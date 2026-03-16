@@ -202,7 +202,7 @@ Reset contract (what gets cleared) is canonical in `FuelProperties_Spec.md`.
 
 ### Pre-race info exports
 - `LalaLaunch.PreRace.*` exports are a short-lived pre-race/on-grid info layer and are intentionally separate from the continuous live `Fuel.*` model view and planner internals.
-- `LalaLaunch.PreRace.Selected` / `SelectedText`: selected pre-race mode (0 No Stop, 1 Single Stop, 2 Multi Stop, 3 Auto). Mode persistence remains shared with planner settings, but mode impact is limited to PreRace outputs.
+- `LalaLaunch.PreRace.Selected` / `SelectedText`: selected pre-race mode (0 No Stop, 1 Single Stop, 2 Multi Stop, 3 Auto). Mode persistence is PreRace-only (`SelectedPreRaceMode` / `PreRaceMode`) and mode impact is limited to PreRace outputs.
 - `LalaLaunch.PreRace.Stints`: key threshold signal (decimal, 1dp) computed as total fuel required / usable tank capacity; this is total stints needed (not shortfall from current fuel) and replaces separate stop exports for dash contract use.
 - `LalaLaunch.PreRace.TotalFuelNeeded`: unified pre-race fuel projection using race session definition time (`CurrentSessionInfo._SessionTime`) + after-zero allowance. Manual modes include a fixed +2-lap fuel allowance (pre-race-only proxy for formation+contingency).
 - `LalaLaunch.PreRace.FuelDelta`: single pre-race delta output. `Auto` is planner-first and mirrors planner first-stint delta reference when planner values are available (runtime fallback only when planner values are unavailable); `Single Stop` uses current fuel + pit-menu refuel intent (`PitSvFuel`); `No Stop`/`Multi Stop` use current fuel only.

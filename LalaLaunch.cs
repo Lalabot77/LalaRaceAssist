@@ -731,7 +731,7 @@ namespace LaunchPlugin
             double effectiveMaxTank,
             double maxTankCapacity)
         {
-            int selectedStrategy = NormalizeStrategyMode(FuelCalculator?.SelectedPitStrategy ?? 3);
+            int selectedStrategy = NormalizeStrategyMode(FuelCalculator?.SelectedPreRaceMode ?? 3);
             PreRace_Selected = selectedStrategy;
             PreRace_SelectedText = StrategyModeText(selectedStrategy);
 

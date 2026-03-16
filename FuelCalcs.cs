@@ -20,7 +20,7 @@ namespace LaunchPlugin
         public enum RaceType { LapLimited, TimeLimited }
         public enum TrackCondition { Dry, Wet }
         public enum PlanningSourceMode { Profile, LiveSnapshot }
-        public enum PitStrategyMode
+        public enum PreRaceMode
         {
             NoStop = 0,
             SingleStop = 1,
@@ -779,7 +779,7 @@ namespace LaunchPlugin
             if (p.RaceLaps.HasValue) RaceLaps = p.RaceLaps.Value;
         }
 
-        SelectedPitStrategy = NormalizePitStrategyValue(p.PitStrategyMode);
+        SelectedPreRaceMode = NormalizePitStrategyValue(p.PreRaceMode);
 
         // Tyre change time: only when specified
         if (p.TireChangeTimeSec.HasValue)
@@ -834,7 +834,7 @@ namespace LaunchPlugin
             (_appliedPreset.Type == RacePresetType.TimeLimited && (_appliedPreset.RaceMinutes ?? RaceMinutes) != RaceMinutes) ||
             (_appliedPreset.Type == RacePresetType.LapLimited && (_appliedPreset.RaceLaps ?? RaceLaps) != RaceLaps);
 
-        bool stopDiff = NormalizePitStrategyValue(_appliedPreset.PitStrategyMode) != SelectedPitStrategy;
+        bool stopDiff = NormalizePitStrategyValue(_appliedPreset.PreRaceMode) != SelectedPreRaceMode;
 
         bool tyreDiff = _appliedPreset.TireChangeTimeSec.HasValue &&
                         Math.Abs(_appliedPreset.TireChangeTimeSec.Value - TireChangeTime) > 0.05;
@@ -2294,34 +2294,32 @@ namespace LaunchPlugin
         set { IsContingencyInLaps = !value; }
     }
 
-    private int _selectedPitStrategy = (int)PitStrategyMode.Auto;
-    public int SelectedPitStrategy
+    private int _selectedPreRaceMode = (int)PreRaceMode.Auto;
+    public int SelectedPreRaceMode
     {
-        get => _selectedPitStrategy;
+        get => _selectedPreRaceMode;
         set
         {
             int normalized = NormalizePitStrategyValue(value);
-            if (_selectedPitStrategy != normalized)
+            if (_selectedPreRaceMode != normalized)
             {
-                _selectedPitStrategy = normalized;
+                _selectedPreRaceMode = normalized;
                 OnPropertyChanged();
-                OnPropertyChanged(nameof(SelectedPitStrategyText));
-                CalculateStrategy();
+                OnPropertyChanged(nameof(SelectedPreRaceModeText));
                 RaisePresetStateChanged();
-                MarkPlannerDirty();
             }
         }
     }
 
-    public string SelectedPitStrategyText
+    public string SelectedPreRaceModeText
     {
         get
         {
-            switch ((PitStrategyMode)NormalizePitStrategyValue(_selectedPitStrategy))
+            switch ((PreRaceMode)NormalizePitStrategyValue(_selectedPreRaceMode))
             {
-                case PitStrategyMode.NoStop: return "No Stop";
-                case PitStrategyMode.SingleStop: return "Single Stop";
-                case PitStrategyMode.MultiStop: return "Multi Stop";
+                case PreRaceMode.NoStop: return "No Stop";
+                case PreRaceMode.SingleStop: return "Single Stop";
+                case PreRaceMode.MultiStop: return "Multi Stop";
                 default: return "Auto";
             }
         }
@@ -2329,7 +2327,7 @@ namespace LaunchPlugin
 
     private static int NormalizePitStrategyValue(int raw)
     {
-        return (raw >= 0 && raw <= 3) ? raw : (int)PitStrategyMode.Auto;
+        return (raw >= 0 && raw <= 3) ? raw : (int)PreRaceMode.Auto;
     }
 
     private void RebuildAvailableCarProfiles()
@@ -2469,7 +2467,7 @@ namespace LaunchPlugin
             this.RaceLaps = 20;
             this.RaceMinutes = 40;
         }
-        this.SelectedPitStrategy = (int)PitStrategyMode.Auto;
+        this.SelectedPreRaceMode = (int)PreRaceMode.Auto;
 
         // Smartly default Max Fuel: use the profile base tank (or default).
         if (!preserveMaxFuel)
@@ -2536,7 +2534,7 @@ namespace LaunchPlugin
         // 5) Save car-level settings
         targetProfile.FuelContingencyValue = this.ContingencyValue;
         targetProfile.IsContingencyInLaps = this.IsContingencyInLaps;
-        targetProfile.PitStrategyMode = NormalizePitStrategyValue(this.SelectedPitStrategy);
+        targetProfile.PreRaceMode = NormalizePitStrategyValue(this.SelectedPreRaceMode);
         targetProfile.WetFuelMultiplier = this.WetFactorPercent;
         targetProfile.TireChangeTime = this.TireChangeTime;
 
@@ -2704,7 +2702,7 @@ namespace LaunchPlugin
         target.Type = source.Type;
         target.RaceMinutes = source.RaceMinutes;
         target.RaceLaps = source.RaceLaps;
-        target.PitStrategyMode = NormalizePitStrategyValue(source.PitStrategyMode);
+        target.PreRaceMode = NormalizePitStrategyValue(source.PreRaceMode);
         target.TireChangeTimeSec = source.TireChangeTimeSec;
         target.MaxFuelPercent = source.MaxFuelPercent;
         target.LegacyMaxFuelLitres = source.LegacyMaxFuelLitres;
@@ -2722,7 +2720,7 @@ namespace LaunchPlugin
             Type = source.Type,
             RaceMinutes = source.RaceMinutes,
             RaceLaps = source.RaceLaps,
-            PitStrategyMode = NormalizePitStrategyValue(source.PitStrategyMode),
+            PreRaceMode = NormalizePitStrategyValue(source.PreRaceMode),
             TireChangeTimeSec = source.TireChangeTimeSec,
             MaxFuelPercent = source.MaxFuelPercent,
             LegacyMaxFuelLitres = source.LegacyMaxFuelLitres,
@@ -2839,7 +2837,7 @@ namespace LaunchPlugin
             RaceMinutes = IsTimeLimitedRace ? (int?)RaceMinutes : null,
             RaceLaps = IsLapLimitedRace ? (int?)RaceLaps : null,
 
-            PitStrategyMode = NormalizePitStrategyValue(SelectedPitStrategy),
+            PreRaceMode = NormalizePitStrategyValue(SelectedPreRaceMode),
             TireChangeTimeSec = TireChangeTime,
             MaxFuelPercent = ConvertMaxFuelOverrideToPercent(MaxFuelOverride),
             LegacyMaxFuelLitres = null,
@@ -2857,7 +2855,7 @@ namespace LaunchPlugin
             Type = RacePresetType.TimeLimited,
             RaceLaps = null,
             RaceMinutes = 40,
-            PitStrategyMode = (int)PitStrategyMode.Auto,
+            PreRaceMode = (int)PreRaceMode.Auto,
             TireChangeTimeSec = 23,
             MaxFuelPercent = 100,
             LegacyMaxFuelLitres = null,
@@ -4038,7 +4036,7 @@ namespace LaunchPlugin
                 ApplyRefuelRateFromProfile(car.RefuelRate);
                 this.ContingencyValue = car.FuelContingencyValue;
                 this.IsContingencyInLaps = car.IsContingencyInLaps;
-                this.SelectedPitStrategy = NormalizePitStrategyValue(car.PitStrategyMode);
+                this.SelectedPreRaceMode = NormalizePitStrategyValue(car.PreRaceMode);
                 this.WetFactorPercent = car.WetFuelMultiplier;
             }
 
@@ -4744,13 +4742,8 @@ namespace LaunchPlugin
         double contingencyFuel = IsContingencyInLaps ? (ContingencyValue * fuelPerLap) : ContingencyValue;
         result.TotalFuel = (totalLaps * fuelPerLap) + contingencyFuel + FormationLapFuelLiters;
 
-        // If no stop is needed, we're done (unless user requires a stop).
-        int selectedStrategy = NormalizePitStrategyValue(SelectedPitStrategy);
-        bool forceNoStop = selectedStrategy == (int)PitStrategyMode.NoStop;
-        bool forceSingleStop = selectedStrategy == (int)PitStrategyMode.SingleStop;
-        bool forceMultiStop = selectedStrategy == (int)PitStrategyMode.MultiStop;
-
-        if (result.TotalFuel <= maxFuelLimit && (selectedStrategy == (int)PitStrategyMode.Auto || forceNoStop || forceMultiStop))
+        // If no stop is needed, we're done.
+        if (result.TotalFuel <= maxFuelLimit)
         {
             result.Stops = 0;
             result.FirstStintFuel = result.TotalFuel;
@@ -4798,141 +4791,6 @@ namespace LaunchPlugin
             LastLapsLappedExpected = lappedEventsNoStop.Count;
             return result;
         }
-        else if (result.TotalFuel <= maxFuelLimit && forceSingleStop)
-        {
-            // Base components
-            double lane = pitLaneTimeLoss;
-            double tyres = Math.Max(0.0, TireChangeTime);
-
-            // ----- Time-limited reduces laps; lap-limited keeps laps -----
-            double adjustedLaps;
-            double drivingTimeSeconds;
-            double pitAtLap;
-
-            if (SelectedRaceType == RaceType.TimeLimited)
-            {
-                double raceSecondsLocal = RaceMinutes * 60.0;
-                pitAtLap = Math.Max(1.0, Math.Floor((raceSecondsLocal * 0.5) / playerPaceSeconds));
-
-                // Subtract stop time from race clock (we'll compute stop time after we know pourTime)
-                // For now, assume stop time = 0 to derive a provisional adjustedLaps,
-                // then we’ll recompute accurately after pourTime is known.
-                double driveSecondsProvisional = raceSecondsLocal; // provisional
-                adjustedLaps = Math.Max(1.0, Math.Floor(driveSecondsProvisional / playerPaceSeconds));
-                drivingTimeSeconds = driveSecondsProvisional; // provisional, replaced later
-            }
-            else
-            {
-                drivingTimeSeconds = totalLaps * playerPaceSeconds;
-                adjustedLaps = totalLaps;
-                pitAtLap = Math.Max(1.0, Math.Floor(totalLaps * 0.5));
-            }
-
-            // ----- Split using the clamp helper -----
-            var (firstStintLaps, secondStintLaps, showSecondStint) = ClampStintSplits(adjustedLaps, pitAtLap);
-
-            // Start grid is FULL, but the stint laps must reflect formation burn
-            double effectiveStartFuel2 = Math.Max(0.0, maxFuelLimit - FormationLapFuelLiters);
-            firstStintLaps = (fuelPerLap > 0.0) ? Math.Floor(effectiveStartFuel2 / fuelPerLap) : 0.0;
-
-            // Display always shows a full tank on the grid
-            result.FirstStintFuel = Math.Round(maxFuelLimit, 1);
-
-
-            // How much fuel would be added for stint 2 (display-only if you keep tyres-only strategy)
-            double addLitres = showSecondStint ? Math.Max(0.0, fuelPerLap * secondStintLaps) : 0.0;
-
-            // --- Real pour time using fallback rate when no car/profile data is available ---
-            double pourTime = ComputeRefuelSeconds(addLitres);
-
-            // Final stop time respects parallel ops: lane + max(tyres, pour)
-            double estStopTime = lane + Math.Max(tyres, pourTime);
-
-            // Recompute time-limited driving seconds (now that estStopTime is known)
-            if (SelectedRaceType == RaceType.TimeLimited)
-            {
-                double raceSecondsLocal = RaceMinutes * 60.0;
-                double driveSeconds = Math.Max(0.0, raceSecondsLocal - estStopTime);
-                drivingTimeSeconds = driveSeconds;
-                adjustedLaps = Math.Max(1.0, Math.Floor(driveSeconds / playerPaceSeconds));
-
-                // If lap count changed due to accurate stop time, resplit cleanly
-                (firstStintLaps, secondStintLaps, showSecondStint) =
-                    ClampStintSplits(adjustedLaps, Math.Max(1.0, Math.Floor((raceSecondsLocal * 0.5) / playerPaceSeconds)));
-
-                addLitres = showSecondStint ? Math.Max(0.0, fuelPerLap * secondStintLaps) : 0.0;
-                pourTime = ComputeRefuelSeconds(addLitres);
-                estStopTime = lane + Math.Max(tyres, pourTime);
-
-                result.TotalFuel = Math.Round(fuelPerLap * adjustedLaps, 1);
-                result.FirstStintFuel = Math.Round(Math.Min(maxFuelLimit, (fuelPerLap * firstStintLaps) + FormationLapFuelLiters), 1);
-            }
-
-            // Totals & per-stop
-            result.TotalTime = drivingTimeSeconds + estStopTime;
-            result.Stops = 1;
-            result.FirstStopTimeLoss = estStopTime;
-
-            // ----- Breakdown (style aligned) -----
-            var header = $"Summary:  {adjustedLaps:F0} Laps  |  1 Stop";
-            var sb = new StringBuilder();
-
-            var pitApprox = TimeSpan.FromSeconds(firstStintLaps * playerPaceSeconds);
-            sb.AppendLine($"Pit at: Lap {firstStintLaps:F0} (≈ {pitApprox:mm\\:ss})");
-            sb.AppendLine();
-
-            var stint1Time = TimeSpan.FromSeconds(Math.Floor(firstStintLaps * playerPaceSeconds));
-            sb.AppendLine($"STINT 1:  {firstStintLaps:F0} Laps   Est {stint1Time:hh\\:mm\\:ss}   Start {result.FirstStintFuel:F1} litres");
-
-            var stopTs = TimeSpan.FromSeconds(estStopTime);
-            string suffix = BuildStopSuffix(tyres, pourTime);
-            sb.AppendLine($"STOP 1:   Est {estStopTime:F1}s   Lane {lane:F1}s   Tyres {tyres:F1}s   Fuel {pourTime:F1}s  {suffix}");
-
-            if (showSecondStint)
-            {
-                var stint2Time = TimeSpan.FromSeconds(Math.Floor(secondStintLaps * playerPaceSeconds));
-                sb.AppendLine($"STINT 2:  {secondStintLaps:F0} Laps   Est {stint2Time:hh\\:mm\\:ss}   Add {addLitres:F1} litres");
-            }
-
-            result.Breakdown = header + Environment.NewLine + Environment.NewLine + sb.ToString();
-
-            LastLapsLappedExpected = 0;
-            return result;
-        }
-
-        if (forceNoStop)
-        {
-            result.Stops = 0;
-            result.FirstStintFuel = Math.Round(maxFuelLimit, 1);
-
-            double noStopLaps = totalLaps;
-            if (SelectedRaceType == RaceType.TimeLimited && playerPaceSeconds > 0.0)
-            {
-                // Forced no-stop impossible branch must use a true no-stop assumption,
-                // not a lap count already reduced by stop-time convergence.
-                noStopLaps = Math.Max(1.0, Math.Floor(raceClockSeconds / playerPaceSeconds));
-            }
-
-            double noStopContingencyFuel = IsContingencyInLaps ? (ContingencyValue * fuelPerLap) : ContingencyValue;
-            double noStopTotalFuel = (noStopLaps * fuelPerLap) + noStopContingencyFuel + FormationLapFuelLiters;
-            result.TotalFuel = noStopTotalFuel;
-
-            var bodyForcedNoStop = new StringBuilder();
-                bodyForcedNoStop.AppendLine($"STINT 1:  {noStopLaps:F0} Laps   Est {TimeSpan.FromSeconds(noStopLaps * playerPaceSeconds):hh\\:mm\\:ss}   Start {result.FirstStintFuel:F1} litres");
-                bodyForcedNoStop.AppendLine();
-            bodyForcedNoStop.AppendLine($"NO STOP FORCED: Required {result.TotalFuel:F1}L exceeds max start fuel {maxFuelLimit:F1}L.");
-            bodyForcedNoStop.AppendLine($"UNDERFUELLED: Short by {Math.Max(0.0, result.TotalFuel - maxFuelLimit):F1}L if no pit stop is taken.");
-
-            result.Breakdown = $"Summary:  {noStopLaps:F0} Laps  |  No Stop Forced  |  Underfuelled" +
-                               Environment.NewLine + Environment.NewLine +
-                               bodyForcedNoStop.ToString();
-            result.TotalTime = noStopLaps * playerPaceSeconds;
-            result.FirstStopTimeLoss = 0.0;
-            result.PlayerLaps = noStopLaps;
-            LastLapsLappedExpected = 0;
-            return result;
-        }
-
         // --- Logic for races requiring pit stops ---
         // We build the body first, then prepend a one-line Summary header.
         var body = new StringBuilder();
@@ -4950,20 +4808,6 @@ namespace LaunchPlugin
         // Calculate how many stops are required
         int baseStopsRequired = (int)Math.Ceiling(fuelNeededFromPits / maxFuelLimit);
         result.Stops = baseStopsRequired;
-
-        bool singleStopInfeasible = false;
-        if (forceSingleStop)
-        {
-            if (baseStopsRequired <= 1)
-            {
-                result.Stops = 1;
-            }
-            else
-            {
-                // Keep truthful feasible stop count; do not claim impossible one-stop completion.
-                singleStopInfeasible = true;
-            }
-        }
 
         // Stint 1 (starting stint)
         // Include formation fuel in the starting load, but respect the tank cap.
@@ -5141,16 +4985,9 @@ namespace LaunchPlugin
             }
         }
 
-        if (singleStopInfeasible)
-        {
-            body.AppendLine();
-            body.AppendLine($"SINGLE STOP INFEASIBLE: Fuel model requires {baseStopsRequired} stops to finish.");
-        }
-
         // Summary: only include non-empty facts
         var summaryParts = new List<string> { $"{totalLaps:F0} Laps" };
         if (result.Stops > 0) summaryParts.Add($"{result.Stops} Stops");
-        if (singleStopInfeasible) summaryParts.Add($"Single Stop infeasible ({baseStopsRequired} needed)");
         if (lappedEvents.Count > 0) summaryParts.Add($"Lapped on Lap {string.Join(", ", lappedEvents)}");
 
         var summary = "Summary:  " + string.Join(" | ", summaryParts);

@@ -1,7 +1,7 @@
 # Repository status
 
 Validated against commit: HEAD
-Last updated: 2026-03-14
+Last updated: 2026-03-16
 Branch: work
 
 ## Current repo/link status
@@ -15,6 +15,8 @@ Branch: work
 - `Docs/Subsystems/Fuel_Planner_Tab.md` updated to clarify planner authority vs PreRace display intent.
 
 ## Delivery status highlights
+- Decoupled persisted PreRace mode from planner logic: new `SelectedPreRaceMode` (FuelCalcs runtime) with persisted `PreRaceMode` fields in profiles/presets; legacy `PitStrategyMode` JSON keys map into the PreRace-only field for compatibility.
+- Removed PreRace mode influence from planner calculations (`CalculateSingleStrategy` no longer branches on mode intent), so mode changes no longer trigger planner recalculation side effects.
 - Refactored race-start dash-facing outputs from `LalaLaunch.Strategy.*` to `LalaLaunch.PreRace.*` in `LalaLaunch.cs`.
 - Implemented unified PreRace outputs with one stints value, one total-fuel value, and one delta value; Auto now mirrors planner outputs when planner values are available and falls back at runtime when unavailable.
 - Preserved selected mode persistence/label behavior (0 No Stop, 1 Single Stop, 2 Multi Stop, 3 Auto).

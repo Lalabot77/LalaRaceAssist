@@ -46,7 +46,7 @@ namespace LaunchPlugin
         private bool _isContingencyInLaps = true;
         public bool IsContingencyInLaps { get => _isContingencyInLaps; set { if (_isContingencyInLaps != value) { _isContingencyInLaps = value; OnPropertyChanged(); } } }
         private int _pitStrategyMode = 3;
-        public int PitStrategyMode
+        public int PreRaceMode
         {
             get => (_pitStrategyMode >= 0 && _pitStrategyMode <= 3) ? _pitStrategyMode : 3;
             set
@@ -56,16 +56,25 @@ namespace LaunchPlugin
                 {
                     _pitStrategyMode = normalized;
                     OnPropertyChanged();
+                    OnPropertyChanged(nameof(LegacyPitStrategyMode));
                 }
             }
+        }
+
+        // Backward compatibility for older profile JSON key.
+        [JsonProperty("PitStrategyMode", NullValueHandling = NullValueHandling.Ignore)]
+        public int LegacyPitStrategyMode
+        {
+            get => PreRaceMode;
+            set => PreRaceMode = value;
         }
 
         // Legacy compatibility when older profile JSON includes a mandatory-stop bool.
         [JsonProperty("MandatoryStopRequired", NullValueHandling = NullValueHandling.Ignore)]
         public bool MandatoryStopRequired
         {
-            get => PitStrategyMode == 1;
-            set => PitStrategyMode = value ? 1 : 3;
+            get => PreRaceMode == 1;
+            set => PreRaceMode = value ? 1 : 3;
         }
         private double _wetFuelMultiplier = 90;
         public double WetFuelMultiplier
