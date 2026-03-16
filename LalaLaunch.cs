@@ -696,7 +696,7 @@ namespace LaunchPlugin
 
         private double GetPreRaceLapSeconds(GameData data, out string source)
         {
-            double plannerLapSeconds = FuelCalcs.ParseLapTime(FuelCalculator?.EstimatedLapTime);
+            double plannerLapSeconds = FuelCalculator?.ParseLapTime(FuelCalculator?.EstimatedLapTime) ?? 0.0;
             if (plannerLapSeconds > 0.0)
             {
                 source = "planner";

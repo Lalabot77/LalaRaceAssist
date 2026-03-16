@@ -5160,7 +5160,7 @@ namespace LaunchPlugin
         LastLapsLappedExpected = lappedEvents.Count;
         return result;
     }
-    private double ParseLapTime(string timeString)
+    public double ParseLapTime(string timeString)
     {
         if (string.IsNullOrWhiteSpace(timeString)) return 0.0;
 
