@@ -764,6 +764,7 @@ namespace LaunchPlugin
             double plannerFirstStintFuel = Math.Max(0.0, FuelCalculator?.FirstStintFuel ?? 0.0);
             double plannerTankBasis = Math.Max(0.0, FuelCalculator?.PlannerTankBasisLitres ?? 0.0);
             bool autoPlannerAvailable = selectedStrategy == 3 && plannerTotalFuelNeeded > 0.0;
+            double plannedSingleStopRefuel = Math.Max(0.0, pitWindowRequestedAdd);
 
             if (autoPlannerAvailable)
             {
@@ -774,7 +775,7 @@ namespace LaunchPlugin
                     : 0.0;
 
                 double plannerNextAddLitres = Math.Max(0.0, FuelCalculator?.PlannerNextAddLitres ?? 0.0);
-                double plannedSingleStopRefuel = Math.Max(0.0, pitWindowRequestedAdd);
+                
                 if (plannerNextAddLitres > 0.0)
                 {
                     double plannerDeltaReferenceFuel = currentFuel + plannerNextAddLitres;
@@ -820,7 +821,7 @@ namespace LaunchPlugin
                 ? Math.Round(Math.Max(0.0, PreRace_TotalFuelNeeded / usableTank), 1)
                 : 0.0;
 
-            double plannedSingleStopRefuel = Math.Max(0.0, pitWindowRequestedAdd);
+            plannedSingleStopRefuel = Math.Max(0.0, pitWindowRequestedAdd);
             switch (selectedStrategy)
             {
                 case 1:
