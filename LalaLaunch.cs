@@ -607,6 +607,7 @@ namespace LaunchPlugin
         public double PreRace_FuelDelta { get; private set; }
         public string PreRace_FuelSource { get; private set; } = "fallback";
         public string PreRace_LapTimeSource { get; private set; } = "fallback";
+        public string PreRace_StatusText { get; private set; } = "STRATEGY OKAY";
         private bool _isRefuelSelected = true;
         private bool _isTireChangeSelected = true;
         public double LiveCarMaxFuel { get; private set; }
@@ -669,6 +670,28 @@ namespace LaunchPlugin
                 case 1: return "Single Stop";
                 case 2: return "Multi Stop";
                 default: return "Auto";
+            }
+        }
+
+        private const double PreRaceStatusMarginalStintTolerance = 0.2;
+
+        private static string EvaluatePreRaceStatusText(int selectedStrategy, double stints)
+        {
+            double normalizedStints = Math.Max(0.0, stints);
+            switch (NormalizeStrategyMode(selectedStrategy))
+            {
+                case 0:
+                    if (normalizedStints <= 1.0) return "STRATEGY OKAY";
+                    if (normalizedStints <= (1.0 + PreRaceStatusMarginalStintTolerance)) return "STRATEGY MARGINAL";
+                    return "UNABLE STRATEGY";
+                case 1:
+                    if (normalizedStints <= 2.0) return "STRATEGY OKAY";
+                    if (normalizedStints <= (2.0 + PreRaceStatusMarginalStintTolerance)) return "STRATEGY MARGINAL";
+                    return "UNABLE STRATEGY";
+                case 2:
+                case 3:
+                default:
+                    return "STRATEGY OKAY";
             }
         }
 
@@ -750,12 +773,23 @@ namespace LaunchPlugin
                     ? Math.Round(Math.Max(0.0, plannerTotalFuelNeeded / autoTankBasis), 1)
                     : 0.0;
 
-                double plannerDeltaReferenceFuel = plannerFirstStintFuel > 0.0
-                    ? plannerFirstStintFuel
-                    : plannerTotalFuelNeeded;
-                PreRace_FuelDelta = currentFuel - plannerDeltaReferenceFuel;
+                double plannerNextAddLitres = Math.Max(0.0, FuelCalculator?.PlannerNextAddLitres ?? 0.0);
+                double plannedSingleStopRefuel = Math.Max(0.0, pitWindowRequestedAdd);
+                if (plannerNextAddLitres > 0.0)
+                {
+                    double plannerDeltaReferenceFuel = currentFuel + plannerNextAddLitres;
+                    PreRace_FuelDelta = (currentFuel + plannedSingleStopRefuel) - plannerDeltaReferenceFuel;
+                }
+                else
+                {
+                    double plannerDeltaReferenceFuel = plannerFirstStintFuel > 0.0
+                        ? plannerFirstStintFuel
+                        : plannerTotalFuelNeeded;
+                    PreRace_FuelDelta = (currentFuel + plannedSingleStopRefuel) - plannerDeltaReferenceFuel;
+                }
                 PreRace_FuelSource = "planner";
                 PreRace_LapTimeSource = "planner";
+                PreRace_StatusText = EvaluatePreRaceStatusText(selectedStrategy, PreRace_Stints);
                 return;
             }
 
@@ -799,6 +833,7 @@ namespace LaunchPlugin
 
             PreRace_FuelSource = preRaceFuelSource;
             PreRace_LapTimeSource = preRaceLapSource;
+            PreRace_StatusText = EvaluatePreRaceStatusText(selectedStrategy, PreRace_Stints);
         }
 
         // Stable model inputs
@@ -4466,6 +4501,7 @@ namespace LaunchPlugin
             AttachCore("LalaLaunch.PreRace.FuelDelta", () => PreRace_FuelDelta);
             AttachCore("LalaLaunch.PreRace.FuelSource", () => PreRace_FuelSource);
             AttachCore("LalaLaunch.PreRace.LapTimeSource", () => PreRace_LapTimeSource);
+            AttachCore("LalaLaunch.PreRace.StatusText", () => PreRace_StatusText);
             AttachCore("Fuel.ProjectionLapTime_Stable", () => ProjectionLapTime_Stable);
             AttachCore("Fuel.ProjectionLapTime_StableSource", () => ProjectionLapTime_StableSource);
             AttachCore("Fuel.Live.ProjectedDriveSecondsRemaining", () => LiveProjectedDriveSecondsRemaining);
@@ -11723,6 +11759,7 @@ namespace LaunchPlugin
             PreRace_FuelDelta = 0;
             PreRace_FuelSource = "fallback";
             PreRace_LapTimeSource = "fallback";
+            PreRace_StatusText = "STRATEGY OKAY";
 
             // --- Additional dashboard-facing fuel/projection outputs that must not latch across resets ---
             // (These were listed in SessionResetIssues.docx)

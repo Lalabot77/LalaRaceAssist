@@ -1,7 +1,7 @@
 # Repository status
 
 Validated against commit: HEAD
-Last updated: 2026-03-16
+Last updated: 2026-03-17
 Branch: work
 
 ## Current repo/link status
@@ -9,7 +9,7 @@ Branch: work
 - No Git remote is configured in this checkout (`git remote -v` returns empty).
 
 ## Documentation sync status (requested set)
-- `Docs/SimHubParameterInventory.md` updated for the new `LalaLaunch.PreRace.*` public contract (`Selected`, `SelectedText`, `Stints`, `TotalFuelNeeded`, `FuelDelta`, `FuelSource`, `LapTimeSource`).
+- `Docs/SimHubParameterInventory.md` updated for the revised `LalaLaunch.PreRace.*` public contract (Auto delta basis fix + new `StatusText` export).
 - `Docs/Plugin_UI_Tooltips.md` updated to describe pit mode selection as a PreRace on-grid info layer control.
 - `Docs/Subsystems/Fuel_Model.md` updated to replace Strategy export guidance with the PreRace adapter/export contract and source-label behavior.
 - `Docs/Subsystems/Fuel_Planner_Tab.md` updated to clarify planner authority vs PreRace display intent.
@@ -24,7 +24,9 @@ Branch: work
 - Implemented explicit source ordering for pre-race manual-mode inputs and a fixed +2-lap manual allowance:
   - Fuel burn: planner/profile value -> SimHub computed burn -> hard fallback (3.0 L/lap).
   - Lap time: planner/profile value -> SimHub/iRacing predicted value chain -> hard fallback (120.0 s).
-- `Single Stop` PreRace delta uses current fuel + pit-menu refuel intent (`PitSvFuel`) for live on-grid response; Auto PreRace delta mirrors planner first-stint assumption when planner values are available.
+- `Single Stop` PreRace delta continues to use current fuel + pit-menu refuel intent (`PitSvFuel`) for live on-grid response.
+- `Auto` PreRace totals/stints remain planner-first, but `Auto` PreRace delta now uses live pit-menu add intent against planner-required next add (`PlannerNextAddLitres`) so on-grid pit-menu edits move delta live toward zero.
+- Added `LalaLaunch.PreRace.StatusText` export (`STRATEGY OKAY` / `STRATEGY MARGINAL` / `UNABLE STRATEGY`) with initial mode+stints thresholding and explicit +0.2 stints marginal tolerance for No Stop and Single Stop.
 - Planner and continuous live `Fuel.*` model behavior remain unchanged beyond read-only reuse of existing inputs.
 
 ## Notes
