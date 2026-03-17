@@ -229,7 +229,7 @@ namespace LaunchPlugin
                     car.AntiStallThreshold = defaultProfile.AntiStallThreshold;
                     car.FuelContingencyValue = defaultProfile.FuelContingencyValue;
                     car.IsContingencyInLaps = defaultProfile.IsContingencyInLaps;
-                    car.PitStrategyMode = defaultProfile.PitStrategyMode;
+                    car.PreRaceMode = defaultProfile.PreRaceMode;
                     car.WetFuelMultiplier = defaultProfile.WetFuelMultiplier;
                     car.TireChangeTime = defaultProfile.TireChangeTime;
                     car.RacePaceDeltaSeconds = defaultProfile.RacePaceDeltaSeconds;
@@ -1343,7 +1343,7 @@ namespace LaunchPlugin
                 newProfile.AntiStallThreshold = defaultProfile.AntiStallThreshold;
                 newProfile.FuelContingencyValue = defaultProfile.FuelContingencyValue;
                 newProfile.IsContingencyInLaps = defaultProfile.IsContingencyInLaps;
-                newProfile.PitStrategyMode = defaultProfile.PitStrategyMode;
+                newProfile.PreRaceMode = defaultProfile.PreRaceMode;
                 newProfile.WetFuelMultiplier = defaultProfile.WetFuelMultiplier;
                 newProfile.RefuelRate = defaultProfile.RefuelRate;
                 newProfile.BaseTankLitres = defaultProfile.BaseTankLitres;
@@ -1434,7 +1434,7 @@ namespace LaunchPlugin
             destination.AntiStallThreshold = source.AntiStallThreshold;
             destination.FuelContingencyValue = source.FuelContingencyValue;
             destination.IsContingencyInLaps = source.IsContingencyInLaps;
-            destination.PitStrategyMode = source.PitStrategyMode;
+            destination.PreRaceMode = source.PreRaceMode;
             destination.WetFuelMultiplier = source.WetFuelMultiplier;
             destination.RejoinWarningLingerTime = source.RejoinWarningLingerTime;
             destination.RejoinWarningMinSpeed = source.RejoinWarningMinSpeed;
@@ -1936,7 +1936,7 @@ namespace LaunchPlugin
                     // Fuel & Pit Properties
                     FuelContingencyValue = 1.5,
                     IsContingencyInLaps = true,
-                    PitStrategyMode = 3,
+                    PreRaceMode = 3,
                     WetFuelMultiplier = 90.0,
                     TireChangeTime = 22,
                     RacePaceDeltaSeconds = 1.2,

@@ -141,7 +141,7 @@ Using planner-selected lap time + fuel per lap:
 - Total fuel required to finish.
 - Fuel delta (surplus/deficit).
 - Number of stops required by plan from the planner-feasible strategy result.
-- Selected pit mode is shared with the PreRace info layer as display intent only; planner stop count remains planner-authoritative and independent. When mode is Auto, PreRace mirrors planner totals/assumptions when planner values are available, with runtime fallback only if planner values are unavailable.
+- Planner stop count and planner outputs are fully independent from the PreRace mode selector. PreRace Auto mirrors planner totals/assumptions when planner values are available, with runtime fallback only if planner values are unavailable.
 - Dash-facing pre-race visibility uses `LalaLaunch.PreRace.Stints` instead of separate stop-count exports.
 - Pit add requirement.
 
@@ -227,12 +227,6 @@ Reset semantics are shared with the Fuel Model and documented centrally in:
 ---
 
 ## Failure modes / edge cases
-
-- **No Stop underfuelled outcomes**
-  - If `No Stop` is selected when required fuel exceeds start-capacity, planner output stays internally consistent and explicitly reports the strategy as underfuelled/impossible rather than mixing zero-stop summary with pit-path breakdown timing. For time-limited races, this branch now recomputes no-stop laps/fuel from the full no-stop race clock basis (no pit-time deduction).
-
-- **Single Stop infeasible outcomes**
-  - If `Single Stop` is selected but more than one stop is required to finish, planner output remains truthful and reports that one-stop intent is infeasible rather than presenting an impossible one-stop completion.
 
 - **Low confidence live data**
   - Live values may appear but `IsFuelReady == false`.

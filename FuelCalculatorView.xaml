@@ -561,12 +561,12 @@
                                              ToolTip="Extra fuel to add as a safety margin (L)." />
                         </StackPanel>
                         <StackPanel Orientation="Horizontal" Margin="0,10,0,6">
-                            <TextBlock Text="Pit Strategy" FontWeight="Bold" VerticalAlignment="Center" Margin="0,0,16,0"
+                            <TextBlock Text="PreRace Mode" FontWeight="Bold" VerticalAlignment="Center" Margin="0,0,16,0"
                                        ToolTip="Driver-selected mode for the PreRace on-grid info layer only. Auto mirrors planner-derived assumptions; manual modes only affect PreRace outputs and never alter planner/live fuel behavior."/>
                             <ComboBox Width="170"
                                       VerticalAlignment="Center"
                                       SelectedValuePath="Tag"
-                                      SelectedValue="{Binding SelectedPitStrategy, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
+                                      SelectedValue="{Binding SelectedPreRaceMode, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
                                       ToolTip="Auto mirrors planner-derived assumptions for PreRace outputs. No Stop uses current fuel only; Single Stop uses current + pit-menu add intent; Multi Stop remains informational and favors stint threshold context.">
                                     <ComboBoxItem Content="Auto">
                                         <ComboBoxItem.Tag>
