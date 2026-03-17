@@ -49,6 +49,7 @@ namespace LaunchPlugin
         public double TotalTime;
         public double PlayerLaps;
         public double FirstStintFuel;
+        public double FirstPlannedAddLitres;
         public double FirstStopTimeLoss;
     }
     // --- Private Fields ---
@@ -76,6 +77,7 @@ namespace LaunchPlugin
     private double _strategyLeaderExtraSecondsAfterZero;
     private double _strategyDriverExtraSecondsAfterZero;
     private double _firstStintFuel;
+    private double _plannerNextAddLitres;
     private string _validationMessage;
     private double _firstStopTimeLoss;
     private double _refuelRate;
@@ -2385,6 +2387,7 @@ namespace LaunchPlugin
         private set { _strategyDriverExtraSecondsAfterZero = value; OnPropertyChanged(); }
     }
     public double FirstStintFuel { get => _firstStintFuel; private set { _firstStintFuel = value; OnPropertyChanged("FirstStintFuel"); } }
+    public double PlannerNextAddLitres { get => _plannerNextAddLitres; private set { _plannerNextAddLitres = value; OnPropertyChanged("PlannerNextAddLitres"); } }
     public string ValidationMessage
     {
         get => _validationMessage;
@@ -4553,6 +4556,7 @@ namespace LaunchPlugin
                 StrategyLeaderExtraSecondsAfterZero = 0.0;
                 StrategyDriverExtraSecondsAfterZero = 0.0;
                 FirstStintFuel = 0.0;
+                PlannerNextAddLitres = 0.0;
                 PlannerTankBasisLitres = 0.0;
                 return;
             }
@@ -4639,6 +4643,7 @@ namespace LaunchPlugin
             RequiredPitStops = strategyResult.Stops;
             StintBreakdown = strategyResult.Breakdown;
             FirstStintFuel = strategyResult.FirstStintFuel;
+            PlannerNextAddLitres = Math.Max(0.0, strategyResult.FirstPlannedAddLitres);
             FirstStopTimeLoss = strategyResult.FirstStopTimeLoss;
             OnPropertyChanged(nameof(IsPitstopRequired));
 
@@ -4747,6 +4752,7 @@ namespace LaunchPlugin
         {
             result.Stops = 0;
             result.FirstStintFuel = result.TotalFuel;
+            result.FirstPlannedAddLitres = 0.0;
 
             var bodyNoStop = new StringBuilder();
             bodyNoStop.Append($"STINT 1:  {totalLaps:F0} Laps   Est {TimeSpan.FromSeconds(totalLaps * playerPaceSeconds):hh\\:mm\\:ss}   Start {result.TotalFuel:F1} litres");
@@ -4899,6 +4905,10 @@ namespace LaunchPlugin
             // Only add what you need beyond what is already in the tank at pit-in, capped by tank size
             double fuelToAdd = Math.Max(0.0, Math.Min(maxFuelLimit - fuelAtPitIn, fuelForRemainingLaps - fuelAtPitIn));
             double fuelToFillTo = fuelToAdd; // In iRacing, "Fill To" is the amount to add.
+            if (i == 1)
+            {
+                result.FirstPlannedAddLitres = Math.Max(0.0, fuelToAdd);
+            }
 
             // Calculate pit stop time for this specific stop
             double refuelTime = ComputeRefuelSeconds(fuelToAdd);
