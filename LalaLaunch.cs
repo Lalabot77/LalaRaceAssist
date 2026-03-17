@@ -785,7 +785,7 @@ namespace LaunchPlugin
                     double plannerDeltaReferenceFuel = plannerFirstStintFuel > 0.0
                         ? plannerFirstStintFuel
                         : plannerTotalFuelNeeded;
-                    PreRace_FuelDelta = (currentFuel + plannedSingleStopRefuel) - plannerDeltaReferenceFuel;
+                    PreRace_FuelDelta = currentFuel - plannerDeltaReferenceFuel;
                 }
                 PreRace_FuelSource = "planner";
                 PreRace_LapTimeSource = "planner";

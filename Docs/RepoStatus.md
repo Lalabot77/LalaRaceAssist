@@ -25,7 +25,7 @@ Branch: work
   - Fuel burn: planner/profile value -> SimHub computed burn -> hard fallback (3.0 L/lap).
   - Lap time: planner/profile value -> SimHub/iRacing predicted value chain -> hard fallback (120.0 s).
 - `Single Stop` PreRace delta continues to use current fuel + pit-menu refuel intent (`PitSvFuel`) for live on-grid response.
-- `Auto` PreRace totals/stints remain planner-first, but `Auto` PreRace delta now uses live pit-menu add intent against planner-required next add (`PlannerNextAddLitres`) so on-grid pit-menu edits move delta live toward zero.
+- `Auto` PreRace totals/stints remain planner-first; Auto delta uses live pit-menu add intent only when planner-required next add (`PlannerNextAddLitres`) is greater than zero, and otherwise falls back to planner fuel-basis delta without pit-menu add intent.
 - Added `LalaLaunch.PreRace.StatusText` export (`STRATEGY OKAY` / `STRATEGY MARGINAL` / `UNABLE STRATEGY`) with initial mode+stints thresholding and explicit +0.2 stints marginal tolerance for No Stop and Single Stop.
 - Planner and continuous live `Fuel.*` model behavior remain unchanged beyond read-only reuse of existing inputs.
 

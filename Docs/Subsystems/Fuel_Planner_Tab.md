@@ -141,7 +141,7 @@ Using planner-selected lap time + fuel per lap:
 - Total fuel required to finish.
 - Fuel delta (surplus/deficit).
 - Number of stops required by plan from the planner-feasible strategy result.
-- Planner stop count and planner outputs are fully independent from the PreRace mode selector. PreRace Auto mirrors planner totals/stints when planner values are available, with runtime fallback only if planner values are unavailable. Auto delta now compares the driver’s live pit-menu refuel request against planner-required next add, so on-grid add changes update Auto delta live without altering planner math.
+- Planner stop count and planner outputs are fully independent from the PreRace mode selector. PreRace Auto mirrors planner totals/stints when planner values are available, with runtime fallback only if planner values are unavailable. Auto delta only applies live pit-menu refuel intent when planner-required next add is greater than zero; otherwise it reuses the planner fuel-basis fallback so arbitrary pit-menu add does not mask Auto deficit.
 - Dash-facing pre-race visibility uses `LalaLaunch.PreRace.Stints` instead of separate stop-count exports.
 - Pit add requirement.
 
