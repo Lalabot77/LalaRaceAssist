@@ -42,19 +42,39 @@
                     <Separator Margin="0,12,0,12" />
 
                     <TextBlock Text="Dark Mode" FontWeight="Bold" Margin="0,0,0,6"/>
-                    <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
-                        <TextBlock Text="Dark Mode:"
-                                   Width="150"
-                                   VerticalAlignment="Center"
-                                   ToolTip="Select Dark Mode behavior: Off, Manual, or Auto."/>
-                        <ComboBox Width="180"
-                                  SelectedValue="{Binding Settings.DarkModeMode, Mode=TwoWay}"
-                                  SelectedValuePath="Tag"
-                                  ToolTip="0=Off (forced off), 1=Manual, 2=Auto solar dimming.">
-                            <ComboBoxItem Content="Off" Tag="0" />
-                            <ComboBoxItem Content="Manual" Tag="1" />
-                            <ComboBoxItem Content="Auto" Tag="2" />
-                        </ComboBox>
+                    <StackPanel>
+                        <Grid VerticalAlignment="Center">
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="150" />
+                                <ColumnDefinition Width="120" />
+                                <ColumnDefinition Width="Auto" />
+                            </Grid.ColumnDefinitions>
+                            <TextBlock Grid.Column="0"
+                                       Text="Dark Mode:"
+                                       VerticalAlignment="Center"
+                                       ToolTip="Select Dark Mode behavior: Off, Manual, or Auto."/>
+                            <ComboBox Grid.Column="1"
+                                      Width="120"
+                                      Margin="0,0,12,0"
+                                      HorizontalAlignment="Left"
+                                      SelectedValue="{Binding Settings.DarkModeMode, Mode=TwoWay}"
+                                      SelectedValuePath="Tag"
+                                      ToolTip="0=Off (forced off), 1=Manual, 2=Auto solar dimming.">
+                                <ComboBoxItem Content="Off" Tag="0" />
+                                <ComboBoxItem Content="Manual" Tag="1" />
+                                <ComboBoxItem Content="Auto" Tag="2" />
+                            </ComboBox>
+                            <styles:SHToggleCheckbox Grid.Column="2"
+                                                     Content="Use Lovely True Dark"
+                                                     VerticalAlignment="Center"
+                                                     IsChecked="{Binding Settings.UseLovelyTrueDark, Mode=TwoWay}"
+                                                     IsEnabled="{Binding IsLovelyAvailableForDarkMode}"
+                                                     ToolTip="When Lovely is available, Dark Mode active state can follow Lovely True Dark." />
+                        </Grid>
+                        <TextBlock Text="If using Lovely True Dark, bind only one toggle (Lovely OR LalaLaunch)."
+                                   Margin="150,4,0,0"
+                                   Opacity="0.85"
+                                   TextWrapping="Wrap" />
                     </StackPanel>
                     <ui:TitledSlider Title="Dark Mode Brightness (%): "
                                      Margin="0,8,0,0"
@@ -64,19 +84,10 @@
                                      IsSnapToTickEnabled="True"
                                      Value="{Binding Settings.DarkModeBrightnessPct, Mode=TwoWay}"
                                      ToolTip="Base Dark Mode brightness percent (0-100). 100 is brightest." />
-                    <styles:SHToggleCheckbox Content="Use Lovely True Dark"
-                                             Margin="0,8,0,0"
-                                             IsChecked="{Binding Settings.UseLovelyTrueDark, Mode=TwoWay}"
-                                             IsEnabled="{Binding IsLovelyAvailableForDarkMode}"
-                                             ToolTip="When Lovely is available, Dark Mode active state can follow Lovely True Dark." />
                     <ui:ControlsEditor ActionName="LalaLaunch.ToggleDarkMode"
                                        FriendlyName="Toggle Dark Mode"
                                        Margin="0,8,0,0"
                                        ToolTip="Assign a button to cycle LalaLaunch Dark Mode mode (Off → Manual → Auto). Warning: don’t bind this to the same button as Lovely’s True Dark toggle. If ‘Use Lovely True Dark’ is enabled and Lovely is available, LalaLaunch toggle is ignored." />
-                    <TextBlock Text="If using Lovely True Dark, bind only one toggle (Lovely OR LalaLaunch)."
-                               Margin="0,4,0,0"
-                               Opacity="0.85"
-                               TextWrapping="Wrap" />
 
                     <Separator Margin="0,12,0,12" />
 
@@ -100,7 +111,7 @@
                 </StackPanel>
             </GroupBox>
 
-            <GroupBox Header="DASH VISIBILITY">
+            <GroupBox Header="DASH VISIBILITY" Width="820" HorizontalAlignment="Left">
                 <StackPanel Margin="12,10,12,12">
                     <TextBlock Text="Choose which dash families can show each feature."
                                Margin="0,0,0,10"
