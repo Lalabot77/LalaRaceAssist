@@ -274,6 +274,7 @@ namespace LaunchPlugin
             var car = EnsureCar(carProfileName);
             var display = string.IsNullOrWhiteSpace(trackDisplay) ? trackName : trackDisplay;
             var ts = car.EnsureTrack(trackName, display);
+            car.EnsureTrackPlannerSettings(ts);
             SimHub.Logging.Current.Info($"[LalaPlugin:Profiles] Track resolved: key='{ts?.Key}', display='{ts?.DisplayName}'");
 
             // --- FIX: Manually initialize the text properties after creation ---
@@ -441,6 +442,11 @@ namespace LaunchPlugin
 
                 if (SelectedProfile?.TrackStats != null)
                 {
+                    if (EnsureTrackPlannerSettings(SelectedProfile))
+                    {
+                        SaveProfiles();
+                    }
+
                     // add in a stable order (name or key)
                     foreach (var t in SelectedProfile.TrackStats.Values
                                  .OrderBy(t => t.DisplayName ?? t.Key ?? string.Empty, StringComparer.OrdinalIgnoreCase))
@@ -465,6 +471,22 @@ namespace LaunchPlugin
 
             if (disp == null || disp.CheckAccess()) DoRefresh();
             else disp.Invoke(DoRefresh);
+        }
+
+        private bool EnsureTrackPlannerSettings(CarProfile profile)
+        {
+            if (profile?.TrackStats == null) return false;
+
+            bool changed = false;
+            foreach (var track in profile.TrackStats.Values)
+            {
+                if (profile.EnsureTrackPlannerSettings(track))
+                {
+                    changed = true;
+                }
+            }
+
+            return changed;
         }
 
 
@@ -1957,6 +1979,10 @@ namespace LaunchPlugin
                 {
                     DisplayName = "Default",
                     Key = "default",
+                    FuelContingencyValue = 1.5,
+                    IsContingencyInLaps = true,
+                    WetFuelMultiplier = 90.0,
+                    RacePaceDeltaSeconds = 1.2,
                     BestLapMsDry = null,
                     BestLapMsWet = null,
                     PitLaneLossSeconds = 25.0,
@@ -1983,6 +2009,7 @@ namespace LaunchPlugin
             foreach (var profile in CarProfiles)
             {
                 seededAny |= EnsurePitEntryDefaults(profile, profile.ProfileName);
+                seededAny |= EnsureTrackPlannerSettings(profile);
             }
 
             if (seededAny || createdDefault)

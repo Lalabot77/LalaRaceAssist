@@ -274,11 +274,56 @@ namespace LaunchPlugin
                     Key = canonicalKey,
                     DisplayName = trackDisplay,
                     DryConditionMultipliers = ConditionMultipliers.CreateDefaultDry(),
-                    WetConditionMultipliers = ConditionMultipliers.CreateDefaultWet()
+                    WetConditionMultipliers = ConditionMultipliers.CreateDefaultWet(),
+                    FuelContingencyValue = FuelContingencyValue,
+                    IsContingencyInLaps = IsContingencyInLaps,
+                    WetFuelMultiplier = WetFuelMultiplier,
+                    RacePaceDeltaSeconds = RacePaceDeltaSeconds
                 };
                 TrackStats[canonicalKey] = newRecord;
                 return newRecord;
             }
+        }
+
+        public bool EnsureTrackPlannerSettings(TrackStats track)
+        {
+            if (track == null) return false;
+
+            bool changed = false;
+
+            if (!track.HasFuelContingencyValue)
+            {
+                track.FuelContingencyValue = FuelContingencyValue;
+                changed = true;
+            }
+
+            if (!track.HasContingencyMode)
+            {
+                track.IsContingencyInLaps = IsContingencyInLaps;
+                changed = true;
+            }
+
+            if (!track.HasRacePaceDeltaSeconds)
+            {
+                track.RacePaceDeltaSeconds = RacePaceDeltaSeconds;
+                changed = true;
+            }
+
+            if (!track.HasWetFuelMultiplier)
+            {
+                var trackWetMultiplier = track.GetConditionMultipliers(true)?.WetFactorPercent;
+                var carWetMultiplier = GetConditionMultipliers(true)?.WetFactorPercent;
+                double fallbackWet = trackWetMultiplier ?? carWetMultiplier ?? WetFuelMultiplier;
+                if (fallbackWet <= 0)
+                {
+                    fallbackWet = 90.0;
+                }
+
+                track.WetFuelMultiplier = fallbackWet;
+                changed = true;
+            }
+
+            return changed;
         }
 
         public ShiftStackData EnsureShiftStack(string gearStackId)
@@ -441,6 +486,16 @@ namespace LaunchPlugin
         private void OnDeserialized(StreamingContext context)
         {
             _isHydrating = false;
+
+            if (_wetFuelMultiplier.HasValue)
+            {
+                if (WetConditionMultipliers == null)
+                {
+                    WetConditionMultipliers = ConditionMultipliers.CreateDefaultWet();
+                }
+
+                WetConditionMultipliers.WetFactorPercent = _wetFuelMultiplier.Value;
+            }
         }
 
         // --- Helper for String-to-Double/Int Conversion ---
@@ -479,6 +534,116 @@ namespace LaunchPlugin
         [JsonProperty] public string DisplayName { get => _displayName; set { if (_displayName != value) { _displayName = value; OnPropertyChanged(); } } }
         private string _key;
         [JsonProperty] public string Key { get => _key; set { if (_key != value) { _key = value; OnPropertyChanged(); } } }
+
+        private double? _fuelContingencyValue;
+        [JsonProperty("FuelContingencyValue", NullValueHandling = NullValueHandling.Ignore)]
+        private double? FuelContingencyValueStorage
+        {
+            get => _fuelContingencyValue;
+            set => _fuelContingencyValue = value;
+        }
+
+        [JsonIgnore]
+        public bool HasFuelContingencyValue => _fuelContingencyValue.HasValue;
+
+        [JsonIgnore]
+        public double FuelContingencyValue
+        {
+            get => _fuelContingencyValue ?? 1.5;
+            set
+            {
+                double normalized = Math.Round(value, 2);
+                if (!_fuelContingencyValue.HasValue || Math.Abs(_fuelContingencyValue.Value - normalized) > 0.0001)
+                {
+                    _fuelContingencyValue = normalized;
+                    OnPropertyChanged();
+                }
+            }
+        }
+
+        private bool? _isContingencyInLaps;
+        [JsonProperty("IsContingencyInLaps", NullValueHandling = NullValueHandling.Ignore)]
+        private bool? IsContingencyInLapsStorage
+        {
+            get => _isContingencyInLaps;
+            set => _isContingencyInLaps = value;
+        }
+
+        [JsonIgnore]
+        public bool HasContingencyMode => _isContingencyInLaps.HasValue;
+
+        [JsonIgnore]
+        public bool IsContingencyInLaps
+        {
+            get => _isContingencyInLaps ?? true;
+            set
+            {
+                if (_isContingencyInLaps != value)
+                {
+                    _isContingencyInLaps = value;
+                    OnPropertyChanged();
+                }
+            }
+        }
+
+        private double? _wetFuelMultiplier;
+        [JsonProperty("WetFuelMultiplier", NullValueHandling = NullValueHandling.Ignore)]
+        private double? WetFuelMultiplierStorage
+        {
+            get => _wetFuelMultiplier;
+            set => _wetFuelMultiplier = value;
+        }
+
+        [JsonIgnore]
+        public bool HasWetFuelMultiplier => _wetFuelMultiplier.HasValue;
+
+        [JsonIgnore]
+        public double WetFuelMultiplier
+        {
+            get => _wetFuelMultiplier ?? 90.0;
+            set
+            {
+                double normalized = Math.Round(value, 2);
+                if (!_wetFuelMultiplier.HasValue || Math.Abs(_wetFuelMultiplier.Value - normalized) > 0.0001)
+                {
+                    _wetFuelMultiplier = normalized;
+                    OnPropertyChanged();
+
+                    if (WetConditionMultipliers == null)
+                    {
+                        WetConditionMultipliers = ConditionMultipliers.CreateDefaultWet();
+                    }
+
+                    WetConditionMultipliers.WetFactorPercent = normalized;
+                }
+            }
+        }
+
+        private double? _racePaceDeltaSeconds;
+        [JsonProperty("RacePaceDeltaSeconds", NullValueHandling = NullValueHandling.Ignore)]
+        private double? RacePaceDeltaSecondsStorage
+        {
+            get => _racePaceDeltaSeconds;
+            set => _racePaceDeltaSeconds = value;
+        }
+
+        [JsonIgnore]
+        public bool HasRacePaceDeltaSeconds => _racePaceDeltaSeconds.HasValue;
+
+        [JsonIgnore]
+        public double RacePaceDeltaSeconds
+        {
+            get => _racePaceDeltaSeconds ?? 1.2;
+            set
+            {
+                double normalized = Math.Round(value, 2);
+                if (!_racePaceDeltaSeconds.HasValue || Math.Abs(_racePaceDeltaSeconds.Value - normalized) > 0.0001)
+                {
+                    _racePaceDeltaSeconds = normalized;
+                    OnPropertyChanged();
+                }
+            }
+        }
 
         private int? _bestLapMsDry;
         private string _bestLapMsDryText;

@@ -9,18 +9,16 @@ Branch: work
 - No Git remote is configured in this checkout (`git remote -v` returns empty).
 
 ## Documentation sync status (requested set)
-- `Docs/Plugin_UI_Tooltips.md` updated for the Profiles tab tidy-up (`CAR` / `LAUNCH` / `SHIFT` / `TRACKS`), the Launch Settings host move, the Dash Control regrouping, and the Global Settings cleanup.
-- `Docs/Project_Index.md` refreshed to surface `Plugin_UI_Tooltips.md` in the canonical docs list.
-- `Docs/RepoStatus.md` updated with the validation summary for this UI-only tidy-up.
+- `Docs/Plugin_UI_Tooltips.md` updated for the TRACKS planner ownership migration and wet-multiplier relocation in the Profiles UI.
+- `Docs/Project_Index.md` refreshed to note that `Plugin_UI_Tooltips.md` now covers the TRACKS tab's track-scoped planner inputs.
+- `Docs/RepoStatus.md` updated with the validation summary for the track-scoped planner migration.
 
 ## Delivery status highlights
-- Profiles UI sub-tabs now read `CAR`, `LAUNCH`, `SHIFT`, and `TRACKS`; the old `DASH` and `FUEL` tabs were removed.
-- Launch Settings now host only the moved `Launch Mode` binding and `Post-Launch Results Display Time` control from Dash Control; no wider Launch Settings tidy-up was introduced.
-- The `CAR` tab now contains the existing car-profile-backed refuel, base-tank, rejoin, overtake, spin, and pit-entry controls without changing their bindings or persistence scope.
-- The `TRACKS` tab now hosts the existing `Wet Fuel Multiplier`, `Race Pace Delta`, and contingency controls at the top of the workflow, but they still bind to the same existing car-profile properties as before.
-- Global Settings no longer shows the duplicated per-profile `USER VARIABLES` block; the remaining sections continue to cover true global settings only, with `Event Marker` now surfaced in the Debug area.
-- Dash Control now uses a narrower stacked layout with explicit `BINDINGS`, `GLOBAL DASH FUNCTIONS`, and `DASH VISIBILITY` sections while preserving the existing underlying bindings and visibility properties.
-- No persistence/schema/runtime behavior changed in this tidy-up: car-profile save/load, default-profile copy seeding, fuel planner/runtime math, launch behavior, shift behavior, pit-entry math, and telemetry behavior remain as before.
+- `TrackStats` now owns the TRACKS planner values for `Wet Fuel Multiplier`, `Race Pace Delta`, `Fuel Contingency Value`, and contingency mode, while the legacy `CarProfile` copies remain in place only as compatibility fallbacks for older JSON.
+- Existing profiles migrate lazily and safely: when a track is loaded or refreshed and one of the new track-scoped planner values is missing, the code seeds it from the legacy car-profile value (or the existing wet-condition multiplier for wet factor) and then saves the track record back out.
+- `FuelCalcs` now loads and saves those four planner inputs from the resolved `TrackStats` record instead of the selected car profile, while `PreRaceMode`, `TireChangeTime`, `RefuelRate`, `BaseTankLitres`, `Pit Entry Decel`, and `Pit Entry Buffer` remain in their existing scopes.
+- The `TRACKS` tab now uses a `Track Planning` group for contingency/mode and race pace delta, and moves `Wet Fuel Multiplier` into the `Wet vs Dry Avg Deltas` section near the wet-condition workflow.
+- No schema-breaking rewrite was introduced: older profile JSON still loads, untouched legacy car-level fields are still accepted, and track values converge naturally on first use/save.
 
 ## Notes
 - `Docs/Code_Snapshot.md` remains non-canonical orientation-only documentation.
