@@ -2639,7 +2639,7 @@ namespace LaunchPlugin
         trackRecord.FuelContingencyValue = this.ContingencyValue;
         trackRecord.IsContingencyInLaps = this.IsContingencyInLaps;
         trackRecord.WetFuelMultiplier = this.WetFactorPercent;
-        trackRecord.RacePaceDeltaSeconds = this.LeaderDeltaSeconds;
+        trackRecord.RacePaceDeltaSeconds = GetPersistedRacePaceDeltaSeconds();
 
         // 7) Persist + refresh dependent UI
         _plugin.ProfilesViewModel.SaveProfiles();
@@ -3948,6 +3948,11 @@ namespace LaunchPlugin
         {
             UpdateEffectiveLeaderDelta();
         }
+    }
+
+    private double GetPersistedRacePaceDeltaSeconds()
+    {
+        return IsLeaderDeltaManual ? _manualLeaderDeltaSeconds : _storedLeaderDeltaSeconds;
     }
 
     public void ForceProfileDataReload()

@@ -1,6 +1,6 @@
 # Fuel Planner Tab
 
-Validated against commit: f379358  
+Validated against commit: dd49555  
 Last updated: 2026-01-27  
 Branch: work
 
@@ -98,6 +98,7 @@ The planner tracks *what source is currently active* for each input:
 ### Race pace delta behaviour
 - Each track stores a **default** race-pace delta used when no live leader delta is available.
 - Loading a track does **not** force manual leader-delta mode.
+- Planner saves persist the stored/default pace delta (or an explicit manual override), not the transient live leader-gap value.
 - Live leader-delta telemetry remains authoritative whenever it is available unless the driver explicitly edits the pace-delta control, which is the only path that sets manual override mode.
 
 ### Track-condition handling (dry vs wet)

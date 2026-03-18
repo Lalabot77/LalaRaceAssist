@@ -329,7 +329,10 @@ namespace LaunchPlugin
                     DryConditionMultipliers = ConditionMultipliers.CreateDefaultDry(),
                     WetConditionMultipliers = ConditionMultipliers.CreateDefaultWet()
                 };
-                ApplyPlannerDefaultsToTrack(newRecord, templateTrack);
+                if (!HasLegacyTrackPlannerSettings || templateTrack != null)
+                {
+                    ApplyPlannerDefaultsToTrack(newRecord, templateTrack);
+                }
                 TrackStats[canonicalKey] = newRecord;
                 return newRecord;
             }

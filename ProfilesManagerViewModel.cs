@@ -471,9 +471,20 @@ namespace LaunchPlugin
 
         private bool EnsureTrackPlannerSettings(CarProfile profile)
         {
-            if (profile?.TrackStats == null) return false;
+            if (profile == null) return false;
 
             bool changed = false;
+            if (profile.HasLegacyTrackPlannerSettings)
+            {
+                var defaultTrack = profile.EnsureTrack("default", "Default");
+                if (profile.EnsureTrackPlannerSettings(defaultTrack))
+                {
+                    changed = true;
+                }
+            }
+
+            if (profile.TrackStats == null) return changed;
+
             foreach (var track in profile.TrackStats.Values)
             {
                 if (profile.EnsureTrackPlannerSettings(track))
@@ -1450,9 +1461,12 @@ namespace LaunchPlugin
 
             if (source?.TrackStats == null || source.TrackStats.Count == 0)
             {
+                destination.TrackStats = new Dictionary<string, TrackStats>(StringComparer.OrdinalIgnoreCase);
                 destination.EnsureTrack("Default", "Default");
                 return;
             }
+
+            destination.TrackStats = new Dictionary<string, TrackStats>(StringComparer.OrdinalIgnoreCase);
 
             foreach (var sourceTrack in source.TrackStats.Values)
             {
