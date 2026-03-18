@@ -3823,6 +3823,7 @@ namespace LaunchPlugin
         private PitEngine _pit;
         private OpponentsEngine _opponentsEngine;
         private CarSAEngine _carSaEngine;
+        private H2HEngine _h2hEngine;
         private readonly RadioFrequencyNameCache _radioFrequencyNameCache = new RadioFrequencyNameCache();
         private int _lastTransmitCarIdx = -1;
         private int _lastTransmitRadioIdx = -1;
@@ -4155,6 +4156,63 @@ namespace LaunchPlugin
             if (SimhubPublish.VERBOSE) this.AttachDelegate(name, getter);
         }
 
+        private void AttachH2HExports()
+        {
+            AttachH2HFamilyExports("H2HRace", () => _h2hEngine?.Outputs?.Race);
+            AttachH2HFamilyExports("H2HTrack", () => _h2hEngine?.Outputs?.Track);
+        }
+
+        private void AttachH2HFamilyExports(string prefix, Func<H2HEngine.H2HFamilyOutput> familyGetter)
+        {
+            if (string.IsNullOrWhiteSpace(prefix) || familyGetter == null)
+            {
+                return;
+            }
+
+            AttachCore(prefix + ".Player.LastLapSec", () => familyGetter()?.Player.LastLapSec ?? 0.0);
+            AttachCore(prefix + ".Player.BestLapSec", () => familyGetter()?.Player.BestLapSec ?? 0.0);
+            AttachCore(prefix + ".Player.LastLapDeltaToBestSec", () => familyGetter()?.Player.LastLapDeltaToBestSec ?? 0.0);
+            AttachCore(prefix + ".Player.LiveDeltaToBestSec", () => familyGetter()?.Player.LiveDeltaToBestSec ?? 0.0);
+            AttachCore(prefix + ".Player.ActiveSegment", () => familyGetter()?.Player.ActiveSegment ?? 0);
+            AttachCore(prefix + ".Player.LapRef", () => familyGetter()?.Player.LapRef ?? 0);
+
+            AttachH2HTargetExports(prefix, "Ahead", () => familyGetter()?.Ahead);
+            AttachH2HTargetExports(prefix, "Behind", () => familyGetter()?.Behind);
+        }
+
+        private void AttachH2HTargetExports(string prefix, string side, Func<H2HEngine.H2HParticipantOutput> participantGetter)
+        {
+            if (string.IsNullOrWhiteSpace(prefix) || string.IsNullOrWhiteSpace(side) || participantGetter == null)
+            {
+                return;
+            }
+
+            string baseName = prefix + "." + side;
+            AttachCore(baseName + ".Valid", () => participantGetter()?.Valid ?? false);
+            AttachCore(baseName + ".CarIdx", () => participantGetter()?.CarIdx ?? -1);
+            AttachCore(baseName + ".IdentityKey", () => participantGetter()?.IdentityKey ?? string.Empty);
+            AttachCore(baseName + ".Name", () => participantGetter()?.Name ?? string.Empty);
+            AttachCore(baseName + ".CarNumber", () => participantGetter()?.CarNumber ?? string.Empty);
+            AttachCore(baseName + ".ClassColor", () => participantGetter()?.ClassColor ?? string.Empty);
+            AttachCore(baseName + ".PositionInClass", () => participantGetter()?.PositionInClass ?? 0);
+            AttachCore(baseName + ".LastLapSec", () => participantGetter()?.LastLapSec ?? 0.0);
+            AttachCore(baseName + ".BestLapSec", () => participantGetter()?.BestLapSec ?? 0.0);
+            AttachCore(baseName + ".LastLapDeltaToBestSec", () => participantGetter()?.LastLapDeltaToBestSec ?? 0.0);
+            AttachCore(baseName + ".LiveDeltaToBestSec", () => participantGetter()?.LiveDeltaToBestSec ?? 0.0);
+            AttachCore(baseName + ".LastLapDeltaToPlayerSec", () => participantGetter()?.LastLapDeltaToPlayerSec ?? 0.0);
+            AttachCore(baseName + ".LiveGapSec", () => participantGetter()?.LiveGapSec ?? 0.0);
+            AttachCore(baseName + ".ActiveSegment", () => participantGetter()?.ActiveSegment ?? 0);
+            AttachCore(baseName + ".LapRef", () => participantGetter()?.LapRef ?? 0);
+
+            for (int i = 0; i < H2HEngine.SegmentCount; i++)
+            {
+                int segmentIndex = i;
+                string segmentLabel = "S" + (i + 1).ToString(CultureInfo.InvariantCulture);
+                AttachCore(baseName + "." + segmentLabel + "DeltaSec", () => participantGetter() != null ? participantGetter().GetSegmentDeltaSec(segmentIndex) : 0.0);
+                AttachCore(baseName + "." + segmentLabel + "State", () => participantGetter() != null ? participantGetter().GetSegmentState(segmentIndex) : 0);
+            }
+        }
+
         private bool HardDebugEnabled => HARD_DEBUG_ENABLED;
         private bool SoftDebugEnabled => HardDebugEnabled && (Settings?.EnableSoftDebug == true);
         private bool IsDebugOnForLogic => SoftDebugEnabled;
@@ -4316,6 +4374,7 @@ namespace LaunchPlugin
             _telemetryTraceLogger = new TelemetryTraceLogger(this);
             _opponentsEngine = new OpponentsEngine();
             _carSaEngine = new CarSAEngine();
+            _h2hEngine = new H2HEngine();
             ResetCarSaLapTimeUpdateState();
             ResetCarSaIdentityState();
 
@@ -4925,6 +4984,8 @@ namespace LaunchPlugin
             AttachCore("PitExit.Behind.CarNumber", () => _opponentsEngine?.Outputs.PitExit.BehindCarNumber ?? string.Empty);
             AttachCore("PitExit.Behind.ClassColor", () => _opponentsEngine?.Outputs.PitExit.BehindClassColor ?? string.Empty);
             AttachCore("PitExit.Behind.GapSec", () => _opponentsEngine?.Outputs.PitExit.BehindGapSec ?? 0.0);
+
+            AttachH2HExports();
 
             AttachCore("Radio.TransmitShortName", () => _radioTransmitShortName ?? string.Empty);
             AttachCore("Radio.TransmitFullName", () => _radioTransmitFullName ?? string.Empty);
@@ -5642,6 +5703,7 @@ namespace LaunchPlugin
             _lastPitWindowLabel = string.Empty;
             _lastPitWindowLogUtc = DateTime.MinValue;
             _opponentsEngine?.Reset();
+            _h2hEngine?.Reset();
         }
 
         private void ResetCoreLaunchMetrics()
@@ -5958,6 +6020,7 @@ namespace LaunchPlugin
                 _pit?.ResetPitPhaseState();
                 _opponentsEngine?.Reset();
                 _carSaEngine?.Reset();
+                _h2hEngine?.Reset();
                 _radioFrequencyNameCache.Reset();
                 ResetTransmitState();
                 ResetCarSaIdentityState();
@@ -6235,6 +6298,32 @@ namespace LaunchPlugin
                 UpdateCarSaSlotTelemetry(pluginManager, _carSaEngine.Outputs.AheadSlots, carIdxLapDistPct, sessionTimeSec);
                 UpdateCarSaSlotTelemetry(pluginManager, _carSaEngine.Outputs.BehindSlots, carIdxLapDistPct, sessionTimeSec);
                 UpdateCarSaPlayerTelemetry(pluginManager, playerCarIdx, sessionTimeSec);
+                if (_h2hEngine != null)
+                {
+                    var previousRaceAhead = _h2hEngine.Outputs?.Race?.Ahead;
+                    var previousRaceBehind = _h2hEngine.Outputs?.Race?.Behind;
+                    var raceAheadSelector = BuildH2HRaceSelector(pluginManager, _opponentsEngine?.Outputs?.Ahead1, previousRaceAhead);
+                    var raceBehindSelector = BuildH2HRaceSelector(pluginManager, _opponentsEngine?.Outputs?.Behind1, previousRaceBehind);
+
+                    string playerTrackClassColor = _carSaEngine?.Outputs?.PlayerSlot?.ClassColor ?? string.Empty;
+                    var trackAheadSelector = BuildH2HTrackSelector(_carSaEngine.Outputs.AheadSlots, playerTrackClassColor);
+                    var trackBehindSelector = BuildH2HTrackSelector(_carSaEngine.Outputs.BehindSlots, playerTrackClassColor);
+
+                    _h2hEngine.Update(
+                        sessionTimeSec,
+                        playerCarIdx,
+                        carIdxLapDistPct,
+                        carIdxLap,
+                        playerBestLapTimeSec,
+                        playerLastLapTimeSec,
+                        _carSaBestLapTimeSecByIdx,
+                        _carSaLastLapTimeSecByIdx,
+                        _carSaClassPositionByIdx,
+                        raceAheadSelector,
+                        raceBehindSelector,
+                        trackAheadSelector,
+                        trackBehindSelector);
+                }
                 if (_friendsDirty)
                 {
                     RefreshFriendUserIds();
@@ -10095,6 +10184,202 @@ namespace LaunchPlugin
                 delta = LiveDeltaClampSec;
             }
             return delta;
+        }
+
+        private H2HEngine.TargetSelector BuildH2HTrackSelector(CarSASlot[] slots, string playerClassColor)
+        {
+            string normalizedPlayerClassColor = NormalizeClassColorHex(playerClassColor);
+            if (slots == null || slots.Length == 0 || string.IsNullOrWhiteSpace(normalizedPlayerClassColor))
+            {
+                return default(H2HEngine.TargetSelector);
+            }
+
+            for (int i = 0; i < slots.Length; i++)
+            {
+                CarSASlot slot = slots[i];
+                if (slot == null || !slot.IsValid || slot.CarIdx < 0)
+                {
+                    continue;
+                }
+
+                if (!string.Equals(NormalizeClassColorHex(slot.ClassColor), normalizedPlayerClassColor, StringComparison.Ordinal))
+                {
+                    continue;
+                }
+
+                return new H2HEngine.TargetSelector
+                {
+                    CarIdx = slot.CarIdx,
+                    IdentityKey = MakeH2HIdentityKey(slot.ClassColor, slot.CarNumber),
+                    Name = slot.Name ?? string.Empty,
+                    CarNumber = slot.CarNumber ?? string.Empty,
+                    ClassColor = slot.ClassColor ?? string.Empty,
+                    PositionInClass = slot.PositionInClass > 0 ? slot.PositionInClass : 0
+                };
+            }
+
+            return default(H2HEngine.TargetSelector);
+        }
+
+        private H2HEngine.TargetSelector BuildH2HRaceSelector(PluginManager pluginManager, OpponentsEngine.OpponentTargetOutput current, H2HEngine.H2HParticipantOutput previousOutput)
+        {
+            string identityKey = MakeH2HIdentityKey(current?.ClassColor, current?.CarNumber);
+            string name = current?.Name ?? string.Empty;
+            string carNumber = current?.CarNumber ?? string.Empty;
+            string classColor = current?.ClassColor ?? string.Empty;
+            int positionInClass = 0;
+            bool sameIdentityAsPrevious = previousOutput != null
+                && !string.IsNullOrWhiteSpace(previousOutput.IdentityKey)
+                && string.Equals(previousOutput.IdentityKey, identityKey, StringComparison.Ordinal);
+
+            if (string.IsNullOrWhiteSpace(identityKey))
+            {
+                return default(H2HEngine.TargetSelector);
+            }
+
+            if (string.IsNullOrWhiteSpace(name) && previousOutput != null && string.Equals(previousOutput.IdentityKey, identityKey, StringComparison.Ordinal))
+            {
+                name = previousOutput.Name ?? string.Empty;
+            }
+
+            if (string.IsNullOrWhiteSpace(carNumber) && previousOutput != null && string.Equals(previousOutput.IdentityKey, identityKey, StringComparison.Ordinal))
+            {
+                carNumber = previousOutput.CarNumber ?? string.Empty;
+            }
+
+            if (string.IsNullOrWhiteSpace(classColor) && previousOutput != null && string.Equals(previousOutput.IdentityKey, identityKey, StringComparison.Ordinal))
+            {
+                classColor = previousOutput.ClassColor ?? string.Empty;
+            }
+
+            if (positionInClass <= 0 && previousOutput != null && string.Equals(previousOutput.IdentityKey, identityKey, StringComparison.Ordinal))
+            {
+                positionInClass = previousOutput.PositionInClass;
+            }
+
+            int carIdx = -1;
+            if (TryResolveCarIdxByIdentityKey(pluginManager, identityKey, out int resolvedCarIdx))
+            {
+                carIdx = resolvedCarIdx;
+                if (carIdx >= 0 && carIdx < _carSaClassPositionByIdx.Length && _carSaClassPositionByIdx[carIdx] > 0)
+                {
+                    positionInClass = _carSaClassPositionByIdx[carIdx];
+                }
+            }
+            else if (sameIdentityAsPrevious && previousOutput != null && previousOutput.CarIdx >= 0)
+            {
+                carIdx = previousOutput.CarIdx;
+            }
+
+            return new H2HEngine.TargetSelector
+            {
+                CarIdx = carIdx,
+                IdentityKey = identityKey,
+                Name = name,
+                CarNumber = carNumber,
+                ClassColor = classColor,
+                PositionInClass = positionInClass > 0 ? positionInClass : 0
+            };
+        }
+
+        private bool TryResolveCarIdxByIdentityKey(PluginManager pluginManager, string identityKey, out int carIdx)
+        {
+            carIdx = -1;
+            if (pluginManager == null || string.IsNullOrWhiteSpace(identityKey))
+            {
+                return false;
+            }
+
+            string[] parts = identityKey.Split(new[] { ':' }, 2);
+            if (parts.Length != 2)
+            {
+                return false;
+            }
+
+            string classColor = parts[0];
+            string carNumber = parts[1];
+            string requestedKey = MakeH2HIdentityKey(classColor, carNumber);
+            if (string.IsNullOrWhiteSpace(requestedKey))
+            {
+                return false;
+            }
+
+            if (TryResolveCarIdxByIdentityFromDriversTable(pluginManager, requestedKey, out carIdx))
+            {
+                return true;
+            }
+
+            return TryResolveCarIdxByIdentityFromCompetingDrivers(pluginManager, requestedKey, out carIdx);
+        }
+
+        private bool TryResolveCarIdxByIdentityFromDriversTable(PluginManager pluginManager, string requestedKey, out int carIdx)
+        {
+            carIdx = -1;
+            for (int i = 1; i <= 64; i++)
+            {
+                string basePath = $"DataCorePlugin.GameRawData.SessionData.DriverInfo.Drivers{i:00}";
+                int candidateCarIdx = GetInt(pluginManager, $"{basePath}.CarIdx", int.MinValue);
+                if (candidateCarIdx == int.MinValue)
+                {
+                    continue;
+                }
+
+                string candidateCarNumber = GetString(pluginManager, $"{basePath}.CarNumber") ?? string.Empty;
+                if (string.IsNullOrWhiteSpace(candidateCarNumber))
+                {
+                    int numberRaw = GetInt(pluginManager, $"{basePath}.CarNumberRaw", int.MinValue);
+                    if (numberRaw != int.MinValue)
+                    {
+                        candidateCarNumber = numberRaw.ToString(CultureInfo.InvariantCulture);
+                    }
+                }
+
+                string candidateClassColor = GetCarClassColorHex(pluginManager, $"{basePath}.CarClassColor");
+                string candidateKey = MakeH2HIdentityKey(candidateClassColor, candidateCarNumber);
+                if (string.Equals(candidateKey, requestedKey, StringComparison.OrdinalIgnoreCase))
+                {
+                    carIdx = candidateCarIdx;
+                    return true;
+                }
+            }
+
+            return false;
+        }
+
+        private bool TryResolveCarIdxByIdentityFromCompetingDrivers(PluginManager pluginManager, string requestedKey, out int carIdx)
+        {
+            carIdx = -1;
+            for (int i = 0; i < 64; i++)
+            {
+                string basePath = $"DataCorePlugin.GameRawData.SessionData.DriverInfo.CompetingDrivers[{i}]";
+                int candidateCarIdx = GetInt(pluginManager, $"{basePath}.CarIdx", int.MinValue);
+                if (candidateCarIdx == int.MinValue)
+                {
+                    break;
+                }
+
+                string candidateCarNumber = GetString(pluginManager, $"{basePath}.CarNumber") ?? string.Empty;
+                string candidateClassColor = GetCarClassColorHex(pluginManager, $"{basePath}.CarClassColor");
+                string candidateKey = MakeH2HIdentityKey(candidateClassColor, candidateCarNumber);
+                if (string.Equals(candidateKey, requestedKey, StringComparison.OrdinalIgnoreCase))
+                {
+                    carIdx = candidateCarIdx;
+                    return true;
+                }
+            }
+
+            return false;
+        }
+
+        private string MakeH2HIdentityKey(string classColor, string carNumber)
+        {
+            string normalizedClassColor = NormalizeClassColorHex(classColor);
+            if (string.IsNullOrWhiteSpace(normalizedClassColor))
+            {
+                normalizedClassColor = classColor ?? string.Empty;
+            }
+
+            return OpponentsEngine.MakeIdentityKey(normalizedClassColor, carNumber ?? string.Empty);
         }
 
         private static bool IsValidCarSaLapTimeSec(double value)
