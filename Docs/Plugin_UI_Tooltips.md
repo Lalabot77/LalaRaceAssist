@@ -1,4 +1,4 @@
-# Plugin UI Tooltips
+﻿# Plugin UI Tooltips
 
 Validated against commit: HEAD
 Last updated: 2026-03-18
@@ -15,53 +15,12 @@ Branch: work
 - L40: Close without copying.
 
 ## DashesTabView.xaml
-- L24: Assign a button to cancel the current popup message.
-- L25: Assign a button to show or hide the pit screen popup.
-- L27: Manual prime/abort launch mode (useful for testing and non-standing-start sessions).
-- L31: Assign a button to cycle primary dash modes (main screen views).
-- L32: Assign a button to cycle declutter mode (0/1/2) for dash visibility bindings.
-- L33: Assign a button to cycle LalaLaunch Dark Mode mode (Off → Manual → Auto). Warning: don’t bind this to the same button as Lovely’s True Dark toggle. If ‘Use Lovely True Dark’ is enabled and Lovely is available, LalaLaunch toggle is ignored.
-- L34: Assign a button to fire a short event marker pulse for dashboards and CSV exports.
-- L48: Automatically switch dash screens when a session starts based on context.
-- L51: Select Dark Mode behavior: Off, Manual, or Auto.
-- L52: 0=Off (forced off), 1=Manual, 2=Auto solar dimming.
-- L59: Base Dark Mode brightness percent (0-100). 100 is brightest.
-- L63: When Lovely is available, Dark Mode active state can follow Lovely True Dark.
-- L69: How long the post-launch results screen stays visible (sec).
-- L71: Minimum confidence (%) before pit strategy uses live fuel. Below this, profile estimates may be used.
-- L79: Reserve fuel as a percentage of one lap (based on stable fuel burn) when calculating stint burn targets.
-- L107: Enable the Launch screen for this dash type.
-- L109: Show the Launch screen on the Main Dash.
-- L111: Show the Launch screen on the Message Dash.
-- L113: Show the Launch screen on the Overlay.
-- L116: Enable the Pit Limiter screen for this dash type.
-- L118: Show the Pit Limiter screen on the Main Dash.
-- L120: Show the Pit Limiter screen on the Message Dash.
-- L122: Show the Pit Limiter screen on the Overlay.
-- L125: Enable the automatic pit screen for this dash type.
-- L127: Show the automatic pit screen on the Main Dash.
-- L129: Show the automatic pit screen on the Message Dash.
-- L131: Show the automatic pit screen on the Overlay.
-- L134: Enable track rejoin assist for this dash type.
-- L136: Show track rejoin assist on the Main Dash.
-- L138: Show track rejoin assist on the Message Dash.
-- L140: Show track rejoin assist on the Overlay.
-- L143: Enable detailed race messages for this dash type.
-- L145: Show verbose race messages on the Main Dash.
-- L147: Show verbose race messages on the Message Dash.
-- L149: Show verbose race messages on the Overlay.
-- L152: Enable race flag notifications for this dash type.
-- L154: Show race flags on the Main Dash.
-- L156: Show race flags on the Message Dash.
-- L158: Show race flags on the Overlay.
-- L161: Enable radio message popups for this dash type.
-- L163: Show radio messages on the Main Dash.
-- L165: Show radio messages on the Message Dash.
-- L167: Show radio messages on the Overlay.
-- L170: Enable traffic alert warnings for this dash type.
-- L172: Show traffic alerts on the Main Dash.
-- L174: Show traffic alerts on the Message Dash.
-- L176: Show traffic alerts on the Overlay.
+- BINDINGS section: contains only the true dash bindings for `Cancel Msg Button`, `Toggle Pit Screen Popup`, `Change Primary Dash Mode`, and `Cycle Declutter Mode`.
+- GLOBAL DASH FUNCTIONS -> General: `Auto screen selection at session start` automatically switches dash screens when a session starts based on context.
+- GLOBAL DASH FUNCTIONS -> Dark Mode: `Dark Mode` selector uses Off / Manual / Auto, `Dark Mode Brightness` sets base brightness, `Use Lovely True Dark` follows Lovely when available, and `Toggle Dark Mode` remains here as the dark-mode-specific binding row.
+- GLOBAL DASH FUNCTIONS -> Fuel: `Fuel Ready Confidence` sets the live-fuel readiness threshold and `Pit-in Fuel Reserve` sets the stint reserve margin.
+- DASH VISIBILITY section: keeps the existing main/message/overlay visibility matrix for Launch Assist, Pit Assists, Automatic Pit Screen, Rejoin Assist, Verbose Race Messages, Race Flags, Radio Messages, and Traffic Alerts.
+- `Launch Mode`, `Event Marker`, and `Post-Launch Results Display Time` no longer appear in Dash Control after this tidy-up.
 
 ## FuelCalculatorView.xaml
 - L114: Inputs used to calculate the pre-race fuel plan.
@@ -147,6 +106,9 @@ Branch: work
 - L42: Allowed deviation (±%) around the bite point target.
 - L43: If the engine RPM drops below this percentage of the initial Launch RPM, the run will be flagged as 'Bogged'.
 - L44: Sets the sensitivity for detecting game-assisted anti-stall. % is delta between paddle and in game clutch.
+- LAUNCH UI / BINDINGS section: hosts only the moved `Launch Mode` binding and `Post-Launch Results Display Time` slider from Dash Control; no wider Launch Settings tidy-up was introduced.
+- L26-L27 of the moved block: `Launch Mode` manually primes/aborts launch mode for testing and non-standing-start sessions.
+- L32-L37 of the moved block: `Post-Launch Results Display Time` controls how long the results screen stays visible after a launch.
 - L51: Location for the one-line launch summary CSV. Leave blank to use the default path shown.
 - L66: Enable or disable writing the one-line summary of each launch.
 - L70: Custom path for the summary CSV. Leave blank to use the default path.
@@ -240,5 +202,6 @@ Branch: work
 - `ProfilesManagerView.xaml` L522: `Learning mode` tooltip explains shift-point data mining and learning-overlay visibility.
 - `ProfilesManagerView.xaml` L751-L768: custom WAV controls include the existing path/browse affordance while some adjacent labels remain tooltip-free.
 - `GlobalSettingsView.xaml` no longer contains the duplicated per-profile `USER VARIABLES` block; true global sections now begin with `DRIVER TAGS`.
-- `GlobalSettingsView.xaml` L154-L158: `Shift Assist Debug CSV` tooltip explains per-tick diagnostic CSV logging.
-- `GlobalSettingsView.xaml` L158-L162: `Shift Assist Debug Max Hz` textbox tooltip documents valid range (1..60 Hz).
+- `GlobalSettingsView.xaml` DEBUG section continues to host the existing debug toggles and now also hosts the moved `Event Marker` binding under `Debug Actions`.
+- `GlobalSettingsView.xaml` `Shift Assist Debug CSV` tooltip explains per-tick diagnostic CSV logging.
+- `GlobalSettingsView.xaml` `Shift Assist Debug Max Hz` textbox tooltip documents valid range (1..60 Hz).

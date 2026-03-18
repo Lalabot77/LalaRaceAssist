@@ -45,6 +45,20 @@
                 </StackPanel>
             </styles:SHSection>
 
+            <styles:SHSection Title="LAUNCH UI / BINDINGS" ShowSeparator="True">
+                <StackPanel>
+                    <ui:ControlsEditor ActionName="LalaLaunch.LaunchMode"
+                                       FriendlyName="Launch Mode"
+                                       ToolTip="Manual prime/abort launch mode (useful for testing and non-standing-start sessions)." />
+                    <ui:TitledSlider Title="Post-Launch Results Display Time: "
+                                     Margin="0,10,0,0"
+                                     Minimum="0"
+                                     Maximum="30"
+                                     Value="{Binding Settings.ResultsDisplayTime, Mode=TwoWay}"
+                                     ToolTip="How long the post-launch results screen stays visible (sec)."/>
+                </StackPanel>
+            </styles:SHSection>
+
             <styles:SHSection Title="TELEMETRY LOGGING SETTINGS" ShowSeparator="True">
                 <StackPanel>
                     <TextBlock Margin="0,5,0,2" Foreground="LightGray"
