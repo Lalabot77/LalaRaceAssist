@@ -1,4 +1,4 @@
-<UserControl x:Class="LaunchPlugin.GlobalSettingsView"
+﻿<UserControl x:Class="LaunchPlugin.GlobalSettingsView"
              xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
@@ -161,6 +161,10 @@
                                      IsEnabled="{Binding ElementName=ShiftAssistDebugCsvToggle, Path=IsChecked}"
                                      ToolTip="Allowed range: 1 to 60 Hz."/>
                         </StackPanel>
+                        <TextBlock Text="Debug Actions" FontWeight="SemiBold" Margin="0,14,0,6"/>
+                        <ui:ControlsEditor ActionName="LalaLaunch.EventMarker"
+                                           FriendlyName="Event Marker"
+                                           ToolTip="Assign a button to fire a short event marker pulse for dashboards and CSV exports."/>
                     </StackPanel>
                 </Expander>
             </StackPanel>
