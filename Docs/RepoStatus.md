@@ -1,6 +1,6 @@
 ﻿# Repository status
 
-Validated against commit: HEAD
+Validated against commit: dd49555
 Last updated: 2026-03-18
 Branch: work
 
@@ -17,6 +17,21 @@ Branch: work
 - `H2HTrack.*` now scans CarSA ahead/behind slots and binds only to the nearest valid same-class local target instead of blindly consuming raw slot 01.
 - `H2HRace.*` no longer revives a stale previous identity when Opponents intentionally clears race outputs; it only preserves the previous binding for temporary same-identity reverse-resolution misses.
 - No plugin UI/settings were added, no export names changed, no debug CSV logging was introduced, and CarSA/Opponents ownership boundaries were preserved.
+- `Docs/Plugin_UI_Tooltips.md` updated for the final TRACKS planner ownership model and wet-multiplier relocation in the Profiles UI.
+- `Docs/Project_Index.md` refreshed to keep the TRACKS tab planner documentation discoverable from the canonical doc entry points.
+- `Docs/Subsystems/Fuel_Planner_Tab.md` updated to describe the final track-scoped planner persistence and stored-vs-live race-pace delta behaviour.
+- `Docs/RepoStatus.md` updated with the validation summary for the final track-planning cleanup.
+
+## Delivery status highlights
+- `TrackStats` now owns the TRACKS planner values for `Wet Fuel Multiplier`, `Race Pace Delta`, `Fuel Contingency Value`, and contingency mode as the single active ownership model.
+- Legacy car-level planner JSON keys are now treated as one-time migration inputs only; load-time migration seeds missing track values once, clears the legacy values, and no longer keeps mixed ownership paths alive.
+- Profiles with only legacy planner keys now seed their `Default` track template before those legacy values are cleared, so first-time creation of later track records still inherits the migrated planner defaults instead of generic fallbacks.
+- Wet-factor migration now prefers the true legacy planner wet multiplier before any default-generated wet-condition multiplier, so customised old planner values are not overwritten by a synthetic `90%` default.
+- `FuelCalcs` now loads and saves those four planner inputs from the resolved `TrackStats` record instead of the selected car profile, while `PreRaceMode`, `TireChangeTime`, `RefuelRate`, `BaseTankLitres`, `Pit Entry Decel`, and `Pit Entry Buffer` remain in their existing scopes.
+- Loading stored per-track `Race Pace Delta` now populates the track default without forcing manual leader-delta mode, and planner saves persist the stored/manual default value rather than transient live leader-gap telemetry.
+- The `TRACKS` tab now uses a `Track Planning` group for contingency/mode and race pace delta, and moves `Wet Fuel Multiplier` into the `Wet vs Dry Avg Deltas` section near the wet-condition workflow.
+- Save chatter was reduced by removing selection-time migration saves and by only saving when a real migration/default mutation occurs.
+- Profile copy/overwrite now rebuilds destination track-planner records from the source set so destination-only stale planner tracks do not survive an overwrite.
 
 ## Notes
 - `Docs/Code_Snapshot.md` remains non-canonical orientation-only documentation.

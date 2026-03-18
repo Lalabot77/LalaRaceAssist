@@ -1,6 +1,6 @@
 ﻿# Project Index
 
-Validated against commit: HEAD
+Validated against commit: f379358
 Last updated: 2026-03-18
 Branch: work
 
@@ -21,7 +21,7 @@ LalaLaunchPlugin is a SimHub plugin for iRacing that provides launch instrumenta
 - [CODEX_CONTRACT.txt](CODEX_CONTRACT.txt) - mandatory Codex/global engineering policy.
 - [Architecture_Guardrails.md](Architecture_Guardrails.md) - practical architecture boundaries and subsystem ownership guidance.
 - [CODEX_TASK_TEMPLATE.txt](CODEX_TASK_TEMPLATE.txt) - reusable task skeleton for analysis-first Codex work.
-- [Plugin_UI_Tooltips.md](Plugin_UI_Tooltips.md) - current tooltip inventory and UI navigation notes for plugin tabs and controls, including the Profiles/Dash/Global tidy-up layout.
+- [Plugin_UI_Tooltips.md](Plugin_UI_Tooltips.md) - current tooltip inventory and UI navigation notes for plugin tabs and controls, including the Profiles/Dash/Global tidy-up layout and the TRACKS tab's track-scoped planner inputs.
 - [SimHubParameterInventory.md](SimHubParameterInventory.md) - canonical SimHub export contract.
 - [SimHubLogMessages.md](SimHubLogMessages.md) - canonical Info/Warn/Error log catalogue.
 - [Subsystems/Shift_Assist.md](Subsystems/Shift_Assist.md) - Shift Assist purpose, inputs/state, outputs, and validation checklist.
@@ -52,6 +52,6 @@ LalaLaunchPlugin is a SimHub plugin for iRacing that provides launch instrumenta
 | Dash integration | Main/message/overlay visibility, screen state exports, and global dark-mode controls (`LalaLaunch.Dash.DarkMode.*`) | [Subsystems/Dash_Integration.md](Subsystems/Dash_Integration.md) |
 
 ## Freshness
-- Validated against commit: HEAD
+- Validated against commit: f379358
 - Date: 2026-03-18
 - Branch: work

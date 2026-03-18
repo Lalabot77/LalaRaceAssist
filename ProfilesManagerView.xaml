@@ -793,15 +793,13 @@
 
                         <ScrollViewer Grid.Column="2" VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled">
                             <StackPanel DataContext="{Binding SelectedTrack}" Grid.IsSharedSizeScope="True" IsEnabled="{Binding DataContext.IsTrackSelected, RelativeSource={RelativeSource AncestorType=UserControl}}">
-                                <GroupBox Header="Planning Defaults" Margin="0,0,0,10"
-                                          ToolTip="Car-profile planning defaults shown here for track workflow, while continuing to save to the selected car profile.">
-                                    <StackPanel Margin="8,6,8,8" DataContext="{Binding DataContext.SelectedProfile, RelativeSource={RelativeSource AncestorType=UserControl}}">
+                                <GroupBox Header="Track Planning" Margin="0,0,0,10"
+                                          ToolTip="Track-scoped planner settings saved with this track record.">
+                                    <StackPanel Margin="8,6,8,8">
                                         <ui:TitledSlider Title="Contingency Laps/Litres" Minimum="0" Maximum="10" Value="{Binding FuelContingencyValue, Mode=TwoWay}"
-                                                         ToolTip="Default contingency amount added to fuel plans." />
+                                                         ToolTip="Track-scoped contingency amount added to fuel plans." />
                                         <styles:SHToggleCheckbox Content="Contingency is in Laps (otherwise Litres)" IsChecked="{Binding IsContingencyInLaps, Mode=TwoWay}" Margin="5,10,0,0"
-                                                                 ToolTip="Toggle whether the contingency value represents laps or litres."/>
-                                        <ui:TitledSlider Title="Wet Fuel Multiplier (%)" Minimum="70" Maximum="130" Value="{Binding WetFuelMultiplier, Mode=TwoWay}" Margin="0,15,0,0"
-                                                         ToolTip="Fuel burn multiplier for wet conditions (%)."/>
+                                                                 ToolTip="Track-scoped contingency mode: laps when checked, litres when unchecked."/>
 
                                         <Grid Margin="0,15,0,0">
                                             <Grid.RowDefinitions>
@@ -815,7 +813,7 @@
                                                     <ColumnDefinition Width="Auto" />
                                                 </Grid.ColumnDefinitions>
                                                 <Slider Grid.Column="0" VerticalAlignment="Center" Value="{Binding RacePaceDeltaSeconds, Mode=TwoWay}" Minimum="0" Maximum="5" SmallChange="0.1" TickFrequency="0.1" IsSnapToTickEnabled="True"
-                                                        ToolTip="Adjust the race pace delta used for planning (sec)."/>
+                                                        ToolTip="Track-scoped pace delta used for planning (sec)."/>
                                                 <TextBlock Grid.Column="1" Text="{Binding RacePaceDeltaSeconds, StringFormat=N1}" VerticalAlignment="Center" Margin="10,0,0,0" MinWidth="35" TextAlignment="Right"/>
                                             </Grid>
                                         </Grid>
@@ -1301,11 +1299,17 @@
                                 <GroupBox Header="Wet vs Dry Avg Deltas" Margin="0,0,0,10"
                                           ToolTip="Computed deltas between wet and dry averages for this track.">
                                     <Grid Margin="8,6,8,8">
+                                        <Grid.RowDefinitions>
+                                            <RowDefinition Height="Auto"/>
+                                            <RowDefinition Height="Auto"/>
+                                        </Grid.RowDefinitions>
                                         <TextBlock TextWrapping="Wrap">
                                             <Run Text="{Binding WetVsDryAvgLapDeltaText, Mode=OneWay}" />
                                             <Run Text="  |  " />
                                             <Run Text="{Binding WetVsDryAvgFuelDeltaText, Mode=OneWay}" />
                                         </TextBlock>
+                                        <ui:TitledSlider Grid.Row="1" Title="Wet Fuel Multiplier (%)" Minimum="70" Maximum="130" Value="{Binding WetFuelMultiplier, Mode=TwoWay}" Margin="0,12,0,0"
+                                                         ToolTip="Track-scoped wet fuel burn multiplier (%) used alongside the wet versus dry condition deltas."/>
                                     </Grid>
                                 </GroupBox>
 
