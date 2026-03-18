@@ -12,15 +12,17 @@ Branch: work
 - `Docs/Plugin_UI_Tooltips.md` updated for the Profiles tab tidy-up (`CAR` / `LAUNCH` / `SHIFT` / `TRACKS`), the Launch Settings host move, the Dash Control regrouping, and the Global Settings cleanup.
 - `Docs/Project_Index.md` refreshed to surface `Plugin_UI_Tooltips.md` in the canonical docs list.
 - `Docs/RepoStatus.md` updated with the validation summary for this UI-only tidy-up.
+- `Docs/Subsystems/H2H.md` added as the canonical subsystem doc for phase-1 Head-to-Head.
+- `Docs/Subsystems/CarSA.md` and `Docs/Subsystems/Opponents.md` updated to clarify their selector-only relationship to H2H.
+- `Docs/SimHubParameterInventory.md` updated for the new `H2HRace.*` / `H2HTrack.*` export families.
+- `Docs/Project_Index.md` refreshed to include the H2H subsystem in the canonical docs map.
 
 ## Delivery status highlights
-- Profiles UI sub-tabs now read `CAR`, `LAUNCH`, `SHIFT`, and `TRACKS`; the old `DASH` and `FUEL` tabs were removed.
-- Launch Settings now host only the moved `Launch Mode` binding and `Post-Launch Results Display Time` control from Dash Control; no wider Launch Settings tidy-up was introduced.
-- The `CAR` tab now contains the existing car-profile-backed refuel, base-tank, rejoin, overtake, spin, and pit-entry controls without changing their bindings or persistence scope.
-- The `TRACKS` tab now hosts the existing `Wet Fuel Multiplier`, `Race Pace Delta`, and contingency controls at the top of the workflow, but they still bind to the same existing car-profile properties as before.
-- Global Settings no longer shows the duplicated per-profile `USER VARIABLES` block; the remaining sections continue to cover true global settings only, with `Event Marker` now surfaced in the Debug area.
-- Dash Control now uses a narrower stacked layout with explicit `BINDINGS`, `GLOBAL DASH FUNCTIONS`, and `DASH VISIBILITY` sections while preserving the existing underlying bindings and visibility properties.
-- No persistence/schema/runtime behavior changed in this tidy-up: car-profile save/load, default-profile copy seeding, fuel planner/runtime math, launch behavior, shift behavior, pit-entry math, and telemetry behavior remain as before.
+- Added a new standalone `H2HEngine.cs` phase-1 subsystem with concurrent `H2HRace.*` and `H2HTrack.*` export families.
+- `H2HRace.*` uses Opponents only for race target identity selection, then resolves that identity back to live `CarIdx` for standalone H2H timing.
+- `H2HTrack.*` uses CarSA only for current track ahead/behind slot selection and accepts that local track targets can swap more often than race targets.
+- Phase 1 uses fixed 6 segments with latched deltas, active-segment outputs, and simple dash-facing lap summary values for player/ahead/behind.
+- No plugin UI/settings were added, no debug CSV logging was introduced, and CarSA/Opponents ownership boundaries were preserved.
 
 ## Notes
 - `Docs/Code_Snapshot.md` remains non-canonical orientation-only documentation.

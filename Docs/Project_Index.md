@@ -29,6 +29,7 @@ LalaLaunchPlugin is a SimHub plugin for iRacing that provides launch instrumenta
 - [Subsystems/Track_Markers.md](Subsystems/Track_Markers.md)
 - [Subsystems/Opponents.md](Subsystems/Opponents.md)
 - [Subsystems/CarSA.md](Subsystems/CarSA.md)
+- [Subsystems/H2H.md](Subsystems/H2H.md)
 - [Subsystems/Message_System_V1.md](Subsystems/Message_System_V1.md)
 - [Subsystems/Dash_Integration.md](Subsystems/Dash_Integration.md)
 - [Subsystems/Trace_Logging.md](Subsystems/Trace_Logging.md)
@@ -46,6 +47,7 @@ LalaLaunchPlugin is a SimHub plugin for iRacing that provides launch instrumenta
 | Rejoin assist | Incident/threat detection, linger logic, and suppression guardrails | [Subsystems/Rejoin_Assist.md](Subsystems/Rejoin_Assist.md) |
 | Opponents | Nearby pace/fight and pit-exit class prediction (race-gated) | [Subsystems/Opponents.md](Subsystems/Opponents.md) |
 | CarSA | Car-centric gap/closing/status engine and debug exports | [Subsystems/CarSA.md](Subsystems/CarSA.md) |
+| H2H | Standalone head-to-head race/track comparison exports with fixed 6 segments | [Subsystems/H2H.md](Subsystems/H2H.md) |
 | Messaging | MSG lanes + definition-driven MessageEngine v1 outputs | [Subsystems/Message_System_V1.md](Subsystems/Message_System_V1.md) |
 | Dash integration | Main/message/overlay visibility, screen state exports, and global dark-mode controls (`LalaLaunch.Dash.DarkMode.*`) | [Subsystems/Dash_Integration.md](Subsystems/Dash_Integration.md) |
 
