@@ -49,8 +49,50 @@
             </StackPanel>
 
             <TabControl>
-                <styles:SHTabItem Header="DASH">
-                    <StackPanel Margin="10" DataContext="{Binding SelectedProfile}">
+                <styles:SHTabItem Header="CAR">
+                    <ScrollViewer VerticalScrollBarVisibility="Auto">
+                        <StackPanel Margin="10" DataContext="{Binding SelectedProfile}">
+
+                            <Grid Margin="0,0,0,15">
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="*" />
+                                    <ColumnDefinition Width="20" />
+                                    <ColumnDefinition Width="*" />
+                                </Grid.ColumnDefinitions>
+
+                                <StackPanel Grid.Column="0">
+                                    <TextBlock Text="Refuel Rate (L/s):" ToolTip="Average refuel rate (L/s). Updates after a live refuel event if available."/>
+                                    <Grid Margin="0,4,0,0">
+                                        <Grid.ColumnDefinitions>
+                                            <ColumnDefinition Width="*" />
+                                            <ColumnDefinition Width="Auto" />
+                                        </Grid.ColumnDefinitions>
+                                        <Slider Grid.Column="0" VerticalAlignment="Center" Value="{Binding RefuelRate, Mode=TwoWay}" Minimum="1" Maximum="10" SmallChange="0.05" TickFrequency="0.05" IsSnapToTickEnabled="True"
+                                                ToolTip="Set the refuel rate (L/s). Live refuel events can update this value."/>
+                                        <TextBlock Grid.Column="1" Text="{Binding RefuelRate, StringFormat=N2}" VerticalAlignment="Center" Margin="10,0,0,0" MinWidth="35" TextAlignment="Right"/>
+                                    </Grid>
+                                </StackPanel>
+
+                                <StackPanel Grid.Column="2">
+                                    <TextBlock Text="Base Tank (L):" ToolTip="Base tank capacity for this car. Use Learn from Live to pull from live max fuel."/>
+                                    <Grid Margin="0,4,0,0">
+                                        <Grid.ColumnDefinitions>
+                                            <ColumnDefinition Width="*" />
+                                            <ColumnDefinition Width="Auto" />
+                                        </Grid.ColumnDefinitions>
+                                        <TextBox Grid.Column="0"
+                                                 Margin="0,0,0,0"
+                                                 TextAlignment="Right"
+                                                 Text="{Binding BaseTankLitres, Mode=TwoWay, UpdateSourceTrigger=LostFocus, TargetNullValue=''}"
+                                                 ToolTip="Base tank size (L). Leave blank to use the default."/>
+                                        <styles:SHButtonSecondary Grid.Column="1"
+                                                                  Content="Learn from Live"
+                                                                  Margin="8,0,0,0"
+                                                                  Command="{Binding DataContext.LearnBaseTankCommand, RelativeSource={RelativeSource AncestorType=UserControl}}"
+                                                                  ToolTip="Capture the current live max fuel as the base tank size."/>
+                                    </Grid>
+                                </StackPanel>
+                            </Grid>
 
                         <ui:TitledSlider Title="Rejoin Assist Linger Time (sec)"
                          Minimum="1" Maximum="30"
@@ -112,7 +154,8 @@
                             </ui:TitledSlider.ToolTip>
                         </ui:TitledSlider>
 
-                    </StackPanel>
+                        </StackPanel>
+                    </ScrollViewer>
                 </styles:SHTabItem>
 
 
@@ -729,76 +772,6 @@
                     </ScrollViewer>
                 </styles:SHTabItem>
 
-
-                <styles:SHTabItem Header="FUEL">
-                    <StackPanel Margin="10" DataContext="{Binding SelectedProfile}">
-                        <ui:TitledSlider Title="Contingency Laps/Litres" Minimum="0" Maximum="10" Value="{Binding FuelContingencyValue, Mode=TwoWay}"
-                                         ToolTip="Default contingency amount added to fuel plans." />
-                        <styles:SHToggleCheckbox Content="Contingency is in Laps (otherwise Litres)" IsChecked="{Binding IsContingencyInLaps, Mode=TwoWay}" Margin="5,10,0,0"
-                                                 ToolTip="Toggle whether the contingency value represents laps or litres."/>
-                        <ui:TitledSlider Title="Wet Fuel Multiplier (%)" Minimum="70" Maximum="130" Value="{Binding WetFuelMultiplier, Mode=TwoWay}" Margin="0,15,0,0"
-                                         ToolTip="Fuel burn multiplier for wet conditions (%)."/>
-
-                        <Grid Margin="0,15,0,0">
-                            <Grid.RowDefinitions>
-                                <RowDefinition Height="Auto"/>
-                                <RowDefinition Height="Auto"/>
-                            </Grid.RowDefinitions>
-                            <TextBlock Grid.Row="0" Text="Race Pace Delta (seconds):" ToolTip="How many seconds slower your average race pace is compared to your personal best lap (e.g., 1.2)."/>
-                            <Grid Grid.Row="1">
-                                <Grid.ColumnDefinitions>
-                                    <ColumnDefinition Width="*" />
-                                    <ColumnDefinition Width="Auto" />
-                                </Grid.ColumnDefinitions>
-                                <Slider Grid.Column="0" VerticalAlignment="Center" Value="{Binding RacePaceDeltaSeconds, Mode=TwoWay}" Minimum="0" Maximum="5" SmallChange="0.1" TickFrequency="0.1" IsSnapToTickEnabled="True"
-                                        ToolTip="Adjust the race pace delta used for planning (sec)."/>
-                                <TextBlock Grid.Column="1" Text="{Binding RacePaceDeltaSeconds, StringFormat=N1}" VerticalAlignment="Center" Margin="10,0,0,0" MinWidth="35" TextAlignment="Right"/>
-                            </Grid>
-                        </Grid>
-
-                        <Grid Margin="0,15,0,0">
-                            <Grid.ColumnDefinitions>
-                                <ColumnDefinition Width="*" />
-                                <ColumnDefinition Width="20" />
-                                <ColumnDefinition Width="*" />
-                            </Grid.ColumnDefinitions>
-
-                            <StackPanel Grid.Column="0">
-                                <TextBlock Text="Refuel Rate (L/s):" ToolTip="Average refuel rate (L/s). Updates after a live refuel event if available."/>
-                                <Grid Margin="0,4,0,0">
-                                    <Grid.ColumnDefinitions>
-                                        <ColumnDefinition Width="*" />
-                                        <ColumnDefinition Width="Auto" />
-                                    </Grid.ColumnDefinitions>
-                                    <Slider Grid.Column="0" VerticalAlignment="Center" Value="{Binding RefuelRate, Mode=TwoWay}" Minimum="1" Maximum="10" SmallChange="0.05" TickFrequency="0.05" IsSnapToTickEnabled="True"
-                                            ToolTip="Set the refuel rate (L/s). Live refuel events can update this value."/>
-                                    <TextBlock Grid.Column="1" Text="{Binding RefuelRate, StringFormat=N2}" VerticalAlignment="Center" Margin="10,0,0,0" MinWidth="35" TextAlignment="Right"/>
-                                </Grid>
-                            </StackPanel>
-
-                            <StackPanel Grid.Column="2">
-                                <TextBlock Text="Base Tank (L):" ToolTip="Base tank capacity for this car. Use Learn from Live to pull from live max fuel."/>
-                                <Grid Margin="0,4,0,0">
-                                    <Grid.ColumnDefinitions>
-                                        <ColumnDefinition Width="*" />
-                                        <ColumnDefinition Width="Auto" />
-                                    </Grid.ColumnDefinitions>
-                                    <TextBox Grid.Column="0"
-                                             Margin="0,0,0,0"
-                                             TextAlignment="Right"
-                                             Text="{Binding BaseTankLitres, Mode=TwoWay, UpdateSourceTrigger=LostFocus, TargetNullValue=''}"
-                                             ToolTip="Base tank size (L). Leave blank to use the default."/>
-                                    <styles:SHButtonSecondary Grid.Column="1"
-                                                              Content="Learn from Live"
-                                                              Margin="8,0,0,0"
-                                                              Command="{Binding DataContext.LearnBaseTankCommand, RelativeSource={RelativeSource AncestorType=UserControl}}"
-                                                              ToolTip="Capture the current live max fuel as the base tank size."/>
-                                </Grid>
-                            </StackPanel>
-                        </Grid>
-                    </StackPanel>
-                </styles:SHTabItem>
-
                 <styles:SHTabItem Header="TRACKS">
                     <Grid Margin="10">
                         <Grid.ColumnDefinitions>
@@ -820,6 +793,35 @@
 
                         <ScrollViewer Grid.Column="2" VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled">
                             <StackPanel DataContext="{Binding SelectedTrack}" Grid.IsSharedSizeScope="True" IsEnabled="{Binding DataContext.IsTrackSelected, RelativeSource={RelativeSource AncestorType=UserControl}}">
+                                <GroupBox Header="Planning Defaults" Margin="0,0,0,10"
+                                          ToolTip="Car-profile planning defaults shown here for track workflow, while continuing to save to the selected car profile.">
+                                    <StackPanel Margin="8,6,8,8" DataContext="{Binding DataContext.SelectedProfile, RelativeSource={RelativeSource AncestorType=UserControl}}">
+                                        <ui:TitledSlider Title="Contingency Laps/Litres" Minimum="0" Maximum="10" Value="{Binding FuelContingencyValue, Mode=TwoWay}"
+                                                         ToolTip="Default contingency amount added to fuel plans." />
+                                        <styles:SHToggleCheckbox Content="Contingency is in Laps (otherwise Litres)" IsChecked="{Binding IsContingencyInLaps, Mode=TwoWay}" Margin="5,10,0,0"
+                                                                 ToolTip="Toggle whether the contingency value represents laps or litres."/>
+                                        <ui:TitledSlider Title="Wet Fuel Multiplier (%)" Minimum="70" Maximum="130" Value="{Binding WetFuelMultiplier, Mode=TwoWay}" Margin="0,15,0,0"
+                                                         ToolTip="Fuel burn multiplier for wet conditions (%)."/>
+
+                                        <Grid Margin="0,15,0,0">
+                                            <Grid.RowDefinitions>
+                                                <RowDefinition Height="Auto"/>
+                                                <RowDefinition Height="Auto"/>
+                                            </Grid.RowDefinitions>
+                                            <TextBlock Grid.Row="0" Text="Race Pace Delta (seconds):" ToolTip="How many seconds slower your average race pace is compared to your personal best lap (e.g., 1.2)."/>
+                                            <Grid Grid.Row="1">
+                                                <Grid.ColumnDefinitions>
+                                                    <ColumnDefinition Width="*" />
+                                                    <ColumnDefinition Width="Auto" />
+                                                </Grid.ColumnDefinitions>
+                                                <Slider Grid.Column="0" VerticalAlignment="Center" Value="{Binding RacePaceDeltaSeconds, Mode=TwoWay}" Minimum="0" Maximum="5" SmallChange="0.1" TickFrequency="0.1" IsSnapToTickEnabled="True"
+                                                        ToolTip="Adjust the race pace delta used for planning (sec)."/>
+                                                <TextBlock Grid.Column="1" Text="{Binding RacePaceDeltaSeconds, StringFormat=N1}" VerticalAlignment="Center" Margin="10,0,0,0" MinWidth="35" TextAlignment="Right"/>
+                                            </Grid>
+                                        </Grid>
+                                    </StackPanel>
+                                </GroupBox>
+
                                 <TextBlock FontWeight="Bold"
                                            ToolTip="Edit saved data for the selected track.">
                                     <Run Text="Editing Data for: "/>

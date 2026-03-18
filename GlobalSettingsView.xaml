@@ -21,44 +21,6 @@
     </UserControl.Resources>
     <ScrollViewer VerticalScrollBarVisibility="Auto">
         <StackPanel Margin="10">
-            <TextBlock Text="USER VARIABLES (PER-PROFILE)" FontSize="16" FontWeight="Bold" Margin="0,5,10,0"/>
-            <StackPanel Orientation="Horizontal" Margin="5,0,0,10">
-                <TextBlock Text="{Binding ActiveProfile.ProfileName, StringFormat='Current Profile: {0}'}"
-                           HorizontalAlignment="Left" FontSize="13" Foreground="DarkGray" VerticalAlignment="Center"/>
-
-                <styles:SHButtonPrimary Content="Save to Profile" Margin="15,0,0,0"
-                                        Command="{Binding SaveActiveProfileCommand}"
-                                        ToolTip="Save the current dash user variables to this profile."
-                                        Visibility="{Binding IsActiveProfileDirty, Converter={StaticResource BooleanToVisibilityConverter}}"/>
-
-                <styles:SHButtonPrimary Content="Return to Defaults" Margin="5,0,0,0"
-                                        Command="{Binding ReturnToDefaultsCommand}"
-                                        ToolTip="Resets the view to the 'Default Settings' profile."
-                                        Visibility="{Binding CanReturnToDefaults, Converter={StaticResource BooleanToVisibilityConverter}}"/>
-            </StackPanel>
-            <Grid Margin="0,0,0,0">
-                <Grid.ColumnDefinitions>
-                    <ColumnDefinition Width="*"/>
-                    <ColumnDefinition Width="*"/>
-                </Grid.ColumnDefinitions>
-
-                <StackPanel Grid.Column="0">
-                    <ui:TitledSlider Title="Rejoin Assist Linger Time (sec): " Minimum="1" Maximum="30" Value="{Binding ActiveProfile.RejoinWarningLingerTime, Mode=TwoWay}"
-                                     ToolTip="How long the rejoin warning remains after you return to the track (sec)." />
-                    <ui:TitledSlider Title="Rejoin Assist Clear Speed (kph): " Minimum="10" Maximum="250" Value="{Binding ActiveProfile.RejoinWarningMinSpeed, Mode=TwoWay}"
-                                     ToolTip="Speed (kph) above which the rejoin warning clears automatically." />
-                    <ui:TitledSlider Title="Spin Yaw Rate Threshold: " Minimum="10" Maximum="100" Value="{Binding ActiveProfile.SpinYawRateThreshold, Mode=TwoWay}"
-                                     ToolTip="Yaw rate (deg/s) above which a spin is detected." />
-                    <ui:TitledSlider Title="Overtake Alert activation (sec): " Minimum="1" Maximum="20" Value="{Binding ActiveProfile.TrafficApproachWarnSeconds, Mode=TwoWay}"
-                                     ToolTip="Seconds to impact for an approaching car before an overtake alert triggers." />
-                    <ui:TitledSlider Title="Pit Entry Decel (m/s²): " Minimum="8" Maximum="22" Value="{Binding ActiveProfile.PitEntryDecelMps2, Mode=TwoWay}"
-                                     ToolTip="Target braking deceleration for pit entry assist (m/s²)." />
-                    <ui:TitledSlider Title="Pit Entry Buffer (m): " Minimum="0" Maximum="40" Value="{Binding ActiveProfile.PitEntryBufferM, Mode=TwoWay}"
-                                     ToolTip="Distance before pit entry to start the braking assist (m)." />
-                </StackPanel>
-            </Grid>
- 
-            <Separator Style="{StaticResource {x:Static ToolBar.SeparatorStyleKey}}" Margin="0,10,0,5" Height="2" />
             <styles:SHSection Title="DRIVER TAGS" ShowSeparator="True">
                 <StackPanel>
                     <TextBlock Margin="0,0,0,5" Foreground="LightGray"

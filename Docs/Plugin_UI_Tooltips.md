@@ -1,7 +1,7 @@
 # Plugin UI Tooltips
 
-Validated against commit: b9250e1
-Last updated: 2026-02-24
+Validated against commit: HEAD
+Last updated: 2026-03-18
 Branch: work
 
 ## CopyProfileDialog.xaml
@@ -193,90 +193,52 @@ Branch: work
 - L42: Rename the selected profile.
 - L46: Instantly copies these settings to the active car for this session.
 - L48: Saves all profiles to the JSON file.
-- L60: How long the rejoin warning remains visible after returning to the track (in seconds).
-- L70: The minimum speed (in km/h) above which the rejoin warning automatically clears.
-- L80: Yaw rate (degrees per second) above which a spin event is detected and triggers rejoin assist.
-- L90: How many seconds behind an approaching car must be projected to trigger the overtake alert.
-- L100: Target deceleration for pit entry braking assist (m/s²).
-- L110: Distance before the pit entry trigger point to start the braking assist.
-- L128: The target engine RPM to hold during launch control activation.
-- L138: Allowed deviation (±RPM) from the target launch RPM before the system flags it as out of range.
-- L148: Throttle percentage to apply when holding the launch RPM target.
-- L158: Accepted throttle percentage deviation from target before launch control gives a warning.
-- L168: Clutch engagement percentage considered the ideal bite point for launch.
-- L178: Allowed deviation (±%) around the target bite point during launch setup.
-- L188: Launch performance reduction factor to simulate clutch bog or wheel slip.
-- L198: Throttle or clutch percentage threshold below which an anti-stall warning is triggered.
-- L211: Default contingency amount added to fuel plans.
-- L213: Toggle whether the contingency value represents laps or litres.
-- L215: Fuel burn multiplier for wet conditions (%).
-- L222: How many seconds slower your average race pace is compared to your personal best lap (e.g., 1.2).
-- L229: Adjust the race pace delta used for planning (sec).
-- L242: Average refuel rate (L/s). Updates after a live refuel event if available.
-- L249: Set the refuel rate (L/s). Live refuel events can update this value.
-- L255: Base tank capacity for this car. Use Learn from Live to pull from live max fuel.
-- L265: Base tank size (L). Leave blank to use the default.
-- L270: Capture the current live max fuel as the base tank size.
-- L287: Tracks with saved data for this profile.
-- L290: Delete the selected track data from this profile.
-- L293: Select a track to edit its saved data.
-- L299: Edit saved data for the selected track.
-- L307: Pit lane loss and pit entry/exit markers for this track.
-- L342: Estimated pit lane loss per stop (sec). Updates from live pits when unlocked.
-- L348: Manual override for pit lane loss (sec).
-- L355: Lock to prevent live pit samples from overwriting this value.
-- L407: Saved pit entry marker as % of lap distance.
-- L417: Lock to prevent live marker updates from overwriting pit entry/exit values.
-- L423: Saved pit exit marker as % of lap distance.
-- L434: Last time these pit markers were updated.
-- L451: Reload LalaLaunch.TrackMarkers.json from disk (for manual edits).
-- L455: Clear pit markers and relearn them from the next live pit cycle.
-- L466: Dry-condition pace and fuel data for this track.
-- L493: Best dry lap time stored for this track.
-- L497: Manual override for best dry lap time (m:ss.fff).
-- L511: Average dry lap time used for planning (m:ss.fff).
-- L516: Manual override for average dry lap time (m:ss.fff).
-- L540: Dry fuel burn values used for planning (L/lap).
-- L548: Lowest observed dry fuel burn (L/lap).
-- L553: Manual override for dry ECO fuel burn (L/lap).
-- L561: Average observed dry fuel burn (L/lap).
-- L565: Manual override for dry AVG fuel burn (L/lap).
-- L573: Highest observed dry fuel burn (L/lap).
-- L577: Manual override for dry MAX fuel burn (L/lap).
-- L590: Number of dry fuel samples collected for this track.
-- L597: Last time dry fuel data was updated.
-- L608: Lock to prevent live dry data from overwriting these values.
-- L613: Clear dry data and relearn from new live laps (while unlocked).
-- L621: Wet-condition pace and fuel data for this track.
-- L648: Best wet lap time stored for this track.
-- L652: Manual override for best wet lap time (m:ss.fff).
-- L666: Average wet lap time used for planning (m:ss.fff).
-- L671: Manual override for average wet lap time (m:ss.fff).
-- L695: Wet fuel burn values used for planning (L/lap).
-- L703: Lowest observed wet fuel burn (L/lap).
-- L708: Manual override for wet ECO fuel burn (L/lap).
-- L716: Average observed wet fuel burn (L/lap).
-- L720: Manual override for wet AVG fuel burn (L/lap).
-- L728: Highest observed wet fuel burn (L/lap).
-- L732: Manual override for wet MAX fuel burn (L/lap).
-- L745: Number of wet fuel samples collected for this track.
-- L752: Last time wet fuel data was updated.
-- L763: Lock to prevent live wet data from overwriting these values.
-- L768: Clear wet data and relearn from new live laps (while unlocked).
-- L775: Computed deltas between wet and dry averages for this track.
+- L52: `CAR` tab header replaces the old `DASH` tab.
+- L64: Average refuel rate (L/s). Updates after a live refuel event if available.
+- L70: Set the refuel rate (L/s). Live refuel events can update this value.
+- L77: Base tank capacity for this car. Use Learn from Live to pull from live max fuel.
+- L86: Base tank size (L). Leave blank to use the default.
+- L91: Capture the current live max fuel as the base tank size.
+- L97: How long the rejoin warning remains visible after returning to the track (in seconds).
+- L107: The minimum speed (in km/h) above which the rejoin warning automatically clears.
+- L117: Yaw rate (degrees per second) above which a spin event is detected and triggers rejoin assist.
+- L127: How many seconds behind an approaching car must be projected to trigger the overtake alert.
+- L137: Target deceleration for pit entry braking assist (m/s²).
+- L147: Distance before the pit entry trigger point to start the braking assist.
+- L162: `LAUNCH` tab header for per-profile launch controls.
+- L166: The target engine RPM to hold during launch control activation.
+- L176: Allowed deviation (±RPM) from the target launch RPM before the system flags it as out of range.
+- L186: Throttle percentage to apply when holding the launch RPM target.
+- L196: Accepted throttle percentage deviation from target before launch control gives a warning.
+- L206: Clutch engagement percentage considered the ideal bite point for launch.
+- L216: Allowed deviation (±%) around the target bite point during launch setup.
+- L226: Launch performance reduction factor to simulate clutch bog or wheel slip.
+- L236: Throttle or clutch percentage threshold below which an anti-stall warning is triggered.
+- L775: `TRACKS` tab header now also hosts the moved car-profile planning defaults block.
+- L784: Tracks with saved data for this profile.
+- L788: Delete the selected track data from this profile.
+- L791: Select a track to edit its saved data.
+- L797: Planning defaults shown in the Tracks workflow while still saving to the selected car profile.
+- L799: Default contingency amount added to fuel plans.
+- L801: Toggle whether the contingency value represents laps or litres.
+- L803: Fuel burn multiplier for wet conditions (%).
+- L811: How many seconds slower your average race pace is compared to your personal best lap (e.g., 1.2).
+- L817: Adjust the race pace delta used for planning (sec).
+- L826: Edit saved data for the selected track.
+- L833: Pit lane loss and pit entry/exit markers for this track.
+- The remainder of the `TRACKS` tab continues to expose the existing pit-loss, marker, dry-condition, wet-condition, and delta editors; this tidy-up only moved the four planning-default controls into the top of the tab and did not change their bindings or track-data editors.
 
 ## Shift Assist controls
-- `ProfilesManagerView.xaml` L219: `Enable Shift Assist` toggle exists without a tooltip string.
-- `ProfilesManagerView.xaml` L220-L221: `Learning mode` tooltip explains shift-point data mining and learning-overlay visibility.
-- `ProfilesManagerView.xaml` L234-L238: `Shift Light` toggle tooltip clarifies it gates canonical `ShiftAssist.ShiftLight` visibility/export semantics (legacy alias `ShiftAssist.BeepLight`).
-- `ProfilesManagerView.xaml` L240-L244: `Shift Light Duration (ms)` tooltip clarifies this controls the Shift Light latch exports (`ShiftAssist.ShiftLight` / `ShiftLightPrimary` / `ShiftLightUrgent`) only, not WAV playback length.
-- `ProfilesManagerView.xaml` L282-L312: `Shift Light Mode` label/selector tooltip: "Choose which cue types drive the shift light latch/export. Audio is controlled separately by Shift Sound / Urgent sound."
-- `ProfilesManagerView.xaml` L290: `Shift Sound` toggle exists without a tooltip string.
-- `ProfilesManagerView.xaml` L309: `Test Sound` button exists without a tooltip string.
-- `ProfilesManagerView.xaml` L310-L321: `Beep volume` label/slider tooltip says it controls primary beep volume and urgent beep derives at 50% of this value.
-- `ProfilesManagerView.xaml` L327-L331: `Urgent sound` tooltip: "Plays a delayed secondary shift beep (1s after primary) at 50% of the main beep volume."
-- `ProfilesManagerView.xaml` L331-L345: gear stack selector + Add/Save/Delete buttons include tooltips on action buttons, but selector itself has no tooltip.
-- `ProfilesManagerView.xaml` L347-L423: shift target grid and learning/runtime stat panel are mostly label-only with no tooltip strings.
-- `ProfilesManagerView.xaml` L433-L492: custom WAV controls include tooltip on path textbox and browse button, while some adjacent labels/buttons remain tooltip-free.
-- `GlobalSettingsView.xaml` L191-L195: `Shift Assist Debug CSV` tooltip explains per-tick diagnostic CSV logging.
-- `GlobalSettingsView.xaml` L196-L200: `Shift Assist Debug Max Hz` textbox tooltip documents valid range (1..60 Hz).
+- `ProfilesManagerView.xaml` L251: `SHIFT` tab header for per-profile shift controls.
+- `ProfilesManagerView.xaml` L257: `Enable Shift Assist` toggle exists without a tooltip string.
+- `ProfilesManagerView.xaml` L274-L280: `Shift Light` toggle and duration tooltip clarify canonical `ShiftAssist.ShiftLight` latch/export semantics.
+- `ProfilesManagerView.xaml` L320-L356: `Shift Light Mode` label/selector tooltip says audio is controlled separately by Shift Sound / Urgent sound.
+- `ProfilesManagerView.xaml` L373: `Shift Sound` toggle exists without a tooltip string.
+- `ProfilesManagerView.xaml` L394: `Test Sound` button exists without a tooltip string.
+- `ProfilesManagerView.xaml` L395-L411: `Beep volume` label/slider tooltip says it controls primary beep volume and urgent beep derives at 50% of this value.
+- `ProfilesManagerView.xaml` L411-L417: `Urgent sound` tooltip says it plays a delayed secondary shift beep at 50% of the main beep volume.
+- `ProfilesManagerView.xaml` L522: `Learning mode` tooltip explains shift-point data mining and learning-overlay visibility.
+- `ProfilesManagerView.xaml` L751-L768: custom WAV controls include the existing path/browse affordance while some adjacent labels remain tooltip-free.
+- `GlobalSettingsView.xaml` no longer contains the duplicated per-profile `USER VARIABLES` block; true global sections now begin with `DRIVER TAGS`.
+- `GlobalSettingsView.xaml` L154-L158: `Shift Assist Debug CSV` tooltip explains per-tick diagnostic CSV logging.
+- `GlobalSettingsView.xaml` L158-L162: `Shift Assist Debug Max Hz` textbox tooltip documents valid range (1..60 Hz).
