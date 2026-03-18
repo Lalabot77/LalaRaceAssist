@@ -9,13 +9,13 @@ Branch: work
 - No Git remote is configured in this checkout (`git remote -v` returns empty).
 
 ## Documentation sync status (requested set)
-- `Docs/Subsystems/H2H.md` updated to document same-identity race-selector fallback, no fake mid-lap lap-start seeding, and segment finalization on lap wrap.
-- `Docs/RepoStatus.md` updated with the validation summary for the scoped H2H runtime fix.
+- `Docs/Subsystems/H2H.md` updated to document same-class `H2HTrack` selection and race-selector clear behavior for `H2HRace`.
+- `Docs/Subsystems/CarSA.md` and `Docs/Subsystems/Opponents.md` updated so their selector-only wording matches the final H2H behavior.
+- `Docs/RepoStatus.md` updated with the validation summary for the scoped H2H selector-correctness follow-up.
 
 ## Delivery status highlights
-- `H2HEngine.cs` now finalizes the outgoing active segment before lap-reset so the closing fixed segment can latch on wrap.
-- H2H mid-lap first-bind/rebind no longer seeds a synthetic lap-start from the current tick, so live delta and segment timing stay safely incomplete until a real boundary is observed.
-- `H2HRace.*` keeps the previous same-identity `CarIdx` binding when reverse identity resolution blips temporarily, avoiding unnecessary target/runtime resets.
+- `H2HTrack.*` now scans CarSA ahead/behind slots and binds only to the nearest valid same-class local target instead of blindly consuming raw slot 01.
+- `H2HRace.*` no longer revives a stale previous identity when Opponents intentionally clears race outputs; it only preserves the previous binding for temporary same-identity reverse-resolution misses.
 - No plugin UI/settings were added, no export names changed, no debug CSV logging was introduced, and CarSA/Opponents ownership boundaries were preserved.
 
 ## Notes

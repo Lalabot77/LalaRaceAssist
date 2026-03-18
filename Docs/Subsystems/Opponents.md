@@ -5,7 +5,7 @@ Last updated: 2026-03-18
 Branch: work
 
 Purpose: own all opponent-facing calculations for nearby pace/fight prediction and pit-exit position forecasting with SimHub exports under `Opp.*` and `PitExit.*`.
-Phase-1 Head-to-Head (`H2HRace.*`) consumes Opponents only as a **race-target selector seam** (current class-ahead / class-behind identity from `Opp.Ahead1` / `Opp.Behind1`). Persistent H2H timing, live-gap, lap-summary, and fixed-6-segment ownership remain inside the standalone H2H subsystem; Opponents does **not** become a far-away timing engine.
+Phase-1 Head-to-Head (`H2HRace.*`) consumes Opponents only as a **race-target selector seam** (current class-ahead / class-behind identity from `Opp.Ahead1` / `Opp.Behind1`). Persistent H2H timing, live-gap, lap-summary, and fixed-6-segment ownership remain inside the standalone H2H subsystem; if Opponents clears those race outputs, H2H should also clear/inactivate rather than revive a stale race identity. Opponents does **not** become a far-away timing engine.
 
 ## Gating and scope
 - Runs **race sessions only**; resets caches/outputs if session leaves Race.【F:Opponents.cs†L42-L88】

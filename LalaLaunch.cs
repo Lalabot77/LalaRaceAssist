@@ -6305,15 +6305,9 @@ namespace LaunchPlugin
                     var raceAheadSelector = BuildH2HRaceSelector(pluginManager, _opponentsEngine?.Outputs?.Ahead1, previousRaceAhead);
                     var raceBehindSelector = BuildH2HRaceSelector(pluginManager, _opponentsEngine?.Outputs?.Behind1, previousRaceBehind);
 
-                    CarSASlot trackAheadSlot = _carSaEngine.Outputs.AheadSlots != null && _carSaEngine.Outputs.AheadSlots.Length > 0
-                        ? _carSaEngine.Outputs.AheadSlots[0]
-                        : null;
-                    CarSASlot trackBehindSlot = _carSaEngine.Outputs.BehindSlots != null && _carSaEngine.Outputs.BehindSlots.Length > 0
-                        ? _carSaEngine.Outputs.BehindSlots[0]
-                        : null;
-
-                    var trackAheadSelector = BuildH2HTrackSelector(trackAheadSlot);
-                    var trackBehindSelector = BuildH2HTrackSelector(trackBehindSlot);
+                    string playerTrackClassColor = _carSaEngine?.Outputs?.PlayerSlot?.ClassColor ?? string.Empty;
+                    var trackAheadSelector = BuildH2HTrackSelector(_carSaEngine.Outputs.AheadSlots, playerTrackClassColor);
+                    var trackBehindSelector = BuildH2HTrackSelector(_carSaEngine.Outputs.BehindSlots, playerTrackClassColor);
 
                     _h2hEngine.Update(
                         sessionTimeSec,
@@ -10192,22 +10186,39 @@ namespace LaunchPlugin
             return delta;
         }
 
-        private H2HEngine.TargetSelector BuildH2HTrackSelector(CarSASlot slot)
+        private H2HEngine.TargetSelector BuildH2HTrackSelector(CarSASlot[] slots, string playerClassColor)
         {
-            if (slot == null || !slot.IsValid || slot.CarIdx < 0)
+            string normalizedPlayerClassColor = NormalizeClassColorHex(playerClassColor);
+            if (slots == null || slots.Length == 0 || string.IsNullOrWhiteSpace(normalizedPlayerClassColor))
             {
                 return default(H2HEngine.TargetSelector);
             }
 
-            return new H2HEngine.TargetSelector
+            for (int i = 0; i < slots.Length; i++)
             {
-                CarIdx = slot.CarIdx,
-                IdentityKey = MakeH2HIdentityKey(slot.ClassColor, slot.CarNumber),
-                Name = slot.Name ?? string.Empty,
-                CarNumber = slot.CarNumber ?? string.Empty,
-                ClassColor = slot.ClassColor ?? string.Empty,
-                PositionInClass = slot.PositionInClass > 0 ? slot.PositionInClass : 0
-            };
+                CarSASlot slot = slots[i];
+                if (slot == null || !slot.IsValid || slot.CarIdx < 0)
+                {
+                    continue;
+                }
+
+                if (!string.Equals(NormalizeClassColorHex(slot.ClassColor), normalizedPlayerClassColor, StringComparison.Ordinal))
+                {
+                    continue;
+                }
+
+                return new H2HEngine.TargetSelector
+                {
+                    CarIdx = slot.CarIdx,
+                    IdentityKey = MakeH2HIdentityKey(slot.ClassColor, slot.CarNumber),
+                    Name = slot.Name ?? string.Empty,
+                    CarNumber = slot.CarNumber ?? string.Empty,
+                    ClassColor = slot.ClassColor ?? string.Empty,
+                    PositionInClass = slot.PositionInClass > 0 ? slot.PositionInClass : 0
+                };
+            }
+
+            return default(H2HEngine.TargetSelector);
         }
 
         private H2HEngine.TargetSelector BuildH2HRaceSelector(PluginManager pluginManager, OpponentsEngine.OpponentTargetOutput current, H2HEngine.H2HParticipantOutput previousOutput)
@@ -10220,16 +10231,6 @@ namespace LaunchPlugin
             bool sameIdentityAsPrevious = previousOutput != null
                 && !string.IsNullOrWhiteSpace(previousOutput.IdentityKey)
                 && string.Equals(previousOutput.IdentityKey, identityKey, StringComparison.Ordinal);
-
-            if (string.IsNullOrWhiteSpace(identityKey) && previousOutput != null && !string.IsNullOrWhiteSpace(previousOutput.IdentityKey))
-            {
-                identityKey = previousOutput.IdentityKey;
-                name = previousOutput.Name ?? string.Empty;
-                carNumber = previousOutput.CarNumber ?? string.Empty;
-                classColor = previousOutput.ClassColor ?? string.Empty;
-                positionInClass = previousOutput.PositionInClass;
-                sameIdentityAsPrevious = true;
-            }
 
             if (string.IsNullOrWhiteSpace(identityKey))
             {
