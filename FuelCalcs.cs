@@ -96,6 +96,7 @@ namespace LaunchPlugin
         // Separate storage for live vs manual deltas
         private double _liveLeaderDeltaSeconds;      // from telemetry
         private double _manualLeaderDeltaSeconds;    // from the slider
+        private double _storedLeaderDeltaSeconds;    // per-track default loaded from profile
 
         private bool _hasLiveLeaderDelta;
         private bool _isLeaderDeltaManual;
@@ -1145,7 +1146,7 @@ namespace LaunchPlugin
             }
             else
             {
-                newDelta = 0.0;
+                newDelta = _storedLeaderDeltaSeconds;
             }
 
             if (Math.Abs(_leaderDeltaSeconds - newDelta) < 0.001)
@@ -1167,10 +1168,18 @@ namespace LaunchPlugin
         {
             LiveLeaderDeltaSeconds = 0.0;
             _manualLeaderDeltaSeconds = 0.0;
+            _storedLeaderDeltaSeconds = 0.0;
             _hasLiveLeaderDelta = false;
             IsLeaderDeltaManual = false;
             _leaderDeltaSeconds = 0.0;
             OnPropertyChanged(nameof(LeaderDeltaSeconds));
+        }
+
+        private void ClearManualLeaderDeltaOverride()
+        {
+            _manualLeaderDeltaSeconds = 0.0;
+            IsLeaderDeltaManual = false;
+            UpdateEffectiveLeaderDelta();
         }
 
     public double FuelPerLap
@@ -2229,9 +2238,12 @@ namespace LaunchPlugin
 
             if (SelectedPlanningSourceMode == PlanningSourceMode.Profile)
             {
-                var trackMultipliers = (SelectedTrackStats ?? ResolveSelectedTrackStats())?.GetConditionMultipliers(true);
-                var carMultipliers = SelectedCarProfile?.GetConditionMultipliers(true);
-                return trackMultipliers?.WetFactorPercent ?? carMultipliers?.WetFactorPercent ?? SelectedCarProfile?.WetFuelMultiplier;
+                var selectedTrack = SelectedTrackStats ?? ResolveSelectedTrackStats();
+                var trackMultipliers = selectedTrack?.GetConditionMultipliers(true);
+                double? trackWetMultiplier = selectedTrack != null && selectedTrack.HasWetFuelMultiplier
+                    ? (double?)selectedTrack.WetFuelMultiplier
+                    : null;
+                return trackWetMultiplier ?? trackMultipliers?.WetFactorPercent ?? 90.0;
             }
 
             if (SelectedPlanningSourceMode == PlanningSourceMode.LiveSnapshot)
@@ -2534,11 +2546,8 @@ namespace LaunchPlugin
         // 4) Ensure the record we’re saving into
         var trackRecord = targetProfile.EnsureTrack(keyToSave, nameToSave);
 
-        // 5) Save car-level settings
-        targetProfile.FuelContingencyValue = this.ContingencyValue;
-        targetProfile.IsContingencyInLaps = this.IsContingencyInLaps;
+        // 5) Save remaining car-level settings
         targetProfile.PreRaceMode = NormalizePitStrategyValue(this.SelectedPreRaceMode);
-        targetProfile.WetFuelMultiplier = this.WetFactorPercent;
         targetProfile.TireChangeTime = this.TireChangeTime;
 
         bool saveWet = IsWet || (IsPlanningSourceLiveSnapshot && _liveWeatherIsWet == true);
@@ -2546,10 +2555,6 @@ namespace LaunchPlugin
 
         var profileCondition = targetProfile.GetConditionMultipliers(saveWet);
         profileCondition.FormationLapBurnLiters = this.FormationLapFuelLiters;
-        if (saveWet)
-        {
-            profileCondition.WetFactorPercent = this.WetFactorPercent;
-        }
 
         // 6) Save track-specific settings
         var lapTimeMs = trackRecord.LapTimeStringToMilliseconds(EstimatedLapTime);
@@ -2630,6 +2635,11 @@ namespace LaunchPlugin
         {
             trackCondition.WetFactorPercent = this.WetFactorPercent;
         }
+
+        trackRecord.FuelContingencyValue = this.ContingencyValue;
+        trackRecord.IsContingencyInLaps = this.IsContingencyInLaps;
+        trackRecord.WetFuelMultiplier = this.WetFactorPercent;
+        trackRecord.RacePaceDeltaSeconds = GetPersistedRacePaceDeltaSeconds();
 
         // 7) Persist + refresh dependent UI
         _plugin.ProfilesViewModel.SaveProfiles();
@@ -3890,7 +3900,7 @@ namespace LaunchPlugin
         }
     }
 
-        private void SetUIDefaults()
+    private void SetUIDefaults()
     {
         ResetSnapshotDisplays();
         _raceLaps = 20.0;
@@ -3913,6 +3923,36 @@ namespace LaunchPlugin
         ProfileFuelMaxDisplay = "-";
         IsProfileFuelSaveAvailable = false;
         IsProfileFuelMaxAvailable = false;
+        ClearLeaderDeltaState();
+    }
+
+    private void ApplyTrackPlannerSettings(TrackStats track)
+    {
+        if (track == null) return;
+
+        ContingencyValue = track.FuelContingencyValue;
+        IsContingencyInLaps = track.IsContingencyInLaps;
+        WetFactorPercent = track.WetFuelMultiplier;
+        ApplyStoredLeaderDelta(track.RacePaceDeltaSeconds);
+    }
+
+    private void ApplyStoredLeaderDelta(double deltaSeconds)
+    {
+        if (double.IsNaN(deltaSeconds) || double.IsInfinity(deltaSeconds) || deltaSeconds < 0.0)
+        {
+            deltaSeconds = 0.0;
+        }
+
+        _storedLeaderDeltaSeconds = deltaSeconds;
+        if (!IsLeaderDeltaManual)
+        {
+            UpdateEffectiveLeaderDelta();
+        }
+    }
+
+    private double GetPersistedRacePaceDeltaSeconds()
+    {
+        return IsLeaderDeltaManual ? _manualLeaderDeltaSeconds : _storedLeaderDeltaSeconds;
     }
 
     public void ForceProfileDataReload()
@@ -4022,6 +4062,7 @@ namespace LaunchPlugin
             // a car/track swap cannot leak lap times or fuel numbers from the
             // previous selection (e.g., switching from McLaren 720S to Ferrari 296).
             ResetTrackScopedProfileData();
+            ClearManualLeaderDeltaOverride();
 
             if (ts == null)
             {
@@ -4033,15 +4074,14 @@ namespace LaunchPlugin
                 return;
             }
 
-            // --- Load Refuel Rate and car-level settings only when the car changes ---
+            // --- Load Refuel Rate and remaining car-level settings only when the car changes ---
             if (carChanged || _lastLoadedCarProfile == null)
             {
                 ApplyRefuelRateFromProfile(car.RefuelRate);
-                this.ContingencyValue = car.FuelContingencyValue;
-                this.IsContingencyInLaps = car.IsContingencyInLaps;
                 this.SelectedPreRaceMode = NormalizePitStrategyValue(car.PreRaceMode);
-                this.WetFactorPercent = car.WetFuelMultiplier;
             }
+
+            ApplyTrackPlannerSettings(ts);
 
             UpdateProfileBestLapForCondition(ts);
 
@@ -4365,8 +4405,11 @@ namespace LaunchPlugin
 
                 if (isWet)
                 {
-                    double fallbackWet = carMultipliers?.WetFactorPercent ?? car?.WetFuelMultiplier ?? WetFactorPercent;
-                    double targetWet = trackMultipliers?.WetFactorPercent ?? fallbackWet;
+                    double fallbackWet = 90.0;
+                    double? trackWetMultiplier = ts != null && ts.HasWetFuelMultiplier
+                        ? (double?)ts.WetFuelMultiplier
+                        : null;
+                    double targetWet = trackWetMultiplier ?? trackMultipliers?.WetFactorPercent ?? fallbackWet;
                     if (targetWet > 0 && Math.Abs(WetFactorPercent - targetWet) > 0.01)
                     {
                         WetFactorPercent = targetWet;

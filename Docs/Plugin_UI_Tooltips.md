@@ -1,6 +1,6 @@
 ﻿# Plugin UI Tooltips
 
-Validated against commit: HEAD
+Validated against commit: f379358
 Last updated: 2026-03-18
 Branch: work
 
@@ -176,19 +176,19 @@ Branch: work
 - L216: Allowed deviation (±%) around the target bite point during launch setup.
 - L226: Launch performance reduction factor to simulate clutch bog or wheel slip.
 - L236: Throttle or clutch percentage threshold below which an anti-stall warning is triggered.
-- L775: `TRACKS` tab header now also hosts the moved car-profile planning defaults block.
+- L775: `TRACKS` tab header now hosts track-scoped planning controls and track data editors.
 - L784: Tracks with saved data for this profile.
 - L788: Delete the selected track data from this profile.
 - L791: Select a track to edit its saved data.
-- L797: Planning defaults shown in the Tracks workflow while still saving to the selected car profile.
-- L799: Default contingency amount added to fuel plans.
-- L801: Toggle whether the contingency value represents laps or litres.
-- L803: Fuel burn multiplier for wet conditions (%).
+- L797: `Track Planning` group contains track-scoped planner values stored on the selected track record.
+- L799: Track-scoped contingency amount added to fuel plans.
+- L801: Track-scoped contingency mode: laps when checked, litres when unchecked.
 - L811: How many seconds slower your average race pace is compared to your personal best lap (e.g., 1.2).
-- L817: Adjust the race pace delta used for planning (sec).
+- L817: Track-scoped pace delta used for planning (sec).
 - L826: Edit saved data for the selected track.
 - L833: Pit lane loss and pit entry/exit markers for this track.
-- The remainder of the `TRACKS` tab continues to expose the existing pit-loss, marker, dry-condition, wet-condition, and delta editors; this tidy-up only moved the four planning-default controls into the top of the tab and did not change their bindings or track-data editors.
+- L1311: `Wet Fuel Multiplier` now sits in `Wet vs Dry Avg Deltas` as a track-scoped wet-condition planning control.
+- The remainder of the `TRACKS` tab continues to expose the existing pit-loss, marker, dry-condition, wet-condition, and delta editors; contingency/mode and race pace delta now persist per track in the top planning block, while `Wet Fuel Multiplier` now sits in the `Wet vs Dry Avg Deltas` section near the wet-condition context.
 
 ## Shift Assist controls
 - `ProfilesManagerView.xaml` L251: `SHIFT` tab header for per-profile shift controls.
