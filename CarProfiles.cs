@@ -41,10 +41,6 @@ namespace LaunchPlugin
         public double AntiStallThreshold { get => _antiStallThreshold; set { if (_antiStallThreshold != value) { _antiStallThreshold = value; OnPropertyChanged(); } } }
 
         // --- Fuel & Pit Properties ---
-        private double _fuelContingencyValue = 1.5;
-        public double FuelContingencyValue { get => _fuelContingencyValue; set { if (_fuelContingencyValue != value) { _fuelContingencyValue = value; OnPropertyChanged(); } } }
-        private bool _isContingencyInLaps = true;
-        public bool IsContingencyInLaps { get => _isContingencyInLaps; set { if (_isContingencyInLaps != value) { _isContingencyInLaps = value; OnPropertyChanged(); } } }
         private int _pitStrategyMode = 3;
         public int PreRaceMode
         {
@@ -76,30 +72,41 @@ namespace LaunchPlugin
             get => PreRaceMode == 1;
             set => PreRaceMode = value ? 1 : 3;
         }
-        private double _wetFuelMultiplier = 90;
-        public double WetFuelMultiplier
-        {
-            get => _wetFuelMultiplier;
-            set
-            {
-                if (_wetFuelMultiplier != value)
-                {
-                    _wetFuelMultiplier = value;
-                    OnPropertyChanged();
 
-                    // Keep the legacy wet multiplier in sync with the condition overrides
-                    if (WetConditionMultipliers == null)
-                    {
-                        WetConditionMultipliers = ConditionMultipliers.CreateDefaultWet();
-                    }
-                    WetConditionMultipliers.WetFactorPercent = value;
-                }
-            }
+        private double? _legacyFuelContingencyValue;
+        [JsonProperty("FuelContingencyValue", NullValueHandling = NullValueHandling.Ignore)]
+        private double? LegacyFuelContingencyValue
+        {
+            get => _legacyFuelContingencyValue;
+            set => _legacyFuelContingencyValue = value;
         }
+
+        private bool? _legacyIsContingencyInLaps;
+        [JsonProperty("IsContingencyInLaps", NullValueHandling = NullValueHandling.Ignore)]
+        private bool? LegacyIsContingencyInLaps
+        {
+            get => _legacyIsContingencyInLaps;
+            set => _legacyIsContingencyInLaps = value;
+        }
+
+        private double? _legacyWetFuelMultiplier;
+        [JsonProperty("WetFuelMultiplier", NullValueHandling = NullValueHandling.Ignore)]
+        private double? LegacyWetFuelMultiplier
+        {
+            get => _legacyWetFuelMultiplier;
+            set => _legacyWetFuelMultiplier = value;
+        }
+
+        private double? _legacyRacePaceDeltaSeconds;
+        [JsonProperty("RacePaceDeltaSeconds", NullValueHandling = NullValueHandling.Ignore)]
+        private double? LegacyRacePaceDeltaSeconds
+        {
+            get => _legacyRacePaceDeltaSeconds;
+            set => _legacyRacePaceDeltaSeconds = value;
+        }
+
         private double _tireChangeTime = 22;
         public double TireChangeTime { get => _tireChangeTime; set { if (_tireChangeTime != value) { _tireChangeTime = value; OnPropertyChanged(); } } }
-        private double _racePaceDeltaSeconds = 1.2;
-        public double RacePaceDeltaSeconds { get => _racePaceDeltaSeconds; set { if (_racePaceDeltaSeconds != value) { _racePaceDeltaSeconds = value; OnPropertyChanged(); } } }
 
         // --- NEW Per-Car Property ---
         private double _refuelRate = 2.7;
@@ -158,6 +165,51 @@ namespace LaunchPlugin
             return isWet
                 ? (WetConditionMultipliers ?? ConditionMultipliers.CreateDefaultWet())
                 : (DryConditionMultipliers ?? ConditionMultipliers.CreateDefaultDry());
+        }
+
+        [JsonIgnore]
+        public bool HasLegacyTrackPlannerSettings =>
+            _legacyFuelContingencyValue.HasValue ||
+            _legacyIsContingencyInLaps.HasValue ||
+            _legacyWetFuelMultiplier.HasValue ||
+            _legacyRacePaceDeltaSeconds.HasValue;
+
+        private TrackStats GetPlannerTemplateTrack(string targetTrackKey = null)
+        {
+            var defaultTrack = FindTrack("default");
+            if (defaultTrack != null && !string.Equals(defaultTrack.Key, targetTrackKey, StringComparison.OrdinalIgnoreCase))
+            {
+                return defaultTrack;
+            }
+
+            return TrackStats?.Values
+                .FirstOrDefault(t =>
+                    t != null &&
+                    !string.Equals(t.Key, targetTrackKey, StringComparison.OrdinalIgnoreCase) &&
+                    string.Equals(t.DisplayName, "Default", StringComparison.OrdinalIgnoreCase));
+        }
+
+        private void ApplyPlannerDefaultsToTrack(TrackStats targetTrack, TrackStats templateTrack = null)
+        {
+            if (targetTrack == null) return;
+
+            double defaultContingency = templateTrack != null && templateTrack.HasFuelContingencyValue
+                ? templateTrack.FuelContingencyValue
+                : 1.5;
+            bool defaultContingencyMode = templateTrack != null && templateTrack.HasContingencyMode
+                ? templateTrack.IsContingencyInLaps
+                : true;
+            double defaultWetMultiplier = templateTrack != null && templateTrack.HasWetFuelMultiplier
+                ? templateTrack.WetFuelMultiplier
+                : 90.0;
+            double defaultRacePaceDelta = templateTrack != null && templateTrack.HasRacePaceDeltaSeconds
+                ? templateTrack.RacePaceDeltaSeconds
+                : 1.2;
+
+            targetTrack.FuelContingencyValue = defaultContingency;
+            targetTrack.IsContingencyInLaps = defaultContingencyMode;
+            targetTrack.WetFuelMultiplier = defaultWetMultiplier;
+            targetTrack.RacePaceDeltaSeconds = defaultRacePaceDelta;
         }
 
         [JsonProperty]
@@ -269,17 +321,15 @@ namespace LaunchPlugin
             else
             {
                 // No record found. Create a new one.
+                var templateTrack = GetPlannerTemplateTrack(canonicalKey);
                 var newRecord = new TrackStats
                 {
                     Key = canonicalKey,
                     DisplayName = trackDisplay,
                     DryConditionMultipliers = ConditionMultipliers.CreateDefaultDry(),
-                    WetConditionMultipliers = ConditionMultipliers.CreateDefaultWet(),
-                    FuelContingencyValue = FuelContingencyValue,
-                    IsContingencyInLaps = IsContingencyInLaps,
-                    WetFuelMultiplier = WetFuelMultiplier,
-                    RacePaceDeltaSeconds = RacePaceDeltaSeconds
+                    WetConditionMultipliers = ConditionMultipliers.CreateDefaultWet()
                 };
+                ApplyPlannerDefaultsToTrack(newRecord, templateTrack);
                 TrackStats[canonicalKey] = newRecord;
                 return newRecord;
             }
@@ -290,30 +340,42 @@ namespace LaunchPlugin
             if (track == null) return false;
 
             bool changed = false;
+            var templateTrack = GetPlannerTemplateTrack(track.Key);
 
             if (!track.HasFuelContingencyValue)
             {
-                track.FuelContingencyValue = FuelContingencyValue;
+                track.FuelContingencyValue = _legacyFuelContingencyValue
+                    ?? (templateTrack != null && templateTrack.HasFuelContingencyValue ? (double?)templateTrack.FuelContingencyValue : null)
+                    ?? 1.5;
                 changed = true;
             }
 
             if (!track.HasContingencyMode)
             {
-                track.IsContingencyInLaps = IsContingencyInLaps;
+                track.IsContingencyInLaps = _legacyIsContingencyInLaps
+                    ?? (templateTrack != null && templateTrack.HasContingencyMode ? (bool?)templateTrack.IsContingencyInLaps : null)
+                    ?? true;
                 changed = true;
             }
 
             if (!track.HasRacePaceDeltaSeconds)
             {
-                track.RacePaceDeltaSeconds = RacePaceDeltaSeconds;
+                track.RacePaceDeltaSeconds = _legacyRacePaceDeltaSeconds
+                    ?? (templateTrack != null && templateTrack.HasRacePaceDeltaSeconds ? (double?)templateTrack.RacePaceDeltaSeconds : null)
+                    ?? 1.2;
                 changed = true;
             }
 
             if (!track.HasWetFuelMultiplier)
             {
                 var trackWetMultiplier = track.GetConditionMultipliers(true)?.WetFactorPercent;
-                var carWetMultiplier = GetConditionMultipliers(true)?.WetFactorPercent;
-                double fallbackWet = trackWetMultiplier ?? carWetMultiplier ?? WetFuelMultiplier;
+                var templateWetMultiplier = templateTrack != null && templateTrack.HasWetFuelMultiplier
+                    ? (double?)templateTrack.WetFuelMultiplier
+                    : null;
+                double fallbackWet = _legacyWetFuelMultiplier
+                    ?? templateWetMultiplier
+                    ?? trackWetMultiplier
+                    ?? 90.0;
                 if (fallbackWet <= 0)
                 {
                     fallbackWet = 90.0;
@@ -323,6 +385,16 @@ namespace LaunchPlugin
                 changed = true;
             }
 
+            return changed;
+        }
+
+        public bool ClearLegacyTrackPlannerSettings()
+        {
+            bool changed = HasLegacyTrackPlannerSettings;
+            _legacyFuelContingencyValue = null;
+            _legacyIsContingencyInLaps = null;
+            _legacyWetFuelMultiplier = null;
+            _legacyRacePaceDeltaSeconds = null;
             return changed;
         }
 

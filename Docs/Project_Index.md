@@ -1,6 +1,6 @@
 ﻿# Project Index
 
-Validated against commit: HEAD
+Validated against commit: f379358
 Last updated: 2026-03-18
 Branch: work
 
@@ -50,6 +50,6 @@ LalaLaunchPlugin is a SimHub plugin for iRacing that provides launch instrumenta
 | Dash integration | Main/message/overlay visibility, screen state exports, and global dark-mode controls (`LalaLaunch.Dash.DarkMode.*`) | [Subsystems/Dash_Integration.md](Subsystems/Dash_Integration.md) |
 
 ## Freshness
-- Validated against commit: HEAD
+- Validated against commit: f379358
 - Date: 2026-03-18
 - Branch: work

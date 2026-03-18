@@ -227,12 +227,8 @@ namespace LaunchPlugin
                     car.BitePointTolerance = defaultProfile.BitePointTolerance;
                     car.BogDownFactorPercent = defaultProfile.BogDownFactorPercent;
                     car.AntiStallThreshold = defaultProfile.AntiStallThreshold;
-                    car.FuelContingencyValue = defaultProfile.FuelContingencyValue;
-                    car.IsContingencyInLaps = defaultProfile.IsContingencyInLaps;
                     car.PreRaceMode = defaultProfile.PreRaceMode;
-                    car.WetFuelMultiplier = defaultProfile.WetFuelMultiplier;
                     car.TireChangeTime = defaultProfile.TireChangeTime;
-                    car.RacePaceDeltaSeconds = defaultProfile.RacePaceDeltaSeconds;
                     car.RefuelRate = defaultProfile.RefuelRate;
                     car.BaseTankLitres = defaultProfile.BaseTankLitres;
                     car.DryConditionMultipliers = defaultProfile.DryConditionMultipliers?.Clone() ?? ConditionMultipliers.CreateDefaultDry();
@@ -245,6 +241,7 @@ namespace LaunchPlugin
                     car.PitEntryBufferM = defaultProfile.PitEntryBufferM;
                     car.ShiftAssistShiftLightMode = defaultProfile.ShiftAssistShiftLightMode;
                     CloneShiftStacks(defaultProfile, car);
+                    CopyTrackPlannerSettings(defaultProfile, car);
                 }
 
                 // Ensure the newly created car profile has a default track record
@@ -273,8 +270,9 @@ namespace LaunchPlugin
 
             var car = EnsureCar(carProfileName);
             var display = string.IsNullOrWhiteSpace(trackDisplay) ? trackName : trackDisplay;
+            var existingTrack = car.ResolveTrackByNameOrKey(trackName);
             var ts = car.EnsureTrack(trackName, display);
-            car.EnsureTrackPlannerSettings(ts);
+            bool plannerSeeded = car.EnsureTrackPlannerSettings(ts);
             SimHub.Logging.Current.Info($"[LalaPlugin:Profiles] Track resolved: key='{ts?.Key}', display='{ts?.DisplayName}'");
 
             // --- FIX: Manually initialize the text properties after creation ---
@@ -293,7 +291,10 @@ namespace LaunchPlugin
             ts.AvgDryTrackTempText = ts.AvgDryTrackTemp?.ToString(System.Globalization.CultureInfo.InvariantCulture);
             ts.AvgWetTrackTempText = ts.AvgWetTrackTemp?.ToString(System.Globalization.CultureInfo.InvariantCulture);
 
-            SaveProfiles();
+            if (existingTrack == null || plannerSeeded)
+            {
+                SaveProfiles();
+            }
             var disp = System.Windows.Application.Current?.Dispatcher;
 
             void DoUiWork()
@@ -442,11 +443,6 @@ namespace LaunchPlugin
 
                 if (SelectedProfile?.TrackStats != null)
                 {
-                    if (EnsureTrackPlannerSettings(SelectedProfile))
-                    {
-                        SaveProfiles();
-                    }
-
                     // add in a stable order (name or key)
                     foreach (var t in SelectedProfile.TrackStats.Values
                                  .OrderBy(t => t.DisplayName ?? t.Key ?? string.Empty, StringComparer.OrdinalIgnoreCase))
@@ -484,6 +480,11 @@ namespace LaunchPlugin
                 {
                     changed = true;
                 }
+            }
+
+            if (profile.ClearLegacyTrackPlannerSettings())
+            {
+                changed = true;
             }
 
             return changed;
@@ -1363,21 +1364,18 @@ namespace LaunchPlugin
                 newProfile.BitePointTolerance = defaultProfile.BitePointTolerance;
                 newProfile.BogDownFactorPercent = defaultProfile.BogDownFactorPercent;
                 newProfile.AntiStallThreshold = defaultProfile.AntiStallThreshold;
-                newProfile.FuelContingencyValue = defaultProfile.FuelContingencyValue;
-                newProfile.IsContingencyInLaps = defaultProfile.IsContingencyInLaps;
                 newProfile.PreRaceMode = defaultProfile.PreRaceMode;
-                newProfile.WetFuelMultiplier = defaultProfile.WetFuelMultiplier;
                 newProfile.RefuelRate = defaultProfile.RefuelRate;
                 newProfile.BaseTankLitres = defaultProfile.BaseTankLitres;
                 newProfile.RejoinWarningLingerTime = defaultProfile.RejoinWarningLingerTime;
                 newProfile.RejoinWarningMinSpeed = defaultProfile.RejoinWarningMinSpeed;
                 newProfile.SpinYawRateThreshold = defaultProfile.SpinYawRateThreshold;
                 newProfile.TrafficApproachWarnSeconds = defaultProfile.TrafficApproachWarnSeconds;
-                newProfile.RacePaceDeltaSeconds = defaultProfile.RacePaceDeltaSeconds;
                 newProfile.PitEntryDecelMps2 = defaultProfile.PitEntryDecelMps2;
                 newProfile.PitEntryBufferM = defaultProfile.PitEntryBufferM;
                 newProfile.ShiftAssistShiftLightMode = defaultProfile.ShiftAssistShiftLightMode;
                 CloneShiftStacks(defaultProfile, newProfile);
+                CopyTrackPlannerSettings(defaultProfile, newProfile);
             }
 
             // Ensure the new profile has a unique name
@@ -1443,6 +1441,34 @@ namespace LaunchPlugin
             }
         }
 
+        private static void CopyTrackPlannerSettings(CarProfile source, CarProfile destination)
+        {
+            if (destination == null)
+            {
+                return;
+            }
+
+            if (source?.TrackStats == null || source.TrackStats.Count == 0)
+            {
+                destination.EnsureTrack("Default", "Default");
+                return;
+            }
+
+            foreach (var sourceTrack in source.TrackStats.Values)
+            {
+                if (sourceTrack == null) continue;
+
+                string trackKey = string.IsNullOrWhiteSpace(sourceTrack.Key) ? "default" : sourceTrack.Key;
+                string displayName = string.IsNullOrWhiteSpace(sourceTrack.DisplayName) ? trackKey : sourceTrack.DisplayName;
+                var destinationTrack = destination.EnsureTrack(trackKey, displayName);
+
+                destinationTrack.FuelContingencyValue = sourceTrack.HasFuelContingencyValue ? sourceTrack.FuelContingencyValue : 1.5;
+                destinationTrack.IsContingencyInLaps = sourceTrack.HasContingencyMode ? sourceTrack.IsContingencyInLaps : true;
+                destinationTrack.WetFuelMultiplier = sourceTrack.HasWetFuelMultiplier ? sourceTrack.WetFuelMultiplier : 90.0;
+                destinationTrack.RacePaceDeltaSeconds = sourceTrack.HasRacePaceDeltaSeconds ? sourceTrack.RacePaceDeltaSeconds : 1.2;
+            }
+        }
+
         private void CopyProfileProperties(CarProfile source, CarProfile destination)
         {
             // This copies every setting except the name
@@ -1454,15 +1480,11 @@ namespace LaunchPlugin
             destination.BitePointTolerance = source.BitePointTolerance;
             destination.BogDownFactorPercent = source.BogDownFactorPercent;
             destination.AntiStallThreshold = source.AntiStallThreshold;
-            destination.FuelContingencyValue = source.FuelContingencyValue;
-            destination.IsContingencyInLaps = source.IsContingencyInLaps;
             destination.PreRaceMode = source.PreRaceMode;
-            destination.WetFuelMultiplier = source.WetFuelMultiplier;
             destination.RejoinWarningLingerTime = source.RejoinWarningLingerTime;
             destination.RejoinWarningMinSpeed = source.RejoinWarningMinSpeed;
             destination.SpinYawRateThreshold = source.SpinYawRateThreshold;
             destination.TrafficApproachWarnSeconds = source.TrafficApproachWarnSeconds;
-            destination.RacePaceDeltaSeconds = source.RacePaceDeltaSeconds;
             destination.RefuelRate = source.RefuelRate;
             destination.BaseTankLitres = source.BaseTankLitres;
             destination.PitEntryDecelMps2 = source.PitEntryDecelMps2;
@@ -1470,6 +1492,7 @@ namespace LaunchPlugin
             destination.ShiftAssistShiftLightMode = source.ShiftAssistShiftLightMode;
 
             CloneShiftStacks(source, destination);
+            CopyTrackPlannerSettings(source, destination);
             destination.MaxForwardGearsHint = source.MaxForwardGearsHint;
         }
 
@@ -1956,12 +1979,8 @@ namespace LaunchPlugin
                     AntiStallThreshold = 10.0,
 
                     // Fuel & Pit Properties
-                    FuelContingencyValue = 1.5,
-                    IsContingencyInLaps = true,
                     PreRaceMode = 3,
-                    WetFuelMultiplier = 90.0,
                     TireChangeTime = 22,
-                    RacePaceDeltaSeconds = 1.2,
                     RefuelRate = 3.7,
                     BaseTankLitres = null,
                     PitEntryDecelMps2 = 13.5,

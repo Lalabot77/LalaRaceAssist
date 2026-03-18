@@ -1,6 +1,6 @@
 # Fuel Planner Tab
 
-Validated against commit: 708af0f  
+Validated against commit: f379358  
 Last updated: 2026-01-27  
 Branch: work
 
@@ -56,6 +56,15 @@ These are **authoritative** once set by the user:
   - Used for pit math and pit window evaluation.
   - Clamped by tank capacity.
 
+### Track-scoped planner persistence
+These planner inputs persist on the selected `TrackStats` record rather than on the car profile:
+- `Wet Fuel Multiplier`
+- `Race Pace Delta`
+- `Fuel Contingency Value`
+- contingency mode (`laps` vs `litres`)
+
+The current car profile still owns per-car items such as refuel rate, base tank, tyre-change time, and pit-entry settings, but the four planner controls above are now **track-only**.
+
 Planner inputs persist until explicitly changed by the user or reset by session identity change.
 
 ---
@@ -86,10 +95,15 @@ The planner tracks *what source is currently active* for each input:
 - `FuelPerLapSourceInfo`
   - manual / profile / live / max
 
+### Race pace delta behaviour
+- Each track stores a **default** race-pace delta used when no live leader delta is available.
+- Loading a track does **not** force manual leader-delta mode.
+- Live leader-delta telemetry remains authoritative whenever it is available unless the driver explicitly edits the pace-delta control, which is the only path that sets manual override mode.
+
 ### Track-condition handling (dry vs wet)
 - **Manual selection:** Drivers can explicitly switch the planner into dry or wet mode (per-track).
 - **Live Snapshot sync:** When the live surface mode is known (tyre compound), Live Snapshot mode auto-switches the planner to match unless the user has manually overridden the condition.
-- **Wet factor support:** If wet mode is selected but only dry profile stats exist, the planner scales dry values by the wet factor percentage and labels the source accordingly.
+- **Wet factor support:** If wet mode is selected but only dry profile stats exist, the planner scales dry values by the selected track's wet-factor percentage and labels the source accordingly.
 
 ### Max fuel override handling (profile vs live)
 - **Profile mode:** `MaxFuelOverride` is clamped to the profile base tank (`BaseTankLitres`), and the UI shows a percent-of-base-tank badge.

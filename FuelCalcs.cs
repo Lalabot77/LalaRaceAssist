@@ -96,6 +96,7 @@ namespace LaunchPlugin
         // Separate storage for live vs manual deltas
         private double _liveLeaderDeltaSeconds;      // from telemetry
         private double _manualLeaderDeltaSeconds;    // from the slider
+        private double _storedLeaderDeltaSeconds;    // per-track default loaded from profile
 
         private bool _hasLiveLeaderDelta;
         private bool _isLeaderDeltaManual;
@@ -1145,7 +1146,7 @@ namespace LaunchPlugin
             }
             else
             {
-                newDelta = 0.0;
+                newDelta = _storedLeaderDeltaSeconds;
             }
 
             if (Math.Abs(_leaderDeltaSeconds - newDelta) < 0.001)
@@ -1167,10 +1168,18 @@ namespace LaunchPlugin
         {
             LiveLeaderDeltaSeconds = 0.0;
             _manualLeaderDeltaSeconds = 0.0;
+            _storedLeaderDeltaSeconds = 0.0;
             _hasLiveLeaderDelta = false;
             IsLeaderDeltaManual = false;
             _leaderDeltaSeconds = 0.0;
             OnPropertyChanged(nameof(LeaderDeltaSeconds));
+        }
+
+        private void ClearManualLeaderDeltaOverride()
+        {
+            _manualLeaderDeltaSeconds = 0.0;
+            IsLeaderDeltaManual = false;
+            UpdateEffectiveLeaderDelta();
         }
 
     public double FuelPerLap
@@ -2231,11 +2240,10 @@ namespace LaunchPlugin
             {
                 var selectedTrack = SelectedTrackStats ?? ResolveSelectedTrackStats();
                 var trackMultipliers = selectedTrack?.GetConditionMultipliers(true);
-                var carMultipliers = SelectedCarProfile?.GetConditionMultipliers(true);
                 double? trackWetMultiplier = selectedTrack != null && selectedTrack.HasWetFuelMultiplier
                     ? (double?)selectedTrack.WetFuelMultiplier
                     : null;
-                return trackWetMultiplier ?? trackMultipliers?.WetFactorPercent ?? carMultipliers?.WetFactorPercent ?? SelectedCarProfile?.WetFuelMultiplier;
+                return trackWetMultiplier ?? trackMultipliers?.WetFactorPercent ?? 90.0;
             }
 
             if (SelectedPlanningSourceMode == PlanningSourceMode.LiveSnapshot)
@@ -2547,10 +2555,6 @@ namespace LaunchPlugin
 
         var profileCondition = targetProfile.GetConditionMultipliers(saveWet);
         profileCondition.FormationLapBurnLiters = this.FormationLapFuelLiters;
-        if (saveWet)
-        {
-            profileCondition.WetFactorPercent = this.WetFactorPercent;
-        }
 
         // 6) Save track-specific settings
         var lapTimeMs = trackRecord.LapTimeStringToMilliseconds(EstimatedLapTime);
@@ -3939,9 +3943,11 @@ namespace LaunchPlugin
             deltaSeconds = 0.0;
         }
 
-        _manualLeaderDeltaSeconds = deltaSeconds;
-        IsLeaderDeltaManual = true;
-        UpdateEffectiveLeaderDelta();
+        _storedLeaderDeltaSeconds = deltaSeconds;
+        if (!IsLeaderDeltaManual)
+        {
+            UpdateEffectiveLeaderDelta();
+        }
     }
 
     public void ForceProfileDataReload()
@@ -4051,6 +4057,7 @@ namespace LaunchPlugin
             // a car/track swap cannot leak lap times or fuel numbers from the
             // previous selection (e.g., switching from McLaren 720S to Ferrari 296).
             ResetTrackScopedProfileData();
+            ClearManualLeaderDeltaOverride();
 
             if (ts == null)
             {
@@ -4060,12 +4067,6 @@ namespace LaunchPlugin
                 _lastLoadedCarProfile = car;
                 _lastLoadedTrackKey = trackKey;
                 return;
-            }
-
-            bool seededTrackPlannerValues = car.EnsureTrackPlannerSettings(ts);
-            if (seededTrackPlannerValues)
-            {
-                _plugin.ProfilesViewModel.SaveProfiles();
             }
 
             // --- Load Refuel Rate and remaining car-level settings only when the car changes ---
@@ -4399,7 +4400,7 @@ namespace LaunchPlugin
 
                 if (isWet)
                 {
-                    double fallbackWet = carMultipliers?.WetFactorPercent ?? car?.WetFuelMultiplier ?? WetFactorPercent;
+                    double fallbackWet = 90.0;
                     double? trackWetMultiplier = ts != null && ts.HasWetFuelMultiplier
                         ? (double?)ts.WetFuelMultiplier
                         : null;
