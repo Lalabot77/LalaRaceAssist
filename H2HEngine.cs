@@ -226,10 +226,15 @@ namespace LaunchPlugin
             }
 
             bool carChanged = runtime.CarIdx != carIdx;
-            bool hadPriorSample = runtime.HasSample;
+            bool hadPriorSampleForCurrentCar = runtime.HasSample && !carChanged;
             bool lapRefChanged = runtime.HasSample && runtime.LapRef != lapRef;
             bool wrapped = runtime.HasSample && !double.IsNaN(runtime.LastLapPct) && (lapPct + LapWrapThresholdPct) < runtime.LastLapPct;
             bool newLap = carChanged || !runtime.HasSample || lapRefChanged || wrapped;
+
+            if ((lapRefChanged || wrapped) && runtime.LastActiveSegment > 0 && IsFinite(runtime.LapStartTimeSec))
+            {
+                CompleteActiveSegment(runtime, sessionTimeSec);
+            }
 
             if (carChanged)
             {
@@ -250,7 +255,7 @@ namespace LaunchPlugin
             runtime.ActiveSegment = ComputeActiveSegment(lapPct);
             if (newLap || !IsFinite(runtime.LapStartTimeSec))
             {
-                runtime.LapStartTimeSec = (!hadPriorSample && lapPct > LapStartDetectWindowPct)
+                runtime.LapStartTimeSec = (!hadPriorSampleForCurrentCar && lapPct > LapStartDetectWindowPct)
                     ? double.NaN
                     : sessionTimeSec;
             }
@@ -280,6 +285,16 @@ namespace LaunchPlugin
             runtime.LastLapPct = lapPct;
             runtime.LastActiveSegment = runtime.ActiveSegment;
             return true;
+        }
+
+        private static void CompleteActiveSegment(ParticipantRuntime runtime, double sessionTimeSec)
+        {
+            if (runtime == null || runtime.LastActiveSegment <= 0 || runtime.LastActiveSegment > SegmentCount || !IsFinite(runtime.LapStartTimeSec))
+            {
+                return;
+            }
+
+            runtime.SegmentCompletedTimeSec[runtime.LastActiveSegment - 1] = sessionTimeSec - runtime.LapStartTimeSec;
         }
 
         private static double ComputeLiveDeltaToBest(ParticipantRuntime runtime, double sessionTimeSec, double bestLapSec)

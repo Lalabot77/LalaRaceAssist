@@ -10217,6 +10217,9 @@ namespace LaunchPlugin
             string carNumber = current?.CarNumber ?? string.Empty;
             string classColor = current?.ClassColor ?? string.Empty;
             int positionInClass = 0;
+            bool sameIdentityAsPrevious = previousOutput != null
+                && !string.IsNullOrWhiteSpace(previousOutput.IdentityKey)
+                && string.Equals(previousOutput.IdentityKey, identityKey, StringComparison.Ordinal);
 
             if (string.IsNullOrWhiteSpace(identityKey) && previousOutput != null && !string.IsNullOrWhiteSpace(previousOutput.IdentityKey))
             {
@@ -10225,11 +10228,32 @@ namespace LaunchPlugin
                 carNumber = previousOutput.CarNumber ?? string.Empty;
                 classColor = previousOutput.ClassColor ?? string.Empty;
                 positionInClass = previousOutput.PositionInClass;
+                sameIdentityAsPrevious = true;
             }
 
             if (string.IsNullOrWhiteSpace(identityKey))
             {
                 return default(H2HEngine.TargetSelector);
+            }
+
+            if (string.IsNullOrWhiteSpace(name) && previousOutput != null && string.Equals(previousOutput.IdentityKey, identityKey, StringComparison.Ordinal))
+            {
+                name = previousOutput.Name ?? string.Empty;
+            }
+
+            if (string.IsNullOrWhiteSpace(carNumber) && previousOutput != null && string.Equals(previousOutput.IdentityKey, identityKey, StringComparison.Ordinal))
+            {
+                carNumber = previousOutput.CarNumber ?? string.Empty;
+            }
+
+            if (string.IsNullOrWhiteSpace(classColor) && previousOutput != null && string.Equals(previousOutput.IdentityKey, identityKey, StringComparison.Ordinal))
+            {
+                classColor = previousOutput.ClassColor ?? string.Empty;
+            }
+
+            if (positionInClass <= 0 && previousOutput != null && string.Equals(previousOutput.IdentityKey, identityKey, StringComparison.Ordinal))
+            {
+                positionInClass = previousOutput.PositionInClass;
             }
 
             int carIdx = -1;
@@ -10240,6 +10264,10 @@ namespace LaunchPlugin
                 {
                     positionInClass = _carSaClassPositionByIdx[carIdx];
                 }
+            }
+            else if (sameIdentityAsPrevious && previousOutput != null && previousOutput.CarIdx >= 0)
+            {
+                carIdx = previousOutput.CarIdx;
             }
 
             return new H2HEngine.TargetSelector
