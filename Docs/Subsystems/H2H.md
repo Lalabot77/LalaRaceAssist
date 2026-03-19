@@ -49,7 +49,7 @@ Phase 1 is intentionally simple:
 - `PositionInClass = 0` when unavailable.
 - `LiveDeltaToBestSec = 0` when insufficient data exists.
 - Segment delta values reset to `0` whenever their segment state is not `valid`.
-- When a lap wraps, previously published valid segment states/deltas stay latched on the dash until the new lap rebuilds that same segment; new segments only publish `pending`/`0` when they had not already been published valid, and the new lap progressively overwrites each segment once replacement timing is available.
+- When a lap wraps, the just-finished closing segment is carried across the ordinary new-lap runtime reset so sector 6 can still publish valid timing after start-finish; full participant discard/rebind still clears that carryover, while previously published valid segment states/deltas stay latched on the dash until the new lap rebuilds that same segment.
 - `Valid` is true only when a side has a resolved live target and usable H2H timing context.
 
 ## Export contract summary
@@ -67,5 +67,5 @@ Both `H2HRace.*` and `H2HTrack.*` expose the same flat shape:
 
 ## Runtime timing notes
 - H2H does not synthesize a lap-start timestamp from the current tick when a participant is first observed or rebound mid-lap; live-delta and segment timing remain incomplete until a real lap boundary is seen.
-- When a lap wraps, the outgoing active segment is finalized before the runtime resets for the next lap so the closing segment can latch valid timing, and the already-published segment outputs remain visible until the new lap revisits them.
+- When a lap wraps, the outgoing active segment is finalized and its completion time is carried across the ordinary new-lap runtime reset so all six fixed segments, including sector 6, remain publishable; true participant discard/reset/rebind paths still clear that carryover, and already-published segment outputs stay visible until the new lap revisits and replaces them.
 - `ClassColor` is published in one canonical uppercase hex format: `#RRGGBB`.

@@ -183,8 +183,8 @@ namespace LaunchPlugin
                     continue;
                 }
 
-                double playerTime = playerRuntime.SegmentCompletedTimeSec[i];
-                double targetTime = targetRuntime.SegmentCompletedTimeSec[i];
+                double playerTime = GetLatestCompletedSegmentTime(playerRuntime, i);
+                double targetTime = GetLatestCompletedSegmentTime(targetRuntime, i);
                 bool playerDone = IsFinite(playerTime);
                 bool targetDone = IsFinite(targetTime);
 
@@ -197,6 +197,22 @@ namespace LaunchPlugin
                     output.SetSegment(i, 0.0, SegmentStatePending);
                 }
             }
+        }
+
+        private static double GetLatestCompletedSegmentTime(ParticipantRuntime runtime, int index)
+        {
+            if (runtime == null || index < 0 || index >= SegmentCount)
+            {
+                return double.NaN;
+            }
+
+            double currentLapTime = runtime.SegmentCompletedTimeSec[index];
+            if (IsFinite(currentLapTime))
+            {
+                return currentLapTime;
+            }
+
+            return runtime.PublishedSegmentCarryoverTimeSec[index];
         }
 
         private static bool UpdateRuntime(ParticipantRuntime runtime, int carIdx, double sessionTimeSec, float[] carIdxLapDistPct, int[] carIdxLap)
@@ -289,7 +305,10 @@ namespace LaunchPlugin
                 return;
             }
 
-            runtime.SegmentCompletedTimeSec[runtime.LastActiveSegment - 1] = sessionTimeSec - runtime.LapStartTimeSec;
+            double completedTimeSec = sessionTimeSec - runtime.LapStartTimeSec;
+            int segmentIndex = runtime.LastActiveSegment - 1;
+            runtime.SegmentCompletedTimeSec[segmentIndex] = completedTimeSec;
+            runtime.PublishedSegmentCarryoverTimeSec[segmentIndex] = completedTimeSec;
         }
 
         private static double ComputeLiveDeltaToBest(ParticipantRuntime runtime, double sessionTimeSec, double bestLapSec)
@@ -444,6 +463,7 @@ namespace LaunchPlugin
         private sealed class ParticipantRuntime
         {
             public readonly double[] SegmentCompletedTimeSec = new double[SegmentCount];
+            public readonly double[] PublishedSegmentCarryoverTimeSec = new double[SegmentCount];
             public int CarIdx = -1;
             public int LapRef;
             public double LapPct = double.NaN;
@@ -474,7 +494,8 @@ namespace LaunchPlugin
                 LapStartTimeSec = double.NaN;
                 BestLapReferenceSec = 0.0;
                 LastLapReferenceSec = 0.0;
-                ClearSegments();
+                ClearCurrentLapSegments();
+                ClearPublishedSegmentCarryover();
             }
 
             public void ResetForNewLap()
@@ -485,7 +506,7 @@ namespace LaunchPlugin
                 LastActiveSegment = 0;
                 HasUsableContext = false;
                 LapStartTimeSec = double.NaN;
-                ClearSegments();
+                ClearCurrentLapSegments();
             }
 
             public void ResetContext(int carIdx)
@@ -498,14 +519,23 @@ namespace LaunchPlugin
                 HasUsableContext = false;
                 HasSample = false;
                 LapStartTimeSec = double.NaN;
-                ClearSegments();
+                ClearCurrentLapSegments();
+                ClearPublishedSegmentCarryover();
             }
 
-            private void ClearSegments()
+            private void ClearCurrentLapSegments()
             {
                 for (int i = 0; i < SegmentCompletedTimeSec.Length; i++)
                 {
                     SegmentCompletedTimeSec[i] = double.NaN;
+                }
+            }
+
+            private void ClearPublishedSegmentCarryover()
+            {
+                for (int i = 0; i < PublishedSegmentCarryoverTimeSec.Length; i++)
+                {
+                    PublishedSegmentCarryoverTimeSec[i] = double.NaN;
                 }
             }
         }
