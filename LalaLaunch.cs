@@ -10266,7 +10266,7 @@ namespace LaunchPlugin
                     positionInClass = _carSaClassPositionByIdx[carIdx];
                 }
             }
-            else if (TryResolveH2HRaceCarIdxFromCarSa(identityKey, out resolvedCarIdx))
+            else if (TryResolveH2HRaceCarIdxFromCarSa(identityKey, carNumber, name, out resolvedCarIdx))
             {
                 carIdx = resolvedCarIdx;
                 if (carIdx >= 0 && carIdx < _carSaClassPositionByIdx.Length && _carSaClassPositionByIdx[carIdx] > 0)
@@ -10302,7 +10302,7 @@ namespace LaunchPlugin
             };
         }
 
-        private bool TryResolveH2HRaceCarIdxFromCarSa(string identityKey, out int carIdx)
+        private bool TryResolveH2HRaceCarIdxFromCarSa(string identityKey, string requestedCarNumber, string requestedName, out int carIdx)
         {
             carIdx = -1;
             if (string.IsNullOrWhiteSpace(identityKey) || _carSaEngine?.Outputs == null)
@@ -10310,21 +10310,41 @@ namespace LaunchPlugin
                 return false;
             }
 
-            if (TryResolveH2HRaceCarIdxFromCarSaSlots(_carSaEngine.Outputs.AheadSlots, identityKey, out carIdx))
+            int matchedCarIdx = -1;
+            bool exactIdentityMatched = false;
+            int boundedFallbackMatches = 0;
+
+            if (TryResolveH2HRaceCarIdxFromCarSaSlots(_carSaEngine.Outputs.AheadSlots, identityKey, requestedCarNumber, requestedName, ref matchedCarIdx, ref exactIdentityMatched, ref boundedFallbackMatches))
             {
+                carIdx = matchedCarIdx;
                 return true;
             }
 
-            return TryResolveH2HRaceCarIdxFromCarSaSlots(_carSaEngine.Outputs.BehindSlots, identityKey, out carIdx);
+            if (TryResolveH2HRaceCarIdxFromCarSaSlots(_carSaEngine.Outputs.BehindSlots, identityKey, requestedCarNumber, requestedName, ref matchedCarIdx, ref exactIdentityMatched, ref boundedFallbackMatches))
+            {
+                carIdx = matchedCarIdx;
+                return true;
+            }
+
+            if (!exactIdentityMatched && matchedCarIdx >= 0 && boundedFallbackMatches == 1)
+            {
+                carIdx = matchedCarIdx;
+                return true;
+            }
+
+            return false;
         }
 
-        private static bool TryResolveH2HRaceCarIdxFromCarSaSlots(CarSASlot[] slots, string identityKey, out int carIdx)
+        private static bool TryResolveH2HRaceCarIdxFromCarSaSlots(CarSASlot[] slots, string identityKey, string requestedCarNumber, string requestedName, ref int matchedCarIdx, ref bool exactIdentityMatched, ref int boundedFallbackMatches)
         {
-            carIdx = -1;
             if (slots == null || string.IsNullOrWhiteSpace(identityKey))
             {
                 return false;
             }
+
+            string normalizedRequestedCarNumber = NormalizeH2HCarNumber(requestedCarNumber);
+            string normalizedRequestedName = NormalizeH2HDriverName(requestedName);
+            bool requireNameMatch = !string.IsNullOrWhiteSpace(normalizedRequestedName);
 
             for (int i = 0; i < slots.Length; i++)
             {
@@ -10335,16 +10355,47 @@ namespace LaunchPlugin
                 }
 
                 string slotIdentityKey = MakeStaticH2HIdentityKey(slot.ClassColor, slot.CarNumber);
-                if (!string.Equals(slotIdentityKey, identityKey, StringComparison.Ordinal))
+                if (string.Equals(slotIdentityKey, identityKey, StringComparison.Ordinal))
+                {
+                    matchedCarIdx = slot.CarIdx;
+                    exactIdentityMatched = true;
+                    return true;
+                }
+
+                if (string.IsNullOrWhiteSpace(normalizedRequestedCarNumber))
                 {
                     continue;
                 }
 
-                carIdx = slot.CarIdx;
-                return true;
+                if (!string.Equals(NormalizeH2HCarNumber(slot.CarNumber), normalizedRequestedCarNumber, StringComparison.Ordinal))
+                {
+                    continue;
+                }
+
+                if (requireNameMatch && !string.Equals(NormalizeH2HDriverName(slot.Name), normalizedRequestedName, StringComparison.Ordinal))
+                {
+                    continue;
+                }
+
+                matchedCarIdx = slot.CarIdx;
+                boundedFallbackMatches++;
+                if (boundedFallbackMatches > 1)
+                {
+                    matchedCarIdx = -1;
+                }
             }
 
             return false;
+        }
+
+        private static string NormalizeH2HCarNumber(string carNumber)
+        {
+            return string.IsNullOrWhiteSpace(carNumber) ? string.Empty : carNumber.Trim();
+        }
+
+        private static string NormalizeH2HDriverName(string name)
+        {
+            return string.IsNullOrWhiteSpace(name) ? string.Empty : name.Trim().ToUpperInvariant();
         }
 
         private string ResolveH2HNameFromCarSaCarIdx(int carIdx)

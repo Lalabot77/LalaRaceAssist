@@ -1,4 +1,4 @@
-﻿# Repository status
+# Repository status
 
 Validated against commit: HEAD
 Last updated: 2026-03-19
@@ -9,16 +9,14 @@ Branch: work
 - No Git remote is configured in this checkout (`git remote -v` returns empty).
 
 ## Documentation sync status (requested set)
-- `Docs/Subsystems/H2H.md` updated for the scoped H2H correctness follow-up: lap-wrap segment carryover, canonical H2H class-color formatting, and the bounded race `CarIdx` fallback path.
-- `Docs/Subsystems/CarSA.md` and `Docs/Subsystems/Opponents.md` updated so their selector-only wording still matches final H2H ownership after the race-resolution hardening.
-- `Docs/SimHubParameterInventory.md` updated so the published H2H export contract now describes canonical `ClassColor` formatting and lap-wrap segment latching accurately.
+- `Docs/Subsystems/H2H.md` updated for this scoped H2H follow-up so the canonical subsystem doc matches the bounded race `CarIdx` fallback and the corrected lap-wrap segment latching rule.
+- `Docs/SimHubParameterInventory.md` updated so the published H2H export contract describes the bounded race `CarIdx` recovery path and the per-segment lap-wrap latch semantics accurately.
 - `Docs/RepoStatus.md` refreshed for the current validation summary.
 
 ## Delivery status highlights
-- `H2HRace.*` and `H2HTrack.*` now keep previously published segment states/deltas latched across lap crossing until the new lap rebuilds each segment, instead of pushing immediate empty/zero outputs at start/finish.
-- H2H `ClassColor` outputs now publish one canonical uppercase hex format: `#RRGGBB`.
-- `H2HRace.*` still uses Opponents as the selector source, but when direct identity-table lookup misses it can now use a narrow local CarSA-slot fallback to recover the live target `CarIdx` without moving ownership into CarSA or Opponents.
-- `H2HTrack.*` remains the more volatile family because local CarSA slots can still rebind as nearby cars change.
+- `H2HRace.*` still uses Opponents as the selector source and still prefers exact `ClassColor:CarNumber` resolution first, but it can now recover a live nearby `CarIdx` from current CarSA slots via a bounded car-number/name fallback when class-color identity differs between selector sources.
+- `H2HRace.*` identity/cosmetic fields can therefore stay populated while the live target `CarIdx` is recovered more robustly, without moving selector ownership into Opponents or CarSA.
+- `H2HRace.*` and `H2HTrack.*` now keep previously published valid segment states/deltas latched across lap wrap until the new lap replaces that same segment, instead of downgrading published values back to `pending/0` as one side rolls first over start-finish.
 - No plugin UI/settings were added, no H2H export names changed, no debug CSV logging was introduced, and CarSA/Opponents ownership boundaries were preserved.
 
 ## Notes
