@@ -55,7 +55,7 @@ namespace LaunchPlugin
                 return;
             }
 
-            bool gateNow = completedLaps >= 1;
+            bool gateNow = true; //completedLaps >= 1; removed lap gate requirement to allow opponents info to populate during out-laps and first lap during testing.
             bool allowLogs = gateNow;
 
             _nearby.Update(pluginManager, allowLogs, debugEnabled);
