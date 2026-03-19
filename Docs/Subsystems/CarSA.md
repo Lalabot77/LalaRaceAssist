@@ -4,7 +4,7 @@
 CarSA provides **session-agnostic**, **class-aware** spatial awareness using iRacing CarIdx telemetry arrays as the source of truth. It publishes the 5 nearest cars ahead and 5 behind on track for Practice, Qualifying, and Race sessions using distance-based gaps derived from car-centric LapDistPct deltas, plus gate-gap v2 relative proximity.
 
 CarSA is independent of the race-only Opponents subsystem and does not change Opponents or Rejoin Assist behavior.
-Phase-1 Head-to-Head (`H2HTrack.*`) consumes CarSA only as a **track-target selector seam** (the current ahead/behind slot sets, `CarIdx`, and already-resolved cosmetic metadata). H2H locally picks the nearest valid same-class candidate from those slots; timing, lap-summary, live-gap, and fixed-6-segment ownership remain inside the standalone H2H subsystem, and CarSA does **not** become the H2H timing engine.
+Phase-1 Head-to-Head (`H2HTrack.*`) consumes CarSA only as a **track-target selector seam** (the current ahead/behind slot sets, `CarIdx`, and already-resolved cosmetic metadata). H2H locally picks the nearest valid same-class candidate from those slots, normalizes exported H2H class colors to canonical `#RRGGBB`, and keeps timing, lap-summary, live-gap, and fixed-6-segment ownership inside the standalone H2H subsystem. CarSA does **not** become the H2H timing engine, and `H2HRace.*` only uses CarSA as a narrow local live-session fallback when a known Opponents-selected identity needs help re-resolving `CarIdx`.
 
 ## Truth source
 - **Primary:** `CarIdx*` telemetry arrays (CarIdxLapDistPct, CarIdxLap, CarIdxTrackSurface, CarIdxOnPitRoad).
