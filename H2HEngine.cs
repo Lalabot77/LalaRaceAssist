@@ -192,7 +192,7 @@ namespace LaunchPlugin
                 {
                     output.SetSegment(i, targetTime - playerTime, SegmentStateValid);
                 }
-                else if (playerDone || targetDone)
+                else if ((playerDone || targetDone) && output.GetSegmentState(i) != SegmentStateValid)
                 {
                     output.SetSegment(i, 0.0, SegmentStatePending);
                 }
