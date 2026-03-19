@@ -1,7 +1,7 @@
 ﻿# Repository status
 
-Validated against commit: dd49555
-Last updated: 2026-03-18
+Validated against commit: HEAD
+Last updated: 2026-03-19
 Branch: work
 
 ## Current repo/link status
@@ -9,29 +9,17 @@ Branch: work
 - No Git remote is configured in this checkout (`git remote -v` returns empty).
 
 ## Documentation sync status (requested set)
-- `Docs/Subsystems/H2H.md` updated to document same-class `H2HTrack` selection and race-selector clear behavior for `H2HRace`.
-- `Docs/Subsystems/CarSA.md` and `Docs/Subsystems/Opponents.md` updated so their selector-only wording matches the final H2H behavior.
-- `Docs/RepoStatus.md` updated with the validation summary for the scoped H2H selector-correctness follow-up.
+- `Docs/Subsystems/H2H.md` updated for the scoped H2H correctness follow-up: lap-wrap segment carryover, canonical H2H class-color formatting, and the bounded race `CarIdx` fallback path.
+- `Docs/Subsystems/CarSA.md` and `Docs/Subsystems/Opponents.md` updated so their selector-only wording still matches final H2H ownership after the race-resolution hardening.
+- `Docs/SimHubParameterInventory.md` updated so the published H2H export contract now describes canonical `ClassColor` formatting and lap-wrap segment latching accurately.
+- `Docs/RepoStatus.md` refreshed for the current validation summary.
 
 ## Delivery status highlights
-- `H2HTrack.*` now scans CarSA ahead/behind slots and binds only to the nearest valid same-class local target instead of blindly consuming raw slot 01.
-- `H2HRace.*` no longer revives a stale previous identity when Opponents intentionally clears race outputs; it only preserves the previous binding for temporary same-identity reverse-resolution misses.
-- No plugin UI/settings were added, no export names changed, no debug CSV logging was introduced, and CarSA/Opponents ownership boundaries were preserved.
-- `Docs/Plugin_UI_Tooltips.md` updated for the final TRACKS planner ownership model and wet-multiplier relocation in the Profiles UI.
-- `Docs/Project_Index.md` refreshed to keep the TRACKS tab planner documentation discoverable from the canonical doc entry points.
-- `Docs/Subsystems/Fuel_Planner_Tab.md` updated to describe the final track-scoped planner persistence and stored-vs-live race-pace delta behaviour.
-- `Docs/RepoStatus.md` updated with the validation summary for the final track-planning cleanup.
-
-## Delivery status highlights
-- `TrackStats` now owns the TRACKS planner values for `Wet Fuel Multiplier`, `Race Pace Delta`, `Fuel Contingency Value`, and contingency mode as the single active ownership model.
-- Legacy car-level planner JSON keys are now treated as one-time migration inputs only; load-time migration seeds missing track values once, clears the legacy values, and no longer keeps mixed ownership paths alive.
-- Profiles with only legacy planner keys now seed their `Default` track template before those legacy values are cleared, so first-time creation of later track records still inherits the migrated planner defaults instead of generic fallbacks.
-- Wet-factor migration now prefers the true legacy planner wet multiplier before any default-generated wet-condition multiplier, so customised old planner values are not overwritten by a synthetic `90%` default.
-- `FuelCalcs` now loads and saves those four planner inputs from the resolved `TrackStats` record instead of the selected car profile, while `PreRaceMode`, `TireChangeTime`, `RefuelRate`, `BaseTankLitres`, `Pit Entry Decel`, and `Pit Entry Buffer` remain in their existing scopes.
-- Loading stored per-track `Race Pace Delta` now populates the track default without forcing manual leader-delta mode, and planner saves persist the stored/manual default value rather than transient live leader-gap telemetry.
-- The `TRACKS` tab now uses a `Track Planning` group for contingency/mode and race pace delta, and moves `Wet Fuel Multiplier` into the `Wet vs Dry Avg Deltas` section near the wet-condition workflow.
-- Save chatter was reduced by removing selection-time migration saves and by only saving when a real migration/default mutation occurs.
-- Profile copy/overwrite now rebuilds destination track-planner records from the source set so destination-only stale planner tracks do not survive an overwrite.
+- `H2HRace.*` and `H2HTrack.*` now keep previously published segment states/deltas latched across lap crossing until the new lap rebuilds each segment, instead of pushing immediate empty/zero outputs at start/finish.
+- H2H `ClassColor` outputs now publish one canonical uppercase hex format: `#RRGGBB`.
+- `H2HRace.*` still uses Opponents as the selector source, but when direct identity-table lookup misses it can now use a narrow local CarSA-slot fallback to recover the live target `CarIdx` without moving ownership into CarSA or Opponents.
+- `H2HTrack.*` remains the more volatile family because local CarSA slots can still rebind as nearby cars change.
+- No plugin UI/settings were added, no H2H export names changed, no debug CSV logging was introduced, and CarSA/Opponents ownership boundaries were preserved.
 
 ## Notes
 - `Docs/Code_Snapshot.md` remains non-canonical orientation-only documentation.

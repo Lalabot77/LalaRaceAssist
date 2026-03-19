@@ -180,7 +180,6 @@ namespace LaunchPlugin
             {
                 if (!hasUsableTimingContext || playerRuntime == null || targetRuntime == null)
                 {
-                    output.SetSegment(i, 0.0, SegmentStateEmpty);
                     continue;
                 }
 
@@ -196,10 +195,6 @@ namespace LaunchPlugin
                 else if (playerDone || targetDone)
                 {
                     output.SetSegment(i, 0.0, SegmentStatePending);
-                }
-                else
-                {
-                    output.SetSegment(i, 0.0, SegmentStateEmpty);
                 }
             }
         }

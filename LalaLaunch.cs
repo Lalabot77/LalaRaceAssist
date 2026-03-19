@@ -10213,7 +10213,7 @@ namespace LaunchPlugin
                     IdentityKey = MakeH2HIdentityKey(slot.ClassColor, slot.CarNumber),
                     Name = slot.Name ?? string.Empty,
                     CarNumber = slot.CarNumber ?? string.Empty,
-                    ClassColor = slot.ClassColor ?? string.Empty,
+                    ClassColor = NormalizeH2HClassColor(slot.ClassColor),
                     PositionInClass = slot.PositionInClass > 0 ? slot.PositionInClass : 0
                 };
             }
@@ -10226,7 +10226,7 @@ namespace LaunchPlugin
             string identityKey = MakeH2HIdentityKey(current?.ClassColor, current?.CarNumber);
             string name = current?.Name ?? string.Empty;
             string carNumber = current?.CarNumber ?? string.Empty;
-            string classColor = current?.ClassColor ?? string.Empty;
+            string classColor = NormalizeH2HClassColor(current?.ClassColor);
             int positionInClass = 0;
             bool sameIdentityAsPrevious = previousOutput != null
                 && !string.IsNullOrWhiteSpace(previousOutput.IdentityKey)
@@ -10249,7 +10249,7 @@ namespace LaunchPlugin
 
             if (string.IsNullOrWhiteSpace(classColor) && previousOutput != null && string.Equals(previousOutput.IdentityKey, identityKey, StringComparison.Ordinal))
             {
-                classColor = previousOutput.ClassColor ?? string.Empty;
+                classColor = NormalizeH2HClassColor(previousOutput.ClassColor);
             }
 
             if (positionInClass <= 0 && previousOutput != null && string.Equals(previousOutput.IdentityKey, identityKey, StringComparison.Ordinal))
@@ -10266,6 +10266,26 @@ namespace LaunchPlugin
                     positionInClass = _carSaClassPositionByIdx[carIdx];
                 }
             }
+            else if (TryResolveH2HRaceCarIdxFromCarSa(identityKey, out resolvedCarIdx))
+            {
+                carIdx = resolvedCarIdx;
+                if (carIdx >= 0 && carIdx < _carSaClassPositionByIdx.Length && _carSaClassPositionByIdx[carIdx] > 0)
+                {
+                    positionInClass = _carSaClassPositionByIdx[carIdx];
+                }
+                if (string.IsNullOrWhiteSpace(name))
+                {
+                    name = ResolveH2HNameFromCarSaCarIdx(resolvedCarIdx);
+                }
+                if (string.IsNullOrWhiteSpace(carNumber))
+                {
+                    carNumber = ResolveH2HCarNumberFromCarSaCarIdx(resolvedCarIdx);
+                }
+                if (string.IsNullOrWhiteSpace(classColor))
+                {
+                    classColor = ResolveH2HClassColorFromCarSaCarIdx(resolvedCarIdx);
+                }
+            }
             else if (sameIdentityAsPrevious && previousOutput != null && previousOutput.CarIdx >= 0)
             {
                 carIdx = previousOutput.CarIdx;
@@ -10277,9 +10297,137 @@ namespace LaunchPlugin
                 IdentityKey = identityKey,
                 Name = name,
                 CarNumber = carNumber,
-                ClassColor = classColor,
+                ClassColor = NormalizeH2HClassColor(classColor),
                 PositionInClass = positionInClass > 0 ? positionInClass : 0
             };
+        }
+
+        private bool TryResolveH2HRaceCarIdxFromCarSa(string identityKey, out int carIdx)
+        {
+            carIdx = -1;
+            if (string.IsNullOrWhiteSpace(identityKey) || _carSaEngine?.Outputs == null)
+            {
+                return false;
+            }
+
+            if (TryResolveH2HRaceCarIdxFromCarSaSlots(_carSaEngine.Outputs.AheadSlots, identityKey, out carIdx))
+            {
+                return true;
+            }
+
+            return TryResolveH2HRaceCarIdxFromCarSaSlots(_carSaEngine.Outputs.BehindSlots, identityKey, out carIdx);
+        }
+
+        private static bool TryResolveH2HRaceCarIdxFromCarSaSlots(CarSASlot[] slots, string identityKey, out int carIdx)
+        {
+            carIdx = -1;
+            if (slots == null || string.IsNullOrWhiteSpace(identityKey))
+            {
+                return false;
+            }
+
+            for (int i = 0; i < slots.Length; i++)
+            {
+                CarSASlot slot = slots[i];
+                if (slot == null || !slot.IsValid || slot.CarIdx < 0)
+                {
+                    continue;
+                }
+
+                string slotIdentityKey = MakeStaticH2HIdentityKey(slot.ClassColor, slot.CarNumber);
+                if (!string.Equals(slotIdentityKey, identityKey, StringComparison.Ordinal))
+                {
+                    continue;
+                }
+
+                carIdx = slot.CarIdx;
+                return true;
+            }
+
+            return false;
+        }
+
+        private string ResolveH2HNameFromCarSaCarIdx(int carIdx)
+        {
+            if (_carSaEngine?.Outputs == null || carIdx < 0)
+            {
+                return string.Empty;
+            }
+
+            if (TryFindCarSaSlotByCarIdx(_carSaEngine.Outputs.AheadSlots, carIdx, out CarSASlot aheadSlot))
+            {
+                return aheadSlot.Name ?? string.Empty;
+            }
+
+            if (TryFindCarSaSlotByCarIdx(_carSaEngine.Outputs.BehindSlots, carIdx, out CarSASlot behindSlot))
+            {
+                return behindSlot.Name ?? string.Empty;
+            }
+
+            return string.Empty;
+        }
+
+        private string ResolveH2HCarNumberFromCarSaCarIdx(int carIdx)
+        {
+            if (_carSaEngine?.Outputs == null || carIdx < 0)
+            {
+                return string.Empty;
+            }
+
+            if (TryFindCarSaSlotByCarIdx(_carSaEngine.Outputs.AheadSlots, carIdx, out CarSASlot aheadSlot))
+            {
+                return aheadSlot.CarNumber ?? string.Empty;
+            }
+
+            if (TryFindCarSaSlotByCarIdx(_carSaEngine.Outputs.BehindSlots, carIdx, out CarSASlot behindSlot))
+            {
+                return behindSlot.CarNumber ?? string.Empty;
+            }
+
+            return string.Empty;
+        }
+
+        private string ResolveH2HClassColorFromCarSaCarIdx(int carIdx)
+        {
+            if (_carSaEngine?.Outputs == null || carIdx < 0)
+            {
+                return string.Empty;
+            }
+
+            if (TryFindCarSaSlotByCarIdx(_carSaEngine.Outputs.AheadSlots, carIdx, out CarSASlot aheadSlot))
+            {
+                return NormalizeH2HClassColor(aheadSlot.ClassColor);
+            }
+
+            if (TryFindCarSaSlotByCarIdx(_carSaEngine.Outputs.BehindSlots, carIdx, out CarSASlot behindSlot))
+            {
+                return NormalizeH2HClassColor(behindSlot.ClassColor);
+            }
+
+            return string.Empty;
+        }
+
+        private static bool TryFindCarSaSlotByCarIdx(CarSASlot[] slots, int carIdx, out CarSASlot match)
+        {
+            match = null;
+            if (slots == null || carIdx < 0)
+            {
+                return false;
+            }
+
+            for (int i = 0; i < slots.Length; i++)
+            {
+                CarSASlot slot = slots[i];
+                if (slot == null || slot.CarIdx != carIdx)
+                {
+                    continue;
+                }
+
+                match = slot;
+                return true;
+            }
+
+            return false;
         }
 
         private bool TryResolveCarIdxByIdentityKey(PluginManager pluginManager, string identityKey, out int carIdx)
@@ -10373,13 +10521,23 @@ namespace LaunchPlugin
 
         private string MakeH2HIdentityKey(string classColor, string carNumber)
         {
-            string normalizedClassColor = NormalizeClassColorHex(classColor);
+            return MakeStaticH2HIdentityKey(classColor, carNumber);
+        }
+
+        private static string MakeStaticH2HIdentityKey(string classColor, string carNumber)
+        {
+            string normalizedClassColor = NormalizeH2HClassColor(classColor);
             if (string.IsNullOrWhiteSpace(normalizedClassColor))
             {
                 normalizedClassColor = classColor ?? string.Empty;
             }
 
             return OpponentsEngine.MakeIdentityKey(normalizedClassColor, carNumber ?? string.Empty);
+        }
+
+        private static string NormalizeH2HClassColor(string classColor)
+        {
+            return NormalizeClassColorHex(classColor);
         }
 
         private static bool IsValidCarSaLapTimeSec(double value)
