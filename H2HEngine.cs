@@ -494,7 +494,8 @@ namespace LaunchPlugin
                 LapStartTimeSec = double.NaN;
                 BestLapReferenceSec = 0.0;
                 LastLapReferenceSec = 0.0;
-                ClearSegments();
+                ClearCurrentLapSegments();
+                ClearPublishedSegmentCarryover();
             }
 
             public void ResetForNewLap()
@@ -505,7 +506,7 @@ namespace LaunchPlugin
                 LastActiveSegment = 0;
                 HasUsableContext = false;
                 LapStartTimeSec = double.NaN;
-                ClearSegments();
+                ClearCurrentLapSegments();
             }
 
             public void ResetContext(int carIdx)
@@ -518,14 +519,22 @@ namespace LaunchPlugin
                 HasUsableContext = false;
                 HasSample = false;
                 LapStartTimeSec = double.NaN;
-                ClearSegments();
+                ClearCurrentLapSegments();
+                ClearPublishedSegmentCarryover();
             }
 
-            private void ClearSegments()
+            private void ClearCurrentLapSegments()
             {
                 for (int i = 0; i < SegmentCompletedTimeSec.Length; i++)
                 {
                     SegmentCompletedTimeSec[i] = double.NaN;
+                }
+            }
+
+            private void ClearPublishedSegmentCarryover()
+            {
+                for (int i = 0; i < PublishedSegmentCarryoverTimeSec.Length; i++)
+                {
                     PublishedSegmentCarryoverTimeSec[i] = double.NaN;
                 }
             }
