@@ -9,14 +9,15 @@ Branch: work
 - No Git remote is configured in this checkout (`git remote -v` returns empty).
 
 ## Documentation sync status (requested set)
-- `Docs/Subsystems/Fuel_Planner_Tab.md` updated so the canonical Fuel planner doc now records that pace-vs-leader is editable only in Profile mode, auto-follows live leader delta in Live Snapshot mode, and falls back to `0.0` instead of stale manual/profile values when live leader pace is unavailable.
-- `Docs/Plugin_UI_Tooltips.md` updated to remove the obsolete leader-delta reset-to-live tooltip and describe the Live Snapshot lock behaviour for the pace-vs-leader control.
+- `Docs/Subsystems/Fuel_Planner_Tab.md` updated so the canonical planner doc now describes the top-level Strategy tab name, the preserved inline Race Preset selector, and the modal Preset Manager workflow that replaces the former separate Presets tab.
+- `Docs/Plugin_UI_Tooltips.md` updated so the tooltip inventory reflects the Strategy-tab navigation, the new `Presets...` button beside the Race Preset combo, and the Strategy wording inside the preset manager.
+- `Docs/Project_Index.md` updated so the subsystem map and tooltip reference describe the Strategy-tab / modal-preset workflow.
 - `Docs/RepoStatus.md` refreshed for the current validation summary.
 
 ## Delivery status highlights
-- Fuel planner leader delta now follows the selected planning source model: Profile mode keeps the manual/stored race-pace delta workflow, while Live Snapshot mode clears manual override state on entry and continuously uses the current live leader delta when available.
-- The Fuel tab no longer needs a separate "Reset to live" / "Use live" leader-delta recovery path; the manual slider is locked in Live Snapshot mode and strategy calculations fall back to zero leader delta when no live leader pace is available.
-- Live snapshot resets and car/track combination clears now wipe live/manual leader-delta runtime state without reviving stale hidden manual values during Live Snapshot mode, while still preserving track-stored profile behaviour for Profile mode.
+- The top-level planner tab is now labeled `STRATEGY`, while the existing planner content and FuelCalcs-backed strategy workflow remain intact.
+- The former top-level `PRESETS` tab has been removed; preset management now opens as a modal Preset Manager from the `Presets...` button beside the Strategy tab's Race Preset combo.
+- The modal reuses the existing preset editor and shared `FuelCalcs` state, preserving preset selection/application semantics, save-current behavior, and preset persistence without changing preset storage or planner math.
 
 ## Notes
 - `Docs/Code_Snapshot.md` remains non-canonical orientation-only documentation.

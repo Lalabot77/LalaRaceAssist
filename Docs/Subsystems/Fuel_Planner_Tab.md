@@ -1,11 +1,11 @@
-# Fuel Planner Tab
+# Fuel Planner / Strategy Tab
 
-Validated against commit: dd49555  
-Last updated: 2026-01-27  
+Validated against commit: HEAD
+Last updated: 2026-03-20
 Branch: work
 
 ## Purpose
-The Fuel Planner Tab is the **human-in-the-loop planning interface** that:
+The Fuel Planner (surfaced as the top-level **Strategy** tab in the plugin UI) is the **human-in-the-loop planning interface** that:
 - Presents a snapshot of live session state (fuel, pace, confidence).
 - Allows the driver to **select authoritative planning inputs** (lap time + fuel per lap).
 - Computes a **deterministic pit plan** using planner inputs, independent of live volatility.
@@ -13,6 +13,8 @@ The Fuel Planner Tab is the **human-in-the-loop planning interface** that:
 
 The planner does **not** replace the Fuel Model.  
 It consumes the Fuel Model’s **live snapshot** and produces **explicit planning outputs** that are stable unless the user changes them.
+
+Preset management remains part of the same subsystem, but it is no longer a separate top-level navigation tab. The Strategy tab keeps the inline `Race Preset` selector and opens the existing preset editor via a modal **Preset Manager** dialog beside that selector.
 
 Canonical references:
 - Fuel behaviour contract: `Docs/FuelProperties_Spec.md`
@@ -55,6 +57,10 @@ These are **authoritative** once set by the user:
 - **Fuel to Add (MFD request)**
   - Used for pit math and pit window evaluation.
   - Clamped by tank capacity.
+
+- **Race Preset selection**
+  - The Strategy tab keeps the inline preset combo as the active apply/select control.
+  - The adjacent `Presets...` button opens the modal Preset Manager for create/rename/delete/edit/save-current flows without introducing a second preset-editing path.
 
 ### Track-scoped planner persistence
 These planner inputs persist on the selected `TrackStats` record rather than on the car profile:

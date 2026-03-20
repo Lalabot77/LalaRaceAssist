@@ -35,7 +35,7 @@ namespace LaunchPlugin
 
         /// <summary>
         /// Local selection for the presets list on this view.
-        /// This is intentionally NOT bound to VM.SelectedPreset so the Fuel tab combo won't jump.
+        /// This is intentionally NOT bound to VM.SelectedPreset so the Strategy tab combo won't jump.
         /// </summary>
         public RacePreset EditorSelection
         {
@@ -58,7 +58,7 @@ namespace LaunchPlugin
             {
                 var active = GetActivePreset();
                 var name = active?.Name ?? "(none)";
-                return $"Active preset in Fuel tab: {name}";
+                return $"Active preset in Strategy tab: {name}";
             }
         }
 
@@ -83,7 +83,7 @@ namespace LaunchPlugin
 
             _vm.PropertyChanged += OnVmPropertyChanged;
 
-            // Start by mirroring whatever the Fuel tab had selected; from now on selection is local
+            // Start by mirroring whatever the Strategy tab had selected; from now on selection is local
             EditorSelection = _vm.SelectedPreset;
         }
 
@@ -229,8 +229,8 @@ namespace LaunchPlugin
         private void OnDiscardChanges(object sender, RoutedEventArgs e) => RebuildWorkingCopyFromEditorSelection();
 
         /// <summary>
-        /// This is your "Save Fuel Tab Data as Preset" button (kept as-is, logic unchanged).
-        /// It reads the current Fuel screen values via VM and saves a new preset.
+        /// This is the "Save Strategy Data as Preset" button (kept as-is, logic unchanged).
+        /// It reads the current Strategy screen values via VM and saves a new preset.
         /// </summary>
         private void OnSaveCurrentAsPreset(object sender, RoutedEventArgs e)
         {
