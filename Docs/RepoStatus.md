@@ -9,20 +9,17 @@ Branch: work
 - No Git remote is configured in this checkout (`git remote -v` returns empty).
 
 ## Documentation sync status (requested set)
-- `Docs/Subsystems/Fuel_Planner_Tab.md` updated so the canonical planner doc now states that Live Snapshot max fuel is locked to the live detected cap only, while Profile mode retains manual/preset max-fuel behavior.
-- `Docs/Plugin_UI_Tooltips.md` updated so the Strategy-tab max-fuel tooltip text explicitly calls out the Profile-mode edit path and the Live Snapshot lock-to-live-cap behavior.
+- `Docs/Project_Index.md` updated so the canonical doc map now mentions the reordered main-tab layout and the embedded Launch Settings expander inside Settings.
+- `Docs/Plugin_UI_Tooltips.md` updated so the tooltip/navigation inventory reflects the new main-tab order, the `Launch Analysis` / `Settings` labels, and the moved Launch Settings location under Settings.
+- `Docs/Lala_Plugin_User_Guide_v0.3.md` updated so current user-facing navigation wording matches the new Settings/Launch Analysis layout.
 - `Docs/RepoStatus.md` refreshed for the current validation summary.
 
 ## Delivery status highlights
-- The top-level planner tab is now labeled `STRATEGY`, while the existing planner content and FuelCalcs-backed strategy workflow remain intact.
-- The former top-level `PRESETS` tab has been removed; preset management now opens as a modal Preset Manager from the `Presets...` button beside the Strategy tab's Race Preset combo.
-- The modal reuses the existing preset editor and shared `FuelCalcs` state, preserving preset selection/application semantics, save-current behavior, and preset persistence without changing preset storage or planner math.
-- Strategy-tab preset UX follow-up: the inline `Presets...` action now uses the primary blue button style, the modal auto-selects the active preset (or first available preset) on open, dark-theme preset-manager text/input colours are explicitly readable, and successful `Save Changes` closes the modal without a second success popup.
-- Strategy-tab preset-manager follow-up: the modal now keeps the PreRace Mode combo on the same dark input styling as the rest of the plugin, spaces the active-preset helper text away from the name field, detaches its `FuelCalcs.PropertyChanged` listener when the dialog unloads/closes, and uses a small Strategy-tab guard to avoid accidental re-entrant dialog opens.
-- `Docs/User Docs/Changelog_Since_PR240.md` extended with concise user-facing highlights through PR #481, including Track planner migration, H2H, H2H follow-up fixes, and the latest Fuel Planner Live Snapshot leader-delta cleanup.
-- `Docs/Lala_Plugin_Quick_Start_Guide_v0.3.md` added as the review-friendly source version of the tester quick-start, matching the current setup flow, fuel-planning model, track-marker/pit-learning workflow, and supported race-context aids.
-- `Docs/Lala_Plugin_User_Guide_v0.3.md` added as the review-friendly source version of the ship-ready user guide, reflecting current fuel/planner behaviour, track-scoped planner defaults, H2H, pit/rejoin aids, and the current inactive status of the broader message-dash system.
-- `Docs/RepoStatus.md` refreshed for the current validation summary.
+- The top-level plugin tabs are now ordered `STRATEGY`, `PROFILES`, `DASH CONTROL`, `LAUNCH ANALYSIS`, `SETTINGS`.
+- The former `POST LAUNCH ANALYSIS` label is now `LAUNCH ANALYSIS`, and the former `GLOBAL SETTINGS` label is now `SETTINGS`.
+- The standalone top-level `LAUNCH SETTINGS` tab has been removed.
+- The existing Launch Settings UI is now hosted inside the `SETTINGS` tab under a collapsed `Launch Settings` expander placed after Friends List and before Debug.
+- The embedded Launch Settings block reuses the existing controls and bindings, so launch-setting semantics and launch-analysis trace/logging behavior remain unchanged.
 
 ## Notes
 - `Docs/Code_Snapshot.md` remains non-canonical orientation-only documentation.

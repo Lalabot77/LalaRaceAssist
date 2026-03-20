@@ -10,12 +10,19 @@ namespace LaunchPlugin
         {
             InitializeComponent();
 
-            var globalSettingsTab = new SHTabItem
+            var strategyTab = new SHTabItem
             {
-                Header = "GLOBAL SETTINGS",
-                Content = new GlobalSettingsView(mainPluginInstance)
+                Header = "STRATEGY",
+                Content = new FuelCalculatorView(mainPluginInstance.FuelCalculator)
             };
-            MainTabControl.Items.Add(globalSettingsTab);
+            MainTabControl.Items.Add(strategyTab);
+
+            var profilesTab = new SHTabItem
+            {
+                Header = "PROFILES",
+                Content = new ProfilesManagerView(mainPluginInstance.ProfilesViewModel)
+            };
+            MainTabControl.Items.Add(profilesTab);
 
             var dashesTab = new SHTabItem
             {
@@ -24,34 +31,19 @@ namespace LaunchPlugin
             };
             MainTabControl.Items.Add(dashesTab);
 
-            var settingsTab = new SHTabItem
-            {
-                Header = "LAUNCH SETTINGS",
-                Content = new LaunchPluginSettingsUI(mainPluginInstance, telemetryTraceLoggerService)
-            };
-            MainTabControl.Items.Add(settingsTab);
-
             var launchAnalysisTab = new SHTabItem
             {
-                Header = "POST LAUNCH ANALYSIS",
+                Header = "LAUNCH ANALYSIS",
                 Content = new LaunchAnalysisControl(telemetryTraceLoggerService)
             };
             MainTabControl.Items.Add(launchAnalysisTab);
 
-            var fuelTab = new SHTabItem
+            var settingsTab = new SHTabItem
             {
-                Header = "STRATEGY",
-                Content = new FuelCalculatorView(mainPluginInstance.FuelCalculator)
+                Header = "SETTINGS",
+                Content = new GlobalSettingsView(mainPluginInstance, telemetryTraceLoggerService)
             };
-            MainTabControl.Items.Add(fuelTab);
-
-            // The Profiles tab now gets its content from a view that is given the new ViewModel
-            var profilesTab = new SHTabItem
-            {
-                Header = "PROFILES",
-                Content = new ProfilesManagerView(mainPluginInstance.ProfilesViewModel)
-            };
-            MainTabControl.Items.Add(profilesTab);
+            MainTabControl.Items.Add(settingsTab);
         }
     }
 }

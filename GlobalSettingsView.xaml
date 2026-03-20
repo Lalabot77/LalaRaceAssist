@@ -21,7 +21,7 @@
     </UserControl.Resources>
     <ScrollViewer VerticalScrollBarVisibility="Auto">
         <StackPanel Margin="10">
-            <styles:SHSection Title="DRIVER TAGS" ShowSeparator="True">
+            <styles:SHSection Title="FRIENDS LIST" ShowSeparator="True">
                 <StackPanel>
                     <TextBlock Margin="0,0,0,5" Foreground="LightGray"
                                Text="Add iRacing Customer IDs and assign a driver tag in CarSA." />
@@ -103,6 +103,12 @@
                                             Click="AddFriend_Click" />
                 </StackPanel>
             </styles:SHSection>
+
+            <Expander Header="Launch Settings"
+                      Margin="0,0,0,10"
+                      IsExpanded="False">
+                <ContentControl x:Name="LaunchSettingsHost" Margin="0,10,0,0"/>
+            </Expander>
 
             <StackPanel Visibility="{Binding HardDebugEnabledForUi, Converter={StaticResource BooleanToVisibilityConverter}}">
                 <TextBlock Text="DEBUG" FontSize="16" FontWeight="Bold" Margin="0,5,10,0"/>
