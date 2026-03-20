@@ -83,7 +83,9 @@ namespace LaunchPlugin
             // Use the VM as DataContext for lists/collections, but keep selection local
             DataContext = _vm;
 
-            SubscribeToViewModel();
+            _vm.PropertyChanged += OnVmPropertyChanged;
+            _isVmSubscribed = true;
+            _isCleanedUp = false;
             Loaded += OnViewLoaded;
             Unloaded += OnViewUnloaded;
 
@@ -113,18 +115,6 @@ namespace LaunchPlugin
             }
 
             return presets.FirstOrDefault();
-        }
-
-        private void SubscribeToViewModel()
-        {
-            if (_isVmSubscribed)
-            {
-                return;
-            }
-
-            _vm.PropertyChanged += OnVmPropertyChanged;
-            _isVmSubscribed = true;
-            _isCleanedUp = false;
         }
 
         private void OnVmPropertyChanged(object sender, PropertyChangedEventArgs e)
