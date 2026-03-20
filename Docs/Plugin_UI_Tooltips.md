@@ -1,6 +1,6 @@
 ﻿# Plugin UI Tooltips
 
-Validated against commit: HEAD
+Validated against commit: 3f0af12824336625dd449cc0329702ac50394396
 Last updated: 2026-03-20
 Branch: work
 
