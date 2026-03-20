@@ -45,7 +45,7 @@ LalaLaunchPlugin is a SimHub plugin for iRacing that provides launch instrumenta
 | Pit timing & pit-loss | PitEngine DTL/direct timing, pit-cycle exports | [Subsystems/Pit_Timing_And_PitLoss.md](Subsystems/Pit_Timing_And_PitLoss.md) |
 | Pit Entry Assist | Braking cues, margin/cue maths, entry-line debrief outputs | [Subsystems/Pit_Entry_Assist.md](Subsystems/Pit_Entry_Assist.md) |
 | Rejoin assist | Incident/threat detection, linger logic, and suppression guardrails | [Subsystems/Rejoin_Assist.md](Subsystems/Rejoin_Assist.md) |
-| Opponents | Nearby pace/fight and pit-exit class prediction (race-gated) | [Subsystems/Opponents.md](Subsystems/Opponents.md) |
+| Opponents | Strict same-class race selector, pace/fight enrichment, and pit-exit class prediction | [Subsystems/Opponents.md](Subsystems/Opponents.md) |
 | CarSA | Car-centric gap/closing/status engine and debug exports | [Subsystems/CarSA.md](Subsystems/CarSA.md) |
 | H2H | Standalone head-to-head race/track comparison exports with fixed 6 segments | [Subsystems/H2H.md](Subsystems/H2H.md) |
 | Messaging | MSG lanes + definition-driven MessageEngine v1 outputs | [Subsystems/Message_System_V1.md](Subsystems/Message_System_V1.md) |

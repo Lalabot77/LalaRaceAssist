@@ -1,23 +1,24 @@
 # Opponents subsystem
 
 Validated against commit: HEAD
-Last updated: 2026-03-19
+Last updated: 2026-03-20
 Branch: work
 
-Purpose: own all opponent-facing calculations for nearby pace/fight prediction and pit-exit position forecasting with SimHub exports under `Opp.*` and `PitExit.*`.
+Purpose: own all opponent-facing calculations for strict same-class race-target selection, nearby/leaderboard pace enrichment, and pit-exit position forecasting with SimHub exports under `Opp.*` and `PitExit.*`.
 Phase-1 Head-to-Head (`H2HRace.*`) consumes Opponents only as a **race-target selector seam** (current class-ahead / class-behind identity from `Opp.Ahead1` / `Opp.Behind1`). Persistent H2H timing, live-gap, lap-summary, fixed-6-segment ownership, and canonical H2H class-color publishing remain inside the standalone H2H subsystem; if Opponents clears those race outputs, H2H should also clear/inactivate rather than revive a stale race identity. Opponents does **not** become a far-away timing engine, and any extra `CarIdx` recovery stays a narrow local fallback inside H2H/LalaLaunch rather than moving timing ownership into Opponents.
 
 ## Gating and scope
-- Runs **race sessions only**; resets caches/outputs if session leaves Race.【F:Opponents.cs†L42-L88】
-- Additional lap gate: requires **CompletedLaps ≥ 1** before any Opp/PitExit outputs become valid. Data is still ingested pre-gate, but outputs/logging are gated. Gate opening logs once per activation.【F:Opponents.cs†L58-L88】
+- Runs **race sessions only**; resets caches/outputs if session leaves Race.【F:Opponents.cs†L42-L155】
+- No additional completed-lap gate is currently applied; once the session is Race, Opp and PitExit outputs may publish immediately. The subsystem-active log still fires once per activation.【F:Opponents.cs†L58-L155】
 - Uses **IRacingExtraProperties only**; no Dahl DLL or SDK arrays.【F:Opponents.cs†L42-L88】
 
 ## Identity model
 - Stable key: `ClassColor:CarNumber`. Empty class+number returns blank identity (slot ignored).【F:Opponents.cs†L90-L100】
-- Nearby slot changes log once per rebind when active; identity caches persist pace history across slot swaps. Logging follows the lap gate and debug toggle (no chatter before lap ≥1 or when debug disabled).【F:Opponents.cs†L252-L361】
+- Nearby slot changes log once per rebind when active; identity caches persist pace history across slot swaps. Logging remains race-session scoped and debug-gated for slot-rebind chatter.【F:Opponents.cs†L277-L421】
+- Published race-target identity is now leaderboard-authoritative: Opponents finds the player row in `iRacing_ClassLeaderboard_Driver_XX_*`, then selects `PositionInClass - 1/-2/+1/+2` within the same class for `Opp.Ahead1/2` and `Opp.Behind1/2`. If the player row or neighbor row cannot be resolved, the published target stays empty/invalid; there is no fallback to nearby slots for race-target identity.【F:Opponents.cs†L129-L211】【F:Opponents.cs†L568-L608】
 
 ## Data inputs
-- Nearby targets: `iRacing_DriverAheadInClass_00/01_*`, `iRacing_DriverBehindInClass_00/01_*` for Name, CarNumber, ClassColor, RelativeGapToPlayer, LastLapTime, BestLapTime, IsInPit, IsConnected.【F:Opponents.cs†L252-L344】
+- Nearby targets: `iRacing_DriverAheadInClass_00/01_*`, `iRacing_DriverBehindInClass_00/01_*` for Name, CarNumber, ClassColor, RelativeGapToPlayer, LastLapTime, BestLapTime, IsInPit, IsConnected. These feeds are still ingested for cache continuity and debug slot-rebind logging, but they no longer determine published race-target identity for `Opp.Ahead1/2.*` or `Opp.Behind1/2.*`.【F:Opponents.cs†L277-L421】
 - Leaderboard scan (00–63 until empty row): `iRacing_ClassLeaderboard_Driver_XX_*` for Name, CarNumber, ClassColor, Position, PositionInClass, RelativeGapToLeader, IsInPit/IsConnected, LastLapTime, BestLapTime.【F:Opponents.cs†L489-L525】
 - Player identity: `iRacing_Player_ClassColor`, `iRacing_Player_CarNumber`. Pit-exit receives pit loss from LalaLaunch’s stop-loss calculation (validated to ≥0).【F:Opponents.cs†L42-L88】【F:LalaLaunch.cs†L3701-L3731】
 
@@ -26,10 +27,10 @@ Phase-1 Head-to-Head (`H2HRace.*`) consumes Opponents only as a **race-target se
 - BlendedPaceSec = 0.70×RecentAvg + 0.30×(BestLap×1.01); falls back to recent-only or best×1.01 if missing.【F:Opponents.cs†L693-L717】
 
 ## Fight prediction (dash support)
-- Uses my pace (from LalaLaunch) vs opponent blended pace once gate active; my pace is sanitized to remove invalid/huge values.【F:Opponents.cs†L42-L88】【F:Opponents.cs†L82-L88】
-- Gap is stored as the absolute of the relative gap input for display consistency.【F:Opponents.cs†L268-L317】
-- Ahead: closingRate = opponent − mine; requires closingRate > +0.05 s/lap and positive gap to publish LapsToFight (capped at 999). Otherwise NaN (no catch).【F:Opponents.cs†L268-L317】
-- Behind: closingRate = mine − opponent; requires closingRate > +0.05 s/lap and positive gap to publish LapsToFight (NaN when no threat/invalid).【F:Opponents.cs†L268-L317】
+- Uses my pace (from LalaLaunch) vs opponent blended pace once active; my pace is sanitized to remove invalid/huge values.【F:Opponents.cs†L42-L88】【F:Opponents.cs†L129-L211】
+- For published race targets, GapToPlayerSec is derived from the absolute difference between the target row’s `RelativeGapToLeader` and the player row’s `RelativeGapToLeader`, so same-class neighbors remain valid even across multi-lap gaps.【F:Opponents.cs†L170-L211】
+- Ahead: closingRate = opponent − mine; requires closingRate > +0.05 s/lap and positive gap to publish LapsToFight (capped at 999). Otherwise NaN (no catch).【F:Opponents.cs†L191-L211】
+- Behind: closingRate = mine − opponent; requires closingRate > +0.05 s/lap and positive gap to publish LapsToFight (NaN when no threat/invalid).【F:Opponents.cs†L191-L211】
 - Summary strings split: `Opponents_SummaryAhead` (A1/A2) and `Opponents_SummaryBehind` (B1/B2). Per-slot variants: `Opponents_SummaryAhead1/2`, `Opponents_SummaryBehind1/2`. Format example — Ahead: `A1 #25 +0.6s Δ-0.12s/L LTF=5 | A2 #11 +1.4s Δ-0.05s/L LTF=—`; Behind: `B1 #39 -0.7s Δ+0.08s/L LTF=9 | B2 #32 -1.6s Δ+0.03s/L LTF=—`. Uses `—` when data unavailable.【F:Opponents.cs†L78-L155】
 
 ## Pit-exit prediction
@@ -44,6 +45,6 @@ Phase-1 Head-to-Head (`H2HRace.*`) consumes Opponents only as a **race-target se
 - Publishes PitExit.Valid/PredictedPositionInClass/CarsAheadAfterPitCount/Summary plus nearest ahead/behind identity/gap fields; defaults reset when invalid.【F:Opponents.cs†L507-L579】【F:Opponents.cs†L775-L789】
 
 ## Outputs
-- `Opp.Ahead1/2.*`, `Opp.Behind1/2.*` → Name, CarNumber, ClassColor, GapToPlayerSec (absolute), BlendedPaceSec, PaceDeltaSecPerLap, LapsToFight (NaN = no fight/invalid). Summaries at `Opponents_SummaryAhead/Behind` (plus per-slot variants).【F:Opponents.cs†L252-L343】【F:Opponents.cs†L268-L317】【F:Opponents.cs†L720-L765】
+- `Opp.Ahead1/2.*`, `Opp.Behind1/2.*` → strict same-class standings neighbors around the player row (no nearby fallback), published as Name, CarNumber, ClassColor, GapToPlayerSec (absolute leaderboard-relative gap), BlendedPaceSec, PaceDeltaSecPerLap, and LapsToFight (NaN = no fight/invalid). Summaries at `Opponents_SummaryAhead/Behind` (plus per-slot variants).【F:Opponents.cs†L129-L211】
 - Optional leader pace: `Opp.Leader.BlendedPaceSec`, `Opp.P2.BlendedPaceSec`.【F:Opponents.cs†L84-L88】【F:Opponents.cs†L720-L736】
 - Pit exit exports: `PitExit.Valid`, `PitExit.PredictedPositionInClass`, `PitExit.CarsAheadAfterPitCount`, `PitExit.Summary`, `PitExit.Ahead.*`, `PitExit.Behind.*` (Name/CarNumber/ClassColor/GapSec).【F:Opponents.cs†L507-L566】【F:Opponents.cs†L775-L789】
