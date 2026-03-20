@@ -96,10 +96,12 @@ The planner tracks *what source is currently active* for each input:
   - manual / profile / live / max
 
 ### Race pace delta behaviour
-- Each track stores a **default** race-pace delta used when no live leader delta is available.
+- Each track stores a **default** race-pace delta for **Profile** planning mode.
 - Loading a track does **not** force manual leader-delta mode.
-- Planner saves persist the stored/default pace delta (or an explicit manual override), not the transient live leader-gap value.
-- Live leader-delta telemetry remains authoritative whenever it is available unless the driver explicitly edits the pace-delta control, which is the only path that sets manual override mode.
+- **Profile mode:** the pace-vs-leader slider remains editable, and planner saves persist the stored/default pace delta (or an explicit manual override).
+- **Live Snapshot mode:** the effective planner delta follows the current live leader delta whenever live leader pace is available; entering Live Snapshot clears any manual leader-delta override instead of preserving it behind the scenes.
+- **Live Snapshot fallback:** if live leader pace is unavailable, the effective leader delta falls back to `0.0` rather than reusing a stale manual or stored profile delta, so the planner does not masquerade as live while using old data.
+- The old manual "use live/reset to live" recovery path is no longer part of normal leader-delta operation.
 
 ### Track-condition handling (dry vs wet)
 - **Manual selection:** Drivers can explicitly switch the planner into dry or wet mode (per-track).

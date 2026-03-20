@@ -44,8 +44,7 @@ Branch: work
 - L314: Live rolling average lap time.
 - L321: Saved average lap time from profile (condition aware).
 - L337: How many seconds slower your average lap time is compared to the race leader.
-- L359: Adjust the pace delta to the leader (sec) used in the plan.
-- L372: Replace the manual pace delta with the current live average.
+- L359: Adjust the pace delta to the leader (sec) used in the plan. Disabled while Planning Source is Live Snapshot.
 - L382: Limit the usable tank size for restricted fuel races (L).
 - L385: Limit the car's tank size for races with restricted fuel.
 - L414: Fuel burn per lap used for strategy (L/lap).
