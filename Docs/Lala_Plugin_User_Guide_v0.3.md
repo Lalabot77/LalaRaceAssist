@@ -1,4 +1,4 @@
-# Lala Plugin – Plugin & Dashboards User Guide
+﻿# Lala Plugin – Plugin & Dashboards User Guide
 
 **Applies to:** SimHub v9+
 
@@ -42,6 +42,8 @@ Locks exist so traffic, replays, weather transitions, incomplete pit cycles, or 
 
 ## 3. Dash Controls & Live Adjustments
 
+Top-level plugin tabs are ordered left-to-right as **Strategy**, **Profiles**, **Dash Control**, **Launch Analysis**, and **Settings**.
+
 ### 3.1 Recommended bindings
 
 - **Cancel Msg Button**: cancels pit and rejoin popups and temporarily suppresses repeats.
@@ -67,11 +69,11 @@ Adjust these only when you are chasing a specific false positive or a repeatable
 
 ## 4. Launch Settings & Analysis
 
-Launch Settings controls launch behaviour and launch telemetry capture. Per-car defaults can be stored in profiles and then applied to live use.
+Launch Settings now lives inside the top-level **Settings** tab under a collapsed **Launch Settings** expander. It still controls launch behaviour and launch telemetry capture, and per-car defaults can still be stored in profiles and then applied to live use.
 
 - Typical launch controls include target RPM / throttle, tolerances, bite point behaviour, bog-down detection, and anti-stall sensitivity.
 - Launch telemetry recording is for post-run analysis and does not change what the dashboards do live.
-- Post Launch Analysis is the place to review saved traces, summaries, and graph overlays.
+- **Launch Analysis** is the top-level tab used to review saved traces, summaries, and graph overlays.
 
 ## 5. Fuel System
 
