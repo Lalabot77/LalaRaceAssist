@@ -4,7 +4,6 @@ using System.ComponentModel;
 using System.Linq;
 using System.Windows;
 using System.Windows.Controls;
-using System.Xml.Linq;
 
 namespace LaunchPlugin
 {
@@ -83,11 +82,33 @@ namespace LaunchPlugin
 
             _vm.PropertyChanged += OnVmPropertyChanged;
 
-            // Start by mirroring whatever the Strategy tab had selected; from now on selection is local
-            EditorSelection = _vm.SelectedPreset;
+            // Start with the active Strategy preset when possible, otherwise the first available preset.
+            EditorSelection = ResolveInitialSelection();
         }
 
         private RacePreset GetActivePreset() => _vm?.AppliedPreset ?? _vm?.SelectedPreset;
+
+        private RacePreset ResolveInitialSelection()
+        {
+            var presets = _vm?.AvailablePresets;
+            if (presets == null || presets.Count == 0)
+            {
+                return null;
+            }
+
+            var active = GetActivePreset();
+            if (active != null)
+            {
+                var activeMatch = presets.FirstOrDefault(x =>
+                    string.Equals(x.Name, active.Name, StringComparison.OrdinalIgnoreCase));
+                if (activeMatch != null)
+                {
+                    return activeMatch;
+                }
+            }
+
+            return presets.FirstOrDefault();
+        }
 
         private void OnVmPropertyChanged(object sender, PropertyChangedEventArgs e)
         {
@@ -112,9 +133,8 @@ namespace LaunchPlugin
         private void RebuildWorkingCopyFromEditorSelection()
         {
             var s = EditorSelection;
-            // No defaults here: blank when nothing selected
-            EditingPreset = s != null ? CreateEditableCopy(s) : new RacePreset { Name = "" };
-            _originalName = s?.Name ?? "";
+            EditingPreset = s != null ? CreateEditableCopy(s) : new RacePreset { Name = string.Empty };
+            _originalName = s?.Name ?? string.Empty;
         }
 
         private RacePreset CreateEditableCopy(RacePreset p)
@@ -198,8 +218,8 @@ namespace LaunchPlugin
                 EditorSelection = saved ?? _vm.AvailablePresets?.FirstOrDefault(x =>
                     string.Equals(x.Name, _originalName, StringComparison.OrdinalIgnoreCase));
 
-                MessageBox.Show("Preset saved.", "Presets",
-                    MessageBoxButton.OK, MessageBoxImage.Information);
+                var owner = Window.GetWindow(this);
+                owner?.Close();
             }
             catch (Exception ex)
             {

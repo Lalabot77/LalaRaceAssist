@@ -1,4 +1,4 @@
-using System.Windows;
+﻿using System.Windows;
 using System.Windows.Controls;
 namespace LaunchPlugin
 {
@@ -30,10 +30,13 @@ namespace LaunchPlugin
                 MinWidth = 860,
                 MinHeight = 620,
                 ResizeMode = ResizeMode.CanResize,
+                Background = new System.Windows.Media.SolidColorBrush(System.Windows.Media.Color.FromRgb(0x1F, 0x23, 0x2B)),
                 WindowStartupLocation = owner != null ? WindowStartupLocation.CenterOwner : WindowStartupLocation.CenterScreen,
                 Owner = owner,
                 ShowInTaskbar = false
             };
+
+            presetManager.Background = new System.Windows.Media.SolidColorBrush(System.Windows.Media.Color.FromRgb(0x1F, 0x23, 0x2B));
 
             dialog.ShowDialog();
         }

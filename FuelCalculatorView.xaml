@@ -520,13 +520,13 @@
                             </TextBlock.Visibility>
                             </TextBlock>
 
-                            <styles:SHButtonSecondary Grid.Column="3"
-                                                      Content="Presets..."
-                                                      Height="28"
-                                                      Margin="12,0,0,0"
-                                                      VerticalAlignment="Center"
-                                                      Click="OnOpenPresetManager"
-                                                      ToolTip="Open the Preset Manager to create, rename, edit, or delete strategy presets."/>
+                            <styles:SHButtonPrimary Grid.Column="3"
+                                                    Content="Presets..."
+                                                    Height="28"
+                                                    Margin="12,0,0,0"
+                                                    VerticalAlignment="Center"
+                                                    Click="OnOpenPresetManager"
+                                                    ToolTip="Open the Preset Manager to create, rename, edit, or delete strategy presets."/>
                         </Grid>
 
 
