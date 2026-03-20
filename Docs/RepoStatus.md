@@ -9,14 +9,14 @@ Branch: work
 - No Git remote is configured in this checkout (`git remote -v` returns empty).
 
 ## Documentation sync status (requested set)
-- `Docs/Subsystems/H2H.md` updated so the canonical H2H doc now records that true target rebinds still clear the published row immediately, stale pre-bind target completions are still blocked, and segment rebuild resumes from the next clean target completion without requiring a player-side post-bind completion.
-- `Docs/SimHubParameterInventory.md` updated so the H2H segment export contract now matches the relaxed bind-aware rebuild rule while preserving sector-6 carryover and `ClassSessionBestLapSec` fallback behavior.
+- `Docs/User Docs/Changelog_Since_PR240.md` extended with concise user-facing highlights through PR #481, including Track planner migration, H2H, H2H follow-up fixes, and the latest Fuel Planner Live Snapshot leader-delta cleanup.
+- `Docs/Lala_Plugin_Quick_Start_Guide_v0.3.md` added as the review-friendly source version of the tester quick-start, matching the current setup flow, fuel-planning model, track-marker/pit-learning workflow, and supported race-context aids.
+- `Docs/Lala_Plugin_User_Guide_v0.3.md` added as the review-friendly source version of the ship-ready user guide, reflecting current fuel/planner behaviour, track-scoped planner defaults, H2H, pit/rejoin aids, and the current inactive status of the broader message-dash system.
 - `Docs/RepoStatus.md` refreshed for the current validation summary.
 
 ## Delivery status highlights
-- H2H segment publication no longer starves after a true Ahead/Behind target rebind: the row still clears immediately, then rebuilds from the next clean target-side segment completion instead of waiting for a whole new lap.
-- Bind-aware protection remains on the target side, so stale pre-bind target segment timestamps still cannot leak into the new comparison window and recreate the large garbage swap deltas seen previously.
-- `H2HRace.ClassSessionBestLapSec` / `H2HTrack.ClassSessionBestLapSec`, the same-class primary source plus `IRacingExtraProperties.iRacing_Session_PlayerClassBestLapTime` fallback, and same-target sector-6 lap-wrap carryover remain unchanged.
+- User-facing documentation now has review-friendly markdown source guides in the repo: Quick Start is focused on install/bind/learn/lock workflow, while the full User Guide explains the current fuel planner, track-scoped data, race aids, and H2H without implying the broader message-dash system is active.
+- The user changelog now covers the recent H2H and fuel-planner updates through PR #481 in a concise tester-facing format instead of stopping short of the latest merged work.
 
 ## Notes
 - `Docs/Code_Snapshot.md` remains non-canonical orientation-only documentation.
