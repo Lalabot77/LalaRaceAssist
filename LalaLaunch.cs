@@ -6325,6 +6325,7 @@ namespace LaunchPlugin
                         _carSaBestLapTimeSecByIdx,
                         _carSaLastLapTimeSecByIdx,
                         _carSaClassPositionByIdx,
+                        _carSaEngine.TryGetFixedSectorCacheSnapshot,
                         raceAheadSelector,
                         raceBehindSelector,
                         trackAheadSelector,
