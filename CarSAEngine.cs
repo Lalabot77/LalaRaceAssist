@@ -32,6 +32,8 @@ namespace LaunchPlugin
         private const double LapDeltaWrapEdgePct = 0.05;
         private const double SuspectPulseDurationSec = 5.0;
         private const int MiniSectorCheckpointCount = 60;
+        private const int FixedSectorCount = 6;
+        private const int FixedSectorMaxContinuousAdvance = 10;
         private const int HotCoolCoarseSectorCount = 6;
         private const int HotCoolMiniSectorsPerCoarse = 10;
         private const double HotCoolHotThresholdSec = 0.00;
@@ -197,6 +199,7 @@ namespace LaunchPlugin
         private double _trackGapLastGoodScaleSec = double.NaN;
         private bool _hadValidTick;
         private bool _hasMultipleClassOpponents;
+        private readonly FixedSectorCacheEntry[] _fixedSectorCacheByCar = new FixedSectorCacheEntry[MaxCars];
 
         private sealed class CarSA_CarState
         {
@@ -320,6 +323,100 @@ namespace LaunchPlugin
             public bool AllowLatches { get; set; }
         }
 
+        public struct FixedSectorValue
+        {
+            public FixedSectorValue(bool hasValue, double durationSec)
+            {
+                HasValue = hasValue;
+                DurationSec = durationSec;
+            }
+
+            public bool HasValue { get; }
+            public double DurationSec { get; }
+        }
+
+        public struct FixedSectorCacheSnapshot
+        {
+            public FixedSectorCacheSnapshot(
+                FixedSectorValue sector1,
+                FixedSectorValue sector2,
+                FixedSectorValue sector3,
+                FixedSectorValue sector4,
+                FixedSectorValue sector5,
+                FixedSectorValue sector6)
+            {
+                Sector1 = sector1;
+                Sector2 = sector2;
+                Sector3 = sector3;
+                Sector4 = sector4;
+                Sector5 = sector5;
+                Sector6 = sector6;
+            }
+
+            public FixedSectorValue Sector1 { get; }
+            public FixedSectorValue Sector2 { get; }
+            public FixedSectorValue Sector3 { get; }
+            public FixedSectorValue Sector4 { get; }
+            public FixedSectorValue Sector5 { get; }
+            public FixedSectorValue Sector6 { get; }
+
+            public FixedSectorValue GetSector(int index)
+            {
+                switch (index)
+                {
+                    case 0: return Sector1;
+                    case 1: return Sector2;
+                    case 2: return Sector3;
+                    case 3: return Sector4;
+                    case 4: return Sector5;
+                    case 5: return Sector6;
+                    default: return default(FixedSectorValue);
+                }
+            }
+        }
+
+        private sealed class FixedSectorCacheEntry
+        {
+            public readonly FixedSectorCacheValue[] Sectors = new FixedSectorCacheValue[FixedSectorCount];
+            public int LastCheckpointIndex = -1;
+            public int LastBoundaryIndex = -1;
+            public double LastBoundaryTimeSec = double.NaN;
+
+            public FixedSectorCacheSnapshot CreateSnapshot()
+            {
+                return new FixedSectorCacheSnapshot(
+                    Sectors[0].ToPublicValue(),
+                    Sectors[1].ToPublicValue(),
+                    Sectors[2].ToPublicValue(),
+                    Sectors[3].ToPublicValue(),
+                    Sectors[4].ToPublicValue(),
+                    Sectors[5].ToPublicValue());
+            }
+
+            public void Clear()
+            {
+                LastCheckpointIndex = -1;
+                LastBoundaryIndex = -1;
+                LastBoundaryTimeSec = double.NaN;
+                for (int i = 0; i < Sectors.Length; i++)
+                {
+                    Sectors[i].HasValue = false;
+                    Sectors[i].DurationSec = 0.0;
+                }
+            }
+        }
+
+        private struct FixedSectorCacheValue
+        {
+            public bool HasValue;
+            public double DurationSec;
+
+            public FixedSectorValue ToPublicValue()
+            {
+                return new FixedSectorValue(HasValue, HasValue ? DurationSec : 0.0);
+            }
+        }
+
         public CarSAEngine()
         {
             _outputs = new CarSAOutputs(SlotsAhead, SlotsBehind);
@@ -333,12 +430,32 @@ namespace LaunchPlugin
             {
                 _carStates[i] = new CarSA_CarState();
                 _carStates[i].Reset(i);
+                _fixedSectorCacheByCar[i] = new FixedSectorCacheEntry();
+                _fixedSectorCacheByCar[i].Clear();
             }
 
             ClearGateGapCaches();
         }
 
         public CarSAOutputs Outputs => _outputs;
+
+        public bool TryGetFixedSectorCacheSnapshot(int carIdx, out FixedSectorCacheSnapshot snapshot)
+        {
+            snapshot = default(FixedSectorCacheSnapshot);
+            if (carIdx < 0 || carIdx >= _fixedSectorCacheByCar.Length)
+            {
+                return false;
+            }
+
+            FixedSectorCacheEntry entry = _fixedSectorCacheByCar[carIdx];
+            if (entry == null)
+            {
+                return false;
+            }
+
+            snapshot = entry.CreateSnapshot();
+            return true;
+        }
 
         public void UpdateIRatingSof(int[] iRatingsByIdx)
         {
@@ -823,13 +940,177 @@ namespace LaunchPlugin
             }
         }
 
-        // === Car-centric shadow state (unused by current logic) =================
+        // === Car-centric shadow state / reset helpers ===========================
         private void ResetCarStates()
         {
             for (int i = 0; i < _carStates.Length; i++)
             {
                 _carStates[i].Reset(i);
+                ClearFixedSectorCacheForCar(i);
             }
+        }
+
+        private void ClearFixedSectorCacheForCar(int carIdx)
+        {
+            if (carIdx < 0 || carIdx >= _fixedSectorCacheByCar.Length)
+            {
+                return;
+            }
+
+            FixedSectorCacheEntry entry = _fixedSectorCacheByCar[carIdx];
+            if (entry != null)
+            {
+                entry.Clear();
+            }
+        }
+
+        private static bool TryGetCoarseBoundaryIndex(int checkpointIndex, out int boundaryIndex)
+        {
+            boundaryIndex = -1;
+            switch (checkpointIndex)
+            {
+                case 0:
+                    boundaryIndex = 0;
+                    return true;
+                case 10:
+                    boundaryIndex = 1;
+                    return true;
+                case 20:
+                    boundaryIndex = 2;
+                    return true;
+                case 30:
+                    boundaryIndex = 3;
+                    return true;
+                case 40:
+                    boundaryIndex = 4;
+                    return true;
+                case 50:
+                    boundaryIndex = 5;
+                    return true;
+                default:
+                    return false;
+            }
+        }
+
+        private static int GetExpectedPreviousBoundaryIndex(int boundaryIndex)
+        {
+            if (boundaryIndex <= 0)
+            {
+                return FixedSectorCount - 1;
+            }
+
+            return boundaryIndex - 1;
+        }
+
+        private static int GetSectorIndexForBoundary(int boundaryIndex)
+        {
+            return boundaryIndex <= 0
+                ? FixedSectorCount - 1
+                : boundaryIndex - 1;
+        }
+
+        private static bool TryGetCrossedCoarseBoundaryIndex(int lastCheckpointIndex, int checkpointNow, out int boundaryIndex)
+        {
+            boundaryIndex = -1;
+            if (lastCheckpointIndex < 0 || checkpointNow < 0)
+            {
+                return false;
+            }
+
+            int advance = (checkpointNow - lastCheckpointIndex + MiniSectorCheckpointCount) % MiniSectorCheckpointCount;
+            if (advance < 1 || advance > FixedSectorMaxContinuousAdvance)
+            {
+                return false;
+            }
+
+            for (int step = 1; step <= advance; step++)
+            {
+                int checkpoint = (lastCheckpointIndex + step) % MiniSectorCheckpointCount;
+                if (TryGetCoarseBoundaryIndex(checkpoint, out boundaryIndex))
+                {
+                    return true;
+                }
+            }
+
+            return false;
+        }
+
+        private void AnchorFixedSectorCacheAtCheckpoint(int carIdx, int checkpointNow, double sessionTimeSec)
+        {
+            if (carIdx < 0 || carIdx >= _fixedSectorCacheByCar.Length)
+            {
+                return;
+            }
+
+            FixedSectorCacheEntry entry = _fixedSectorCacheByCar[carIdx];
+            if (entry == null)
+            {
+                return;
+            }
+
+            entry.LastCheckpointIndex = checkpointNow;
+            if (TryGetCoarseBoundaryIndex(checkpointNow, out int boundaryIndex))
+            {
+                entry.LastBoundaryIndex = boundaryIndex;
+                entry.LastBoundaryTimeSec = sessionTimeSec;
+            }
+        }
+
+        private void UpdateFixedSectorCacheForCar(int carIdx, int checkpointNow, double sessionTimeSec)
+        {
+            if (carIdx < 0 || carIdx >= _fixedSectorCacheByCar.Length || checkpointNow < 0 || checkpointNow >= MiniSectorCheckpointCount || double.IsNaN(sessionTimeSec) || double.IsInfinity(sessionTimeSec))
+            {
+                ClearFixedSectorCacheForCar(carIdx);
+                return;
+            }
+
+            FixedSectorCacheEntry entry = _fixedSectorCacheByCar[carIdx];
+            if (entry == null)
+            {
+                return;
+            }
+
+            if (entry.LastCheckpointIndex < 0)
+            {
+                AnchorFixedSectorCacheAtCheckpoint(carIdx, checkpointNow, sessionTimeSec);
+                return;
+            }
+
+            int advance = (checkpointNow - entry.LastCheckpointIndex + MiniSectorCheckpointCount) % MiniSectorCheckpointCount;
+            if (advance == 0)
+            {
+                entry.LastCheckpointIndex = checkpointNow;
+                return;
+            }
+
+            if (advance > FixedSectorMaxContinuousAdvance)
+            {
+                entry.Clear();
+                AnchorFixedSectorCacheAtCheckpoint(carIdx, checkpointNow, sessionTimeSec);
+                return;
+            }
+
+            if (TryGetCrossedCoarseBoundaryIndex(entry.LastCheckpointIndex, checkpointNow, out int boundaryIndex))
+            {
+                int expectedPreviousBoundaryIndex = GetExpectedPreviousBoundaryIndex(boundaryIndex);
+                if (entry.LastBoundaryIndex == expectedPreviousBoundaryIndex
+                    && !double.IsNaN(entry.LastBoundaryTimeSec)
+                    && !double.IsInfinity(entry.LastBoundaryTimeSec))
+                {
+                    double durationSec = sessionTimeSec - entry.LastBoundaryTimeSec;
+                    if (durationSec > 0.0 && !double.IsNaN(durationSec) && !double.IsInfinity(durationSec))
+                    {
+                        int sectorIndex = GetSectorIndexForBoundary(boundaryIndex);
+                        entry.Sectors[sectorIndex].HasValue = true;
+                        entry.Sectors[sectorIndex].DurationSec = durationSec;
+                    }
+                }
+
+                entry.LastBoundaryIndex = boundaryIndex;
+                entry.LastBoundaryTimeSec = sessionTimeSec;
+            }
+
+            entry.LastCheckpointIndex = checkpointNow;
         }
 
         private void UpdateCarStates(
@@ -940,10 +1221,17 @@ namespace LaunchPlugin
                         state.SuspectPulseUntilTimeSec = double.NaN;
                         state.SuspectPulseActive = false;
                         state.LapsSincePit = -1;
+                        ClearFixedSectorCacheForCar(carIdx);
                         continue;
                     }
 
+                    ClearFixedSectorCacheForCar(carIdx);
                     continue;
+                }
+
+                if (!hasLapPct)
+                {
+                    ClearFixedSectorCacheForCar(carIdx);
                 }
 
                 bool lapAdvanced = prevLap != int.MinValue && state.Lap > prevLap;
@@ -1062,9 +1350,10 @@ namespace LaunchPlugin
                     && sessionTimeSec <= state.SuspectPulseUntilTimeSec;
                 state.OutLapActive = state.OutLapUntilLap != int.MinValue
                     && state.Lap < state.OutLapUntilLap;
+                int checkpointNow = -1;
                 if (hasLapPct)
                 {
-                    int checkpointNow = ComputeCheckpointIndex(state.LapDistPct);
+                    checkpointNow = ComputeCheckpointIndex(state.LapDistPct);
                     if (checkpointNow >= 0)
                     {
                         int checkpointCrossed = -1;
@@ -1108,12 +1397,18 @@ namespace LaunchPlugin
                     {
                         state.CheckpointIndexNow = -1;
                         state.CheckpointIndexCrossed = -1;
+                        ClearFixedSectorCacheForCar(carIdx);
                     }
                 }
                 else
                 {
                     state.CheckpointIndexNow = -1;
                     state.CheckpointIndexCrossed = -1;
+                }
+
+                if (checkpointNow >= 0)
+                {
+                    UpdateFixedSectorCacheForCar(carIdx, checkpointNow, sessionTimeSec);
                 }
 
                 if (lapAdvanced)
@@ -3149,6 +3444,7 @@ namespace LaunchPlugin
                 state.CheckpointIndexCrossed = -1;
                 state.LapStartTimeSec = double.NaN;
                 state.LapStartLap = int.MinValue;
+                ClearFixedSectorCacheForCar(i);
             }
 
             ClearSlotLatchStates(_outputs?.AheadSlots);
