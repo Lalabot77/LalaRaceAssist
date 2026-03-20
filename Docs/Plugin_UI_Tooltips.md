@@ -46,8 +46,8 @@ Branch: work
 - L321: Saved average lap time from profile (condition aware).
 - L337: How many seconds slower your average lap time is compared to the race leader.
 - L359: Adjust the pace delta to the leader (sec) used in the plan. Disabled while Planning Source is Live Snapshot.
-- L382: Limit the usable tank size for restricted fuel races (L).
-- L385: Limit the car's tank size for races with restricted fuel.
+- L382: Profile mode: limit the usable tank size for restricted fuel races (L). Live Snapshot: locked to the detected live session cap.
+- L385: Profile mode: edit the planner tank limit. Live Snapshot: this control is locked to the detected live session cap.
 - L414: Fuel burn per lap used for strategy (L/lap).
 - L417: Fuel burn per lap (L/lap). Edit to override the suggested value.
 - L452: Use the average fuel per lap saved in the selected profile.
