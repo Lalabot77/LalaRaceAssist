@@ -13,6 +13,11 @@ namespace LaunchPlugin
         private const double DefaultGapLapTimeSec = 120.0;
         private const double LapWrapThresholdPct = 0.20;
         private const double LapStartDetectWindowPct = 0.05;
+        private const double LapTimeEqualityToleranceSec = 0.001;
+
+        private const string LastLapColorNormal = "#FFFFFF";
+        private const string LastLapColorPersonalBest = "#00FF00";
+        private const string LastLapColorSessionBest = "#FF00FF";
 
         private readonly FamilyRuntime _raceRuntime = new FamilyRuntime();
         private readonly FamilyRuntime _trackRuntime = new FamilyRuntime();
@@ -38,6 +43,7 @@ namespace LaunchPlugin
             int[] carIdxLap,
             double playerBestLapSec,
             double playerLastLapSec,
+            double classSessionBestLapSec,
             double[] bestLapTimeSecByIdx,
             double[] lastLapTimeSecByIdx,
             int[] classPositionByIdx,
@@ -47,10 +53,10 @@ namespace LaunchPlugin
             TargetSelector trackBehindSelector)
         {
             UpdateFamily(Outputs.Race, _raceRuntime, sessionTimeSec, playerCarIdx, carIdxLapDistPct, carIdxLap, playerBestLapSec, playerLastLapSec,
-                bestLapTimeSecByIdx, lastLapTimeSecByIdx, classPositionByIdx, raceAheadSelector, raceBehindSelector);
+                classSessionBestLapSec, bestLapTimeSecByIdx, lastLapTimeSecByIdx, classPositionByIdx, raceAheadSelector, raceBehindSelector);
 
             UpdateFamily(Outputs.Track, _trackRuntime, sessionTimeSec, playerCarIdx, carIdxLapDistPct, carIdxLap, playerBestLapSec, playerLastLapSec,
-                bestLapTimeSecByIdx, lastLapTimeSecByIdx, classPositionByIdx, trackAheadSelector, trackBehindSelector);
+                classSessionBestLapSec, bestLapTimeSecByIdx, lastLapTimeSecByIdx, classPositionByIdx, trackAheadSelector, trackBehindSelector);
         }
 
         private static void UpdateFamily(
@@ -62,6 +68,7 @@ namespace LaunchPlugin
             int[] carIdxLap,
             double playerBestLapSec,
             double playerLastLapSec,
+            double classSessionBestLapSec,
             double[] bestLapTimeSecByIdx,
             double[] lastLapTimeSecByIdx,
             int[] classPositionByIdx,
@@ -73,11 +80,11 @@ namespace LaunchPlugin
                 return;
             }
 
-            UpdatePlayer(family.Player, runtime.Player, sessionTimeSec, playerCarIdx, carIdxLapDistPct, carIdxLap, playerBestLapSec, playerLastLapSec);
+            UpdatePlayer(family.Player, runtime.Player, sessionTimeSec, playerCarIdx, carIdxLapDistPct, carIdxLap, playerBestLapSec, playerLastLapSec, classSessionBestLapSec);
             UpdateTarget(family.Ahead, runtime.Ahead, aheadSelector, sessionTimeSec, runtime.Player, family.Player,
-                carIdxLapDistPct, carIdxLap, bestLapTimeSecByIdx, lastLapTimeSecByIdx, classPositionByIdx);
+                carIdxLapDistPct, carIdxLap, bestLapTimeSecByIdx, lastLapTimeSecByIdx, classPositionByIdx, classSessionBestLapSec);
             UpdateTarget(family.Behind, runtime.Behind, behindSelector, sessionTimeSec, runtime.Player, family.Player,
-                carIdxLapDistPct, carIdxLap, bestLapTimeSecByIdx, lastLapTimeSecByIdx, classPositionByIdx);
+                carIdxLapDistPct, carIdxLap, bestLapTimeSecByIdx, lastLapTimeSecByIdx, classPositionByIdx, classSessionBestLapSec);
         }
 
         private static void UpdatePlayer(
@@ -88,7 +95,8 @@ namespace LaunchPlugin
             float[] carIdxLapDistPct,
             int[] carIdxLap,
             double playerBestLapSec,
-            double playerLastLapSec)
+            double playerLastLapSec,
+            double classSessionBestLapSec)
         {
             if (output == null || runtime == null)
             {
@@ -102,6 +110,7 @@ namespace LaunchPlugin
             runtime.LastLapReferenceSec = output.LastLapSec;
             output.LastLapDeltaToBestSec = ComputeLastLapDeltaToBest(output.LastLapSec, output.BestLapSec);
             output.LiveDeltaToBestSec = hasContext ? ComputeLiveDeltaToBest(runtime, sessionTimeSec, output.BestLapSec) : 0.0;
+            output.LastLapColor = ComputeLastLapColor(output.LastLapSec, output.BestLapSec, classSessionBestLapSec);
             output.ActiveSegment = hasContext ? runtime.ActiveSegment : 0;
             output.LapRef = hasContext ? runtime.LapRef : 0;
         }
@@ -117,7 +126,8 @@ namespace LaunchPlugin
             int[] carIdxLap,
             double[] bestLapTimeSecByIdx,
             double[] lastLapTimeSecByIdx,
-            int[] classPositionByIdx)
+            int[] classPositionByIdx,
+            double classSessionBestLapSec)
         {
             if (output == null || runtime == null)
             {
@@ -136,7 +146,7 @@ namespace LaunchPlugin
             bool carIdxChanged = output.CarIdx != selector.CarIdx;
             if (identityChanged || carIdxChanged)
             {
-                output.ResetTarget();
+                output.ResetPublishedSegments();
                 runtime.Reset();
             }
 
@@ -160,6 +170,7 @@ namespace LaunchPlugin
             runtime.LastLapReferenceSec = output.LastLapSec;
             output.LastLapDeltaToBestSec = ComputeLastLapDeltaToBest(output.LastLapSec, output.BestLapSec);
             output.LiveDeltaToBestSec = hasTargetContext ? ComputeLiveDeltaToBest(runtime, sessionTimeSec, output.BestLapSec) : 0.0;
+            output.LastLapColor = ComputeLastLapColor(output.LastLapSec, output.BestLapSec, classSessionBestLapSec);
             output.LastLapDeltaToPlayerSec = ComputeLastLapDeltaToPlayer(output.LastLapSec, playerOutput != null ? playerOutput.LastLapSec : 0.0);
             output.LiveGapSec = hasUsableTimingContext ? ComputeLiveGapSec(playerRuntime, runtime) : 0.0;
             output.ActiveSegment = hasTargetContext ? runtime.ActiveSegment : 0;
@@ -385,6 +396,24 @@ namespace LaunchPlugin
             return targetLastLapSec - playerLastLapSec;
         }
 
+        private static string ComputeLastLapColor(double lastLapSec, double bestLapSec, double classSessionBestLapSec)
+        {
+            bool lastLapMatchesBest = IsValidLapTime(lastLapSec)
+                && IsValidLapTime(bestLapSec)
+                && AreLapTimesEqual(lastLapSec, bestLapSec);
+            if (!lastLapMatchesBest)
+            {
+                return LastLapColorNormal;
+            }
+
+            if (IsValidLapTime(classSessionBestLapSec) && AreLapTimesEqual(bestLapSec, classSessionBestLapSec))
+            {
+                return LastLapColorSessionBest;
+            }
+
+            return LastLapColorPersonalBest;
+        }
+
         private static int ComputeActiveSegment(double lapPct)
         {
             if (!IsValidLapPct(lapPct))
@@ -439,6 +468,11 @@ namespace LaunchPlugin
             }
 
             return values[carIdx] > 0 ? values[carIdx] : 0;
+        }
+
+        private static bool AreLapTimesEqual(double a, double b)
+        {
+            return IsValidLapTime(a) && IsValidLapTime(b) && Math.Abs(a - b) <= LapTimeEqualityToleranceSec;
         }
 
         private static bool IsFinite(double value)
@@ -595,6 +629,7 @@ namespace LaunchPlugin
             public double BestLapSec { get; set; }
             public double LastLapDeltaToBestSec { get; set; }
             public double LiveDeltaToBestSec { get; set; }
+            public string LastLapColor { get; set; } = LastLapColorNormal;
             public double LastLapDeltaToPlayerSec { get; set; }
             public double LiveGapSec { get; set; }
             public int ActiveSegment { get; set; }
@@ -634,6 +669,7 @@ namespace LaunchPlugin
                 BestLapSec = 0.0;
                 LastLapDeltaToBestSec = 0.0;
                 LiveDeltaToBestSec = 0.0;
+                LastLapColor = LastLapColorNormal;
                 LastLapDeltaToPlayerSec = 0.0;
                 LiveGapSec = 0.0;
                 ActiveSegment = 0;
@@ -644,6 +680,11 @@ namespace LaunchPlugin
             public void ResetTarget()
             {
                 ResetPlayer();
+            }
+
+            public void ResetPublishedSegments()
+            {
+                ResetSegments();
             }
 
             private void ResetSegments()
