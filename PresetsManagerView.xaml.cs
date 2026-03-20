@@ -10,6 +10,9 @@ namespace LaunchPlugin
     public partial class PresetsManagerView : UserControl, INotifyPropertyChanged
     {
         private readonly FuelCalcs _vm;
+        private Window _hostWindow;
+        private bool _isVmSubscribed;
+        private bool _isCleanedUp;
 
         private RacePreset _editingPreset;      // working copy for the right pane
         private RacePreset _editorSelection;    // local selection for the left list (decoupled from VM.SelectedPreset)
@@ -80,7 +83,9 @@ namespace LaunchPlugin
             // Use the VM as DataContext for lists/collections, but keep selection local
             DataContext = _vm;
 
-            _vm.PropertyChanged += OnVmPropertyChanged;
+            SubscribeToViewModel();
+            Loaded += OnViewLoaded;
+            Unloaded += OnViewUnloaded;
 
             // Start with the active Strategy preset when possible, otherwise the first available preset.
             EditorSelection = ResolveInitialSelection();
@@ -110,6 +115,18 @@ namespace LaunchPlugin
             return presets.FirstOrDefault();
         }
 
+        private void SubscribeToViewModel()
+        {
+            if (_isVmSubscribed)
+            {
+                return;
+            }
+
+            _vm.PropertyChanged += OnVmPropertyChanged;
+            _isVmSubscribed = true;
+            _isCleanedUp = false;
+        }
+
         private void OnVmPropertyChanged(object sender, PropertyChangedEventArgs e)
         {
             if (e.PropertyName == nameof(FuelCalcs.SelectedPreset) ||
@@ -118,6 +135,58 @@ namespace LaunchPlugin
             {
                 NotifyActivePresetIndicator();
             }
+        }
+
+        private void CleanupSubscriptions()
+        {
+            if (_isCleanedUp)
+            {
+                return;
+            }
+
+            if (_isVmSubscribed)
+            {
+                _vm.PropertyChanged -= OnVmPropertyChanged;
+                _isVmSubscribed = false;
+            }
+
+            if (_hostWindow != null)
+            {
+                _hostWindow.Closed -= OnHostWindowClosed;
+                _hostWindow = null;
+            }
+
+            _isCleanedUp = true;
+        }
+
+        private void OnViewLoaded(object sender, RoutedEventArgs e)
+        {
+            var hostWindow = Window.GetWindow(this);
+            if (ReferenceEquals(_hostWindow, hostWindow))
+            {
+                return;
+            }
+
+            if (_hostWindow != null)
+            {
+                _hostWindow.Closed -= OnHostWindowClosed;
+            }
+
+            _hostWindow = hostWindow;
+            if (_hostWindow != null)
+            {
+                _hostWindow.Closed += OnHostWindowClosed;
+            }
+        }
+
+        private void OnViewUnloaded(object sender, RoutedEventArgs e)
+        {
+            CleanupSubscriptions();
+        }
+
+        private void OnHostWindowClosed(object sender, EventArgs e)
+        {
+            CleanupSubscriptions();
         }
 
         private void NotifyActivePresetIndicator()
