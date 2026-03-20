@@ -80,6 +80,8 @@ namespace LaunchPlugin
                 return;
             }
 
+            family.ClassSessionBestLapSec = SanitizeLapTime(classSessionBestLapSec);
+
             UpdatePlayer(family.Player, runtime.Player, sessionTimeSec, playerCarIdx, carIdxLapDistPct, carIdxLap, playerBestLapSec, playerLastLapSec, classSessionBestLapSec);
             UpdateTarget(family.Ahead, runtime.Ahead, aheadSelector, sessionTimeSec, runtime.Player, family.Player,
                 carIdxLapDistPct, carIdxLap, bestLapTimeSecByIdx, lastLapTimeSecByIdx, classPositionByIdx, classSessionBestLapSec);
@@ -147,7 +149,7 @@ namespace LaunchPlugin
             if (identityChanged || carIdxChanged)
             {
                 output.ResetPublishedSegments();
-                runtime.Reset();
+                runtime.ResetForRebind(sessionTimeSec);
             }
 
             output.IdentityKey = selector.IdentityKey ?? string.Empty;
@@ -194,36 +196,61 @@ namespace LaunchPlugin
                     continue;
                 }
 
-                double playerTime = GetLatestCompletedSegmentTime(playerRuntime, i);
-                double targetTime = GetLatestCompletedSegmentTime(targetRuntime, i);
+                double bindStartTimeSec = targetRuntime.BindStartTimeSec;
+                double playerTime = GetLatestCompletedSegmentTime(playerRuntime, i, bindStartTimeSec);
+                double targetTime = GetLatestCompletedSegmentTime(targetRuntime, i, bindStartTimeSec);
                 bool playerDone = IsFinite(playerTime);
                 bool targetDone = IsFinite(targetTime);
+                bool playerFresh = HasFreshSegmentCompletion(playerRuntime, i, bindStartTimeSec);
+                bool targetFresh = HasFreshSegmentCompletion(targetRuntime, i, bindStartTimeSec);
 
-                if (playerDone && targetDone)
+                if (playerFresh && targetFresh && playerDone && targetDone)
                 {
                     output.SetSegment(i, targetTime - playerTime, SegmentStateValid);
                 }
-                else if ((playerDone || targetDone) && output.GetSegmentState(i) != SegmentStateValid)
+                else if ((playerFresh || targetFresh) && output.GetSegmentState(i) != SegmentStateValid)
                 {
                     output.SetSegment(i, 0.0, SegmentStatePending);
                 }
             }
         }
 
-        private static double GetLatestCompletedSegmentTime(ParticipantRuntime runtime, int index)
+        private static double GetLatestCompletedSegmentTime(ParticipantRuntime runtime, int index, double bindStartTimeSec)
         {
             if (runtime == null || index < 0 || index >= SegmentCount)
             {
                 return double.NaN;
             }
 
-            double currentLapTime = runtime.SegmentCompletedTimeSec[index];
-            if (IsFinite(currentLapTime))
+            if (IsCompletionFresh(runtime.SegmentCompletedSessionTimeSec[index], bindStartTimeSec))
             {
-                return currentLapTime;
+                return runtime.SegmentCompletedTimeSec[index];
             }
 
-            return runtime.PublishedSegmentCarryoverTimeSec[index];
+            if (IsCompletionFresh(runtime.PublishedSegmentCarryoverSessionTimeSec[index], bindStartTimeSec))
+            {
+                return runtime.PublishedSegmentCarryoverTimeSec[index];
+            }
+
+            return double.NaN;
+        }
+
+        private static bool HasFreshSegmentCompletion(ParticipantRuntime runtime, int index, double bindStartTimeSec)
+        {
+            if (runtime == null || index < 0 || index >= SegmentCount)
+            {
+                return false;
+            }
+
+            return IsCompletionFresh(runtime.SegmentCompletedSessionTimeSec[index], bindStartTimeSec)
+                || IsCompletionFresh(runtime.PublishedSegmentCarryoverSessionTimeSec[index], bindStartTimeSec);
+        }
+
+        private static bool IsCompletionFresh(double completionSessionTimeSec, double bindStartTimeSec)
+        {
+            return IsFinite(completionSessionTimeSec)
+                && IsFinite(bindStartTimeSec)
+                && completionSessionTimeSec >= bindStartTimeSec;
         }
 
         private static bool UpdateRuntime(ParticipantRuntime runtime, int carIdx, double sessionTimeSec, float[] carIdxLapDistPct, int[] carIdxLap)
@@ -289,6 +316,7 @@ namespace LaunchPlugin
                     for (int segment = runtime.LastActiveSegment; segment < runtime.ActiveSegment; segment++)
                     {
                         runtime.SegmentCompletedTimeSec[segment - 1] = sessionTimeSec - runtime.LapStartTimeSec;
+                        runtime.SegmentCompletedSessionTimeSec[segment - 1] = sessionTimeSec;
                     }
                 }
                 else
@@ -319,7 +347,9 @@ namespace LaunchPlugin
             double completedTimeSec = sessionTimeSec - runtime.LapStartTimeSec;
             int segmentIndex = runtime.LastActiveSegment - 1;
             runtime.SegmentCompletedTimeSec[segmentIndex] = completedTimeSec;
+            runtime.SegmentCompletedSessionTimeSec[segmentIndex] = sessionTimeSec;
             runtime.PublishedSegmentCarryoverTimeSec[segmentIndex] = completedTimeSec;
+            runtime.PublishedSegmentCarryoverSessionTimeSec[segmentIndex] = sessionTimeSec;
         }
 
         private static double ComputeLiveDeltaToBest(ParticipantRuntime runtime, double sessionTimeSec, double bestLapSec)
@@ -497,7 +527,9 @@ namespace LaunchPlugin
         private sealed class ParticipantRuntime
         {
             public readonly double[] SegmentCompletedTimeSec = new double[SegmentCount];
+            public readonly double[] SegmentCompletedSessionTimeSec = new double[SegmentCount];
             public readonly double[] PublishedSegmentCarryoverTimeSec = new double[SegmentCount];
+            public readonly double[] PublishedSegmentCarryoverSessionTimeSec = new double[SegmentCount];
             public int CarIdx = -1;
             public int LapRef;
             public double LapPct = double.NaN;
@@ -509,6 +541,7 @@ namespace LaunchPlugin
             public double LapStartTimeSec = double.NaN;
             public double BestLapReferenceSec;
             public double LastLapReferenceSec;
+            public double BindStartTimeSec = double.NaN;
 
             public ParticipantRuntime()
             {
@@ -528,6 +561,7 @@ namespace LaunchPlugin
                 LapStartTimeSec = double.NaN;
                 BestLapReferenceSec = 0.0;
                 LastLapReferenceSec = 0.0;
+                BindStartTimeSec = double.NaN;
                 ClearCurrentLapSegments();
                 ClearPublishedSegmentCarryover();
             }
@@ -557,11 +591,18 @@ namespace LaunchPlugin
                 ClearPublishedSegmentCarryover();
             }
 
+            public void ResetForRebind(double sessionTimeSec)
+            {
+                Reset();
+                BindStartTimeSec = IsFinite(sessionTimeSec) ? sessionTimeSec : double.NaN;
+            }
+
             private void ClearCurrentLapSegments()
             {
                 for (int i = 0; i < SegmentCompletedTimeSec.Length; i++)
                 {
                     SegmentCompletedTimeSec[i] = double.NaN;
+                    SegmentCompletedSessionTimeSec[i] = double.NaN;
                 }
             }
 
@@ -570,6 +611,7 @@ namespace LaunchPlugin
                 for (int i = 0; i < PublishedSegmentCarryoverTimeSec.Length; i++)
                 {
                     PublishedSegmentCarryoverTimeSec[i] = double.NaN;
+                    PublishedSegmentCarryoverSessionTimeSec[i] = double.NaN;
                 }
             }
         }
@@ -604,9 +646,11 @@ namespace LaunchPlugin
             public H2HParticipantOutput Player { get; private set; }
             public H2HParticipantOutput Ahead { get; private set; }
             public H2HParticipantOutput Behind { get; private set; }
+            public double ClassSessionBestLapSec { get; set; }
 
             public void Reset()
             {
+                ClassSessionBestLapSec = 0.0;
                 Player.ResetPlayer();
                 Ahead.ResetTarget();
                 Behind.ResetTarget();
