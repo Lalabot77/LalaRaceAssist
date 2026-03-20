@@ -1,6 +1,6 @@
 ﻿# Repository status
 
-Validated against commit: bef8bed
+Validated against commit: HEAD
 Last updated: 2026-03-20
 Branch: work
 
@@ -9,17 +9,15 @@ Branch: work
 - No Git remote is configured in this checkout (`git remote -v` returns empty).
 
 ## Documentation sync status (requested set)
-- `Docs/Project_Index.md` updated so the canonical doc map now mentions the reordered main-tab layout and the embedded Launch Settings expander inside Settings.
-- `Docs/Plugin_UI_Tooltips.md` updated so the tooltip/navigation inventory reflects the new main-tab order, the `Launch Analysis` / `Settings` labels, and the moved Launch Settings location under Settings.
-- `Docs/Lala_Plugin_User_Guide_v0.3.md` updated so current user-facing navigation wording matches the new Settings/Launch Analysis layout.
+- `Docs/Subsystems/CarSA.md` updated so the canonical CarSA doc now records the new CarSA-owned fixed-6-sector cache foundation, its 60-checkpoint-to-6-sector mapping, overwrite/invalidation rules, and the narrow accessor seam while making clear H2H has not switched to it yet.
+- `Docs/Subsystems/H2H.md` updated so the canonical H2H doc now states that CarSA owns the new sector-cache foundation in this phase while published H2H outputs still come from the existing H2H runtime.
 - `Docs/RepoStatus.md` refreshed for the current validation summary.
 
 ## Delivery status highlights
-- The top-level plugin tabs are now ordered `STRATEGY`, `PROFILES`, `DASH CONTROL`, `LAUNCH ANALYSIS`, `SETTINGS`.
-- The former `POST LAUNCH ANALYSIS` label is now `LAUNCH ANALYSIS`, and the former `GLOBAL SETTINGS` label is now `SETTINGS`.
-- The standalone top-level `LAUNCH SETTINGS` tab has been removed.
-- The existing Launch Settings UI is now hosted inside the `SETTINGS` tab under a collapsed `Launch Settings` expander placed after Friends List and before Debug.
-- The embedded Launch Settings block reuses the existing controls and bindings, so launch-setting semantics and launch-analysis trace/logging behavior remain unchanged.
+- CarSA now owns a per-car fixed-6-sector cache foundation derived from the existing 60-checkpoint progression, with per-car continuity anchors, per-sector `HasValue`/`DurationSec`, explicit modulo-advance `>10` discontinuity clears, and a narrow `TryGetFixedSectorCacheSnapshot` read seam for later H2H migration.
+- The new cache remains inside the CarSA ownership boundary and does not depend on selector state, lap-bound sector runtime, or H2H bind windows.
+- H2H output behavior is intentionally unchanged in this phase: the existing H2H runtime, selectors, and published dash contract remain in place while the new CarSA-side timing source is built and documented for later switchover.
+- `Docs/RepoStatus.md` refreshed for the current validation summary.
 
 ## Notes
 - `Docs/Code_Snapshot.md` remains non-canonical orientation-only documentation.

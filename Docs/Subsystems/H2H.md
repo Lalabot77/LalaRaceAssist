@@ -12,10 +12,11 @@ Head-to-Head is a standalone dash-facing comparison subsystem that publishes two
 The feature provides a flat, explicit contract for Dash Studio consumption with player/ahead/behind lap summaries, direct `LastLapColor` exports, fixed 6-segment state, latched segment deltas, canonical `#RRGGBB` class colors, and active-segment outputs.
 
 ## Ownership and subsystem boundaries
-- **H2H owns** target timing context, live-gap values, lap-summary values, fixed-6-segment state, latched segment deltas, and active-segment outputs.
+- **H2H currently owns** target timing context, live-gap values, lap-summary values, fixed-6-segment state, latched segment deltas, and active-segment outputs.
 - **Opponents owns only race-target selection** for `H2HRace.*` via current class-ahead / class-behind identity (`Opp.Ahead1` / `Opp.Behind1`).
-- **CarSA owns only track-target selection** for `H2HTrack.*` via the current ahead/behind slot set, `CarIdx`, and already-resolved cosmetic metadata; H2H picks the nearest valid same-class candidate locally.
-- H2H does **not** move timing responsibility into Opponents or CarSA.
+- **CarSA owns track-target selection** for `H2HTrack.*` via the current ahead/behind slot set, `CarIdx`, and already-resolved cosmetic metadata; in the current foundation phase CarSA also owns the new per-car fixed-6-sector cache, but H2H does not consume it yet.
+- CarSA now also owns a car-centric fixed-6-sector cache foundation for a later H2H timing-source swap, but **this phase does not switch H2H consumption yet**; the published H2H outputs still come from the existing H2H runtime.
+- H2H does **not** move timing responsibility into Opponents, and the CarSA-owned cache remains internal to CarSA until the later consumer switchover task.
 
 ## Phase-1 model
 Phase 1 is intentionally simple:
@@ -65,6 +66,7 @@ Both `H2HRace.*` and `H2HTrack.*` expose the same flat shape:
 
 ## Update flow
 - `LalaLaunch.cs` reads the existing raw telemetry/session-info inputs and builds race/track selector snapshots.
+- `CarSAEngine` now also maintains a per-car fixed-6-sector cache derived from the existing 60-checkpoint progression, but H2H does not consume that cache yet in this phase.
 - The standalone `H2HEngine` updates both families every tick.
 - `AttachCore` publishes the flat `H2HRace.*` and `H2HTrack.*` exports for dash use.
 
