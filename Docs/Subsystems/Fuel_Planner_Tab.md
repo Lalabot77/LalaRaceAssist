@@ -1,4 +1,4 @@
-# Fuel Planner / Strategy Tab
+﻿# Fuel Planner / Strategy Tab
 
 Validated against commit: 3f0af12824336625dd449cc0329702ac50394396
 Last updated: 2026-03-20
@@ -115,12 +115,14 @@ The planner tracks *what source is currently active* for each input:
 - **Wet factor support:** If wet mode is selected but only dry profile stats exist, the planner scales dry values by the selected track's wet-factor percentage and labels the source accordingly.
 
 ### Max fuel override handling (profile vs live)
-- **Profile mode:** `MaxFuelOverride` is clamped to the profile base tank (`BaseTankLitres`), and the UI shows a percent-of-base-tank badge.
+- **Profile mode:** `MaxFuelOverride` is clamped to the profile base tank (`BaseTankLitres`), remains manually editable, and the UI shows a percent-of-base-tank badge.
 - **Preset max fuel input:** Preset max fuel is expressed as a **percentage of base tank** (default 100%), making presets portable across cars with different base tanks.
-- **Live Snapshot mode:** `MaxFuelOverride` is set from the live session cap (MaxFuel × BoP), or `0` if the live cap is unavailable.
-- **Preset visibility in Live Snapshot:** Preset max-fuel values remain visible (read-only) so drivers can compare preset intent against live caps.
-- **Mode transitions:** switching into Live Snapshot stores the previous profile override; switching back to Profile restores it and re-applies the selected preset (if any).
-- **Validation:** if the live cap is missing in Live Snapshot mode, the planner surfaces an explicit “Live max fuel cap unavailable” error and blocks strategy outputs.
+- **Preset application in Profile mode:** applying/selecting a preset can still set the active planner max fuel exactly as before, subject to the existing profile-side clamp.
+- **Live Snapshot mode:** the planner tank basis comes only from the live detected session cap (`MaxFuel × BoP`). Manual/profile/preset max-fuel values do not remain active underneath Live Snapshot.
+- **Live Snapshot UI lock:** the max-fuel slider/input is non-editable in Live Snapshot and shows the live cap when available.
+- **Live Snapshot fallback:** if the live cap is unavailable, the planner uses `0` as the effective tank basis, surfaces an explicit “Live max fuel cap unavailable” validation error, and blocks strategy outputs rather than silently reusing an older profile/preset/manual value.
+- **Mode transitions:** switching into Live Snapshot stores the prior Profile-mode override for later restoration but immediately stops using it as the active planner tank basis; switching back to Profile restores normal editability, restores the remembered profile value, and reapplies the selected preset (if any) under Profile-mode rules.
+- **Ongoing live updates:** while Live Snapshot is active, live cap changes automatically update the planner tank basis and downstream strategy outputs, including first-stint fuel.
 
 These are exposed to the UI so the driver can see **why** a number changed.
 

@@ -9,9 +9,8 @@ Branch: work
 - No Git remote is configured in this checkout (`git remote -v` returns empty).
 
 ## Documentation sync status (requested set)
-- `Docs/Subsystems/Fuel_Planner_Tab.md` updated so the canonical planner doc now describes the top-level Strategy tab name, the preserved inline Race Preset selector, and the modal Preset Manager workflow that replaces the former separate Presets tab.
-- `Docs/Plugin_UI_Tooltips.md` updated so the tooltip inventory reflects the Strategy-tab navigation, the new `Presets...` button beside the Race Preset combo, and the Strategy wording inside the preset manager.
-- `Docs/Project_Index.md` updated so the subsystem map and tooltip reference describe the Strategy-tab / modal-preset workflow.
+- `Docs/Subsystems/Fuel_Planner_Tab.md` updated so the canonical planner doc now states that Live Snapshot max fuel is locked to the live detected cap only, while Profile mode retains manual/preset max-fuel behavior.
+- `Docs/Plugin_UI_Tooltips.md` updated so the Strategy-tab max-fuel tooltip text explicitly calls out the Profile-mode edit path and the Live Snapshot lock-to-live-cap behavior.
 - `Docs/RepoStatus.md` refreshed for the current validation summary.
 
 ## Delivery status highlights
@@ -24,8 +23,6 @@ Branch: work
 - `Docs/Lala_Plugin_Quick_Start_Guide_v0.3.md` added as the review-friendly source version of the tester quick-start, matching the current setup flow, fuel-planning model, track-marker/pit-learning workflow, and supported race-context aids.
 - `Docs/Lala_Plugin_User_Guide_v0.3.md` added as the review-friendly source version of the ship-ready user guide, reflecting current fuel/planner behaviour, track-scoped planner defaults, H2H, pit/rejoin aids, and the current inactive status of the broader message-dash system.
 - `Docs/RepoStatus.md` refreshed for the current validation summary.
-- User-facing documentation now has review-friendly markdown source guides in the repo: Quick Start is focused on install/bind/learn/lock workflow, while the full User Guide explains the current fuel planner, track-scoped data, race aids, and H2H without implying the broader message-dash system is active.
-- The user changelog now covers the recent H2H and fuel-planner updates through PR #481 in a concise tester-facing format instead of stopping short of the latest merged work.
 
 ## Notes
 - `Docs/Code_Snapshot.md` remains non-canonical orientation-only documentation.
