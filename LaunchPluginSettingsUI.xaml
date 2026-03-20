@@ -12,8 +12,7 @@
     <UserControl.Resources>
         <BooleanToVisibilityConverter x:Key="BooleanToVisibilityConverter"/>
     </UserControl.Resources>
-    <ScrollViewer VerticalScrollBarVisibility="Auto">
-        <StackPanel Margin="10">
+    <StackPanel Margin="10">
 
             <styles:SHSection Title="LAUNCH PARAMETERS" ShowSeparator="True">
                 <StackPanel>
@@ -87,7 +86,7 @@
                                                 ToolTip="Browse for a summary CSV location."/>
                     </Grid>
                     <TextBlock Margin="0,15,0,2" Foreground="LightGray"
-                               ToolTip="Location for detailed launch trace files used by the Launch Analysis tab. Leave blank to use the default path shown.">
+                               ToolTip="Location for detailed launch trace files used by the Launch Analysis tab in the main navigation. Leave blank to use the default path shown.">
                         <TextBlock.Text>
                             <MultiBinding StringFormat="{}Detailed Trace Files Path (Leave blank for default: {0})">
                                 <Binding ElementName="SettingsPage" Path="DefaultTraceLogPath" Mode="OneWay"/>
@@ -102,7 +101,7 @@
                         </Grid.ColumnDefinitions>
                         <styles:SHToggleCheckbox Grid.Column="0" VerticalAlignment="Center" Margin="0,0,10,0"
                                                  IsChecked="{Binding Settings.EnableTelemetryTracing, Mode=TwoWay}"
-                                                 ToolTip="Enable or disable creating detailed trace files for the 'LAUNCH ANALYSIS' tab."/>
+                                                 ToolTip="Enable or disable creating detailed trace files for the 'LAUNCH ANALYSIS' tab in the main navigation."/>
                         <TextBox Grid.Column="1" x:Name="TracePathTextBox" 
                                  Text="{Binding Settings.TraceLogPath, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" 
                                  VerticalAlignment="Center"
@@ -114,6 +113,5 @@
                 </StackPanel>
             </styles:SHSection>
 
-        </StackPanel>
-    </ScrollViewer>
+    </StackPanel>
 </UserControl>

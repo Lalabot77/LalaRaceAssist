@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.IO;
@@ -15,12 +15,15 @@ namespace LaunchPlugin
         private readonly ObservableCollection<IOverlayCategory> _iOverlayCategories = new ObservableCollection<IOverlayCategory>();
 
         public LalaLaunch Plugin { get; }
+        public TelemetryTraceLogger TelemetryService { get; }
 
-        public GlobalSettingsView(LalaLaunch plugin)
+        public GlobalSettingsView(LalaLaunch plugin, TelemetryTraceLogger telemetry)
         {
             InitializeComponent();
             Plugin = plugin;
+            TelemetryService = telemetry;
             DataContext = plugin;
+            LaunchSettingsHost.Content = new LaunchPluginSettingsUI(plugin, telemetry);
             InitializeIOverlayImport();
         }
 

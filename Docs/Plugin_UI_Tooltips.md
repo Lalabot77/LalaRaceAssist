@@ -83,7 +83,7 @@ Branch: work
 ## LaunchAnalysisControl.xaml
 - L27: Select a launch trace file to review in this tab.
 - L33: Pick a trace file captured from a launch session.
-- L37: Reloads the list of files from the path specified in the Settings tab.
+- L37: Reloads the list of files from the path specified in Settings → Launch Settings.
 - L41: Temporarily browse a different folder for launch trace files.
 - L46: WARNING: Permanently deletes the selected trace file from your disk.
 - L55: Auto-generated summary for the selected trace file.
@@ -107,19 +107,18 @@ Branch: work
 - L42: Allowed deviation (±%) around the bite point target.
 - L43: If the engine RPM drops below this percentage of the initial Launch RPM, the run will be flagged as 'Bogged'.
 - L44: Sets the sensitivity for detecting game-assisted anti-stall. % is delta between paddle and in game clutch.
-- LAUNCH UI / BINDINGS section: hosts only the moved `Launch Mode` binding and `Post-Launch Results Display Time` slider from Dash Control; no wider Launch Settings tidy-up was introduced.
+- Launch Settings content is no longer a standalone main tab; it now appears inside Settings under a collapsed `Launch Settings` expander placed after Friends List and before Debug.
+- LAUNCH UI / BINDINGS section: still hosts only the moved `Launch Mode` binding and `Post-Launch Results Display Time` slider from Dash Control; moving the block into Settings did not change their behavior or bindings.
 - L26-L27 of the moved block: `Launch Mode` manually primes/aborts launch mode for testing and non-standing-start sessions.
 - L32-L37 of the moved block: `Post-Launch Results Display Time` controls how long the results screen stays visible after a launch.
 - L51: Location for the one-line launch summary CSV. Leave blank to use the default path shown.
 - L66: Enable or disable writing the one-line summary of each launch.
 - L70: Custom path for the summary CSV. Leave blank to use the default path.
 - L73: Browse for a summary CSV location.
-- L76: Location for detailed launch trace files used by the Launch Analysis tab. Leave blank to use the default path shown.
-- L91: Enable or disable creating detailed trace files for the 'LAUNCH ANALYSIS' tab.
+- L76: Location for detailed launch trace files used by the Launch Analysis tab in the top-level navigation. Leave blank to use the default path shown.
+- L91: Enable or disable creating detailed trace files for the 'LAUNCH ANALYSIS' tab in the top-level navigation.
 - L95: Custom path for launch trace files. Leave blank to use the default path.
 - L98: Browse for a launch trace folder.
-- L102: Enables verbose logging for troubleshooting the plugin.
-- L105: Adds PitExit math audit details to pit-in snapshots for troubleshooting.
 
 ## PresetsManagerView.xaml
 - L34: Manage reusable race strategy presets.
@@ -202,7 +201,11 @@ Branch: work
 - `ProfilesManagerView.xaml` L411-L417: `Urgent sound` tooltip says it plays a delayed secondary shift beep at 50% of the main beep volume.
 - `ProfilesManagerView.xaml` L522: `Learning mode` tooltip explains shift-point data mining and learning-overlay visibility.
 - `ProfilesManagerView.xaml` L751-L768: custom WAV controls include the existing path/browse affordance while some adjacent labels remain tooltip-free.
-- `GlobalSettingsView.xaml` no longer contains the duplicated per-profile `USER VARIABLES` block; true global sections now begin with `DRIVER TAGS`.
-- `GlobalSettingsView.xaml` DEBUG section continues to host the existing debug toggles and now also hosts the moved `Event Marker` binding under `Debug Actions`.
+- `GlobalSettingsView.xaml` is now the top-level `SETTINGS` tab, with visible main-tab order `STRATEGY`, `PROFILES`, `DASH CONTROL`, `LAUNCH ANALYSIS`, `SETTINGS`.
+- `GlobalSettingsView.xaml` now surfaces the Friends List section first, then a collapsed `Launch Settings` expander, then the existing Debug block.
+- `GlobalSettingsView.xaml` no longer contains the duplicated per-profile `USER VARIABLES` block; the Settings tab now begins with the Friends List tools/import flow.
+- `GlobalSettingsView.xaml` DEBUG section continues to host the existing debug toggles and the moved `Event Marker` binding under `Debug Actions`; Launch Settings now sits above this block inside its own collapsed expander.
+- `GlobalSettingsView.xaml` `Enable Debug Logging` tooltip says it enables verbose logging for troubleshooting the plugin.
+- `GlobalSettingsView.xaml` `PitExit Verbose Logging` tooltip says it adds PitExit math audit details to pit-in snapshots for troubleshooting.
 - `GlobalSettingsView.xaml` `Shift Assist Debug CSV` tooltip explains per-tick diagnostic CSV logging.
 - `GlobalSettingsView.xaml` `Shift Assist Debug Max Hz` textbox tooltip documents valid range (1..60 Hz).
