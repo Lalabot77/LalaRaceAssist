@@ -9,14 +9,14 @@ Branch: work
 - No Git remote is configured in this checkout (`git remote -v` returns empty).
 
 ## Documentation sync status (requested set)
-- `Docs/Subsystems/Fuel_Planner_Tab.md` updated so the canonical Fuel planner doc now records that pace-vs-leader is editable only in Profile mode, auto-follows live leader delta in Live Snapshot mode, and falls back to `0.0` instead of stale manual/profile values when live leader pace is unavailable.
-- `Docs/Plugin_UI_Tooltips.md` updated to remove the obsolete leader-delta reset-to-live tooltip and describe the Live Snapshot lock behaviour for the pace-vs-leader control.
+- `Docs/Subsystems/H2H.md` updated so the canonical H2H doc now records that true target rebinds still clear the published row immediately, stale pre-bind target completions are still blocked, and segment rebuild resumes from the next clean target completion without requiring a player-side post-bind completion.
+- `Docs/SimHubParameterInventory.md` updated so the H2H segment export contract now matches the relaxed bind-aware rebuild rule while preserving sector-6 carryover and `ClassSessionBestLapSec` fallback behavior.
 - `Docs/RepoStatus.md` refreshed for the current validation summary.
 
 ## Delivery status highlights
-- Fuel planner leader delta now follows the selected planning source model: Profile mode keeps the manual/stored race-pace delta workflow, while Live Snapshot mode clears manual override state on entry and continuously uses the current live leader delta when available.
-- The Fuel tab no longer needs a separate "Reset to live" / "Use live" leader-delta recovery path; the manual slider is locked in Live Snapshot mode and strategy calculations fall back to zero leader delta when no live leader pace is available.
-- Live snapshot resets and car/track combination clears now wipe live/manual leader-delta runtime state without reviving stale hidden manual values during Live Snapshot mode, while still preserving track-stored profile behaviour for Profile mode.
+- H2H segment publication no longer starves after a true Ahead/Behind target rebind: the row still clears immediately, then rebuilds from the next clean target-side segment completion instead of waiting for a whole new lap.
+- Bind-aware protection remains on the target side, so stale pre-bind target segment timestamps still cannot leak into the new comparison window and recreate the large garbage swap deltas seen previously.
+- `H2HRace.ClassSessionBestLapSec` / `H2HTrack.ClassSessionBestLapSec`, the same-class primary source plus `IRacingExtraProperties.iRacing_Session_PlayerClassBestLapTime` fallback, and same-target sector-6 lap-wrap carryover remain unchanged.
 
 ## Notes
 - `Docs/Code_Snapshot.md` remains non-canonical orientation-only documentation.
