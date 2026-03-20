@@ -1,6 +1,6 @@
 ﻿# Repository status
 
-Validated against commit: f9d805f
+Validated against commit: HEAD
 Last updated: 2026-03-20
 Branch: work
 
@@ -9,15 +9,16 @@ Branch: work
 - No Git remote is configured in this checkout (`git remote -v` returns empty).
 
 ## Documentation sync status (requested set)
-- `GlobalSettingsView.xaml` updated so the Settings tab now hosts the existing Friends List tools/import flow inside a collapsed `Friends List` expander while preserving the existing order of Friends List -> Launch Settings -> Debug.
-- `DashesTabView.xaml` updated so Dash Control now uses expander-based `Bindings`, `Global Dash Functions`, and `Dash Visibility` sections, all expanded by default without changing their internal bindings or behavior.
-- `Docs/Plugin_UI_Tooltips.md`, `Docs/Project_Index.md`, and `Docs/Lala_Plugin_User_Guide_v0.3.md` updated so navigation/help text matches the new expander-based layout.
+- `H2HEngine.cs` now publishes `H2HRace.*` / `H2HTrack.*` `S1..S6State` and `S1..S6DeltaSec` from the CarSA-owned fixed-6-sector cache instead of the old target-bound H2H stopwatch runtime.
+- `LalaLaunch.cs` now wires the narrow CarSA read seam (`TryGetFixedSectorCacheSnapshot`) into H2H without changing race/track selector ownership.
+- `Docs/Subsystems/H2H.md`, `Docs/Subsystems/CarSA.md`, and `Docs/SimHubParameterInventory.md` now document the cache-based sector contract, the locked `0/1/2` state semantics, and the immediate target-swap behavior.
 - `Docs/RepoStatus.md` refreshed for the current validation summary.
 
 ## Delivery status highlights
-- Settings is less vertically heavy because Friends List now follows the same collapsed-expander pattern already used for Launch Settings, while keeping Launch Settings below Friends List and above Debug.
-- Dash Control keeps the same three main content areas and bindings, but each area now sits inside a tidy expander container for cleaner scanning.
-- This task is UI-only: no subsystem logic, setting semantics, binding behavior, preset flow, or launch-setting behavior changed.
+- H2H sector publication now reads the player/target fixed-6-sector snapshots from CarSA every tick and computes `S1..S6State` / `S1..S6DeltaSec` directly from cache presence plus cached durations.
+- The old bind-aware H2H segment rebuild behavior is gone by design: target swaps now publish immediately from the new target's existing cache if present, otherwise the row naturally shows `empty`/`0`.
+- Selector architecture did not change: `H2HRace` still follows Opponents-resolved identity and `H2HTrack` still follows CarSA same-class ahead/behind slot selection.
+- H2H still owns lightweight presentation/runtime outputs such as `ActiveSegment`, `LapRef`, `LiveGapSec`, `LiveDeltaToBestSec`, lap summary values, colors, and class-session-best publication.
 
 ## Notes
 - `Docs/Code_Snapshot.md` remains non-canonical orientation-only documentation.

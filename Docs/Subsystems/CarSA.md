@@ -4,7 +4,10 @@
 CarSA provides **session-agnostic**, **class-aware** spatial awareness using iRacing CarIdx telemetry arrays as the source of truth. It publishes the 5 nearest cars ahead and 5 behind on track for Practice, Qualifying, and Race sessions using distance-based gaps derived from car-centric LapDistPct deltas, plus gate-gap v2 relative proximity.
 
 CarSA is independent of the race-only Opponents subsystem and does not change Opponents or Rejoin Assist behavior.
-Phase-1 Head-to-Head (`H2HTrack.*`) consumes CarSA as a **track-target selector seam** (the current ahead/behind slot sets, `CarIdx`, and already-resolved cosmetic metadata). In the current implementation phase, H2H still keeps its own target-bound timing runtime for published segment deltas, but CarSA now also owns a car-centric fixed-6-sector cache foundation for later H2H migration. That cache is derived from the existing 60-checkpoint progression, remains overwrite-on-next-completion, is not selector-bound, and is exposed only through a narrow CarSA-owned read seam. `H2HRace.*` still uses CarSA only as a narrow local live-session fallback when a known Opponents-selected identity needs help re-resolving `CarIdx`.
+Head-to-Head now consumes CarSA in two narrow ways:
+- `H2HTrack.*` uses CarSA as the **track-target selector seam** (the current ahead/behind slot sets, `CarIdx`, and already-resolved cosmetic metadata).
+- Both `H2HRace.*` and `H2HTrack.*` now read `S1..S6State` / `S1..S6DeltaSec` from the CarSA-owned per-car fixed-6-sector cache through the narrow CarSA accessor seam.
+`H2HRace.*` still uses CarSA only as a bounded local live-session fallback when a known Opponents-selected identity needs help re-resolving `CarIdx`; selector ownership remains in Opponents.
 
 ## Truth source
 - **Primary:** `CarIdx*` telemetry arrays (CarIdxLapDistPct, CarIdxLap, CarIdxTrackSurface, CarIdxOnPitRoad).
@@ -25,16 +28,16 @@ CarSA keeps a car-centric shadow state per `CarIdx` that is authoritative for St
   - **LapPct grace:** 0.5 s grace before clearing delta/closing data on invalid LapDistPct.
   - **Not-in-world grace:** 3.0 s before clearing latches if a car remains NotInWorld.
 
-## Fixed-6-sector cache foundation
-CarSA now also owns a per-car fixed-6-sector cache for later H2H timing migration:
+## Fixed-6-sector cache
+CarSA owns the per-car fixed-6-sector cache consumed by H2H:
 - **Ownership:** CarSA owns the cache and its derivation rules; H2H does not mutate or own the cache.
 - **Shape:** per car = `LastCheckpointIndex`, `LastBoundaryIndex`, `LastBoundaryTimeSec`, and 6 sector entries containing only `HasValue` + `DurationSec`.
 - **Mapping:** fixed sectors use the existing 60-checkpoint model with coarse boundaries `0,10,20,30,40,50`, so sector spans are `0→10`, `10→20`, `20→30`, `30→40`, `40→50`, `50→0`.
 - **Derivation:** a sector is written only when continuous checkpoint progress reaches that sector's end boundary and the immediately previous coarse boundary was already anchored for that same car; otherwise the new boundary is anchored without synthesizing a sector.
 - **Continuity rule:** checkpoint advance is computed modulo 60; only advances `1..10` are accepted as continuous. `>10` is treated as a discontinuity and clears that car's cache before re-anchoring.
 - **Invalidation:** CarSA reset paths and unusable per-car tracking samples clear the affected cache back to the sentinel/unset state. There is no age timeout in this phase.
-- **Read seam:** later consumers must use the narrow CarSA-owned accessor (`TryGetFixedSectorCacheSnapshot`) rather than reaching into mutable internals.
-- **Current phase note:** the cache exists as a timing-source foundation only. Published H2H segment deltas/states still come from the existing H2H runtime until the later switchover task.
+- **Read seam:** consumers must use the narrow CarSA-owned accessor (`TryGetFixedSectorCacheSnapshot`) rather than reaching into mutable internals.
+- **Current H2H use:** H2H reads the player and target cache snapshots directly every tick. Target swap does not clear rows for bind reasons; the newly selected target publishes immediately from whatever cache state CarSA already has for that `CarIdx`.
 
 ## Slot selection (Ahead/Behind)
 - Ordering uses car-centric forward/backward distances computed from LapDistPct.
