@@ -46,6 +46,8 @@ Top-level plugin tabs are ordered left-to-right as **Strategy**, **Profiles**, *
 
 ### 3.1 Recommended bindings
 
+Dash Control is now organized into three expander sections — **Bindings**, **Global Dash Functions**, and **Dash Visibility** — and all three are expanded by default so the existing controls remain visible without the tab feeling as vertically heavy.
+
 - **Cancel Msg Button**: cancels pit and rejoin popups and temporarily suppresses repeats.
 - **Pit Screen Toggle**: manually shows or hides pit-related screens.
 
@@ -69,7 +71,7 @@ Adjust these only when you are chasing a specific false positive or a repeatable
 
 ## 4. Launch Settings & Analysis
 
-Launch Settings now lives inside the top-level **Settings** tab under a collapsed **Launch Settings** expander. It still controls launch behaviour and launch telemetry capture, and per-car defaults can still be stored in profiles and then applied to live use.
+The top-level **Settings** tab now starts with a collapsed **Friends List** expander, followed by a collapsed **Launch Settings** expander and then the Debug area. Launch Settings still controls launch behaviour and launch telemetry capture, and per-car defaults can still be stored in profiles and then applied to live use.
 
 - Typical launch controls include target RPM / throttle, tolerances, bite point behaviour, bog-down detection, and anti-stall sensitivity.
 - Launch telemetry recording is for post-run analysis and does not change what the dashboards do live.
