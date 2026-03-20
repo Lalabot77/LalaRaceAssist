@@ -197,22 +197,41 @@ namespace LaunchPlugin
                 }
 
                 double bindStartTimeSec = targetRuntime.BindStartTimeSec;
-                double playerTime = GetLatestCompletedSegmentTime(playerRuntime, i, bindStartTimeSec);
+                double playerTime = GetLatestCompletedSegmentTime(playerRuntime, i);
                 double targetTime = GetLatestCompletedSegmentTime(targetRuntime, i, bindStartTimeSec);
                 bool playerDone = IsFinite(playerTime);
                 bool targetDone = IsFinite(targetTime);
-                bool playerFresh = HasFreshSegmentCompletion(playerRuntime, i, bindStartTimeSec);
                 bool targetFresh = HasFreshSegmentCompletion(targetRuntime, i, bindStartTimeSec);
 
-                if (playerFresh && targetFresh && playerDone && targetDone)
+                if (targetFresh && playerDone && targetDone)
                 {
                     output.SetSegment(i, targetTime - playerTime, SegmentStateValid);
                 }
-                else if ((playerFresh || targetFresh) && output.GetSegmentState(i) != SegmentStateValid)
+                else if (targetFresh && output.GetSegmentState(i) != SegmentStateValid)
                 {
                     output.SetSegment(i, 0.0, SegmentStatePending);
                 }
             }
+        }
+
+        private static double GetLatestCompletedSegmentTime(ParticipantRuntime runtime, int index)
+        {
+            if (runtime == null || index < 0 || index >= SegmentCount)
+            {
+                return double.NaN;
+            }
+
+            if (IsFinite(runtime.SegmentCompletedSessionTimeSec[index]))
+            {
+                return runtime.SegmentCompletedTimeSec[index];
+            }
+
+            if (IsFinite(runtime.PublishedSegmentCarryoverSessionTimeSec[index]))
+            {
+                return runtime.PublishedSegmentCarryoverTimeSec[index];
+            }
+
+            return double.NaN;
         }
 
         private static double GetLatestCompletedSegmentTime(ParticipantRuntime runtime, int index, double bindStartTimeSec)
