@@ -21,8 +21,10 @@
     </UserControl.Resources>
     <ScrollViewer VerticalScrollBarVisibility="Auto">
         <StackPanel Margin="10">
-            <styles:SHSection Title="FRIENDS LIST" ShowSeparator="True">
-                <StackPanel>
+            <Expander Header="Friends List"
+                      Margin="0,0,0,10"
+                      IsExpanded="False">
+                <StackPanel Margin="0,10,0,0">
                     <TextBlock Margin="0,0,0,5" Foreground="LightGray"
                                Text="Add iRacing Customer IDs and assign a driver tag in CarSA." />
                     <StackPanel Margin="0,0,0,8">
@@ -52,7 +54,6 @@
                                                     Content="Import"
                                                     Padding="8,2"
                                                     MinWidth="70"
-  
                                                     Click="ImportIOverlay_Click" />
                             <styles:SHButtonPrimary Grid.Column="4"
                                                     Content="Reload"
@@ -102,7 +103,7 @@
                                             HorizontalAlignment="Left"
                                             Click="AddFriend_Click" />
                 </StackPanel>
-            </styles:SHSection>
+            </Expander>
 
             <Expander Header="Launch Settings"
                       Margin="0,0,0,10"

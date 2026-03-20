@@ -15,11 +15,12 @@ Branch: work
 - L40: Close without copying.
 
 ## DashesTabView.xaml
-- BINDINGS section: contains only the true dash bindings for `Cancel Msg Button`, `Toggle Pit Screen Popup`, `Change Primary Dash Mode`, and `Cycle Declutter Mode`.
-- GLOBAL DASH FUNCTIONS -> General: `Auto screen selection at session start` automatically switches dash screens when a session starts based on context.
-- GLOBAL DASH FUNCTIONS -> Dark Mode: `Dark Mode` selector uses Off / Manual / Auto, `Dark Mode Brightness` sets base brightness, `Use Lovely True Dark` follows Lovely when available, and `Toggle Dark Mode` remains here as the dark-mode-specific binding row.
-- GLOBAL DASH FUNCTIONS -> Fuel: `Fuel Ready Confidence` sets the live-fuel readiness threshold and `Pit-in Fuel Reserve` sets the stint reserve margin.
-- DASH VISIBILITY section: keeps the existing main/message/overlay visibility matrix for Launch Assist, Pit Assists, Automatic Pit Screen, Rejoin Assist, Verbose Race Messages, Race Flags, Radio Messages, and Traffic Alerts.
+- Dash Control now uses three expander-based main sections: `Bindings`, `Global Dash Functions`, and `Dash Visibility`; all default to expanded so the existing content remains immediately visible while matching the Settings-tab tidy-up pattern.
+- `Bindings` contains only the true dash bindings for `Cancel Msg Button`, `Toggle Pit Screen Popup`, `Change Primary Dash Mode`, and `Cycle Declutter Mode`.
+- `Global Dash Functions` -> General: `Auto screen selection at session start` automatically switches dash screens when a session starts based on context.
+- `Global Dash Functions` -> Dark Mode: `Dark Mode` selector uses Off / Manual / Auto, `Dark Mode Brightness` sets base brightness, `Use Lovely True Dark` follows Lovely when available, and `Toggle Dark Mode` remains here as the dark-mode-specific binding row.
+- `Global Dash Functions` -> Fuel: `Fuel Ready Confidence` sets the live-fuel readiness threshold and `Pit-in Fuel Reserve` sets the stint reserve margin.
+- `Dash Visibility` keeps the existing main/message/overlay visibility matrix for Launch Assist, Pit Assists, Automatic Pit Screen, Rejoin Assist, Verbose Race Messages, Race Flags, Radio Messages, and Traffic Alerts.
 - `Launch Mode`, `Event Marker`, and `Post-Launch Results Display Time` no longer appear in Dash Control after this tidy-up.
 
 ## FuelCalculatorView.xaml
@@ -202,7 +203,7 @@ Branch: work
 - `ProfilesManagerView.xaml` L522: `Learning mode` tooltip explains shift-point data mining and learning-overlay visibility.
 - `ProfilesManagerView.xaml` L751-L768: custom WAV controls include the existing path/browse affordance while some adjacent labels remain tooltip-free.
 - `GlobalSettingsView.xaml` is now the top-level `SETTINGS` tab, with visible main-tab order `STRATEGY`, `PROFILES`, `DASH CONTROL`, `LAUNCH ANALYSIS`, `SETTINGS`.
-- `GlobalSettingsView.xaml` now surfaces the Friends List section first, then a collapsed `Launch Settings` expander, then the existing Debug block.
+- `GlobalSettingsView.xaml` now surfaces the Friends List tools/import flow inside a collapsed `Friends List` expander first, then a collapsed `Launch Settings` expander, then the existing Debug block.
 - `GlobalSettingsView.xaml` no longer contains the duplicated per-profile `USER VARIABLES` block; the Settings tab now begins with the Friends List tools/import flow.
 - `GlobalSettingsView.xaml` DEBUG section continues to host the existing debug toggles and the moved `Event Marker` binding under `Debug Actions`; Launch Settings now sits above this block inside its own collapsed expander.
 - `GlobalSettingsView.xaml` `Enable Debug Logging` tooltip says it enables verbose logging for troubleshooting the plugin.

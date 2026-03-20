@@ -18,7 +18,7 @@
                 <RowDefinition Height="Auto" />
             </Grid.RowDefinitions>
 
-            <GroupBox Grid.Row="0" Header="BINDINGS" Margin="0,0,0,12">
+            <Expander Grid.Row="0" Header="Bindings" Margin="0,0,0,12" IsExpanded="True">
                 <StackPanel Margin="12,10,12,12">
                     <ui:ControlsEditor ActionName="LalaLaunch.MsgCx"
                                        FriendlyName="Cancel Msg Button"
@@ -36,9 +36,9 @@
                                        Margin="0,8,0,0"
                                        ToolTip="Assign a button to cycle declutter mode (0/1/2) for dash visibility bindings." />
                 </StackPanel>
-            </GroupBox>
+            </Expander>
 
-            <GroupBox Grid.Row="1" Header="GLOBAL DASH FUNCTIONS" Margin="0,0,0,12">
+            <Expander Grid.Row="1" Header="Global Dash Functions" Margin="0,0,0,12" IsExpanded="True">
                 <StackPanel Margin="12,10,12,12">
                     <TextBlock Text="General" FontWeight="Bold" Margin="0,0,0,6"/>
                     <styles:SHToggleCheckbox Content="Auto screen selection at session start"
@@ -115,9 +115,9 @@
                                      Value="{Binding Settings.StintFuelMarginPct, Mode=TwoWay}"
                                      ToolTip="Reserve fuel as a percentage of one lap (based on stable fuel burn) when calculating stint burn targets." />
                 </StackPanel>
-            </GroupBox>
+            </Expander>
 
-            <GroupBox Grid.Row="2" Header="DASH VISIBILITY">
+            <Expander Grid.Row="2" Header="Dash Visibility" IsExpanded="True">
                 <StackPanel Margin="12,10,12,12">
                     <TextBlock Text="Choose which dash families can show each feature."
                                Margin="0,0,0,10"
@@ -243,7 +243,7 @@
                                                  ToolTip="Show traffic alerts on the Overlay." />
                     </Grid>
                 </StackPanel>
-            </GroupBox>
+            </Expander>
         </Grid>
     </ScrollViewer>
 </UserControl>
