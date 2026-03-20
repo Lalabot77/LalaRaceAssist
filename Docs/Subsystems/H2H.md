@@ -9,7 +9,7 @@ Head-to-Head is a standalone dash-facing comparison subsystem that publishes two
 - `H2HRace.*` = class race targets ahead/behind
 - `H2HTrack.*` = class on-track targets ahead/behind
 
-The feature provides a flat, explicit contract for Dash Studio consumption with player/ahead/behind lap summaries, fixed 6-segment state, latched segment deltas, canonical `#RRGGBB` class colors, and active-segment outputs.
+The feature provides a flat, explicit contract for Dash Studio consumption with player/ahead/behind lap summaries, direct `LastLapColor` exports, fixed 6-segment state, latched segment deltas, canonical `#RRGGBB` class colors, and active-segment outputs.
 
 ## Ownership and subsystem boundaries
 - **H2H owns** target timing context, live-gap values, lap-summary values, fixed-6-segment state, latched segment deltas, and active-segment outputs.
@@ -34,13 +34,13 @@ Phase 1 is intentionally simple:
 ### H2HTrack
 - Scans CarSA ahead/behind slots and uses the nearest valid same-class local track target.
 - Can be more volatile than race mode because local on-track slots can swap as nearby cars change.
-- When the selected track target changes, phase-1 timing/segment state is cleared and rebuilt.
+- When the selected track target changes, the published `S1..S6State` / `S1..S6DeltaSec` outputs for that side are cleared immediately and rebuild from the next valid segment completion onward; H2H does not wait for a whole lap.
 
 ### H2HRace
 - Uses Opponents class-ahead / class-behind identity as the race selector input.
 - Continues to track the selected identity even when that car is no longer nearby, provided the identity can still be resolved to a live `CarIdx`.
 - If direct session-info identity lookup misses for a known race target, H2H can use a narrow local live-session fallback by probing current CarSA slots: exact normalized H2H identity remains the first path, then a bounded car-number fallback can recover the live `CarIdx` when the nearby CarSA slot has the same car number and, when available, the same resolved driver name even if class-color identity differs. Selector ownership still stays in Opponents.
-- If the identity stays the same but the resolved `CarIdx` changes, unsafe per-target timing state is cleared and rebuilt.
+- If the identity stays the same but the resolved `CarIdx` changes, the published `S1..S6State` / `S1..S6DeltaSec` outputs for that side are cleared immediately and rebuild from the next valid segment completion onward; ordinary same-target lap-wrap carryover still remains intact.
 - If same-identity reverse resolution blips for a tick, H2H keeps the previous `CarIdx` binding/state instead of forcing a false selector reset.
 - If Opponents intentionally clears the race selector, H2H clears/inactivates the race target instead of reviving a stale previous identity.
 - If the target identity genuinely cannot currently be resolved, the identity/cosmetic fields can remain latched while `Valid` falls false.
@@ -49,13 +49,15 @@ Phase 1 is intentionally simple:
 - `PositionInClass = 0` when unavailable.
 - `LiveDeltaToBestSec = 0` when insufficient data exists.
 - Segment delta values reset to `0` whenever their segment state is not `valid`.
-- When a lap wraps, the just-finished closing segment is carried across the ordinary new-lap runtime reset so sector 6 can still publish valid timing after start-finish; full participant discard/rebind still clears that carryover, while previously published valid segment states/deltas stay latched on the dash until the new lap rebuilds that same segment.
+- When a true target rebind happens (identity change or resolved `CarIdx` swap), the published segment row for that side is cleared immediately so stale deltas from the previous target cannot leak into the new binding; rebuilding begins from the next valid segment completion, not the next lap.
+- When a lap wraps for the same bound participant, the just-finished closing segment is carried across the ordinary new-lap runtime reset so sector 6 can still publish valid timing after start-finish; true participant discard/reset/rebind still clears that carryover, while previously published valid segment states/deltas stay latched on the dash until the new lap rebuilds that same segment.
+- `LastLapColor` uses direct dash-ready `#RRGGBB` outputs: white `#FFFFFF` for a normal last lap, lime `#00FF00` when the corresponding published last lap is also that participant's valid PB, and magenta `#FF00FF` when that valid PB also matches the same-class session-best; session-best overrides PB, and invalid faster raw last laps do not trigger PB/session-best coloring.
 - `Valid` is true only when a side has a resolved live target and usable H2H timing context.
 
 ## Export contract summary
 Both `H2HRace.*` and `H2HTrack.*` expose the same flat shape:
 - `Ahead.*` / `Behind.*` identity fields: `Valid`, `CarIdx`, `IdentityKey`, `Name`, `CarNumber`, `ClassColor`, `PositionInClass`
-- `Player.*`, `Ahead.*`, `Behind.*` lap-summary fields: `LastLapSec`, `BestLapSec`, `LastLapDeltaToBestSec`, `LiveDeltaToBestSec`, `ActiveSegment`, `LapRef`
+- `Player.*`, `Ahead.*`, `Behind.*` lap-summary fields: `LastLapSec`, `BestLapSec`, `LastLapDeltaToBestSec`, `LiveDeltaToBestSec`, `LastLapColor`, `ActiveSegment`, `LapRef`
 - `Ahead.*` / `Behind.*` comparison fields: `LastLapDeltaToPlayerSec`, `LiveGapSec`
 - `Ahead.S1..S6DeltaSec`, `Ahead.S1..S6State`
 - `Behind.S1..S6DeltaSec`, `Behind.S1..S6State`
