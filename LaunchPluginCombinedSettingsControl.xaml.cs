@@ -40,7 +40,7 @@ namespace LaunchPlugin
 
             var fuelTab = new SHTabItem
             {
-                Header = "FUEL",
+                Header = "STRATEGY",
                 Content = new FuelCalculatorView(mainPluginInstance.FuelCalculator)
             };
             MainTabControl.Items.Add(fuelTab);
@@ -52,14 +52,6 @@ namespace LaunchPlugin
                 Content = new ProfilesManagerView(mainPluginInstance.ProfilesViewModel)
             };
             MainTabControl.Items.Add(profilesTab);
-
-            // NEW: PRESETS tab (management only)
-            var presetsTab = new SHTabItem
-            {
-                Header = "PRESETS",
-                Content = new PresetsManagerView(mainPluginInstance.FuelCalculator)
-            };
-            MainTabControl.Items.Add(presetsTab);
         }
     }
 }

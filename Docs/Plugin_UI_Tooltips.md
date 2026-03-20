@@ -1,7 +1,7 @@
 ﻿# Plugin UI Tooltips
 
-Validated against commit: f379358
-Last updated: 2026-03-18
+Validated against commit: 3f0af12824336625dd449cc0329702ac50394396
+Last updated: 2026-03-20
 Branch: work
 
 ## CopyProfileDialog.xaml
@@ -23,7 +23,8 @@ Branch: work
 - `Launch Mode`, `Event Marker`, and `Post-Launch Results Display Time` no longer appear in Dash Control after this tidy-up.
 
 ## FuelCalculatorView.xaml
-- L114: Inputs used to calculate the pre-race fuel plan.
+- Main planner navigation: top-level `FUEL` tab is now `STRATEGY`, and preset management is opened from the `Presets...` button beside the `Race Preset` selector instead of a separate top-level `PRESETS` tab.
+- L114: Inputs used to calculate the race strategy plan.
 - L125: Use saved profile/track data for planning.
 - L130: Use live session data once confidence builds (may take a few laps).
 - L138: Live session snapshot used for planning when available. Confidence improves with more laps.
@@ -59,6 +60,7 @@ Branch: work
 - L486: Most efficient lap recorded in this session.
 - L487: Highest valid fuel per lap recorded in this session.
 - L513: Select a preset to apply.
+- L526: Open the Preset Manager to create, rename, edit, or delete strategy presets.
 - L533: Choose whether the race is limited by laps or time.
 - L535: Plan for a fixed number of laps.
 - L537: Plan for a fixed race duration (minutes).
@@ -139,7 +141,7 @@ Branch: work
 - L233: Number of extra laps of fuel to add.
 - L250: Extra fuel to add as a safety margin (L).
 - L276: Enter a preset name: use for Save Current or Rename
-- L283: Save current Fuel tab settings into a new preset name.
+- L283: Save current Strategy tab settings into a new preset name.
 - L289: Rename the selected preset using the name box.
 - L301: Revert edits to the last saved preset values.
 - L303: Save edits to the selected preset.

@@ -29,7 +29,7 @@
         <!-- LEFT: header + list + full-width New/Delete -->
         <DockPanel Grid.Column="0">
             <TextBlock DockPanel.Dock="Top"
-             Text="Race Presets"
+             Text="Preset Manager"
              FontSize="16" FontWeight="Bold"
              Margin="0,0,0,10"
              ToolTip="Manage reusable race strategy presets."/>
@@ -300,10 +300,10 @@
                      HorizontalAlignment="Stretch"/>
 
                         <styles:SHButtonPrimary Grid.Column="1"
-                                    Content="Save Fuel Tab Data as Preset"
+                                    Content="Save Strategy Data as Preset"
                                     Width="220" Height="30" Margin="8,0,0,0"
                                     Click="OnSaveCurrentAsPreset"
-                                    ToolTip="Save current Fuel tab settings into a new preset name."/>
+                                    ToolTip="Save current Strategy tab settings into a new preset name."/>
 
                         <styles:SHButtonSecondary Grid.Column="2"
                                       Content="Rename Selected"

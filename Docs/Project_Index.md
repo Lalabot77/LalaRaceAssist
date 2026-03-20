@@ -1,7 +1,7 @@
 ﻿# Project Index
 
-Validated against commit: f379358
-Last updated: 2026-03-18
+Validated against commit: 3f0af12824336625dd449cc0329702ac50394396
+Last updated: 2026-03-20
 Branch: work
 
 ## What this repo is
@@ -21,7 +21,7 @@ LalaLaunchPlugin is a SimHub plugin for iRacing that provides launch instrumenta
 - [CODEX_CONTRACT.txt](CODEX_CONTRACT.txt) - mandatory Codex/global engineering policy.
 - [Architecture_Guardrails.md](Architecture_Guardrails.md) - practical architecture boundaries and subsystem ownership guidance.
 - [CODEX_TASK_TEMPLATE.txt](CODEX_TASK_TEMPLATE.txt) - reusable task skeleton for analysis-first Codex work.
-- [Plugin_UI_Tooltips.md](Plugin_UI_Tooltips.md) - current tooltip inventory and UI navigation notes for plugin tabs and controls, including the Profiles/Dash/Global tidy-up layout and the TRACKS tab's track-scoped planner inputs.
+- [Plugin_UI_Tooltips.md](Plugin_UI_Tooltips.md) - current tooltip inventory and UI navigation notes for plugin tabs and controls, including the Strategy tab preset-manager modal flow plus the Profiles/Dash/Global tidy-up layout and the TRACKS tab's track-scoped planner inputs.
 - [SimHubParameterInventory.md](SimHubParameterInventory.md) - canonical SimHub export contract.
 - [SimHubLogMessages.md](SimHubLogMessages.md) - canonical Info/Warn/Error log catalogue.
 - [Subsystems/Shift_Assist.md](Subsystems/Shift_Assist.md) - Shift Assist purpose, inputs/state, outputs, and validation checklist.
@@ -39,7 +39,7 @@ LalaLaunchPlugin is a SimHub plugin for iRacing that provides launch instrumenta
 | Subsystem | Purpose | Documentation link |
 | --- | --- | --- |
 | Fuel model | Live burn capture, confidence, race projection, pit-window logic | [Subsystems/Fuel_Model.md](Subsystems/Fuel_Model.md) |
-| Fuel planner tab | Strategy calculator and profile/live source selection | [Subsystems/Fuel_Planner_Tab.md](Subsystems/Fuel_Planner_Tab.md) |
+| Strategy tab (fuel planner) | Strategy calculator and profile/live source selection, including modal preset management | [Subsystems/Fuel_Planner_Tab.md](Subsystems/Fuel_Planner_Tab.md) |
 | Launch mode | Launch state machine, anti-stall/bog detection, launch metrics | [Subsystems/Launch_Mode.md](Subsystems/Launch_Mode.md) |
 | Shift Assist | RPM target cueing with predictive lead-time, primary/urgent beep routing (urgent at derived 50% volume), and per-gear delay telemetry | [Subsystems/Shift_Assist.md](Subsystems/Shift_Assist.md) |
 | Pit timing & pit-loss | PitEngine DTL/direct timing, pit-cycle exports | [Subsystems/Pit_Timing_And_PitLoss.md](Subsystems/Pit_Timing_And_PitLoss.md) |
@@ -52,6 +52,6 @@ LalaLaunchPlugin is a SimHub plugin for iRacing that provides launch instrumenta
 | Dash integration | Main/message/overlay visibility, screen state exports, and global dark-mode controls (`LalaLaunch.Dash.DarkMode.*`) | [Subsystems/Dash_Integration.md](Subsystems/Dash_Integration.md) |
 
 ## Freshness
-- Validated against commit: f379358
-- Date: 2026-03-18
+- Validated against commit: 3f0af12824336625dd449cc0329702ac50394396
+- Date: 2026-03-20
 - Branch: work
