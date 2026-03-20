@@ -25,3 +25,7 @@
 - **Declutter dash control**: secondary dash mode renamed to declutter with a 0/1/2 visibility cycle (legacy alias preserved).
 - **Radio transmit exports**: live frequency names, mute state, and class position labels updated with more robust fallbacks and live refresh.
 - **Off-track debug change-only logging**: optional setting writes CSV rows only when the probe snapshot changes to reduce file size.
+- **TRACKS planner migration**: planner defaults such as wet multiplier, pace-vs-leader, and fuel contingency now live with the track/layout data they belong to instead of following the wrong venue.
+- **Head-to-head (H2H) dash support**: new race-target and on-track same-class comparison outputs with lap summaries, six fixed comparison segments, and dash-ready class/lap colouring.
+- **H2H reliability fixes**: target swaps, lap-wrap carryover, segment rebuild timing, and bind-aware publication were tightened so the comparison stays stable when identities or lap state change.
+- **Latest Fuel Planner cleanup (through PR481)**: Live Snapshot pace-vs-leader now follows the current live leader delta, clears stale manual override state on entry, and safely falls back to `0.0` when live leader pace is unavailable.
