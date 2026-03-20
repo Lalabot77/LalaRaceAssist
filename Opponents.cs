@@ -81,7 +81,7 @@ namespace LaunchPlugin
 
             double validatedMyPace = SanitizePace(myPaceSec);
 
-            _nearby.PopulateOutputs(Outputs, validatedMyPace);
+            PopulateRaceOutputsFromLeaderboard(validatedMyPace);
             Outputs.LeaderBlendedPaceSec = _leaderboard.GetBlendedPaceForPosition(1);
             Outputs.P2BlendedPaceSec = _leaderboard.GetBlendedPaceForPosition(2);
             var summaries = BuildSummaries(Outputs);
@@ -142,6 +142,83 @@ namespace LaunchPlugin
             posOverall = row.PositionOverall;
             gapToLeaderSec = row.RelativeGapToLeader;
             return true;
+        }
+
+        private void PopulateRaceOutputsFromLeaderboard(double myPaceSec)
+        {
+            Outputs.Ahead1.Reset();
+            Outputs.Ahead2.Reset();
+            Outputs.Behind1.Reset();
+            Outputs.Behind2.Reset();
+
+            if (!_leaderboard.TryGetPlayerClassNeighbors(_playerIdentityKey, out var playerRow, out var ahead1Row, out var ahead2Row, out var behind1Row, out var behind2Row))
+            {
+                return;
+            }
+
+            PopulateTargetFromLeaderboardRow(Outputs.Ahead1, playerRow, ahead1Row, myPaceSec, true);
+            PopulateTargetFromLeaderboardRow(Outputs.Ahead2, playerRow, ahead2Row, myPaceSec, true);
+            PopulateTargetFromLeaderboardRow(Outputs.Behind1, playerRow, behind1Row, myPaceSec, false);
+            PopulateTargetFromLeaderboardRow(Outputs.Behind2, playerRow, behind2Row, myPaceSec, false);
+        }
+
+        private void PopulateTargetFromLeaderboardRow(OpponentTargetOutput target, LeaderboardRow playerRow, LeaderboardRow row, double myPaceSec, bool isAhead)
+        {
+            if (target == null)
+            {
+                return;
+            }
+
+            target.Reset();
+
+            if (playerRow == null || row == null || string.IsNullOrWhiteSpace(row.IdentityKey))
+            {
+                return;
+            }
+
+            target.Name = row.Name ?? string.Empty;
+            target.CarNumber = row.CarNumber ?? string.Empty;
+            target.ClassColor = row.ClassColor ?? string.Empty;
+
+            if (IsFiniteNonNegative(playerRow.RelativeGapToLeader) && IsFiniteNonNegative(row.RelativeGapToLeader))
+            {
+                target.GapToPlayerSec = Math.Abs(row.RelativeGapToLeader - playerRow.RelativeGapToLeader);
+            }
+
+            var entity = _entityCache.Touch(row.IdentityKey, row.Name, row.CarNumber, row.ClassColor);
+            if (entity != null)
+            {
+                entity.IngestLapTimes(row.LastLapSec, row.BestLapSec, row.IsInPit);
+                target.BlendedPaceSec = entity.GetBlendedPaceSec();
+            }
+
+            if (double.IsNaN(myPaceSec) || double.IsNaN(target.BlendedPaceSec) || target.BlendedPaceSec <= 0.0)
+            {
+                target.PaceDeltaSecPerLap = double.NaN;
+                target.LapsToFight = double.NaN;
+                return;
+            }
+
+            double closingRate = isAhead
+                ? target.BlendedPaceSec - myPaceSec
+                : myPaceSec - target.BlendedPaceSec;
+
+            target.PaceDeltaSecPerLap = closingRate;
+
+            if (target.GapToPlayerSec > 0.0 && closingRate > 0.05)
+            {
+                double lapsToFight = target.GapToPlayerSec / closingRate;
+                target.LapsToFight = lapsToFight > 999.0 ? 999.0 : lapsToFight;
+            }
+            else
+            {
+                target.LapsToFight = double.NaN;
+            }
+        }
+
+        private static bool IsFiniteNonNegative(double value)
+        {
+            return !double.IsNaN(value) && !double.IsInfinity(value) && value >= 0.0;
         }
 
         private static OpponentSummaries BuildSummaries(OpponentOutputs outputs)
@@ -565,6 +642,54 @@ namespace LaunchPlugin
 
                 var entity = _cache.Get(row.IdentityKey);
                 return entity?.GetBlendedPaceSec() ?? double.NaN;
+            }
+
+            public bool TryGetPlayerClassNeighbors(
+                string playerIdentityKey,
+                out LeaderboardRow playerRow,
+                out LeaderboardRow ahead1Row,
+                out LeaderboardRow ahead2Row,
+                out LeaderboardRow behind1Row,
+                out LeaderboardRow behind2Row)
+            {
+                playerRow = null;
+                ahead1Row = null;
+                ahead2Row = null;
+                behind1Row = null;
+                behind2Row = null;
+
+                if (_rows.Count == 0 || string.IsNullOrWhiteSpace(playerIdentityKey))
+                {
+                    return false;
+                }
+
+                playerRow = _rows.FirstOrDefault(r => string.Equals(r.IdentityKey, playerIdentityKey, StringComparison.Ordinal));
+                if (playerRow == null || string.IsNullOrWhiteSpace(playerRow.ClassColor) || playerRow.PositionInClass <= 0)
+                {
+                    playerRow = null;
+                    return false;
+                }
+
+                string classColor = playerRow.ClassColor;
+                ahead1Row = FindSameClassRow(classColor, playerRow.PositionInClass - 1);
+                ahead2Row = FindSameClassRow(classColor, playerRow.PositionInClass - 2);
+                behind1Row = FindSameClassRow(classColor, playerRow.PositionInClass + 1);
+                behind2Row = FindSameClassRow(classColor, playerRow.PositionInClass + 2);
+                return true;
+            }
+
+            private LeaderboardRow FindSameClassRow(string classColor, int positionInClass)
+            {
+                if (string.IsNullOrWhiteSpace(classColor) || positionInClass <= 0)
+                {
+                    return null;
+                }
+
+                return _rows.FirstOrDefault(r =>
+                    r.PositionInClass == positionInClass
+                    && string.Equals(r.ClassColor, classColor, StringComparison.Ordinal)
+                    && !string.IsNullOrWhiteSpace(r.IdentityKey)
+                    && r.IsConnected);
             }
 
             private static string SafeReadString(PluginManager pluginManager, string propertyName)
