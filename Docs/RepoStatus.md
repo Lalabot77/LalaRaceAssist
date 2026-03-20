@@ -1,6 +1,6 @@
 ﻿# Repository status
 
-Validated against commit: f071ec440ef30e7a243dbaa51107493af1a47343
+Validated against commit: 23d4d55073be68286ab35a258737ce12048eeddf
 Last updated: 2026-03-20
 Branch: work
 
@@ -9,22 +9,16 @@ Branch: work
 - No Git remote is configured in this checkout (`git remote -v` returns empty).
 
 ## Documentation sync status (requested set)
-- `Docs/Subsystems/Fuel_Planner_Tab.md` updated so the canonical planner doc now describes the top-level Strategy tab name, the preserved inline Race Preset selector, and the modal Preset Manager workflow that replaces the former separate Presets tab.
-- `Docs/Plugin_UI_Tooltips.md` updated so the tooltip inventory reflects the Strategy-tab navigation, the new `Presets...` button beside the Race Preset combo, and the Strategy wording inside the preset manager.
-- `Docs/Project_Index.md` updated so the subsystem map and tooltip reference describe the Strategy-tab / modal-preset workflow.
+- `Docs/Subsystems/Fuel_Planner_Tab.md` updated so the canonical planner doc now states that Live Snapshot max fuel is locked to the live detected cap only, while Profile mode retains manual/preset max-fuel behavior.
+- `Docs/Plugin_UI_Tooltips.md` updated so the Strategy-tab max-fuel tooltip text explicitly calls out the Profile-mode edit path and the Live Snapshot lock-to-live-cap behavior.
 - `Docs/RepoStatus.md` refreshed for the current validation summary.
 
 ## Delivery status highlights
-- The top-level planner tab is now labeled `STRATEGY`, while the existing planner content and FuelCalcs-backed strategy workflow remain intact.
-- The former top-level `PRESETS` tab has been removed; preset management now opens as a modal Preset Manager from the `Presets...` button beside the Strategy tab's Race Preset combo.
-- The modal reuses the existing preset editor and shared `FuelCalcs` state, preserving preset selection/application semantics, save-current behavior, and preset persistence without changing preset storage or planner math.
-- Strategy-tab preset UX follow-up: the inline `Presets...` action now uses the primary blue button style, the modal auto-selects the active preset (or first available preset) on open, dark-theme preset-manager text/input colours are explicitly readable, and successful `Save Changes` closes the modal without a second success popup.
-- `Docs/User Docs/Changelog_Since_PR240.md` extended with concise user-facing highlights through PR #481, including Track planner migration, H2H, H2H follow-up fixes, and the latest Fuel Planner Live Snapshot leader-delta cleanup.
-- `Docs/Lala_Plugin_Quick_Start_Guide_v0.3.md` added as the review-friendly source version of the tester quick-start, matching the current setup flow, fuel-planning model, track-marker/pit-learning workflow, and supported race-context aids.
-- `Docs/Lala_Plugin_User_Guide_v0.3.md` added as the review-friendly source version of the ship-ready user guide, reflecting current fuel/planner behaviour, track-scoped planner defaults, H2H, pit/rejoin aids, and the current inactive status of the broader message-dash system.
+- Fuel Planner max-fuel selection now follows the same clean planning-source model as the recent pace-vs-leader fix: Profile mode keeps manual/preset behavior, while Live Snapshot uses only the live detected cap as the active planner tank basis.
+- Entering Live Snapshot no longer falls back to a remembered profile/preset/manual max-fuel value when the live cap is missing; instead the planner reports the missing live-cap validation state and blocks strategy outputs until valid live cap telemetry is available.
+- Ongoing live cap changes now flow straight through the planner tank basis and strategy outputs in Live Snapshot, including first-stint fuel, without any preset-side override path.
+- The Strategy-tab max-fuel control remains visually unchanged but is now documented as Profile-editable and Live Snapshot-locked to the detected live cap.
 - `Docs/RepoStatus.md` refreshed for the current validation summary.
-- User-facing documentation now has review-friendly markdown source guides in the repo: Quick Start is focused on install/bind/learn/lock workflow, while the full User Guide explains the current fuel planner, track-scoped data, race aids, and H2H without implying the broader message-dash system is active.
-- The user changelog now covers the recent H2H and fuel-planner updates through PR #481 in a concise tester-facing format instead of stopping short of the latest merged work.
 
 ## Notes
 - `Docs/Code_Snapshot.md` remains non-canonical orientation-only documentation.
