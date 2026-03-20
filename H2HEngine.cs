@@ -306,8 +306,9 @@ namespace LaunchPlugin
 
             if (carChanged)
             {
-                runtime.Reset();
-                runtime.CarIdx = carIdx;
+                double bindStartTimeSec = runtime.BindStartTimeSec;
+                runtime.ResetContext(carIdx);
+                runtime.BindStartTimeSec = bindStartTimeSec;
             }
             else if (newLap)
             {
