@@ -13,7 +13,7 @@ namespace LaunchPlugin
         private const double DefaultGapLapTimeSec = 120.0;
         private const double LapWrapThresholdPct = 0.20;
         private const double LapStartDetectWindowPct = 0.05;
-        private const double LapTimeEqualityToleranceSec = 0.001;
+        private const double LapTimeEqualityToleranceSec = 0.002;
 
         private const string LastLapColorNormal = "#FFFFFF";
         private const string LastLapColorPersonalBest = "#00FF00";
