@@ -4173,6 +4173,7 @@ namespace LaunchPlugin
             AttachCore(prefix + ".Player.BestLapSec", () => familyGetter()?.Player.BestLapSec ?? 0.0);
             AttachCore(prefix + ".Player.LastLapDeltaToBestSec", () => familyGetter()?.Player.LastLapDeltaToBestSec ?? 0.0);
             AttachCore(prefix + ".Player.LiveDeltaToBestSec", () => familyGetter()?.Player.LiveDeltaToBestSec ?? 0.0);
+            AttachCore(prefix + ".Player.LastLapColor", () => familyGetter()?.Player.LastLapColor ?? string.Empty);
             AttachCore(prefix + ".Player.ActiveSegment", () => familyGetter()?.Player.ActiveSegment ?? 0);
             AttachCore(prefix + ".Player.LapRef", () => familyGetter()?.Player.LapRef ?? 0);
 
@@ -4199,6 +4200,7 @@ namespace LaunchPlugin
             AttachCore(baseName + ".BestLapSec", () => participantGetter()?.BestLapSec ?? 0.0);
             AttachCore(baseName + ".LastLapDeltaToBestSec", () => participantGetter()?.LastLapDeltaToBestSec ?? 0.0);
             AttachCore(baseName + ".LiveDeltaToBestSec", () => participantGetter()?.LiveDeltaToBestSec ?? 0.0);
+            AttachCore(baseName + ".LastLapColor", () => participantGetter()?.LastLapColor ?? string.Empty);
             AttachCore(baseName + ".LastLapDeltaToPlayerSec", () => participantGetter()?.LastLapDeltaToPlayerSec ?? 0.0);
             AttachCore(baseName + ".LiveGapSec", () => participantGetter()?.LiveGapSec ?? 0.0);
             AttachCore(baseName + ".ActiveSegment", () => participantGetter()?.ActiveSegment ?? 0);
@@ -6309,6 +6311,8 @@ namespace LaunchPlugin
                     var trackAheadSelector = BuildH2HTrackSelector(_carSaEngine.Outputs.AheadSlots, playerTrackClassColor);
                     var trackBehindSelector = BuildH2HTrackSelector(_carSaEngine.Outputs.BehindSlots, playerTrackClassColor);
 
+                    double h2hClassSessionBestLapSec = ComputeH2HClassSessionBestLapSec(playerCarIdx);
+
                     _h2hEngine.Update(
                         sessionTimeSec,
                         playerCarIdx,
@@ -6316,6 +6320,7 @@ namespace LaunchPlugin
                         carIdxLap,
                         playerBestLapTimeSec,
                         playerLastLapTimeSec,
+                        h2hClassSessionBestLapSec,
                         _carSaBestLapTimeSecByIdx,
                         _carSaLastLapTimeSecByIdx,
                         _carSaClassPositionByIdx,
@@ -11756,6 +11761,38 @@ namespace LaunchPlugin
         {
             if (carIdx < 0) return null;
             return _carIdxToClassShortName.TryGetValue(carIdx, out var cls) ? cls : null;
+        }
+
+        private double ComputeH2HClassSessionBestLapSec(int playerCarIdx)
+        {
+            if (playerCarIdx < 0 || playerCarIdx >= CarSAEngine.MaxCars)
+            {
+                return 0.0;
+            }
+
+            string playerClassShort = GetCachedClassShortName(playerCarIdx);
+            if (string.IsNullOrWhiteSpace(playerClassShort))
+            {
+                return 0.0;
+            }
+
+            double classBestLapSec = double.NaN;
+            for (int i = 0; i < CarSAEngine.MaxCars; i++)
+            {
+                string classShort = GetCachedClassShortName(i);
+                if (!string.Equals(classShort, playerClassShort, StringComparison.OrdinalIgnoreCase))
+                {
+                    continue;
+                }
+
+                double bestLapSec = _carSaBestLapTimeSecByIdx[i];
+                if (IsValidCarSaLapTimeSec(bestLapSec) && (!IsValidCarSaLapTimeSec(classBestLapSec) || bestLapSec < classBestLapSec))
+                {
+                    classBestLapSec = bestLapSec;
+                }
+            }
+
+            return IsValidCarSaLapTimeSec(classBestLapSec) ? classBestLapSec : 0.0;
         }
 
         private bool IsNewSessionBestInClass(int carIdx, double candidateBestLapSec, float[] currentBestLapTimes, double[] previousBestLapTimes)
