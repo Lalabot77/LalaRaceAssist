@@ -9,14 +9,14 @@ Branch: work
 - No Git remote is configured in this checkout (`git remote -v` returns empty).
 
 ## Documentation sync status (requested set)
-- `Docs/Subsystems/Fuel_Planner_Tab.md` updated so the canonical Fuel planner doc now records that pace-vs-leader is editable only in Profile mode, auto-follows live leader delta in Live Snapshot mode, and falls back to `0.0` instead of stale manual/profile values when live leader pace is unavailable.
-- `Docs/Plugin_UI_Tooltips.md` updated to remove the obsolete leader-delta reset-to-live tooltip and describe the Live Snapshot lock behaviour for the pace-vs-leader control.
+- `Docs/User Docs/Changelog_Since_PR240.md` extended with concise user-facing highlights through PR #481, including Track planner migration, H2H, H2H follow-up fixes, and the latest Fuel Planner Live Snapshot leader-delta cleanup.
+- `Docs/Lala_Plugin_Quick_Start_Guide_v0.3.md` added as the review-friendly source version of the tester quick-start, matching the current setup flow, fuel-planning model, track-marker/pit-learning workflow, and supported race-context aids.
+- `Docs/Lala_Plugin_User_Guide_v0.3.md` added as the review-friendly source version of the ship-ready user guide, reflecting current fuel/planner behaviour, track-scoped planner defaults, H2H, pit/rejoin aids, and the current inactive status of the broader message-dash system.
 - `Docs/RepoStatus.md` refreshed for the current validation summary.
 
 ## Delivery status highlights
-- Fuel planner leader delta now follows the selected planning source model: Profile mode keeps the manual/stored race-pace delta workflow, while Live Snapshot mode clears manual override state on entry and continuously uses the current live leader delta when available.
-- The Fuel tab no longer needs a separate "Reset to live" / "Use live" leader-delta recovery path; the manual slider is locked in Live Snapshot mode and strategy calculations fall back to zero leader delta when no live leader pace is available.
-- Live snapshot resets and car/track combination clears now wipe live/manual leader-delta runtime state without reviving stale hidden manual values during Live Snapshot mode, while still preserving track-stored profile behaviour for Profile mode.
+- User-facing documentation now has review-friendly markdown source guides in the repo: Quick Start is focused on install/bind/learn/lock workflow, while the full User Guide explains the current fuel planner, track-scoped data, race aids, and H2H without implying the broader message-dash system is active.
+- The user changelog now covers the recent H2H and fuel-planner updates through PR #481 in a concise tester-facing format instead of stopping short of the latest merged work.
 
 ## Notes
 - `Docs/Code_Snapshot.md` remains non-canonical orientation-only documentation.
