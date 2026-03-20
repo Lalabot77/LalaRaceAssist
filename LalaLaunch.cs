@@ -4169,6 +4169,7 @@ namespace LaunchPlugin
                 return;
             }
 
+            AttachCore(prefix + ".ClassSessionBestLapSec", () => familyGetter()?.ClassSessionBestLapSec ?? 0.0);
             AttachCore(prefix + ".Player.LastLapSec", () => familyGetter()?.Player.LastLapSec ?? 0.0);
             AttachCore(prefix + ".Player.BestLapSec", () => familyGetter()?.Player.BestLapSec ?? 0.0);
             AttachCore(prefix + ".Player.LastLapDeltaToBestSec", () => familyGetter()?.Player.LastLapDeltaToBestSec ?? 0.0);
@@ -11765,34 +11766,117 @@ namespace LaunchPlugin
 
         private double ComputeH2HClassSessionBestLapSec(int playerCarIdx)
         {
-            if (playerCarIdx < 0 || playerCarIdx >= CarSAEngine.MaxCars)
+            double classBestLapSec = 0.0;
+            if (playerCarIdx >= 0 && playerCarIdx < CarSAEngine.MaxCars)
             {
-                return 0.0;
-            }
-
-            string playerClassShort = GetCachedClassShortName(playerCarIdx);
-            if (string.IsNullOrWhiteSpace(playerClassShort))
-            {
-                return 0.0;
-            }
-
-            double classBestLapSec = double.NaN;
-            for (int i = 0; i < CarSAEngine.MaxCars; i++)
-            {
-                string classShort = GetCachedClassShortName(i);
-                if (!string.Equals(classShort, playerClassShort, StringComparison.OrdinalIgnoreCase))
+                string playerClassShort = GetCachedClassShortName(playerCarIdx);
+                if (!string.IsNullOrWhiteSpace(playerClassShort))
                 {
-                    continue;
-                }
+                    double resolvedClassBestLapSec = double.NaN;
+                    for (int i = 0; i < CarSAEngine.MaxCars; i++)
+                    {
+                        string classShort = GetCachedClassShortName(i);
+                        if (!string.Equals(classShort, playerClassShort, StringComparison.OrdinalIgnoreCase))
+                        {
+                            continue;
+                        }
 
-                double bestLapSec = _carSaBestLapTimeSecByIdx[i];
-                if (IsValidCarSaLapTimeSec(bestLapSec) && (!IsValidCarSaLapTimeSec(classBestLapSec) || bestLapSec < classBestLapSec))
-                {
-                    classBestLapSec = bestLapSec;
+                        double bestLapSec = _carSaBestLapTimeSecByIdx[i];
+                        if (IsValidCarSaLapTimeSec(bestLapSec) && (!IsValidCarSaLapTimeSec(resolvedClassBestLapSec) || bestLapSec < resolvedClassBestLapSec))
+                        {
+                            resolvedClassBestLapSec = bestLapSec;
+                        }
+                    }
+
+                    if (IsValidCarSaLapTimeSec(resolvedClassBestLapSec))
+                    {
+                        classBestLapSec = resolvedClassBestLapSec;
+                    }
                 }
             }
 
-            return IsValidCarSaLapTimeSec(classBestLapSec) ? classBestLapSec : 0.0;
+            if (classBestLapSec > 0.0)
+            {
+                return classBestLapSec;
+            }
+
+            return ReadH2HClassSessionBestFallbackLapSec(PluginManager);
+        }
+
+        private static double ReadH2HClassSessionBestFallbackLapSec(PluginManager pluginManager)
+        {
+            return TryReadLapTimeSeconds(pluginManager, "IRacingExtraProperties.iRacing_Session_PlayerClassBestLapTime", out double lapTimeSec)
+                ? lapTimeSec
+                : 0.0;
+        }
+
+        private static bool TryReadLapTimeSeconds(PluginManager pluginManager, string propertyName, out double lapTimeSec)
+        {
+            lapTimeSec = 0.0;
+            if (pluginManager == null || string.IsNullOrWhiteSpace(propertyName))
+            {
+                return false;
+            }
+
+            object rawValue;
+            try
+            {
+                rawValue = pluginManager.GetPropertyValue(propertyName);
+            }
+            catch
+            {
+                return false;
+            }
+
+            if (rawValue == null)
+            {
+                return false;
+            }
+
+            if (rawValue is TimeSpan timeSpan && timeSpan.TotalSeconds > 0.0)
+            {
+                lapTimeSec = timeSpan.TotalSeconds;
+                return true;
+            }
+
+            if (rawValue is double rawDouble && rawDouble > 0.0)
+            {
+                lapTimeSec = rawDouble;
+                return true;
+            }
+
+            if (rawValue is float rawFloat && rawFloat > 0.0f)
+            {
+                lapTimeSec = rawFloat;
+                return true;
+            }
+
+            if (rawValue is decimal rawDecimal && rawDecimal > 0m)
+            {
+                lapTimeSec = (double)rawDecimal;
+                return true;
+            }
+
+            string rawText = Convert.ToString(rawValue, CultureInfo.InvariantCulture);
+            if (string.IsNullOrWhiteSpace(rawText))
+            {
+                return false;
+            }
+
+            rawText = rawText.Trim();
+            if (TimeSpan.TryParse(rawText, CultureInfo.InvariantCulture, out TimeSpan parsedTimeSpan) && parsedTimeSpan.TotalSeconds > 0.0)
+            {
+                lapTimeSec = parsedTimeSpan.TotalSeconds;
+                return true;
+            }
+
+            if (double.TryParse(rawText, NumberStyles.Float | NumberStyles.AllowThousands, CultureInfo.InvariantCulture, out double parsedDouble) && parsedDouble > 0.0)
+            {
+                lapTimeSec = parsedDouble;
+                return true;
+            }
+
+            return false;
         }
 
         private bool IsNewSessionBestInClass(int carIdx, double candidateBestLapSec, float[] currentBestLapTimes, double[] previousBestLapTimes)
