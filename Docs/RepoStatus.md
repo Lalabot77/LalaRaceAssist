@@ -1,6 +1,6 @@
 ﻿# Repository status
 
-Validated against commit: 23d4d55073be68286ab35a258737ce12048eeddf
+Validated against commit: bef8bed
 Last updated: 2026-03-20
 Branch: work
 
@@ -14,10 +14,14 @@ Branch: work
 - `Docs/RepoStatus.md` refreshed for the current validation summary.
 
 ## Delivery status highlights
-- Fuel Planner max-fuel selection now follows the same clean planning-source model as the recent pace-vs-leader fix: Profile mode keeps manual/preset behavior, while Live Snapshot uses only the live detected cap as the active planner tank basis.
-- Entering Live Snapshot no longer falls back to a remembered profile/preset/manual max-fuel value when the live cap is missing; instead the planner reports the missing live-cap validation state and blocks strategy outputs until valid live cap telemetry is available.
-- Ongoing live cap changes now flow straight through the planner tank basis and strategy outputs in Live Snapshot, including first-stint fuel, without any preset-side override path.
-- The Strategy-tab max-fuel control remains visually unchanged but is now documented as Profile-editable and Live Snapshot-locked to the detected live cap.
+- The top-level planner tab is now labeled `STRATEGY`, while the existing planner content and FuelCalcs-backed strategy workflow remain intact.
+- The former top-level `PRESETS` tab has been removed; preset management now opens as a modal Preset Manager from the `Presets...` button beside the Strategy tab's Race Preset combo.
+- The modal reuses the existing preset editor and shared `FuelCalcs` state, preserving preset selection/application semantics, save-current behavior, and preset persistence without changing preset storage or planner math.
+- Strategy-tab preset UX follow-up: the inline `Presets...` action now uses the primary blue button style, the modal auto-selects the active preset (or first available preset) on open, dark-theme preset-manager text/input colours are explicitly readable, and successful `Save Changes` closes the modal without a second success popup.
+- Strategy-tab preset-manager follow-up: the modal now keeps the PreRace Mode combo on the same dark input styling as the rest of the plugin, spaces the active-preset helper text away from the name field, detaches its `FuelCalcs.PropertyChanged` listener when the dialog unloads/closes, and uses a small Strategy-tab guard to avoid accidental re-entrant dialog opens.
+- `Docs/User Docs/Changelog_Since_PR240.md` extended with concise user-facing highlights through PR #481, including Track planner migration, H2H, H2H follow-up fixes, and the latest Fuel Planner Live Snapshot leader-delta cleanup.
+- `Docs/Lala_Plugin_Quick_Start_Guide_v0.3.md` added as the review-friendly source version of the tester quick-start, matching the current setup flow, fuel-planning model, track-marker/pit-learning workflow, and supported race-context aids.
+- `Docs/Lala_Plugin_User_Guide_v0.3.md` added as the review-friendly source version of the ship-ready user guide, reflecting current fuel/planner behaviour, track-scoped planner defaults, H2H, pit/rejoin aids, and the current inactive status of the broader message-dash system.
 - `Docs/RepoStatus.md` refreshed for the current validation summary.
 
 ## Notes
