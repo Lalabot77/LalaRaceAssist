@@ -185,7 +185,6 @@ namespace LaunchPlugin
     public ObservableCollection<CarProfile> AvailableCarProfiles { get; set; } // CHANGED
     public ObservableCollection<string> AvailableTracks { get; set; } = new ObservableCollection<string>();
     public string DetectedMaxFuelDisplay { get; private set; }
-    public ICommand ResetLeaderDeltaToLiveCommand { get; }
     public ICommand SetLiveMaxFuelOverrideCommand { get; }
     private string _fuelPerLapText = "";
     private bool _suppressFuelTextSync = false;
@@ -294,6 +293,8 @@ namespace LaunchPlugin
         set { if (_isLeaderDeltaManual != value) { _isLeaderDeltaManual = value; OnPropertyChanged(); } }
     }
 
+    public bool IsLeaderDeltaEditable => SelectedPlanningSourceMode == PlanningSourceMode.Profile;
+
     public double LiveLeaderDeltaSeconds
     {
         get => _liveLeaderDeltaSeconds;
@@ -303,7 +304,7 @@ namespace LaunchPlugin
             _liveLeaderDeltaSeconds = value;
             OnPropertyChanged();
 
-            if (!IsLeaderDeltaManual)
+            if (!IsLeaderDeltaManual || SelectedPlanningSourceMode == PlanningSourceMode.LiveSnapshot)
             {
                 UpdateEffectiveLeaderDelta();
             }
@@ -324,6 +325,7 @@ namespace LaunchPlugin
             OnPropertyChanged();
             OnPropertyChanged(nameof(IsPlanningSourceProfile));
             OnPropertyChanged(nameof(IsPlanningSourceLiveSnapshot));
+            OnPropertyChanged(nameof(IsLeaderDeltaEditable));
             OnPropertyChanged(nameof(ShowLiveLapHelper));
             OnPropertyChanged(nameof(ShowProfileLapHelper));
             OnPropertyChanged(nameof(MaxFuelOverrideMaximum));
@@ -337,6 +339,7 @@ namespace LaunchPlugin
             // drop any manual overrides so the new source fully takes over.
             IsEstimatedLapTimeManual = false;
             IsFuelPerLapManual = false;
+            ClearManualLeaderDeltaOverride();
 
             // Auto-expand/collapse the Live Session telemetry panel based on planning source.
             if (value == PlanningSourceMode.LiveSnapshot)
@@ -1116,6 +1119,11 @@ namespace LaunchPlugin
             get => _leaderDeltaSeconds;
             set
             {
+                if (SelectedPlanningSourceMode == PlanningSourceMode.LiveSnapshot)
+                {
+                    return;
+                }
+
                 if (IsLeaderDeltaManual && Math.Abs(_manualLeaderDeltaSeconds - value) < 0.001)
                 {
                     return;
@@ -1129,20 +1137,21 @@ namespace LaunchPlugin
         }
 
         /// <summary>
-        /// Recomputes the effective leader delta based on live and manual sources.
-        /// Manual input wins when set; otherwise live is used when available.
+        /// Recomputes the effective leader delta based on planning source.
+        /// Profile mode prefers manual input, then the stored track delta.
+        /// Live Snapshot mode follows the current live delta and otherwise falls back to zero.
         /// </summary>
         private void UpdateEffectiveLeaderDelta()
         {
             double newDelta;
 
-            if (IsLeaderDeltaManual)
+            if (SelectedPlanningSourceMode == PlanningSourceMode.LiveSnapshot)
+            {
+                newDelta = _hasLiveLeaderDelta ? LiveLeaderDeltaSeconds : 0.0;
+            }
+            else if (IsLeaderDeltaManual)
             {
                 newDelta = _manualLeaderDeltaSeconds;
-            }
-            else if (_hasLiveLeaderDelta)
-            {
-                newDelta = LiveLeaderDeltaSeconds;
             }
             else
             {
@@ -1164,11 +1173,14 @@ namespace LaunchPlugin
         /// <summary>
         /// Fully clears all leader-delta state (live + manual) without calling the public setter.
         /// </summary>
-        private void ClearLeaderDeltaState()
+        private void ClearLeaderDeltaState(bool clearStoredDelta = true)
         {
             LiveLeaderDeltaSeconds = 0.0;
             _manualLeaderDeltaSeconds = 0.0;
-            _storedLeaderDeltaSeconds = 0.0;
+            if (clearStoredDelta)
+            {
+                _storedLeaderDeltaSeconds = 0.0;
+            }
             _hasLiveLeaderDelta = false;
             IsLeaderDeltaManual = false;
             _leaderDeltaSeconds = 0.0;
@@ -2966,7 +2978,6 @@ namespace LaunchPlugin
         RefreshPlannerViewCommand = new RelayCommand(_ => RefreshPlannerView());
         ResetEstimatedLapTimeToSourceCommand = new RelayCommand(_ => ResetEstimatedLapTimeToSource());
         ResetFuelPerLapToSourceCommand = new RelayCommand(_ => ResetFuelPerLapToSource());
-        ResetLeaderDeltaToLiveCommand = new RelayCommand(_ => ResetLeaderDeltaToLive());
         ApplySourceWetFactorCommand = new RelayCommand(_ => ApplySourceWetFactorFromSource(), _ => HasSourceWetFactor);
 
         ApplyPresetCommand = new RelayCommand(o => ApplySelectedPreset(), o => HasSelectedPreset);
@@ -3014,18 +3025,11 @@ namespace LaunchPlugin
         ApplyPlanningSourceToAutoFields(applyLapTime: false, applyFuel: true);
     }
 
-    private void ResetLeaderDeltaToLive()
-    {
-        IsLeaderDeltaManual = false;
-        _manualLeaderDeltaSeconds = LiveLeaderDeltaSeconds;
-        UpdateEffectiveLeaderDelta();
-    }
-
     public void ResetPlannerManualOverrides()
     {
         IsEstimatedLapTimeManual = false;
         IsFuelPerLapManual = false;
-        ResetLeaderDeltaToLive();
+        ClearManualLeaderDeltaOverride();
         ApplyPlanningSourceToAutoFields(applyLapTime: true, applyFuel: true);
     }
 
@@ -3327,14 +3331,14 @@ namespace LaunchPlugin
         }
         else
         {
-            // No usable live leader pace – clear live delta only,
-            // but leave any manual slider value alone.
+            // No usable live leader pace – clear the live-bound delta so
+            // Live Snapshot mode cannot keep using stale leader pacing.
             AvgDeltaToLdrValue = "-";
             LiveLeaderDeltaSeconds = 0.0;
             _hasLiveLeaderDelta = false;
         }
 
-        // Recompute effective delta (live if available, otherwise manual)
+        // Recompute the effective delta for the active planning source.
         UpdateEffectiveLeaderDelta();
 
         OnPropertyChanged(nameof(AvgDeltaToLdrValue));
@@ -3474,7 +3478,7 @@ namespace LaunchPlugin
         LiveLeaderPaceInfo = "-";
         LiveLapPaceInfo = "-";
         AvgDeltaToLdrValue = "-";
-        ClearLeaderDeltaState();
+        ClearLeaderDeltaState(clearStoredDelta: false);
         _hasLiveLeaderDelta = false;
         var nowUtc = DateTime.UtcNow;
         if ((nowUtc - _lastSnapshotResetLogUtc) > TimeSpan.FromSeconds(1))
@@ -3551,7 +3555,7 @@ namespace LaunchPlugin
         LiveLeaderPaceInfo = "-";
         AvgDeltaToLdrValue = "-";
         RacePaceVsLeaderSummary = "-";
-        ClearLeaderDeltaState();
+        ClearLeaderDeltaState(clearStoredDelta: false);
 
         ApplyLiveConfidenceLevels(0, 0, 0);
 
@@ -4510,29 +4514,33 @@ namespace LaunchPlugin
             double num = PitLaneTimeLoss; // use the current value directly
 
             double num3 = ParseLapTime(EstimatedLapTime);          // your estimated lap time
-            bool leaderPaceAvailable = IsLeaderDeltaManual || _hasLiveLeaderDelta;
-            double appliedDelta = IsLeaderDeltaManual ? LeaderDeltaSeconds : LiveLeaderDeltaSeconds;
+            bool leaderPaceAvailable = SelectedPlanningSourceMode == PlanningSourceMode.LiveSnapshot
+                ? _hasLiveLeaderDelta
+                : LeaderDeltaSeconds > 0.0;
+            double appliedDelta = SelectedPlanningSourceMode == PlanningSourceMode.LiveSnapshot
+                ? LiveLeaderDeltaSeconds
+                : LeaderDeltaSeconds;
             double num2 = leaderPaceAvailable
                 ? num3 - appliedDelta                       // leader pace (your pace - delta)
                 : num3;                                           // fall back to your pace when no leader data
 
-            if (LeaderDeltaSeconds > 0.0 && num3 > 0.0)
+            if (appliedDelta > 0.0 && num3 > 0.0)
             {
                 double leaderLap = num2;
                 bool shouldLog = Math.Abs(leaderLap - _lastLoggedStrategyLeaderLap) > 0.01 ||
                                  Math.Abs(num3 - _lastLoggedStrategyEstLap) > 0.01 ||
-                                 Math.Abs(LeaderDeltaSeconds - _lastLoggedLeaderDeltaSeconds) > 0.01;
+                                 Math.Abs(appliedDelta - _lastLoggedLeaderDeltaSeconds) > 0.01;
                 if (shouldLog)
                 {
                     SimHub.Logging.Current.Info(string.Format(
                         "[LalaPlugin:Leader Lap] CalculateStrategy: estLap={0:F3}, leaderDelta={1:F3}, leaderLap={2:F3}",
                         num3,
-                        LeaderDeltaSeconds,
+                        appliedDelta,
                         leaderLap));
 
                     _lastLoggedStrategyLeaderLap = leaderLap;
                     _lastLoggedStrategyEstLap = num3;
-                    _lastLoggedLeaderDeltaSeconds = LeaderDeltaSeconds;
+                    _lastLoggedLeaderDeltaSeconds = appliedDelta;
                 }
             }
 

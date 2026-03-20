@@ -347,7 +347,6 @@
                                         <!-- Value column: Auto and SHARED across both rows -->
                                         <ColumnDefinition Width="Auto" SharedSizeGroup="DeltaValueCol"/>
                                         <ColumnDefinition Width="Auto"/>
-                                        <ColumnDefinition Width="Auto"/>
                                     </Grid.ColumnDefinitions>
 
                                     <Slider Grid.Column="0"
@@ -357,6 +356,7 @@
               Minimum="0" Maximum="5"
               SmallChange="0.1" TickFrequency="0.1"
               IsSnapToTickEnabled="True"
+              IsEnabled="{Binding IsLeaderDeltaEditable}"
               ToolTip="Adjust the pace delta to the leader (sec) used in the plan." />
 
                                     <TextBlock Grid.Column="1"
@@ -365,13 +365,6 @@
                 Margin="10,0,0,0"
                 MinWidth="35"
                 TextAlignment="Right"/>
-
-                                    <Button Grid.Column="3"
-                        Content="Reset to live"
-                        Command="{Binding ResetLeaderDeltaToLiveCommand}"
-                        Margin="8,0,0,0"
-                        ToolTip="Replace the manual pace delta with the current live average."
-                        Visibility="{Binding IsLeaderDeltaManual, Converter={StaticResource BoolToVisibilityConverter}}" />
                                 </Grid>
                             </Grid>
 
