@@ -10209,7 +10209,11 @@ namespace LaunchPlugin
                     continue;
                 }
 
-                if (!string.Equals(NormalizeClassColorHex(slot.ClassColor), normalizedPlayerClassColor, StringComparison.Ordinal))
+                string slotClassColor = !string.IsNullOrWhiteSpace(slot.ClassColorHex)
+                    ? slot.ClassColorHex
+                    : slot.ClassColor;
+
+                if (!string.Equals(NormalizeClassColorHex(slotClassColor), normalizedPlayerClassColor, StringComparison.Ordinal))
                 {
                     continue;
                 }
@@ -10217,10 +10221,10 @@ namespace LaunchPlugin
                 return new H2HEngine.TargetSelector
                 {
                     CarIdx = slot.CarIdx,
-                    IdentityKey = MakeH2HIdentityKey(slot.ClassColor, slot.CarNumber),
+                    IdentityKey = MakeH2HIdentityKey(slotClassColor, slot.CarNumber),
                     Name = slot.Name ?? string.Empty,
                     CarNumber = slot.CarNumber ?? string.Empty,
-                    ClassColor = NormalizeH2HClassColor(slot.ClassColor),
+                    ClassColor = NormalizeH2HClassColor(slotClassColor),
                     PositionInClass = slot.PositionInClass > 0 ? slot.PositionInClass : 0
                 };
             }
