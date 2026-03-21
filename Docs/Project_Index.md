@@ -1,7 +1,7 @@
 ﻿# Project Index
 
 Validated against commit: 3f0af12824336625dd449cc0329702ac50394396
-Last updated: 2026-03-20
+Last updated: 2026-03-21
 Branch: work
 
 ## What this repo is
@@ -34,6 +34,12 @@ LalaLaunchPlugin is a SimHub plugin for iRacing that provides launch instrumenta
 - [Subsystems/Dash_Integration.md](Subsystems/Dash_Integration.md)
 - [Subsystems/Trace_Logging.md](Subsystems/Trace_Logging.md)
 - [RepoStatus.md](RepoStatus.md) - current branch/repo health and delivery status.
+- [Quick_Start.md](Quick_Start.md) - GitHub-facing quick setup guide for installing the plugin, binding the core dash controls, and starting with the Strategy workflow.
+- [User_Guide.md](User_Guide.md) - GitHub-facing end-user manual covering the current UI flow, saved-data model, dash control usage, launch settings location, and practical race-day habits.
+- [Dashboards.md](Dashboards.md) - user-facing overview of the supported dashboard package, visibility concepts, primary/support/overlay roles, and dash-vs-plugin responsibility split.
+- [Strategy_System.md](Strategy_System.md) - user-facing explanation of the Strategy tab workflow, Live Snapshot vs profile/manual planning, preset flow, and PreRace boundaries.
+- [H2H_System.md](H2H_System.md) - concise user-facing overview of H2H Race and H2H Track, what they compare, and where they appear.
+- [Rejoin_And_Pit_Assists.md](Rejoin_And_Pit_Assists.md) - user-facing guide to rejoin warnings, pit popups, and pit entry assist trust/override workflow.
 
 ## Subsystem map
 | Subsystem | Purpose | Documentation link |
@@ -51,7 +57,10 @@ LalaLaunchPlugin is a SimHub plugin for iRacing that provides launch instrumenta
 | Messaging | MSG lanes + definition-driven MessageEngine v1 outputs | [Subsystems/Message_System_V1.md](Subsystems/Message_System_V1.md) |
 | Dash integration | Main/message/overlay visibility, screen state exports, and global dark-mode controls (`LalaLaunch.Dash.DarkMode.*`) | [Subsystems/Dash_Integration.md](Subsystems/Dash_Integration.md) |
 
+## GitHub-facing user docs
+These pages are for end users and GitHub readers. They summarize the current supported workflow without replacing the canonical subsystem specifications above. When behavior details matter, the subsystem docs remain authoritative.
+
 ## Freshness
 - Validated against commit: 3f0af12824336625dd449cc0329702ac50394396
-- Date: 2026-03-20
+- Date: 2026-03-21
 - Branch: work

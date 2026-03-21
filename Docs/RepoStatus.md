@@ -1,7 +1,7 @@
 ﻿# Repository status
 
 Validated against commit: HEAD
-Last updated: 2026-03-20
+Last updated: 2026-03-21
 Branch: work
 
 ## Current repo/link status
@@ -9,16 +9,17 @@ Branch: work
 - No Git remote is configured in this checkout (`git remote -v` returns empty).
 
 ## Documentation sync status (requested set)
-- `Opponents.cs` now resolves `Opp.Ahead1/2.*` and `Opp.Behind1/2.*` strictly from same-class leaderboard neighbors around the player's `PositionInClass`, instead of publishing identity from nearby/proximity slots.
-- `Opponents.cs` still ingests `iRacing_DriverAheadInClass_*` / `iRacing_DriverBehindInClass_*` for cache continuity and slot-rebind debug logging, but those feeds no longer drive the published race-target identity consumed by H2H.
-- `Docs/Subsystems/Opponents.md`, `Docs/SimHubParameterInventory.md`, and `Docs/Project_Index.md` now document the standings-based selector truth source and the no-nearby-fallback rule for published race targets.
+- Added a GitHub-facing user documentation layer at repo root and `Docs/` with `README.md`, `CHANGELOG.md`, `Docs/Quick_Start.md`, `Docs/User_Guide.md`, `Docs/Dashboards.md`, `Docs/Strategy_System.md`, `Docs/H2H_System.md`, and `Docs/Rejoin_And_Pit_Assists.md`.
+- User-facing wording now reflects the current documented UI flow: `Strategy`, `Profiles`, `Dash Control`, `Launch Analysis`, `Settings`.
+- User docs now describe presets through the Strategy-tab `Presets...` modal flow, remove outdated `Use Live` wording, keep PreRace display-only, and place launch controls under `Settings -> Launch Settings`.
+- `Docs/Project_Index.md` now links the new GitHub-facing user docs while preserving subsystem docs as canonical technical truth.
 - `Docs/RepoStatus.md` refreshed for the current validation summary.
 
 ## Delivery status highlights
-- Published Opp race targets now use leaderboard-authoritative same-class standings neighbors (`PositionInClass - 1/-2/+1/+2`) so multi-lap class gaps stay valid and isolated players no longer get substituted with nearer on-track cars.
-- Selector ownership did not move: `H2HRace` still follows Opponents-resolved identity and `H2HTrack` still follows CarSA same-class ahead/behind slot selection.
-- If the player's leaderboard row or a strict same-class neighbor cannot be resolved, Opponents now leaves that published target empty/invalid rather than falling back to nearby slot identity.
-- Pace enrichment remains cache-based, using the existing entity cache/blended pace logic on top of leaderboard-authoritative identity and lap data.
+- The repo now has a clean GitHub-facing documentation structure for installation, quick start, the full user guide, dashboards, strategy, H2H, driver assists, and release history.
+- User docs have been aligned to the current UI and ownership model without changing runtime code, telemetry logic, exports, settings behavior, or dashboard ownership boundaries.
+- Dash Control remains documented as dash-oriented, while launch controls are documented under `Settings -> Launch Settings`.
+- Strategy remains the planning entry point, with Live Snapshot/manual distinctions and PreRace display-only positioning called out explicitly.
 
 ## Notes
 - `Docs/Code_Snapshot.md` remains non-canonical orientation-only documentation.
