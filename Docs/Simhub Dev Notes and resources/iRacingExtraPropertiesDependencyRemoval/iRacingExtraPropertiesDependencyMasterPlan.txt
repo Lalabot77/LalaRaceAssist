@@ -1,0 +1,267 @@
+IRACING EXTRA PROPERTIES DEPENDENCY MASTER HANDOVER
+Pruned-design version
+Backups excluded from dash scan
+
+Purpose
+
+This document defines the current dependency on iRacing Extra Properties across plugin code and active dashes, but with a v1-release lens:
+- first identify removable debug, legacy, and redundant fallback usage
+- then isolate the final critical dependency surface that truly needs internal replacement
+
+This document is therefore split into:
+1. removable dependencies
+2. dependencies to retain for now
+3. final must-replace surface after cleanup
+
+==================================================
+1. HIGH-LEVEL CONCLUSION
+==================================================
+
+The current dependency picture is noisier than the true engineering need.
+
+A meaningful portion of Extra Properties usage appears to be:
+- debug-only
+- legacy-only
+- convenience fallback only
+- metadata fallback only
+
+Before designing an internal replacement layer, LalaLaunch should first remove dependency sites that no longer justify their maintenance cost.
+
+The real long-term replacement target is smaller and centers on:
+- stable player race identity
+- same-class leaderboard row stream
+- race-order-aware neighbor selection
+- player lap-percent feed for Opponents pit-exit cadence
+- selected traffic/message signals if still in v1 scope
+- selected dash-facing race/traffic properties still used live
+
+==================================================
+2. CANDIDATE DEPENDENCIES TO REMOVE BEFORE REDESIGN
+==================================================
+
+A. Debug-only removals
+These are strong candidates for full removal before replacement design:
+
+1. CarSA iRacing-vs-Dahl relative-gap comparison arrays
+Current dependency:
+- iRacing_DriverAhead_00..04_RelativeGapToPlayer
+- iRacing_DriverBehind_00..04_RelativeGapToPlayer
+Reason:
+- debug-only
+- not part of release-facing functionality
+Recommendation:
+- remove unless still actively used for validation during current development
+
+B. Likely dead / legacy removals
+These should be reviewed for removal now:
+
+2. SignalProvider unused class-label mappings
+Current dependency:
+- iRacing_DriverBehind_00_ClassName
+- iRacing_Player_ClassName
+Reason:
+- reported as currently unused by active evaluators/definitions
+Recommendation:
+- remove if confirmed unused in live MsgV1 definitions
+
+3. Profiles VM prefix-aware IRacingExtraProperties helper
+Current dependency:
+- IRacingExtraProperties.* prefix awareness
+Reason:
+- not runtime telemetry
+- admin/helper only
+Recommendation:
+- remove or simplify later; not part of race-intelligence replacement surface
+
+C. Redundant fallback removals
+These should be considered for removal if current primary/native paths are already trusted:
+
+4. Legacy MessagingSystem Extra Properties fast path
+Current dependency:
+- player/behind class and gap fast path
+Reason:
+- fallback logic already exists
+Recommendation:
+- remove if legacy MessagingSystem behavior remains acceptable on fallback-only logic
+
+5. Track/car metadata fallbacks
+Current dependency:
+- iRacing_TrackDisplayName
+- iRacing_CarModel
+Reason:
+- native GameData path already primary
+Recommendation:
+- remove if current combo/profile detection is stable enough without them
+
+6. Wet-tyre fallback
+Current dependency:
+- iRacing_Player_TireCompound
+Reason:
+- raw telemetry already primary
+Recommendation:
+- remove if raw compound data is now reliable in all target sessions
+
+7. H2H class-best fallback
+Current dependency:
+- iRacing_Session_PlayerClassBestLapTime
+Reason:
+- primary path already internal
+Recommendation:
+- remove if H2H class-best remains stable in real multiclass tests without fallback
+
+8. Leader-lap legacy fallback candidates
+Current dependency:
+- iRacing_ClassLeaderboard_Driver_00_LastLapTime
+- iRacing_LeaderLastLapTime
+Reason:
+- helper/fallback only
+Recommendation:
+- remove if DataCore fallback path is good enough for v1 expectations
+
+9. Pit-entry fallback values
+Current dependency:
+- iRacing_PitSpeedLimitKph
+- iRacing_DistanceToPitEntry
+- iRacing_PitEntryTrkPct
+Reason:
+- native/session/stored-marker path already preferred
+Recommendation:
+- remove only after confirming marker/native coverage is acceptable for all intended v1 tracks/workflows
+
+==================================================
+3. DEPENDENCIES TO RETAIN FOR NOW
+==================================================
+
+These should remain in scope until replacement exists or a deliberate feature cut is made.
+
+A. Core race-intelligence dependencies
+1. Opponents player identity
+- iRacing_Player_ClassColor
+- iRacing_Player_CarNumber
+
+2. Opponents same-class leaderboard row stream
+- iRacing_ClassLeaderboard_Driver_XX_*
+Fields:
+- Name
+- CarNumber
+- ClassColor
+- Position
+- PositionInClass
+- RelativeGapToLeader
+- IsInPit
+- IsConnected
+- LastLapTime
+- BestLapTime
+
+3. Opponents player lap-percent feed
+- iRacing_Player_LapDistPct
+
+B. Fuel dependency
+4. Fuel projection
+- iRacing_LapsRemainingFloat
+Retain unless fuel logic is separately redesigned or an internal/native equivalent is proven
+
+C. Message/traffic dependencies
+5. MsgV1 signal mappings, if MsgV1 remains in v1 scope
+- iRacing_DriverBehind_00_RelativeGapToPlayer
+- iRacing_DriverBehind_00_DistanceToPlayer
+- iRacing_DriverAhead_00_RelativeGapToPlayer
+- iRacing_SlowDownTime
+
+D. Live dash dependencies
+6. Active dash/widget race and traffic properties still directly used
+Especially:
+- OnTrackOpp
+- Racing AHD BHD
+- Rejoin widgets
+- Traffic displays
+- Alerts widgets
+These should remain in the inventory until plugin-side replacements or explicit dash redesigns exist
+
+==================================================
+4. POST-PRUNING TRUE MUST-REPLACE SURFACE
+==================================================
+
+Assuming the removable items above are actually cleaned out, the core replacement surface becomes:
+
+A. Must replace
+1. Stable player race identity
+Needs:
+- class color
+- car number
+
+2. Internal same-class leaderboard row stream
+Needs:
+- stable row identity
+- overall position
+- class position
+- pit state
+- connected state
+- last lap
+- best lap
+- internal gap basis equivalent to RelativeGapToLeader
+
+3. Race-order-aware same-class neighbor selection
+Needs:
+- player row lookup
+- same-class ahead/behind selection by race order
+- preservation of Opp.* and H2HRace.* contracts
+- no fallback to simple proximity for race mode
+
+4. Player lap-percent feed for Opponents cadence
+Needs:
+- stable player lap progress source for pit-exit timing/prediction cadence
+
+B. Likely must replace if retained in v1
+5. Fuel laps remaining source
+- current dependency: iRacing_LapsRemainingFloat
+Retain on must-replace list unless fuel design changes first
+
+6. MsgV1 traffic/race-control signals
+- nearest behind gap
+- nearest behind distance
+- nearest ahead gap
+- slowdown timer
+Retain on must-replace list only if MsgV1 remains a release-facing v1 feature
+
+7. Dash-facing race target properties
+Retain on must-replace list where active dashes still depend directly on Extra Properties semantics, especially:
+- iRacing_DriverAhead_00_*
+- iRacing_DriverBehind_00_*
+- iRacing_DriverBehind_01_*
+- iRacing_DriverBehind_02_*
+- iRacing_DriverBehindInClass_00..02_CarNumber
+- iRacing_NonRelativeDriverAheadInClass_00_*
+- iRacing_NonRelativeDriverBehindInClass_00_*
+
+==================================================
+5. RECOMMENDED NEXT STEP
+==================================================
+
+Do not start internal replacement design yet.
+
+First run a bounded cleanup task:
+- remove debug-only dependencies
+- remove confirmed dead mappings
+- remove redundant fallbacks that are no longer needed for v1
+
+Then rerun the dependency inventory.
+
+Only after that should the final replacement design be frozen, because the post-cleanup dependency surface will be smaller, clearer, and much safer to architect around.
+
+==================================================
+6. BOTTOM LINE
+==================================================
+
+The right question is no longer:
+“What Extra Properties do we use?”
+
+The better v1 question is:
+“What Extra Properties still justify existing after we remove debug and redundant fallback baggage?”
+
+Once that pruning is done, the true core problem is likely just:
+- race identity
+- same-class leaderboard ownership
+- race-order-aware neighbor selection
+- lap-progress cadence
+- fuel/message/dash extras only where still deliberately retained
