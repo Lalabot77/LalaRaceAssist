@@ -39,11 +39,11 @@ Do not collapse these concerns back together unless there is a concrete reason.
 
 ## 5. Subsystem ownership model
 - Canonical subsystem behaviour belongs in `Docs/Subsystems/<name>.md`.
-- Canonical export names belong in `Docs/SimHubParameterInventory.md`.
-- Canonical log wording and meaning belong in `Docs/SimHubLogMessages.md`.
-- Repo-wide working method belongs in `Docs/CODEX_CONTRACT.txt` and `Docs/Project_Index.md`.
+- Canonical export names belong in `Docs/Internal/SimHubParameterInventory.md`.
+- Canonical log wording and meaning belong in `Docs/Internal/SimHubLogMessages.md`.
+- Repo-wide working method belongs in `Docs/Internal/CODEX_CONTRACT.txt` and `Docs/Project_Index.md`.
 - `Docs/RepoStatus.md` records current validated state and documentation sync status.
-- `Docs/Code_Snapshot.md` is orientation only and must not override the canonical docs above.
+- `Docs/Internal/Code_Snapshot.md` is orientation only and must not override the canonical docs above.
 
 When work touches multiple subsystems, update each owning doc instead of inventing a new catch-all design note unless the cross-cutting contract genuinely needs one.
 
@@ -82,7 +82,7 @@ This is a direction, not a rewrite order. Existing code may remain more integrat
 - State affected paths, invariants, and edit boundaries before changing files.
 - Prefer subsystem-local changes over adding repo-global prose.
 - If a task changes behaviour, update subsystem docs plus export/log docs as needed.
-- If canonical docs and `Code_Snapshot.md` disagree, follow the canonical docs and treat the snapshot as stale.
+- If canonical docs and `Docs/Internal/Code_Snapshot.md` disagree, follow the canonical docs and treat the snapshot as stale.
 - Do not propose broad architecture rewrites unless the task explicitly asks for one.
 
 ## 10. Practical warning signs of architectural drift

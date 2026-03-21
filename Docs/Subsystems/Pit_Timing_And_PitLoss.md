@@ -13,9 +13,9 @@ The Pit Timing & Pit Loss subsystem measures **real pit lane time loss** during 
 It converts raw pit entry/exit signals into **lane travel**, **box time**, and **net pit loss** figures, with safeguards to avoid publishing invalid or misleading data.
 
 Canonical references:
-- Log semantics: `Docs/SimHubLogMessages.md`
+- Log semantics: `Docs/Internal/SimHubLogMessages.md`
 - Fuel consumption & pit integration: `Docs/FuelProperties_Spec.md`
-- Export list & cadence: `Docs/SimHubParameterInventory.md`
+- Export list & cadence: `Docs/Internal/SimHubParameterInventory.md`
 
 ---
 
@@ -175,7 +175,7 @@ Once published, the value remains until superseded by a newer valid cycle.
 ## Outputs (exports + logs)
 
 ### Core exports
-(See `SimHubParameterInventory.md` for authoritative list.)
+(See `Docs/Internal/SimHubParameterInventory.md` for authoritative list.)
 
 Typical outputs include:
 - `Fuel.Live.PitLaneLoss_S`
@@ -200,7 +200,7 @@ The subsystem emits structured INFO logs for:
 - Locking blocks (candidate blocked + logged) when the profile pit loss is locked.
 - NaN, infinite, or non-positive pit-loss candidates are skipped and logged before any persistence attempt.
 
-Log semantics are canonical in `SimHubLogMessages.md`.
+Log semantics are canonical in `Docs/Internal/SimHubLogMessages.md`.
 
 ---
 

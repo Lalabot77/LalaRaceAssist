@@ -1,10 +1,25 @@
-﻿# User Guide
+# User Guide
 
-This guide explains the supported user-facing parts of Lala Race Assist Plugin and the dashboard package.
+This guide is the central driver-facing overview for Lala Race Assist Plugin. It explains what the plugin owns, what the driver sees, and where to find the detailed user pages for each system.
 
-> **Scope note:** The global message system is not operational yet and is intentionally not documented here as a user feature. Radio Messages can still be treated as a functional dash feature where the current dashboards expose them.
+> **Scope note:** The future/global message system is not operational yet and is intentionally not documented here as an active user feature. Radio Messages can still be treated as current dashboard behavior where supported.
 
-## 1. Responsibility split
+## 1. How to read the docs
+
+Use this page as the overview, then jump to the dedicated pages for the systems you actively use:
+
+- [Quick Start](Quick_Start.md)
+- [Dashboards](Dashboards.md)
+- [Strategy System](Strategy_System.md)
+- [Shift Assist](Shift_Assist.md)
+- [Launch System](Launch_System.md)
+- [Rejoin Assist](Rejoin_Assist.md)
+- [Pit Assist](Pit_Assist.md)
+- [H2H System](H2H_System.md)
+- [Profiles System](Profiles_System.md)
+- [Fuel Model](Fuel_Model.md)
+
+## 2. Plugin vs dashboard responsibility
 
 ### Plugin
 
@@ -24,11 +39,11 @@ Dashboards:
 - provide situational awareness,
 - provide limited interaction through bindings or touch areas.
 
-Dashboards do **not** become the source of truth for strategy, fuel math, H2H selection, learned data, or persistence.
+Dashboards do **not** become the source of truth for strategy, fuel math, H2H selection, saved learning, or persistence.
 
-## 2. Current top-level navigation
+## 3. Current plugin navigation
 
-The current plugin order is:
+The current top-level plugin order is:
 
 1. **Strategy**
 2. **Profiles**
@@ -36,180 +51,84 @@ The current plugin order is:
 4. **Launch Analysis**
 5. **Settings**
 
-Important changes reflected in this repo guide:
+Important workflow rules:
 
 - The main planning tab is **Strategy**, not Fuel.
 - There is **no separate Presets tab**.
 - Presets are managed from **Strategy** using the **`Presets...`** modal flow.
-- Launch-related controls now belong under **Settings → Launch Settings**.
+- Launch controls belong under **Settings → Launch Settings**.
+- **Launch Analysis** remains the separate post-run review tab.
 
-## 3. Strategy workflow
+## 4. The main user-facing systems
 
-Strategy is the main planning workflow.
+### Strategy
 
-### Profile/manual vs Live Snapshot
+Strategy is the main planning workflow. It lets you choose between stable profile/manual planning and live-driven snapshot planning without confusing those two jobs. See [Strategy System](Strategy_System.md).
 
-There are two user-facing planning states to understand:
+### Profiles
 
-- **Profile/manual planning** uses your selected profile, track values, and chosen planner inputs.
-- **Live Snapshot** follows the live session snapshot when those inputs are available.
+Profiles are the plugin’s long-term memory for car, track, and condition-specific data. They are what make the other systems become trustworthy over time. See [Profiles System](Profiles_System.md).
 
-Key rule: **watching live state is not the same as committing a stable plan**.
+### Fuel model
 
-The plugin keeps this distinction intentionally:
+The fuel model learns gradually, builds confidence, and feeds Strategy with a trustworthy burn basis. See [Fuel Model](Fuel_Model.md).
 
-- Live Snapshot helps you follow the current session.
-- Profile/manual planning gives you a stable strategy basis.
+### Dashboards
 
-When live control is active, the matching manual controls are disabled. Older “Use Live” wording is no longer part of the normal flow.
+Dashboards are the display layer. They show outputs, visibility states, and context, but they do not own the calculations underneath. See [Dashboards](Dashboards.md).
 
-### Presets
+### Shift Assist
 
-Presets are now managed inside Strategy.
+Shift Assist gives RPM-based driver cues and becomes more trustworthy once its learned values are stable and locked. See [Shift Assist](Shift_Assist.md).
 
-Use them for repeatable race setup values such as:
+### Launch
 
-- race length mode,
-- contingency,
-- tyre-change time,
-- max-fuel assumptions,
-- PreRace mode preference.
+Launch setup is handled in Settings, while Launch Analysis is used afterwards to review saved starts. See [Launch System](Launch_System.md).
 
-### PreRace
+### Rejoin and pit aids
 
-PreRace is part of the Strategy story, but it remains **display-oriented only**.
+Lala Race Assist Plugin includes separate driver-facing pages for recovery/rejoin support and pit-lane support:
 
-Use it for on-grid or pre-start information. Do **not** treat it as planner logic or live fuel-model logic.
+- [Rejoin Assist](Rejoin_Assist.md)
+- [Pit Assist](Pit_Assist.md)
 
-## 4. Profiles and saved data
+### H2H
 
-Profiles are the plugin’s long-term memory.
+H2H is a read-only race-context aid that helps the driver compare race-order and local-track threats without becoming a separate planning workflow. See [H2H System](H2H_System.md).
 
-### Car profile
+## 5. Trust model
 
-Car-level storage includes things such as:
-
-- launch defaults,
-- pit-entry settings,
-- base tank assumptions,
-- rejoin and assist thresholds,
-- Shift Assist settings.
-
-### Track record
-
-Track/layout-level storage includes things such as:
-
-- pit-lane loss,
-- entry/exit markers,
-- dry/wet pace and fuel data,
-- track-scoped planning defaults.
-
-### Locking philosophy
-
-The normal lifecycle is:
+A good mental model for the whole plugin is:
 
 **learn → validate → lock → trust**
 
-Lock good values once they are representative. If something becomes unreliable, unlock only the affected item, relearn it cleanly, then lock again.
+Use that pattern for:
 
-## 5. Dash Control
+- profile values,
+- fuel burn and pace baselines,
+- pit-loss and marker data,
+- Shift Assist targets,
+- launch defaults,
+- assist thresholds that repeatedly affect what you see while driving.
 
-Dash Control is now strictly dash-oriented.
+If a system is wrong once, keep driving. If it is wrong repeatedly, review the saved data or thresholds behind it instead of assuming the dashboard art is the problem.
 
-### Main bindings to care about
-
-- **Cancel Message**
-- **Toggle Pit Screen**
-- **Primary Dash Mode**
-- **Declutter Mode**
-
-### Global Dash Functions
-
-The grouped user-facing structure is:
-
-- **General**
-- **Dark Mode**
-- **Lovely integration**
-- **Fuel**
-
-Keep these thought of as display/consumption controls, not core runtime logic.
-
-### What is no longer part of Dash Control
-
-Do not look here for:
-
-- launch mode,
-- post-launch display time,
-- event marker debug actions as a normal dash feature.
-
-Launch controls belong in **Settings → Launch Settings**.
-
-## 6. Launch settings and launch analysis
-
-Launch behaviour is configured in **Settings → Launch Settings**. For the user-facing launch workflow and tuning habits, see [Launch System](Launch_System.md).
-
-Typical launch controls include:
-
-- launch mode binding,
-- post-launch results display time,
-- launch targets and tolerances,
-- launch summary and trace capture locations,
-- launch logging options.
-
-**Launch Analysis** is the separate top-level tab used to review saved launch traces and summaries. Keep live launch setup in Settings, then use Launch Analysis for post-run review.
-
-
-## 7. Shift Assist
-
-Shift Assist is a driver aid for RPM-based shift cueing. It can provide a **Shift Sound**, **Shift Light**, and an additional urgent reminder if you stay in the gear too long after the main cue.
-
-Use it to improve shift timing consistency, then review learned values and lock gears once they are stable. It is still a cueing aid, not an automatic shift feature.
-
-For setup and first-use guidance, see [Shift Assist](Shift_Assist.md).
-
-## 8. Dashboards
-
-The supported dashboard package normally includes:
-
-- a **primary race dash**,
-- a **strategy/support dash**,
-- an **overlay**,
-- optional **Lovely-based layouts**.
-
-Use visibility settings, primary mode, and declutter mode to decide what appears where. The dashes display outputs; they do not own calculations.
-
-For details, see [Dashboards](Dashboards.md).
-
-## 9. H2H and race context
-
-H2H is a read-only race-context aid for the driver.
-
-- **H2H Race** compares the same-class targets ahead and behind in race order.
-- **H2H Track** compares the same-class cars immediately around you on track.
-
-Use it for awareness and comparison, not as something you constantly configure.
-
-For details, see [H2H System](H2H_System.md).
-
-## 10. Rejoin, pit entry, and pit popups
-
-The plugin includes practical driver aids for:
-
-- rejoin warnings,
-- pit popups,
-- pit entry assist.
-
-Trust them most when your saved markers, pit-loss values, and thresholds are known-good.
-
-If a popup is wrong once, cancel or override it and keep driving. If it is wrong repeatedly, review the underlying saved data or threshold settings.
-
-For details, see [Rejoin and Pit Assists](Rejoin_And_Pit_Assists.md).
-
-## 11. Practical best practice
+## 6. Practical best practice
 
 - Start each new car/track combination by gathering clean laps.
-- Validate pit-loss and track markers before locking them.
-- Use Strategy as the single planning entry point.
-- Keep the distinction between **live observation** and **stable planning** clear in your own workflow.
-- Use Dash Control for presentation and visibility, not to “fix” calculation logic.
-- Review profile values when a driver aid is repeatedly wrong.
+- Use **Strategy** as the single planning entry point.
+- Keep the difference between **live observation** and **stable planning** clear in your workflow.
+- Lock only values that have settled and make sense.
+- Use **Dash Control** for visibility and presentation, not to fix calculation logic.
+- Review profile-backed data when a driver aid is repeatedly wrong.
+
+## 7. Recommended reading order
+
+For most drivers, this order works well:
+
+1. [Quick Start](Quick_Start.md)
+2. [Strategy System](Strategy_System.md)
+3. [Profiles System](Profiles_System.md)
+4. [Fuel Model](Fuel_Model.md)
+5. [Dashboards](Dashboards.md)
+6. Then the feature pages you use most: [Shift Assist](Shift_Assist.md), [Launch System](Launch_System.md), [Rejoin Assist](Rejoin_Assist.md), [Pit Assist](Pit_Assist.md), and [H2H System](H2H_System.md)

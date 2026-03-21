@@ -1,4 +1,4 @@
-﻿# Fuel Planner / Strategy Tab
+# Fuel Planner / Strategy Tab
 
 Validated against commit: 3f0af12824336625dd449cc0329702ac50394396
 Last updated: 2026-03-20
@@ -19,7 +19,7 @@ Preset management remains part of the same subsystem, but it is no longer a sepa
 Canonical references:
 - Fuel behaviour contract: `Docs/FuelProperties_Spec.md`
 - Planner/live flow: `Docs/FuelTab_SourceFlowNotes.md`
-- Export definitions: `Docs/SimHubParameterInventory.md`
+- Export definitions: `Docs/Internal/SimHubParameterInventory.md`
 
 ---
 
@@ -202,7 +202,7 @@ Additional Live Session rules:
 ## Outputs (exports + UI bindings)
 
 ### Key planner outputs
-(See `SimHubParameterInventory.md` for full list.)
+(See `Docs/Internal/SimHubParameterInventory.md` for full list.)
 
 Typical outputs include:
 - Planner fuel required to end.

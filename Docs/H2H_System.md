@@ -1,14 +1,12 @@
 # H2H System
 
-This page explains the user-facing purpose of the H2H tools.
+This page explains the driver-facing purpose of the H2H tools in Lala Race Assist Plugin.
 
 ## 1. What H2H is for
 
-H2H gives the driver a compact, read-only comparison against useful same-class targets.
+H2H gives the driver a compact, read-only comparison against useful same-class targets. It helps answer questions like:
 
-It is there to help answer questions like:
-
-- Who am I racing directly?
+- Who am I really racing?
 - Am I stronger or weaker over the lap?
 - Is the nearby threat a race-position threat or just local track traffic?
 
@@ -20,33 +18,33 @@ It is not a planning workflow and it is not something you constantly manage in t
 
 **What it helps with**
 
-- Understanding the same-class cars directly ahead and behind in race order.
-- Seeing whether you are gaining or losing on the race targets that matter most.
+- understanding the same-class cars directly ahead and behind in race order,
+- seeing whether you are gaining or losing on the race targets that matter most.
 
 **What it compares**
 
-- You versus the same-class race target ahead.
-- You versus the same-class race target behind.
+- you versus the same-class race target ahead,
+- you versus the same-class race target behind.
 
-**Where it appears**
+**User outcome**
 
-- On supported dashboards and overlays that expose the H2H race package.
+This is the cleaner “who matters to my result?” view.
 
 ### H2H Track
 
 **What it helps with**
 
-- Understanding the same-class cars immediately around you on track.
-- Seeing local pressure or opportunity even when race-order context and local traffic context differ.
+- understanding the same-class cars immediately around you on track,
+- seeing local pressure or opportunity even when race-order context and local traffic context differ.
 
 **What it compares**
 
-- You versus the nearby same-class car ahead on track.
-- You versus the nearby same-class car behind on track.
+- you versus the nearby same-class car ahead on track,
+- you versus the nearby same-class car behind on track.
 
-**Where it appears**
+**User outcome**
 
-- On supported dashboards and overlays that expose the H2H track package.
+This is the better “what is happening around me right now?” view.
 
 ## 3. What users will usually see
 
@@ -60,15 +58,24 @@ Depending on the dash, H2H can include:
 
 The exact presentation belongs to the dashboard package, but the comparison itself comes from the plugin.
 
-## 4. Important ownership boundary
+## 4. Where H2H comes from
+
+From the driver’s point of view, H2H is one feature. Internally, it depends on supporting technical systems.
+
+- **Opponents** helps support the race-order target selection behind **H2H Race**.
+- **CarSA** helps support the local on-track target selection behind **H2H Track**.
+
+Those are supporting subsystem docs, not separate user-facing feature pages.
+
+## 5. Important ownership boundary
 
 Keep the ownership clear:
 
 - H2H is a **read-only race-context tool for the driver**.
 - The plugin owns the selection and publication of the comparison outputs.
-- Dashboards simply display those outputs.
+- Dashboards display those outputs.
 
-## 5. When H2H is most useful
+## 6. When H2H is most useful
 
 H2H is especially useful when:
 
@@ -77,7 +84,7 @@ H2H is especially useful when:
 - you want a quick feel for whether a nearby car is actually a race-position threat,
 - you want a simple visual comparison rather than raw timing pages.
 
-## 6. What H2H is not
+## 7. What H2H is not
 
 H2H is not:
 

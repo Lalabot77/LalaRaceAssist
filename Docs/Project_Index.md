@@ -1,66 +1,68 @@
-﻿# Project Index
+# Project Index
 
 Validated against commit: HEAD
 Last updated: 2026-03-21
 Branch: work
 
 ## What this repo is
-LalaLaunchPlugin is a SimHub plugin for iRacing that provides launch instrumentation, fuel strategy and planning, pit-cycle analytics, rejoin support, Shift Assist cueing, messaging, and multi-dash visibility coordination.
+Lala Race Assist Plugin is a SimHub plugin for iRacing that provides strategy planning, fuel learning, dashboards, launch instrumentation, pit assistance, rejoin support, Shift Assist cueing, profile-backed persistence, and H2H race context.
 
 ## Codex read/start order
 1. If present at repo root, read `../AGENTS.md` as the thin agent entry point, then start with `Project_Index.md`.
-2. Read `CODEX_CONTRACT.txt` for mandatory engineering policy.
-3. Use `Architecture_Guardrails.md` for subsystem boundaries and ownership guidance.
+2. Read `Docs/Internal/CODEX_CONTRACT.txt` for mandatory engineering policy.
+3. Use `Docs/Internal/Architecture_Guardrails.md` for subsystem boundaries and ownership guidance.
 4. Read the relevant `Subsystems/*.md` files before editing affected areas.
 5. Check `RepoStatus.md` for the current validated repo/doc state.
-6. Use `Code_Snapshot.md` only for orientation when needed; it is not canonical if it conflicts with the docs above.
-7. Follow the analysis-first workflow and reusable task framing in `CODEX_TASK_TEMPLATE.txt`.
+6. Use `Docs/Internal/Code_Snapshot.md` only for orientation when needed; it is not canonical if it conflicts with the docs above.
+7. Follow the analysis-first workflow and reusable task framing in `Docs/Internal/CODEX_TASK_TEMPLATE.txt`.
 
-## Start here (canonical docs)
-- [../AGENTS.md](../AGENTS.md) - root-level agent pointer into the canonical docs workflow.
-- [CODEX_CONTRACT.txt](CODEX_CONTRACT.txt) - mandatory Codex/global engineering policy.
-- [Architecture_Guardrails.md](Architecture_Guardrails.md) - practical architecture boundaries and subsystem ownership guidance.
-- [CODEX_TASK_TEMPLATE.txt](CODEX_TASK_TEMPLATE.txt) - reusable task skeleton for analysis-first Codex work.
-- [Plugin_UI_Tooltips.md](Plugin_UI_Tooltips.md) - current tooltip inventory and UI navigation notes for plugin tabs and controls, including the Strategy tab preset-manager modal flow, the reordered top-level tab layout (Strategy / Profiles / Dash Control / Launch Analysis / Settings), the collapsed Friends List and Launch Settings expanders inside Settings, the expander-based Dash Control sections, and the TRACKS tab's track-scoped planner inputs.
-- [SimHubParameterInventory.md](SimHubParameterInventory.md) - canonical SimHub export contract.
-- [SimHubLogMessages.md](SimHubLogMessages.md) - canonical Info/Warn/Error log catalogue.
-- [Subsystems/Shift_Assist.md](Subsystems/Shift_Assist.md) - Shift Assist purpose, inputs/state, outputs, and validation checklist.
+## User documentation
+These pages are the GitHub-facing driver/user layer. They should explain what the driver sees, how to use the feature, what to trust, and what to review when it feels wrong.
+
+- [Quick Start](Quick_Start.md)
+- [User Guide](User_Guide.md)
+- [Dashboards](Dashboards.md)
+- [Strategy System](Strategy_System.md)
+- [Shift Assist](Shift_Assist.md)
+- [Launch System](Launch_System.md)
+- [Rejoin Assist](Rejoin_Assist.md)
+- [Pit Assist](Pit_Assist.md)
+- [H2H System](H2H_System.md)
+- [Profiles System](Profiles_System.md)
+- [Fuel Model](Fuel_Model.md)
+
+## Subsystem documentation
+These pages are the technical/canonical subsystem layer. They should explain internal ownership, inputs, outputs, calculations, persistence, caching, and architecture boundaries.
+
+- [Subsystems/Fuel_Model.md](Subsystems/Fuel_Model.md)
+- [Subsystems/Fuel_Planner_Tab.md](Subsystems/Fuel_Planner_Tab.md)
+- [Subsystems/Launch_Mode.md](Subsystems/Launch_Mode.md)
+- [Subsystems/Shift_Assist.md](Subsystems/Shift_Assist.md)
+- [Subsystems/Pit_Timing_And_PitLoss.md](Subsystems/Pit_Timing_And_PitLoss.md)
 - [Subsystems/Pit_Entry_Assist.md](Subsystems/Pit_Entry_Assist.md)
-- [Subsystems/Track_Markers.md](Subsystems/Track_Markers.md)
+- [Subsystems/Rejoin_Assist.md](Subsystems/Rejoin_Assist.md)
 - [Subsystems/Opponents.md](Subsystems/Opponents.md)
 - [Subsystems/CarSA.md](Subsystems/CarSA.md)
 - [Subsystems/H2H.md](Subsystems/H2H.md)
-- [Subsystems/Message_System_V1.md](Subsystems/Message_System_V1.md)
+- [Subsystems/Profiles_And_PB.md](Subsystems/Profiles_And_PB.md)
 - [Subsystems/Dash_Integration.md](Subsystems/Dash_Integration.md)
+- [Subsystems/Pace_And_Projection.md](Subsystems/Pace_And_Projection.md)
 - [Subsystems/Trace_Logging.md](Subsystems/Trace_Logging.md)
-- [RepoStatus.md](RepoStatus.md) - current branch/repo health and delivery status.
-- [Quick_Start.md](Quick_Start.md) - GitHub-facing quick setup guide for installing the plugin, binding the core dash controls, and starting with the Strategy workflow.
-- [User_Guide.md](User_Guide.md) - GitHub-facing end-user manual covering the current UI flow, saved-data model, dash control usage, launch settings location, and practical race-day habits.
-- [Dashboards.md](Dashboards.md) - user-facing overview of the supported dashboard package, visibility concepts, primary/support/overlay roles, and dash-vs-plugin responsibility split.
-- [Strategy_System.md](Strategy_System.md) - user-facing explanation of the Strategy tab workflow, Live Snapshot vs profile/manual planning, preset flow, and PreRace boundaries.
-- [Shift_Assist.md](Shift_Assist.md) - user-facing guide to Shift Assist cues, learning workflow, locking practice, and practical troubleshooting.
-- [Launch_System.md](Launch_System.md) - user-facing guide to Launch Settings, Launch Analysis, saved launch review, and careful tuning workflow.
-- [H2H_System.md](H2H_System.md) - concise user-facing overview of H2H Race and H2H Track, what they compare, and where they appear.
-- [Rejoin_And_Pit_Assists.md](Rejoin_And_Pit_Assists.md) - user-facing guide to rejoin warnings, pit popups, and pit entry assist trust/override workflow.
+- [Subsystems/Track_Markers.md](Subsystems/Track_Markers.md)
+- [Subsystems/Message_System_V1.md](Subsystems/Message_System_V1.md)
+- [Subsystems/MessageEngineV1_Notes.md](Subsystems/MessageEngineV1_Notes.md)
+- and other existing technical subsystem docs in `Docs/Subsystems/`.
 
-## Subsystem map
-| Subsystem | Purpose | Documentation link |
-| --- | --- | --- |
-| Fuel model | Live burn capture, confidence, race projection, pit-window logic | [Subsystems/Fuel_Model.md](Subsystems/Fuel_Model.md) |
-| Strategy tab (fuel planner) | Strategy calculator and profile/live source selection, including modal preset management | [Subsystems/Fuel_Planner_Tab.md](Subsystems/Fuel_Planner_Tab.md) |
-| Launch mode | Launch state machine, anti-stall/bog detection, launch metrics | [Subsystems/Launch_Mode.md](Subsystems/Launch_Mode.md) |
-| Shift Assist | RPM target cueing with predictive lead-time, primary/urgent beep routing (urgent at derived 50% volume), and per-gear delay telemetry | [Subsystems/Shift_Assist.md](Subsystems/Shift_Assist.md) |
-| Pit timing & pit-loss | PitEngine DTL/direct timing, pit-cycle exports | [Subsystems/Pit_Timing_And_PitLoss.md](Subsystems/Pit_Timing_And_PitLoss.md) |
-| Pit Entry Assist | Braking cues, margin/cue maths, entry-line debrief outputs | [Subsystems/Pit_Entry_Assist.md](Subsystems/Pit_Entry_Assist.md) |
-| Rejoin assist | Incident/threat detection, linger logic, and suppression guardrails | [Subsystems/Rejoin_Assist.md](Subsystems/Rejoin_Assist.md) |
-| Opponents | Strict same-class race selector, pace/fight enrichment, and pit-exit class prediction | [Subsystems/Opponents.md](Subsystems/Opponents.md) |
-| CarSA | Car-centric gap/closing/status engine and debug exports | [Subsystems/CarSA.md](Subsystems/CarSA.md) |
-| H2H | Standalone head-to-head race/track comparison exports with fixed 6 segments | [Subsystems/H2H.md](Subsystems/H2H.md) |
-| Messaging | MSG lanes + definition-driven MessageEngine v1 outputs | [Subsystems/Message_System_V1.md](Subsystems/Message_System_V1.md) |
-| Dash integration | Main/message/overlay visibility, screen state exports, and global dark-mode controls (`LalaLaunch.Dash.DarkMode.*`) | [Subsystems/Dash_Integration.md](Subsystems/Dash_Integration.md) |
+## Internal / developer documentation
+These pages support maintainers, support work, and Codex tasks. They are not part of the normal driver-facing documentation layer.
 
-## GitHub-facing user docs
-These pages are for end users and GitHub readers. They summarize the current supported workflow without replacing the canonical subsystem specifications above. When behavior details matter, the subsystem docs remain authoritative. The public set now covers quick start, the full user guide, dashboards, strategy, Shift Assist, the Launch system, H2H, and rejoin/pit assists.
+- [Internal/CODEX_CONTRACT.txt](Internal/CODEX_CONTRACT.txt)
+- [Internal/Architecture_Guardrails.md](Internal/Architecture_Guardrails.md)
+- [Internal/CODEX_TASK_TEMPLATE.txt](Internal/CODEX_TASK_TEMPLATE.txt)
+- [Internal/Plugin_UI_Tooltips.md](Internal/Plugin_UI_Tooltips.md)
+- [Internal/SimHubParameterInventory.md](Internal/SimHubParameterInventory.md)
+- [Internal/SimHubLogMessages.md](Internal/SimHubLogMessages.md)
+- [Internal/Code_Snapshot.md](Internal/Code_Snapshot.md)
 
 ## Freshness
 - Validated against commit: HEAD

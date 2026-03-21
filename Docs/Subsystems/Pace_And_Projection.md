@@ -17,7 +17,7 @@ It explicitly separates:
 - **Fallback pace** (when live data is insufficient).
 
 Canonical references:
-- Export definitions: `Docs/SimHubParameterInventory.md`
+- Export definitions: `Docs/Internal/SimHubParameterInventory.md`
 - Fuel integration rules: `Docs/FuelProperties_Spec.md`
 - Pit loss integration: `Subsystems/Pit_Timing_And_PitLoss.md`
 - Reset semantics: `Docs/Reset_And_Session_Identity.md`
@@ -171,7 +171,7 @@ Raw values remain available for diagnostics.
 ## Outputs (exports + logs)
 
 ### Core exports
-(See `SimHubParameterInventory.md` for authoritative list.)
+(See `Docs/Internal/SimHubParameterInventory.md` for authoritative list.)
 
 Typical outputs include:
 - `Pace.StintAvgLapTimeSec`
@@ -197,7 +197,7 @@ The subsystem emits INFO logs for:
 
 Logs are designed to explain *why* a projection changed.
 
-See `SimHubLogMessages.md` for canonical definitions.
+See `Docs/Internal/SimHubLogMessages.md` for canonical definitions.
 
 ---
 

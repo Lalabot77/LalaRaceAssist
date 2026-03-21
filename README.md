@@ -1,28 +1,28 @@
-﻿# Lala Race Assist Plugin
+# Lala Race Assist Plugin
 
-Lala Race Assist Plugin is a SimHub plugin for **iRacing** focused on race-ready strategy, dash support, launch instrumentation, pit assistance, rejoin awareness, Shift Assist, and race-context comparison tools.
+Lala Race Assist Plugin is a SimHub plugin for **iRacing** focused on race-ready strategy, dashboard support, launch instrumentation, pit assistance, rejoin awareness, Shift Assist, and head-to-head race context.
 
-This repo is the user-facing home for the plugin's **v1.0 release** documentation: installation, quick-start guidance, the full user manual, subsystem overviews, and release history.
+This repository now separates documentation into three layers:
+- **User-facing GitHub docs** in `Docs/` for drivers and dashboard users.
+- **Technical subsystem docs** in `Docs/Subsystems/` for internal behavior and ownership.
+- **Internal/developer docs** in `Docs/Internal/` for maintainers, support work, and Codex tasks.
 
 ## Supported scope
 
 - **Platform:** SimHub
 - **Sim:** iRacing only
-- **Primary use:** strategy planning, live race support, dashboard-driven driving aids, and post-launch review
+- **Primary use:** strategy planning, race support, dashboards, launch review, and profile-backed driver aids
 
 ## What it does
 
-- Learns and stores fuel, pace, pit-loss, and track marker data.
-- Provides a **Strategy** workflow for planning laps/time races using profile data or live session snapshots.
+- Learns and stores fuel, pace, pit-loss, marker, and profile data by car, track, and condition.
+- Provides a **Strategy** workflow for stable race planning using saved data or live session snapshots.
 - Publishes stable outputs to dashboards so the driver is not chasing noisy lap-to-lap changes.
-- Supports pit-entry assist, pit popups, rejoin warnings, the Launch system with Launch Analysis review, Shift Assist, and head-to-head race/track comparisons.
-- Coordinates multiple dash types, visibility options, and declutter modes without moving calculation ownership into the dashboards.
+- Supports Shift Assist, the Launch system, rejoin awareness, pit guidance, H2H race context, and profile-backed trust/lock workflows.
 
 ## Plugin vs dashboard responsibility
 
-The plugin is the source of truth for **learning, storage, and calculations**.
-
-Dashboards are there to **display outputs and offer limited interaction**. They do not become the source of truth for fuel math, strategy logic, H2H selection, or saved data.
+The plugin is the source of truth for **learning, storage, calculations, and exports**. Dashboards display those outputs and provide limited interaction, but they do not own strategy math, saved data, H2H selection, or launch logic.
 
 ## Install summary
 
@@ -30,11 +30,9 @@ Dashboards are there to **display outputs and offer limited interaction**. They 
 2. Keep **`RSC.iRacingExtraProperties.dll` required for now**.
 3. Restart SimHub.
 4. Import the dashboards you want to use.
-5. Open the plugin and start with the **Strategy** tab, then review **Dash Control** and **Settings**.
+5. Open the plugin and start with **Strategy**, then review **Profiles**, **Dash Control**, and **Settings**.
 
-For full instructions, use the docs below.
-
-## Documentation
+## User documentation
 
 - [Quick Start](Docs/Quick_Start.md)
 - [User Guide](Docs/User_Guide.md)
@@ -42,9 +40,18 @@ For full instructions, use the docs below.
 - [Strategy System](Docs/Strategy_System.md)
 - [Shift Assist](Docs/Shift_Assist.md)
 - [Launch System](Docs/Launch_System.md)
+- [Rejoin Assist](Docs/Rejoin_Assist.md)
+- [Pit Assist](Docs/Pit_Assist.md)
 - [H2H System](Docs/H2H_System.md)
-- [Rejoin and Pit Assists](Docs/Rejoin_And_Pit_Assists.md)
+- [Profiles System](Docs/Profiles_System.md)
+- [Fuel Model](Docs/Fuel_Model.md)
 - [Changelog](CHANGELOG.md)
+
+## Technical and internal docs
+
+- [Project Index](Docs/Project_Index.md)
+- [Subsystem docs](Docs/Subsystems/)
+- [Internal / developer docs](Docs/Internal/)
 
 ## Current UI structure
 
@@ -62,8 +69,9 @@ Presets are managed from **Strategy** through the **`Presets...`** modal flow. T
 
 - PreRace is an **on-grid/display layer** only. It does not replace the planner or change the live fuel model.
 - Live Snapshot mode can auto-drive relevant planning values. When live control is active, the corresponding manual controls are disabled.
-- Launch-related controls now live under **Settings → Launch Settings**, not Dash Control.
+- Launch-related controls live under **Settings → Launch Settings**, while **Launch Analysis** remains the saved-run review tab.
+- The future/global message system is not documented here as an active user feature.
 
 ## Feedback and requests
 
-If you hit a bug or want a feature, open a GitHub issue in this repo so the docs and code can stay in sync.
+If you hit a bug or want a feature, open a GitHub issue in this repo so the docs and code can stay aligned.
