@@ -8,7 +8,7 @@ Codex must treat this as mandatory engineering policy.
 
 ## 1. Scope Discipline (No Feature Creep)
 
-- Modify ONLY the files explicitly listed in the task.
+- Modify ONLY the files explicitly listed in the task, plus mandatory documentation files required to keep repo truth aligned.
 - Do NOT expand scope.
 - Do NOT introduce new subsystems.
 - Do NOT add new UI controls unless explicitly requested.
@@ -27,17 +27,33 @@ Every code change must update relevant documentation.
 
 Always evaluate and update as needed:
 
-- `SimHubParameterInventory.md` (exports / settings / properties)
-- `SimHubLogMessages.md` (new or modified log lines)
-- `Subsystems/<affected_subsystem>.md`
-- `Plugin_UI_Tooltips.md` (if UI text changes)
-- `Project_Index.md` (if subsystem description changes)
-- `RepoStatus.md` (update validation commit + summary)
+Technical / repo docs:
+- `Docs/SimHubParameterInventory.md` (exports / settings / properties)
+- `Docs/SimHubLogMessages.md` (new or modified log lines)
+- `Docs/Subsystems/<affected_subsystem>.md`
+- `Docs/Plugin_UI_Tooltips.md` (if UI text changes)
+- `Docs/Project_Index.md` (if subsystem description, navigation, or canonical doc map changes)
+- `Docs/RepoStatus.md` (update validation commit + summary)
 
-Documentation must:
-- Reflect final behavior.
+GitHub-facing user docs:
+- `README.md`
+- `CHANGELOG.md`
+- `Docs/Quick_Start.md`
+- `Docs/User_Guide.md`
+- any relevant user-facing feature page such as:
+  - `Docs/Dashboards.md`
+  - `Docs/Strategy_System.md`
+  - `Docs/H2H_System.md`
+  - `Docs/Rejoin_And_Pit_Assists.md`
+  - or other equivalent user docs that own the changed feature
+
+Rules:
+- If a task changes user-facing behaviour, workflow, UI labels, tab names, settings location, dash behaviour, install steps, or practical usage guidance, GitHub-facing user docs must be reviewed and updated in the same task.
+- If a task changes only internal implementation with no user-visible effect, user docs may remain unchanged, but Codex must explicitly state that no user-facing documentation changes were required.
+- Documentation must reflect final behavior.
 - Remove outdated statements.
-- Not mention deprecated settings unless marked `legacy (unused)`.
+- Do not mention deprecated settings unless marked `legacy (unused)`.
+- Do not document inactive systems as active features.
 
 No task is complete without documentation alignment.
 
@@ -56,9 +72,10 @@ For every non-trivial task:
 Before editing on any non-trivial task:
 
 - Do a no-edit analysis pass first.
-- State the relevant code paths or documentation paths being touched.
+- State the relevant code paths and documentation paths being touched.
 - State the system invariants that must remain true.
 - State the edit boundaries and keep them tight.
+- Explicitly state whether GitHub-facing user docs are expected to change.
 
 While implementing:
 
@@ -67,11 +84,13 @@ While implementing:
 - Do not widen file responsibilities without a clear need.
 - Keep architecture guardrails in mind; extend existing subsystem seams before creating new cross-cutting behaviour.
 - If canonical docs are missing or unclear, update the canonical doc rather than relying on ad hoc task wording.
+- If user-facing behaviour changes, update the owning GitHub-facing docs in the same task instead of leaving it for later.
 
 At task close:
 
 - Re-check the edited docs/files against the final repo state.
 - Update `Docs/RepoStatus.md` with the validation commit and summary when documentation or behaviour changed.
+- Confirm whether `README.md`, `CHANGELOG.md`, and user guides were reviewed and whether they changed.
 
 ---
 
@@ -137,4 +156,6 @@ A task is only complete when:
 - Scope respected.
 - No unintended behavior changes.
 - Documentation updated.
-- `RepoStatus.md` updated with new validation commit.
+- `Docs/RepoStatus.md` updated with new validation commit.
+- Relevant GitHub-facing docs reviewed and updated when the task changes anything user-facing.
+- `CHANGELOG.md` updated when the task changes user-visible behaviour worth surfacing in release history.

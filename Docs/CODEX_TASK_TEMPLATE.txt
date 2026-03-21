@@ -5,6 +5,7 @@ Use `Docs/Project_Index.md` as the canonical start point for docs discovery.
 Use affected `Docs/Subsystems/*.md` files as canonical local truth.
 Treat `Docs/Code_Snapshot.md` as orientation only if canonical docs conflict.
 Keep documentation aligned with final repo state and update `Docs/RepoStatus.md` at the end.
+Review and update GitHub-facing user docs when the task changes anything user-facing.
 
 Goal
 
@@ -27,7 +28,8 @@ Identify:
 - canonical entry points and owning docs
 - affected code paths and documentation paths
 - subsystem boundaries that must stay intact
-- any existing overlap/ambiguity that matters to the task
+- whether the task changes user-facing behaviour, workflow, UI wording, install steps, or release-visible functionality
+- which GitHub-facing docs must be reviewed
 
 Do not edit during this phase.
 
@@ -49,6 +51,7 @@ Before editing, state:
 - relevant code/doc paths
 - system invariants
 - edit boundaries
+- whether GitHub-facing docs are expected to change
 
 Implementation rules:
 - keep changes inside the owning subsystem where practical
@@ -56,16 +59,28 @@ Implementation rules:
 - do not widen file responsibilities without clear need
 - update canonical docs when behaviour/contracts change
 - preserve compatibility unless the task explicitly approves a break
+- if user-facing behaviour changes, update GitHub-facing docs in the same task
 
 Documentation updates required
 
 Check and update as needed:
+
+Technical / canonical docs:
 - `Docs/Subsystems/<affected>.md`
 - `Docs/SimHubParameterInventory.md`
 - `Docs/SimHubLogMessages.md`
 - `Docs/Plugin_UI_Tooltips.md`
 - `Docs/Project_Index.md`
 - `Docs/RepoStatus.md`
+
+GitHub-facing user docs:
+- `README.md`
+- `CHANGELOG.md`
+- `Docs/Quick_Start.md`
+- `Docs/User_Guide.md`
+- any relevant user-facing feature page(s)
+
+If any of the above do not require changes, state why.
 
 Phase 3 - Verification
 
@@ -74,6 +89,8 @@ Confirm:
 - invariants still hold
 - docs match the final repo state
 - `Docs/RepoStatus.md` reflects the task
+- relevant GitHub-facing docs were reviewed
+- `CHANGELOG.md` was updated if the change is user-visible
 - no unrelated behaviour changed
 
 Output format
@@ -82,4 +99,5 @@ Provide:
 1. Short summary of what changed
 2. Files added/updated
 3. Verification result
-4. Any follow-up observations or safe future cleanup candidates
+4. Documentation files reviewed and which ones changed
+5. Any follow-up observations or safe future cleanup candidates
