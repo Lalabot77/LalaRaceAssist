@@ -15,7 +15,7 @@ This repo is the user-facing home for the plugin's **v1.0 release** documentatio
 - Learns and stores fuel, pace, pit-loss, and track marker data.
 - Provides a **Strategy** workflow for planning laps/time races using profile data or live session snapshots.
 - Publishes stable outputs to dashboards so the driver is not chasing noisy lap-to-lap changes.
-- Supports pit-entry assist, pit popups, rejoin warnings, launch analysis, Shift Assist, and head-to-head race/track comparisons.
+- Supports pit-entry assist, pit popups, rejoin warnings, the Launch system with Launch Analysis review, Shift Assist, and head-to-head race/track comparisons.
 - Coordinates multiple dash types, visibility options, and declutter modes without moving calculation ownership into the dashboards.
 
 ## Plugin vs dashboard responsibility
@@ -40,6 +40,8 @@ For full instructions, use the docs below.
 - [User Guide](Docs/User_Guide.md)
 - [Dashboards](Docs/Dashboards.md)
 - [Strategy System](Docs/Strategy_System.md)
+- [Shift Assist](Docs/Shift_Assist.md)
+- [Launch System](Docs/Launch_System.md)
 - [H2H System](Docs/H2H_System.md)
 - [Rejoin and Pit Assists](Docs/Rejoin_And_Pit_Assists.md)
 - [Changelog](CHANGELOG.md)

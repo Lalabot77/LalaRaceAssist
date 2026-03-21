@@ -123,6 +123,8 @@ If something is repeatedly wrong, the usual cause is saved data or thresholds th
 - **Fuel or pace looks wrong:** unlock the affected values and gather clean laps.
 - **Pit-loss looks wrong:** relearn with one clean pit cycle, then lock again.
 - **Pit entry cues feel wrong:** review pit markers and pit-entry settings in the profile.
+- **Shift Assist cues feel early, late, or inconsistent:** review the learned or stored Shift Assist values for the active profile, then retest cleanly.
+- **Launch tuning feels inconsistent:** keep a stable baseline, record several launches, then review summaries/traces in **Launch Analysis** before changing settings.
 - **Rejoin or pit popups are distracting:** use **Cancel Message** in the moment, then review thresholds or saved data later.
 - **Dash looks wrong:** remember the plugin owns the data; the dash is usually only showing it.
 
@@ -131,5 +133,7 @@ If something is repeatedly wrong, the usual cause is saved data or thresholds th
 - [User Guide](User_Guide.md)
 - [Dashboards](Dashboards.md)
 - [Strategy System](Strategy_System.md)
+- [Shift Assist](Shift_Assist.md) for cueing, learning, and locking guidance
+- [Launch System](Launch_System.md) for Launch Settings and Launch Analysis workflow
 - [H2H System](H2H_System.md)
 - [Rejoin and Pit Assists](Rejoin_And_Pit_Assists.md)
