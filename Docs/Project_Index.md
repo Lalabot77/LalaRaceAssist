@@ -38,6 +38,8 @@ LalaLaunchPlugin is a SimHub plugin for iRacing that provides launch instrumenta
 - [User_Guide.md](User_Guide.md) - GitHub-facing end-user manual covering the current UI flow, saved-data model, dash control usage, launch settings location, and practical race-day habits.
 - [Dashboards.md](Dashboards.md) - user-facing overview of the supported dashboard package, visibility concepts, primary/support/overlay roles, and dash-vs-plugin responsibility split.
 - [Strategy_System.md](Strategy_System.md) - user-facing explanation of the Strategy tab workflow, Live Snapshot vs profile/manual planning, preset flow, and PreRace boundaries.
+- [Shift_Assist.md](Shift_Assist.md) - user-facing guide to Shift Assist cues, learning workflow, locking practice, and practical troubleshooting.
+- [Launch_System.md](Launch_System.md) - user-facing guide to Launch Settings, Launch Analysis, saved launch review, and careful tuning workflow.
 - [H2H_System.md](H2H_System.md) - concise user-facing overview of H2H Race and H2H Track, what they compare, and where they appear.
 - [Rejoin_And_Pit_Assists.md](Rejoin_And_Pit_Assists.md) - user-facing guide to rejoin warnings, pit popups, and pit entry assist trust/override workflow.
 
@@ -58,7 +60,7 @@ LalaLaunchPlugin is a SimHub plugin for iRacing that provides launch instrumenta
 | Dash integration | Main/message/overlay visibility, screen state exports, and global dark-mode controls (`LalaLaunch.Dash.DarkMode.*`) | [Subsystems/Dash_Integration.md](Subsystems/Dash_Integration.md) |
 
 ## GitHub-facing user docs
-These pages are for end users and GitHub readers. They summarize the current supported workflow without replacing the canonical subsystem specifications above. When behavior details matter, the subsystem docs remain authoritative.
+These pages are for end users and GitHub readers. They summarize the current supported workflow without replacing the canonical subsystem specifications above. When behavior details matter, the subsystem docs remain authoritative. The public set now covers quick start, the full user guide, dashboards, strategy, Shift Assist, the Launch system, H2H, and rejoin/pit assists.
 
 ## Freshness
 - Validated against commit: HEAD

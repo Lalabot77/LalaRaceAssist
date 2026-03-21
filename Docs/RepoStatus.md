@@ -9,19 +9,18 @@ Branch: work
 - No Git remote is configured in this checkout (`git remote -v` returns empty).
 
 ## Documentation sync status (requested set)
-- Refreshed `Docs/CODEX_CONTRACT.txt` and `Docs/CODEX_TASK_TEMPLATE.txt` so the internal Codex workflow now explicitly requires review/update decisions for GitHub-facing docs when tasks change user-visible behavior.
-- For this internal policy refresh, `README.md`, `CHANGELOG.md`, and the user-facing docs were reviewed and left unchanged because no user-facing behavior or workflow changed.
-- Added a GitHub-facing user documentation layer at repo root and `Docs/` with `README.md`, `CHANGELOG.md`, `Docs/Quick_Start.md`, `Docs/User_Guide.md`, `Docs/Dashboards.md`, `Docs/Strategy_System.md`, `Docs/H2H_System.md`, and `Docs/Rejoin_And_Pit_Assists.md`.
-- User-facing wording now reflects the current documented UI flow: `Strategy`, `Profiles`, `Dash Control`, `Launch Analysis`, `Settings`.
-- User docs now describe presets through the Strategy-tab `Presets...` modal flow, remove outdated `Use Live` wording, keep PreRace display-only, and place launch controls under `Settings -> Launch Settings`.
-- `Docs/Project_Index.md` now links the new GitHub-facing user docs while preserving subsystem docs as canonical technical truth.
-- `Docs/RepoStatus.md` refreshed for the current validation summary.
-- The GitHub-facing documentation structure introduced in PR #495 is now aligned with the v1.0 release wording and public release framing.
+- Reviewed the GitHub-facing documentation set for missing public coverage and confirmed the two remaining major user-facing gaps were dedicated pages for Shift Assist and the Launch system.
+- Added `Docs/Shift_Assist.md` as the public user-facing Shift Assist page, covering cue types, learning workflow, profile-backed storage, first-use advice, and troubleshooting without changing subsystem ownership.
+- Added `Docs/Launch_System.md` as the public user-facing Launch system page, covering `Settings -> Launch Settings`, Launch Analysis, saved summaries/traces, and careful launch tuning workflow.
+- Updated `README.md`, `Docs/User_Guide.md`, `Docs/Quick_Start.md`, and `Docs/Project_Index.md` so the new pages are easy to discover and cross-linked from the main public documentation flow.
+- Kept Launch wording aligned to the current UI split: live launch controls under `Settings -> Launch Settings`, with `Launch Analysis` remaining the separate review tab for saved traces and summaries.
+- Kept Shift Assist wording aligned to the current ownership model: the plugin owns learning, storage, and calculations; dashboards remain display/interaction surfaces only.
+- Reviewed `CHANGELOG.md` and left it unchanged because it did not claim the GitHub-facing documentation set was already complete enough to require a release-history correction for these additions.
 
 ## Delivery status highlights
-- The repo now has a clean GitHub-facing documentation structure for installation, quick start, the full user guide, dashboards, strategy, H2H, driver assists, and release history.
+- The repo now has a clean GitHub-facing documentation structure for installation, quick start, the full user guide, dashboards, strategy, Shift Assist, the Launch system, H2H, driver assists, and release history.
 - User docs have been aligned to the current UI and ownership model without changing runtime code, telemetry logic, exports, settings behavior, or dashboard ownership boundaries.
-- Dash Control remains documented as dash-oriented, while launch controls are documented under `Settings -> Launch Settings`.
+- Dash Control remains documented as dash-oriented, while launch controls are documented under `Settings -> Launch Settings` and `Launch Analysis` remains the separate review surface.
 - Strategy remains the planning entry point, with Live Snapshot/manual distinctions and PreRace display-only positioning called out explicitly.
 
 ## Notes

@@ -146,7 +146,7 @@ Launch controls belong in **Settings → Launch Settings**.
 
 ## 6. Launch settings and launch analysis
 
-Launch behaviour is configured in **Settings → Launch Settings**.
+Launch behaviour is configured in **Settings → Launch Settings**. For the user-facing launch workflow and tuning habits, see [Launch System](Launch_System.md).
 
 Typical launch controls include:
 
@@ -156,9 +156,18 @@ Typical launch controls include:
 - launch summary and trace capture locations,
 - launch logging options.
 
-**Launch Analysis** is the separate top-level tab used to review saved launch traces and summaries.
+**Launch Analysis** is the separate top-level tab used to review saved launch traces and summaries. Keep live launch setup in Settings, then use Launch Analysis for post-run review.
 
-## 7. Dashboards
+
+## 7. Shift Assist
+
+Shift Assist is a driver aid for RPM-based shift cueing. It can provide a **Shift Sound**, **Shift Light**, and an additional urgent reminder if you stay in the gear too long after the main cue.
+
+Use it to improve shift timing consistency, then review learned values and lock gears once they are stable. It is still a cueing aid, not an automatic shift feature.
+
+For setup and first-use guidance, see [Shift Assist](Shift_Assist.md).
+
+## 8. Dashboards
 
 The supported dashboard package normally includes:
 
@@ -171,7 +180,7 @@ Use visibility settings, primary mode, and declutter mode to decide what appears
 
 For details, see [Dashboards](Dashboards.md).
 
-## 8. H2H and race context
+## 9. H2H and race context
 
 H2H is a read-only race-context aid for the driver.
 
@@ -182,7 +191,7 @@ Use it for awareness and comparison, not as something you constantly configure.
 
 For details, see [H2H System](H2H_System.md).
 
-## 9. Rejoin, pit entry, and pit popups
+## 10. Rejoin, pit entry, and pit popups
 
 The plugin includes practical driver aids for:
 
@@ -196,7 +205,7 @@ If a popup is wrong once, cancel or override it and keep driving. If it is wrong
 
 For details, see [Rejoin and Pit Assists](Rejoin_And_Pit_Assists.md).
 
-## 10. Practical best practice
+## 11. Practical best practice
 
 - Start each new car/track combination by gathering clean laps.
 - Validate pit-loss and track markers before locking them.
