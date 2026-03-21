@@ -9,6 +9,8 @@ Branch: work
 - No Git remote is configured in this checkout (`git remote -v` returns empty).
 
 ## Documentation sync status (requested set)
+- Refreshed `Docs/CODEX_CONTRACT.txt` and `Docs/CODEX_TASK_TEMPLATE.txt` so the internal Codex workflow now explicitly requires review/update decisions for GitHub-facing docs when tasks change user-visible behavior.
+- For this internal policy refresh, `README.md`, `CHANGELOG.md`, and the user-facing docs were reviewed and left unchanged because no user-facing behavior or workflow changed.
 - Added a GitHub-facing user documentation layer at repo root and `Docs/` with `README.md`, `CHANGELOG.md`, `Docs/Quick_Start.md`, `Docs/User_Guide.md`, `Docs/Dashboards.md`, `Docs/Strategy_System.md`, `Docs/H2H_System.md`, and `Docs/Rejoin_And_Pit_Assists.md`.
 - User-facing wording now reflects the current documented UI flow: `Strategy`, `Profiles`, `Dash Control`, `Launch Analysis`, `Settings`.
 - User docs now describe presets through the Strategy-tab `Presets...` modal flow, remove outdated `Use Live` wording, keep PreRace display-only, and place launch controls under `Settings -> Launch Settings`.
