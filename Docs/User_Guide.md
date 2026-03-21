@@ -1,6 +1,8 @@
-# User Guide
+﻿# User Guide
 
 This guide explains the supported user-facing parts of LalaLaunchPlugin and the dashboard package.
+
+> **Scope note:** The global message system is not operational yet and is intentionally not documented here as a user feature. Radio Messages can still be treated as a functional dash feature where the current dashboards expose them.
 
 ## 1. Responsibility split
 

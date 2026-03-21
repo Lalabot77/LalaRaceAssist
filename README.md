@@ -1,8 +1,8 @@
-# LalaLaunchPlugin
+﻿# LalaLaunchPlugin
 
 LalaLaunchPlugin is a SimHub plugin for **iRacing** focused on race-ready strategy, dash support, launch instrumentation, pit assistance, rejoin awareness, Shift Assist, and race-context comparison tools.
 
-This repo is the user-facing home for installation, quick-start guidance, the full user manual, subsystem overviews, and release history.
+This repo is the user-facing home for the plugin's **v1.0 release** documentation: installation, quick-start guidance, the full user manual, subsystem overviews, and release history.
 
 ## Supported scope
 

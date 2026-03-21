@@ -1,6 +1,6 @@
 ﻿# Project Index
 
-Validated against commit: 3f0af12824336625dd449cc0329702ac50394396
+Validated against commit: HEAD
 Last updated: 2026-03-21
 Branch: work
 
@@ -61,6 +61,6 @@ LalaLaunchPlugin is a SimHub plugin for iRacing that provides launch instrumenta
 These pages are for end users and GitHub readers. They summarize the current supported workflow without replacing the canonical subsystem specifications above. When behavior details matter, the subsystem docs remain authoritative.
 
 ## Freshness
-- Validated against commit: 3f0af12824336625dd449cc0329702ac50394396
+- Validated against commit: HEAD
 - Date: 2026-03-21
 - Branch: work

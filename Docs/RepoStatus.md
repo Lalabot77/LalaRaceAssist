@@ -14,6 +14,7 @@ Branch: work
 - User docs now describe presets through the Strategy-tab `Presets...` modal flow, remove outdated `Use Live` wording, keep PreRace display-only, and place launch controls under `Settings -> Launch Settings`.
 - `Docs/Project_Index.md` now links the new GitHub-facing user docs while preserving subsystem docs as canonical technical truth.
 - `Docs/RepoStatus.md` refreshed for the current validation summary.
+- The GitHub-facing documentation structure introduced in PR #495 is now aligned with the v1.0 release wording and public release framing.
 
 ## Delivery status highlights
 - The repo now has a clean GitHub-facing documentation structure for installation, quick start, the full user guide, dashboards, strategy, H2H, driver assists, and release history.
