@@ -6,7 +6,7 @@ If you want the full detail afterwards, continue to the [User Guide](User_Guide.
 
 ## 1. What this plugin is for
 
-LalaLaunchPlugin is a SimHub plugin for **iRacing** that:
+Lala Race Assist Plugin is a SimHub plugin for **iRacing** that:
 
 - learns fuel, pace, pit-loss, and marker data,
 - stores that data per car, track, and condition,
