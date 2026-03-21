@@ -1,6 +1,6 @@
 # Repository status
 
-Validated against commit: dfee7ec
+Validated against commit: HEAD
 Last updated: 2026-03-21
 Branch: work
 
@@ -9,21 +9,18 @@ Branch: work
 - No Git remote is configured in this checkout (`git remote -v` returns empty).
 
 ## Documentation sync status (requested set)
-- Completed a documentation-structure cleanup only; no runtime/plugin code, XAML, JSON, dashboard, namespace, or property files were changed.
-- Restructured the repo docs into three layers: user-facing GitHub docs in `Docs/`, technical subsystem docs in `Docs/Subsystems/`, and internal/developer docs in `Docs/Internal/`.
-- Moved Codex/maintainer reference docs into `Docs/Internal/`: contract, architecture guardrails, task template, parameter inventory, tooltip inventory, log catalogue, and orientation snapshot.
-- Replaced the combined `Docs/Rejoin_And_Pit_Assists.md` user page with separate driver-facing pages for `Docs/Rejoin_Assist.md` and `Docs/Pit_Assist.md`.
-- Added dedicated top-level user pages for `Docs/Profiles_System.md` and `Docs/Fuel_Model.md` so profile trust/locking and fuel-learning behavior are now documented as first-class driver-facing systems.
-- Updated `README.md`, `Docs/Project_Index.md`, `Docs/User_Guide.md`, `Docs/Quick_Start.md`, and the existing user-facing system pages so navigation now reflects the new three-layer documentation structure.
-- Updated user-facing wording to use **Lala Race Assist Plugin** where appropriate while preserving internal technical names such as `LalaLaunch.*` in technical/internal docs.
-- Reviewed `CHANGELOG.md` and left it unchanged because this task reorganizes docs and branding wording only; it does not correct a public release-history claim about runtime behavior.
+- Completed a documentation-only README polish pass; no runtime/plugin code, XAML, JSON, dashboard, namespace, or property files were changed.
+- Refined `README.md` into a more public-facing landing page with a shorter intro, a scan-friendly Core Systems section, clearer responsibility boundaries, grouped documentation links, and tighter notes for first-time GitHub visitors.
+- Preserved the repo's three-layer documentation structure: user-facing docs in `Docs/`, technical subsystem docs in `Docs/Subsystems/`, and internal/developer docs in `Docs/Internal/`.
+- Preserved all existing user-facing documentation destinations for Quick Start, User Guide, Dashboards, Strategy System, Shift Assist, Launch System, Rejoin Assist, Pit Assist, H2H System, Profiles System, and Fuel Model.
+- Kept branding as **Lala Race Assist Plugin** and did not document the future/global message system as active.
+- Reviewed `Docs/Quick_Start.md`, `Docs/User_Guide.md`, `Docs/Dashboards.md`, and `Docs/Project_Index.md` during the README polish pass and left them unchanged because the task was presentation-only.
+- Reviewed `CHANGELOG.md` and left it unchanged because this task does not change runtime behavior or release-visible functionality.
 
 ## Delivery status highlights
-- Top-level user docs now read as a driver-facing layer centered on what the plugin does, what the driver sees, how to use it, and what to trust.
-- `Docs/Subsystems/` remains the technical/internal architecture layer for ownership, calculations, and export behavior.
-- `Docs/Internal/` now contains the maintainer/Codex support material needed for future tasks without mixing it into the user-facing docs.
-- Strategy remains the user-facing planning term, while Fuel Planner terminology remains technical/internal only.
-- Opponents and CarSA remain subsystem-level supporting docs; H2H stays the user-facing driver outcome page.
+- README now prioritizes first-screen clarity for public visitors by surfacing what the plugin covers before deeper documentation structure.
+- Documentation links are grouped into getting started, driver systems, and dash/reference sections for faster scanning.
+- Plugin-vs-dashboard ownership and current UI boundaries remain explicit without repeating the same ideas across multiple sections.
 
 ## Validation note
-- Validation recorded against commit `dfee7ec` (`Restructure documentation layers`).
+- Validation recorded against `HEAD` (`Polish README landing page`).
