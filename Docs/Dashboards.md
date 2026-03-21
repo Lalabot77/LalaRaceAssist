@@ -1,128 +1,54 @@
 # Dashboards
 
-This page covers the practical dashboard package at a user-facing level.
+This page explains the driver-facing dashboard layer for Lala Race Assist Plugin.
 
 ## 1. What dashboards are for
 
-Dashboards are the display layer for LalaLaunchPlugin.
+Dashboards are the display surface for the plugin. They help the driver see:
 
-They are there to:
+- strategy status,
+- fuel confidence and pit context,
+- H2H comparisons,
+- rejoin and pit alerts,
+- launch and Shift Assist cues,
+- decluttered race information in the layout that suits the driver.
 
-- show strategy outputs,
-- show driver aids,
-- present race context,
-- offer limited interaction through bindings or touch areas.
+The dashboards are not the source of truth for learning, storage, strategy math, or saved decisions.
 
-They do **not** own calculations, saved data, strategy math, or learning rules.
+## 2. Typical dashboard roles
 
-## 2. Main dashboard types
+A common setup includes:
 
-### Primary race dash
+- a **primary race dash** for core race-critical data,
+- a **strategy/support dash** for deeper planning context,
+- an **overlay** for compact alerts,
+- optional **Lovely-based layouts** when using that ecosystem.
 
-Use this as the main driver-facing view.
+## 3. What the driver controls
 
-Typical use:
-
-- current race information,
-- core strategy outputs,
-- pit and rejoin alerts,
-- shift and launch visibility where applicable.
-
-### Strategy / support dash
-
-Use this for extra context that does not always need to live on the main screen.
-
-Typical use:
-
-- strategy support values,
-- additional fuel and stint context,
-- H2H or traffic support,
-- setup and monitoring screens.
-
-### Overlay
-
-Use this when you want compact alerts or support widgets on top of another layout.
-
-Typical use:
-
-- alerts,
-- compact pit information,
-- rejoin warnings,
-- minimal strategy support.
-
-### Lovely-based layouts
-
-If you use Lovely integration, the repo may also include or support Lovely-oriented layouts.
-
-Treat these the same way: they are still a presentation layer consuming plugin outputs.
-
-## 3. Dash visibility and page intent
-
-Dash Control lets you manage what appears on the main dash, message/support dash, and overlay separately.
-
-Typical visibility choices include:
-
-- launch assist,
-- pit assists,
-- automatic pit screen,
-- rejoin assist,
-- verbose race messages,
-- race flags,
-- radio messages,
-- traffic alerts.
-
-These visibility choices change **where** information appears. They do not change the underlying subsystem logic.
-
-## 4. Main dash controls
-
-The core dash controls are:
+The main controls most users care about are:
 
 - **Cancel Message**
 - **Toggle Pit Screen**
 - **Primary Dash Mode**
 - **Declutter Mode**
 
-### Cancel Message
+These controls affect **presentation and visibility**. They do not change the ownership of the underlying plugin systems.
 
-Use this to dismiss or temporarily suppress pit/rejoin messaging when you need less distraction.
+## 4. Dash Control philosophy
 
-### Toggle Pit Screen
+Dash Control is dash-oriented. Use it to manage:
 
-Use this to show or hide the pit screen when you want to override the automatic pit-screen behavior.
+- which surfaces are visible,
+- how much information is shown,
+- whether pit screens appear or are manually overridden,
+- how the display behaves across different dashboard layouts.
 
-### Primary Dash Mode
+Do **not** use Dash Control as the mental home for strategy, launch logic, or saved profile learning.
 
-Use this to cycle the main dash presentation mode.
+## 5. Strategy, PreRace, and display boundaries
 
-### Declutter Mode
-
-Use this to reduce visual load when you want a cleaner display.
-
-## 5. Global Dash Functions
-
-User-facing groups are:
-
-### General
-
-For broad dash behavior such as automatic screen selection at session start.
-
-### Dark Mode
-
-For global dash dark-mode behavior, brightness, and manual/auto choices.
-
-### Lovely integration
-
-For Lovely-specific dark-mode coordination when Lovely is present.
-
-### Fuel
-
-For user-facing dash consumption settings around fuel confidence display and pit-in reserve intent.
-
-These are presentation-oriented controls. They do not transfer ownership of strategy or fuel logic to the dash.
-
-## 6. Strategy, PreRace, and dash wording
-
-The dashboards may show:
+Dashboards can show:
 
 - live strategy values,
 - planner values,
@@ -131,35 +57,37 @@ The dashboards may show:
 Keep the roles straight:
 
 - **Planner values** come from the Strategy workflow.
-- **Live values** come from the runtime live systems.
+- **Live values** come from the runtime systems.
 - **PreRace** is an on-grid/display layer only.
 
-Do not treat PreRace screens as proof that the dash owns planner calculations.
+Seeing a value on a dash does not mean the dash owns that calculation.
 
-## 7. Pit and rejoin screens
+## 6. Pit and rejoin screens
 
-Pit and rejoin items are some of the most important practical dash surfaces.
+Pit and rejoin surfaces are some of the most practically useful dashboard pages.
 
-- Pit screens can appear automatically when pit context is active.
+- Pit screens may appear automatically when pit context becomes relevant.
 - The driver can override with **Toggle Pit Screen**.
-- Rejoin alerts are there to support decision-making, not to replace driver judgment.
-- If alerts are repeatedly wrong, the usual fix is profile review or saved-data review.
+- Rejoin alerts support decision-making, but they do not replace driver judgment.
+- If these surfaces are repeatedly wrong, the normal fix is profile or saved-data review rather than dash redesign.
 
-## 8. H2H on dashboards
+For the feature-specific guidance, see [Rejoin Assist](Rejoin_Assist.md) and [Pit Assist](Pit_Assist.md).
 
-Supported dashes may show:
+## 7. H2H on dashboards
 
-- **H2H Race** for same-class race-order comparisons,
-- **H2H Track** for nearby same-class on-track comparisons.
+Supported dashboards may show:
 
-These are read-only race-context tools. The dash shows them; the plugin owns the comparison outputs.
+- **H2H Race** for same-class race-order comparisons
+- **H2H Track** for same-class nearby on-track comparisons
 
-## 9. Practical layout advice
+The dash shows them; the plugin owns the comparison outputs. See [H2H System](H2H_System.md).
+
+## 8. Practical layout advice
 
 A simple setup usually works best:
 
-- **Main dash:** race-critical information only.
-- **Support dash:** extra strategy and race-context detail.
-- **Overlay:** compact alerts and helper widgets.
+- **Main dash:** race-critical information only
+- **Support dash:** extra strategy and race-context detail
+- **Overlay:** compact alerts and helper widgets
 
-If a screen feels busy, use **Primary Dash Mode**, **Declutter Mode**, and visibility toggles before assuming a subsystem is wrong.
+If a screen feels too busy, use **Primary Dash Mode**, **Declutter Mode**, and visibility choices before assuming a subsystem is wrong.

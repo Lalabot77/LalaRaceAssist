@@ -12,7 +12,7 @@ If this conflicts with `Project_Index.md` or canonical contract docs, treat this
 ## Architectural notes (high level)
 - Core runtime remains centered in `LalaLaunch.cs` with subsystem engines for pit, rejoin, CarSA, opponents, and messaging.
 - Shift Assist is now a first-class subsystem: runtime evaluator (`ShiftAssistEngine`), audio resolver/player (`ShiftAssistAudio`), settings plumbing in `LaunchPluginSettings`, per-tick exports, action bindings, and delay telemetry capture for tuning.
-- Canonical signal and log contracts are maintained in `SimHubParameterInventory.md` and `SimHubLogMessages.md`; this file is a quick orientation snapshot only.
+- Canonical signal and log contracts are maintained in `Docs/Internal/SimHubParameterInventory.md` and `Docs/Internal/SimHubLogMessages.md`; this file is a quick orientation snapshot only.
 
 ## Since PR426 (docs refresh delta)
 - Refreshed canonical docs metadata and validation hashes to the current workspace head/date.

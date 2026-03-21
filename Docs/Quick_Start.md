@@ -1,17 +1,17 @@
 # Quick Start
 
-This guide is for getting the plugin working quickly with trustworthy data.
+This guide gets Lala Race Assist Plugin working quickly with trustworthy data. For the full overview afterwards, continue to the [User Guide](User_Guide.md).
 
-If you want the full detail afterwards, continue to the [User Guide](User_Guide.md).
+## 1. What the plugin is for
 
-## 1. What this plugin is for
+Lala Race Assist Plugin is a SimHub plugin for **iRacing** that helps the driver with:
 
-Lala Race Assist Plugin is a SimHub plugin for **iRacing** that:
-
-- learns fuel, pace, pit-loss, and marker data,
-- stores that data per car, track, and condition,
-- publishes stable outputs for dashboards,
-- supports strategy planning, launch review, pit assistance, rejoin warnings, Shift Assist, and H2H race context.
+- stable race **Strategy** planning,
+- dashboard-driven situational awareness,
+- profile-backed **fuel** and **pace** learning,
+- **Shift Assist** and **Launch** support,
+- **Rejoin** and **Pit** assists,
+- **H2H** race-context comparisons.
 
 ## 2. Install
 
@@ -24,22 +24,22 @@ Copy the plugin files into your SimHub installation, then restart SimHub.
 
 ### Optional
 
-- `DahlDesign.dll` if you want the supported Lala dash package that depends on it.
+- `DahlDesign.dll` if you want the supported Lala dashboard package that depends on it.
 
 ## 3. Import dashboards
 
 Typical layout:
 
-- **Primary race dash** for the main driver view.
-- **Strategy / support dash** for extra planning and support data.
-- **Overlay** for compact alerts.
-- **Lovely-based layouts** if you use the Lovely ecosystem.
+- **Primary race dash** for the main driver view
+- **Strategy/support dash** for planning and context
+- **Overlay** for compact alerts
+- **Lovely-based layouts** if you use the Lovely ecosystem
 
-Dashboards display plugin outputs. They do not learn data or become the source of truth.
+Dashboards display plugin outputs. They do not learn data or replace the plugin as the source of truth. For dashboard-specific guidance, see [Dashboards](Dashboards.md).
 
 ## 4. First plugin check
 
-Open the plugin in SimHub and confirm the top-level tabs are:
+Open the plugin in SimHub and confirm the main navigation order:
 
 1. **Strategy**
 2. **Profiles**
@@ -47,93 +47,49 @@ Open the plugin in SimHub and confirm the top-level tabs are:
 4. **Launch Analysis**
 5. **Settings**
 
-If you are looking for presets, use **Strategy → `Presets...`**. There is no separate top-level Presets tab.
+Important current rules:
 
-## 5. Bind the important controls
+- **Strategy** is the main planner.
+- There is **no separate Presets tab**.
+- Presets are managed from **Strategy** through **`Presets...`**.
+- Launch setup lives in **Settings → Launch Settings**.
 
-Open **Dash Control** and bind at least these:
+## 5. Best first session
 
-- **Cancel Message**
-- **Toggle Pit Screen**
+For a new car/track combination:
 
-Strongly recommended after that:
+1. Start with **Strategy** and confirm the selected profile and track.
+2. Drive a few clean laps so the plugin can begin learning fuel and pace.
+3. Review **Profiles** before locking anything.
+4. Import the dashboards you actually plan to use.
+5. Add only the core controls you need at first:
+   - **Cancel Message**
+   - **Toggle Pit Screen**
+   - **Primary Dash Mode**
+   - **Declutter Mode**
 
-- **Primary Dash Mode**
-- **Declutter Mode**
+## 6. What to trust early vs later
 
-These are the main everyday dash controls.
+Early in a combo, treat the plugin as **learning**. Once you have clean representative data, move toward the normal pattern:
 
-## 6. First session habits
+**learn → validate → lock → trust**
 
-### Drive clean laps first
+That applies especially to:
 
-Before judging the numbers, drive a few clean laps without:
+- profile values,
+- fuel model confidence,
+- pit-loss and marker data,
+- Shift Assist learning,
+- any assist that depends on saved thresholds or track markers.
 
-- pit entry,
-- obvious incidents,
-- invalid laps,
-- messy off-tracks.
+## 7. Where to go next
 
-The plugin needs clean laps to build trustworthy live fuel and pace confidence.
-
-### Learn pit data once per car/track
-
-Do at least one clean pit cycle so the plugin can learn or confirm:
-
-- pit-lane loss,
-- pit entry marker,
-- pit exit marker.
-
-Once those values look sensible, review and lock them in **Profiles**.
-
-### Do not lock too early
-
-Avoid locking fuel or average lap-time values immediately. Let the system learn representative data first.
-
-## 7. Start with Strategy
-
-The **Strategy** tab is the planning entry point.
-
-### Understand the two planning modes
-
-- **Profile / manual planning:** stable planning from saved data and your chosen inputs.
-- **Live Snapshot:** follows live session inputs when they are available and ready.
-
-When Live Snapshot is active, the relevant manual controls are disabled. There are no old “Use Live” toggles to manage.
-
-### PreRace reminder
-
-PreRace belongs to the Strategy workflow, but it is only an **on-grid/display layer**. It does not change planner calculations.
-
-## 8. During a race: what to trust
-
-Once the system has settled, you can usually trust:
-
-- stable strategy outputs,
-- locked pit-loss and marker data,
-- pit-entry assist,
-- pit popups,
-- rejoin warnings,
-- H2H race/track widgets on supported dashboards.
-
-If something is repeatedly wrong, the usual cause is saved data or thresholds that need review.
-
-## 9. Quick fixes when something looks wrong
-
-- **Fuel or pace looks wrong:** unlock the affected values and gather clean laps.
-- **Pit-loss looks wrong:** relearn with one clean pit cycle, then lock again.
-- **Pit entry cues feel wrong:** review pit markers and pit-entry settings in the profile.
-- **Shift Assist cues feel early, late, or inconsistent:** review the learned or stored Shift Assist values for the active profile, then retest cleanly.
-- **Launch tuning feels inconsistent:** keep a stable baseline, record several launches, then review summaries/traces in **Launch Analysis** before changing settings.
-- **Rejoin or pit popups are distracting:** use **Cancel Message** in the moment, then review thresholds or saved data later.
-- **Dash looks wrong:** remember the plugin owns the data; the dash is usually only showing it.
-
-## 10. Next reading
-
-- [User Guide](User_Guide.md)
-- [Dashboards](Dashboards.md)
-- [Strategy System](Strategy_System.md)
-- [Shift Assist](Shift_Assist.md) for cueing, learning, and locking guidance
-- [Launch System](Launch_System.md) for Launch Settings and Launch Analysis workflow
-- [H2H System](H2H_System.md)
-- [Rejoin and Pit Assists](Rejoin_And_Pit_Assists.md)
+- [User Guide](User_Guide.md) for the full driver-facing overview
+- [Strategy System](Strategy_System.md) for planning workflow
+- [Profiles System](Profiles_System.md) for saved-data trust and locking
+- [Fuel Model](Fuel_Model.md) for learning and confidence
+- [Dashboards](Dashboards.md) for display layout guidance
+- [Shift Assist](Shift_Assist.md) for cue setup and locking
+- [Launch System](Launch_System.md) for launch setup and review
+- [Rejoin Assist](Rejoin_Assist.md) and [Pit Assist](Pit_Assist.md) for driver aids
+- [H2H System](H2H_System.md) for race-context comparisons

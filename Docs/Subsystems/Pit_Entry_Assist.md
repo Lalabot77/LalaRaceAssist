@@ -11,8 +11,8 @@ Branch: work
 - **Pit Entry Assist** gives a driver-facing cue to hit pit speed at the entry line using distance, speed, and a constant-decel model. It publishes both dash-friendly properties and structured logs for post-run analysis. 
 - **Deceleration Capture (DecelCap)** is a developer-only instrumentation tool to empirically measure achievable braking decel per car; it is disabled by default and not part of runtime behaviour.
 
-Canonical exports: `Docs/SimHubParameterInventory.md`  
-Canonical logs: `Docs/SimHubLogMessages.md`
+Canonical exports: `Docs/Internal/SimHubParameterInventory.md`  
+Canonical logs: `Docs/Internal/SimHubLogMessages.md`
 
 ---
 

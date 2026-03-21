@@ -1,0 +1,77 @@
+# Pit Assist
+
+This page covers the driver-facing pit support in Lala Race Assist Plugin.
+
+## 1. What Pit Assist includes
+
+The pit-facing driver aids include:
+
+- **pit popups** and pit-context screens,
+- **Pit Entry Assist** braking guidance,
+- profile-backed pit-loss and marker behavior that affects what the driver sees.
+
+These systems are there to reduce avoidable mistakes under pressure. They do not remove the need for driver judgment.
+
+## 2. Pit popups and pit screens
+
+Pit popups are the driver-facing pit-context prompts shown on supported dashboards. They are useful for things like:
+
+- pit screen context,
+- pit-assist visibility,
+- automatic pit-related prompts.
+
+### What to trust
+
+Trust pit popups most when your pit data is good. That usually means:
+
+- pit-loss has been learned cleanly,
+- pit markers are sensible,
+- the track record has been validated and locked where appropriate.
+
+### When to cancel or override
+
+- Use **Toggle Pit Screen** if you want to force the pit screen on or off.
+- Use **Cancel Message** if a popup needs to be dismissed right now.
+
+## 3. Pit Entry Assist
+
+Pit Entry Assist helps you arrive at the pit entry line at the right speed. It uses saved marker context plus braking guidance to tell you whether you are:
+
+- comfortably early,
+- getting close,
+- braking now,
+- already late.
+
+### What to trust
+
+Trust Pit Entry Assist most when:
+
+- the track markers are correct,
+- the pit-entry settings fit the car,
+- you have validated the system with at least one clean pit entry.
+
+### When to override with judgment
+
+Override it with your own judgment when:
+
+- track conditions are unusual,
+- traffic forces a compromised line,
+- the saved settings are not yet validated for that car/track.
+
+## 4. If pit behavior feels repeatedly wrong
+
+If pit popups or Pit Entry Assist keep feeling wrong, review:
+
+- saved pit markers,
+- saved pit-loss data,
+- pit entry deceleration settings,
+- pit entry buffer settings,
+- whether the current car/track data was learned cleanly.
+
+## 5. Practical trust model
+
+A good rule is:
+
+- **Trust the system once the underlying data is good.**
+- **Override it when the moment demands it.**
+- **Relearn or review the saved data if it is repeatedly wrong.**

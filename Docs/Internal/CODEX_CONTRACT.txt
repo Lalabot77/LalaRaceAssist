@@ -28,10 +28,10 @@ Every code change must update relevant documentation.
 Always evaluate and update as needed:
 
 Technical / repo docs:
-- `Docs/SimHubParameterInventory.md` (exports / settings / properties)
-- `Docs/SimHubLogMessages.md` (new or modified log lines)
+- `Docs/Internal/SimHubParameterInventory.md` (exports / settings / properties)
+- `Docs/Internal/SimHubLogMessages.md` (new or modified log lines)
 - `Docs/Subsystems/<affected_subsystem>.md`
-- `Docs/Plugin_UI_Tooltips.md` (if UI text changes)
+- `Docs/Internal/Plugin_UI_Tooltips.md` (if UI text changes)
 - `Docs/Project_Index.md` (if subsystem description, navigation, or canonical doc map changes)
 - `Docs/RepoStatus.md` (update validation commit + summary)
 
@@ -44,7 +44,7 @@ GitHub-facing user docs:
   - `Docs/Dashboards.md`
   - `Docs/Strategy_System.md`
   - `Docs/H2H_System.md`
-  - `Docs/Rejoin_And_Pit_Assists.md`
+  - `Docs/Rejoin_Assist.md`
   - or other equivalent user docs that own the changed feature
 
 Rules:
@@ -67,7 +67,7 @@ For every non-trivial task:
 - Use `Docs/Project_Index.md` to locate the canonical docs for the affected area.
 - Read the relevant `Docs/Subsystems/*.md` files before editing code or subsystem docs.
 - Check `Docs/RepoStatus.md` before implementation when current validated state matters.
-- Treat `Docs/Code_Snapshot.md` as orientation only. If it conflicts with canonical docs, the canonical docs win.
+- Treat `Docs/Internal/Code_Snapshot.md` as orientation only. If it conflicts with canonical docs, the canonical docs win.
 
 Before editing on any non-trivial task:
 

@@ -1,6 +1,6 @@
-﻿# Repository status
+# Repository status
 
-Validated against commit: HEAD
+Validated against commit: dfee7ec
 Last updated: 2026-03-21
 Branch: work
 
@@ -9,19 +9,21 @@ Branch: work
 - No Git remote is configured in this checkout (`git remote -v` returns empty).
 
 ## Documentation sync status (requested set)
-- Reviewed the GitHub-facing documentation set for missing public coverage and confirmed the two remaining major user-facing gaps were dedicated pages for Shift Assist and the Launch system.
-- Added `Docs/Shift_Assist.md` as the public user-facing Shift Assist page, covering cue types, learning workflow, profile-backed storage, first-use advice, and troubleshooting without changing subsystem ownership.
-- Added `Docs/Launch_System.md` as the public user-facing Launch system page, covering `Settings -> Launch Settings`, Launch Analysis, saved summaries/traces, and careful launch tuning workflow.
-- Updated `README.md`, `Docs/User_Guide.md`, `Docs/Quick_Start.md`, and `Docs/Project_Index.md` so the new pages are easy to discover and cross-linked from the main public documentation flow.
-- Kept Launch wording aligned to the current UI split: live launch controls under `Settings -> Launch Settings`, with `Launch Analysis` remaining the separate review tab for saved traces and summaries.
-- Kept Shift Assist wording aligned to the current ownership model: the plugin owns learning, storage, and calculations; dashboards remain display/interaction surfaces only.
-- Reviewed `CHANGELOG.md` and left it unchanged because it did not claim the GitHub-facing documentation set was already complete enough to require a release-history correction for these additions.
+- Completed a documentation-structure cleanup only; no runtime/plugin code, XAML, JSON, dashboard, namespace, or property files were changed.
+- Restructured the repo docs into three layers: user-facing GitHub docs in `Docs/`, technical subsystem docs in `Docs/Subsystems/`, and internal/developer docs in `Docs/Internal/`.
+- Moved Codex/maintainer reference docs into `Docs/Internal/`: contract, architecture guardrails, task template, parameter inventory, tooltip inventory, log catalogue, and orientation snapshot.
+- Replaced the combined `Docs/Rejoin_And_Pit_Assists.md` user page with separate driver-facing pages for `Docs/Rejoin_Assist.md` and `Docs/Pit_Assist.md`.
+- Added dedicated top-level user pages for `Docs/Profiles_System.md` and `Docs/Fuel_Model.md` so profile trust/locking and fuel-learning behavior are now documented as first-class driver-facing systems.
+- Updated `README.md`, `Docs/Project_Index.md`, `Docs/User_Guide.md`, `Docs/Quick_Start.md`, and the existing user-facing system pages so navigation now reflects the new three-layer documentation structure.
+- Updated user-facing wording to use **Lala Race Assist Plugin** where appropriate while preserving internal technical names such as `LalaLaunch.*` in technical/internal docs.
+- Reviewed `CHANGELOG.md` and left it unchanged because this task reorganizes docs and branding wording only; it does not correct a public release-history claim about runtime behavior.
 
 ## Delivery status highlights
-- The repo now has a clean GitHub-facing documentation structure for installation, quick start, the full user guide, dashboards, strategy, Shift Assist, the Launch system, H2H, driver assists, and release history.
-- User docs have been aligned to the current UI and ownership model without changing runtime code, telemetry logic, exports, settings behavior, or dashboard ownership boundaries.
-- Dash Control remains documented as dash-oriented, while launch controls are documented under `Settings -> Launch Settings` and `Launch Analysis` remains the separate review surface.
-- Strategy remains the planning entry point, with Live Snapshot/manual distinctions and PreRace display-only positioning called out explicitly.
+- Top-level user docs now read as a driver-facing layer centered on what the plugin does, what the driver sees, how to use it, and what to trust.
+- `Docs/Subsystems/` remains the technical/internal architecture layer for ownership, calculations, and export behavior.
+- `Docs/Internal/` now contains the maintainer/Codex support material needed for future tasks without mixing it into the user-facing docs.
+- Strategy remains the user-facing planning term, while Fuel Planner terminology remains technical/internal only.
+- Opponents and CarSA remain subsystem-level supporting docs; H2H stays the user-facing driver outcome page.
 
-## Notes
-- `Docs/Code_Snapshot.md` remains non-canonical orientation-only documentation.
+## Validation note
+- Validation recorded against commit `dfee7ec` (`Restructure documentation layers`).

@@ -15,7 +15,7 @@ The Fuel Model is the runtime engine that:
 
 Canonical behaviour and edge-case rules live in:
 - `Docs/FuelProperties_Spec.md` (fuel + pit logic contract).
-- `Docs/SimHubParameterInventory.md` (exports list/cadence).
+- `Docs/Internal/SimHubParameterInventory.md` (exports list/cadence).
 - `Docs/FuelTab_SourceFlowNotes.md` (how the Fuel Tab consumes “live snapshot” + readiness).
 
 ---
@@ -166,7 +166,7 @@ If none fit → **TANK SPACE**.
 ## Outputs (exports + logs)
 
 ### Core exports (selected)
-See `Docs/SimHubParameterInventory.md` for the full list, but the main Fuel Model outputs include:
+See `Docs/Internal/SimHubParameterInventory.md` for the full list, but the main Fuel Model outputs include:
 - `Fuel.LiveFuelPerLap`, `Fuel.LiveFuelPerLap_Stable`, `Fuel.LiveFuelPerLap_StableSource`, `Fuel.LiveFuelPerLap_StableConfidence`
 - `Fuel.LiveLapsRemainingInRace(_Stable)` (+ `_S` strings)
 - `Fuel.DeltaLaps`, `Fuel.TargetFuelPerLap`, `Fuel.LapsRemainingInTank`

@@ -1,9 +1,9 @@
 CODEX TASK - <short task name>
 
-Use `Docs/CODEX_CONTRACT.txt` as mandatory engineering policy.
+Use `Docs/Internal/CODEX_CONTRACT.txt` as mandatory engineering policy.
 Use `Docs/Project_Index.md` as the canonical start point for docs discovery.
 Use affected `Docs/Subsystems/*.md` files as canonical local truth.
-Treat `Docs/Code_Snapshot.md` as orientation only if canonical docs conflict.
+Treat `Docs/Internal/Code_Snapshot.md` as orientation only if canonical docs conflict.
 Keep documentation aligned with final repo state and update `Docs/RepoStatus.md` at the end.
 Review and update GitHub-facing user docs when the task changes anything user-facing.
 
@@ -19,10 +19,10 @@ Phase 1 - Codebase analysis (no edits)
 
 Before editing:
 - Read `Docs/Project_Index.md`.
-- Read `Docs/CODEX_CONTRACT.txt`.
+- Read `Docs/Internal/CODEX_CONTRACT.txt`.
 - Read the affected subsystem docs.
 - Check `Docs/RepoStatus.md` when current validated state matters.
-- Use `Docs/Code_Snapshot.md` only for orientation if needed.
+- Use `Docs/Internal/Code_Snapshot.md` only for orientation if needed.
 
 Identify:
 - canonical entry points and owning docs
@@ -67,9 +67,9 @@ Check and update as needed:
 
 Technical / canonical docs:
 - `Docs/Subsystems/<affected>.md`
-- `Docs/SimHubParameterInventory.md`
-- `Docs/SimHubLogMessages.md`
-- `Docs/Plugin_UI_Tooltips.md`
+- `Docs/Internal/SimHubParameterInventory.md`
+- `Docs/Internal/SimHubLogMessages.md`
+- `Docs/Internal/Plugin_UI_Tooltips.md`
 - `Docs/Project_Index.md`
 - `Docs/RepoStatus.md`
 
