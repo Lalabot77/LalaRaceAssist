@@ -30,11 +30,12 @@ The plugin owns the **learning, storage, calculations, and exports**. Dashboards
 
 ## Install Summary
 
-1. Copy the plugin files into your SimHub installation.
+1. Copy the 2 plugin *.dll files into your SimHub root installation.
 2. Keep **`RSC.iRacingExtraProperties.dll` required for now**.
 3. Restart SimHub.
 4. Import the dashboards you want to use.
 5. Open the plugin and begin with **Strategy**, then review **Profiles**, **Dash Control**, and **Settings**.
+6. For more detailed instructions and help refer to the main user guide or quick start guide in links below.
 
 ## Documentation
 
@@ -115,6 +116,14 @@ Discussions are the best place for:
 - race workflow discussions
 - general feedback
 
+### Dashboard Issues
+
+If you encounter a problem specifically with a dashboard layout or behaviour, open a **Dashboard Issue**.
+
+---
+
+Using Issues and Discussions helps keep the documentation, plugin behaviour, and user feedback aligned.
+
 ## License
 
 Lala Race Assist Plugin  
@@ -123,10 +132,3 @@ Copyright © 2026 Lalabot77
 This project is released under the MIT License.  
 See the LICENSE file for details.
 
-### Dashboard Issues
-
-If you encounter a problem specifically with a dashboard layout or behaviour, open a **Dashboard Issue**.
-
----
-
-Using Issues and Discussions helps keep the documentation, plugin behaviour, and user feedback aligned.
