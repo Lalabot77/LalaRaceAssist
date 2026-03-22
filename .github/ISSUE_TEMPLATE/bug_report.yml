@@ -1,7 +1,8 @@
 name: Bug Report
 description: Report a problem with the Lala Race Assist Plugin
 title: "[Bug]: "
-labels: ["bug"]
+labels:
+  - bug
 
 body:
   - type: markdown
@@ -9,14 +10,14 @@ body:
       value: |
         Thanks for reporting a bug in **Lala Race Assist Plugin**.
 
-        Please fill in the details below so the problem can be reproduced properly.
+        Please complete this form as clearly as possible so the issue can be reproduced properly.
 
   - type: input
     id: plugin_version
     attributes:
       label: Plugin version
       description: The plugin version from the GitHub release you installed
-      placeholder: e.g. v1.0
+      placeholder: "e.g. v1.0"
     validations:
       required: true
 
@@ -25,7 +26,7 @@ body:
     attributes:
       label: SimHub version
       description: You can find this in SimHub -> About
-      placeholder: e.g. 9.8.1
+      placeholder: "e.g. 9.8.1"
     validations:
       required: true
 
@@ -42,10 +43,10 @@ body:
     id: iracing_extra_properties
     attributes:
       label: Is RSC.iRacingExtraProperties installed?
-      description: This dependency is currently required.
+      description: This dependency is currently required
       options:
-        - "Yes"
-        - "No"
+        - "Yes - installed"
+        - "No - not installed"
         - "Not sure"
     validations:
       required: true
@@ -55,7 +56,7 @@ body:
     attributes:
       label: Dashboard being used
       description: Leave blank if not relevant
-      placeholder: Lala Race Dash / Lala Strategy Dash / custom
+      placeholder: "Lala Race Dash / Lala Strategy Dash / custom"
 
   - type: checkboxes
     id: session_state
@@ -68,33 +69,33 @@ body:
         - label: "Not sure"
 
   - type: textarea
-    id: description
+    id: problem_description
     attributes:
       label: Describe the problem
       description: What happened?
-      placeholder: Explain the issue clearly
+      placeholder: "Explain the issue clearly"
     validations:
       required: true
 
   - type: textarea
-    id: steps
+    id: reproduce_steps
     attributes:
       label: Steps to reproduce
       description: What did you do before the issue appeared?
       placeholder: |
         1. Open SimHub
-        2. Load iRacing session
-        3. Open Lala Race Dash
+        2. Start iRacing
+        3. Load the dashboard
         4. Observe the issue
 
   - type: textarea
-    id: expected
+    id: expected_behaviour
     attributes:
       label: Expected behaviour
       description: What should have happened instead?
 
   - type: textarea
-    id: logs
+    id: logs_and_media
     attributes:
       label: Logs, screenshots, or video
       description: |
