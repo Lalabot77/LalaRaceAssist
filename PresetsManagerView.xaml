@@ -240,7 +240,7 @@
                     <StackPanel Orientation="Horizontal" Margin="0,10,0,6">
                         <TextBlock Text="PreRace Mode" FontWeight="Bold" VerticalAlignment="Center" Margin="0,0,16,0"
                                    ToolTip="Preset PreRace mode for on-grid outputs only. It is persisted with the preset and affects LalaLaunch.PreRace.* outputs, not planner calculations."/>
-                        <ComboBox Width="170"
+                        <ComboBox MaxWidth="120" MinWidth="60"
           VerticalAlignment="Center"
           Foreground="{StaticResource PresetManagerPrimaryTextBrush}"
           Background="{StaticResource PresetManagerInputBackgroundBrush}"

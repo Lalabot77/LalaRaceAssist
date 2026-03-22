@@ -487,51 +487,53 @@
                     <StackPanel Grid.Row="0" Grid.Column="1" Margin="15,0,0,0">
                         <TextBlock Text="Race Strategy" FontWeight="Bold" Margin="0,5,0,5"/>
 
-                        <!-- Race Preset selector (inline, auto-apply) -->
-                        <Grid Margin="0,10,0,10">
-                            <Grid.ColumnDefinitions>
-                                <ColumnDefinition Width="Auto"/>
-                                <ColumnDefinition Width="260"/>
-                                <ColumnDefinition Width="Auto"/>
-                                <ColumnDefinition Width="Auto"/>
-                                <ColumnDefinition Width="*"/>
-                            </Grid.ColumnDefinitions>
+                            <!-- Race Preset selector (inline, auto-apply) -->
+                            <Grid Margin="0,10,0,10">
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="Auto"/>
+                                    <ColumnDefinition Width="Auto"/>
+                                    <ColumnDefinition Width="Auto"/>
+                                    <ColumnDefinition Width="Auto"/>
+                                    <ColumnDefinition Width="*"/>
+                                </Grid.ColumnDefinitions>
 
-                            <TextBlock Grid.Column="0"
-                                 Text="Race Preset:" VerticalAlignment="Center"
-                                 Margin="0,0,8,0" FontWeight="Bold"/>
+                                <TextBlock Grid.Column="0"
+                                   Text="Race Preset:"
+                                   VerticalAlignment="Center"
+                                   Margin="0,0,8,0"
+                                   FontWeight="Bold"/>
 
-                            <ComboBox Grid.Column="1"
-                                ItemsSource="{Binding AvailablePresets}"
-                                SelectedItem="{Binding SelectedPreset, Mode=TwoWay}"
-                                DisplayMemberPath="Name"
-                                ToolTip="Select a preset to apply."/>
+                                <ComboBox Grid.Column="1"
+                                  Width="140"
+                                  MinWidth="140"
+                                  ItemsSource="{Binding AvailablePresets}" 
+                                  SelectedItem="{Binding SelectedPreset, Mode=TwoWay}"
+                                  DisplayMemberPath="Name"
+                                  ToolTip="Select a preset to apply."/>
 
-                            <!-- Grey/italic right next to combo -->
-                            <TextBlock Grid.Column="2"
-                                 Text="modified"
-                                 Foreground="Yellow"
-                                 Margin="10,0,0,0"
-                                 VerticalAlignment="Center"
-                                 FontStyle="Italic" Opacity="0.8">
-                            <TextBlock.Visibility>
-                               <Binding Path="IsPresetModifiedFlag"
-                                 Converter="{StaticResource BooleanToVisibilityConverter}"/>
-                            </TextBlock.Visibility>
-                            </TextBlock>
+                                <TextBlock Grid.Column="2"
+                                   Text="modified"
+                                   Foreground="Yellow"
+                                   Margin="10,0,0,0"
+                                   VerticalAlignment="Center"
+                                   FontStyle="Italic"
+                                   Opacity="0.8">
+                                    <TextBlock.Visibility>
+                                        <Binding Path="IsPresetModifiedFlag"
+                                            Converter="{StaticResource BooleanToVisibilityConverter}"/>
+                                    </TextBlock.Visibility>
+                                </TextBlock>
 
-                            <styles:SHButtonPrimary Grid.Column="3"
-                                                    Content="Presets..."
-                                                    Height="28"
-                                                    Margin="12,0,0,0"
-                                                    VerticalAlignment="Center"
-                                                    Click="OnOpenPresetManager"
-                                                    ToolTip="Open the Preset Manager to create, rename, edit, or delete strategy presets."/>
-                        </Grid>
+                                <styles:SHButtonPrimary Grid.Column="3"
+                            Content="Presets..."
+                            Height="28"
+                            Margin="12,0,0,0"
+                            VerticalAlignment="Center"
+                            Click="OnOpenPresetManager"
+                            ToolTip="Open the Preset Manager to create, rename, edit, or delete strategy presets."/>
+                            </Grid>
 
-
-
-                        <StackPanel Orientation="Horizontal" Margin="0,5,0,10">
+                            <StackPanel Orientation="Horizontal" Margin="0,5,0,10">
                             <TextBlock Text="Race Type:" VerticalAlignment="Center" Margin="0,0,10,0"
                                        ToolTip="Choose whether the race is limited by laps or time."/>
                             <RadioButton Content="Lap-Limited" IsChecked="{Binding IsLapLimitedRace, Mode=TwoWay}" GroupName="RaceType"
