@@ -1,0 +1,49 @@
+name: Bug Report
+description: Report a problem with the Lala Race Assist Plugin
+title: "[Bug]: "
+labels: ["bug"]
+
+body:
+
+- type: markdown
+  attributes:
+    value: |
+      Thanks for reporting a bug. Please provide as much detail as possible.
+
+- type: input
+  id: plugin_version
+  attributes:
+    label: Plugin version
+    placeholder: e.g. v1.0
+
+- type: input
+  id: simhub_version
+  attributes:
+    label: SimHub version
+
+- type: dropdown
+  id: simulator
+  attributes:
+    label: Simulator
+    options:
+      - iRacing
+
+- type: textarea
+  id: description
+  attributes:
+    label: Describe the problem
+
+- type: textarea
+  id: steps
+  attributes:
+    label: Steps to reproduce
+
+- type: textarea
+  id: expected
+  attributes:
+    label: Expected behaviour
+
+- type: textarea
+  id: logs
+  attributes:
+    label: Logs or screenshots
