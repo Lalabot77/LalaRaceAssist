@@ -47,24 +47,7 @@
             <Setter Property="CaretBrush" Value="White"/>
         </Style>
 
-        <Style x:Key="PresetManagerComboBoxStyle" TargetType="ComboBox">
-            <Setter Property="Foreground" Value="{StaticResource PresetManagerPrimaryTextBrush}"/>
-            <Setter Property="Background" Value="{StaticResource PresetManagerInputBackgroundBrush}"/>
-            <Setter Property="BorderBrush" Value="{StaticResource PresetManagerInputBorderBrush}"/>
-            <Setter Property="Padding" Value="4,2"/>
-            <Setter Property="SnapsToDevicePixels" Value="True"/>
-        </Style>
-
-        <Style x:Key="PresetManagerComboBoxItemStyle" TargetType="ComboBoxItem">
-            <Setter Property="Foreground" Value="{StaticResource PresetManagerPrimaryTextBrush}"/>
-            <Setter Property="Background" Value="{StaticResource PresetManagerInputBackgroundBrush}"/>
-            <Setter Property="HorizontalContentAlignment" Value="Stretch"/>
-            <Style.Triggers>
-                <Trigger Property="IsHighlighted" Value="True">
-                    <Setter Property="Background" Value="{StaticResource PresetManagerComboItemHoverBrush}"/>
-                </Trigger>
-            </Style.Triggers>
-        </Style>
+       
 
         <Style TargetType="ListBox">
             <Setter Property="Foreground" Value="{StaticResource PresetManagerPrimaryTextBrush}"/>
@@ -258,12 +241,23 @@
                         <TextBlock Text="PreRace Mode" FontWeight="Bold" VerticalAlignment="Center" Margin="0,0,16,0"
                                    ToolTip="Preset PreRace mode for on-grid outputs only. It is persisted with the preset and affects LalaLaunch.PreRace.* outputs, not planner calculations."/>
                         <ComboBox Width="170"
-                                  Style="{StaticResource PresetManagerComboBoxStyle}"
-                                  ItemContainerStyle="{StaticResource PresetManagerComboBoxItemStyle}"
-                                  VerticalAlignment="Center"
-                                  SelectedValuePath="Tag"
-                                  SelectedValue="{Binding PreRaceMode, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
-                                  ToolTip="Auto mirrors planner-derived assumptions for PreRace outputs. No Stop uses current fuel only; Single Stop uses current + pit-menu add intent; Multi Stop remains informational via PreRace stints context.">
+          VerticalAlignment="Center"
+          Foreground="{StaticResource PresetManagerPrimaryTextBrush}"
+          Background="{StaticResource PresetManagerInputBackgroundBrush}"
+          BorderBrush="{StaticResource PresetManagerInputBorderBrush}"
+          SelectedValuePath="Tag"
+          SelectedValue="{Binding PreRaceMode, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
+          ToolTip="Auto mirrors planner-derived assumptions for PreRace outputs. No Stop uses current fuel only; Single Stop uses current + pit-menu add intent; Multi Stop remains informational via PreRace stints context.">
+
+                            <ComboBox.Resources>
+                                <SolidColorBrush x:Key="{x:Static SystemColors.WindowBrushKey}" Color="#171A20"/>
+                                <SolidColorBrush x:Key="{x:Static SystemColors.ControlBrushKey}" Color="#171A20"/>
+                                <SolidColorBrush x:Key="{x:Static SystemColors.HighlightBrushKey}" Color="#2F3743"/>
+                                <SolidColorBrush x:Key="{x:Static SystemColors.HighlightTextBrushKey}" Color="#F2F4F8"/>
+                                <SolidColorBrush x:Key="{x:Static SystemColors.ControlTextBrushKey}" Color="#F2F4F8"/>
+                                <SolidColorBrush x:Key="{x:Static SystemColors.WindowTextBrushKey}" Color="#F2F4F8"/>
+                            </ComboBox.Resources>
+
                             <ComboBoxItem Content="Auto">
                                 <ComboBoxItem.Tag>
                                     <sys:Int32>3</sys:Int32>

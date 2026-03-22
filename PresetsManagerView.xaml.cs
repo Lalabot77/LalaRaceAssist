@@ -90,7 +90,7 @@ namespace LaunchPlugin
             Unloaded += OnViewUnloaded;
 
             // Start with the active Strategy preset when possible, otherwise the first available preset.
-            EditorSelection = ResolveInitialSelection();
+            // EditorSelection = ResolveInitialSelection(); removed because possible simhub crash if presets are loaded asynchronously and this runs before they're ready. Instead, rely on the user to click/select a preset to start editing, which is more intuitive anyway.
         }
 
         private RacePreset GetActivePreset() => _vm?.AppliedPreset ?? _vm?.SelectedPreset;
@@ -151,6 +151,12 @@ namespace LaunchPlugin
 
         private void OnViewLoaded(object sender, RoutedEventArgs e)
         {
+            // Resolve initial selection only after the control is fully loaded
+            if (EditorSelection == null)
+            {
+                EditorSelection = ResolveInitialSelection();
+            }
+
             var hostWindow = Window.GetWindow(this);
             if (ReferenceEquals(_hostWindow, hostWindow))
             {
@@ -379,7 +385,7 @@ namespace LaunchPlugin
                 {
                     _vm.DeletePreset(sel.Name);
                     // pick first remaining item (or none) and rebuild editor
-                    EditorSelection = _vm.AvailablePresets?.FirstOrDefault();
+                    EditorSelection = _vm.AvailablePresets?.FirstOrDefault(x => x != null);
                 }
             }
             catch (Exception ex)
