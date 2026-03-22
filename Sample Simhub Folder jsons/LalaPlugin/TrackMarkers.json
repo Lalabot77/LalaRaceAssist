@@ -1,0 +1,158 @@
+{
+  "daytona 2011 road-Road Course": {
+    "PitEntryTrkPct": 0.9584953784942627,
+    "PitExitTrkPct": 0.098543539643287659,
+    "LastUpdatedUtc": "2026-01-14T00:04:41.3335024Z",
+    "Locked": true
+  },
+  "watkinsglen 2021 fullcourse-Boot": {
+    "PitEntryTrkPct": 0.95333796739578247,
+    "PitExitTrkPct": 0.040650948882102966,
+    "LastUpdatedUtc": "2026-01-15T23:07:47.4212531Z",
+    "Locked": true
+  },
+  "algarve gp-Grand Prix": {
+    "PitEntryTrkPct": 0.98518949747085571,
+    "PitExitTrkPct": 0.088106609880924225,
+    "LastUpdatedUtc": "2026-01-20T19:52:37.8166586Z",
+    "Locked": true
+  },
+  "roadatlanta full-Full Course": {
+    "PitEntryTrkPct": 0.98527282476425171,
+    "PitExitTrkPct": 0.088435620069503784,
+    "LastUpdatedUtc": "2026-01-21T00:48:42.6644141Z",
+    "Locked": true
+  },
+  "mugello gp-Grand Prix": {
+    "PitEntryTrkPct": 0.94455474615097046,
+    "PitExitTrkPct": 0.019067654386162758,
+    "LastUpdatedUtc": "2026-01-21T01:32:25.8272175Z",
+    "Locked": true
+  },
+  "miami gp-Grand Prix": {
+    "PitEntryTrkPct": 0.98842775821685791,
+    "PitExitTrkPct": 0.04780568927526474,
+    "LastUpdatedUtc": "2026-01-22T23:04:00.7833623Z",
+    "Locked": true
+  },
+  "zolder gp-Grand Prix": {
+    "PitEntryTrkPct": "NaN",
+    "PitExitTrkPct": 0.0702497810125351,
+    "LastUpdatedUtc": "2026-01-24T12:30:30.0425061Z",
+    "Locked": true
+  },
+  "monza full": {
+    "PitEntryTrkPct": 0.98251372575759888,
+    "PitExitTrkPct": 0.057635549455881119,
+    "LastUpdatedUtc": "2026-02-02T21:07:23.8858139Z",
+    "Locked": true
+  },
+  "monza combinedchicanes": {
+    "PitEntryTrkPct": 0.99005568027496338,
+    "PitExitTrkPct": 0.033067822456359863,
+    "LastUpdatedUtc": "2026-02-02T23:31:27.7140271Z",
+    "Locked": true
+  },
+  "virginia 2022 full-Full Course": {
+    "PitEntryTrkPct": 0.93029779195785522,
+    "PitExitTrkPct": 0.965314,
+    "LastUpdatedUtc": "2026-02-10T20:02:44.9859779Z",
+    "Locked": true
+  },
+  "silverstone 2019 gp-Arena Grand Prix": {
+    "PitEntryTrkPct": "NaN",
+    "PitExitTrkPct": 0.065386511385440826,
+    "LastUpdatedUtc": "2026-02-09T01:07:58.8466434Z",
+    "Locked": true
+  },
+  "spielberg gp-Grand Prix": {
+    "PitEntryTrkPct": 0.98230880498886108,
+    "PitExitTrkPct": 0.065987676382064819,
+    "LastUpdatedUtc": "2026-02-13T21:04:01.5303566Z",
+    "Locked": true
+  },
+  "imola gp": {
+    "PitEntryTrkPct": 0.932594358921051,
+    "PitExitTrkPct": 0.046082712709903717,
+    "LastUpdatedUtc": "2026-02-10T10:17:17.4874821Z",
+    "Locked": true
+  },
+  "barcelona gp-Full Course": {
+    "PitEntryTrkPct": "NaN",
+    "PitExitTrkPct": 0.069955155253410339,
+    "LastUpdatedUtc": "2026-02-10T11:33:53.2968079Z",
+    "Locked": true
+  },
+  "sebring international-International": {
+    "PitEntryTrkPct": 0.97275781631469727,
+    "PitExitTrkPct": 0.048124514520168304,
+    "LastUpdatedUtc": "2026-02-10T12:59:39.2462415Z",
+    "Locked": true
+  },
+  "roadamerica full-Full Course": {
+    "PitEntryTrkPct": "NaN",
+    "PitExitTrkPct": 0.051425229758024216,
+    "LastUpdatedUtc": "2026-02-10T14:00:43.413372Z",
+    "Locked": true
+  },
+  "bathurst": {
+    "PitEntryTrkPct": "NaN",
+    "PitExitTrkPct": 0.050378292798995972,
+    "LastUpdatedUtc": "2026-02-12T22:33:09.2019052Z",
+    "Locked": true
+  },
+  "indianapolis ovalindypit-IndyCar Oval": {
+    "PitEntryTrkPct": "NaN",
+    "PitExitTrkPct": 0.075192734599113464,
+    "LastUpdatedUtc": "2026-02-16T20:15:48.7803511Z",
+    "Locked": true
+  },
+  "nurburgring gp": {
+    "PitEntryTrkPct": 0.9878191351890564,
+    "PitExitTrkPct": 0.062147799879312515,
+    "LastUpdatedUtc": "2026-02-24T20:37:51.7901529Z",
+    "Locked": true
+  },
+  "misano gp-Grand Prix": {
+    "PitEntryTrkPct": 0.9494248628616333,
+    "PitExitTrkPct": 0.073664933443069458,
+    "LastUpdatedUtc": "2026-03-03T19:36:36.386349Z",
+    "Locked": true
+  },
+  "skidpad": {
+    "PitEntryTrkPct": 0.96880269050598145,
+    "PitExitTrkPct": "NaN",
+    "LastUpdatedUtc": "2026-02-28T11:58:56.9443305Z",
+    "Locked": true
+  },
+  "lemans full": {
+    "PitEntryTrkPct": "NaN",
+    "PitExitTrkPct": 0.027237778529524803,
+    "LastUpdatedUtc": "2026-02-28T12:03:37.8048429Z",
+    "Locked": true
+  },
+  "monza gpsecondchicane": {
+    "PitEntryTrkPct": "NaN",
+    "PitExitTrkPct": 0.057845450937747955,
+    "LastUpdatedUtc": "2026-02-28T12:08:03.6715782Z",
+    "Locked": true
+  },
+  "indianapolis 2022 oval-Oval": {
+    "PitEntryTrkPct": "NaN",
+    "PitExitTrkPct": 0.075262278318405151,
+    "LastUpdatedUtc": "2026-03-06T09:37:32.0266807Z",
+    "Locked": true
+  },
+  "brandshatch grandprix-Grand Prix": {
+    "PitEntryTrkPct": "NaN",
+    "PitExitTrkPct": 0.006129042711108923,
+    "LastUpdatedUtc": "2026-03-14T19:43:00.3257642Z",
+    "Locked": true
+  },
+  "hockenheim gp-Grand Prix": {
+    "PitEntryTrkPct": 0.98753821849823,
+    "PitExitTrkPct": 0.056868705898523331,
+    "LastUpdatedUtc": "2026-03-17T23:46:11.5231502Z",
+    "Locked": true
+  }
+}

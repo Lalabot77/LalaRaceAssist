@@ -1,0 +1,88 @@
+{
+  "SchemaVersion": 1,
+  "Presets": [
+    {
+      "Name": "IMSA 40m (1 stop window)",
+      "Type": 0,
+      "RaceMinutes": 40,
+      "RaceLaps": null,
+      "PreRaceMode": 1,
+      "PitStrategyMode": 1,
+      "MandatoryStopRequired": true,
+      "TireChangeTimeSec": 0.0,
+      "MaxFuelPercent": null,
+      "MaxFuelLitres": 55.0,
+      "ContingencyInLaps": true,
+      "ContingencyValue": 1.0
+    },
+    {
+      "Name": "Sprint 20m (no stop)",
+      "Type": 0,
+      "RaceMinutes": 20,
+      "RaceLaps": null,
+      "PreRaceMode": 3,
+      "PitStrategyMode": 3,
+      "MandatoryStopRequired": false,
+      "TireChangeTimeSec": 0.0,
+      "MaxFuelPercent": null,
+      "MaxFuelLitres": 55.0,
+      "ContingencyInLaps": true,
+      "ContingencyValue": 0.5
+    },
+    {
+      "Name": "Fixed 30 Laps",
+      "Type": 1,
+      "RaceMinutes": null,
+      "RaceLaps": 30,
+      "PreRaceMode": 3,
+      "PitStrategyMode": 3,
+      "MandatoryStopRequired": false,
+      "TireChangeTimeSec": 0.0,
+      "MaxFuelPercent": null,
+      "MaxFuelLitres": 55.0,
+      "ContingencyInLaps": true,
+      "ContingencyValue": 1.0
+    },
+    {
+      "Name": "24h Endurance",
+      "Type": 0,
+      "RaceMinutes": 1440,
+      "RaceLaps": null,
+      "PreRaceMode": 3,
+      "PitStrategyMode": 3,
+      "MandatoryStopRequired": false,
+      "TireChangeTimeSec": 23.0,
+      "MaxFuelPercent": null,
+      "MaxFuelLitres": 120.0,
+      "ContingencyInLaps": true,
+      "ContingencyValue": 2.0
+    },
+    {
+      "Name": "SRi Thursday",
+      "Type": 0,
+      "RaceMinutes": 60,
+      "RaceLaps": null,
+      "PreRaceMode": 1,
+      "PitStrategyMode": 1,
+      "MandatoryStopRequired": true,
+      "TireChangeTimeSec": 0.0,
+      "MaxFuelPercent": 69.6,
+      "ContingencyInLaps": true,
+      "ContingencyValue": 1.0
+    },
+    {
+      "Name": "SRi Practice Tuesday",
+      "Type": 0,
+      "RaceMinutes": 60,
+      "RaceLaps": null,
+      "PreRaceMode": 3,
+      "PitStrategyMode": 3,
+      "MandatoryStopRequired": false,
+      "TireChangeTimeSec": 0.0,
+      "MaxFuelPercent": null,
+      "MaxFuelLitres": 77.0,
+      "ContingencyInLaps": true,
+      "ContingencyValue": 2.4650385602308176
+    }
+  ]
+}

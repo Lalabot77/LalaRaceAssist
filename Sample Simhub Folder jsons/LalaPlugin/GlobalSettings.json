@@ -1,0 +1,139 @@
+{
+  "SchemaVersion": 2,
+  "EnableSoftDebug": false,
+  "DebugHide1": false,
+  "DebugHide2": false,
+  "DebugHide3": false,
+  "EnableDebugLogging": false,
+  "EnableCarSADebugExport": false,
+  "EnableOffTrackDebugCsv": false,
+  "OffTrackDebugLogChangesOnly": false,
+  "CarSADebugExportCadence": 0,
+  "CarSADebugExportTickMaxHz": 60,
+  "CarSADebugExportWriteEventsCsv": false,
+  "CarSARawTelemetryMode": 1,
+  "OffTrackDebugProbeCarIdx": 3,
+  "PitExitVerboseLogging": false,
+  "ResultsDisplayTime": 5.0,
+  "FuelReadyConfidence": 19.95836531703592,
+  "StintFuelMarginPct": 10,
+  "EnableAutoDashSwitch": true,
+  "DarkModeMode": 2,
+  "DarkModeBrightnessPct": 81,
+  "UseLovelyTrueDark": false,
+  "EnableCsvLogging": true,
+  "CsvLogPath": "",
+  "TraceLogPath": "",
+  "EnableTelemetryTracing": true,
+  "ShiftAssistEnabled": true,
+  "ShiftAssistLearningModeEnabled": true,
+  "ShiftAssistBeepDurationMs": 300,
+  "ShiftAssistLightEnabled": false,
+  "ShiftAssistLeadTimeMs": 0,
+  "ShiftAssistBeepSoundEnabled": true,
+  "ShiftAssistBeepVolumePct": 12,
+  "ShiftAssistUrgentEnabled": true,
+  "ShiftAssistUrgentMinGapMs": 1000,
+  "ShiftAssistUrgentVolumePct": 50,
+  "ShiftAssistUseCustomWav": false,
+  "ShiftAssistCustomWavPath": "",
+  "EnableShiftAssistDebugCsv": false,
+  "ShiftAssistDebugCsvMaxHz": 60,
+  "NotRelevantGapSec": 10.0,
+  "CarSAStatusEBackgroundColors": {
+    "0": "#000000",
+    "100": "#696969",
+    "110": "#C0C0C0",
+    "120": "#FFA500",
+    "121": "#FFFF00",
+    "122": "#FFA500",
+    "130": "#FF0000",
+    "131": "#FFFF00",
+    "132": "#FFFF00",
+    "140": "#FF0000",
+    "141": "#FFFF00",
+    "200": "#000000",
+    "210": "#000000",
+    "220": "#008000",
+    "230": "#0000FF",
+    "240": "#ADD8E6"
+  },
+  "CarSABorderColors": {
+    "TEAM": "#FF69B4",
+    "BAD": "#FF0000",
+    "LEAD": "#FF00FF",
+    "OCLS": "#0000FF",
+    "DEF": "#F5F5F5"
+  },
+  "Friends": [
+    {
+      "Name": "John Treen",
+      "UserId": 1153081,
+      "Tag": "Teammate"
+    },
+    {
+      "Name": "David Hutcheson",
+      "UserId": 967666,
+      "Tag": "Friend"
+    },
+    {
+      "Name": "David Pilcher",
+      "UserId": 925334,
+      "Tag": "Bad"
+    },
+    {
+      "Name": "Simon N Clifton",
+      "UserId": 1006386,
+      "Tag": "Teammate"
+    },
+    {
+      "Name": "AT Test CarIDX 3",
+      "UserId": 9702,
+      "Tag": "Bad"
+    },
+    {
+      "Name": "Andrei Muntean",
+      "UserId": 1114286,
+      "Tag": "Teammate"
+    },
+    {
+      "Name": "Ashley Brooks",
+      "UserId": 738159,
+      "Tag": "Friend"
+    },
+    {
+      "Name": "Mathew Croft",
+      "UserId": 1145049,
+      "Tag": "Friend"
+    },
+    {
+      "Name": "CraigHewlett",
+      "UserId": 931202,
+      "Tag": "Friend"
+    }
+  ],
+  "LalaDashShowLaunchScreen": false,
+  "LalaDashShowPitLimiter": true,
+  "LalaDashShowPitScreen": true,
+  "LalaDashShowRejoinAssist": false,
+  "LalaDashShowVerboseMessaging": true,
+  "LalaDashShowRaceFlags": true,
+  "LalaDashShowRadioMessages": false,
+  "LalaDashShowTraffic": true,
+  "MsgDashShowLaunchScreen": false,
+  "MsgDashShowPitLimiter": false,
+  "MsgDashShowPitScreen": false,
+  "MsgDashShowRejoinAssist": false,
+  "MsgDashShowVerboseMessaging": true,
+  "MsgDashShowRaceFlags": false,
+  "MsgDashShowRadioMessages": true,
+  "MsgDashShowTraffic": true,
+  "OverlayDashShowLaunchScreen": true,
+  "OverlayDashShowPitLimiter": true,
+  "OverlayDashShowPitScreen": false,
+  "OverlayDashShowRejoinAssist": true,
+  "OverlayDashShowVerboseMessaging": true,
+  "OverlayDashShowRaceFlags": true,
+  "OverlayDashShowRadioMessages": true,
+  "OverlayDashShowTraffic": true
+}
