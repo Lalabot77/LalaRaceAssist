@@ -1101,11 +1101,19 @@ namespace LaunchPlugin
             if (!IsValidPct(entryPct) || !IsValidPct(exitPct))
                 return;
 
+            // Parse lastUpdatedUtc into a DateTime; fall back to UtcNow if invalid or missing
+            DateTime parsedLastUpdated;
+            if (string.IsNullOrWhiteSpace(lastUpdatedUtc) ||
+                !DateTime.TryParse(lastUpdatedUtc, null, System.Globalization.DateTimeStyles.RoundtripKind, out parsedLastUpdated))
+            {
+                parsedLastUpdated = DateTime.UtcNow;
+            }
+
             seededStore[normalizedKey] = new TrackMarkerRecord
             {
                 PitEntryTrkPct = entryPct,
                 PitExitTrkPct = exitPct,
-                LastUpdatedUtc = string.IsNullOrWhiteSpace(lastUpdatedUtc) ? DateTime.UtcNow.ToString("o") : lastUpdatedUtc,
+                LastUpdatedUtc = parsedLastUpdated,
                 Locked = locked
             };
         }
