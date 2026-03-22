@@ -9,25 +9,20 @@ Branch: work
 - No Git remote is configured in this checkout (`git remote -v` returns empty).
 
 ## Documentation sync status
-- Completed a release-polish pass covering Dash Control visibility labels/tooltips, the debug-mode warning copy, Preset Manager combo-box readability, and embedded shipped defaults for presets/track markers.
-- Updated both canonical subsystem docs and user-facing docs so the short dash labels map clearly back to **Lala Race Dash**, **Lala Strategy Dash**, and **overlay surfaces**.
-- Documented that shipped preset defaults and the expanded embedded track-marker defaults now live directly in the owning code paths, with invalid marker entries excluded rather than normalized into fake values and the newly added marker rows carrying fixed embedded timestamps for deterministic first-run seeding.
-- Kept scope inside the existing Dash Integration, Fuel Planner / Strategy, Track Markers, and Settings/UI ownership boundaries without changing fuel math, learning, Shift Assist logic, CarSA, H2H, or telemetry gating.
+- Fixed the Preset Manager `PreRace Mode` combo by removing the fragile custom popup template and reusing the same standard ComboBox interaction pattern already working on the main Strategy page.
+- Hardened the Strategy `Presets...` popup open path so null preset entries are skipped before binding and open-time failures are caught/logged instead of bubbling out as a host-level hard fail.
+- Kept scope inside the existing Fuel Planner / Strategy and Settings/UI ownership boundaries without changing fuel math, learning, Shift Assist logic, CarSA, H2H, track-marker behavior, or telemetry gating.
 
 ## Reviewed documentation set
 ### Changed in this sweep
 - `CHANGELOG.md`
-- `DashesTabView.xaml`
-- `GlobalSettingsView.xaml`
+- `FuelCalculatorView.xaml.cs`
+- `FuelCalcs.cs`
 - `PresetsManagerView.xaml`
-- `RacePresetStore.cs`
-- `PitEngine.cs`
+- `PresetsManagerView.xaml.cs`
 - `Docs/Internal/Plugin_UI_Tooltips.md`
-- `Docs/Subsystems/Dash_Integration.md`
 - `Docs/Subsystems/Fuel_Planner_Tab.md`
-- `Docs/Subsystems/Track_Markers.md`
 - `Docs/Strategy_System.md`
-- `Docs/Dashboards.md`
 - `Docs/RepoStatus.md`
 
 ### Reviewed and left unchanged
@@ -35,6 +30,7 @@ Branch: work
 - `Docs/Project_Index.md`
 - `Docs/Quick_Start.md`
 - `Docs/User_Guide.md`
+- `Docs/Dashboards.md`
 - `Docs/Shift_Assist.md`
 - `Docs/Launch_System.md`
 - `Docs/Rejoin_Assist.md`
@@ -42,6 +38,9 @@ Branch: work
 - `Docs/H2H_System.md`
 - `Docs/Profiles_System.md`
 - `Docs/Fuel_Model.md`
+- `Docs/Internal/SimHubParameterInventory.md`
+- `Docs/Internal/SimHubLogMessages.md`
+- `Docs/Subsystems/Dash_Integration.md`
 - `Docs/Subsystems/Pit_Entry_Assist.md`
 - `Docs/Subsystems/Pit_Timing_And_PitLoss.md`
 - `Docs/Subsystems/Rejoin_Assist.md`
@@ -49,15 +48,14 @@ Branch: work
 - `Docs/Subsystems/CarSA.md`
 - `Docs/Subsystems/H2H.md`
 - `Docs/Subsystems/Profiles_And_PB.md`
+- `Docs/Subsystems/Track_Markers.md`
 - `Docs/Subsystems/Trace_Logging.md`
 - `Docs/Subsystems/Message_System_V1.md`
 - `Docs/Subsystems/MessageEngineV1_Notes.md`
 
 ## Delivery status highlights
-- Dash Control now uses short release-facing visibility headers that still map clearly to the underlying dash families through updated tooltip and documentation wording.
-- The Settings debug section now carries an explicit troubleshooting-only warning next to the master toggle.
-- The Preset Manager popup now documents and implements a dark-theme combo-box fix rather than leaving the selection area dependent on the host theme.
-- Embedded default-shipping behavior for presets and track markers is now documented alongside the owning storage/runtime code paths.
+- The Preset Manager `PreRace Mode` selector now uses the same working ComboBox interaction model as the main Strategy tab, restoring normal open/select behavior while staying readable on the popup’s dark theme.
+- The Strategy `Presets...` modal open flow now skips null preset rows during binding and shows a logged warning dialog instead of hard-failing if window creation still throws.
 
 ## Validation note
-- Validation recorded against `HEAD` (`release polish pass for dash labels, debug warning, embedded defaults, track-marker seed filtering, and preset manager combo styling`).
+- Validation recorded against `HEAD` (`preset manager combo behavior and popup-open hardening`).

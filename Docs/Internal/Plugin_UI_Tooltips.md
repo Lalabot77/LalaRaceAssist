@@ -146,7 +146,7 @@ Branch: work
 - L289: Rename the selected preset using the name box.
 - L301: Revert edits to the last saved preset values.
 - L303: Save edits to the selected preset.
-- The `PreRace Mode` combo now uses an explicit dark popup/control template so the selected value and dropdown list remain readable against the plugin’s dark theme.
+- The `PreRace Mode` combo now reuses the same standard ComboBox interaction pattern as the main Strategy tab while keeping the selected value readable against the plugin’s dark theme.
 
 ## ProfilesManagerView.xaml
 - L22: Manage car profiles stored on disk.

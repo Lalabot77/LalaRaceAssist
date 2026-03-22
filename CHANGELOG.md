@@ -57,5 +57,6 @@ Main user-facing changes since the late-February documentation baseline include:
 
 - Shortened Dash Control visibility column labels to **`DRIVER`**, **`STRATEGY`**, and **`OVERLAY`** while keeping tooltip wording explicit.
 - Added a release-facing warning below the debug-mode master toggle so troubleshooting features are less likely to be left on accidentally.
-- Kept Strategy preset editing in the existing Preset Manager popup but fixed the dark-theme combo-box readability issue for the `PreRace Mode` selector.
+- Fixed the Preset Manager `PreRace Mode` selector by reusing the same working ComboBox behavior as the main Strategy tab, restoring normal dropdown interaction while keeping dark-theme readability.
+- Hardened the Strategy `Presets...` modal open flow against null preset entries and open-time popup failures so the editor no longer hard-fails as easily.
 - Embedded the shipped preset defaults and expanded track-marker defaults directly in the owning code paths so the repo/package ships with the intended first-run data, including the shorter `IMSA 40m` / `Sprint 20m` preset names and additional seeded tracks.
