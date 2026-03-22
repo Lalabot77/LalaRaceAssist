@@ -80,6 +80,45 @@ Presets are managed from **Strategy** through the **`Presets...`** modal flow. T
 - Launch controls live under **Settings -> Launch Settings**. **Launch Analysis** remains the saved-run review tab.
 - The future/global message system is not documented here as an active user feature.
 
-## Feedback and Requests
+## Support and Feedback
 
-If you hit a bug, want a workflow improvement, or need clearer documentation, open a GitHub issue so the public docs and plugin behavior can stay aligned.
+If you run into problems or want to suggest improvements, please use the GitHub support tools so issues can be tracked properly.
+
+### Bug Reports
+
+If something is not working as expected, open a **Bug Report**:
+
+**Issues → New Issue → Bug Report**
+
+Please include:
+
+- plugin version
+- SimHub version
+- screenshots or logs if possible
+
+This helps reproduce and resolve the problem faster.
+
+### Feature Requests
+
+If you have ideas for improving the plugin or workflow:
+
+**Issues → New Issue → Feature Request**
+
+### Questions or Setup Help
+
+For general help, setup questions, or discussion about dashboards or workflows, please use **GitHub Discussions**.
+
+Discussions are the best place for:
+
+- dashboard setup questions
+- usage advice
+- race workflow discussions
+- general feedback
+
+### Dashboard Issues
+
+If you encounter a problem specifically with a dashboard layout or behaviour, open a **Dashboard Issue**.
+
+---
+
+Using Issues and Discussions helps keep the documentation, plugin behaviour, and user feedback aligned.
