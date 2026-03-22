@@ -22,10 +22,6 @@ Copy the plugin files into your SimHub installation, then restart SimHub.
 - `LaunchPlugin.dll`
 - `RSC.iRacingExtraProperties.dll`
 
-### Optional
-
-- `DahlDesign.dll` if you want the supported Lala dashboard package that depends on it.
-
 ## 3. Import dashboards
 
 Typical layout:
@@ -34,6 +30,7 @@ Typical layout:
 - **Strategy/support dash** for planning and context
 - **Overlay** for compact alerts
 - **Lovely-based layouts** if you use the Lovely ecosystem
+- **Head 2 Head** for 6 sector 'How goes it' during racing - ideal use is as a simhub overlay on screen
 
 Dashboards display plugin outputs. They do not learn data or replace the plugin as the source of truth. For dashboard-specific guidance, see [Dashboards](Dashboards.md).
 
@@ -50,7 +47,6 @@ Open the plugin in SimHub and confirm the main navigation order:
 Important current rules:
 
 - **Strategy** is the main planner.
-- There is **no separate Presets tab**.
 - Presets are managed from **Strategy** through **`Presets...`**.
 - Launch setup lives in **Settings → Launch Settings**.
 
@@ -59,7 +55,7 @@ Important current rules:
 For a new car/track combination:
 
 1. Start with **Strategy** and confirm the selected profile and track.
-2. Drive a few clean laps so the plugin can begin learning fuel and pace.
+2. Drive a few clean laps so the plugin can begin learning fuel, pace and pit entry/exit points.
 3. Review **Profiles** before locking anything.
 4. Import the dashboards you actually plan to use.
 5. Add only the core controls you need at first:
