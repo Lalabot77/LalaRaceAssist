@@ -1,70 +1,140 @@
 # Dash Integration
 
-Validated against commit: b9250e1
-Last updated: 2026-02-24
+Validated against commit: HEAD
+Last updated: 2026-03-22
 Branch: work
 
 ## Purpose
-Define how SimHub exports from LalaLaunch should be consumed by dashboards with emphasis on the **Pit Entry Assist** surface. This document complements the subsystem specs and focuses on binding, gating, and rendering guidance.
+Define how Lala Race Assist Plugin exports should be consumed by dashboards.
+
+This document is the canonical dash-facing contract layer. It does **not** redefine subsystem behavior; it explains:
+- which plugin outputs are meant for dash consumption,
+- how dashboards should gate and render them,
+- where the plugin ends and dashboard presentation begins.
 
 ## Core principles
-- **Defensive consumption:** All properties may be `null`/zero on session start; gate on readiness flags when present.
-- **Prefer stable variants:** Use `_Stable` when available for UI text; use numeric forms for gauges.
-- **Visibility gating:** Use explicit visibility flags (e.g., `Pit.EntryAssistActive`) to avoid SimHub suppression.
-- **No renormalisation:** Preserve plugin-provided units; avoid cue-driven remapping that hides continuous metrics.
+- **The plugin owns logic; dashboards own presentation.**
+- **Prefer stable exports** when both raw/live and stable variants exist.
+- **Use explicit visibility gates** instead of guessing from text/value presence.
+- **Do not renormalize plugin units** unless the dash needs purely visual scaling.
+- **Clear state aggressively on session transitions** so stale visuals do not linger.
+
+## High-level dash ownership map
+### Strategy / fuel / pace
+- Use stable strategy/fuel exports for labels and decision widgets.
+- Treat `LalaLaunch.PreRace.*` as a separate on-grid/pre-race info layer, not a replacement for live `Fuel.*` or Strategy planner ownership.
+- If a widget is meant to represent runtime truth, prefer stable `Fuel.*` / pace outputs over UI-only text from elsewhere.
+
+### Launch
+- Gate live launch widgets on `LaunchModeActive` and related launch-visible state.
+- Keep **Launch Analysis** concepts separate from live launch widgets; dashboards can show results, but trace review belongs to the plugin review surface.
+
+### Rejoin / pit / messages
+- Rejoin widgets should respect the explicit rejoin exports rather than infer active state from message text alone.
+- Pit-screen / pit-entry widgets should combine pit visibility toggles with pit-specific active flags.
+- Message-dash widgets should consume the message engine outputs directly rather than rebuilding message priority logic in SimHub expressions.
+
+### H2H / traffic
+- `H2HRace.*` and `H2HTrack.*` are already flattened for dashboard binding; dashboards should not try to recreate selector logic.
+- CarSA / Opponents data that is not part of a published dash contract should stay a technical dependency, not a dashboard-owned truth source.
+
+## Visibility and gating
+### Dash visibility toggles
+Use the exported visibility families as hard gates:
+- `LalaDashShow*` = main dash visibility
+- `MsgDashShow*` = message dash visibility
+- `OverlayDashShow*` = overlay visibility
+
+These toggles are the contract between plugin settings and dash layout visibility. Dash JSON should not fight them.
+
+### Session-reset expectations
+Hide or clear visuals when:
+- session identity changes,
+- a subsystem’s explicit active flag goes false,
+- the relevant dash visibility toggle goes false,
+- a widget’s source data is clearly invalid / unavailable.
 
 ## Pit Entry Assist binding
-- **Properties:** `Pit.EntryAssistActive`, `Pit.EntryDistanceToLine_m`, `Pit.EntryRequiredDistance_m`, `Pit.EntryMargin_m`, `Pit.EntryCue`, `Pit.EntryCueText`, `Pit.EntrySpeedDelta_kph`, `Pit.EntryDecelProfile_mps2`, `Pit.EntryBuffer_m`.
-- **Validity window:** Only render while `Pit.EntryAssistActive == true`; the assist clears itself when distance >500 m or inputs are invalid.
-- **Primary signal:** `Pit.EntryMargin_m` (metres). Use cues only as secondary state indicators.
-- **Cue mapping (0–4):** OFF / OK / BRAKE SOON / BRAKE NOW / LATE; derived from margin vs. buffer.
+### Primary properties
+- `Pit.EntryAssistActive`
+- `Pit.EntryDistanceToLine_m`
+- `Pit.EntryRequiredDistance_m`
+- `Pit.EntryMargin_m`
+- `Pit.EntryCue`
+- `Pit.EntryCueText`
+- `Pit.EntrySpeedDelta_kph`
+- `Pit.EntryDecelProfile_mps2`
+- `Pit.EntryBuffer_m`
 
-### Recommended visualisation
-- **Layout:** Vertical slider or marker with fixed ±150 m scale; centre = 0 m (ideal brake point).
-- **Direction:** Marker up = early; marker down = late.
-- **Secondary labels:** Show `Pit.EntryCueText` beside the marker; keep colours neutral to avoid masking small movements.
-- **Expression hygiene:** Force floating-point math in SimHub expressions (e.g., `150.0`) to prevent integer truncation; avoid nested `if` blocks that cause stepped movement.
+### Consumption guidance
+- Use `Pit.EntryAssistActive` as the hard visibility gate.
+- Use `Pit.EntryMargin_m` as the primary continuous signal.
+- Treat cue text/value as secondary state, not the main visualization input.
+- A fixed-scale marker is preferred over re-scaling around the current cue.
 
-## Pit screen mode + visibility exports
-- **Properties:** `PitScreenActive`, `PitScreenMode`.
-- **Mode values:** `auto` (pit-road auto mode) or `manual` (user toggled on track). Use these to display distinct banners or colour treatments when the pit screen is intentionally forced on.
-- **Manual lifecycle:** manual mode is reset to auto on session token changes or car/track combo changes; if you cache state in dashboards, clear it on those transitions.
+### Recommended visualization
+- Fixed ±150 m vertical or horizontal marker range.
+- Center line = ideal braking point.
+- Up/positive = early; down/negative = late.
+- Keep cue colors simple so small margin changes remain visible.
 
-### Dash visibility toggles
-- **Main dash:** `LalaDashShow*`
-- **Message dash:** `MsgDashShow*`
-- **Overlay:** `OverlayDashShow*`
+## Pit screen mode
+### Properties
+- `PitScreenActive`
+- `PitScreenMode`
 
-Use these toggles as hard gates for visibility. For pit-screen overlays, combine:
-- `PitScreenActive` AND relevant `*ShowPitScreen` toggle.
+### Contract
+- `auto` = plugin-driven pit-screen activation.
+- `manual` = user-forced pit screen while on track.
 
-## Reset behaviour
-- Hide or clear Pit Entry Assist visuals when:
-  - Session identity changes,
-  - `Pit.EntryAssistActive` is false,
-  - SimHub reports `IsInPitLane` true and the line transition already fired (assist logs `END`).
+Dashboards can style these differently, but they should not reinterpret the lifecycle. Manual pit-screen state is reset by the plugin on major session/combo resets.
+
+## Message engine consumption
+For dashboards that use the v1 message engine:
+- bind directly to `MSGV1.*` exports for active text, colors, counts, and stack state,
+- keep `MsgCx` / clear behavior in the plugin action path,
+- avoid recreating priority resolution in dash expressions.
+
+The subsystem docs own message-system behavior; dashboards should remain consumers only.
+
+## Dark Mode integration
+### Stable exports for dashboards
+- `LalaLaunch.Dash.DarkMode.Mode`
+- `LalaLaunch.Dash.DarkMode.Active`
+- `LalaLaunch.Dash.DarkMode.BrightnessPct`
+- `LalaLaunch.Dash.DarkMode.LovelyAvailable`
+- `LalaLaunch.Dash.DarkMode.OpacityPct`
+- `LalaLaunch.Dash.DarkMode.ModeText`
+
+### Consumption rules
+- Bind dashboards to the `LalaLaunch.Dash.DarkMode.*` exports, not Lovely internals.
+- `BrightnessPct` remains `0..100`.
+- `Mode` contract is:
+  - `0` = Off
+  - `1` = Manual
+  - `2` = Auto
+- When Lovely override is enabled and available, dashboards should still trust the plugin export rather than probing Lovely directly.
+
+## Expression hygiene
+- Force floating-point math in SimHub expressions where scaling matters.
+- Prefer simple thresholding over deeply nested expression trees.
+- Avoid dash-side smoothing that masks the plugin’s own stable-vs-live contract.
 
 ## Logging alignment
-- Dash developers can cross-check live visuals with logs:
-  - `ACTIVATE` confirms input resolution (distance, pit speed, decel/buffer).
-  - `LINE` provides `firstOK`/`okBefore` for post-run tuning.
-  - `END` confirms teardown; visuals should already be hidden when this appears.
+Dash developers/support work can cross-check live visuals against plugin logs for:
+- launch state changes,
+- pit-entry assist activation / line / end events,
+- message engine behavior,
+- projection source changes,
+- rejoin state transitions.
 
-## Non-Pit Entry guidance (summary)
-- Use `_Stable` pace/fuel properties for any text labels.
-- Gate launch UI on `LaunchModeActive`; gate rejoin displays on `RejoinIsExitingPits`.
-- Keep visibility toggles (`LalaDashShow...`) respected to avoid fighting user preferences.
+## Non-goals
+Dashboards should **not**:
+- recreate strategy math,
+- own H2H selector logic,
+- own launch or rejoin logic,
+- bypass plugin visibility toggles,
+- depend on undocumented internal state when a canonical export already exists.
 
-
-## Dark Mode integration (global dash control)
-- **Stable exports for dashboards:**
-  - `LalaLaunch.Dash.DarkMode.Mode` (internal key `Dash.DarkMode.Mode`)
-  - `LalaLaunch.Dash.DarkMode.Active` (internal key `Dash.DarkMode.Active`)
-  - `LalaLaunch.Dash.DarkMode.BrightnessPct` (internal key `Dash.DarkMode.BrightnessPct`)
-- **Consumption rule:** Dash JSON should consume only `LalaLaunch.Dash.DarkMode.*` and must not reference Lovely directly.
-- **Brightness contract:** `BrightnessPct` is `0..100` with `100` brightest; when inactive it reports user slider value (unscaled), when active it reports effective value after manual/auto scaling.
-- **Mode contract:**
-  - `0` Off: `Active` forced false.
-  - `1` Manual: active follows manual toggle unless Lovely override is enabled and available.
-  - `2` Auto: active follows solar hysteresis when manual toggle is off and Lovely override is not in control.
-- **Lovely UI behavior:** “Use Lovely True Dark” checkbox stays visible; enabled only when Lovely is detected.
+## v1 documentation note
+The v1 GitHub docs now present dashboards as the presentation layer across all systems. This page is the canonical technical companion to the user-facing `Docs/Dashboards.md` page.

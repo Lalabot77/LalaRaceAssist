@@ -50,4 +50,5 @@ Main user-facing changes since the late-February documentation baseline include:
 - Repositioned **PreRace** as a display/on-grid layer under Strategy without implying that it changes planner calculations.
 - Cleaned up **Dash Control** so it stays dash-oriented, centered on Cancel Message, Toggle Pit Screen, Primary Dash Mode, Declutter Mode, visibility, and grouped global dash functions.
 - Expanded practical guidance for **rejoin warnings**, **pit popups**, and **pit entry assist**.
+- Completed the v1 documentation sweep across the main repo docs and canonical subsystem docs so GitHub readers can move from user pages into technical ownership docs without stale Fuel-tab-era wording or broken responsibility boundaries.
 - Refreshed repo-facing documentation so the GitHub repo can serve as the canonical user home alongside the canonical subsystem docs.

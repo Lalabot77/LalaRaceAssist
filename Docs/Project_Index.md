@@ -1,11 +1,16 @@
 # Project Index
 
 Validated against commit: HEAD
-Last updated: 2026-03-21
+Last updated: 2026-03-22
 Branch: work
 
 ## What this repo is
 Lala Race Assist Plugin is a SimHub plugin for iRacing that provides strategy planning, fuel learning, dashboards, launch instrumentation, pit assistance, rejoin support, Shift Assist cueing, profile-backed persistence, and H2H race context.
+
+This page is the canonical documentation map for the **v1 GitHub documentation set**. It should let a reader move cleanly between:
+- public/user guidance,
+- subsystem-level technical truth,
+- internal maintainer references.
 
 ## Codex read/start order
 1. If present at repo root, read `../AGENTS.md` as the thin agent entry point, then start with `Project_Index.md`.
@@ -17,7 +22,7 @@ Lala Race Assist Plugin is a SimHub plugin for iRacing that provides strategy pl
 7. Follow the analysis-first workflow and reusable task framing in `Docs/Internal/CODEX_TASK_TEMPLATE.txt`.
 
 ## User documentation
-These pages are the GitHub-facing driver/user layer. They should explain what the driver sees, how to use the feature, what to trust, and what to review when it feels wrong.
+These pages are the GitHub-facing driver/user layer. They explain what the driver sees, how to use the feature, what to trust, and what to review when it feels wrong.
 
 - [Quick Start](Quick_Start.md)
 - [User Guide](User_Guide.md)
@@ -32,7 +37,7 @@ These pages are the GitHub-facing driver/user layer. They should explain what th
 - [Fuel Model](Fuel_Model.md)
 
 ## Subsystem documentation
-These pages are the technical/canonical subsystem layer. They should explain internal ownership, inputs, outputs, calculations, persistence, caching, and architecture boundaries.
+These pages are the technical/canonical subsystem layer. They explain internal ownership, inputs, outputs, calculations, persistence, caching, architecture boundaries, and the plugin-vs-dash contract where relevant.
 
 - [Subsystems/Fuel_Model.md](Subsystems/Fuel_Model.md)
 - [Subsystems/Fuel_Planner_Tab.md](Subsystems/Fuel_Planner_Tab.md)
@@ -64,7 +69,14 @@ These pages support maintainers, support work, and Codex tasks. They are not par
 - [Internal/SimHubLogMessages.md](Internal/SimHubLogMessages.md)
 - [Internal/Code_Snapshot.md](Internal/Code_Snapshot.md)
 
+## v1 documentation notes
+- `README.md` is the public landing page.
+- `Docs/*.md` are the reader-facing feature/system pages.
+- `Docs/Subsystems/*.md` are the canonical technical ownership docs.
+- `Docs/RepoStatus.md` records the latest documentation sweep and validation note.
+- If user-facing pages and subsystem docs ever disagree, update both in the same task so GitHub readers do not get split truths.
+
 ## Freshness
 - Validated against commit: HEAD
-- Date: 2026-03-21
+- Date: 2026-03-22
 - Branch: work
