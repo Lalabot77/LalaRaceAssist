@@ -2689,6 +2689,11 @@ namespace LaunchPlugin
 
         foreach (var preset in presets ?? Array.Empty<RacePreset>())
         {
+            if (preset == null)
+            {
+                continue;
+            }
+
             _availablePresets.Add(preset);
         }
     }

@@ -107,14 +107,14 @@ namespace LaunchPlugin
             if (active != null)
             {
                 var activeMatch = presets.FirstOrDefault(x =>
-                    string.Equals(x.Name, active.Name, StringComparison.OrdinalIgnoreCase));
+                    x != null && string.Equals(x.Name, active.Name, StringComparison.OrdinalIgnoreCase));
                 if (activeMatch != null)
                 {
                     return activeMatch;
                 }
             }
 
-            return presets.FirstOrDefault();
+            return presets.FirstOrDefault(x => x != null);
         }
 
         private void OnVmPropertyChanged(object sender, PropertyChangedEventArgs e)
