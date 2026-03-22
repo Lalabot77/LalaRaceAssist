@@ -41,11 +41,11 @@ This document is the canonical dash-facing contract layer. It does **not** redef
 ## Visibility and gating
 ### Dash visibility toggles
 Use the exported visibility families as hard gates:
-- `LalaDashShow*` = main dash visibility
-- `MsgDashShow*` = message dash visibility
-- `OverlayDashShow*` = overlay visibility
+- `LalaDashShow*` = `DRIVER` column in Dash Control = Lala Race Dash visibility
+- `MsgDashShow*` = `STRATEGY` column in Dash Control = Lala Strategy Dash visibility
+- `OverlayDashShow*` = `OVERLAY` column in Dash Control = overlay visibility
 
-These toggles are the contract between plugin settings and dash layout visibility. Dash JSON should not fight them.
+These toggles are the contract between plugin settings and dash layout visibility. The short UI labels are only there to fit the matrix width; dashboards should still treat the exported families above as the canonical technical meaning. Dash JSON should not fight them.
 
 ### Session-reset expectations
 Hide or clear visuals when:

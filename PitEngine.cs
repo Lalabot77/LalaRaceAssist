@@ -1043,6 +1043,73 @@ namespace LaunchPlugin
             return Path.Combine(GetTrackMarkersFolderPath(), "LalaPlugin.TrackMarkers.json");
         }
 
+        private bool TryLoadEmbeddedTrackMarkerSeed(out Dictionary<string, TrackMarkerRecord> seededStore)
+        {
+            seededStore = new Dictionary<string, TrackMarkerRecord>(StringComparer.OrdinalIgnoreCase);
+
+            try
+            {
+                AddEmbeddedTrackMarkerSeed(seededStore, "daytona 2011 road-Road Course", 0.9584953784942627, 0.09854353964328766, "2026-01-14T00:04:41.3335024Z", true);
+                AddEmbeddedTrackMarkerSeed(seededStore, "watkinsglen 2021 fullcourse-Boot", 0.9533379673957825, 0.040650948882102966, "2026-01-15T23:07:47.4212531Z", true);
+                AddEmbeddedTrackMarkerSeed(seededStore, "algarve gp-Grand Prix", 0.9851894974708557, 0.08810660988092422, "2026-01-20T19:52:37.8166586Z", true);
+                AddEmbeddedTrackMarkerSeed(seededStore, "roadatlanta full-Full Course", 0.9852728247642517, 0.08843562006950378, "2026-01-21T00:48:42.6644141Z", true);
+                AddEmbeddedTrackMarkerSeed(seededStore, "mugello gp-Grand Prix", 0.9445547461509705, 0.019067654386162758, "2026-01-21T01:32:25.8272175Z", true);
+                AddEmbeddedTrackMarkerSeed(seededStore, "miami gp-Grand Prix", 0.9884277582168579, 0.04780568927526474, "2026-01-22T23:04:00.7833623Z", true);
+                AddEmbeddedTrackMarkerSeed(seededStore, "monza full", 0.9825137257575989, 0.05763554945588112, "2026-02-02T21:07:23.8858139Z", true);
+                AddEmbeddedTrackMarkerSeed(seededStore, "monza combinedchicanes", 0.9900556802749634, 0.03306782245635986, "2026-02-02T23:31:27.7140271Z", true);
+                AddEmbeddedTrackMarkerSeed(seededStore, "virginia 2022 full-Full Course", 0.9302977919578552, 0.965314, "2026-02-10T20:02:44.9859779Z", true);
+                AddEmbeddedTrackMarkerSeed(seededStore, "spielberg gp-Grand Prix", 0.9823088049888611, 0.06598767638206482, "2026-02-13T21:04:01.5303566Z", true);
+                AddEmbeddedTrackMarkerSeed(seededStore, "imola gp", 0.932594358921051, 0.04608271270990372, "2026-02-10T10:17:17.4874821Z", true);
+                AddEmbeddedTrackMarkerSeed(seededStore, "sebring international-International", 0.9727578163146973, 0.048124514520168304, "2026-02-10T12:59:39.2462415Z", true);
+                AddEmbeddedTrackMarkerSeed(seededStore, "nurburgring gp", 0.9878191351890564, 0.062147799879312515, "2026-02-24T20:37:51.7901529Z", true);
+                AddEmbeddedTrackMarkerSeed(seededStore, "misano gp-Grand Prix", 0.9494248628616333, 0.07366493344306946, "2026-03-03T19:36:36.386349Z", true);
+                AddEmbeddedTrackMarkerSeed(seededStore, "hockenheim gp-Grand Prix", 0.98753821849823, 0.05686870589852333, "2026-03-17T23:46:11.5231502Z", true);
+                AddEmbeddedTrackMarkerSeed(seededStore, "okayama full", 0.9196758270263672, 0.003685770323500037, "2026-03-22T00:00:00Z", true);
+                AddEmbeddedTrackMarkerSeed(seededStore, "silverstone 2019 gp", 0.942277193069458, 0.06540275365114212, "2026-03-22T00:00:00Z", true);
+                AddEmbeddedTrackMarkerSeed(seededStore, "donington gp", 0.978685736656189, 0.04303457960486412, "2026-03-22T00:00:00Z", true);
+                AddEmbeddedTrackMarkerSeed(seededStore, "tsukuba 2kfull", 0.9532710313796997, 0.061123888939619064, "2026-03-22T00:00:00Z", true);
+                AddEmbeddedTrackMarkerSeed(seededStore, "fuji gp", 0.9919514060020447, 0.10028695315122604, "2026-03-22T00:00:00Z", true);
+                AddEmbeddedTrackMarkerSeed(seededStore, "spa 2024 up", 0.9877252578735352, 0.04072536528110504, "2026-03-22T00:00:00Z", true);
+                AddEmbeddedTrackMarkerSeed(seededStore, "zandvoort 2023 gp", 0.9934133887290955, 0.049291037023067474, "2026-03-22T00:00:00Z", true);
+                AddEmbeddedTrackMarkerSeed(seededStore, "lemans full", 0.9897839426994324, 0.027248606085777283, "2026-03-22T00:00:00Z", true);
+
+                SimHub.Logging.Current.Info($"[LalaPlugin:TrackMarkers] embedded seed load ok ({seededStore.Count} track(s))");
+                return seededStore.Count > 0;
+            }
+            catch (Exception ex)
+            {
+                SimHub.Logging.Current.Warn($"[LalaPlugin:TrackMarkers] embedded seed load fail err='{ex.Message}'");
+                seededStore.Clear();
+                return false;
+            }
+        }
+
+        private void AddEmbeddedTrackMarkerSeed(
+            Dictionary<string, TrackMarkerRecord> seededStore,
+            string key,
+            double entryPctRaw,
+            double exitPctRaw,
+            string lastUpdatedUtc,
+            bool locked)
+        {
+            string normalizedKey = NormalizeTrackKey(key);
+            if (string.IsNullOrWhiteSpace(normalizedKey))
+                return;
+
+            double entryPct = NormalizeTrackPercent(entryPctRaw);
+            double exitPct = NormalizeTrackPercent(exitPctRaw);
+            if (!IsValidPct(entryPct) || !IsValidPct(exitPct))
+                return;
+
+            seededStore[normalizedKey] = new TrackMarkerRecord
+            {
+                PitEntryTrkPct = entryPct,
+                PitExitTrkPct = exitPct,
+                LastUpdatedUtc = string.IsNullOrWhiteSpace(lastUpdatedUtc) ? DateTime.UtcNow.ToString("o") : lastUpdatedUtc,
+                Locked = locked
+            };
+        }
+
         private bool TryLoadTrackMarkerStore(out Dictionary<string, TrackMarkerRecord> loadedStore)
         {
             loadedStore = new Dictionary<string, TrackMarkerRecord>(StringComparer.OrdinalIgnoreCase);
@@ -1065,6 +1132,15 @@ namespace LaunchPlugin
 
                 if (!File.Exists(path))
                 {
+                    if (TryLoadEmbeddedTrackMarkerSeed(out var seededStore))
+                    {
+                        loadedStore = seededStore;
+                        var seededJson = JsonConvert.SerializeObject(loadedStore, Formatting.Indented);
+                        File.WriteAllText(newPath, seededJson);
+                        SimHub.Logging.Current.Info($"[LalaPlugin:TrackMarkers] load seeded ({loadedStore.Count} track(s)) path='{path}'");
+                        return true;
+                    }
+
                     SimHub.Logging.Current.Info($"[LalaPlugin:TrackMarkers] load (new) path='{path}'");
                     return true;
                 }
