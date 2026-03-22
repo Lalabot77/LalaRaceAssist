@@ -77,7 +77,7 @@ Presets are part of the Strategy workflow.
 - Choose a race preset from Strategy.
 - Open **`Presets...`** to create, rename, edit, save, or delete presets.
 - Return to Strategy to apply and use them.
-- The Preset Manager popup now keeps its combo-box selection readable against the dark theme instead of relying on a washed-out host default.
+- The Preset Manager popup now uses the same working ComboBox behavior as the main Strategy page, keeping the selected value readable against the dark theme without breaking dropdown selection.
 
 There is no separate top-level Presets tab.
 

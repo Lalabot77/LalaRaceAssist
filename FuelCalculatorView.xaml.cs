@@ -1,4 +1,5 @@
-﻿using System.Windows;
+﻿using System;
+using System.Windows;
 using System.Windows.Controls;
 namespace LaunchPlugin
 {
@@ -42,14 +43,27 @@ namespace LaunchPlugin
                     MinHeight = 620,
                     ResizeMode = ResizeMode.CanResize,
                     Background = new System.Windows.Media.SolidColorBrush(System.Windows.Media.Color.FromRgb(0x1F, 0x23, 0x2B)),
-                    WindowStartupLocation = owner != null ? WindowStartupLocation.CenterOwner : WindowStartupLocation.CenterScreen,
-                    Owner = owner,
+                    WindowStartupLocation = owner != null && owner.IsVisible ? WindowStartupLocation.CenterOwner : WindowStartupLocation.CenterScreen,
                     ShowInTaskbar = false
                 };
+
+                if (owner != null && owner.IsVisible)
+                {
+                    dialog.Owner = owner;
+                }
 
                 presetManager.Background = new System.Windows.Media.SolidColorBrush(System.Windows.Media.Color.FromRgb(0x1F, 0x23, 0x2B));
 
                 dialog.ShowDialog();
+            }
+            catch (Exception ex)
+            {
+                SimHub.Logging.Current.Error("[LalaPlugin:Fuel Burn] Failed to open Preset Manager: " + ex.Message);
+                MessageBox.Show(
+                    "Unable to open the Preset Manager. See SimHub logs for details.",
+                    "Preset Manager",
+                    MessageBoxButton.OK,
+                    MessageBoxImage.Warning);
             }
             finally
             {

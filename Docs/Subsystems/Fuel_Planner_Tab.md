@@ -14,7 +14,7 @@ The Fuel Planner (surfaced as the top-level **Strategy** tab in the plugin UI) i
 The planner does **not** replace the Fuel Model.  
 It consumes the Fuel Model’s **live snapshot** and produces **explicit planning outputs** that are stable unless the user changes them.
 
-Preset management remains part of the same subsystem, but it is no longer a separate top-level navigation tab. The Strategy tab keeps the inline `Race Preset` selector and opens the existing preset editor via a modal **Preset Manager** dialog beside that selector. The Preset Manager still owns preset editing only; this release-polish pass also keeps its `PreRace Mode` combo on an explicit dark theme so the selected value remains readable in the popup.
+Preset management remains part of the same subsystem, but it is no longer a separate top-level navigation tab. The Strategy tab keeps the inline `Race Preset` selector and opens the existing preset editor via a modal **Preset Manager** dialog beside that selector. The Preset Manager still owns preset editing only; its `PreRace Mode` combo now reuses the same standard WPF ComboBox pattern already working on the main Strategy page so the selected value stays readable without breaking normal dropdown interaction.
 
 Canonical references:
 - Fuel behaviour contract: `Docs/FuelProperties_Spec.md`
@@ -61,6 +61,7 @@ These are **authoritative** once set by the user:
 - **Race Preset selection**
   - The Strategy tab keeps the inline preset combo as the active apply/select control.
   - The adjacent `Presets...` button opens the modal Preset Manager for create/rename/delete/edit/save-current flows without introducing a second preset-editing path.
+  - Preset load/open paths now defensively skip null preset entries before binding the modal editor so malformed persisted rows do not hard-fail the popup open flow.
 
 ### Track-scoped planner persistence
 These planner inputs persist on the selected `TrackStats` record rather than on the car profile:
