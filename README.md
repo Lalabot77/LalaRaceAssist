@@ -115,6 +115,14 @@ Discussions are the best place for:
 - race workflow discussions
 - general feedback
 
+## License
+
+Lala Race Assist Plugin  
+Copyright © 2026 Lalabot77
+
+This project is released under the MIT License.  
+See the LICENSE file for details.
+
 ### Dashboard Issues
 
 If you encounter a problem specifically with a dashboard layout or behaviour, open a **Dashboard Issue**.
