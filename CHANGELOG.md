@@ -52,3 +52,10 @@ Main user-facing changes since the late-February documentation baseline include:
 - Expanded practical guidance for **rejoin warnings**, **pit popups**, and **pit entry assist**.
 - Completed the v1 documentation sweep across the main repo docs and canonical subsystem docs so GitHub readers can move from user pages into technical ownership docs without stale Fuel-tab-era wording or broken responsibility boundaries.
 - Refreshed repo-facing documentation so the GitHub repo can serve as the canonical user home alongside the canonical subsystem docs.
+
+## v1.1 – Release polish pass
+
+- Shortened Dash Control visibility column labels to **`DRIVER`**, **`STRATEGY`**, and **`OVERLAY`** while keeping tooltip wording explicit.
+- Added a release-facing warning below the debug-mode master toggle so troubleshooting features are less likely to be left on accidentally.
+- Kept Strategy preset editing in the existing Preset Manager popup but fixed the dark-theme combo-box readability issue for the `PreRace Mode` selector.
+- Embedded the shipped preset defaults and expanded track-marker defaults directly in the owning code paths so the repo/package ships with the intended first-run data, including the shorter `IMSA 40m` / `Sprint 20m` preset names and additional seeded tracks.

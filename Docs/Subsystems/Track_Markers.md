@@ -1,7 +1,7 @@
 # Track Markers (Pit Entry/Exit) — Auto-Learn, Storage, MSGV1
 
-Validated against commit: 298accf  
-Last updated: 2026-02-10  
+Validated against commit: HEAD  
+Last updated: 2026-03-22  
 Branch: work
 
 ## Purpose
@@ -10,7 +10,8 @@ Capture pit entry/exit lines per track, keep them stable across sessions via per
 ## Source of truth and storage
 - **Source of truth:** Persisted markers in `PluginsData/Common/LalaPlugin/TrackMarkers.json` (`PitEngine` store). Live telemetry is only used to propose captures; stored values drive exports and UI snapshots. Legacy `LalaPlugin.TrackMarkers.json` is migrated on load if present.【F:PitEngine.cs†L948-L1034】
 - **Keys:** Canonicalised track key from SimHub (`TrackCode`, then display/config/name fallbacks). Unknown/blank keys short-circuit all marker handling.【F:PitEngine.cs†L629-L676】【F:PitEngine.cs†L821-L878】
-- **Defaults:** New tracks start **locked = true** with empty percents. Lock can be toggled via UI or actions; lock state is persisted with the markers.【F:PitEngine.cs†L586-L600】【F:PitEngine.cs†L968-L1034】
+- **Embedded seed support:** If the persisted store does not exist yet, `PitEngine` seeds defaults from an embedded in-code track-marker set. Only records with valid seeded entry and exit percents are accepted; invalid / `NaN` / incomplete entries are skipped rather than coerced. The shipped embedded rows also carry fixed stored timestamps, so first-run seeded JSON stays deterministic instead of picking up the current clock time.【F:PitEngine.cs†L1046-L1148】
+- **Defaults after seeding:** New tracks still start **locked = true** with empty percents when no valid embedded seed entry exists for that track. Lock can be toggled via UI or actions; lock state is persisted with the markers.【F:PitEngine.cs†L586-L600】【F:PitEngine.cs†L968-L1034】
 
 ## Inputs and guards
 - **Track length:** Parsed once per session from `WeekendInfo.TrackLength` (kilometres). Values outside **500–20000 m** are ignored.【F:PitEngine.cs†L126-L154】【F:PitEngine.cs†L669-L676】

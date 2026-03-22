@@ -1,7 +1,7 @@
 # Fuel Planner / Strategy Tab
 
-Validated against commit: 3f0af12824336625dd449cc0329702ac50394396
-Last updated: 2026-03-20
+Validated against commit: HEAD
+Last updated: 2026-03-22
 Branch: work
 
 ## Purpose
@@ -14,7 +14,7 @@ The Fuel Planner (surfaced as the top-level **Strategy** tab in the plugin UI) i
 The planner does **not** replace the Fuel Model.  
 It consumes the Fuel Model’s **live snapshot** and produces **explicit planning outputs** that are stable unless the user changes them.
 
-Preset management remains part of the same subsystem, but it is no longer a separate top-level navigation tab. The Strategy tab keeps the inline `Race Preset` selector and opens the existing preset editor via a modal **Preset Manager** dialog beside that selector.
+Preset management remains part of the same subsystem, but it is no longer a separate top-level navigation tab. The Strategy tab keeps the inline `Race Preset` selector and opens the existing preset editor via a modal **Preset Manager** dialog beside that selector. The Preset Manager still owns preset editing only; this release-polish pass also keeps its `PreRace Mode` combo on an explicit dark theme so the selected value remains readable in the popup.
 
 Canonical references:
 - Fuel behaviour contract: `Docs/FuelProperties_Spec.md`
@@ -118,6 +118,7 @@ The planner tracks *what source is currently active* for each input:
 - **Profile mode:** `MaxFuelOverride` is clamped to the profile base tank (`BaseTankLitres`), remains manually editable, and the UI shows a percent-of-base-tank badge.
 - **Preset max fuel input:** Preset max fuel is expressed as a **percentage of base tank** (default 100%), making presets portable across cars with different base tanks.
 - **Preset application in Profile mode:** applying/selecting a preset can still set the active planner max fuel exactly as before, subject to the existing profile-side clamp.
+- **Shipped preset defaults:** when no persisted preset store exists yet, the plugin seeds the shipped default set directly from the embedded preset payload in `RacePresetStore`; there is no separate external default file dependency for repo/package shipping.
 - **Live Snapshot mode:** the planner tank basis comes only from the live detected session cap (`MaxFuel × BoP`). Manual/profile/preset max-fuel values do not remain active underneath Live Snapshot.
 - **Live Snapshot UI lock:** the max-fuel slider/input is non-editable in Live Snapshot and shows the live cap when available.
 - **Live Snapshot fallback:** if the live cap is unavailable, the planner uses `0` as the effective tank basis, surfaces an explicit “Live max fuel cap unavailable” validation error, and blocks strategy outputs rather than silently reusing an older profile/preset/manual value.

@@ -118,6 +118,11 @@
                                          Margin="0,10,0,0"
                                          IsChecked="{Binding Settings.EnableSoftDebug, Mode=TwoWay}"
                                          ToolTip="Master toggle that enables debug UI and debug processing."/>
+                <TextBlock Margin="0,6,0,0"
+                           Foreground="LightGray"
+                           Opacity="0.9"
+                           TextWrapping="Wrap"
+                           Text="Debug mode is for troubleshooting only. Leave this off unless asked to enable it."/>
                 <Expander Header="Debug Options"
                           Margin="0,10,0,0"
                           IsExpanded="{Binding ElementName=DebugMasterToggle, Path=IsChecked}"

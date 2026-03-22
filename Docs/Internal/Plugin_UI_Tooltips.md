@@ -1,7 +1,7 @@
 ﻿# Plugin UI Tooltips
 
-Validated against commit: 3f0af12824336625dd449cc0329702ac50394396
-Last updated: 2026-03-20
+Validated against commit: HEAD
+Last updated: 2026-03-22
 Branch: work
 
 ## CopyProfileDialog.xaml
@@ -20,7 +20,8 @@ Branch: work
 - `Global Dash Functions` -> General: `Auto screen selection at session start` automatically switches dash screens when a session starts based on context.
 - `Global Dash Functions` -> Dark Mode: `Dark Mode` selector uses Off / Manual / Auto, `Dark Mode Brightness` sets base brightness, `Use Lovely True Dark` follows Lovely when available, and `Toggle Dark Mode` remains here as the dark-mode-specific binding row.
 - `Global Dash Functions` -> Fuel: `Fuel Ready Confidence` sets the live-fuel readiness threshold and `Pit-in Fuel Reserve` sets the stint reserve margin.
-- `Dash Visibility` keeps the existing main/message/overlay visibility matrix for Launch Assist, Pit Assists, Automatic Pit Screen, Rejoin Assist, Verbose Race Messages, Race Flags, Radio Messages, and Traffic Alerts.
+- `Dash Visibility` keeps the existing visibility matrix for Launch Assist, Pit Assists, Automatic Pit Screen, Rejoin Assist, Verbose Race Messages, Race Flags, Radio Messages, and Traffic Alerts, but the release-facing column headers are now `DRIVER`, `STRATEGY`, and `OVERLAY`.
+- `Dash Visibility` header tooltips make the short labels explicit: `DRIVER = Lala Race Dash`, `STRATEGY = Lala Strategy Dash`, and `OVERLAY = overlay surfaces`.
 - `Launch Mode`, `Event Marker`, and `Post-Launch Results Display Time` no longer appear in Dash Control after this tidy-up.
 
 ## FuelCalculatorView.xaml
@@ -145,6 +146,7 @@ Branch: work
 - L289: Rename the selected preset using the name box.
 - L301: Revert edits to the last saved preset values.
 - L303: Save edits to the selected preset.
+- The `PreRace Mode` combo now uses an explicit dark popup/control template so the selected value and dropdown list remain readable against the plugin’s dark theme.
 
 ## ProfilesManagerView.xaml
 - L22: Manage car profiles stored on disk.
@@ -206,6 +208,7 @@ Branch: work
 - `GlobalSettingsView.xaml` now surfaces the Friends List tools/import flow inside a collapsed `Friends List` expander first, then a collapsed `Launch Settings` expander, then the existing Debug block.
 - `GlobalSettingsView.xaml` no longer contains the duplicated per-profile `USER VARIABLES` block; the Settings tab now begins with the Friends List tools/import flow.
 - `GlobalSettingsView.xaml` DEBUG section continues to host the existing debug toggles and the moved `Event Marker` binding under `Debug Actions`; Launch Settings now sits above this block inside its own collapsed expander.
+- `GlobalSettingsView.xaml` shows the warning text `Debug mode is for troubleshooting only. Leave this off unless asked to enable it.` directly below `Enable debugging mode`.
 - `GlobalSettingsView.xaml` `Enable Debug Logging` tooltip says it enables verbose logging for troubleshooting the plugin.
 - `GlobalSettingsView.xaml` `PitExit Verbose Logging` tooltip says it adds PitExit math audit details to pit-in snapshots for troubleshooting.
 - `GlobalSettingsView.xaml` `Shift Assist Debug CSV` tooltip explains per-tick diagnostic CSV logging.

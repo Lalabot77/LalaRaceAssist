@@ -27,6 +27,8 @@
         <SolidColorBrush x:Key="PresetManagerInputBackgroundBrush" Color="#171A20"/>
         <SolidColorBrush x:Key="PresetManagerInputBorderBrush" Color="#566171"/>
         <SolidColorBrush x:Key="PresetManagerComboItemHoverBrush" Color="#2F3743"/>
+        <SolidColorBrush x:Key="PresetManagerComboButtonBrush" Color="#20252D"/>
+        <SolidColorBrush x:Key="PresetManagerComboPopupBrush" Color="#171A20"/>
 
         <Style TargetType="TextBlock">
             <Setter Property="Foreground" Value="{StaticResource PresetManagerPrimaryTextBrush}"/>
@@ -51,6 +53,75 @@
             <Setter Property="Foreground" Value="{StaticResource PresetManagerPrimaryTextBrush}"/>
             <Setter Property="Background" Value="{StaticResource PresetManagerInputBackgroundBrush}"/>
             <Setter Property="BorderBrush" Value="{StaticResource PresetManagerInputBorderBrush}"/>
+            <Setter Property="Padding" Value="8,3,30,3"/>
+            <Setter Property="SnapsToDevicePixels" Value="True"/>
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="ComboBox">
+                        <Grid>
+                            <Border x:Name="OuterBorder"
+                                    Background="{TemplateBinding Background}"
+                                    BorderBrush="{TemplateBinding BorderBrush}"
+                                    BorderThickness="{TemplateBinding BorderThickness}"
+                                    CornerRadius="3"
+                                    SnapsToDevicePixels="True"/>
+                            <Grid Margin="0">
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="*"/>
+                                    <ColumnDefinition Width="28"/>
+                                </Grid.ColumnDefinitions>
+
+                                <ContentPresenter Grid.Column="0"
+                                                  Margin="{TemplateBinding Padding}"
+                                                  HorizontalAlignment="Left"
+                                                  VerticalAlignment="Center"
+                                                  Content="{TemplateBinding SelectionBoxItem}"
+                                                  ContentTemplate="{TemplateBinding SelectionBoxItemTemplate}"
+                                                  ContentTemplateSelector="{TemplateBinding ItemTemplateSelector}"
+                                                  RecognizesAccessKey="True"
+                                                  SnapsToDevicePixels="{TemplateBinding SnapsToDevicePixels}"/>
+
+                                <Border Grid.Column="1"
+                                        Background="{StaticResource PresetManagerComboButtonBrush}"
+                                        BorderBrush="{TemplateBinding BorderBrush}"
+                                        BorderThickness="1,0,0,0"
+                                        CornerRadius="0,3,3,0">
+                                    <Path HorizontalAlignment="Center"
+                                          VerticalAlignment="Center"
+                                          Fill="{StaticResource PresetManagerPrimaryTextBrush}"
+                                          Data="M 0 0 L 4 4 L 8 0 Z"/>
+                                </Border>
+
+                                <Popup x:Name="PART_Popup"
+                                       Placement="Bottom"
+                                       AllowsTransparency="True"
+                                       Focusable="False"
+                                       IsOpen="{TemplateBinding IsDropDownOpen}"
+                                       PopupAnimation="Slide">
+                                    <Border Margin="0,4,0,0"
+                                            MinWidth="{Binding ActualWidth, RelativeSource={RelativeSource TemplatedParent}}"
+                                            Background="{StaticResource PresetManagerComboPopupBrush}"
+                                            BorderBrush="{TemplateBinding BorderBrush}"
+                                            BorderThickness="1"
+                                            CornerRadius="3">
+                                        <ScrollViewer SnapsToDevicePixels="True">
+                                            <ItemsPresenter KeyboardNavigation.DirectionalNavigation="Contained"/>
+                                        </ScrollViewer>
+                                    </Border>
+                                </Popup>
+                            </Grid>
+                        </Grid>
+                        <ControlTemplate.Triggers>
+                            <Trigger Property="IsEnabled" Value="False">
+                                <Setter TargetName="OuterBorder" Property="Opacity" Value="0.6"/>
+                            </Trigger>
+                            <Trigger Property="IsMouseOver" Value="True">
+                                <Setter TargetName="OuterBorder" Property="BorderBrush" Value="{StaticResource PresetManagerPrimaryTextBrush}"/>
+                            </Trigger>
+                        </ControlTemplate.Triggers>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
         </Style>
 
         <Style TargetType="ComboBoxItem">

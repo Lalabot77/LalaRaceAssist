@@ -24,7 +24,6 @@ namespace LaunchPlugin
 
         private const string NewFileName = "RacePresets.json";
         private const string LegacyFileName = "LalaLaunch.RacePresets.json";
-
         public static string GetFolderPath()
         {
             return PluginStorage.GetPluginFolder();
@@ -128,7 +127,7 @@ namespace LaunchPlugin
         }
 
         /// <summary>
-        /// Simple default set to prove the plumbing. Adjust values later.
+        /// Embedded shipped defaults for first-run preset seeding.
         /// </summary>
         public static List<RacePreset> DefaultPresets()
         {
@@ -136,34 +135,77 @@ namespace LaunchPlugin
             {
                 new RacePreset
                 {
-                    Name = "IMSA 40m (1 stop window)",
+                    Name = "IMSA 40m",
                     Type = RacePresetType.TimeLimited,
                     RaceMinutes = 40,
-                    MandatoryStopRequired = false,
-                    TireChangeTimeSec = 0,        // 0 = no planned tyre change
-                    MaxFuelPercent = 100,         // percent of base tank
+                    RaceLaps = null,
+                    PreRaceMode = 1,
+                    TireChangeTimeSec = 0.0,
+                    MaxFuelPercent = 49.8,
                     ContingencyInLaps = true,
-                    ContingencyValue = 1.0
+                    ContingencyValue = 1.9047486670090663
                 },
                 new RacePreset
                 {
-                    Name = "Sprint 25m (no stop)",
+                    Name = "Sprint 20m",
                     Type = RacePresetType.TimeLimited,
-                    RaceMinutes = 25,
-                    MandatoryStopRequired = false,
-                    TireChangeTimeSec = 0,
-                    MaxFuelPercent = 100,
+                    RaceMinutes = 20,
+                    RaceLaps = null,
+                    PreRaceMode = 3,
+                    TireChangeTimeSec = 0.0,
+                    MaxFuelPercent = null,
+                    LegacyMaxFuelLitres = 55.079360442729552,
                     ContingencyInLaps = true,
-                    ContingencyValue = 0.5
+                    ContingencyValue = 1.5
                 },
                 new RacePreset
                 {
                     Name = "Fixed 30 Laps",
                     Type = RacePresetType.LapLimited,
+                    RaceMinutes = null,
                     RaceLaps = 30,
-                    MandatoryStopRequired = false,
-                    TireChangeTimeSec = 0,
-                    MaxFuelPercent = 100,
+                    PreRaceMode = 3,
+                    TireChangeTimeSec = 0.0,
+                    MaxFuelPercent = null,
+                    LegacyMaxFuelLitres = 110.0,
+                    ContingencyInLaps = true,
+                    ContingencyValue = 1.0
+                },
+                new RacePreset
+                {
+                    Name = "Thursday SRi League",
+                    Type = RacePresetType.TimeLimited,
+                    RaceMinutes = 60,
+                    RaceLaps = null,
+                    PreRaceMode = 1,
+                    TireChangeTimeSec = 0.0,
+                    MaxFuelPercent = 70.0,
+                    ContingencyInLaps = true,
+                    ContingencyValue = 1.4331941999189148
+                },
+                new RacePreset
+                {
+                    Name = "24 Hours Endurance",
+                    Type = RacePresetType.TimeLimited,
+                    RaceMinutes = 1440,
+                    RaceLaps = null,
+                    PreRaceMode = 3,
+                    TireChangeTimeSec = 23.231592413663829,
+                    MaxFuelPercent = null,
+                    LegacyMaxFuelLitres = 119.89939586875516,
+                    ContingencyInLaps = true,
+                    ContingencyValue = 1.0
+                },
+                new RacePreset
+                {
+                    Name = "6 Hour GT3 Endurance",
+                    Type = RacePresetType.TimeLimited,
+                    RaceMinutes = 360,
+                    RaceLaps = null,
+                    PreRaceMode = 2,
+                    TireChangeTimeSec = 23.0,
+                    MaxFuelPercent = null,
+                    LegacyMaxFuelLitres = 110.0,
                     ContingencyInLaps = true,
                     ContingencyValue = 1.0
                 }

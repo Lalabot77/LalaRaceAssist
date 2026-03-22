@@ -44,6 +44,12 @@ Dash Control is dash-oriented. Use it to manage:
 - whether pit screens appear or are manually overridden,
 - how the display behaves across different dashboard layouts.
 
+In the Dash Visibility matrix, the short release-facing headers are:
+
+- **DRIVER** = Lala Race Dash
+- **STRATEGY** = Lala Strategy Dash
+- **OVERLAY** = overlay surfaces
+
 Do **not** use Dash Control as the mental home for strategy, launch logic, or saved profile learning.
 
 ## 5. Strategy, PreRace, and display boundaries
