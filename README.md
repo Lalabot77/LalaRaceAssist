@@ -4,6 +4,8 @@ Lala Race Assist Plugin is a SimHub plugin for **iRacing** focused on race engin
 
 It is built to help with the practical race workflow: plan stints, trust learned fuel and pace data, manage launch and pit situations, and keep key race context visible while driving.
 
+Version **1.0** documentation is now organized so GitHub readers can move from a quick user overview into the canonical subsystem docs without guessing which page owns which truth.
+
 ## Core Systems
 
 - **Strategy** - stable planning workflow for race fuel, stint, and context decisions
@@ -52,11 +54,12 @@ The plugin owns the **learning, storage, calculations, and exports**. Dashboards
 - [Profiles System](Docs/Profiles_System.md)
 - [Fuel Model](Docs/Fuel_Model.md)
 
-### Dash and Reference
+### Technical / Canonical Subsystems
 
-- [Dashboards](Docs/Dashboards.md)
+- [Project Index](Docs/Project_Index.md) - documentation map and ownership guide
+- [Subsystem docs](Docs/Subsystems/) - canonical subsystem behavior, boundaries, and export-level contracts
+- [Dash integration notes](Docs/Subsystems/Dash_Integration.md)
 - [Changelog](CHANGELOG.md)
-- [Project Index](Docs/Project_Index.md)
 
 ## Current UI Structure
 

@@ -1,210 +1,191 @@
 # Fuel Model
 
-Validated against commit: 708af0f  
-Last updated: 2026-01-27  
+Validated against commit: HEAD
+Last updated: 2026-03-22
 Branch: work
 
 ## Purpose
-The Fuel Model is the runtime engine that:
-- Captures **live fuel burn per lap** (with strict acceptance/rejection rules).
-- Maintains **rolling windows** (dry/wet) and computes a **stable fuel-per-lap** used for projections.
-- Seeds fuel burn across session transitions to avoid cold starts in Race.
-- Persists stable fuel and pace stats into profiles when confidence thresholds are met.
-- Projects **laps remaining in race**, including **after-zero** behaviour for timed races.
-- Computes **deltas, pit needs, and pit window state** outputs consumed by the Fuel Tab and dashboards.
+The Fuel Model is the runtime fuel-learning and fuel-projection engine. It:
+- captures accepted live fuel-burn samples lap by lap,
+- maintains dry/wet rolling windows,
+- publishes a stable fuel-per-lap value for dashboards and runtime calculations,
+- persists trustworthy condition-specific values into profiles,
+- projects race distance / after-zero behavior for timed races,
+- feeds pit-need, pit-window, and stint-burn guidance outputs.
 
-Canonical behaviour and edge-case rules live in:
-- `Docs/FuelProperties_Spec.md` (fuel + pit logic contract).
-- `Docs/Internal/SimHubParameterInventory.md` (exports list/cadence).
-- `Docs/FuelTab_SourceFlowNotes.md` (how the Fuel Tab consumes “live snapshot” + readiness).
+For GitHub readers, the practical split is:
+- **`Docs/Fuel_Model.md`** = driver-facing explanation of what to trust.
+- **`Docs/Subsystems/Fuel_Model.md`** = canonical runtime behavior and ownership.
+- **`Docs/Subsystems/Fuel_Planner_Tab.md`** = the separate Strategy-tab planning workflow that consumes fuel-model outputs but does not replace the runtime engine.
 
----
+Canonical companion docs:
+- `Docs/Internal/SimHubParameterInventory.md`
+- `Docs/Internal/SimHubLogMessages.md`
+- `Docs/Subsystems/Pace_And_Projection.md`
+- `Docs/Subsystems/Fuel_Planner_Tab.md`
 
 ## Scope and boundaries
-This doc describes the **fuel model runtime** (burn capture → stable selection → projection → pit math → pit window outputs).
-It does **not** re-document:
-- Fuel Planner UI source selection logic (see `Subsystems/Fuel_Planner_Tab.md` + `FuelTab_SourceFlowNotes.md`).
-- Pace estimator internals (see `Subsystems/Pace_And_Projection.md`).
+This doc covers the **runtime** fuel path:
+- lap acceptance,
+- rolling fuel windows,
+- stable burn selection,
+- race-distance projection inputs,
+- pit math,
+- pit-window states,
+- profile persistence of learned fuel values.
 
----
+Out of scope:
+- Strategy-tab input ownership and preset behavior,
+- user-facing planner workflow,
+- dashboard artwork/layout decisions.
 
 ## Inputs (source + cadence)
+### Runtime telemetry
+- Fuel level / fuel delta at lap transitions.
+- Session type, session time remaining, timer-zero state, and laps-completed state.
+- Pit-lane / pit-trip state.
+- Refuel request and live tank-capacity inputs.
+- Tyre compound / wetness context used to separate dry vs wet learning.
 
-### Telemetry and SimHub core data (runtime, 500 ms poll)
-- Fuel level, laps/completed laps, session time remaining, “timer zero” signals.
-- Pit lane status / pitting state.
-- Refuel request (MFD fuel to add), tyre selection state.
-- SimHub computed fallback fuel-per-lap (`DataCorePlugin.Computed.Fuel_LitersPerLap`) when no accepted laps exist.
-- Live max fuel inputs: `DataCorePlugin.GameData.MaxFuel` and `DriverCarMaxFuelPct` (BoP) for effective tank capacity.
+### Profile baselines
+- Track/car dry and wet fuel averages.
+- Track/car lap-time baselines used to keep acceptance and projection behavior defensible.
+- Condition lock state that prevents telemetry-driven overwrites when a condition has been intentionally frozen.
 
-### Profile baselines (on access)
-- Track/car profile fuel baselines (dry/wet averages) used for:
-  - Rejection bracketing (0.5x–1.5x baseline).
-  - Stable fallback when live confidence is low.
-  - Seeding on session transition (Driving → Race).
-
-### Pace inputs (integrated dependency)
-- Projection lap time selection (stint avg / last5 / profile / fallback estimator) feeds race-distance projection and pit window.
-
----
+### Pace / projection dependency
+- Projection lap-time selection from the Pace & Projection subsystem.
+- Strategy-derived after-zero allowance when no live after-zero estimate is ready yet.
 
 ## Internal state
+### Rolling fuel windows
+- Separate dry and wet accepted-lap windows.
+- Per-session max-burn tracking with spike protection.
+- Seed markers so carry-over baseline values are not immediately evicted on a session transition.
 
-### Rolling windows and fuel capture
-- Dry and wet rolling lists (max 5 accepted laps each).
-- Session max burn tracking (bounded by baseline multiplier to avoid spikes).
-- “Active seeds” markers (so seeded laps aren’t immediately evicted).
-- Wet/dry mode flag influencing which window is considered “live”.
+### Stable burn state
+- A continuously evaluated candidate burn.
+- A stable exported burn value held with a deadband so dashboards do not thrash on minor changes.
+- Source/confidence tags so consumers can tell whether the value is live, profile-backed, or fallback-driven.
 
-### Surface detection & wet mode
-- **Wet mode source:** tire compound telemetry (iRacing PlayerTireCompound / extra property) drives `wet` vs `dry` mode. Track wetness telemetry is captured for dashboards but does not override the tyre-based mode.
-- **Track wetness exports:** numeric wetness and a label (“Dry”, “Damp”, “Light Wet”, “Mod Wet”, “Very Wet”, “Unknown”) are exported for UI display.
-- **Cross-mode penalty:** when using the opposite-condition window (e.g., wet mode with only dry samples), confidence applies a wet/dry match penalty.
+### Wet/dry routing
+- Wet mode follows tyre-compound telemetry for learning/persistence routing.
+- Track wetness is exported for UI use, but tyre mode remains the canonical routing choice for fuel learning.
+- Cross-condition fallback is allowed, but confidence is penalized when dry data is being used in wet mode or vice versa.
 
-### Seed handling across sessions
-- On session transitions, the model captures dry/wet seeds (burn averages + sample counts) and re-applies them when entering a Race session for the same car/track.
-- Seeded laps are protected from immediate eviction in the rolling window until fresh samples arrive.
+### Persistence state
+- Dry and wet condition stats persist independently.
+- Each condition has its own sample count, last-updated metadata, and lock gate.
+- Session-transition seeding is used to reduce race-session cold starts.
 
-### Stable burn state (the number dashboards should trust)
-- `_stableFuelPerLap` + `Fuel.LiveFuelPerLap_StableSource` + `Fuel.LiveFuelPerLap_StableConfidence`.
-- Deadband hold: when the candidate is “close enough”, stable value holds while source/confidence can still evolve.
-
-### Live max tank tracking
-- Live max tank is computed as `MaxFuel × BoP` with BoP clamped to [0.01, 1.0] and defaulted to 1.0 when missing.
-- The last valid live max fuel is retained so tank-space calculations remain stable if telemetry temporarily drops.
-- Live Session UI displays are cleared to `—` when no valid cap exists, avoiding stale values during session transitions.
-
-### Profile persistence (dry vs wet)
-- Once enough samples exist (≥2 valid laps), the model persists min/avg/max fuel burn, sample counts, and avg lap time into the active track profile.
-- Condition locks (`DryConditionsLocked`/`WetConditionsLocked`) prevent telemetry-driven writes.
-- Per-condition “last updated” metadata is recorded separately for dry and wet stats.
-
-### After-zero state (timed-race support)
-- Planner after-zero seconds always available (from strategy/profile).
-- Live after-zero estimate becomes valid once timer zero is observed and post-zero time advances.
-- Source switches between planner and live (and is exported).
-
-### Pit window state cache
-- Last pit window state enum + label + last log timestamp to avoid spam logging.
-- Pit window opening/closing lap calculations are computed from stable burn + tank space logic.
-
----
+### Projection and pit-window state
+- Last valid live max tank for stable tank-space behavior.
+- Current after-zero source (`planner` vs `live`).
+- Debounced pit-window state / label so logs and dashes do not chatter.
 
 ## Calculation blocks (high level)
+### 1) Lap acceptance
+On lap completion, the subsystem calculates the lap fuel delta and rejects non-representative samples.
 
-### 1) Lap acceptance (per lap crossing)
-On lap completion, compute fuel delta for the lap and apply rejection rules before inserting into windows.
+Common reject cases include:
+- race warmup / earliest laps,
+- pit-involved laps or the first lap after pit exit,
+- incident-latched laps when that signal is active,
+- impossible or clearly bad fuel deltas,
+- deltas that fall too far outside the saved profile baseline when a baseline exists.
 
-**Rejection gates (canonical):**
-- Race warmup (laps ≤ 1) → reject.
-- Pit involvement / first lap after pit exit → reject.
-- Incident/off-track latched reason (if wired) → reject.
-- Fuel delta sanity (>0.05 L, and <= max(10 L, 20% of effective tank)) → reject.
-- If profile baseline exists: require 0.5x–1.5x baseline → reject otherwise.
+Wet/dry mode does **not** change the validity rules; it only decides which condition window receives an accepted sample.
 
-Wet/dry mode **does not change** the acceptance rules; it only controls which condition’s rolling window receives the lap and which stats can be persisted.
+### 2) Rolling window maintenance
+Accepted samples are inserted into the active condition window.
+The subsystem then:
+- enforces maximum window size,
+- updates min/max guidance values,
+- refreshes session max-burn state inside guarded bounds,
+- protects newly seeded values until enough fresh live data exists.
 
-Source of truth: `FuelProperties_Spec.md`.
+### 3) Stable burn selection
+The runtime chooses a stable burn candidate from:
+1. trustworthy live window data,
+2. profile condition averages,
+3. safe fallback behavior.
 
-### 2) Rolling window maintenance (per accepted lap)
-- Insert accepted lap into dry or wet list (depending on wet mode).
-- Maintain max length (5).
-- Track minima/maxima for guidance.
-- Update session max burn only when within a safe baseline multiplier band (avoid spikes).
+A deadband holds the previous stable value when the new candidate is only trivially different, while source and confidence labels can still update.
 
-### 3) Live burn and confidence (continuous)
-- `Fuel.LiveFuelPerLap` is the burn used for projections when live is valid.
-- `Fuel.Confidence` grows with window size/quality (fuel confidence only; pace confidence is separate).
-- `Pace.OverallConfidence` reflects combined/derived confidence behaviour and is used by dashes.
+### 4) Confidence growth
+Fuel confidence rises as accepted live samples accumulate and becomes weaker when:
+- samples are sparse,
+- opposite-condition data is being reused,
+- the session is too young,
+- the accepted sample set is still noisy or incomplete.
 
-### 4) Stable fuel selection (continuous)
-Stable fuel-per-lap exists so dashboards don’t “thrash” when live data is noisy.
+### 5) Race-distance projection input
+The Fuel Model consumes the selected runtime projection lap time and combines it with:
+- session time remaining,
+- planner after-zero allowance,
+- live after-zero estimate once timer-zero has actually been observed.
 
-**Candidate sources:**
-- Live window average when valid.
-- Profile track average when confidence below readiness threshold (or no live yet).
-- Fallback when neither exists.
+If the runtime projection path is invalid, the subsystem can still fall back to sim-provided laps-remaining behavior.
 
-**Deadband hold:**
-If the new candidate is within `StableFuelPerLapDeadband`, hold the old stable value while still allowing source/confidence to update.
+### 6) Pit math and stint guidance
+Using current fuel, stable burn, projection laps, tank-space limits, and pit-menu add intent, the subsystem computes:
+- laps remaining in tank,
+- total fuel needed to end,
+- fuel to add,
+- stops required,
+- current-stint burn target and burn band.
 
-### 5) Race-distance projection (continuous)
-Compute projected laps remaining using:
-- Projection lap time (from Pace subsystem source selection).
-- Session time remaining.
-- After-zero allowance seconds (planner or live estimate).
-If invalid, fallback to SimHub’s laps-remaining telemetry.
-
-### 6) Pit math + deltas (continuous)
-Using current fuel + projected laps + burns (push/stable/save), compute:
-- Laps remaining in tank, target burn, delta laps.
-- Liters needed vs end (`Fuel.Pit.TotalNeededToEnd`), liters to add (`Fuel.Pit.NeedToAdd`).
-- “Will add” litres based on MFD request clamped to tank space.
-- Required stops by capacity vs by plan, and final stops required to end.
-- **Stops-required fields:** `PitStopsRequiredByFuel` is computed from liters short ÷ effective tank capacity. `PitStopsRequiredByPlan` now mirrors planner-feasible stop count output (authoritative planner result). Driver-selected mode intent is exported via `LalaLaunch.PreRace.Selected` / `SelectedText` for the pre-race info layer only. `Pit.StopsRequiredToEnd` still mirrors planner-feasible stop count for live/planner dashboards.
-- **Stint burn target (current tank only):** a per-lap target burn that respects the configured pit-in reserve (percentage of one lap’s stable burn). The output is banded (`SAVE`/`PUSH`/`HOLD`/`OKAY`) to guide the current stint without implying long-term strategy.
-
-### 7) Pit window state machine (continuous)
-Pit window is **race-only** and only meaningful when stops may be required.
-
-Canonical gates (in priority order):
-1. Not Race / session not running / no fuel stops required → **N/A**
-2. Stable confidence below readiness threshold → **NO DATA YET**
-3. Refuel off or request <= 0 → **SET FUEL!**
-4. Unknown tank capacity → **TANK ERROR**
-5. Otherwise evaluate whether required add fits within tank space for:
-   - PUSH burn, then
-   - STD (stable burn), then
-   - ECO (save burn)
-
-If any fits → open window with state label:
-- **CLEAR PUSH** / **RACE PACE** / **FUEL SAVE**
-If none fit → **TANK SPACE**.
-
----
+### 7) Pit-window state machine
+Pit window state is race-only and depends on both stable confidence and tank feasibility.
+Typical states include:
+- `N/A`
+- `NO DATA YET`
+- `SET FUEL!`
+- `TANK ERROR`
+- open-window states such as `CLEAR PUSH`, `RACE PACE`, or `FUEL SAVE`
+- `TANK SPACE` when required fuel cannot fit under the current assumptions.
 
 ## Outputs (exports + logs)
+### Core exports
+The full authoritative export list lives in `Docs/Internal/SimHubParameterInventory.md`. The key Fuel Model families are:
+- `Fuel.LiveFuelPerLap*`
+- `Fuel.LiveLapsRemainingInRace*`
+- `Fuel.LapsRemainingInTank`
+- `Fuel.TargetFuelPerLap`
+- `Fuel.Delta*`
+- `Fuel.Pit.*`
+- `Fuel.StintBurnTarget*`
+- `Fuel.Live.ProjectedDriveSecondsRemaining`
+- `LalaLaunch.PreRace.*` as the separate pre-race/on-grid info layer
 
-### Core exports (selected)
-See `Docs/Internal/SimHubParameterInventory.md` for the full list, but the main Fuel Model outputs include:
-- `Fuel.LiveFuelPerLap`, `Fuel.LiveFuelPerLap_Stable`, `Fuel.LiveFuelPerLap_StableSource`, `Fuel.LiveFuelPerLap_StableConfidence`
-- `Fuel.LiveLapsRemainingInRace(_Stable)` (+ `_S` strings)
-- `Fuel.DeltaLaps`, `Fuel.TargetFuelPerLap`, `Fuel.LapsRemainingInTank`
-- `Fuel.StintBurnTarget`, `Fuel.StintBurnTargetBand`
-- Pit deltas and need-to-add: `Fuel.Pit.*` and `Fuel.Delta.*`
-- Stops required: `Fuel.PitStopsRequiredByFuel`, `Fuel.PitStopsRequiredByPlan`, `Fuel.Pit.StopsRequiredToEnd`
-- After-zero model: `Fuel.Live.DriveTimeAfterZero`, `Fuel.Live.ProjectedDriveSecondsRemaining`
+### Logging expectations
+The subsystem logs:
+- lap acceptance / rejection summaries,
+- projection source changes,
+- after-zero source changes,
+- pit-window state changes,
+- wet/dry mode flips with surface context.
 
-### Fuel tab UI refresh
-- When a new live car/track combination appears, the Fuel Tab’s live snapshot is cleared and fuel-burn summaries are recomputed so the UI renders “-” instead of stale profile values during startup.
+Canonical wording remains in `Docs/Internal/SimHubLogMessages.md`.
 
-### Logs
-Fuel model emits structured INFO logs for:
-- Per-lap acceptance/rejection summary (fuel + pace + projection lines).
-- Projection source changes (lap-time source, after-zero source).
-- Pit window state changes (debounced).
-- Wet surface mode flips (tyre compound changes) with track wetness context.
+## Dependencies / ordering assumptions
+- Lap detection must happen before live fuel capture for that lap.
+- Pace/projection selection must be ready before final fuel-to-end and pit-window outputs are finalized.
+- The Strategy tab reads the live snapshot from this subsystem but remains the separate human-owned planning layer.
 
----
+## Reset rules
+Fuel-model state resets on:
+- session-token changes,
+- session-type changes,
+- broader combo/identity resets,
+- any reset path that must clear stale live windows, projection state, and pit-window labels.
 
-## Reset rules (session identity + transitions)
-Fuel model state is reset on:
-- Session type change (notably Driving → Race includes seeding behaviour).
-- Session token change (`SessionID:SubSessionID`) which performs broader clearing across subsystems.
+Driving → Race transitions can seed race state from the just-learned baseline instead of forcing a full cold start.
 
-Reset contract (what gets cleared) is canonical in `FuelProperties_Spec.md`.
+## Failure modes / edge cases
+- **Replay timing anomalies:** acceptance/projection behavior may need log verification.
+- **Missing live tank cap:** runtime keeps the last valid cap for stability, while UI can still clear user-facing displays when no current valid cap exists.
+- **Weak early-session data:** profile-backed fallback may legitimately remain safer than live values until confidence improves.
+- **Cross-condition reuse:** dry/wet fallback works, but confidence should be interpreted as lower.
 
----
-
-## Failure modes / known edge cases
-- **Replay sessions:** timer behaviour and lap validity may differ; projection/after-zero source switching should be validated with logs.
-
-
-### Pre-race info exports
-- `LalaLaunch.PreRace.*` exports are a short-lived pre-race/on-grid info layer and are intentionally separate from the continuous live `Fuel.*` model view and planner internals.
-- `LalaLaunch.PreRace.Selected` / `SelectedText`: selected pre-race mode (0 No Stop, 1 Single Stop, 2 Multi Stop, 3 Auto). Mode persistence is PreRace-only (`SelectedPreRaceMode` / `PreRaceMode`) and mode impact is limited to PreRace outputs.
-- `LalaLaunch.PreRace.Stints`: key threshold signal (decimal, 1dp) computed as total fuel required / usable tank capacity; this is total stints needed (not shortfall from current fuel) and replaces separate stop exports for dash contract use.
-- `LalaLaunch.PreRace.TotalFuelNeeded`: unified pre-race fuel projection using race session definition time (`CurrentSessionInfo._SessionTime`) + after-zero allowance. Manual modes include a fixed +2-lap fuel allowance (pre-race-only proxy for formation+contingency).
-- `LalaLaunch.PreRace.FuelDelta`: single pre-race delta output. `Auto` remains planner-first for totals/stints. When planner-required next add (`PlannerNextAddLitres`) is greater than zero, delta compares the driver’s live pit-menu refuel request (`PitSvFuel`) against that planner-required add. When next-add is zero/unavailable, Auto falls back to planner fuel-basis delta (`currentFuel - planner first-stint/total reference`) and does not include pit-menu add intent. `Single Stop` uses current fuel + pit-menu refuel intent; `No Stop`/`Multi Stop` use current fuel only.
-- `LalaLaunch.PreRace.FuelSource` / `LapTimeSource`: short informational source labels (`planner`, `simhub`, `fallback`) for dash message assembly. Auto reports planner/planner when planner values are available, with runtime fallback labels only when planner values are unavailable. Manual modes use explicit fallback order: planner/profile -> SimHub/iRacing -> hard fallback defaults (3.0 L/lap fuel, 120.0 s lap).
-- `LalaLaunch.PreRace.StatusText`: pre-race strategy status text for dash warning bands. Current contract values are `STRATEGY OKAY`, `STRATEGY MARGINAL`, and `UNABLE STRATEGY`. Initial logic is mode+stints based with a fixed marginal tolerance of +0.2 stints over the No Stop (1.0) and Single Stop (2.0) targets; Multi Stop and Auto currently report `STRATEGY OKAY`.
+## v1 documentation note
+Use **Strategy** terminology for GitHub-facing explanations. Treat older “Fuel tab” wording as legacy technical language only; the canonical UI story is now the Strategy tab plus the separate runtime Fuel Model.
