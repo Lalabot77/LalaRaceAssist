@@ -1,0 +1,23 @@
+name: Dashboard Issue
+description: Report a problem with a Lala dashboard
+title: "[Dashboard]: "
+labels: ["dashboard"]
+
+body:
+
+- type: input
+  attributes:
+    label: Dashboard name
+    placeholder: Lala Race Dash / Lala Strategy Dash
+
+- type: textarea
+  attributes:
+    label: Describe the issue
+
+- type: textarea
+  attributes:
+    label: Screenshot or video
+
+- type: textarea
+  attributes:
+    label: SimHub version
