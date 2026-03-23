@@ -63,9 +63,15 @@ Important workflow rules:
 
 Strategy is the main planning workflow. It lets you choose between stable profile/manual planning and live-driven snapshot planning without confusing those two jobs. See [Strategy System](Strategy_System.md).
 
+![Strategy dashboard main page](Images/StrategyDashMainPageGrid.png)
+*Use Strategy as the main planning surface; the dashboard view mirrors that workflow rather than replacing it.*
+
 ### Profiles
 
 Profiles are the plugin’s long-term memory for car, track, and condition-specific data. They are what make the other systems become trustworthy over time. See [Profiles System](Profiles_System.md).
+
+![Profiles car settings](Images/ProfilesCar.png)
+*Profiles are where you review and lock the saved values that should become trustworthy for a combo.*
 
 ### Fuel model
 
@@ -74,6 +80,15 @@ The fuel model learns gradually, builds confidence, and feeds Strategy with a tr
 ### Dashboards
 
 Dashboards are the display layer. They show outputs, visibility states, and context, but they do not own the calculations underneath. See [Dashboards](Dashboards.md).
+
+![Driver dashboard race context](Images/DriverDashRacingOpp.png)
+*The driver dash is there to keep race context readable at speed without moving ownership away from the plugin.*
+
+#### Friends list and driver tags
+
+If you use the Friends list, manage it in **Settings → Friends List**. Add iRacing customer IDs there and assign the practical tag you want to use, such as **Friend**, **Teammate**, or **Bad**.
+
+Those tags are mainly for **awareness and presentation** on supported nearby-car / CarSA-style surfaces. They help known drivers stand out more clearly on dashboards, but they do **not** change strategy math, fuel calculations, or the core H2H comparisons.
 
 #### Optional: ShakeIt Motors traction-loss export
 
@@ -95,6 +110,9 @@ Shift Assist gives RPM-based driver cues and becomes more trustworthy once its l
 ### Launch
 
 Launch setup is handled in Settings, while Launch Analysis is used afterwards to review saved starts. See [Launch System](Launch_System.md).
+
+![Launch Analysis review tab](Images/LaunchAnalysis.png)
+*Launch Analysis is the active review surface for saved launches after the run, not a future or placeholder feature.*
 
 ### Rejoin and pit aids
 

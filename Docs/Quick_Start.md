@@ -15,7 +15,7 @@ Lala Race Assist Plugin is a SimHub plugin for **iRacing** that helps the driver
 
 ## 2. Install
 
-Go to the bottom left of the left menu and click"Add/Remove Features". Find the Lala Plugin and activate it and click show in left menu option.
+Go to the bottom left of the left menu and click "Add/Remove Features". Find the Lala Plugin, activate it, and enable the show-in-left-menu option.
 
 ### Required for now
 
@@ -61,6 +61,9 @@ Open the plugin in SimHub and confirm the main navigation order:
 3. **Dash Control**
 4. **Launch Analysis**
 5. **Settings**
+
+![Strategy tab after install](Images/StrategyTab.png)
+*After install, Strategy should be the first main tab you land on and the main place to start planning.*
 
 Important current rules:
 

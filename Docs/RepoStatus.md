@@ -1,7 +1,7 @@
 # Repository status
 
 Validated against commit: HEAD
-Last updated: 2026-03-22
+Last updated: 2026-03-23
 Branch: work
 
 ## Current repo/link status
@@ -9,53 +9,42 @@ Branch: work
 - No Git remote is configured in this checkout (`git remote -v` returns empty).
 
 ## Documentation sync status
-- Fixed the Preset Manager `PreRace Mode` combo by removing the fragile custom popup template and reusing the same standard ComboBox interaction pattern already working on the main Strategy page.
-- Hardened the Strategy `Presets...` popup open path so null preset entries are skipped before binding and open-time failures are caught/logged instead of bubbling out as a host-level hard fail.
-- Kept scope inside the existing Fuel Planner / Strategy and Settings/UI ownership boundaries without changing fuel math, learning, Shift Assist logic, CarSA, H2H, track-marker behavior, or telemetry gating.
+- Performed a documentation-only screenshot placement pass across the main GitHub-facing user docs using the already-added repo image assets.
+- Added a concise, release-focused Friends List / driver-tag explanation in the existing driver-facing docs where it most naturally affects dashboard awareness.
+- Kept scope limited to markdown updates only: no runtime behavior, dashboard assets, plugin UI, or image files were changed.
+- Preserved the current release-facing boundaries: Launch Analysis remains active, Launch setup still lives under Settings, and the future/global Messaging System and Race Summary are still not documented as active user features.
 
 ## Reviewed documentation set
 ### Changed in this sweep
-- `CHANGELOG.md`
-- `FuelCalculatorView.xaml.cs`
-- `FuelCalcs.cs`
-- `PresetsManagerView.xaml`
-- `PresetsManagerView.xaml.cs`
-- `Docs/Internal/Plugin_UI_Tooltips.md`
-- `Docs/Subsystems/Fuel_Planner_Tab.md`
-- `Docs/Strategy_System.md`
-- `Docs/RepoStatus.md`
-
-### Reviewed and left unchanged
 - `README.md`
-- `Docs/Project_Index.md`
 - `Docs/Quick_Start.md`
 - `Docs/User_Guide.md`
 - `Docs/Dashboards.md`
+- `Docs/RepoStatus.md`
+
+### Reviewed and left unchanged
+- `Docs/Project_Index.md`
+- `Docs/Strategy_System.md`
+- `Docs/H2H_System.md`
+- `Docs/Profiles_System.md`
+- `Docs/Fuel_Model.md`
 - `Docs/Shift_Assist.md`
 - `Docs/Launch_System.md`
 - `Docs/Rejoin_Assist.md`
 - `Docs/Pit_Assist.md`
-- `Docs/H2H_System.md`
-- `Docs/Profiles_System.md`
-- `Docs/Fuel_Model.md`
-- `Docs/Internal/SimHubParameterInventory.md`
-- `Docs/Internal/SimHubLogMessages.md`
-- `Docs/Subsystems/Dash_Integration.md`
-- `Docs/Subsystems/Pit_Entry_Assist.md`
-- `Docs/Subsystems/Pit_Timing_And_PitLoss.md`
-- `Docs/Subsystems/Rejoin_Assist.md`
-- `Docs/Subsystems/Opponents.md`
+- `Docs/Internal/CODEX_CONTRACT.txt`
+- `Docs/Internal/Architecture_Guardrails.md`
+- `Docs/Internal/CODEX_TASK_TEMPLATE.txt`
+- `Docs/Internal/Code_Snapshot.md`
 - `Docs/Subsystems/CarSA.md`
-- `Docs/Subsystems/H2H.md`
-- `Docs/Subsystems/Profiles_And_PB.md`
-- `Docs/Subsystems/Track_Markers.md`
-- `Docs/Subsystems/Trace_Logging.md`
-- `Docs/Subsystems/Message_System_V1.md`
-- `Docs/Subsystems/MessageEngineV1_Notes.md`
+- `Docs/Internal/SimHubParameterInventory.md`
+- `Docs/Internal/Plugin_UI_Tooltips.md`
 
 ## Delivery status highlights
-- The Preset Manager `PreRace Mode` selector now uses the same working ComboBox interaction model as the main Strategy tab, restoring normal open/select behavior while staying readable on the popup’s dark theme.
-- The Strategy `Presets...` modal open flow now skips null preset rows during binding and shows a logged warning dialog instead of hard-failing if window creation still throws.
+- README now uses a smaller landing-page image set focused on first-impression systems rather than trying to show every dashboard surface.
+- Quick Start now includes a single setup-oriented screenshot to confirm the expected first plugin landing view without turning setup into a full visual manual.
+- User Guide and Dashboards now include a limited number of inline screenshots with short captions to clarify planning, profile trust, dashboard roles, and active Launch Analysis coverage.
+- Friends List / driver tags now have a short practical explanation for where users manage them and the dashboard-awareness effect they should expect.
 
 ## Validation note
-- Validation recorded against `HEAD` (`preset manager combo behavior and popup-open hardening`).
+- Validation recorded against `HEAD` (`docs-only screenshot placement and friends-list user guidance pass`).
