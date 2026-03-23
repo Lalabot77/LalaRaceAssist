@@ -82,8 +82,18 @@ For a new car/track combination:
 5. Add only the core controls you need at first:
    - **Cancel Message**
    - **Toggle Pit Screen**
-   - **Primary Dash Mode**
+   - **Next Dash**
+   - **Previous Dash**
    - **Declutter Mode**
+
+### Dash navigation quick setup
+
+The dashboards can be used by touch, but binding controls is strongly recommended. For a first usable setup:
+
+- Bind SimHub's **Next Dash** and **Previous Dash** commands to physical controls you can reach easily.
+- By default, **Next Screen** moves through the main pages and **Previous Screen** moves through internal/sub-pages.
+- The driver and strategy dashboards also have touch areas for page changes and context actions, but their exact function depends on the current page.
+- The **Primary Dash Mode** binding shown in the plugin UI is reserved for future use and does not currently perform any action, so you do not need to bind it.
 
 ## 6. What to trust early vs later
 

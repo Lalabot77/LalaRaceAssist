@@ -38,12 +38,46 @@ The main controls most users care about are:
 
 - **Cancel Message**
 - **Toggle Pit Screen**
-- **Primary Dash Mode**
+- **Next Dash**
+- **Previous Dash**
 - **Declutter Mode**
 
-These controls affect **presentation and visibility**. They do not change the ownership of the underlying plugin systems.
+These controls affect **presentation and visibility**. They do not change the ownership of the underlying plugin systems. The dashboards can be used by touch, but binding controls is strongly recommended.
 
-## 4. Dash Control philosophy
+## 4. Navigation patterns in the released dash set
+
+The released dashboards are designed to work with SimHub's standard dash navigation commands:
+
+- **Next Dash**
+- **Previous Dash**
+
+Best practice is to bind those commands to physical controls instead of relying only on touch. By default, **Next Screen** moves through the main pages and **Previous Screen** moves through internal/sub-pages. If you prefer, SimHub/Dash Studio also lets you bind individual dashes directly with separate commands per dash, but that is an advanced setup rather than the default expectation.
+
+### Main driver dash
+
+On the main driver dash, touch navigation is broadly based on screen regions rather than tiny exact buttons:
+
+- the left outer region usually moves to the previous main page,
+- the right outer region usually moves to the next main page,
+- the middle region is used for context actions,
+- on some pages, middle upper/lower areas are used for page-specific secondary actions.
+
+In practical use, that means the centre press might change a secondary source on one page, while on another page it might zoom or expand ahead/behind information. Touch areas on the driver and strategy dashboards allow page changes and context actions, but their exact function depends on the current page.
+
+### Strategy dash
+
+The strategy dash follows the same release philosophy, but its touch navigation is more side-oriented:
+
+- touch regions down the side are used for navigation between screens or sections,
+- the centre area often exits a sub-screen or moves on to the next main screen depending on context.
+
+Treat the strategy dash touch zones as practical shortcuts, not as a promise that every page uses the exact same split. Some pages need slightly different context actions, so the touch behaviour varies a little by page.
+
+### Important current limitation
+
+The **Primary Dash Mode** binding shown in the plugin UI is reserved for future use and does not currently perform any action. Users do not need to bind it for the released dash set.
+
+## 5. Dash Control philosophy
 
 Dash Control is dash-oriented. Use it to manage:
 
@@ -64,7 +98,7 @@ In the Dash Visibility matrix, the short release-facing headers are:
 
 Do **not** use Dash Control as the mental home for strategy, launch logic, or saved profile learning.
 
-## 5. Strategy, PreRace, and display boundaries
+## 6. Strategy, PreRace, and display boundaries
 
 Dashboards can show:
 
@@ -80,7 +114,7 @@ Keep the roles straight:
 
 Seeing a value on a dash does not mean the dash owns that calculation.
 
-## 6. Pit and rejoin screens
+## 7. Pit and rejoin screens
 
 Pit and rejoin surfaces are some of the most practically useful dashboard pages.
 
@@ -95,7 +129,7 @@ Pit and rejoin surfaces are some of the most practically useful dashboard pages.
 
 For the feature-specific guidance, see [Rejoin Assist](Rejoin_Assist.md) and [Pit Assist](Pit_Assist.md).
 
-## 7. H2H on dashboards
+## 8. H2H on dashboards
 
 Supported dashboards may show:
 
@@ -114,7 +148,7 @@ If you want certain drivers to stand out more clearly, use **Settings → Friend
 
 For most users, the practical effect is on **awareness styling** in supported nearby-car / CarSA-style dashboard surfaces: tagged drivers can be easier to spot as **Friend**, **Teammate**, or **Bad**. Treat this as a presentation aid, not as something that changes strategy or core H2H ownership.
 
-## 8. Practical layout advice
+## 9. Practical layout advice
 
 A simple setup usually works best:
 
@@ -122,4 +156,4 @@ A simple setup usually works best:
 - **Support dash:** extra strategy and race-context detail
 - **Overlay:** compact alerts and helper widgets
 
-If a screen feels too busy, use **Primary Dash Mode**, **Declutter Mode**, and visibility choices before assuming a subsystem is wrong.
+If a screen feels too busy, use **Declutter Mode**, your dash visibility choices, and a cleaner dash layout before assuming a subsystem is wrong. The **Primary Dash Mode** binding shown in the plugin UI is currently inactive and can be ignored.

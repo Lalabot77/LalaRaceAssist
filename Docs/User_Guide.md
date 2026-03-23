@@ -90,6 +90,21 @@ If you use the Friends list, manage it in **Settings → Friends List**. Add iRa
 
 Those tags are mainly for **awareness and presentation** on supported nearby-car / CarSA-style surfaces. They help known drivers stand out more clearly on dashboards, but they do **not** change strategy math, fuel calculations, or the core H2H comparisons.
 
+#### Dashboard navigation and bindings
+
+The dashboards can be used by touch, but binding controls is strongly recommended. The released dash set is built around SimHub's main dash navigation commands:
+
+- **Next Dash**
+- **Previous Dash**
+
+In normal use, bind those to physical buttons, wheel inputs, or other controls you can use without hunting for touch targets. By default, **Next Screen** moves through the main pages and **Previous Screen** moves through internal/sub-pages. Advanced users can also bind specific dashes directly in SimHub/Dash Studio if they prefer dedicated commands per dash.
+
+On the main driver dash, the screen is broadly split into thirds. The outer left and right regions are mainly used to move between main screens, while the middle region, or middle upper/lower areas on some pages, is used for context actions such as changing a secondary source or zooming/expanding ahead/behind information on the strategy-style pages.
+
+On the strategy dash, navigation is usually handled by touch regions down the side. The centre area often exits a sub-screen or advances to the next main screen depending on context. Touch areas on the driver and strategy dashboards allow page changes and context actions, but their exact function depends on the current page.
+
+The **Primary Dash Mode** binding shown in the plugin UI is reserved for future use and does not currently perform any action. You do not need to bind it for the released dash set.
+
 #### Optional: ShakeIt Motors traction-loss export
 
 Some Lala dashboards and launch/practice visuals can use SimHub's ShakeIt Motors output for wheelspin / traction-loss indications. This is **optional** and is not a core plugin requirement. If you do nothing here, the plugin still works normally.
@@ -149,6 +164,7 @@ If a system is wrong once, keep driving. If it is wrong repeatedly, review the s
 - Keep the difference between **live observation** and **stable planning** clear in your workflow.
 - Lock only values that have settled and make sense.
 - Use **Dash Control** for visibility and presentation, not to fix calculation logic.
+- Treat touch navigation as a backup or convenience layer; for race use, bind **Next Dash** and **Previous Dash** to physical controls.
 - Review profile-backed data when a driver aid is repeatedly wrong.
 
 ## 7. Recommended reading order
