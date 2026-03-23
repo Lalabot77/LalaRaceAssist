@@ -2,8 +2,6 @@
 
 This guide is the central driver-facing overview for Lala Race Assist Plugin. It explains what the plugin owns, what the driver sees, and where to find the detailed user pages for each system.
 
-> **Scope note:** The future/global message system is not operational yet and is intentionally not documented here as an active user feature. Radio Messages can still be treated as current dashboard behavior where supported.
-
 ## 1. How to read the docs
 
 Use this page as the overview, then jump to the dedicated pages for the systems you actively use:
@@ -76,6 +74,19 @@ The fuel model learns gradually, builds confidence, and feeds Strategy with a tr
 ### Dashboards
 
 Dashboards are the display layer. They show outputs, visibility states, and context, but they do not own the calculations underneath. See [Dashboards](Dashboards.md).
+
+#### Optional: ShakeIt Motors traction-loss export
+
+Some Lala dashboards and launch/practice visuals can use SimHub's ShakeIt Motors output for wheelspin / traction-loss indications. This is **optional** and is not a core plugin requirement. If you do nothing here, the plugin still works normally.
+
+Set it up only if you want those specific indicators:
+
+1. Open **SimHub** and go to **ShakeIt Motors**.
+2. Open the **Wheel slip** effect and enable it.
+3. In the effect's **Export** section, tick **Export output value as a property**.
+4. Set the property name to exactly `TractionLoss`.
+
+This exposes `[ShakeITMotorsV3Plugin.Export.TractionLoss.All]`. Dashboards or visuals that read that property can then show wheelspin / traction-loss activity. Without this setup, those indicators may be unavailable while the rest of the plugin continues to operate normally.
 
 ### Shift Assist
 
