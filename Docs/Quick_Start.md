@@ -38,6 +38,20 @@ Typical layout:
 
 Dashboards display plugin outputs. They do not learn data or replace the plugin as the source of truth. For dashboard-specific guidance, see [Dashboards](Dashboards.md).
 
+### Optional: ShakeIt Motors traction-loss export
+
+Some Lala dashboards and launch-related visuals can show wheelspin / traction-loss indications from SimHub's ShakeIt Motors output. This setup is **optional**. The plugin still works normally without it.
+
+If you want those indicators:
+
+1. Open **SimHub**.
+2. Go to **ShakeIt Motors**.
+3. Open the **Wheel slip** effect and enable it.
+4. In the **Export** section, tick **Export output value as a property**.
+5. Set the property name to exactly `TractionLoss`.
+
+That exposes `[ShakeITMotorsV3Plugin.Export.TractionLoss.All]` for dashboards or visuals that use it. Without this setup, wheelspin-related indicators may be unavailable.
+
 ## 4. First plugin check
 
 Open the plugin in SimHub and confirm the main navigation order:
