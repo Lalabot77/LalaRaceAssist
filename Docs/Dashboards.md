@@ -16,6 +16,7 @@ Dashboards are the display surface for the plugin. They help the driver see:
 The dashboards are not the source of truth for learning, storage, strategy math, or saved decisions.
 
 ![Driver race dashboard](Images/DriverDashRacingOpp.png)
+
 *Use the race dash for fast awareness while the plugin continues to own the calculations underneath.*
 
 ## 2. Typical dashboard roles
@@ -28,6 +29,7 @@ A common setup includes:
 - optional **Lovely-based layouts** when using that ecosystem.
 
 ![Strategy dashboard main page](Images/StrategyDashMainPageGrid.png)
+
 *Keep deeper fuel and stint detail on a support surface instead of overloading the main race dash.*
 
 ## 3. What the driver controls
@@ -57,6 +59,7 @@ In the Dash Visibility matrix, the short release-facing headers are:
 - **OVERLAY** = overlay surfaces
 
 ![Dash visibility options](Images/DashVisibilityOptions.png)
+
 *Use Dash Control to decide what is shown where, not to change how the plugin calculates it.*
 
 Do **not** use Dash Control as the mental home for strategy, launch logic, or saved profile learning.
@@ -87,6 +90,7 @@ Pit and rejoin surfaces are some of the most practically useful dashboard pages.
 - If these surfaces are repeatedly wrong, the normal fix is profile or saved-data review rather than dash redesign.
 
 ![Pit entry assist dash](Images/PitEntryAssist.png)
+
 *Pit entry cues are a good example of the dash presenting a live aid without becoming the owner of the underlying marker and timing logic.*
 
 For the feature-specific guidance, see [Rejoin Assist](Rejoin_Assist.md) and [Pit Assist](Pit_Assist.md).
@@ -101,6 +105,7 @@ Supported dashboards may show:
 The dash shows them; the plugin owns the comparison outputs. See [H2H System](H2H_System.md).
 
 ![H2H overlay](Images/Head2HeadOverlay.png)
+
 *H2H is there to improve race awareness on the dash, not to create a second planning workflow.*
 
 ### Tagged drivers and Friends list
