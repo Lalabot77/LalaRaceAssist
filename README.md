@@ -6,6 +6,23 @@ It is built to help with the practical race workflow: plan stints, trust learned
 
 Version **1.0** documentation is now organized so GitHub readers can move from a quick user overview into the canonical subsystem docs without guessing which page owns which truth.
 
+## At a glance
+
+![Strategy tab overview](Docs/Images/StrategyTab.png)
+*Strategy is the main plugin home for planning, live snapshot inputs, and preset-driven race setup.*
+
+![Strategy dashboard overview](Docs/Images/StrategyDashMainPageGrid.png)
+*The strategy dashboard focuses on fuel, stint, and race-context decisions without moving that logic out of the plugin.*
+
+![Driver dashboard awareness view](Docs/Images/DriverDashRacingOpp.png)
+*The driver-facing dash keeps nearby race context visible while you stay focused on driving.*
+
+![Pit entry assist dashboard cue](Docs/Images/PitEntryAssist.png)
+*Pit entry guidance is presented on the dash, while the plugin continues to own the underlying timing and marker logic.*
+
+![Launch Analysis tab](Docs/Images/LaunchAnalysis.png)
+*Launch Analysis remains the active post-run review surface for saved starts and launch traces.*
+
 ## Core Systems
 
 - **Strategy** - stable planning workflow for race fuel, stint, and context decisions
@@ -131,4 +148,3 @@ Copyright © 2026 Lalabot77
 
 This project is released under the MIT License.  
 See the LICENSE file for details.
-
