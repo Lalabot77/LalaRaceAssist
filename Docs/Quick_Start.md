@@ -59,6 +59,14 @@ If you want those indicators:
 
 That exposes `[ShakeITMotorsV3Plugin.Export.TractionLoss.All]` for dashboards or visuals that use it. Without this setup, wheelspin-related indicators may be unavailable.
 
+### Current constraints (v1.x)
+
+- Some dashboard indicators and behaviors depend on optional SimHub exports or optional setup steps.
+- Wheelspin / traction-loss visuals require the optional `TractionLoss` ShakeIt export above.
+- Primary Dash navigation behavior may continue to evolve during early public releases.
+- In plugin UI, **Primary Dash Mode** binding is currently a placeholder and does not perform an action.
+- **`RSC.iRacingExtraProperties.dll` is still required**.
+
 ## 4. First plugin check
 
 Open the plugin in SimHub and confirm the main navigation order:
