@@ -9,10 +9,12 @@ Branch: work
 - No Git remote is configured in this checkout (`git remote -v` returns empty).
 
 ## Documentation sync status
-- Performed a documentation-only screenshot placement pass across the main GitHub-facing user docs using the already-added repo image assets.
-- Added a concise, release-focused Friends List / driver-tag explanation in the existing driver-facing docs where it most naturally affects dashboard awareness.
-- Kept scope limited to markdown updates only: no runtime behavior, dashboard assets, plugin UI, or image files were changed.
-- Preserved the current release-facing boundaries: Launch Analysis remains active, Launch setup still lives under Settings, and the future/global Messaging System and Race Summary are still not documented as active user features.
+- Performed a documentation-only Primary Driver Dash guide pass across the main GitHub-facing user docs.
+- Reworked `Docs/Dashboards.md` into a structured dashboard guide covering overview, import, navigation, Primary Dash page order, overlays, and shared widget summaries.
+- Aligned `Docs/User_Guide.md`, `Docs/Quick_Start.md`, and `README.md` so their dashboard wording now points to the expanded guide instead of leaving fragmented navigation details in multiple places.
+- Kept scope limited to markdown updates only: no runtime behavior, plugin settings, bindings, exports, dashboard assets, or image files were changed.
+- Preserved the current release-facing boundary that the dashboard layer displays plugin-owned outputs and does not become the source of truth for logic, telemetry interpretation, learning, or messaging decisions.
+- Did not document the future/global messaging system as an active user feature.
 
 ## Reviewed documentation set
 ### Changed in this sweep
@@ -35,16 +37,17 @@ Branch: work
 - `Docs/Internal/CODEX_CONTRACT.txt`
 - `Docs/Internal/Architecture_Guardrails.md`
 - `Docs/Internal/CODEX_TASK_TEMPLATE.txt`
-- `Docs/Internal/Code_Snapshot.md`
-- `Docs/Subsystems/CarSA.md`
-- `Docs/Internal/SimHubParameterInventory.md`
-- `Docs/Internal/Plugin_UI_Tooltips.md`
+- `Docs/Subsystems/Dash_Integration.md`
+- `Docs/Subsystems/Opponents.md`
+- `Docs/Subsystems/H2H.md`
+- `Docs/Subsystems/Pit_Entry_Assist.md`
+- `Docs/Subsystems/Rejoin_Assist.md`
+- `Docs/Subsystems/Launch_Mode.md`
 
 ## Delivery status highlights
-- README now uses a smaller landing-page image set focused on first-impression systems rather than trying to show every dashboard surface.
-- Quick Start now includes a single setup-oriented screenshot to confirm the expected first plugin landing view without turning setup into a full visual manual.
-- User Guide and Dashboards now include a limited number of inline screenshots with short captions to clarify planning, profile trust, dashboard roles, and active Launch Analysis coverage.
-- Friends List / driver tags now have a short practical explanation for where users manage them and the dashboard-awareness effect they should expect.
+- `Docs/Dashboards.md` now documents the confirmed Primary Driver Dash page order: Track Situational Awareness, Racing Standings Awareness, Timing, Practice, Head-to-Head, and Pit Pop-Up.
+- The dashboard guide now explains left/right touch navigation, SimHub next/previous dash bindings, binding scope options, auto-dash switching expectations, and the separate overlay model.
+- The Primary Dash documentation now embeds only confirmed repo images from `Docs/Images/PrimaryDash/` and uses explicit placeholders where a page-specific screenshot is not currently present.
 
 ## Validation note
-- Validation recorded against `HEAD` (`docs-only screenshot placement and friends-list user guidance pass`).
+- Validation recorded against `HEAD` (`docs-only Primary Driver Dash user documentation pass`).

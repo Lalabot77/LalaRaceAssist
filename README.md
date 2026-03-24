@@ -50,6 +50,10 @@ Version **1.0** documentation is now organized so GitHub readers can move from a
 
 The plugin owns the **learning, storage, calculations, and exports**. Dashboards are the presentation layer: they show those outputs and provide limited interaction, but they do not own strategy math, saved learning, H2H selection, or launch logic.
 
+## Dashboard Package
+
+The dashboard docs now include a dedicated Primary Driver Dash guide covering the confirmed page order, navigation model, pit pop-up, LalaAlerts overlay layer, and shared widget surfaces. If you are importing dashboards or binding page controls, start with [Docs/Dashboards.md](Docs/Dashboards.md).
+
 ## Install Summary
 
 1. Copy the 2 plugin *.dll files into your SimHub root installation.

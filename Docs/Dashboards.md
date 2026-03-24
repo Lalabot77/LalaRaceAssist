@@ -1,159 +1,249 @@
 # Dashboards
 
-This page explains the driver-facing dashboard layer for Lala Race Assist Plugin.
+This page is the main driver-facing guide to the Lala dashboard package.
 
-## 1. What dashboards are for
+## 1. Overview
 
-Dashboards are the display surface for the plugin. They help the driver see:
+Lala dashboards exist to make the plugin's outputs readable while driving. They help you see race context, pit context, timing, alerts, and helper widgets in layouts that are practical to use in SimHub.
 
-- strategy status,
-- fuel confidence and pit context,
-- H2H comparisons,
-- rejoin and pit alerts,
-- launch and Shift Assist cues,
-- decluttered race information in the layout that suits the driver.
+Keep the ownership split clear:
 
-The dashboards are not the source of truth for learning, storage, strategy math, or saved decisions.
+- **The plugin owns logic, telemetry interpretation, learning, persistence, and stable outputs.**
+- **Dashboards own display, page layout, touch areas, and user interaction.**
 
-![Driver race dashboard](Images/DriverDashRacingOpp.png)
+That means dashboards are not the source of truth for strategy math, fuel learning, H2H selection, rejoin logic, or pit-entry calculations. They display the outputs the plugin publishes and let you interact with those surfaces in a driver-friendly way.
 
-*Use the race dash for fast awareness while the plugin continues to own the calculations underneath.*
+## 2. Installation / import
 
-## 2. Typical dashboard roles
+At a high level, dashboard setup is:
 
-A common setup includes:
+1. Import the Lala dashboard files into SimHub.
+2. Assign the imported dashboards to the screen or device you want to use.
+3. Bind **Next Dash** and **Previous Dash** if you want reliable non-touch navigation.
+4. Use **Dash Control** and your screen assignments to decide which surfaces you actually use while driving.
 
-- a **primary race dash** for core race-critical data,
-- a **strategy/support dash** for deeper planning context,
-- an **overlay** for compact alerts,
-- optional **Lovely-based layouts** when using that ecosystem.
+Dashboards can be assigned per device, and SimHub lets you combine touch navigation with button bindings. For the wider plugin setup flow, see [Quick Start](Quick_Start.md).
 
-![Strategy dashboard main page](Images/StrategyDashMainPageGrid.png)
+## 3. Navigation and bindings
 
-*Keep deeper fuel and stint detail on a support surface instead of overloading the main race dash.*
+The released dashboard package is built around simple page navigation plus temporary overlays.
 
-## 3. What the driver controls
+### Main page navigation
 
-The main controls most users care about are:
+On the Primary Driver Dash, the normal page flow is driven by:
 
-- **Cancel Message**
-- **Toggle Pit Screen**
-- **Next Dash**
-- **Previous Dash**
-- **Declutter Mode**
+- **left touch area** = previous page
+- **right touch area** = next page
+- SimHub **Previous Dash** binding
+- SimHub **Next Dash** binding
 
-These controls affect **presentation and visibility**. They do not change the ownership of the underlying plugin systems. The dashboards can be used by touch, but binding controls is strongly recommended.
+You can use touch only, but physical bindings are strongly recommended for race use.
 
-## 4. Navigation patterns in the released dash set
+### Binding scope in SimHub
 
-The released dashboards are designed to work with SimHub's standard dash navigation commands:
+Depending on how you organise your SimHub setup, those bindings can be configured:
 
-- **Next Dash**
-- **Previous Dash**
+- per dash,
+- per device,
+- or as broader/global bindings.
 
-Best practice is to bind those commands to physical controls instead of relying only on touch. By default, **Next Screen** moves through the main pages and **Previous Screen** moves through internal/sub-pages. If you prefer, SimHub/Dash Studio also lets you bind individual dashes directly with separate commands per dash, but that is an advanced setup rather than the default expectation.
+Use whichever approach best matches your hardware. The important point is that the Lala dashboards are designed to work with SimHub's standard next/previous dash navigation model.
 
-### Main driver dash
+### Auto-dash switching
 
-On the main driver dash, touch navigation is broadly based on screen regions rather than tiny exact buttons:
+If you use SimHub auto-dash switching, the active session type can determine which dashboard page becomes your landing page.
 
-- the left outer region usually moves to the previous main page,
-- the right outer region usually moves to the next main page,
-- the middle region is used for context actions,
-- on some pages, middle upper/lower areas are used for page-specific secondary actions.
+Practical expectations for the current Primary Dash package:
 
-In practical use, that means the centre press might change a secondary source on one page, while on another page it might zoom or expand ahead/behind information. Touch areas on the driver and strategy dashboards allow page changes and context actions, but their exact function depends on the current page.
+- qualifying sessions commonly land on the **Timing** page,
+- practice sessions can use the **Practice** page when you select it manually,
+- the race-oriented track/racing awareness pages are not the normal offline-testing surfaces when there are no opponents to reason about.
 
-### Strategy dash
+### Overlays are separate
 
-The strategy dash follows the same release philosophy, but its touch navigation is more side-oriented:
+Overlays are **temporary surfaces**, not part of the normal left/right page loop. They appear independently from normal page navigation when their conditions are active.
 
-- touch regions down the side are used for navigation between screens or sections,
-- the centre area often exits a sub-screen or moves on to the next main screen depending on context.
+## 4. Primary Driver Dash
 
-Treat the strategy dash touch zones as practical shortcuts, not as a promise that every page uses the exact same split. Some pages need slightly different context actions, so the touch behaviour varies a little by page.
+### Primary Dash overview
 
-### Important current limitation
+The Primary Driver Dash is the main race-driving surface. It is organised around a practical page order so you can move between awareness, standings, timing, practice, H2H context, and pit work without changing the underlying plugin behavior.
 
-The **Primary Dash Mode** binding shown in the plugin UI is reserved for future use and does not currently perform any action. Users do not need to bind it for the released dash set.
+Current confirmed page order:
 
-## 5. Dash Control philosophy
+1. **Track Situational Awareness (Ahead/Behind)**
+2. **Racing Standings Awareness**
+3. **Timing**
+4. **Practice**
+5. **Head-to-Head page**
+6. **Pit Pop-Up**
 
-Dash Control is dash-oriented. Use it to manage:
+![Primary Dash track situational awareness](Images/PrimaryDash/DriverTrackSA.png)
 
-- which surfaces are visible,
-- how much information is shown,
-- whether pit screens appear or are manually overridden,
-- how the display behaves across different dashboard layouts.
+*Primary Driver Dash track-awareness page.*
 
-In the Dash Visibility matrix, the short release-facing headers are:
+### Track Situational Awareness (Ahead/Behind)
 
-- **DRIVER** = Lala Race Dash
-- **STRATEGY** = Lala Strategy Dash
-- **OVERLAY** = overlay surfaces
+This is the nearby on-track awareness page.
 
-![Dash visibility options](Images/DashVisibilityOptions.png)
+Use it when you want a quick view of:
 
-*Use Dash Control to decide what is shown where, not to change how the plugin calculates it.*
+- the car ahead,
+- the car behind,
+- immediate on-track context,
+- nearby race pressure while still staying focused on driving.
 
-Do **not** use Dash Control as the mental home for strategy, launch logic, or saved profile learning.
+This page is about **local track situation**, not overall race-order classification. It is the "who is around me right now?" surface.
 
-## 6. Strategy, PreRace, and display boundaries
+If you prefer a larger-focus view, the repo also includes a zoomed screenshot for this page:
 
-Dashboards can show:
+![Track situational awareness zoom view](Images/PrimaryDash/DriverTrackSA_Zoom.png)
 
-- live strategy values,
-- planner values,
-- PreRace information.
+*Zoomed Primary Dash view for nearby ahead/behind context.*
 
-Keep the roles straight:
+### Racing Standings Awareness
 
-- **Planner values** come from the Strategy workflow.
-- **Live values** come from the runtime systems.
-- **PreRace** is an on-grid/display layer only.
+This page shifts from local track situation to **same-class race standings awareness**.
 
-Seeing a value on a dash does not mean the dash owns that calculation.
+Use it when you want to understand:
 
-## 7. Pit and rejoin screens
+- who is ahead of you in class standings,
+- who is behind you in class standings,
+- race-order context even when those cars are not currently on the same bit of track.
 
-Pit and rejoin surfaces are some of the most practically useful dashboard pages.
+In practical terms:
 
-- Pit screens may appear automatically when pit context becomes relevant.
-- The driver can override with **Toggle Pit Screen**.
-- Rejoin alerts support decision-making, but they do not replace driver judgment.
-- If these surfaces are repeatedly wrong, the normal fix is profile or saved-data review rather than dash redesign.
+- **Track Situational Awareness** = nearby on-track context.
+- **Racing Standings Awareness** = same-class opponents ahead/behind in standings regardless of lap position.
 
-![Pit entry assist dash](Images/PitEntryAssist.png)
+![Primary Dash racing standings awareness](Images/PrimaryDash/DriverDashRacingOpp.png)
 
-*Pit entry cues are a good example of the dash presenting a live aid without becoming the owner of the underlying marker and timing logic.*
+*Racing page focused on same-class standings awareness rather than immediate local track position.*
 
-For the feature-specific guidance, see [Rejoin Assist](Rejoin_Assist.md) and [Pit Assist](Pit_Assist.md).
+### Timing screen
 
-## 8. H2H on dashboards
+The **Timing** page is the qualifying-focused timing surface.
 
-Supported dashboards may show:
+Use it for timing-oriented checks such as:
 
-- **H2H Race** for same-class race-order comparisons
-- **H2H Track** for same-class nearby on-track comparisons
+- lap delta,
+- personal best comparison,
+- all-time best comparison,
+- fuel remaining.
 
-The dash shows them; the plugin owns the comparison outputs. See [H2H System](H2H_System.md).
+This is the page you should expect to be most relevant in qualifying workflows, including when session-based auto-switching selects a more timing-oriented landing page.
 
-![H2H overlay](Images/Head2HeadOverlay.png)
+**Screenshot placeholder:** no dedicated Timing-page screenshot is currently confirmed in the repo's Primary Dash image folder.
 
-*H2H is there to improve race awareness on the dash, not to create a second planning workflow.*
+### Practice screen
 
-### Tagged drivers and Friends list
+The **Practice** page keeps the timing-style layout but adds more driver-input context.
 
-If you want certain drivers to stand out more clearly, use **Settings → Friends List** in the plugin and add their iRacing customer IDs with the tag you want to apply.
+Current confirmed use:
 
-For most users, the practical effect is on **awareness styling** in supported nearby-car / CarSA-style dashboard surfaces: tagged drivers can be easier to spot as **Friend**, **Teammate**, or **Bad**. Treat this as a presentation aid, not as something that changes strategy or core H2H ownership.
+- timing-style information remains visible,
+- throttle and brake inputs are included,
+- ABS and TC alerts can be surfaced here,
+- the page can be manually selected in practice sessions.
 
-## 9. Practical layout advice
+![Primary Dash practice page](Images/PrimaryDash/DriverDashPractice.png)
 
-A simple setup usually works best:
+*Practice page with timing-style context plus driver-input visibility.*
 
-- **Main dash:** race-critical information only
-- **Support dash:** extra strategy and race-context detail
-- **Overlay:** compact alerts and helper widgets
+### Head-to-Head page
 
-If a screen feels too busy, use **Declutter Mode**, your dash visibility choices, and a cleaner dash layout before assuming a subsystem is wrong. The **Primary Dash Mode** binding shown in the plugin UI is currently inactive and can be ignored.
+The **Head-to-Head** page gives you the same H2H view as the standalone H2H overlay, but inside the normal Primary Dash page flow.
+
+Keep the role narrow:
+
+- it is an additional way to view H2H context,
+- it does not change H2H logic,
+- it remains a display surface for plugin-owned H2H outputs.
+
+For broader H2H concepts, also see [H2H System](H2H_System.md).
+
+**Screenshot placeholder:** no dedicated Primary Dash H2H-page screenshot is currently confirmed in the repo's Primary Dash image folder.
+
+### Pit Pop-Up
+
+The **Pit Pop-Up** is the pit-focused page in the Primary Dash flow. It can appear as an automatic pit screen or be called manually depending on your workflow.
+
+Current confirmed elements to expect here:
+
+- traffic side bar,
+- top alert area,
+- fuel lines,
+- pit controls,
+- fuel gauge,
+- pit box assist.
+
+This is the main "pit work" surface for the Primary Dash package.
+
+![Primary Dash pit pop-up](Images/PrimaryDash/pitpopup.png)
+
+*Pit Pop-Up page with pit controls, fuel information, alert space, and pit-box support.*
+
+### Overlay system / Lala Alerts
+
+The Primary Dash package also uses a separate overlay layer. The main overlay host is **LalaAlerts**.
+
+This is where temporary overlay messaging and widget-driven alerts live, including:
+
+- side spotter bars,
+- traffic alerts,
+- penalty alerts,
+- fuel alerts,
+- radio-style messages,
+- lap-invalid alerts,
+- session-finished alerts,
+- position-change alerts.
+
+Think of LalaAlerts as a separate temporary alert surface that sits alongside the normal page flow rather than replacing it.
+
+![Lala Alerts overlay](Images/PrimaryDash/AlertsOverlay.png)
+
+*LalaAlerts overlay showing the separate temporary alert layer used by the Primary Dash package.*
+
+## 5. Shared widgets / overlays
+
+These shared widgets belong to the dashboard package, but the plugin still owns the underlying calculations and activation rules.
+
+### PitEntryAssist
+
+PitEntryAssist is the focused pit-entry braking aid. It is there to help you judge the approach to pit speed and the entry line using plugin-owned pit-entry outputs.
+
+See also [Pit Assist](Pit_Assist.md) for the wider pit-support explanation.
+
+### PitPopUp
+
+PitPopUp is the pit-focused temporary screen or page that brings pit controls, fuel lines, alert space, and pit-box support together when pit work becomes relevant.
+
+### RejoinAssist
+
+RejoinAssist is the recovery/rejoin warning surface. It helps you judge whether you are clear to rejoin, but it remains a presentation layer for plugin-owned rejoin and threat logic.
+
+See [Rejoin Assist](Rejoin_Assist.md) for the full driver-facing system guide.
+
+### LaunchAssist
+
+LaunchAssist surfaces launch-related driver information on supported dashboards. It does not replace **Settings → Launch Settings** or **Launch Analysis**, and it does not become the owner of launch logic.
+
+### StallWidget
+
+StallWidget is a compact helper surface for stalling/restart awareness where the relevant dashboard layout includes it.
+
+## 6. Remaining dashboard package sections
+
+### Strategy Dash
+
+Documentation pending.
+
+### Head-to-Head overlay
+
+Documentation pending.
+
+## 7. Screenshot notes
+
+The screenshots embedded above are limited to images that are already present in the repo under `Docs/Images/PrimaryDash/`.
+
+Where a useful page-specific screenshot is not currently available in that folder, this guide uses a simple placeholder note rather than inventing a filename or implying an image exists when it does not.
