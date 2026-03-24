@@ -32,10 +32,10 @@ The released dashboard package is built around simple page navigation plus tempo
 
 On the Primary Driver Dash, the normal page flow is driven by:
 
-- **left touch area** = previous page
-- **right touch area** = next page
-- SimHub **Previous Dash** binding
-- SimHub **Next Dash** binding
+- **left touch area** = previous page  
+- **right touch area** = next page  
+- SimHub **Previous Dash** binding  
+- SimHub **Next Dash** binding  
 
 You can use touch only, but physical bindings are strongly recommended for race use.
 
@@ -71,8 +71,8 @@ The Primary Driver Dash is the main race-driving surface. It is organised around
 
 Current confirmed page order:
 
-1. **Track Situational Awareness (Ahead/Behind)**
-2. **Racing Standings Awareness**
+1. **Track Page (Nearby Ahead/Behind)**
+2. **Racing Page (Class Standings Awareness)**
 3. **Timing**
 4. **Practice**
 5. **Head-to-Head page**
@@ -82,7 +82,7 @@ Current confirmed page order:
 
 *Primary Driver Dash track-awareness page.*
 
-### Track Situational Awareness (Ahead/Behind)
+### Track Page (Nearby Ahead/Behind)
 
 This is the nearby on-track awareness page.
 
@@ -101,7 +101,7 @@ If you prefer a larger-focus view, the repo also includes a zoomed screenshot fo
 
 *Zoomed Primary Dash view for nearby ahead/behind context.*
 
-### Racing Standings Awareness
+### Racing Page (Class Standings Awareness)
 
 This page shifts from local track situation to **same-class race standings awareness**.
 
@@ -113,8 +113,8 @@ Use it when you want to understand:
 
 In practical terms:
 
-- **Track Situational Awareness** = nearby on-track context.
-- **Racing Standings Awareness** = same-class opponents ahead/behind in standings regardless of lap position.
+- **Track Page** = nearby on-track context.  
+- **Racing Page** = same-class opponents ahead/behind in standings regardless of lap position.
 
 ![Primary Dash racing standings awareness](Images/PrimaryDash/DriverDashRacingOpp.png)
 
@@ -131,6 +131,14 @@ Use it for timing-oriented checks such as:
 - all-time best comparison,
 - fuel remaining.
 
+The central delta display can cycle between multiple timing modes:
+
+- session personal best delta  
+- estimated lap time  
+- all-time best delta  
+
+This can be changed using the **centre touch area** or the configured dash navigation binding.
+
 This is the page you should expect to be most relevant in qualifying workflows, including when session-based auto-switching selects a more timing-oriented landing page.
 
 **Screenshot placeholder:** no dedicated Timing-page screenshot is currently confirmed in the repo's Primary Dash image folder.
@@ -145,6 +153,17 @@ Current confirmed use:
 - throttle and brake inputs are included,
 - ABS and TC alerts can be surfaced here,
 - the page can be manually selected in practice sessions.
+
+The throttle and brake bars allow you to see:
+
+- brake application percentage,
+- throttle application percentage,
+- ABS activity,
+- traction control / wheel spin alerts.
+
+These alerts are designed primarily as **driver feedback during practice**, rather than race awareness.
+
+Note: the **brake peak indicator** feature is currently temporarily disabled while undergoing an update.
 
 ![Primary Dash practice page](Images/PrimaryDash/DriverDashPractice.png)
 
@@ -166,7 +185,9 @@ For broader H2H concepts, also see [H2H System](H2H_System.md).
 
 ### Pit Pop-Up
 
-The **Pit Pop-Up** is the pit-focused page in the Primary Dash flow. It can appear as an automatic pit screen or be called manually depending on your workflow.
+The **Pit Pop-Up** is the pit-focused page in the Primary Dash flow.
+
+It may appear **automatically when entering pit lane**, or it can be opened manually using the **Pit Screen binding**, depending on your workflow.
 
 Current confirmed elements to expect here:
 
@@ -177,7 +198,7 @@ Current confirmed elements to expect here:
 - fuel gauge,
 - pit box assist.
 
-This is the main "pit work" surface for the Primary Dash package.
+This is the main **pit work surface** for the Primary Dash package.
 
 ![Primary Dash pit pop-up](Images/PrimaryDash/pitpopup.png)
 
@@ -189,7 +210,7 @@ The Primary Dash package also uses a separate overlay layer. The main overlay ho
 
 This is where temporary overlay messaging and widget-driven alerts live, including:
 
-- side spotter bars,
+- side **spotter bars** that appear when a car is alongside,
 - traffic alerts,
 - penalty alerts,
 - fuel alerts,
@@ -198,7 +219,7 @@ This is where temporary overlay messaging and widget-driven alerts live, includi
 - session-finished alerts,
 - position-change alerts.
 
-Think of LalaAlerts as a separate temporary alert surface that sits alongside the normal page flow rather than replacing it.
+Think of LalaAlerts as a **temporary alert surface** that sits alongside the normal page flow rather than replacing it.
 
 ![Lala Alerts overlay](Images/PrimaryDash/AlertsOverlay.png)
 
