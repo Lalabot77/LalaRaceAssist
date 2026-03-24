@@ -63,49 +63,13 @@ The dashboard docs now include a dedicated Primary Driver Dash guide covering th
 5. Open the plugin and begin with **Strategy**, then review **Profiles**, **Dash Control**, and **Settings**.
 6. For more detailed instructions and help refer to the main user guide or quick start guide in links below.
 
-## Documentation
+## Current Constraints (v1.x)
 
-### Getting Started
-
-- [Quick Start](Docs/Quick_Start.md)
-- [User Guide](Docs/User_Guide.md)
-
-### Driver Systems
-
-- [Strategy System](Docs/Strategy_System.md)
-- [Shift Assist](Docs/Shift_Assist.md)
-- [Launch System](Docs/Launch_System.md)
-- [Rejoin Assist](Docs/Rejoin_Assist.md)
-- [Pit Assist](Docs/Pit_Assist.md)
-- [H2H System](Docs/H2H_System.md)
-- [Profiles System](Docs/Profiles_System.md)
-- [Fuel Model](Docs/Fuel_Model.md)
-
-### Technical / Canonical Subsystems
-
-- [Project Index](Docs/Project_Index.md) - documentation map and ownership guide
-- [Subsystem docs](Docs/Subsystems/) - canonical subsystem behavior, boundaries, and export-level contracts
-- [Dash integration notes](Docs/Subsystems/Dash_Integration.md)
-- [Changelog](CHANGELOG.md)
-
-## Current UI Structure
-
-The current top-level plugin navigation is:
-
-1. **Strategy**
-2. **Profiles**
-3. **Dash Control**
-4. **Launch Analysis**
-5. **Settings**
-
-Presets are managed from **Strategy** through the **`Presets...`** modal flow. There is no separate top-level Presets tab.
-
-## Notes / Important Boundaries
-
-- **PreRace** is display-only. It does not replace the planner or change the live fuel model.
-- **Live Snapshot** can auto-drive relevant planning values. When it is active, the corresponding manual controls are disabled.
-- Launch controls live under **Settings -> Launch Settings**. **Launch Analysis** remains the saved-run review tab.
-- The future/global message system is not documented here as an active user feature.
+- Some dashboard behaviors depend on optional SimHub-side setup and optional dashboard exports. If those are not configured, affected indicators or overlays may be missing while core plugin systems still work.
+- Wheelspin / traction-loss indicators depend on optional **ShakeIt Motors** export setup (`TractionLoss` property). Without that optional export, those indicators are unavailable.
+- Primary Dash navigation behavior is still evolving as the dashboard package is refined for early testers.
+- In plugin UI, **Primary Dash Mode** binding is currently a future placeholder and does not perform an action yet.
+- **`RSC.iRacingExtraProperties.dll` remains required** in this release line.
 
 ## Support and Feedback
 
@@ -149,6 +113,50 @@ If you encounter a problem specifically with a dashboard layout or behaviour, op
 ---
 
 Using Issues and Discussions helps keep the documentation, plugin behaviour, and user feedback aligned.
+
+## Documentation
+
+### Getting Started
+
+- [Quick Start](Docs/Quick_Start.md)
+- [User Guide](Docs/User_Guide.md)
+
+### Driver Systems
+
+- [Strategy System](Docs/Strategy_System.md)
+- [Shift Assist](Docs/Shift_Assist.md)
+- [Launch System](Docs/Launch_System.md)
+- [Rejoin Assist](Docs/Rejoin_Assist.md)
+- [Pit Assist](Docs/Pit_Assist.md)
+- [H2H System](Docs/H2H_System.md)
+- [Profiles System](Docs/Profiles_System.md)
+- [Fuel Model](Docs/Fuel_Model.md)
+
+### Technical / Canonical Subsystems
+
+- [Project Index](Docs/Project_Index.md) - documentation map and ownership guide
+- [Subsystem docs](Docs/Subsystems/) - canonical subsystem behavior, boundaries, and export-level contracts
+- [Dash integration notes](Docs/Subsystems/Dash_Integration.md)
+- [Changelog](CHANGELOG.md)
+
+## Current UI Structure
+
+The current top-level plugin navigation is:
+
+1. **Strategy**
+2. **Profiles**
+3. **Dash Control**
+4. **Launch Analysis**
+5. **Settings**
+
+Presets are managed from **Strategy** through the **`Presets...`** modal flow. There is no separate top-level Presets tab.
+
+## Notes / Important Boundaries
+
+- **PreRace** is display-only. It does not replace the planner or change the live fuel model.
+- **Live Snapshot** can auto-drive relevant planning values. When it is active, the corresponding manual controls are disabled.
+- Launch controls live under **Settings -> Launch Settings**. **Launch Analysis** remains the saved-run review tab.
+- The future/global message system is not documented here as an active user feature.
 
 ## License
 
