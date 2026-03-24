@@ -9,6 +9,8 @@ Think of it as two related parts:
 
 The plugin remains the source of truth for launch calculations, state, and saved data. Dashboards can show launch information, but they do not own the launch logic.
 
+[Launch System Tutorial](https://youtu.be/_IV0simCjYo)
+
 ## What the Launch system is for
 
 Use the Launch system when you want to:
