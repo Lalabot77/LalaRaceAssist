@@ -2,7 +2,9 @@
 
 This page explains the driver-facing purpose of the H2H tools in Lala Race Assist Plugin.
 
-Docs/Images/Head2HeadOverlay.png
+![Primary Dash track situational awareness](Images/Head2HeadOverlay.png)
+
+*Head 2 Head page.*
 
 ## 1. What H2H is for
 
@@ -59,6 +61,7 @@ Depending on the dash, H2H can include:
 - segment-by-segment comparison.
 
 The exact presentation belongs to the dashboard package, but the comparison itself comes from the plugin.
+It is included as a screen on the Driver and Strategy dashes as well as a standalone dash which can be converted to an overlay for on screen placement.
 
 ## 4. Where H2H comes from
 
