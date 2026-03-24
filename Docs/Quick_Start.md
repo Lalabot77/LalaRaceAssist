@@ -34,9 +34,16 @@ Typical layout:
 - **Strategy/support dash** for planning and context
 - **Overlay** for compact alerts
 - **Lovely-based layouts** if you use the Lovely ecosystem
-- **Head 2 Head** for 6 sector 'How goes it' during racing - ideal use is as a simhub overlay on screen
+- **Head 2 Head** as a separate context surface if you use it
 
-Dashboards display plugin outputs. They do not learn data or replace the plugin as the source of truth. For dashboard-specific guidance, see [Dashboards](Dashboards.md).
+High-level setup flow:
+
+1. Import the dashboards into SimHub.
+2. Assign each dashboard to the device or screen where you want to use it.
+3. Bind SimHub's **Next Dash** and **Previous Dash** controls if you want reliable non-touch navigation.
+4. Use touch areas as a backup or convenience layer rather than the only race-use control path.
+
+Dashboards display plugin outputs. They do not learn data or replace the plugin as the source of truth. For the structured page guide, navigation model, and overlay explanation, see [Dashboards](Dashboards.md).
 
 ### Optional: ShakeIt Motors traction-loss export
 
@@ -91,9 +98,9 @@ For a new car/track combination:
 The dashboards can be used by touch, but binding controls is strongly recommended. For a first usable setup:
 
 - Bind SimHub's **Next Dash** and **Previous Dash** commands to physical controls you can reach easily.
-- By default, **Next Screen** moves through the main pages and **Previous Screen** moves through internal/sub-pages.
-- The driver and strategy dashboards also have touch areas for page changes and context actions, but their exact function depends on the current page.
-- The **Primary Dash Mode** binding shown in the plugin UI is reserved for future use and does not currently perform any action, so you do not need to bind it.
+- On the Primary Driver Dash, the **left** touch area moves to the previous page and the **right** touch area moves to the next page.
+- SimHub bindings can be configured per dash, per device, or globally depending on your setup.
+- Auto-dash switching can choose a sensible landing page by session type, while overlays remain separate temporary surfaces instead of becoming part of the normal page loop.
 
 ## 6. What to trust early vs later
 

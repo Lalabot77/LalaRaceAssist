@@ -79,10 +79,10 @@ The fuel model learns gradually, builds confidence, and feeds Strategy with a tr
 
 ### Dashboards
 
-Dashboards are the display layer. They show outputs, visibility states, and context, but they do not own the calculations underneath. See [Dashboards](Dashboards.md).
+Dashboards are the display layer. They show outputs, visibility states, and context, but they do not own the calculations underneath. The expanded dashboard guide now documents the confirmed Primary Driver Dash page order, navigation model, overlays, and shared widget surfaces in one place. See [Dashboards](Dashboards.md).
 
-![Driver dashboard race context](Images/DriverDashRacingOpp.png)
-*The driver dash is there to keep race context readable at speed without moving ownership away from the plugin.*
+![Driver dashboard race context](Images/PrimaryDash/DriverTrackSA.png)
+*The Primary Driver Dash keeps immediate track-awareness readable while the plugin continues to own the underlying calculations and stable outputs.*
 
 #### Friends list and driver tags
 
@@ -92,18 +92,16 @@ Those tags are mainly for **awareness and presentation** on supported nearby-car
 
 #### Dashboard navigation and bindings
 
-The dashboards can be used by touch, but binding controls is strongly recommended. The released dash set is built around SimHub's main dash navigation commands:
+The dashboard package is designed around SimHub's **Next Dash** and **Previous Dash** navigation model, with matching left/right touch areas on the Primary Driver Dash. Those bindings can be set up per dash, per device, or globally in SimHub, depending on your hardware and workflow.
 
-- **Next Dash**
-- **Previous Dash**
+Practical expectations for the current Primary Dash package:
 
-In normal use, bind those to physical buttons, wheel inputs, or other controls you can use without hunting for touch targets. By default, **Next Screen** moves through the main pages and **Previous Screen** moves through internal/sub-pages. Advanced users can also bind specific dashes directly in SimHub/Dash Studio if they prefer dedicated commands per dash.
+- **Track Situational Awareness** and **Racing Standings Awareness** are the main race-facing pages.
+- **Timing** is the qualifying-oriented timing surface.
+- **Practice** can be selected manually in practice sessions.
+- pit and alert surfaces remain separate from the core page loop when they are acting as temporary overlays.
 
-On the main driver dash, the screen is broadly split into thirds. The outer left and right regions are mainly used to move between main screens, while the middle region, or middle upper/lower areas on some pages, is used for context actions such as changing a secondary source or zooming/expanding ahead/behind information on the strategy-style pages.
-
-On the strategy dash, navigation is usually handled by touch regions down the side. The centre area often exits a sub-screen or advances to the next main screen depending on context. Touch areas on the driver and strategy dashboards allow page changes and context actions, but their exact function depends on the current page.
-
-The **Primary Dash Mode** binding shown in the plugin UI is reserved for future use and does not currently perform any action. You do not need to bind it for the released dash set.
+For the detailed page-by-page breakdown, use the main [Dashboards](Dashboards.md) guide rather than treating this overview page as the full dashboard manual.
 
 #### Optional: ShakeIt Motors traction-loss export
 
