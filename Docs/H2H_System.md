@@ -2,6 +2,8 @@
 
 This page explains the driver-facing purpose of the H2H tools in Lala Race Assist Plugin.
 
+Docs/Images/Head2HeadOverlay.png
+
 ## 1. What H2H is for
 
 H2H gives the driver a compact, read-only comparison against useful same-class targets. It helps answer questions like:
