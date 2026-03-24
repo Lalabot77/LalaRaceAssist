@@ -2,7 +2,7 @@
 
 This page explains the user-facing role of profiles in Lala Race Assist Plugin.
 
-![Profiles system track data view](Images/ProfilesTrackData.png)
+![Profiles system track data view](Images/ProfilesTracks.png)
 
 For a full post-install SimHub walkthrough of the plugin tabs and setup flow, see: [YouTube walkthrough (~30 min)](https://youtu.be/Ug9BRo0WRbE).
 
