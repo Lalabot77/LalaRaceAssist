@@ -2,6 +2,12 @@
 
 This guide is the central driver-facing overview for Lala Race Assist Plugin. It explains what the plugin owns, what the driver sees, and where to find the detailed user pages for each system.
 
+## Video walkthrough (post-install)
+
+If you want a full SimHub-side walkthrough of the plugin tabs and setup flow after installation, use this video first: [Lala Race Assist Plugin walkthrough (YouTube, ~30 min)](https://youtu.be/Ug9BRo0WRbE).
+
+This video is intentionally post-install guidance and does not replace [Quick Start](Quick_Start.md) for initial installation/setup.
+
 ## 1. How to read the docs
 
 Use this page as the overview, then jump to the dedicated pages for the systems you actively use:

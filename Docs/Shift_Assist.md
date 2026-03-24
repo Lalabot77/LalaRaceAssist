@@ -2,6 +2,10 @@
 
 Shift Assist is a driver aid for cleaner, more repeatable upshift timing in Lala Race Assist Plugin.
 
+![Shift Assist learning popup](Images/ShiftAssistLearningPopup.png)
+
+For a full post-install SimHub walkthrough of the plugin tabs and setup flow, see: [YouTube walkthrough (~30 min)](https://youtu.be/Ug9BRo0WRbE).
+
 It watches the current gear and RPM, then gives you cues near the target RPM for that gear. It helps the driver react consistently, but it does **not** shift the car for you.
 
 ## What it is for

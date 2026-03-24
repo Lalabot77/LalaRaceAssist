@@ -2,6 +2,10 @@
 
 This page covers the driver-facing rejoin support in Lala Race Assist Plugin.
 
+![Rejoin Assist warning example](Images/RejoinAssist.png)
+
+For a full post-install SimHub walkthrough of the plugin tabs and setup flow, see: [YouTube walkthrough (~30 min)](https://youtu.be/Ug9BRo0WRbE).
+
 ## 1. What Rejoin Assist is for
 
 Rejoin Assist helps the driver make better decisions when the car is recovering from a spin, incident, off-track moment, or other compromised situation.

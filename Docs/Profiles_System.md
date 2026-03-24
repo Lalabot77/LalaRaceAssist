@@ -2,6 +2,10 @@
 
 This page explains the user-facing role of profiles in Lala Race Assist Plugin.
 
+![Profiles system track data view](Images/ProfilesTrackData.png)
+
+For a full post-install SimHub walkthrough of the plugin tabs and setup flow, see: [YouTube walkthrough (~30 min)](https://youtu.be/Ug9BRo0WRbE).
+
 ## 1. What profiles are for
 
 Profiles are the plugin’s long-term memory. They let the plugin remember what it has learned about a car, a track, and the conditions you run in.

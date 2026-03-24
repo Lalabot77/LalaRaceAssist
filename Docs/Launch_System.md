@@ -2,6 +2,10 @@
 
 The Launch system in Lala Race Assist Plugin helps you prepare, execute, and review race starts more consistently.
 
+![Launch Analysis example](Images/LaunchAnalysis.png)
+
+For a full post-install SimHub walkthrough of the plugin tabs and setup flow, see: [YouTube walkthrough (~30 min)](https://youtu.be/Ug9BRo0WRbE).
+
 Think of it as two related parts:
 
 - **live launch behavior** that supports the start itself,
