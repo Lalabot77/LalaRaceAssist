@@ -5,138 +5,393 @@
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
              xmlns:styles="clr-namespace:SimHub.Plugins.Styles;assembly=SimHub.Plugins"
              mc:Ignorable="d"
-             d:DesignWidth="900" d:DesignHeight="1100">
+             d:DesignWidth="900"
+             d:DesignHeight="1100">
+
     <ScrollViewer VerticalScrollBarVisibility="Auto">
         <StackPanel Margin="10">
-            <Border BorderBrush="#3A3A3A" BorderThickness="1" CornerRadius="6" Padding="10" Margin="0,0,0,10">
+
+            <!-- Header -->
+            <Border BorderBrush="#3A3A3A"
+                    BorderThickness="1"
+                    CornerRadius="6"
+                    Padding="10"
+                    Margin="0,0,0,10">
                 <Grid>
                     <Grid.ColumnDefinitions>
-                        <ColumnDefinition Width="*"/>
-                        <ColumnDefinition Width="120"/>
+                        <ColumnDefinition Width="*" />
+                        <ColumnDefinition Width="120" />
                     </Grid.ColumnDefinitions>
+
                     <StackPanel Grid.Column="0">
-                        <TextBlock Text="Lala Race Assist" FontSize="20" FontWeight="Bold" Foreground="White"/>
+                        <TextBlock Text="Lala Race Assist"
+                                   FontSize="20"
+                                   FontWeight="Bold"
+                                   Foreground="White" />
                         <TextBlock Text="Race engineering tools and dashboards for iRacing on SimHub"
-                                   Margin="0,4,0,0" Foreground="LightGray" TextWrapping="Wrap"/>
-                        <TextBlock Margin="0,8,0,0" Foreground="LightGray"
-                                   Text="{Binding InstalledVersionText, StringFormat=Installed version: {0}}"/>
+                                   Margin="0,4,0,0"
+                                   Foreground="LightGray"
+                                   TextWrapping="Wrap" />
+                        <TextBlock Margin="0,8,0,0"
+                                   Foreground="LightGray"
+                                   Text="{Binding InstalledVersionText, StringFormat=Installed version: {0}}" />
                     </StackPanel>
-                    <Border Grid.Column="1" Margin="12,0,0,0" BorderBrush="#555" BorderThickness="1" CornerRadius="4" Height="62" VerticalAlignment="Top">
-                        <TextBlock Text="Logo placeholder" Foreground="#9A9A9A" HorizontalAlignment="Center" VerticalAlignment="Center" FontStyle="Italic"/>
+
+                    <Border Grid.Column="1"
+                            Margin="12,0,0,0"
+                            BorderBrush="#555"
+                            BorderThickness="1"
+                            CornerRadius="4"
+                            Height="62"
+                            VerticalAlignment="Top">
+                        <TextBlock Text="Logo placeholder"
+                                   Foreground="#9A9A9A"
+                                   HorizontalAlignment="Center"
+                                   VerticalAlignment="Center"
+                                   FontStyle="Italic" />
                     </Border>
                 </Grid>
             </Border>
 
+            <!-- Quick Links -->
             <styles:SHSection Title="QUICK LINKS" ShowSeparator="True">
-                <WrapPanel Margin="0,6,0,0">
-                    <styles:SHButtonPrimary Content="Quick Start" Margin="0,0,8,8" Padding="10,4" Click="QuickStart_Click"/>
-                    <styles:SHButtonPrimary Content="User Guide" Margin="0,0,8,8" Padding="10,4" Click="UserGuide_Click"/>
-                    <styles:SHButtonPrimary Content="GitHub Repository" Margin="0,0,8,8" Padding="10,4" Click="Repository_Click"/>
-                    <styles:SHButtonPrimary Content="Releases" Margin="0,0,8,8" Padding="10,4" Click="Releases_Click"/>
-                    <styles:SHButtonPrimary Content="Report Issue" Margin="0,0,8,8" Padding="10,4" Click="Issues_Click"/>
-                </WrapPanel>
-                <TextBlock Margin="0,4,0,0" Foreground="LightGray" Text="{Binding LinkStatusText}"/>
-            </styles:SHSection>
-
-            <styles:SHSection Title="STATUS" ShowSeparator="True">
-                <Grid Margin="0,6,0,0">
-                    <Grid.ColumnDefinitions>
-                        <ColumnDefinition Width="210"/>
-                        <ColumnDefinition Width="*"/>
-                    </Grid.ColumnDefinitions>
-                    <Grid.RowDefinitions>
-                        <RowDefinition Height="Auto"/>
-                        <RowDefinition Height="Auto"/>
-                        <RowDefinition Height="Auto"/>
-                        <RowDefinition Height="Auto"/>
-                        <RowDefinition Height="Auto"/>
-                        <RowDefinition Height="Auto"/>
-                    </Grid.RowDefinitions>
-
-                    <TextBlock Grid.Row="0" Grid.Column="0" Text="Game" Foreground="LightGray" Margin="0,0,8,4"/>
-                    <TextBlock Grid.Row="0" Grid.Column="1" Text="{Binding CurrentGameText}" Margin="0,0,0,4"/>
-
-                    <TextBlock Grid.Row="1" Grid.Column="0" Text="Plugin" Foreground="LightGray" Margin="0,0,8,4"/>
-                    <TextBlock Grid.Row="1" Grid.Column="1" Text="{Binding PluginLoadedText}" Margin="0,0,0,4"/>
-
-                    <TextBlock Grid.Row="2" Grid.Column="0" Text="Profiles" Foreground="LightGray" Margin="0,0,8,4"/>
-                    <TextBlock Grid.Row="2" Grid.Column="1" Text="{Binding ProfilesStatusText}" Margin="0,0,0,4"/>
-
-                    <TextBlock Grid.Row="3" Grid.Column="0" Text="Track markers" Foreground="LightGray" Margin="0,0,8,4"/>
-                    <TextBlock Grid.Row="3" Grid.Column="1" Text="{Binding TrackMarkersStatusText}" Margin="0,0,0,4"/>
-
-                    <TextBlock Grid.Row="4" Grid.Column="0" Text="Current car" Foreground="LightGray" Margin="0,0,8,4"/>
-                    <TextBlock Grid.Row="4" Grid.Column="1" Text="{Binding CurrentCarText}" Margin="0,0,0,4"/>
-
-                    <TextBlock Grid.Row="5" Grid.Column="0" Text="Current track" Foreground="LightGray" Margin="0,0,8,0"/>
-                    <TextBlock Grid.Row="5" Grid.Column="1" Text="{Binding CurrentTrackText}"/>
-                </Grid>
-            </styles:SHSection>
-
-            <styles:SHSection Title="UPDATES" ShowSeparator="True">
                 <StackPanel Margin="0,6,0,0">
-                    <TextBlock Text="{Binding InstalledVersionText, StringFormat=Installed: {0}}" Margin="0,0,0,2"/>
-                    <TextBlock Text="{Binding LatestVersionText, StringFormat=Latest release: {0}}" Margin="0,0,0,2"/>
-                    <TextBlock Text="{Binding UpdateStateText, StringFormat=Status: {0}}" Margin="0,0,0,8"/>
                     <WrapPanel>
-                        <styles:SHButtonPrimary Content="Check Now" Padding="10,4" Margin="0,0,8,0" Click="CheckNow_Click"/>
-                        <styles:SHButtonPrimary Content="Open Releases" Padding="10,4" Click="OpenReleases_Click"/>
+                        <styles:SHButtonPrimary Content="Quick Start"
+                                                Margin="0,0,8,8"
+                                                Padding="10,4"
+                                                Height="28"
+                                                MinWidth="95"
+                                                VerticalAlignment="Center"
+                                                Click="QuickStart_Click" />
+
+                        <styles:SHButtonPrimary Content="User Guide"
+                                                Margin="0,0,8,8"
+                                                Padding="10,4"
+                                                Height="28"
+                                                MinWidth="95"
+                                                VerticalAlignment="Center"
+                                                Click="UserGuide_Click" />
+
+                        <styles:SHButtonPrimary Content="GitHub Repository"
+                                                Margin="0,0,8,8"
+                                                Padding="10,4"
+                                                Height="28"
+                                                MinWidth="120"
+                                                VerticalAlignment="Center"
+                                                Click="Repository_Click" />
+
+                        <styles:SHButtonPrimary Content="Releases"
+                                                Margin="0,0,8,8"
+                                                Padding="10,4"
+                                                Height="28"
+                                                MinWidth="95"
+                                                VerticalAlignment="Center"
+                                                Click="Releases_Click" />
+
+                        <Button Content="Report Issue"
+                                Margin="0,0,8,8"
+                                Padding="10,4"
+                                Height="28"
+                                MinWidth="95"
+                                VerticalAlignment="Center"
+                                Background="#D97A00"
+                                Foreground="White"
+                                BorderBrush="#B96400"
+                                Click="Issues_Click" />
                     </WrapPanel>
+
+                    <TextBlock Margin="0,4,0,0"
+                               Foreground="LightGray"
+                               Text="{Binding LinkStatusText}" />
                 </StackPanel>
             </styles:SHSection>
 
+            <!-- Status + Updates side by side -->
+            <Grid Margin="0,10,0,0">
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="1.2*" />
+                    <ColumnDefinition Width="20" />
+                    <ColumnDefinition Width="1*" />
+                </Grid.ColumnDefinitions>
+
+                <!-- Status -->
+                <styles:SHSection Grid.Column="0" Title="STATUS" ShowSeparator="True">
+                    <Grid Margin="0,6,0,0">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="120" />
+                            <ColumnDefinition Width="*" />
+                            <ColumnDefinition Width="Auto" />
+                        </Grid.ColumnDefinitions>
+
+                        <Grid.RowDefinitions>
+                            <RowDefinition Height="Auto" />
+                            <RowDefinition Height="Auto" />
+                            <RowDefinition Height="Auto" />
+                            <RowDefinition Height="Auto" />
+                            <RowDefinition Height="Auto" />
+                        </Grid.RowDefinitions>
+
+                        <TextBlock Grid.Row="0" Grid.Column="0"
+                                   Text="Game"
+                                   Foreground="LightGray"
+                                   Margin="0,0,8,6" />
+                        <TextBlock Grid.Row="0" Grid.Column="1"
+                                   Text="{Binding CurrentGameText}"
+                                   Margin="0,0,0,6" />
+
+                        <TextBlock Grid.Row="1" Grid.Column="0"
+                                   Text="Plugin"
+                                   Foreground="LightGray"
+                                   Margin="0,0,8,6" />
+                        <TextBlock Grid.Row="1" Grid.Column="1"
+                                   Text="{Binding PluginLoadedText}"
+                                   Margin="0,0,8,6" />
+                        <Button Grid.Row="1" Grid.Column="2"
+                                Content="Restart Plugin"
+                                Margin="0,0,0,6"
+                                Padding="10,3"
+                                Height="26"
+                                MinWidth="95"
+                                VerticalAlignment="Center"
+                                Click="ResetPlugin_Click" />
+
+                        <TextBlock Grid.Row="2" Grid.Column="0"
+                                   Text="Profiles"
+                                   Foreground="LightGray"
+                                   Margin="0,0,8,6" />
+                        <TextBlock Grid.Row="2" Grid.Column="1"
+                                   Grid.ColumnSpan="2"
+                                   Text="{Binding ProfilesStatusText}"
+                                   Margin="0,0,0,6" />
+
+                        <TextBlock Grid.Row="3" Grid.Column="0"
+                                   Text="Current car"
+                                   Foreground="LightGray"
+                                   Margin="0,0,8,6" />
+                        <TextBlock Grid.Row="3" Grid.Column="1"
+                                   Grid.ColumnSpan="2"
+                                   Text="{Binding CurrentCarText}"
+                                   Margin="0,0,0,6" />
+
+                        <TextBlock Grid.Row="4" Grid.Column="0"
+                                   Text="Current track"
+                                   Foreground="LightGray"
+                                   Margin="0,0,8,0" />
+                        <TextBlock Grid.Row="4" Grid.Column="1"
+                                   Grid.ColumnSpan="2"
+                                   Text="{Binding CurrentTrackText}" />
+                    </Grid>
+                </styles:SHSection>
+
+                <!-- Updates -->
+                <styles:SHSection Grid.Column="2" Title="UPDATES" ShowSeparator="True">
+                    <StackPanel Margin="0,6,0,0">
+                        <TextBlock Text="{Binding InstalledVersionText, StringFormat=Installed: {0}}"
+                                   Margin="0,0,0,2" />
+                        <TextBlock Text="{Binding LatestVersionText, StringFormat=Latest release: {0}}"
+                                   Margin="0,0,0,2" />
+                        <TextBlock Text="{Binding UpdateStateText, StringFormat=Status: {0}}"
+                                   Margin="0,0,0,8" />
+
+                        <WrapPanel>
+                            <styles:SHButtonPrimary Content="Check Now"
+                                                    Padding="10,4"
+                                                    Height="28"
+                                                    MinWidth="110"
+                                                    Margin="0,0,8,0"
+                                                    VerticalAlignment="Center"
+                                                    Click="CheckNow_Click" />
+
+                            <styles:SHButtonPrimary Content="Open Releases"
+                                                    Padding="10,4"
+                                                    Height="28"
+                                                    MinWidth="110"
+                                                    VerticalAlignment="Center"
+                                                    Click="OpenReleases_Click" />
+                        </WrapPanel>
+                    </StackPanel>
+                </styles:SHSection>
+            </Grid>
+
+            <!-- Included Systems -->
             <styles:SHSection Title="INCLUDED SYSTEMS" ShowSeparator="True">
                 <WrapPanel Margin="0,6,0,0">
-                    <Border Margin="0,0,8,8" Padding="8,3" BorderBrush="#4A4A4A" BorderThickness="1" CornerRadius="4"><TextBlock Text="Launch Assist"/></Border>
-                    <Border Margin="0,0,8,8" Padding="8,3" BorderBrush="#4A4A4A" BorderThickness="1" CornerRadius="4"><TextBlock Text="Strategy Tools"/></Border>
-                    <Border Margin="0,0,8,8" Padding="8,3" BorderBrush="#4A4A4A" BorderThickness="1" CornerRadius="4"><TextBlock Text="Shift Assist"/></Border>
-                    <Border Margin="0,0,8,8" Padding="8,3" BorderBrush="#4A4A4A" BorderThickness="1" CornerRadius="4"><TextBlock Text="Pit Assist"/></Border>
-                    <Border Margin="0,0,8,8" Padding="8,3" BorderBrush="#4A4A4A" BorderThickness="1" CornerRadius="4"><TextBlock Text="Rejoin Assist"/></Border>
-                    <Border Margin="0,0,8,8" Padding="8,3" BorderBrush="#4A4A4A" BorderThickness="1" CornerRadius="4"><TextBlock Text="Head-to-Head"/></Border>
+                    <Border Margin="0,0,8,8" Padding="8,3" BorderBrush="#4A4A4A" BorderThickness="1" CornerRadius="4">
+                        <TextBlock Text="Launch Assist" />
+                    </Border>
+                    <Border Margin="0,0,8,8" Padding="8,3" BorderBrush="#4A4A4A" BorderThickness="1" CornerRadius="4">
+                        <TextBlock Text="Strategy Tools" />
+                    </Border>
+                    <Border Margin="0,0,8,8" Padding="8,3" BorderBrush="#4A4A4A" BorderThickness="1" CornerRadius="4">
+                        <TextBlock Text="Shift Assist" />
+                    </Border>
+                    <Border Margin="0,0,8,8" Padding="8,3" BorderBrush="#4A4A4A" BorderThickness="1" CornerRadius="4">
+                        <TextBlock Text="Pit Assist" />
+                    </Border>
+                    <Border Margin="0,0,8,8" Padding="8,3" BorderBrush="#4A4A4A" BorderThickness="1" CornerRadius="4">
+                        <TextBlock Text="Rejoin Assist" />
+                    </Border>
+                    <Border Margin="0,0,8,8" Padding="8,3" BorderBrush="#4A4A4A" BorderThickness="1" CornerRadius="4">
+                        <TextBlock Text="Head-to-Head" />
+                    </Border>
                 </WrapPanel>
             </styles:SHSection>
 
+            <!-- Dashboard previews -->
             <styles:SHSection Title="DASHBOARD PREVIEWS" ShowSeparator="True">
                 <StackPanel Margin="0,6,0,0">
-                    <TextBlock Foreground="LightGray" TextWrapping="Wrap" Margin="0,0,0,8"
-                               Text="Preview images are optional in this workspace. To enable them, place PNG files in Assets/Overview with the filenames below, then bind those paths in this section."/>
+                    <TextBlock Foreground="LightGray"
+                               TextWrapping="Wrap"
+                               Margin="0,0,0,8"
+                               Text="Included dashboard previews:" />
                     <WrapPanel>
-                        <Border Margin="0,0,10,10" Width="220" Height="120" BorderBrush="#4A4A4A" BorderThickness="1" CornerRadius="4" Padding="8">
-                            <StackPanel VerticalAlignment="Center">
-                                <TextBlock Text="Driver dashboard" FontWeight="SemiBold"/>
-                                <TextBlock Text="Assets/Overview/driver-preview.png" Foreground="LightGray" TextWrapping="Wrap"/>
+                        <Border Margin="0,0,10,10"
+                                Width="220"
+                                Height="150"
+                                BorderBrush="#4A4A4A"
+                                BorderThickness="1"
+                                CornerRadius="4"
+                                Padding="6">
+                            <StackPanel>
+                                <TextBlock Text="Driver dashboard"
+                                           FontWeight="SemiBold"
+                                           Margin="0,0,0,6" />
+                                <Border BorderBrush="#333333"
+                                        BorderThickness="1"
+                                        CornerRadius="2"
+                                        ClipToBounds="True">
+                                    <Image Source="Assets/Overview/driver-preview.png"
+                                           Width="206"
+                                           Height="104"
+                                           Stretch="UniformToFill" />
+                                </Border>
                             </StackPanel>
                         </Border>
-                        <Border Margin="0,0,10,10" Width="220" Height="120" BorderBrush="#4A4A4A" BorderThickness="1" CornerRadius="4" Padding="8">
-                            <StackPanel VerticalAlignment="Center">
-                                <TextBlock Text="Strategy dashboard" FontWeight="SemiBold"/>
-                                <TextBlock Text="Assets/Overview/strategy-preview.png" Foreground="LightGray" TextWrapping="Wrap"/>
+
+                        <Border Margin="0,0,10,10"
+                                Width="220"
+                                Height="150"
+                                BorderBrush="#4A4A4A"
+                                BorderThickness="1"
+                                CornerRadius="4"
+                                Padding="6">
+                            <StackPanel>
+                                <TextBlock Text="Strategy dashboard"
+                                           FontWeight="SemiBold"
+                                           Margin="0,0,0,6" />
+                                <Border BorderBrush="#333333"
+                                        BorderThickness="1"
+                                        CornerRadius="2"
+                                        ClipToBounds="True">
+                                    <Image Source="Assets/Overview/strategy-preview.png"
+                                           Width="206"
+                                           Height="104"
+                                           Stretch="UniformToFill" />
+                                </Border>
                             </StackPanel>
                         </Border>
-                        <Border Margin="0,0,10,10" Width="220" Height="120" BorderBrush="#4A4A4A" BorderThickness="1" CornerRadius="4" Padding="8">
-                            <StackPanel VerticalAlignment="Center">
-                                <TextBlock Text="Pit popup example" FontWeight="SemiBold"/>
-                                <TextBlock Text="Assets/Overview/pit-popup-preview.png" Foreground="LightGray" TextWrapping="Wrap"/>
+
+                        <Border Margin="0,0,10,10"
+                                Width="220"
+                                Height="150"
+                                BorderBrush="#4A4A4A"
+                                BorderThickness="1"
+                                CornerRadius="4"
+                                Padding="6">
+                            <StackPanel>
+                                <TextBlock Text="Pit popup example"
+                                           FontWeight="SemiBold"
+                                           Margin="0,0,0,6" />
+                                <Border BorderBrush="#333333"
+                                        BorderThickness="1"
+                                        CornerRadius="2"
+                                        ClipToBounds="True">
+                                    <Image Source="Assets/Overview/pit-popup-preview.png"
+                                           Width="206"
+                                           Height="104"
+                                           Stretch="UniformToFill" />
+                                </Border>
                             </StackPanel>
                         </Border>
-                        <Border Margin="0,0,10,10" Width="220" Height="120" BorderBrush="#4A4A4A" BorderThickness="1" CornerRadius="4" Padding="8">
-                            <StackPanel VerticalAlignment="Center">
-                                <TextBlock Text="Rejoin assist example" FontWeight="SemiBold"/>
-                                <TextBlock Text="Assets/Overview/rejoin-preview.png" Foreground="LightGray" TextWrapping="Wrap"/>
+
+                        <Border Margin="0,0,10,10"
+                                Width="220"
+                                Height="150"
+                                BorderBrush="#4A4A4A"
+                                BorderThickness="1"
+                                CornerRadius="4"
+                                Padding="6">
+                            <StackPanel>
+                                <TextBlock Text="Rejoin assist example"
+                                           FontWeight="SemiBold"
+                                           Margin="0,0,0,6" />
+                                <Border BorderBrush="#333333"
+                                        BorderThickness="1"
+                                        CornerRadius="2"
+                                        ClipToBounds="True">
+                                    <Image Source="Assets/Overview/rejoin-preview.png"
+                                           Width="206"
+                                           Height="104"
+                                           Stretch="UniformToFill" />
+                                </Border>
+                            </StackPanel>
+                        </Border>
+
+                        <Border Margin="0,0,10,10"
+                                Width="220"
+                                Height="150"
+                                BorderBrush="#4A4A4A"
+                                BorderThickness="1"
+                                CornerRadius="4"
+                                Padding="6">
+                            <StackPanel>
+                                <TextBlock Text="Head2Head preview"
+                                           FontWeight="SemiBold"
+                                           Margin="0,0,0,6" />
+                                <Border BorderBrush="#333333"
+                                        BorderThickness="1"
+                                        CornerRadius="2"
+                                        ClipToBounds="True">
+                                    <Image Source="Assets/Overview/head2head-preview.png"
+                                           Width="206"
+                                           Height="104"
+                                           Stretch="UniformToFill" />
+                                </Border>
                             </StackPanel>
                         </Border>
                     </WrapPanel>
                 </StackPanel>
             </styles:SHSection>
 
+            <!-- Help / Notes -->
             <styles:SHSection Title="HELP / NOTES" ShowSeparator="True">
                 <StackPanel Margin="0,6,0,0">
-                    <TextBlock Text="• Dashboards can be used by touch, but bindings are recommended." TextWrapping="Wrap" Margin="0,0,0,3"/>
-                    <TextBlock Text="• Next Screen flips main pages; Previous Screen flips internal/sub-pages." TextWrapping="Wrap" Margin="0,0,0,3"/>
-                    <TextBlock Text="• Primary Dash Mode is reserved for future use and currently does nothing." TextWrapping="Wrap" Margin="0,0,0,3"/>
-                    <TextBlock Text="• Optional wheelspin indicators require SimHub ShakeIt Motors 'TractionLoss' export." TextWrapping="Wrap" Margin="0,0,0,3"/>
+                    <TextBlock Text="• Dashboards can be used by touch, but bindings are recommended."
+                               TextWrapping="Wrap"
+                               Margin="0,0,0,3" />
+                    <TextBlock Text="• Next Screen flips main pages; Previous Screen flips internal/sub-pages."
+                               TextWrapping="Wrap"
+                               Margin="0,0,0,3" />
+                    <TextBlock Text="• Primary Dash Mode is reserved for future use and currently does nothing."
+                               TextWrapping="Wrap"
+                               Margin="0,0,0,3" />
+                    <TextBlock Text="• Optional wheelspin indicators require SimHub ShakeIt Motors 'TractionLoss' export."
+                               TextWrapping="Wrap"
+                               Margin="0,0,0,8" />
+
+                    <Button Content="Report Issue"
+                            Padding="10,4"
+                            Height="28"
+                            MinWidth="95"
+                            HorizontalAlignment="Left"
+                            Background="#D97A00"
+                            Foreground="White"
+                            BorderBrush="#B96400"
+                            Click="Issues_Click" />
                 </StackPanel>
             </styles:SHSection>
+
         </StackPanel>
     </ScrollViewer>
 </UserControl>

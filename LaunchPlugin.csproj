@@ -219,6 +219,13 @@
   <ItemGroup>
     <EmbeddedResource Include="Resources\ShiftAssist_DefaultBeep.wav" />
   </ItemGroup>
+  <ItemGroup>
+    <Resource Include="Assets\Overview\driver-preview.png" />
+    <Resource Include="Assets\Overview\head2head-preview.png" />
+    <Resource Include="Assets\Overview\pit-popup-preview.png" />
+    <Resource Include="Assets\Overview\rejoin-preview.png" />
+    <Resource Include="Assets\Overview\strategy-preview.png" />
+  </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <PropertyGroup>
     <RestoreProjectStyle>PackagesConfig</RestoreProjectStyle>

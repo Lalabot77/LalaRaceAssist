@@ -76,7 +76,27 @@ namespace LaunchPlugin
         private static string GetInstalledVersionText()
         {
             var version = Assembly.GetExecutingAssembly().GetName().Version;
-            return version == null ? "Unknown" : version.ToString();
+            if (version == null)
+            {
+                return "Unknown";
+            }
+
+            if (version.Build == 0 && version.Revision == 0)
+            {
+                return $"v{version.Major}.{version.Minor}";
+            }
+
+            if (version.Revision == 0)
+            {
+                return $"v{version.Major}.{version.Minor}.{version.Build}";
+            }
+
+            return $"v{version.Major}.{version.Minor}.{version.Build}.{version.Revision}";
+        }
+
+        private void ResetPlugin_Click(object sender, RoutedEventArgs e)
+        {
+            LinkStatusText = "Add your plugin reset/reload action here.";
         }
 
         private void RefreshStatusSnapshot()
