@@ -49,14 +49,16 @@ Dashboards do **not** become the source of truth for strategy, fuel math, H2H se
 
 The current top-level plugin order is:
 
-1. **Strategy**
-2. **Profiles**
-3. **Dash Control**
-4. **Launch Analysis**
-5. **Settings**
+1. **Overview**
+2. **Strategy**
+3. **Profiles**
+4. **Dash Control**
+5. **Launch Analysis**
+6. **Settings**
 
 Important workflow rules:
 
+- **Overview** is the landing tab for quick orientation, links, and update status.
 - The main planning tab is **Strategy**, not Fuel.
 - There is **no separate Presets tab**.
 - Presets are managed from **Strategy** using the **`Presets...`** modal flow.

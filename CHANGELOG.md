@@ -7,7 +7,7 @@ For internal between-release development history, see `Docs/Internal/Development
 ## v1.1 (Unreleased)
 
 ### Added
-- _No public release notes staged yet._
+- Added a new **Overview** top-level plugin tab as a landing/front-door page with quick links, lightweight status, release-check awareness, and dashboard preview placeholders.
 
 ### Changed
 - _No public release notes staged yet._

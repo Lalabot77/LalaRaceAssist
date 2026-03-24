@@ -45,3 +45,8 @@ The public user-facing release history is maintained in the root `CHANGELOG.md`.
 - Hardened Strategy `Presets...` modal open flow against null preset entries and popup open failures.
 - Fixed Preset Manager `PreRace Mode` dropdown behavior by reusing the validated ComboBox interaction pattern.
 - Embedded shipped preset defaults and expanded track-marker defaults in owning code paths for predictable first-run packaging.
+
+### Plugin UI
+- Added a new top-level `OVERVIEW` tab as the plugin landing page/front door.
+- Added quick-link buttons, lightweight runtime status text, and a fail-soft GitHub latest-release check (`Check Now` + `Open Releases`).
+- Added dashboard preview placeholders that document the exact drop-in paths/names for future images (`Assets/Overview/*.png`) without shipping binaries in this branch.
