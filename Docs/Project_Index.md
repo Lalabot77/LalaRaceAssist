@@ -68,6 +68,7 @@ These pages support maintainers, support work, and Codex tasks. They are not par
 - [Internal/SimHubParameterInventory.md](Internal/SimHubParameterInventory.md)
 - [Internal/SimHubLogMessages.md](Internal/SimHubLogMessages.md)
 - [Internal/Code_Snapshot.md](Internal/Code_Snapshot.md)
+- [Internal/Release_Checklist.md](Internal/Release_Checklist.md)
 
 ## v1 documentation notes
 - `README.md` is the public landing page.
