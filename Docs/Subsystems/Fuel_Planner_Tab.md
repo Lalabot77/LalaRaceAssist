@@ -1,7 +1,7 @@
 # Fuel Planner / Strategy Tab
 
 Validated against commit: HEAD
-Last updated: 2026-03-22
+Last updated: 2026-03-24
 Branch: work
 
 ## Purpose
@@ -11,7 +11,7 @@ The Fuel Planner (surfaced as the top-level **Strategy** tab in the plugin UI) i
 - Computes a **deterministic pit plan** using planner inputs, independent of live volatility.
 - Exposes “readiness” gates so dashboards can safely auto-apply or inhibit live suggestions.
 
-The planner does **not** replace the Fuel Model.  
+The planner does **not** replace the Fuel Model.
 It consumes the Fuel Model’s **live snapshot** and produces **explicit planning outputs** that are stable unless the user changes them.
 
 Preset management remains part of the same subsystem, but it is no longer a separate top-level navigation tab. The Strategy tab keeps the inline `Race Preset` selector and opens the existing preset editor via a modal **Preset Manager** dialog beside that selector. The Preset Manager still owns preset editing only; its `PreRace Mode` combo now reuses the same standard WPF ComboBox pattern already working on the main Strategy page so the selected value stays readable without breaking normal dropdown interaction.
@@ -302,6 +302,6 @@ Reset semantics are shared with the Fuel Model and documented centrally in:
 
 ## TODO / VERIFY
 
-- TODO/VERIFY: Confirm exact confidence threshold used to set `IsFuelReady` and whether it differs for lap time vs fuel.  
-- TODO/VERIFY: Confirm whether planner pit loss always prefers DTL or falls back to direct lane loss when DTL unavailable.  
+- TODO/VERIFY: Confirm exact confidence threshold used to set `IsFuelReady` and whether it differs for lap time vs fuel.
+- TODO/VERIFY: Confirm whether planner pit loss always prefers DTL or falls back to direct lane loss when DTL unavailable.
 - TODO/VERIFY: Confirm which planner outputs are exported as `_S` (smoothed) vs numeric only.
