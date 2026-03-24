@@ -2,6 +2,10 @@
 
 This page explains the user-facing Strategy workflow in Lala Race Assist Plugin.
 
+![Strategy tab overview](Images/StrategyTab.png)
+
+For a full post-install SimHub walkthrough of the plugin tabs and setup flow, see: [YouTube walkthrough (~30 min)](https://youtu.be/Ug9BRo0WRbE).
+
 ## 1. What Strategy is
 
 **Strategy** is the main planning tab and the single user-facing entry point for race planning.

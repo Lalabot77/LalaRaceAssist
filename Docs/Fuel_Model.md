@@ -2,6 +2,10 @@
 
 This page explains the driver-facing fuel-learning model in Lala Race Assist Plugin.
 
+![Fuel model and strategy fuel context](Images/StrategyDashFuelMidStint.png)
+
+For a full post-install SimHub walkthrough of the plugin tabs and setup flow, see: [YouTube walkthrough (~30 min)](https://youtu.be/Ug9BRo0WRbE).
+
 ## 1. What the fuel model does
 
 The fuel model learns how much fuel your current car uses in the current conditions, then turns that into a trustworthy basis for Strategy and race support.

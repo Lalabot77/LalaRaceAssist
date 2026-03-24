@@ -2,6 +2,10 @@
 
 This page covers the driver-facing pit support in Lala Race Assist Plugin.
 
+![Pit Entry Assist example](Images/PitEntryAssist.png)
+
+For a full post-install SimHub walkthrough of the plugin tabs and setup flow, see: [YouTube walkthrough (~30 min)](https://youtu.be/Ug9BRo0WRbE).
+
 ## 1. What Pit Assist includes
 
 The pit-facing driver aids include:
