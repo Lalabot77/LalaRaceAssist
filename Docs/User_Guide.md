@@ -63,7 +63,15 @@ Important workflow rules:
 - Launch controls belong under **Settings → Launch Settings**.
 - **Launch Analysis** remains the separate post-run review tab.
 
-## 4. The main user-facing systems
+## 4. Current constraints (v1.x)
+
+- Some dashboard indicators depend on optional SimHub-side setup or optional exports.
+- Wheelspin / traction-loss visuals depend on optional ShakeIt Motors export setup (`TractionLoss` property).
+- Primary Dash navigation behavior may evolve as dashboard workflows are refined.
+- In plugin UI, **Primary Dash Mode** binding is currently a placeholder and does not perform an action.
+- `RSC.iRacingExtraProperties.dll` remains required for now.
+
+## 5. The main user-facing systems
 
 ### Strategy
 
@@ -144,7 +152,7 @@ Lala Race Assist Plugin includes separate driver-facing pages for recovery/rejoi
 
 H2H is a read-only race-context aid that helps the driver compare race-order and local-track threats without becoming a separate planning workflow. See [H2H System](H2H_System.md).
 
-## 5. Trust model
+## 6. Trust model
 
 A good mental model for the whole plugin is:
 
@@ -161,7 +169,7 @@ Use that pattern for:
 
 If a system is wrong once, keep driving. If it is wrong repeatedly, review the saved data or thresholds behind it instead of assuming the dashboard art is the problem.
 
-## 6. Practical best practice
+## 7. Practical best practice
 
 - Start each new car/track combination by gathering clean laps.
 - Use **Strategy** as the single planning entry point.
@@ -171,7 +179,7 @@ If a system is wrong once, keep driving. If it is wrong repeatedly, review the s
 - Treat touch navigation as a backup or convenience layer; for race use, bind **Next Dash** and **Previous Dash** to physical controls.
 - Review profile-backed data when a driver aid is repeatedly wrong.
 
-## 7. Recommended reading order
+## 8. Recommended reading order
 
 For most drivers, this order works well:
 

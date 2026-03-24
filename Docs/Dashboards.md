@@ -63,7 +63,14 @@ Practical expectations for the current Primary Dash package:
 
 Overlays are **temporary surfaces**, not part of the normal left/right page loop. They appear independently from normal page navigation when their conditions are active.
 
-## 4. Primary Driver Dash
+## 4. Current dashboard constraints (v1.x)
+
+- Some dashboard behavior depends on optional SimHub-side configuration or optional exports; if those are not configured, related indicators may be missing.
+- Wheelspin / traction-loss indications depend on optional ShakeIt Motors export setup (`TractionLoss` property).
+- Primary Dash navigation behavior is still being refined and may evolve over upcoming releases.
+- In plugin UI, **Primary Dash Mode** binding is currently a placeholder and does not perform an action.
+
+## 5. Primary Driver Dash
 
 ### Primary Dash overview
 
@@ -225,7 +232,7 @@ Think of LalaAlerts as a **temporary alert surface** that sits alongside the nor
 
 *LalaAlerts overlay showing the separate temporary alert layer used by the Primary Dash package.*
 
-## 5. Shared widgets / overlays
+## 6. Shared widgets / overlays
 
 These shared widgets belong to the dashboard package, but the plugin still owns the underlying calculations and activation rules.
 
@@ -253,7 +260,7 @@ LaunchAssist surfaces launch-related driver information on supported dashboards.
 
 StallWidget is a compact helper surface for stalling/restart awareness where the relevant dashboard layout includes it.
 
-## 6. Remaining dashboard package sections
+## 7. Remaining dashboard package sections
 
 ### Strategy Dash
 
@@ -263,7 +270,7 @@ Documentation pending.
 
 Documentation pending.
 
-## 7. Screenshot notes
+## 8. Screenshot notes
 
 The screenshots embedded above are limited to images that are already present in the repo under `Docs/Images/PrimaryDash/`.
 
