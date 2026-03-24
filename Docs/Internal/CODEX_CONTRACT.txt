@@ -50,6 +50,11 @@ GitHub-facing user docs:
 Rules:
 - If a task changes user-facing behaviour, workflow, UI labels, tab names, settings location, dash behaviour, install steps, or practical usage guidance, GitHub-facing user docs must be reviewed and updated in the same task.
 - If a task changes only internal implementation with no user-visible effect, user docs may remain unchanged, but Codex must explicitly state that no user-facing documentation changes were required.
+- For any non-trivial task, Codex must classify changelog impact as **user-facing**, **internal-only**, or **both**.
+- For any non-trivial task that meaningfully changes repo behaviour, packaging, docs, UX, or workflows, Codex must add a concise entry to `Docs/Internal/Development_Changelog.md`.
+- Update root `CHANGELOG.md` only when the task explicitly requests public changelog staging, or when the task is clearly preparing user-facing unreleased/release notes.
+- Avoid adding internal-only refactors, housekeeping, or process-only notes to root `CHANGELOG.md` unless explicitly requested.
+- Task closeout must include a short changelog classification note in the final summary.
 - Documentation must reflect final behavior.
 - Remove outdated statements.
 - Do not mention deprecated settings unless marked `legacy (unused)`.
@@ -158,4 +163,5 @@ A task is only complete when:
 - Documentation updated.
 - `Docs/RepoStatus.md` updated with new validation commit.
 - Relevant GitHub-facing docs reviewed and updated when the task changes anything user-facing.
-- `CHANGELOG.md` updated when the task changes user-visible behaviour worth surfacing in release history.
+- `Docs/Internal/Development_Changelog.md` updated for substantive non-trivial work per changelog classification.
+- `CHANGELOG.md` updated only when public staging/release-note intent is explicit.

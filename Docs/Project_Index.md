@@ -69,12 +69,14 @@ These pages support maintainers, support work, and Codex tasks. They are not par
 - [Internal/SimHubLogMessages.md](Internal/SimHubLogMessages.md)
 - [Internal/Code_Snapshot.md](Internal/Code_Snapshot.md)
 - [Internal/Release_Checklist.md](Internal/Release_Checklist.md)
+- [Internal/Development_Changelog.md](Internal/Development_Changelog.md)
 
 ## v1 documentation notes
 - `README.md` is the public landing page.
 - `Docs/*.md` are the reader-facing feature/system pages.
 - `Docs/Subsystems/*.md` are the canonical technical ownership docs.
 - `Docs/RepoStatus.md` records the latest documentation sweep and validation note.
+- Changelog split: root `CHANGELOG.md` is public release-facing, while `Docs/Internal/Development_Changelog.md` is the internal between-release history.
 - If user-facing pages and subsystem docs ever disagree, update both in the same task so GitHub readers do not get split truths.
 
 ## Freshness

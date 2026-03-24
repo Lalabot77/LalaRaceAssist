@@ -9,25 +9,29 @@ Branch: work
 - No Git remote is configured in this checkout (`git remote -v` returns empty).
 
 ## Documentation sync status
-- Added a new maintainer-facing internal release process checklist based on the workflow that produced the first successful public release.
-- Captured repeatable go/no-go checks for planning, build/readiness, clean install validation, dashboard import validation, runtime/log review, docs/assets verification, GitHub release prep, and post-release follow-up.
-- Kept changes documentation-only and scoped to internal process discoverability.
+- Split changelog responsibilities into public release history (`CHANGELOG.md`) and internal between-release development history (`Docs/Internal/Development_Changelog.md`).
+- Reset root changelog structure to `v1.1 (Unreleased)` staging plus `v1.0 – Initial Public Release`.
+- Added internal changelog governance to Codex contract and task template so substantive work keeps the internal changelog current by default.
+- Synced entry-point documentation (`AGENTS.md`, `Docs/Project_Index.md`) to the internal docs path layout and changelog split.
 
 ## Reviewed documentation set
 ### Changed in this sweep
-- `Docs/Internal/Release_Checklist.md` (new)
+- `CHANGELOG.md`
+- `Docs/Internal/Development_Changelog.md` (new)
+- `Docs/Internal/CODEX_CONTRACT.txt`
+- `Docs/Internal/CODEX_TASK_TEMPLATE.txt`
+- `AGENTS.md`
 - `Docs/Project_Index.md`
 - `Docs/RepoStatus.md`
 
 ### Reviewed and left unchanged
-- `Docs/Internal/CODEX_CONTRACT.txt`
 - `Docs/Internal/Architecture_Guardrails.md`
-- `Docs/Internal/CODEX_TASK_TEMPLATE.txt`
 - `Docs/Internal/Code_Snapshot.md`
 
 ## Delivery status highlights
-- Future releases now have a concrete internal checklist that reflects practical first-release learnings rather than generic boilerplate.
-- Project index now exposes the checklist in the canonical documentation map for maintainers.
+- Public changelog now remains focused on user-visible release notes.
+- Internal changelog is now the canonical running development log between releases.
+- Codex process docs now require changelog classification and internal changelog maintenance for substantive non-trivial tasks.
 
 ## Validation note
-- Validation recorded against `HEAD` (`internal release checklist + project index discoverability update`).
+- Validation recorded against `HEAD` (`public/internal changelog split + Codex workflow enforcement update`).
