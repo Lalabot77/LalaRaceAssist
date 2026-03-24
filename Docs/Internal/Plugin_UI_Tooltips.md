@@ -213,3 +213,12 @@ Branch: work
 - `GlobalSettingsView.xaml` `PitExit Verbose Logging` tooltip says it adds PitExit math audit details to pit-in snapshots for troubleshooting.
 - `GlobalSettingsView.xaml` `Shift Assist Debug CSV` tooltip explains per-tick diagnostic CSV logging.
 - `GlobalSettingsView.xaml` `Shift Assist Debug Max Hz` textbox tooltip documents valid range (1..60 Hz).
+
+## OverviewTabView.xaml
+- Top-level `OVERVIEW` tab is now the plugin landing/front-door page before `STRATEGY`.
+- Header displays plugin name, installed version string, tagline, and a reserved logo placeholder area.
+- `Quick Links` section includes buttons for Quick Start, User Guide, GitHub repo, Releases, and Report Issue.
+- `Status` section shows lightweight runtime state (game, plugin, profiles, track markers, current car/track) without deep subsystem wiring.
+- `Updates` section shows installed version, latest release tag, status (`Up to date`/`Update available`/`Unable to check`), and `Check Now`/`Open Releases` actions.
+- `Dashboard Previews` section now provides placeholder cards with exact expected file paths (`Assets/Overview/*.png`) so preview images can be dropped in later without layout changes.
+- `Help / Notes` section contains concise driver reminders for touch vs bindings, Next/Previous screen behavior, Primary Dash Mode placeholder status, and optional `TractionLoss` export setup.

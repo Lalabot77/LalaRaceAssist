@@ -71,17 +71,19 @@ That exposes `[ShakeITMotorsV3Plugin.Export.TractionLoss.All]` for dashboards or
 
 Open the plugin in SimHub and confirm the main navigation order:
 
-1. **Strategy**
-2. **Profiles**
-3. **Dash Control**
-4. **Launch Analysis**
-5. **Settings**
+1. **Overview**
+2. **Strategy**
+3. **Profiles**
+4. **Dash Control**
+5. **Launch Analysis**
+6. **Settings**
 
 ![Strategy tab after install](Images/StrategyTab.png)
-*After install, Strategy should be the first main tab you land on and the main place to start planning.*
+*After install, Overview is the landing tab; use it for quick links and status, then move to Strategy for planning.*
 
 Important current rules:
 
+- **Overview** is the landing/front-door tab (links, status, and update check).
 - **Strategy** is the main planner.
 - Presets are managed from **Strategy** through **`Presets...`**.
 - Launch setup lives in **Settings → Launch Settings**.

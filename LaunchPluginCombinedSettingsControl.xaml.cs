@@ -10,6 +10,13 @@ namespace LaunchPlugin
         {
             InitializeComponent();
 
+            var overviewTab = new SHTabItem
+            {
+                Header = "OVERVIEW",
+                Content = new OverviewTabView(mainPluginInstance)
+            };
+            MainTabControl.Items.Add(overviewTab);
+
             var strategyTab = new SHTabItem
             {
                 Header = "STRATEGY",

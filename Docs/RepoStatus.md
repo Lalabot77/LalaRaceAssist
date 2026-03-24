@@ -9,29 +9,31 @@ Branch: work
 - No Git remote is configured in this checkout (`git remote -v` returns empty).
 
 ## Documentation sync status
-- Split changelog responsibilities into public release history (`CHANGELOG.md`) and internal between-release development history (`Docs/Internal/Development_Changelog.md`).
-- Reset root changelog structure to `v1.1 (Unreleased)` staging plus `v1.0 – Initial Public Release`.
-- Added internal changelog governance to Codex contract and task template so substantive work keeps the internal changelog current by default.
-- Synced entry-point documentation (`AGENTS.md`, `Docs/Project_Index.md`) to the internal docs path layout and changelog split.
+- Added a new top-level plugin `OVERVIEW` tab as the front-door landing page before Strategy.
+- Synced user-facing docs to the new tab order and overview-first workflow wording.
+- Synced internal UI tooltip inventory and internal development changelog for the new Overview surface.
 
 ## Reviewed documentation set
 ### Changed in this sweep
 - `CHANGELOG.md`
-- `Docs/Internal/Development_Changelog.md` (new)
-- `Docs/Internal/CODEX_CONTRACT.txt`
-- `Docs/Internal/CODEX_TASK_TEMPLATE.txt`
-- `AGENTS.md`
-- `Docs/Project_Index.md`
+- `Docs/Quick_Start.md`
+- `Docs/User_Guide.md`
+- `Docs/Internal/Plugin_UI_Tooltips.md`
+- `Docs/Internal/Development_Changelog.md`
 - `Docs/RepoStatus.md`
 
 ### Reviewed and left unchanged
+- `Docs/Project_Index.md`
+- `Docs/Internal/CODEX_CONTRACT.txt`
 - `Docs/Internal/Architecture_Guardrails.md`
+- `Docs/Internal/CODEX_TASK_TEMPLATE.txt`
 - `Docs/Internal/Code_Snapshot.md`
+- `Docs/Subsystems/Dash_Integration.md`
 
 ## Delivery status highlights
-- Public changelog now remains focused on user-visible release notes.
-- Internal changelog is now the canonical running development log between releases.
-- Codex process docs now require changelog classification and internal changelog maintenance for substantive non-trivial tasks.
+- Plugin settings UI now has a dedicated onboarding/overview tab with quick links, status, update awareness, and dashboard preview placeholders.
+- Version awareness is fail-soft and manual/low-frequency (`Check Now` plus one startup check path), and preview image file paths are documented for later drop-in assets.
+- Existing tabs keep their prior responsibilities (`Strategy`, `Profiles`, `Dash Control`, `Launch Analysis`, `Settings`) unchanged.
 
 ## Validation note
-- Validation recorded against `HEAD` (`public/internal changelog split + Codex workflow enforcement update`).
+- Validation recorded against `HEAD` (`Overview tab polish + lightweight release-check awareness + docs sync`).

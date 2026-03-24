@@ -107,6 +107,9 @@
     <Compile Include="GlobalSettingsView.xaml.cs">
       <DependentUpon>GlobalSettingsView.xaml</DependentUpon>
     </Compile>
+    <Compile Include="OverviewTabView.xaml.cs">
+      <DependentUpon>OverviewTabView.xaml</DependentUpon>
+    </Compile>
     <Compile Include="LaunchSummaryExpander.xaml.cs">
       <DependentUpon>LaunchSummaryExpander.xaml</DependentUpon>
     </Compile>
@@ -177,6 +180,10 @@
       <SubType>Designer</SubType>
     </Page>
     <Page Include="GlobalSettingsView.xaml">
+      <Generator>MSBuild:Compile</Generator>
+      <SubType>Designer</SubType>
+    </Page>
+    <Page Include="OverviewTabView.xaml">
       <Generator>MSBuild:Compile</Generator>
       <SubType>Designer</SubType>
     </Page>
