@@ -181,7 +181,7 @@ Keep the role narrow:
 
 For broader H2H concepts, also see [H2H System](H2H_System.md).
 
-**Screenshot placeholder:** no dedicated Primary Dash H2H-page screenshot is currently confirmed in the repo's Primary Dash image folder.
+![Primary Dash pit pop-up](Images/PrimaryDash/Head2HeadOverlay.png)
 
 ### Pit Pop-Up
 
