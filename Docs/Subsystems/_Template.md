@@ -1,7 +1,7 @@
 # Subsystem Template
 
-Validated against commit: 8618f167efb6ed4f89b7fe60b69a25dd4da53fd1  
-Last updated: 2025-12-28  
+Validated against commit: 8618f167efb6ed4f89b7fe60b69a25dd4da53fd1
+Last updated: 2026-03-24
 Branch: docs/refresh-index-subsystems
 
 Fill each section with concise, technician-focused details. Use TODO/VERIFY where validation is incomplete and cite evidence (file/class/method).

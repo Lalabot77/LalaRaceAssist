@@ -1,7 +1,7 @@
 # Trace Logging
 
 Validated against commit: 298accf
-Last updated: 2026-02-10
+Last updated: 2026-03-24
 Branch: work
 
 ## Purpose
@@ -57,9 +57,9 @@ One row per lap crossing:
 
 ## Outputs
 
-- Summary file: `SessionSummary.csv` under `Logs/LalaPluginData/LalaSessionSummaries` (or configured path). Rows are only written once green + checkered are seen and include planner, profile, and actual race stats in schema version `v2`.【F:SessionSummaryLogger.cs†L31-L176】【F:SessionSummaryModel.cs†L9-L137】
-- Per-lap trace files: `SessionTrace_<car>_<track>_<timestamp>.csv` under `.../LalaSessionSummaries/Traces`. Trace rows include `PitStopIndex` and `PitStopPhase` alongside lap/fuel snapshots.【F:SessionSummaryLogger.cs†L41-L131】【F:SessionTraceLapRow.cs†L7-L33】
-- Summary embedded in trace: the summary row can be appended inside the trace file between `#[SessionSummary]` markers for later parsing.【F:SessionSummaryLogger.cs†L133-L178】
+- Summary file: `SessionSummary.csv` under `Logs/LalaPluginData/LalaSessionSummaries` (or configured path). Rows are only written once green + checkered are seen and include planner, profile, and actual race stats in schema version `v2`.
+- Per-lap trace files: `SessionTrace_<car>_<track>_<timestamp>.csv` under `.../LalaSessionSummaries/Traces`. Trace rows include `PitStopIndex` and `PitStopPhase` alongside lap/fuel snapshots.
+- Summary embedded in trace: the summary row can be appended inside the trace file between `#[SessionSummary]` markers for later parsing.
 
 ---
 
@@ -125,7 +125,7 @@ The values above map directly to `SessionSummaryModel` fields, and the `SchemaVe
 ---
 
 ## Pit stop index semantics
-- `PitStopIndex` is **1-based** and increments once per completed pit cycle (first stop => 1). The maximum index seen is used as the session’s `Actual_PitStops` value in the summary output.【F:LalaLaunch.cs†L3927-L3942】【F:SessionSummaryRuntime.cs†L152-L245】
+- `PitStopIndex` is **1-based** and increments once per completed pit cycle (first stop => 1). The maximum index seen is used as the session’s `Actual_PitStops` value in the summary output.
 
 ## TODO / VERIFY
 

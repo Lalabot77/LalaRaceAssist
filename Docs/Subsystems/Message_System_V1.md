@@ -1,11 +1,13 @@
 # Message System V1
 
-Validated against commit: 9f784a9  
-Last updated: 2026-01-14  
+Validated against commit: 9f784a9
+Last updated: 2026-03-24
 Branch: work
 
 ## Purpose
 Evaluate message definitions against telemetry and plugin signals, maintain an active stack, and publish styled SimHub exports for Lala/Msg dashes.
+
+> Status note: Message System V1 / `MSGV1.*` is still under active development and is **not** part of the shipped plugin v1.0 runtime contract.
 
 ---
 
