@@ -96,7 +96,7 @@ namespace LaunchPlugin
 
         private void ResetPlugin_Click(object sender, RoutedEventArgs e)
         {
-            LinkStatusText = "Add your plugin reset/reload action here.";
+            // Not implemented yet.
         }
 
         private void RefreshStatusSnapshot()
