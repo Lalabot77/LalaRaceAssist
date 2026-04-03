@@ -8,8 +8,9 @@ Purpose: own all opponent-facing calculations for strict same-class race-target 
 Phase-1 Head-to-Head (`H2HRace.*`) consumes Opponents only as a **race-target selector seam** (current class-ahead / class-behind identity from `Opp.Ahead1` / `Opp.Behind1`). Persistent H2H timing, live-gap, lap-summary, fixed-6-segment ownership, and canonical H2H class-color publishing remain inside the standalone H2H subsystem; if Opponents clears those race outputs, H2H should also clear/inactivate rather than revive a stale race identity. Opponents does **not** become a far-away timing engine, and any extra `CarIdx` recovery stays a narrow local fallback inside H2H/LalaLaunch rather than moving timing ownership into Opponents.
 
 ## Gating and scope
-- Runs **race sessions only**; resets caches/outputs if session leaves Race.
-- No additional completed-lap gate is currently applied; once the session is Race, Opp and PitExit outputs may publish immediately. The subsystem-active log still fires once per activation.
+- Runs in **live opponent sessions** (Practice, Qualifying/Open Qualify, Lone Qualify, Race); resets caches/outputs when session leaves that eligibility scope (for example Offline Testing).
+- No completed-lap gate is applied; once the session is eligible, leaderboard-neighbor `Opp.*` outputs may publish immediately.
+- Pit-exit prediction remains race-scoped; `PitExit.*` resets outside Race.
 - Uses **IRacingExtraProperties only**; no Dahl DLL or SDK arrays.
 
 ## Identity model

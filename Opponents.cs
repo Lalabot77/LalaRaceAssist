@@ -39,14 +39,14 @@ namespace LaunchPlugin
             _pitExitPredictor.Reset();
         }
 
-        public void Update(GameData data, PluginManager pluginManager, bool isRaceSession, int completedLaps, double myPaceSec, double pitLossSec, bool pitTripActive, bool onPitRoad, double trackPct, double sessionTimeSec, double sessionTimeRemainingSec, bool debugEnabled)
+        public void Update(GameData data, PluginManager pluginManager, bool isEligibleSession, bool isRaceSession, int completedLaps, double myPaceSec, double pitLossSec, bool pitTripActive, bool onPitRoad, double trackPct, double sessionTimeSec, double sessionTimeRemainingSec, bool debugEnabled)
         {
             var _ = data; // intentional discard to keep signature aligned with caller
             string playerClassColor = SafeReadString(pluginManager, "IRacingExtraProperties.iRacing_Player_ClassColor");
             string playerCarNumber = SafeReadString(pluginManager, "IRacingExtraProperties.iRacing_Player_CarNumber");
             _playerIdentityKey = MakeIdentityKey(playerClassColor, playerCarNumber);
 
-            if (!isRaceSession)
+            if (!isEligibleSession)
             {
                 if (_gateActive || _entityCache.Count > 0)
                 {
@@ -60,7 +60,14 @@ namespace LaunchPlugin
 
             _nearby.Update(pluginManager, allowLogs, debugEnabled);
             _leaderboard.Update(pluginManager);
-            _pitExitPredictor.Update(_playerIdentityKey, pitLossSec, allowLogs, pitTripActive, onPitRoad, trackPct, completedLaps, sessionTimeSec, sessionTimeRemainingSec, debugEnabled);
+            if (isRaceSession)
+            {
+                _pitExitPredictor.Update(_playerIdentityKey, pitLossSec, allowLogs, pitTripActive, onPitRoad, trackPct, completedLaps, sessionTimeSec, sessionTimeRemainingSec, debugEnabled);
+            }
+            else
+            {
+                _pitExitPredictor.Reset();
+            }
 
             if (!gateNow)
             {

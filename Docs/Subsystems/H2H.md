@@ -42,6 +42,7 @@ H2H sector publication is intentionally simple:
 
 ### H2HRace
 - Uses Opponents class-ahead / class-behind identity as the race selector input.
+- Availability follows Opponents selector publication scope (live opponent sessions such as Practice, Qualifying/Open Qualify, Lone Qualify, and Race). If Opponents clears selector identity, `H2HRace.*` naturally clears/inactivates.
 - Continues to track the selected identity even when that car is no longer nearby, provided the identity can still be resolved to a live `CarIdx`.
 - If direct session-info identity lookup misses for a known race target, H2H can use a narrow local live-session fallback by probing current CarSA slots: exact normalized H2H identity remains the first path, then a bounded car-number fallback can recover the live `CarIdx` when the nearby CarSA slot has the same car number and, when available, the same resolved driver name even if class-color identity differs. Selector ownership still stays in Opponents.
 - If the identity stays the same but the resolved `CarIdx` changes, the published `S1..S6State` / `S1..S6DeltaSec` outputs switch immediately to the newly resolved car's CarSA cache contents. If no cached sector exists yet, the row shows `empty`/`0` naturally.
