@@ -59,3 +59,7 @@ The public user-facing release history is maintained in the root `CHANGELOG.md`.
 - Expanded Opponents leaderboard-neighbor publication scope from race-only to live opponent sessions (Practice, Qualifying/Open Qualify, Lone Qualify, Race), while keeping Offline Testing out of scope.
 - Preserved the existing H2HRace selector seam (`Opp.Ahead1` / `Opp.Behind1`) so H2HRace now lights up naturally in practice/qualifying sessions when leaderboard identity is available.
 - Kept race-specific pit-exit prediction bounded to Race sessions and reset pit-exit outputs outside Race.
+
+### Opponents activation log wording cleanup
+- Updated the Opponents activation log text to match current behavior: `Opponents subsystem active (eligible live session).`
+- Synced affected docs to remove stale race-only/lap-gate wording where it referenced Opponents activation.

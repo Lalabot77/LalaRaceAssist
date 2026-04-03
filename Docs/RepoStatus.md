@@ -12,6 +12,7 @@ Branch: work
 - Opponents session eligibility was widened from race-only to live opponent sessions (Practice, Qualifying/Open Qualify, Lone Qualify, Race), while keeping Offline Testing out of scope.
 - H2HRace selector integration remained unchanged (`Opp.Ahead1` / `Opp.Behind1`), so race-style H2H can now populate in practice/qualifying when leaderboard-neighbor identity is available.
 - Race-specific pit-exit prediction remained race-scoped; `PitExit.*` outputs are reset outside Race.
+- Opponents activation log wording now matches current behavior: `Opponents subsystem active (eligible live session).`
 - Synced Opponents/H2H subsystem docs and user-facing H2H page with the new eligibility behavior.
 - Logged this behavior change in the internal development changelog.
 
@@ -21,18 +22,19 @@ Branch: work
 - `Opponents.cs`
 - `Docs/Subsystems/Opponents.md`
 - `Docs/Subsystems/H2H.md`
+- `Docs/Subsystems/CarSA.md`
 - `Docs/H2H_System.md`
+- `Docs/Internal/Architecture_Guardrails.md`
+- `Docs/Internal/SimHubLogMessages.md`
 - `Docs/Internal/Development_Changelog.md`
 - `Docs/RepoStatus.md`
 
 ### Reviewed and left unchanged
 - `Docs/Project_Index.md`
 - `Docs/Internal/CODEX_CONTRACT.txt`
-- `Docs/Internal/Architecture_Guardrails.md`
 - `Docs/Internal/CODEX_TASK_TEMPLATE.txt`
 - `Docs/Internal/Code_Snapshot.md`
 - `Docs/Internal/SimHubParameterInventory.md`
-- `Docs/Internal/SimHubLogMessages.md`
 - `Docs/Internal/Plugin_UI_Tooltips.md`
 - `Docs/Dashboards.md`
 - `Docs/User_Guide.md`

@@ -36,7 +36,7 @@ This is the cleaner “who matters to my result?” view.
 
 **Session availability**
 
-H2H Race can populate whenever the session has meaningful live opponent context (for example Practice, Qualifying/Open Qualify, Lone Qualify, and Race). In true solo/offline running, it will naturally stay empty.
+H2H Race can populate whenever the session has meaningful live opponent context (for example Practice, Qualifying/Open Qualify, Lone Qualify, and Race). In true solo/offline running, it will naturally stay empty, and there is no lap-count activation gate.
 
 ### H2H Track
 

@@ -55,7 +55,7 @@ namespace LaunchPlugin
                 return;
             }
 
-            bool gateNow = true; //completedLaps >= 1; removed lap gate requirement to allow opponents info to populate during out-laps and first lap during testing.
+            bool gateNow = true; // no completed-lap gate; eligible sessions can publish immediately.
             bool allowLogs = gateNow;
 
             _nearby.Update(pluginManager, allowLogs, debugEnabled);
@@ -81,7 +81,7 @@ namespace LaunchPlugin
                 _gateActive = true;
                 if (!_gateOpenedLogged)
                 {
-                    SimHub.Logging.Current.Info("[LalaPlugin:Opponents] Opponents subsystem active (Race session + lap gate met).");
+                    SimHub.Logging.Current.Info("[LalaPlugin:Opponents] Opponents subsystem active (eligible live session).");
                     _gateOpenedLogged = true;
                 }
             }

@@ -64,13 +64,13 @@ Scope: Info-level logs emitted via `SimHub.Logging.Current.Info(...)`. Use the t
 - **`[LalaPlugin:After0Result] driver=... leader=... pred=... lapsPred=...`** — After-zero outcome logged once when session ends or checkered seen.【F:LalaLaunch.cs†L4534-L4560】
 
 ## Opponents and pit-exit prediction
-- **`[LalaPlugin:Opponents] Opponents subsystem active (Race session + lap gate met).`** — Gate opened (Race + CompletedLaps ≥1); outputs now live.【F:Opponents.cs†L72-L88】
-- **`[LalaPlugin:Opponents] Slot <slot> rebound -> <identity> (<name>)`** — Nearby slot (Ahead1/2, Behind1/2) re-bound to a new identity; pace cache persists per identity (logs gated to lap ≥1 and debug toggle).【F:Opponents.cs†L252-L361】
+- **`[LalaPlugin:Opponents] Opponents subsystem active (eligible live session).`** — Opponents activation gate opened for the current eligible live session; leaderboard-neighbor outputs are now live.【F:Opponents.cs†L79-L101】
+- **`[LalaPlugin:Opponents] Slot <slot> rebound -> <identity> (<name>)`** — Nearby slot (Ahead1/2, Behind1/2) re-bound to a new identity; pace cache persists per identity (debug-gated).【F:Opponents.cs†L527-L568】
 - **`[LalaPlugin:CarSA] CarSA enabled (source=CarIdxTruth, slots=5/5)`** — CarSA subsystem became valid for the session (CarIdx truth, 5/5 slots).【F:CarSAEngine.cs†L387-L390】
 - **`[LalaPlugin:CarSA] Class rank map built using <source> (<count> classes)`** — Class-rank lookup initialized from session info (CarClassRelSpeed preferred, else CarClassEstLapTime). Drives Faster/Slower class StatusE labeling in multiclass sessions.【F:LalaLaunch.cs†L4930-L4987】
 - **`[CarSA] BestLap fallback now using DriverInfo CarClassEstLapTime until best lap available.`** — Best-lap estimates switched to class-estimate fallback until per-car best laps arrive (once per session).【F:LalaLaunch.cs†L6655-L6660】
 - **`[LalaPlugin:PitExit] Predictor valid -> true (pitLoss=X.Xs)`** — Pit-exit predictor became valid with leaderboard/player row found.【F:Opponents.cs†L507-L566】
-- **`[LalaPlugin:PitExit] Predicted class position changed -> P# (ahead=N)`** — Predicted post-stop class position changed while valid (gated to lap ≥1 and debug toggle).【F:Opponents.cs†L532-L566】
+- **`[LalaPlugin:PitExit] Predicted class position changed -> P# (ahead=N)`** — Predicted post-stop class position changed while valid (debug-gated with cadence filters).【F:Opponents.cs†L1094-L1134】
 - **`[LalaPlugin:PitExit] Predictor valid -> false`** — Pit-exit predictor lost validity (no player row/leaderboard data).【F:Opponents.cs†L568-L579】
 - **`[LalaPlugin:PitExit] Pit-in snapshot: lap=... t=... posClass=... posOverall=... gapLdr=... pitLoss=... predPosClass=... carsAhead=... srcPitLoss=... laneRef=... boxRef=... directRef=... entryGapLdr=... gapLdrLive=... gapLdrUsed=... pitLossLive=... pitLossUsed=... predGapAfterPit=... lock=...`** — One-time pit entry snapshot logging player positions, pit loss inputs, locked pit-trip gap/pit loss, and prediction summary (see trailing lock/used/live fields).【F:LalaLaunch.cs†L4712-L4747】
 - **`[LalaPlugin:PitExit] Math audit: pitLoss=... playerGap=... | aheadCandidates=[...] | behindCandidates=[...]`** — Pit-in audit of boundary candidates and deltas around the pit-loss comparison, emitted alongside the pit-in snapshot.【F:Opponents.cs†L950-L1038】
