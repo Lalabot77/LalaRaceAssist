@@ -79,6 +79,24 @@ namespace LaunchPlugin
             return string.Equals(NormalizeSessionTypeName(sessionTypeName), "Race", StringComparison.OrdinalIgnoreCase);
         }
 
+        private static bool IsOpponentsEligibleSession(string sessionTypeName)
+        {
+            string normalized = NormalizeSessionTypeName(sessionTypeName);
+            if (string.IsNullOrWhiteSpace(normalized))
+            {
+                return false;
+            }
+
+            if (IsOfflineTestingSession(normalized))
+            {
+                return false;
+            }
+
+            return IsPracticeLikeSession(normalized)
+                || IsQualLikeSession(normalized)
+                || IsRaceSession(normalized);
+        }
+
         private static bool IsOfflineTestingSession(string sessionTypeName)
         {
             return string.Equals(NormalizeSessionTypeName(sessionTypeName), "Offline Testing", StringComparison.OrdinalIgnoreCase);
@@ -6191,6 +6209,7 @@ namespace LaunchPlugin
             string sessionTypeForOpponents = !string.IsNullOrWhiteSpace(currentSessionTypeForConfidence)
                 ? currentSessionTypeForConfidence
                 : (data.NewData?.SessionTypeName ?? string.Empty);
+            bool isOpponentsEligibleSessionNow = IsOpponentsEligibleSession(sessionTypeForOpponents);
             bool isRaceSessionNow = IsRaceSession(sessionTypeForOpponents);
             bool pitExitRecently = (DateTime.UtcNow - _lastPitLaneSeenUtc).TotalSeconds < 1.0;
             bool pitTripActive = _wasInPitThisLap || inLane || pitExitRecently;
@@ -6203,7 +6222,7 @@ namespace LaunchPlugin
                 : (data.NewData?.SessionTypeName ?? string.Empty);
             bool debugMaster = IsDebugOnForLogic;
             bool verboseLogs = IsVerboseDebugLoggingOn;
-            _opponentsEngine?.Update(data, pluginManager, isRaceSessionNow, completedLaps, myPaceSec, pitLossSec, pitTripActive, inLane, trackPct, sessionTimeSec, sessionTimeRemainingSec, verboseLogs);
+            _opponentsEngine?.Update(data, pluginManager, isOpponentsEligibleSessionNow, isRaceSessionNow, completedLaps, myPaceSec, pitLossSec, pitTripActive, inLane, trackPct, sessionTimeSec, sessionTimeRemainingSec, verboseLogs);
 
             int playerCarIdx = SafeReadInt(pluginManager, "DataCorePlugin.GameRawData.Telemetry.PlayerCarIdx", -1);
             float[] carIdxLapDistPct = SafeReadFloatArray(pluginManager, "DataCorePlugin.GameRawData.Telemetry.CarIdxLapDistPct");
@@ -11237,6 +11256,7 @@ namespace LaunchPlugin
             string sessionTypeForOpponents = !string.IsNullOrWhiteSpace(sessionTypeToken)
                 ? sessionTypeToken
                 : (data.NewData?.SessionTypeName ?? string.Empty);
+            bool isOpponentsEligibleSessionNow = IsOpponentsEligibleSession(sessionTypeForOpponents);
             bool isRaceSessionNow = IsRaceSession(sessionTypeForOpponents);
 
             bool isOnPitRoadFlag = Convert.ToBoolean(
@@ -11251,7 +11271,7 @@ namespace LaunchPlugin
             double sessionTimeSec = SafeReadDouble(pluginManager, "DataCorePlugin.GameRawData.Telemetry.SessionTime", 0.0);
             double sessionTimeRemainingSec = SafeReadDouble(pluginManager, "DataCorePlugin.GameRawData.Telemetry.SessionTimeRemain", double.NaN);
             bool verboseLogs = IsVerboseDebugLoggingOn;
-            _opponentsEngine.Update(data, pluginManager, isRaceSessionNow, completedLaps, myPaceSec, pitLossSec, pitTripActive, onPitRoad, trackPct, sessionTimeSec, sessionTimeRemainingSec, verboseLogs);
+            _opponentsEngine.Update(data, pluginManager, isOpponentsEligibleSessionNow, isRaceSessionNow, completedLaps, myPaceSec, pitLossSec, pitTripActive, onPitRoad, trackPct, sessionTimeSec, sessionTimeRemainingSec, verboseLogs);
         }
 
         private static double SafeReadDouble(PluginManager pluginManager, string propertyName, double fallback)

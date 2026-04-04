@@ -31,7 +31,7 @@ Do not collapse these concerns back together unless there is a concrete reason.
 - Pit Timing and Pit Loss own pit-lane timing measurements and pit-loss publication.
 - Pit Entry Assist owns braking-cue maths and entry-line driver guidance.
 - Rejoin Assist owns incident classification, linger/suppression logic, and threat-aware rejoin warnings.
-- Opponents owns race-only opponent calculations and pit-exit prediction.
+- Opponents owns leaderboard-neighbor opponent calculations for eligible live sessions and race-scoped pit-exit prediction.
 - CarSA owns session-agnostic car-relative spatial awareness.
 - Messaging owns message definitions, evaluation, prioritisation, and dash message outputs.
 - Dash Integration owns dashboard-consumption guidance and visibility/rendering contracts, not the underlying business logic.

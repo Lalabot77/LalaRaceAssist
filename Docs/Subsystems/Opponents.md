@@ -8,8 +8,9 @@ Purpose: own all opponent-facing calculations for strict same-class race-target 
 Phase-1 Head-to-Head (`H2HRace.*`) consumes Opponents only as a **race-target selector seam** (current class-ahead / class-behind identity from `Opp.Ahead1` / `Opp.Behind1`). Persistent H2H timing, live-gap, lap-summary, fixed-6-segment ownership, and canonical H2H class-color publishing remain inside the standalone H2H subsystem; if Opponents clears those race outputs, H2H should also clear/inactivate rather than revive a stale race identity. Opponents does **not** become a far-away timing engine, and any extra `CarIdx` recovery stays a narrow local fallback inside H2H/LalaLaunch rather than moving timing ownership into Opponents.
 
 ## Gating and scope
-- Runs **race sessions only**; resets caches/outputs if session leaves Race.
-- No additional completed-lap gate is currently applied; once the session is Race, Opp and PitExit outputs may publish immediately. The subsystem-active log still fires once per activation.
+- Runs in **live opponent sessions** (Practice, Qualifying/Open Qualify, Lone Qualify, Race); resets caches/outputs when session leaves that eligibility scope (for example Offline Testing).
+- No completed-lap gate is applied; once the session is eligible, leaderboard-neighbor `Opp.*` outputs may publish immediately.
+- Pit-exit prediction remains race-scoped; `PitExit.*` reset once on Race → non-Race transitions (not every non-race tick).
 - Uses **IRacingExtraProperties only**; no Dahl DLL or SDK arrays.
 
 ## Identity model
@@ -36,7 +37,7 @@ Phase-1 Head-to-Head (`H2HRace.*`) consumes Opponents only as a **race-target se
 ## Pit-exit prediction
 - Finds player row in class leaderboard; predicted gap to leader after pit = player.RelGapToLeader + pitLossSec (pit loss forced to 0 when invalid). Each same-class, connected row computes `delta = row.RelGapToLeader − playerPredictedGapToLeaderAfterPit`. Negative delta means the car is ahead after pit; positive delta means behind.
 - On pit entry, the predictor **locks** the player gap-to-leader and pit-loss inputs for the duration of the pit trip, preventing drift if leaderboard gaps update mid-stop. Lock clears once pitTripActive ends.
-- PredictedPosition = 1 + count of same-class connected cars where delta < 0. Logs when validity toggles or predicted position changes while active; predicted-position-change logs require debug toggle + lap gate.
+- PredictedPosition = 1 + count of same-class connected cars where delta < 0. Logs when validity toggles or predicted position changes while active; prediction-change logs remain debug-gated and cadence-filtered.
 - Update cadence: runs every tick on pit road; off pit road, runs only when the player enters a new lap quarter (TrackPct × 4 → 0-3). Prediction is skipped near race end if reliable session time remaining is ≤120 s.
 - Nearest ahead/behind exports come from the same scan: nearest ahead = largest negative delta (closest ahead); nearest behind = smallest positive delta (closest behind). Only same-class, connected cars are considered.
 - Prediction-change logs are gated to reduce chatter: emits only on ≥2 place change, ≥2 s since last log, or pitTripActive/onPitRoad transitions (predictor outputs unchanged).

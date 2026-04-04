@@ -54,3 +54,16 @@ The public user-facing release history is maintained in the root `CHANGELOG.md`.
 ### Shift Assist learning
 - Refined Learning v2 adjacent-gear crossover solve with a small internal relative early-bias tolerance (`a_next >= a_curr * (1 - pct)`) so learned shift RPMs land modestly earlier without flat RPM subtraction, hard cap shaping, or reintroducing the prior absolute accel-margin bias.
 - Preserved all existing Learning v2 invariants: speed-domain curves, ratio-based RPM conversion, stability buffer before publish, gear-1 exclusion, no-fallback publication, and safe clamp (`redline - 200`).
+
+### Opponents / H2H session eligibility
+- Expanded Opponents leaderboard-neighbor publication scope from race-only to live opponent sessions (Practice, Qualifying/Open Qualify, Lone Qualify, Race), while keeping Offline Testing out of scope.
+- Preserved the existing H2HRace selector seam (`Opp.Ahead1` / `Opp.Behind1`) so H2HRace now lights up naturally in practice/qualifying sessions when leaderboard identity is available.
+- Kept race-specific pit-exit prediction bounded to Race sessions and reset pit-exit outputs outside Race.
+
+### Opponents activation log wording cleanup
+- Updated the Opponents activation log text to match current behavior: `Opponents subsystem active (eligible live session).`
+- Synced affected docs to remove stale race-only/lap-gate wording where it referenced Opponents activation.
+
+### Opponents pit-exit hot-loop reset cleanup
+- Changed race-scoped pit-exit reset handling to clear once on Race → non-Race transition instead of resetting every non-race telemetry tick.
+- Added a small OpponentsEngine race-active latch that is also cleared by `OpponentsEngine.Reset()`.
