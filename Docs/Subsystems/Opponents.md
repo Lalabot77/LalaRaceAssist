@@ -10,7 +10,7 @@ Phase-1 Head-to-Head (`H2HRace.*`) consumes Opponents only as a **race-target se
 ## Gating and scope
 - Runs in **live opponent sessions** (Practice, Qualifying/Open Qualify, Lone Qualify, Race); resets caches/outputs when session leaves that eligibility scope (for example Offline Testing).
 - No completed-lap gate is applied; once the session is eligible, leaderboard-neighbor `Opp.*` outputs may publish immediately.
-- Pit-exit prediction remains race-scoped; `PitExit.*` resets outside Race.
+- Pit-exit prediction remains race-scoped; `PitExit.*` reset once on Race → non-Race transitions (not every non-race tick).
 - Uses **IRacingExtraProperties only**; no Dahl DLL or SDK arrays.
 
 ## Identity model

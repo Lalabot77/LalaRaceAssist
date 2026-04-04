@@ -16,6 +16,7 @@ namespace LaunchPlugin
 
         private bool _gateActive;
         private bool _gateOpenedLogged;
+        private bool _pitExitWasRaceActive;
         private string _playerIdentityKey = string.Empty;
 
         public OpponentOutputs Outputs { get; } = new OpponentOutputs();
@@ -31,6 +32,7 @@ namespace LaunchPlugin
         {
             _gateActive = false;
             _gateOpenedLogged = false;
+            _pitExitWasRaceActive = false;
             _playerIdentityKey = string.Empty;
             Outputs.Reset();
             _entityCache.Clear();
@@ -63,10 +65,15 @@ namespace LaunchPlugin
             if (isRaceSession)
             {
                 _pitExitPredictor.Update(_playerIdentityKey, pitLossSec, allowLogs, pitTripActive, onPitRoad, trackPct, completedLaps, sessionTimeSec, sessionTimeRemainingSec, debugEnabled);
+                _pitExitWasRaceActive = true;
             }
             else
             {
-                _pitExitPredictor.Reset();
+                if (_pitExitWasRaceActive)
+                {
+                    _pitExitPredictor.Reset();
+                    _pitExitWasRaceActive = false;
+                }
             }
 
             if (!gateNow)

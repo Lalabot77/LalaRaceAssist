@@ -63,3 +63,7 @@ The public user-facing release history is maintained in the root `CHANGELOG.md`.
 ### Opponents activation log wording cleanup
 - Updated the Opponents activation log text to match current behavior: `Opponents subsystem active (eligible live session).`
 - Synced affected docs to remove stale race-only/lap-gate wording where it referenced Opponents activation.
+
+### Opponents pit-exit hot-loop reset cleanup
+- Changed race-scoped pit-exit reset handling to clear once on Race → non-Race transition instead of resetting every non-race telemetry tick.
+- Added a small OpponentsEngine race-active latch that is also cleared by `OpponentsEngine.Reset()`.
