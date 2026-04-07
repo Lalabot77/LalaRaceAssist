@@ -1,7 +1,7 @@
 # Repository status
 
 Validated against commit: HEAD
-Last updated: 2026-04-04
+Last updated: 2026-04-07
 Branch: work
 
 ## Current repo/link status
@@ -9,19 +9,18 @@ Branch: work
 - No Git remote is configured in this checkout (`git remote -v` returns empty).
 
 ## Documentation sync status
-- Opponents session eligibility was widened from race-only to live opponent sessions (Practice, Qualifying/Open Qualify, Lone Qualify, Race), while keeping Offline Testing out of scope.
-- H2HRace selector integration remained unchanged (`Opp.Ahead1` / `Opp.Behind1`), so race-style H2H can now populate in practice/qualifying when leaderboard-neighbor identity is available.
-- Race-specific pit-exit prediction remained race-scoped; `PitExit.*` outputs are reset outside Race.
-- Opponents pit-exit reset now runs once on Race → non-Race transition, avoiding per-tick reset churn during long non-race sessions.
-- Opponents activation log wording now matches current behavior: `Opponents subsystem active (eligible live session).`
-- Synced Opponents/H2H subsystem docs and user-facing H2H page with the new eligibility behavior.
-- Logged this behavior change in the internal development changelog.
+- Completed an analysis-first design pass for removing Opponents dependency on Extra Properties class-leaderboard feeds (`iRacing_ClassLeaderboard_Driver_XX_*`) in controlled phases.
+- Documented a concrete native leaderboard migration model split into identity resolution, class mapping, ordering, gap model, and neighbour selection.
+- Implemented a narrow first safe step: Opponents player identity now resolves natively from `SessionData.DriverInfo.*` using `Telemetry.PlayerCarIdx`, with bounded fallback to `IRacingExtraProperties.iRacing_Player_*`.
+- Kept subsystem boundaries intact: CarSA remains spatial/timing foundation, Opponents remains race selector + pit-exit owner, and H2H remains selector consumer only.
+- No Opp/H2H export names changed; no dashboard contract changes were introduced.
 
 ## Reviewed documentation set
 ### Changed in this sweep
 - `Opponents.cs`
 - `Docs/Subsystems/Opponents.md`
-- `Docs/Internal/Development_Changelog.md`
+- `Docs/Subsystems/CarSA.md`
+- `Docs/Subsystems/H2H.md`
 - `Docs/RepoStatus.md`
 
 ### Reviewed and left unchanged
@@ -31,15 +30,12 @@ Branch: work
 - `Docs/Internal/Code_Snapshot.md`
 - `Docs/Internal/SimHubParameterInventory.md`
 - `Docs/Internal/Plugin_UI_Tooltips.md`
-- `Docs/Dashboards.md`
-- `Docs/User_Guide.md`
+- `LalaLaunch.cs`
 
 ## Delivery status highlights
-- Replaced strict Opponents race-only eligibility with a bounded live-session eligibility helper at the LalaLaunch call sites.
-- Preserved H2HRace family ownership and selector seam; no third H2H mode/family was added.
-- Kept Opponents lap-gate removal intact (no completed-lap re-gate) and left dash-side suppression as the preferred way to handle early sparse timing data.
-- Kept race-specific pit-exit predictor logic bounded to Race to avoid cross-session semantic drift.
-- Removed per-tick non-race pit-exit resets by latching race-active state and resetting only on Race → non-Race transition.
+- Opponents no longer hard-requires `IRacingExtraProperties.iRacing_Player_ClassColor` / `iRacing_Player_CarNumber` when session identity exists in native SessionData.
+- Extra Properties class leaderboard rows remain the active source for same-class row ordering and `RelativeGapToLeader` during this phase.
+- Documentation now explicitly separates current implementation state from planned native migration phases to avoid stale claims.
 
 ## Validation note
-- Validation recorded against `HEAD` (`Opponents pit-exit race-transition reset cleanup + docs sync`).
+- Validation recorded against `HEAD` (`Opponents native leaderboard analysis/design pass + player identity native-first first step`).

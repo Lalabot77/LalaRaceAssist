@@ -21,7 +21,52 @@ Phase-1 Head-to-Head (`H2HRace.*`) consumes Opponents only as a **race-target se
 ## Data inputs
 - Nearby targets: `iRacing_DriverAheadInClass_00/01_*`, `iRacing_DriverBehindInClass_00/01_*` for Name, CarNumber, ClassColor, RelativeGapToPlayer, LastLapTime, BestLapTime, IsInPit, IsConnected. These feeds are still ingested for cache continuity and debug slot-rebind logging, but they no longer determine published race-target identity for `Opp.Ahead1/2.*` or `Opp.Behind1/2.*`.
 - Leaderboard scan (00–63 until empty row): `iRacing_ClassLeaderboard_Driver_XX_*` for Name, CarNumber, ClassColor, Position, PositionInClass, RelativeGapToLeader, IsInPit/IsConnected, LastLapTime, BestLapTime.
-- Player identity: `iRacing_Player_ClassColor`, `iRacing_Player_CarNumber`. Pit-exit receives pit loss from LalaLaunch’s stop-loss calculation (validated to ≥0).
+- Player identity: now resolves natively from `SessionData.DriverInfo.*` by `Telemetry.PlayerCarIdx` first, with bounded fallback to `iRacing_Player_ClassColor` + `iRacing_Player_CarNumber` only if session-info identity is not yet available. Pit-exit receives pit loss from LalaLaunch’s stop-loss calculation (validated to ≥0).
+
+## Extra Properties dependency map (current implementation)
+Opponents still has a large `IRacingExtraProperties` dependency surface for class-leaderboard and same-class gap reconstruction:
+
+- **Still Extra-Properties-backed (active runtime path):**
+  - `iRacing_ClassLeaderboard_Driver_XX_*` (`Name`, `CarNumber`, `ClassColor`, `Position`, `PositionInClass`, `RelativeGapToLeader`, `IsInPit`, `IsConnected`, `LastLapTime`, `BestLapTime`).
+  - `iRacing_DriverAheadInClass_00/01_*` and `iRacing_DriverBehindInClass_00/01_*` (cache continuity + debug slot rebind logs).
+- **Now native-first (with fallback):**
+  - Player identity (`ClassColor`, `CarNumber`) resolves via `SessionData.DriverInfo.DriversXX` / `CompetingDrivers[]` using `Telemetry.PlayerCarIdx`, then falls back to `iRacing_Player_*` only when native identity is unavailable.
+- **Indirect consumers:**
+  - `H2HRace.*` remains a selector consumer of `Opp.Ahead1` / `Opp.Behind1`. H2H does not own race selector identity and does not rebuild class leaderboard state itself.
+
+## Native same-class leaderboard migration design (analysis-first)
+This section captures the approved staged design target without claiming the full migration is already implemented.
+
+### Required native row contract (Opponents-owned model)
+Minimal fields needed to reproduce current `Opp.*` + `PitExit.*` behavior:
+- `CarIdx` (stable join key to telemetry arrays and CarSA caches).
+- `IdentityKey` (`ClassColor:CarNumber`), `Name`, `CarNumber`, `ClassColor`.
+- `PositionInClass` (or reconstructable equivalent ordering rank).
+- `IsConnected`, `IsInPit`.
+- `LastLapSec`, `BestLapSec` (pace cache feed).
+- `GapToClassLeaderSec` (or functionally equivalent monotonic class-order distance used by gap-to-player and pit-exit delta math).
+
+### Proposed native truth sources by field
+- **Identity / cosmetics:** `SessionData.DriverInfo.DriversXX` primary; `CompetingDrivers[]` fallback.
+- **CarIdx and per-car timing:** CarSA-owned caches and existing plugin arrays (`CarIdxBestLapTime`, `CarIdxLastLapTime`, `CarIdxLapDistPct`, `CarIdxLap`, `CarIdxClassPosition`).
+- **Class membership:** normalized `CarClassColor` from session info (same source already used by CarSA/H2H identity resolution).
+- **Class ordering:** first candidate = `Telemetry.CarIdxClassPosition`; fallback candidate = distance-along-lap ordering from `CarIdxLap` + `CarIdxLapDistPct` with lapping guards.
+- **Gap model (leader/player/neighbours):** phased approach:
+  1) temporary parity path keeps `RelativeGapToLeader` from Extra Properties;
+  2) native phase replaces this with class-local cumulative timing built from CarSA checkpoints/fixed-sector + lap-distance interpolation.
+
+### Confidence / risk by field
+- **High confidence:** player identity, car identity metadata, class membership, lap-time fields.
+- **Medium confidence:** class ordering from `CarIdxClassPosition` (needs validation under reconnect/replay edge-cases).
+- **Lower confidence (not first-step safe):** exact `RelativeGapToLeader` parity for lapped/multi-lap race states without Extra Properties.
+
+### Recommended migration order
+1. **Completed in this task:** player identity native-first session-info resolution (fallback retained).
+2. Introduce an Opponents-local native leaderboard row helper that hydrates identity/class/lap-time/order from session+telemetry without changing published behavior.
+3. Dual-run validation (native rows + current Extra Properties rows) with debug-only mismatch counters (no output contract changes).
+4. Switch same-class neighbour selection to native ordering source after mismatch thresholds are acceptable.
+5. Replace gap-to-leader dependency with native gap model for `GapToPlayerSec` and `PitExit.*`.
+6. Remove remaining `iRacing_ClassLeaderboard_Driver_XX_*` dependency once parity is validated.
 
 ## Pace cache & blended pace
 - Entity cache keyed by identity; keeps best lap and a 5-lap ring buffer of valid recent laps (rejects ≤0/NaN/huge, skips laps flagged in-pit).

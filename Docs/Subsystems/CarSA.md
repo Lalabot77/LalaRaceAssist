@@ -8,6 +8,7 @@ Head-to-Head now consumes CarSA in two narrow ways:
 - `H2HTrack.*` uses CarSA as the **track-target selector seam** (the current ahead/behind slot sets, `CarIdx`, and already-resolved cosmetic metadata).
 - Both `H2HRace.*` and `H2HTrack.*` now read `S1..S6State` / `S1..S6DeltaSec` from the CarSA-owned per-car fixed-6-sector cache through the narrow CarSA accessor seam.
 `H2HRace.*` still uses CarSA only as a bounded local live-session fallback when a known Opponents-selected identity needs help re-resolving `CarIdx`; selector ownership remains in Opponents.
+Opponents native-leaderboard migration is expected to consume CarSA as a **read seam only** for per-car timing/order inputs (`CarIdx*` arrays, checkpoint/fixed-sector state). CarSA remains session-agnostic spatial/timing foundation and does not take ownership of Opponents class-neighbour policy.
 
 ## Truth source
 - **Primary:** `CarIdx*` telemetry arrays (CarIdxLapDistPct, CarIdxLap, CarIdxTrackSurface, CarIdxOnPitRoad).

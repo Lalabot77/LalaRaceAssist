@@ -44,8 +44,13 @@ namespace LaunchPlugin
         public void Update(GameData data, PluginManager pluginManager, bool isEligibleSession, bool isRaceSession, int completedLaps, double myPaceSec, double pitLossSec, bool pitTripActive, bool onPitRoad, double trackPct, double sessionTimeSec, double sessionTimeRemainingSec, bool debugEnabled)
         {
             var _ = data; // intentional discard to keep signature aligned with caller
-            string playerClassColor = SafeReadString(pluginManager, "IRacingExtraProperties.iRacing_Player_ClassColor");
-            string playerCarNumber = SafeReadString(pluginManager, "IRacingExtraProperties.iRacing_Player_CarNumber");
+            string playerClassColor;
+            string playerCarNumber;
+            if (!TryResolvePlayerIdentityFromSessionData(pluginManager, out playerClassColor, out playerCarNumber))
+            {
+                playerClassColor = SafeReadString(pluginManager, "IRacingExtraProperties.iRacing_Player_ClassColor");
+                playerCarNumber = SafeReadString(pluginManager, "IRacingExtraProperties.iRacing_Player_CarNumber");
+            }
             _playerIdentityKey = MakeIdentityKey(playerClassColor, playerCarNumber);
 
             if (!isEligibleSession)
@@ -424,6 +429,185 @@ namespace LaunchPlugin
             }
 
             return paceSec;
+        }
+
+        private static bool TryResolvePlayerIdentityFromSessionData(PluginManager pluginManager, out string classColor, out string carNumber)
+        {
+            classColor = string.Empty;
+            carNumber = string.Empty;
+
+            int playerCarIdx = SafeReadInt(pluginManager, "DataCorePlugin.GameRawData.Telemetry.PlayerCarIdx");
+            if (playerCarIdx < 0)
+            {
+                return false;
+            }
+
+            if (TryResolveIdentityFromDriversTable(pluginManager, playerCarIdx, out classColor, out carNumber))
+            {
+                return true;
+            }
+
+            return TryResolveIdentityFromCompetingDrivers(pluginManager, playerCarIdx, out classColor, out carNumber);
+        }
+
+        private static bool TryResolveIdentityFromDriversTable(PluginManager pluginManager, int carIdx, out string classColor, out string carNumber)
+        {
+            classColor = string.Empty;
+            carNumber = string.Empty;
+
+            for (int i = 1; i <= 64; i++)
+            {
+                string basePath = $"DataCorePlugin.GameRawData.SessionData.DriverInfo.Drivers{i:00}";
+                int candidateCarIdx = SafeReadInt(pluginManager, $"{basePath}.CarIdx");
+                if (candidateCarIdx < 0 || candidateCarIdx != carIdx)
+                {
+                    continue;
+                }
+
+                carNumber = SafeReadString(pluginManager, $"{basePath}.CarNumber");
+                if (string.IsNullOrWhiteSpace(carNumber))
+                {
+                    int rawNumber = SafeReadInt(pluginManager, $"{basePath}.CarNumberRaw");
+                    if (rawNumber >= 0)
+                    {
+                        carNumber = rawNumber.ToString(CultureInfo.InvariantCulture);
+                    }
+                }
+
+                classColor = SafeReadColorHex(pluginManager, $"{basePath}.CarClassColor");
+                return !string.IsNullOrWhiteSpace(classColor) || !string.IsNullOrWhiteSpace(carNumber);
+            }
+
+            return false;
+        }
+
+        private static bool TryResolveIdentityFromCompetingDrivers(PluginManager pluginManager, int carIdx, out string classColor, out string carNumber)
+        {
+            classColor = string.Empty;
+            carNumber = string.Empty;
+
+            for (int i = 0; i < 64; i++)
+            {
+                string basePath = $"DataCorePlugin.GameRawData.SessionData.DriverInfo.CompetingDrivers[{i}]";
+                int candidateCarIdx = SafeReadInt(pluginManager, $"{basePath}.CarIdx");
+                if (candidateCarIdx < 0)
+                {
+                    break;
+                }
+
+                if (candidateCarIdx != carIdx)
+                {
+                    continue;
+                }
+
+                carNumber = SafeReadString(pluginManager, $"{basePath}.CarNumber");
+                classColor = SafeReadColorHex(pluginManager, $"{basePath}.CarClassColor");
+                return !string.IsNullOrWhiteSpace(classColor) || !string.IsNullOrWhiteSpace(carNumber);
+            }
+
+            return false;
+        }
+
+        private static int SafeReadInt(PluginManager pluginManager, string propertyName)
+        {
+            try
+            {
+                var raw = pluginManager?.GetPropertyValue(propertyName);
+                if (raw == null)
+                {
+                    return -1;
+                }
+
+                return Convert.ToInt32(raw, CultureInfo.InvariantCulture);
+            }
+            catch
+            {
+                return -1;
+            }
+        }
+
+        private static string SafeReadColorHex(PluginManager pluginManager, string propertyName)
+        {
+            try
+            {
+                var raw = pluginManager?.GetPropertyValue(propertyName);
+                if (raw == null)
+                {
+                    return string.Empty;
+                }
+
+                if (raw is string text)
+                {
+                    string trimmed = text.Trim();
+                    if (string.IsNullOrWhiteSpace(trimmed))
+                    {
+                        return string.Empty;
+                    }
+
+                    if (trimmed.StartsWith("#", StringComparison.Ordinal))
+                    {
+                        return NormalizeHex(trimmed);
+                    }
+
+                    if (uint.TryParse(trimmed, NumberStyles.Integer, CultureInfo.InvariantCulture, out uint parsedText))
+                    {
+                        return "#" + (parsedText & 0xFFFFFFu).ToString("X6", CultureInfo.InvariantCulture);
+                    }
+
+                    return string.Empty;
+                }
+
+                if (raw is IConvertible)
+                {
+                    uint parsed = Convert.ToUInt32(raw, CultureInfo.InvariantCulture);
+                    return "#" + (parsed & 0xFFFFFFu).ToString("X6", CultureInfo.InvariantCulture);
+                }
+            }
+            catch
+            {
+                return string.Empty;
+            }
+
+            return string.Empty;
+        }
+
+        private static string NormalizeHex(string value)
+        {
+            if (string.IsNullOrWhiteSpace(value))
+            {
+                return string.Empty;
+            }
+
+            string candidate = value.Trim();
+            if (!candidate.StartsWith("#", StringComparison.Ordinal))
+            {
+                return string.Empty;
+            }
+
+            string hex = candidate.Substring(1);
+            if (hex.Length == 3)
+            {
+                hex = string.Concat(hex[0], hex[0], hex[1], hex[1], hex[2], hex[2]);
+            }
+
+            if (hex.Length != 6)
+            {
+                return string.Empty;
+            }
+
+            for (int i = 0; i < hex.Length; i++)
+            {
+                char c = hex[i];
+                bool isHex = (c >= '0' && c <= '9')
+                    || (c >= 'A' && c <= 'F')
+                    || (c >= 'a' && c <= 'f');
+                if (!isHex)
+                {
+                    return string.Empty;
+                }
+            }
+
+            return "#" + hex.ToUpperInvariant();
         }
 
         private class NearbySlotsTracker

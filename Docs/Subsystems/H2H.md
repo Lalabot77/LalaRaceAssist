@@ -17,6 +17,7 @@ The feature provides a flat, explicit contract for Dash Studio consumption with 
 - **CarSA owns track-target selection** for `H2HTrack.*` via the current ahead/behind slot set, `CarIdx`, and already-resolved cosmetic metadata.
 - **CarSA also owns the fixed-6-sector timing cache** for all cars. H2H is now a read-only consumer of that cache through the narrow CarSA accessor seam; H2H no longer owns a target-bound sector stopwatch runtime for published `S1..S6*`.
 - H2H does **not** move timing responsibility into Opponents, and selector ownership remains unchanged.
+- During the Opponents native leaderboard migration, H2H remains unaffected contract-wise: it continues consuming only selector outputs and does not become a fallback owner for class ordering/gap reconstruction.
 
 ## Sector publication model
 H2H sector publication is intentionally simple:
