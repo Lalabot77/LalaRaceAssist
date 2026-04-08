@@ -28,9 +28,9 @@
                                        Margin="0,8,0,0"
                                        ToolTip="Assign a button to show or hide the pit screen popup." />
                     <ui:ControlsEditor ActionName="LalaLaunch.PrimaryDashMode"
-                                       FriendlyName="Change Primary Dash Mode"
+                                       FriendlyName="Plugin Quick Reset"
                                        Margin="0,8,0,0"
-                                       ToolTip="Assign a button to cycle primary dash modes (main screen views)." />
+                                       ToolTip="Bind to allow rapid plugin reset if any plugin or dash data issues." />
                     <ui:ControlsEditor ActionName="LalaLaunch.DeclutterMode"
                                        FriendlyName="Cycle Declutter Mode"
                                        Margin="0,8,0,0"

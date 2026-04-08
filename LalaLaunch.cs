@@ -11354,6 +11354,11 @@ namespace LaunchPlugin
             double sessionTimeSec = SafeReadDouble(pluginManager, "DataCorePlugin.GameRawData.Telemetry.SessionTime", 0.0);
             double sessionTimeRemainingSec = SafeReadDouble(pluginManager, "DataCorePlugin.GameRawData.Telemetry.SessionTimeRemain", double.NaN);
             bool verboseLogs = IsVerboseDebugLoggingOn;
+            OpponentsEngine.TryGetCheckpointGapSec checkpointGapReader = null;
+            if (_carSaEngine != null)
+            {
+                checkpointGapReader = _carSaEngine.TryGetCheckpointGapSec;
+            }
             _opponentsEngine.Update(
                 data,
                 pluginManager,
@@ -11368,7 +11373,7 @@ namespace LaunchPlugin
                 sessionTimeSec,
                 sessionTimeRemainingSec,
                 verboseLogs,
-                tryGetCheckpointGapSec: _carSaEngine?.TryGetCheckpointGapSec);
+                checkpointGapReader);
         }
 
         private static double SafeReadDouble(PluginManager pluginManager, string propertyName, double fallback)

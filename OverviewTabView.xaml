@@ -154,7 +154,7 @@
                                     Height="26"
                                     MinWidth="95"
                                     VerticalAlignment="Center"
-                                    Visibility="Collapsed"
+                                    Visibility="Visible"
                                     Click="ResetPlugin_Click" />
 
                         <TextBlock Grid.Row="2" Grid.Column="0"
