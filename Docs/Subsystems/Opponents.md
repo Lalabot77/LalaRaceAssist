@@ -1,7 +1,7 @@
 # Opponents subsystem
 
 Validated against commit: HEAD
-Last updated: 2026-03-24
+Last updated: 2026-04-08
 Branch: work
 
 Purpose: own all opponent-facing calculations for strict same-class race-target selection, nearby/leaderboard pace enrichment, and pit-exit position forecasting with SimHub exports under `Opp.*` and `PitExit.*`.

@@ -1,7 +1,7 @@
 # Head-to-Head (H2H)
 
 Validated against commit: HEAD
-Last updated: 2026-03-20
+Last updated: 2026-04-08
 Branch: work
 
 ## Purpose

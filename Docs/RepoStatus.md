@@ -19,6 +19,8 @@ Branch: work
 ### Changed in this sweep
 - `Opponents.cs`
 - `Docs/Subsystems/Opponents.md`
+- `Docs/Subsystems/CarSA.md`
+- `Docs/Subsystems/H2H.md`
 - `Docs/RepoStatus.md`
 
 ### Reviewed and left unchanged
@@ -29,8 +31,6 @@ Branch: work
 - `Docs/Internal/SimHubParameterInventory.md`
 - `Docs/Internal/Plugin_UI_Tooltips.md`
 - `LalaLaunch.cs`
-- `Docs/Subsystems/CarSA.md`
-- `Docs/Subsystems/H2H.md`
 
 ## Delivery status highlights
 - Opponents rejects partial native identity and no longer allows `?:<carNumber>` style keys to suppress stronger fallback identity.
