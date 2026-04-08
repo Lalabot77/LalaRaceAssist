@@ -86,3 +86,6 @@ The public user-facing release history is maintained in the root `CHANGELOG.md`.
 
 ### Opponents class-position warm-up fallback guard
 - Prevented class-position ordering from activating while the player class position is unset/non-positive, so neighbor selection falls back to lap-progress ordering until player class position is valid.
+
+### Opponents class-color normalization decimal-first fix
+- Updated Opponents class-color normalization to parse decimal-native `CarClassColor` text before hex fallback, preventing incorrect `ClassColor:CarNumber` identity keys when native data is emitted as integers.

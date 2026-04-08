@@ -19,6 +19,7 @@ Branch: work
 - Pit-exit final-120s bypass latch (`_pendingSettledPitOut`) now self-clears after use, restoring normal suppression behavior.
 - Invalid-native-snapshot handling now resets the pit-exit predictor to prevent stale snapshot/audit leakage.
 - `Opp.Ahead1`/`Opp.Behind1` gap publication now prefers CarSA checkpoint-time gap seam when available, with progress/pace fallback preserved.
+- Opponents class-color normalization now parses decimal-native `CarClassColor` strings before hex fallback so integer color feeds produce correct `0xRRGGBB` identity colors.
 
 ## Reviewed documentation set
 ### Changed in this sweep

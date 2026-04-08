@@ -348,23 +348,28 @@ namespace LaunchPlugin
             }
 
             string text = raw.Trim();
+            bool prefixedHex = false;
             if (text.StartsWith("0x", StringComparison.OrdinalIgnoreCase))
             {
+                prefixedHex = true;
                 text = text.Substring(2);
             }
             if (text.StartsWith("#", StringComparison.OrdinalIgnoreCase))
             {
+                prefixedHex = true;
                 text = text.Substring(1);
+            }
+
+            // Native DriverInfo values often arrive as decimal text when read through ReadString(...),
+            // so prefer integer parsing unless the source was explicitly hex-prefixed.
+            if (!prefixedHex && int.TryParse(text, NumberStyles.Integer, CultureInfo.InvariantCulture, out var parsedInt))
+            {
+                return "0x" + (parsedInt & 0xFFFFFF).ToString("X6", CultureInfo.InvariantCulture);
             }
 
             if (int.TryParse(text, NumberStyles.HexNumber, CultureInfo.InvariantCulture, out var parsedHex))
             {
                 return "0x" + (parsedHex & 0xFFFFFF).ToString("X6", CultureInfo.InvariantCulture);
-            }
-
-            if (int.TryParse(text, NumberStyles.Integer, CultureInfo.InvariantCulture, out var parsedInt))
-            {
-                return "0x" + (parsedInt & 0xFFFFFF).ToString("X6", CultureInfo.InvariantCulture);
             }
 
             return string.Empty;
