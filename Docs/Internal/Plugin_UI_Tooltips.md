@@ -17,6 +17,7 @@ Branch: work
 ## DashesTabView.xaml
 - Dash Control now uses three expander-based main sections: `Bindings`, `Global Dash Functions`, and `Dash Visibility`; all default to expanded so the existing content remains immediately visible while matching the Settings-tab tidy-up pattern.
 - `Bindings` contains only the true dash bindings for `Cancel Msg Button`, `Toggle Pit Screen Popup`, `Change Primary Dash Mode`, and `Cycle Declutter Mode`.
+- `Change Primary Dash Mode` binding is currently repurposed as a manual plugin recovery trigger (runtime re-arm/reset seam) while preserving the existing binding/action name for compatibility.
 - `Global Dash Functions` -> General: `Auto screen selection at session start` automatically switches dash screens when a session starts based on context.
 - `Global Dash Functions` -> Dark Mode: `Dark Mode` selector uses Off / Manual / Auto, `Dark Mode Brightness` sets base brightness, `Use Lovely True Dark` follows Lovely when available, and `Toggle Dark Mode` remains here as the dark-mode-specific binding row.
 - `Global Dash Functions` -> Fuel: `Fuel Ready Confidence` sets the live-fuel readiness threshold and `Pit-in Fuel Reserve` sets the stint reserve margin.
@@ -219,6 +220,7 @@ Branch: work
 - Header displays plugin name, installed version string, tagline, and a reserved logo placeholder area.
 - `Quick Links` section includes buttons for Quick Start, User Guide, GitHub repo, Releases, and Report Issue.
 - `Status` section shows lightweight runtime state (game, plugin, profiles, track markers, current car/track) without deep subsystem wiring.
+- `Status` section `Restart Plugin` button wiring now triggers the same manual recovery runtime reset seam used by the `PrimaryDashMode` action (button remains a bounded recovery trigger, not a full profile/settings reset).
 - `Updates` section shows installed version, latest release tag, status (`Up to date`/`Update available`/`Unable to check`), and `Check Now`/`Open Releases` actions.
 - `Dashboard Previews` section now provides placeholder cards with exact expected file paths (`Assets/Overview/*.png`) so preview images can be dropped in later without layout changes.
-- `Help / Notes` section contains concise driver reminders for touch vs bindings, Next/Previous screen behavior, Primary Dash Mode placeholder status, and optional `TractionLoss` export setup.
+- `Help / Notes` section contains concise driver reminders for touch vs bindings, Next/Previous screen behavior, Primary Dash Mode manual-recovery usage, and optional `TractionLoss` export setup.

@@ -138,9 +138,12 @@ namespace LaunchPlugin
 
         public void PrimaryDashMode()
         {
-            // Placeholder: wired for Controls & Events + UI mapping.
-            // TODO: implement real behaviour (switch main dash mode/page).
-            SimHub.Logging.Current.Info("[LalaPlugin:Dash] PrimaryDashMode action fired (placeholder).");
+            ManualRecoveryReset("PrimaryDashMode action");
+        }
+
+        public void TriggerManualRecoveryReset(string reason)
+        {
+            ManualRecoveryReset(reason);
         }
 
 
@@ -5830,6 +5833,108 @@ namespace LaunchPlugin
             }
         }
 
+        private bool _manualRecoverySkipFuelModelReset;
+
+        private void ManualRecoveryReset(string reason)
+        {
+            string reasonLabel = string.IsNullOrWhiteSpace(reason) ? "unspecified" : reason.Trim();
+            SimHub.Logging.Current.Info($"[LalaPlugin:Runtime] manual recovery reset triggered (reason: {reasonLabel}).");
+
+            _rejoinEngine?.Reset();
+            _pit?.Reset();
+            _pitLite?.ResetCycle();
+            _pit?.ResetPitPhaseState();
+            _opponentsEngine?.Reset();
+            _carSaEngine?.Reset();
+            _h2hEngine?.Reset();
+            _radioFrequencyNameCache.Reset();
+            ResetTransmitState();
+            ResetCarSaIdentityState();
+            ResetCarSaLapTimeUpdateState();
+            ResetCarSaDebugExportState();
+            ResetOffTrackDebugExportState();
+            ResetPlayerLapInvalidState();
+
+            _lastSeenCar = string.Empty;
+            _lastSeenTrack = string.Empty;
+            _lastSnapshotCar = string.Empty;
+            _lastSnapshotTrack = string.Empty;
+            _lastAnnouncedMaxFuel = -1;
+            _lastValidLapMs = 0;
+            _lastValidLapNumber = -1;
+            _wetFuelPersistLogged = false;
+            _dryFuelPersistLogged = false;
+            _msgV1InfoLogged = false;
+            _lastIsWetTyres = null;
+            _isWetMode = false;
+            _carSaBestLapFallbackInfoLogged = false;
+            _summaryPitStopIndex = 0;
+
+            _refuelLearnCooldownEnd = 0.0;
+            _isRefuelling = false;
+            _refuelStartFuel = 0.0;
+            _refuelStartTime = 0.0;
+            _refuelWindowStart = 0.0;
+            _refuelWindowRise = 0.0;
+            _refuelLastRiseTime = 0.0;
+            _refuelLastFuel = 0.0;
+            _lastFuel = 0.0;
+
+            FuelCalculator?.ForceProfileDataReload();
+
+            if (!_manualRecoverySkipFuelModelReset)
+            {
+                string sessionType = NormalizeSessionTypeName(Convert.ToString(
+                    PluginManager?.GetPropertyValue("DataCorePlugin.GameData.SessionTypeName") ?? ""));
+                ResetLiveFuelModelForNewSession(sessionType, false);
+            }
+
+            ClearFuelInstructionOutputs();
+            ResetFinishTimingState();
+            ResetSmoothedOutputs();
+            _pendingSmoothingReset = true;
+            _msgV1Engine?.ResetSession();
+            _trackMarkerCapturedPulse.Reset();
+            _trackMarkerLengthDeltaPulse.Reset();
+            _trackMarkerLockedMismatchPulse.Reset();
+            ResetPitScreenToAuto(reasonLabel);
+
+            _msgCxCooldownTimer.Reset();
+            _msgCxPressed = false;
+            _eventMarkerCooldownTimer.Reset();
+            _eventMarkerPressed = false;
+
+            _shiftAssistAudio?.HardStop();
+            _shiftAssistTargetCurrentGear = 0;
+            _shiftAssistActiveGearStackId = "Default";
+            _shiftAssistBeepUntilUtc = DateTime.MinValue;
+            _shiftAssistBeepPrimaryUntilUtc = DateTime.MinValue;
+            _shiftAssistBeepUrgentUntilUtc = DateTime.MinValue;
+            _shiftAssistBeepLatched = false;
+            _shiftAssistBeepPrimaryLatched = false;
+            _shiftAssistBeepUrgentLatched = false;
+            _shiftAssistAudioDelayMs = 0;
+            _shiftAssistAudioDelayLastIssuedUtc = DateTime.MinValue;
+            _shiftAssistAudioIssuedPulse = false;
+            _shiftAssistLastPrimaryAudioIssuedUtc = DateTime.MinValue;
+            _shiftAssistLastPrimaryCueTriggerUtc = DateTime.MinValue;
+            _shiftAssistLastGear = 0;
+            _shiftAssistLastValidGear = 0;
+            _shiftAssistLastValidGearUtc = DateTime.MinValue;
+            _shiftAssistLastSpeedMps = double.NaN;
+            _shiftAssistLastSpeedSampleUtc = DateTime.MinValue;
+            _shiftAssistEngine.Reset();
+            _shiftAssistDelayCaptureState = 0;
+            _shiftAssistDelayBeepType = "NONE";
+            ClearShiftAssistDelayPending();
+            ResetShiftAssistDebugCsvState();
+            _shiftAssistLearnSavedPulseUntilUtc = DateTime.MinValue;
+
+            ResetCoreLaunchMetrics();
+            SetLaunchState(LaunchState.Idle);
+            _launchAbortLatched = false;
+        }
+
         private void UpdatePitScreenState(PluginManager pluginManager)
         {
             bool isOnPitRoad = Convert.ToBoolean(pluginManager.GetPropertyValue("DataCorePlugin.GameRawData.Telemetry.OnPitRoad") ?? false);
@@ -6035,51 +6140,10 @@ namespace LaunchPlugin
                     // nothing else: ConsumeCandidate cleared the latch, sink de-dupe will ignore repeats
                 }
 
-                _rejoinEngine.Reset();
-                _pit.Reset();
-                _pitLite?.ResetCycle();
-                _pit?.ResetPitPhaseState();
-                _opponentsEngine?.Reset();
-                _carSaEngine?.Reset();
-                _h2hEngine?.Reset();
-                _radioFrequencyNameCache.Reset();
-                ResetTransmitState();
-                ResetCarSaIdentityState();
-                ResetCarSaLapTimeUpdateState();
-                ResetCarSaDebugExportState();
-                ResetOffTrackDebugExportState();
-                ResetPlayerLapInvalidState();
-                _currentCarModel = string.Empty;
-                CurrentTrackName = string.Empty;
-                CurrentTrackKey = string.Empty;
-                _lastSeenCar = string.Empty;
-                _lastSeenTrack = string.Empty;
-                _lastSnapshotCar = string.Empty;
-                _lastSnapshotTrack = string.Empty;
-                _lastAnnouncedMaxFuel = -1;
                 _lastSessionId = currentSessionId;
                 _lastSubSessionId = currentSubSessionId;
                 _lastSessionToken = currentSessionToken;
-                _summaryPitStopIndex = 0;
-                _lastValidLapMs = 0;
-                _lastValidLapNumber = -1;
-                _wetFuelPersistLogged = false;
-                _dryFuelPersistLogged = false;
-                _msgV1InfoLogged = false;
-                _lastIsWetTyres = null;
-                _isWetMode = false;
-                _carSaBestLapFallbackInfoLogged = false;
-                FuelCalculator.ForceProfileDataReload();
-                ResetLiveFuelModelForNewSession(currentSessionTypeForConfidence, false);
-                ClearFuelInstructionOutputs();
-                ResetFinishTimingState();
-                ResetSmoothedOutputs();
-                _pendingSmoothingReset = true;
-                _msgV1Engine?.ResetSession();
-                _trackMarkerCapturedPulse.Reset();
-                _trackMarkerLengthDeltaPulse.Reset();
-                _trackMarkerLockedMismatchPulse.Reset();
-                ResetPitScreenToAuto("session-change");
+                ManualRecoveryReset("Session transition");
 
                 SimHub.Logging.Current.Info($"[LalaPlugin:Profile] Session start snapshot: Car='{CurrentCarModel}'  Track='{CurrentTrackName}'");
             }
@@ -6397,110 +6461,117 @@ namespace LaunchPlugin
             bool inPitLaneFlag = (data.NewData?.IsInPitLane ?? 0) != 0;
 
             // Cooldown: avoid re-learning immediately after a save
-            bool onCooldown = sessionTime < _refuelLearnCooldownEnd;
-            if (onCooldown)
+            bool refuelCooldownActive = sessionTime < _refuelLearnCooldownEnd;
+            if (refuelCooldownActive)
             {
                 _lastFuel = currentFuel;   // keep last fuel fresh
-                return;
+                _isRefuelling = false;
+                _refuelStartFuel = 0.0;
+                _refuelStartTime = 0.0;
+                _refuelWindowStart = 0.0;
+                _refuelWindowRise = 0.0;
+                _refuelLastRiseTime = 0.0;
             }
-
-            // Clamp per-tick delta, ignore noise
-            double delta = currentFuel - _refuelLastFuel;
-            if (delta > MaxDeltaPerTickLit) delta = MaxDeltaPerTickLit;
-            if (delta < -MaxDeltaPerTickLit) delta = -MaxDeltaPerTickLit;
-
-            bool rising = delta > FuelNoiseEps;
-
-            // Guard: ignore session start / garage / not in pits
-            bool learningEnabled = sessionTime > 5.0 && inPitLaneFlag;
-
-            // ---- Not refuelling yet: look for a “start” window
-            if (learningEnabled && !_isRefuelling)
+            else
             {
-                // Start or advance window
-                if (_refuelWindowStart <= 0.0) _refuelWindowStart = sessionTime;
+                // Clamp per-tick delta, ignore noise
+                double delta = currentFuel - _refuelLastFuel;
+                if (delta > MaxDeltaPerTickLit) delta = MaxDeltaPerTickLit;
+                if (delta < -MaxDeltaPerTickLit) delta = -MaxDeltaPerTickLit;
 
-                if (rising) _refuelWindowRise += delta;
+                bool rising = delta > FuelNoiseEps;
 
-                // If window aged out, evaluate & maybe start
-                double winAge = sessionTime - _refuelWindowStart;
-                if (winAge >= StartWindowSec)
+                // Guard: ignore session start / garage / not in pits
+                bool learningEnabled = sessionTime > 5.0 && inPitLaneFlag;
+
+                // ---- Not refuelling yet: look for a “start” window
+                if (learningEnabled && !_isRefuelling)
                 {
-                    if (_refuelWindowRise >= StartRiseLiters)
+                    // Start or advance window
+                    if (_refuelWindowStart <= 0.0) _refuelWindowStart = sessionTime;
+
+                    if (rising) _refuelWindowRise += delta;
+
+                    // If window aged out, evaluate & maybe start
+                    double winAge = sessionTime - _refuelWindowStart;
+                    if (winAge >= StartWindowSec)
                     {
-                        // Start refuel
-                        _isRefuelling = true;
-                        _refuelStartFuel = _refuelLastFuel;   // fuel level before rise
-                        _refuelStartTime = _refuelWindowStart;
-                        _refuelLastRiseTime = sessionTime;
-
-                    if (IsVerboseDebugLoggingOn)
-                    {
-                        SimHub.Logging.Current.Debug($"[LalaPlugin:Refuel] Refuel started at {_refuelStartTime:F1}s (fuel {_refuelStartFuel:F1}L).");
-                    }
-                    }
-
-                    // Reset window (whether we started or not)
-                    _refuelWindowStart = sessionTime;
-                    _refuelWindowRise = 0.0;
-                }
-            }
-            // ---- Already refuelling: track and look for “end”
-            else if (_isRefuelling)
-            {
-                if (rising) _refuelLastRiseTime = sessionTime;
-
-                bool idleTooLong = (sessionTime - _refuelLastRiseTime) >= EndIdleSec;
-                bool leftPit = !inPitLaneFlag;
-
-                if (idleTooLong || leftPit)
-                {
-                    // Finalize using last positive-rise time for duration
-                    double stopTime = _refuelLastRiseTime;
-                    if (stopTime <= _refuelStartTime) stopTime = sessionTime; // fallback
-
-                    double fuelAdded = currentFuel - _refuelStartFuel;
-                    double duration = Math.Max(0.0, stopTime - _refuelStartTime);
-
-                    if (fuelAdded > 0.0)
-                    {
-                        SessionSummaryRuntime.OnFuelAdded(_currentSessionToken, fuelAdded);
-                    }
-
-                    if (fuelAdded >= MinValidAddLiters && duration >= MinValidDurSec)
-                    {
-                        double rate = fuelAdded / duration;
-                        if (rate >= MinRateLps && rate <= MaxRateLps)
+                        if (_refuelWindowRise >= StartRiseLiters)
                         {
-                            // Exponential moving average for stability
-                            if (_refuelRateEmaLps <= 0.0) _refuelRateEmaLps = rate;
-                            else _refuelRateEmaLps = (EmaAlpha * rate) + ((1.0 - EmaAlpha) * _refuelRateEmaLps);
+                            // Start refuel
+                            _isRefuelling = true;
+                            _refuelStartFuel = _refuelLastFuel;   // fuel level before rise
+                            _refuelStartTime = _refuelWindowStart;
+                            _refuelLastRiseTime = sessionTime;
 
-                            var savedRate = _refuelRateEmaLps;
-
-                            SaveRefuelRateToActiveProfile(savedRate);
-                            FuelCalculator?.SetLastRefuelRate(savedRate);
-                            _refuelLearnCooldownEnd = sessionTime + LearnCooldownSec;
-
-                            SimHub.Logging.Current.Info(
-                                $"[LalaPlugin:Refuel Rate] Learned refuel rate {savedRate:F2} L/s (raw {rate:F2} L/s, added {fuelAdded:F1} L over {duration:F1} s). " +
-                                $"Cooldown until {_refuelLearnCooldownEnd:F1} s.");
+                            if (IsVerboseDebugLoggingOn)
+                            {
+                                SimHub.Logging.Current.Debug($"[LalaPlugin:Refuel] Refuel started at {_refuelStartTime:F1}s (fuel {_refuelStartFuel:F1}L).");
+                            }
                         }
 
+                        // Reset window (whether we started or not)
+                        _refuelWindowStart = sessionTime;
+                        _refuelWindowRise = 0.0;
                     }
+                }
+                // ---- Already refuelling: track and look for “end”
+                else if (_isRefuelling)
+                {
+                    if (rising) _refuelLastRiseTime = sessionTime;
 
-                    if (IsVerboseDebugLoggingOn)
+                    bool idleTooLong = (sessionTime - _refuelLastRiseTime) >= EndIdleSec;
+                    bool leftPit = !inPitLaneFlag;
+
+                    if (idleTooLong || leftPit)
                     {
-                        SimHub.Logging.Current.Debug($"[LalaPlugin:Refuel] Refuel ended at {stopTime:F1} s.");
-                    }
+                        // Finalize using last positive-rise time for duration
+                        double stopTime = _refuelLastRiseTime;
+                        if (stopTime <= _refuelStartTime) stopTime = sessionTime; // fallback
 
-                    // Reset state
-                    _isRefuelling = false;
-                    _refuelStartFuel = 0.0;
-                    _refuelStartTime = 0.0;
-                    _refuelWindowStart = 0.0;
-                    _refuelWindowRise = 0.0;
-                    _refuelLastRiseTime = 0.0;
+                        double fuelAdded = currentFuel - _refuelStartFuel;
+                        double duration = Math.Max(0.0, stopTime - _refuelStartTime);
+
+                        if (fuelAdded > 0.0)
+                        {
+                            SessionSummaryRuntime.OnFuelAdded(_currentSessionToken, fuelAdded);
+                        }
+
+                        if (fuelAdded >= MinValidAddLiters && duration >= MinValidDurSec)
+                        {
+                            double rate = fuelAdded / duration;
+                            if (rate >= MinRateLps && rate <= MaxRateLps)
+                            {
+                                // Exponential moving average for stability
+                                if (_refuelRateEmaLps <= 0.0) _refuelRateEmaLps = rate;
+                                else _refuelRateEmaLps = (EmaAlpha * rate) + ((1.0 - EmaAlpha) * _refuelRateEmaLps);
+
+                                var savedRate = _refuelRateEmaLps;
+
+                                SaveRefuelRateToActiveProfile(savedRate);
+                                FuelCalculator?.SetLastRefuelRate(savedRate);
+                                _refuelLearnCooldownEnd = sessionTime + LearnCooldownSec;
+
+                                SimHub.Logging.Current.Info(
+                                    $"[LalaPlugin:Refuel Rate] Learned refuel rate {savedRate:F2} L/s (raw {rate:F2} L/s, added {fuelAdded:F1} L over {duration:F1} s). " +
+                                    $"Cooldown until {_refuelLearnCooldownEnd:F1} s.");
+                            }
+
+                        }
+
+                        if (IsVerboseDebugLoggingOn)
+                        {
+                            SimHub.Logging.Current.Debug($"[LalaPlugin:Refuel] Refuel ended at {stopTime:F1} s.");
+                        }
+
+                        // Reset state
+                        _isRefuelling = false;
+                        _refuelStartFuel = 0.0;
+                        _refuelStartTime = 0.0;
+                        _refuelWindowStart = 0.0;
+                        _refuelWindowRise = 0.0;
+                        _refuelLastRiseTime = 0.0;
+                    }
                 }
             }
 
@@ -6701,14 +6772,16 @@ namespace LaunchPlugin
                 // First: let the fuel model handle phase transitions (including seed carry-over rules)
                 HandleSessionChangeForFuelModel(_lastFuelSessionType, currentSession);
 
-                // Phase boundary resets (SessionToken stays constant across P/Q/R for same event)
-                ResetFinishTimingState();
-                ResetSmoothedOutputs();
-                ClearFuelInstructionOutputs();
-                ResetCarSaLapTimeUpdateState();
-
-                // Message session state should not bleed across phase transitions
-                _msgV1Engine?.ResetSession();
+                // Phase boundary reset re-arms transient runtime systems with one bounded path.
+                _manualRecoverySkipFuelModelReset = true;
+                try
+                {
+                    ManualRecoveryReset("Session transition");
+                }
+                finally
+                {
+                    _manualRecoverySkipFuelModelReset = false;
+                }
 
                 if (IsRaceSession(currentSession))
                 {

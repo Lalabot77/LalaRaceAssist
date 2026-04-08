@@ -186,6 +186,7 @@ Driving → Race transitions can seed race state from the just-learned baseline 
 - **Missing live tank cap:** runtime keeps the last valid cap for stability, while UI can still clear user-facing displays when no current valid cap exists.
 - **Weak early-session data:** profile-backed fallback may legitimately remain safer than live values until confidence improves.
 - **Cross-condition reuse:** dry/wet fallback works, but confidence should be interpreted as lower.
+- **Session-change starvation hardening:** refuel-learning cooldown now gates only the refuel-learning block; it no longer exits the full `DataUpdate` tick. This keeps downstream fuel/session/strategy refresh paths running while cooldown is active.
 
 ## v1 documentation note
 Use **Strategy** terminology for GitHub-facing explanations. Treat older “Fuel tab” wording as legacy technical language only; the canonical UI story is now the Strategy tab plus the separate runtime Fuel Model.

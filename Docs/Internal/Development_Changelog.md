@@ -33,6 +33,11 @@ The public user-facing release history is maintained in the root `CHANGELOG.md`.
 
 ## Post-v1.0 development
 
+### Session-change stall recovery hardening
+- Fixed `LalaLaunch.DataUpdate` starvation by removing the refuel-cooldown full-tick early-return; cooldown now gates only refuel-learning internals so downstream runtime updates continue.
+- Added a bounded transient runtime recovery seam (`ManualRecoveryReset`) and wired both Overview reset button and `PrimaryDashMode` action to the same path for manual re-arm.
+- Unified session token/type transition runtime reset execution through the same recovery seam while preserving existing fuel-model transition handling.
+
 ### Dashboard packaging
 - Updated dash control visibility labels to `DRIVER`, `STRATEGY`, and `OVERLAY` while preserving clear tooltips.
 - Added a release-facing warning below the debug-mode master toggle to reduce accidental always-on troubleshooting.
