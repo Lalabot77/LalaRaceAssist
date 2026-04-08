@@ -14,6 +14,9 @@ Branch: work
 - H2H ownership/seam remains unchanged (`H2HRace.*` still consumes `Opp.Ahead1` / `Opp.Behind1`).
 - CarSA ownership remains unchanged (read seam only; Opponents did not absorb CarSA responsibilities).
 - Opponents now logs explicit native invalid-state reasons and leaves outputs invalid/empty when native prerequisites are incomplete.
+- Native class-position ordering now pushes unknown/non-positive `PositionInClass` rows to the end so they cannot displace valid class neighbors.
+- Pit-exit final-120s bypass latch (`_pendingSettledPitOut`) now self-clears after use, restoring normal suppression behavior.
+- Invalid-native-snapshot handling now resets the pit-exit predictor to prevent stale snapshot/audit leakage.
 
 ## Reviewed documentation set
 ### Changed in this sweep

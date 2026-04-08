@@ -74,3 +74,8 @@ The public user-facing release history is maintained in the root `CHANGELOG.md`.
 - Replaced Opponents gap and pit-exit math with a native progress/pace model (lap+distance based) and retained explicit invalid outputs when prerequisites are missing.
 - Added bounded Opponents invalid-state logging for native prerequisite failures; no hidden fallback path to Extra Properties remains in Opponents.
 - Kept H2H selector seam and CarSA ownership boundaries unchanged.
+
+### Opponents native follow-up correctness fixes
+- Prevented unknown/non-positive `PositionInClass` rows from sorting ahead of valid class positions in the class-position ordering path.
+- Cleared the temporary pit-out bypass latch after it serves the final-120s suppression bypass, restoring normal late-race suppression.
+- Reset pit-exit predictor state on invalid native snapshot so stale pit-exit snapshot/audit data cannot leak.

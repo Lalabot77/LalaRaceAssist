@@ -69,6 +69,8 @@ namespace LaunchPlugin
             {
                 Outputs.Reset();
                 _raceModel.Reset();
+                _pitExitPredictor.Reset();
+                _pitExitWasRaceActive = false;
                 LogNativeInvalid(snapshot.InvalidReason);
                 return;
             }
@@ -704,7 +706,7 @@ namespace LaunchPlugin
                 {
                     foreach (var row in sameClass)
                     {
-                        row.SortKey = row.PositionInClass;
+                        row.SortKey = row.PositionInClass > 0 ? row.PositionInClass : double.MaxValue;
                     }
                     sameClass = sameClass.OrderBy(r => r.SortKey).ToList();
                 }
@@ -860,9 +862,21 @@ namespace LaunchPlugin
             public void Update(NativeRaceModel raceModel, string playerIdentityKey, double pitLossSec, bool pitTripActive, bool onPitRoad, double trackPct, int completedLaps, double sessionTimeSec, double sessionTimeRemainingSec, bool debugEnabled)
             {
                 bool allowLogs = true;
-                if (!double.IsNaN(sessionTimeRemainingSec) && !double.IsInfinity(sessionTimeRemainingSec) && sessionTimeRemainingSec <= 120.0 && !_pendingSettledPitOut)
+                bool inFinalSuppressionWindow = !double.IsNaN(sessionTimeRemainingSec)
+                    && !double.IsInfinity(sessionTimeRemainingSec)
+                    && sessionTimeRemainingSec <= 120.0;
+
+                if (inFinalSuppressionWindow && !_pendingSettledPitOut)
                 {
                     return;
+                }
+
+                if (inFinalSuppressionWindow && _pendingSettledPitOut)
+                {
+                    _pendingSettledPitOut = false;
+                    _pendingSettledPitOutLap = -1;
+                    _pitExitSessionTimeSec = double.NaN;
+                    _pitExitTrackPct = double.NaN;
                 }
 
                 bool hasTrackPct = !double.IsNaN(trackPct) && !double.IsInfinity(trackPct);
