@@ -348,23 +348,37 @@ namespace LaunchPlugin
             }
 
             string text = raw.Trim();
+            bool explicitHex = false;
+
             if (text.StartsWith("0x", StringComparison.OrdinalIgnoreCase))
             {
                 text = text.Substring(2);
+                explicitHex = true;
             }
-            if (text.StartsWith("#", StringComparison.OrdinalIgnoreCase))
+            else if (text.StartsWith("#", StringComparison.OrdinalIgnoreCase))
             {
                 text = text.Substring(1);
+                explicitHex = true;
             }
 
-            if (int.TryParse(text, NumberStyles.HexNumber, CultureInfo.InvariantCulture, out var parsedHex))
+            if (explicitHex)
             {
-                return "0x" + (parsedHex & 0xFFFFFF).ToString("X6", CultureInfo.InvariantCulture);
+                if (int.TryParse(text, NumberStyles.HexNumber, CultureInfo.InvariantCulture, out var parsedHex))
+                {
+                    return "0x" + (parsedHex & 0xFFFFFF).ToString("X6", CultureInfo.InvariantCulture);
+                }
+
+                return string.Empty;
             }
 
             if (int.TryParse(text, NumberStyles.Integer, CultureInfo.InvariantCulture, out var parsedInt))
             {
                 return "0x" + (parsedInt & 0xFFFFFF).ToString("X6", CultureInfo.InvariantCulture);
+            }
+
+            if (int.TryParse(text, NumberStyles.HexNumber, CultureInfo.InvariantCulture, out var fallbackHex))
+            {
+                return "0x" + (fallbackHex & 0xFFFFFF).ToString("X6", CultureInfo.InvariantCulture);
             }
 
             return string.Empty;

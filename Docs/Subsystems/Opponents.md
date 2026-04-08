@@ -30,6 +30,7 @@ Opponents now reads from:
 ## Identity model
 - Canonical identity key: `ClassColor:CarNumber`.
 - `ClassColor` is normalized to canonical `0xRRGGBB` with signed/integer masking (`& 0xFFFFFF`).
+- Plain numeric `CarClassColor` text is treated as decimal by default; explicit `0x`/`#` prefixes force hex parsing.
 - Partial identity is rejected. If class color or car number is missing, identity is invalid and the row is not used for published Opp targets.
 
 ## Same-class ordering model
