@@ -89,3 +89,6 @@ The public user-facing release history is maintained in the root `CHANGELOG.md`.
 
 ### Opponents class-color normalization parse-order fix
 - Fixed class-color normalization to parse plain numeric strings as decimal by default, preserving correct `ClassColor:CarNumber` identity keys when native `CarClassColor` values arrive as decimal text.
+
+### PR534 rerun: Opponents class-color normalization
+- Re-applied the PR534 decimal-first class-color normalization change on `work` so it can be submitted again as a fresh PR after the original PR was closed unmerged.

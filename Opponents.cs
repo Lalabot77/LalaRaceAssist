@@ -348,37 +348,29 @@ namespace LaunchPlugin
             }
 
             string text = raw.Trim();
-            bool explicitHex = false;
+            bool prefixedHex = false;
 
             if (text.StartsWith("0x", StringComparison.OrdinalIgnoreCase))
             {
+                prefixedHex = true;
                 text = text.Substring(2);
-                explicitHex = true;
             }
-            else if (text.StartsWith("#", StringComparison.OrdinalIgnoreCase))
+            if (text.StartsWith("#", StringComparison.OrdinalIgnoreCase))
             {
+                prefixedHex = true;
                 text = text.Substring(1);
-                explicitHex = true;
             }
 
-            if (explicitHex)
-            {
-                if (int.TryParse(text, NumberStyles.HexNumber, CultureInfo.InvariantCulture, out var parsedHex))
-                {
-                    return "0x" + (parsedHex & 0xFFFFFF).ToString("X6", CultureInfo.InvariantCulture);
-                }
-
-                return string.Empty;
-            }
-
-            if (int.TryParse(text, NumberStyles.Integer, CultureInfo.InvariantCulture, out var parsedInt))
+            // Native DriverInfo values commonly arrive as decimal text via ReadString(...),
+            // so prefer integer parsing unless the source was explicitly hex-prefixed.
+            if (!prefixedHex && int.TryParse(text, NumberStyles.Integer, CultureInfo.InvariantCulture, out var parsedInt))
             {
                 return "0x" + (parsedInt & 0xFFFFFF).ToString("X6", CultureInfo.InvariantCulture);
             }
 
-            if (int.TryParse(text, NumberStyles.HexNumber, CultureInfo.InvariantCulture, out var fallbackHex))
+            if (int.TryParse(text, NumberStyles.HexNumber, CultureInfo.InvariantCulture, out var parsedHex))
             {
-                return "0x" + (fallbackHex & 0xFFFFFF).ToString("X6", CultureInfo.InvariantCulture);
+                return "0x" + (parsedHex & 0xFFFFFF).ToString("X6", CultureInfo.InvariantCulture);
             }
 
             return string.Empty;
