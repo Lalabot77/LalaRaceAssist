@@ -457,6 +457,94 @@ namespace LaunchPlugin
             return true;
         }
 
+        public bool TryGetCheckpointGapSec(int playerCarIdx, int targetCarIdx, out double signedGapSec)
+        {
+            signedGapSec = double.NaN;
+            if (playerCarIdx < 0 || playerCarIdx >= MaxCars || targetCarIdx < 0 || targetCarIdx >= MaxCars || playerCarIdx == targetCarIdx)
+            {
+                return false;
+            }
+
+            double now = _lastSessionTimeSec;
+            if (double.IsNaN(now) || double.IsInfinity(now))
+            {
+                return false;
+            }
+
+            const double recentAgeMaxSec = 15.0;
+            int bestGate = -1;
+            double bestCommonTime = double.NegativeInfinity;
+            double playerGateTime = double.NaN;
+            double targetGateTime = double.NaN;
+            int playerGateLap = 0;
+            int targetGateLap = 0;
+
+            for (int gate = 0; gate < MiniSectorCheckpointCount; gate++)
+            {
+                double pTime = _carGateTimeSecByCarGate[playerCarIdx, gate];
+                double tTime = _carGateTimeSecByCarGate[targetCarIdx, gate];
+                if (double.IsNaN(pTime) || double.IsInfinity(pTime) || double.IsNaN(tTime) || double.IsInfinity(tTime))
+                {
+                    continue;
+                }
+
+                double playerAge = now - pTime;
+                double targetAge = now - tTime;
+                if (playerAge < 0.0 || targetAge < 0.0 || playerAge > recentAgeMaxSec || targetAge > recentAgeMaxSec)
+                {
+                    continue;
+                }
+
+                double commonTime = pTime < tTime ? pTime : tTime;
+                if (commonTime > bestCommonTime)
+                {
+                    bestCommonTime = commonTime;
+                    bestGate = gate;
+                    playerGateTime = pTime;
+                    targetGateTime = tTime;
+                    playerGateLap = _carGateLapByCarGate[playerCarIdx, gate];
+                    targetGateLap = _carGateLapByCarGate[targetCarIdx, gate];
+                }
+            }
+
+            if (bestGate < 0)
+            {
+                return false;
+            }
+
+            int lapDeltaAtGate = targetGateLap - playerGateLap;
+            if (Math.Abs(lapDeltaAtGate) > 1)
+            {
+                return false;
+            }
+
+            double rawGapSec = playerGateTime - targetGateTime;
+            if (lapDeltaAtGate != 0)
+            {
+                double lapTimeUsed = _outputs?.Debug?.LapTimeUsedSec ?? double.NaN;
+                if (double.IsNaN(lapTimeUsed) || double.IsInfinity(lapTimeUsed) || lapTimeUsed <= 0.0)
+                {
+                    return false;
+                }
+
+                rawGapSec += lapDeltaAtGate * lapTimeUsed;
+            }
+
+            if (double.IsNaN(rawGapSec) || double.IsInfinity(rawGapSec))
+            {
+                return false;
+            }
+
+            double absGap = Math.Abs(rawGapSec);
+            if (absGap <= 0.0 || absGap > 30.0)
+            {
+                return false;
+            }
+
+            signedGapSec = rawGapSec;
+            return true;
+        }
+
         public void UpdateIRatingSof(int[] iRatingsByIdx)
         {
             if (iRatingsByIdx == null || iRatingsByIdx.Length == 0)

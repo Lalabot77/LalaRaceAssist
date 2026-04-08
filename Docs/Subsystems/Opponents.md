@@ -1,51 +1,76 @@
 # Opponents subsystem
 
 Validated against commit: HEAD
-Last updated: 2026-03-24
+Last updated: 2026-04-08
 Branch: work
 
-Purpose: own all opponent-facing calculations for strict same-class race-target selection, nearby/leaderboard pace enrichment, and pit-exit position forecasting with SimHub exports under `Opp.*` and `PitExit.*`.
-Phase-1 Head-to-Head (`H2HRace.*`) consumes Opponents only as a **race-target selector seam** (current class-ahead / class-behind identity from `Opp.Ahead1` / `Opp.Behind1`). Persistent H2H timing, live-gap, lap-summary, fixed-6-segment ownership, and canonical H2H class-color publishing remain inside the standalone H2H subsystem; if Opponents clears those race outputs, H2H should also clear/inactivate rather than revive a stale race identity. Opponents does **not** become a far-away timing engine, and any extra `CarIdx` recovery stays a narrow local fallback inside H2H/LalaLaunch rather than moving timing ownership into Opponents.
+Purpose: own all opponent-facing calculations for strict same-class race-target selection, lap-time enrichment, and race-scoped pit-exit forecasting with SimHub exports under `Opp.*` and `PitExit.*`.
+
+Phase-1 Head-to-Head (`H2HRace.*`) consumes Opponents only as a **race-target selector seam** (`Opp.Ahead1` / `Opp.Behind1`). H2H timing/state ownership remains in H2H/CarSA.
 
 ## Gating and scope
-- Runs in **live opponent sessions** (Practice, Qualifying/Open Qualify, Lone Qualify, Race); resets caches/outputs when session leaves that eligibility scope (for example Offline Testing).
-- No completed-lap gate is applied; once the session is eligible, leaderboard-neighbor `Opp.*` outputs may publish immediately.
-- Pit-exit prediction remains race-scoped; `PitExit.*` reset once on Race → non-Race transitions (not every non-race tick).
-- Uses **IRacingExtraProperties only**; no Dahl DLL or SDK arrays.
+- Runs in live opponent sessions (Practice, Qualifying/Open Qualify, Lone Qualify, Race).
+- No completed-lap gate.
+- Pit-exit prediction remains race-scoped and resets on Race → non-Race transition.
+- Opponents is now **native-only**: no runtime dependency on `IRacingExtraProperties` player/leaderboard/ahead-behind feeds.
+
+## Native data inputs
+Opponents now reads from:
+- `DataCorePlugin.GameRawData.Telemetry.PlayerCarIdx`
+- `DataCorePlugin.GameRawData.Telemetry.CarIdxLap`
+- `DataCorePlugin.GameRawData.Telemetry.CarIdxLapDistPct`
+- `DataCorePlugin.GameRawData.Telemetry.CarIdxClassPosition`
+- `DataCorePlugin.GameRawData.Telemetry.CarIdxBestLapTime`
+- `DataCorePlugin.GameRawData.Telemetry.CarIdxLastLapTime`
+- `DataCorePlugin.GameRawData.Telemetry.CarIdxOnPitRoad`
+- `DataCorePlugin.GameRawData.Telemetry.CarIdxTrackSurface`
+- `DataCorePlugin.GameRawData.SessionData.DriverInfo.Drivers##.*`
+- `DataCorePlugin.GameRawData.SessionData.DriverInfo.CompetingDrivers[*].*`
 
 ## Identity model
-- Stable key: `ClassColor:CarNumber`. Empty class+number returns blank identity (slot ignored).
-- Nearby slot changes log once per rebind when active; identity caches persist pace history across slot swaps. Logging remains race-session scoped and debug-gated for slot-rebind chatter.
-- Published race-target identity is now leaderboard-authoritative: Opponents finds the player row in `iRacing_ClassLeaderboard_Driver_XX_*`, then selects `PositionInClass - 1/-2/+1/+2` within the same class for `Opp.Ahead1/2` and `Opp.Behind1/2`. If the player row or neighbor row cannot be resolved, the published target stays empty/invalid; there is no fallback to nearby slots for race-target identity.
+- Canonical identity key: `ClassColor:CarNumber`.
+- `ClassColor` is normalized to canonical `0xRRGGBB` with signed/integer masking (`& 0xFFFFFF`).
+- Plain numeric `CarClassColor` text is treated as decimal by default; explicit `0x`/`#` prefixes force hex parsing.
+- Partial identity is rejected. If class color or car number is missing, identity is invalid and the row is not used for published Opp targets.
 
-## Data inputs
-- Nearby targets: `iRacing_DriverAheadInClass_00/01_*`, `iRacing_DriverBehindInClass_00/01_*` for Name, CarNumber, ClassColor, RelativeGapToPlayer, LastLapTime, BestLapTime, IsInPit, IsConnected. These feeds are still ingested for cache continuity and debug slot-rebind logging, but they no longer determine published race-target identity for `Opp.Ahead1/2.*` or `Opp.Behind1/2.*`.
-- Leaderboard scan (00–63 until empty row): `iRacing_ClassLeaderboard_Driver_XX_*` for Name, CarNumber, ClassColor, Position, PositionInClass, RelativeGapToLeader, IsInPit/IsConnected, LastLapTime, BestLapTime.
-- Player identity: `iRacing_Player_ClassColor`, `iRacing_Player_CarNumber`. Pit-exit receives pit loss from LalaLaunch’s stop-loss calculation (validated to ≥0).
+## Same-class ordering model
+- Primary: use native `CarIdxClassPosition` when sufficient same-class rows report valid positions.
+- Guard: class-position ordering is enabled only when the player has a valid positive class position; otherwise Opponents falls back to lap-progress ordering to avoid warm-up misordering.
+- Fallback: class-filtered order by `CarIdxLap` then `CarIdxLapDistPct` (descending), with guards:
+  - skip cars without valid lap distance (`0..1`)
+  - skip cars not in world (`CarIdxTrackSurface < 0`)
+- Opponents owns this ordering; CarSA ownership is unchanged.
 
-## Pace cache & blended pace
-- Entity cache keyed by identity; keeps best lap and a 5-lap ring buffer of valid recent laps (rejects ≤0/NaN/huge, skips laps flagged in-pit).
-- BlendedPaceSec = 0.70×RecentAvg + 0.30×(BestLap×1.01); falls back to recent-only or best×1.01 if missing.
+## Gap and fight model (native)
+- `Opp.Ahead1.GapToPlayerSec` and `Opp.Behind1.GapToPlayerSec` now prefer a CarSA checkpoint-time seam (`TryGetCheckpointGapSec`) when available and sane.
+- Fallback for those slots (and primary for Ahead2/Behind2) remains progress delta (`Lap + LapDistPct`) scaled by a pace reference.
+- Pace reference prefers current player pace input from LalaLaunch, then player best/last lap fallback.
+- `PaceDeltaSecPerLap` and `LapsToFight` behavior remains unchanged in shape (same thresholds and NaN invalid behavior).
 
-## Fight prediction (dash support)
-- Uses my pace (from LalaLaunch) vs opponent blended pace once active; my pace is sanitized to remove invalid/huge values.
-- For published race targets, GapToPlayerSec is derived from the absolute difference between the target row’s `RelativeGapToLeader` and the player row’s `RelativeGapToLeader`, so same-class neighbors remain valid even across multi-lap gaps.
-- Ahead: closingRate = opponent − mine; requires closingRate > +0.05 s/lap and positive gap to publish LapsToFight (capped at 999). Otherwise NaN (no catch).
-- Behind: closingRate = mine − opponent; requires closingRate > +0.05 s/lap and positive gap to publish LapsToFight (NaN when no threat/invalid).
-- Summary strings split: `Opponents_SummaryAhead` (A1/A2) and `Opponents_SummaryBehind` (B1/B2). Per-slot variants: `Opponents_SummaryAhead1/2`, `Opponents_SummaryBehind1/2`. Format example — Ahead: `A1 #25 +0.6s Δ-0.12s/L LTF=5 | A2 #11 +1.4s Δ-0.05s/L LTF=—`; Behind: `B1 #39 -0.7s Δ+0.08s/L LTF=9 | B2 #32 -1.6s Δ+0.03s/L LTF=—`. Uses `—` when data unavailable.
+## Lap-time enrichment
+- Per-car best/last lap uses native `CarIdxBestLapTime` / `CarIdxLastLapTime`.
+- Existing identity-keyed blended pace cache remains (`0.70*recent + 0.30*(best*1.01)`).
 
-## Pit-exit prediction
-- Finds player row in class leaderboard; predicted gap to leader after pit = player.RelGapToLeader + pitLossSec (pit loss forced to 0 when invalid). Each same-class, connected row computes `delta = row.RelGapToLeader − playerPredictedGapToLeaderAfterPit`. Negative delta means the car is ahead after pit; positive delta means behind.
-- On pit entry, the predictor **locks** the player gap-to-leader and pit-loss inputs for the duration of the pit trip, preventing drift if leaderboard gaps update mid-stop. Lock clears once pitTripActive ends.
-- PredictedPosition = 1 + count of same-class connected cars where delta < 0. Logs when validity toggles or predicted position changes while active; prediction-change logs remain debug-gated and cadence-filtered.
-- Update cadence: runs every tick on pit road; off pit road, runs only when the player enters a new lap quarter (TrackPct × 4 → 0-3). Prediction is skipped near race end if reliable session time remaining is ≤120 s.
-- Nearest ahead/behind exports come from the same scan: nearest ahead = largest negative delta (closest ahead); nearest behind = smallest positive delta (closest behind). Only same-class, connected cars are considered.
-- Prediction-change logs are gated to reduce chatter: emits only on ≥2 place change, ≥2 s since last log, or pitTripActive/onPitRoad transitions (predictor outputs unchanged).
-- Snapshot data (player positions, gap-to-leader, pitLoss, predicted pos, cars ahead, **locked gap/pit loss**, and derived predicted gap) is captured for one-shot pit-in/out logging in LalaLaunch. Math audit lists boundary candidates around the pit-loss compare and uses `d = (candidateGap - playerGap) - pitLoss` for the same-class set; it is emitted with the pit-in snapshot.
-- A one-lap-delayed “pit-out settled” log is emitted after crossing the lap boundary following pit exit to record the final settled position and gap-to-leader at the end of the out-lap.
-- Publishes PitExit.Valid/PredictedPositionInClass/CarsAheadAfterPitCount/Summary plus nearest ahead/behind identity/gap fields; defaults reset when invalid.
+## Pit-exit prediction model (native)
+- Uses same-class progress model only (no leaderboard-relative gap inputs).
+- Predicts player post-stop progress from locked pit-entry progress + pit loss while pit trip is active.
+- Compares predicted player progress against class rivals to derive:
+  - `PitExit.PredictedPositionInClass`
+  - `PitExit.CarsAheadAfterPitCount`
+  - nearest ahead/behind identities and gaps.
+
+## Invalid-state behavior and logging
+- If native prerequisites are missing/incomplete (for example missing player row or invalid identity), Opponents publishes invalid/empty outputs and logs:
+  - `[LalaPlugin:Opponents] Native data unavailable -> outputs invalid (<reason>).`
+- Logging is cadence-limited / reason-change driven to avoid spam.
 
 ## Outputs
-- `Opp.Ahead1/2.*`, `Opp.Behind1/2.*` → strict same-class standings neighbors around the player row (no nearby fallback), published as Name, CarNumber, ClassColor, GapToPlayerSec (absolute leaderboard-relative gap), BlendedPaceSec, PaceDeltaSecPerLap, and LapsToFight (NaN = no fight/invalid). Summaries at `Opponents_SummaryAhead/Behind` (plus per-slot variants).
-- Optional leader pace: `Opp.Leader.BlendedPaceSec`, `Opp.P2.BlendedPaceSec`.
-- Pit exit exports: `PitExit.Valid`, `PitExit.PredictedPositionInClass`, `PitExit.CarsAheadAfterPitCount`, `PitExit.Summary`, `PitExit.Ahead.*`, `PitExit.Behind.*` (Name/CarNumber/ClassColor/GapSec).
+- `Opp.Ahead1/2.*`, `Opp.Behind1/2.*` (Name/CarNumber/ClassColor/GapToPlayerSec/BlendedPaceSec/PaceDeltaSecPerLap/LapsToFight).
+- `Opp.Leader.BlendedPaceSec`, `Opp.P2.BlendedPaceSec`.
+- `Opponents_SummaryAhead/Behind` and per-slot variants.
+- `PitExit.Valid`, `PitExit.PredictedPositionInClass`, `PitExit.CarsAheadAfterPitCount`, `PitExit.Summary`, `PitExit.Ahead.*`, `PitExit.Behind.*`.
+
+## Known limitations vs old Extra-Properties-backed behavior
+- No direct leaderboard `RelativeGapToLeader` parity path.
+- Gap/pit-exit values are now native progress/pace-derived approximations.
+- When native identity/order prerequisites are absent, outputs intentionally remain invalid instead of silently falling back.

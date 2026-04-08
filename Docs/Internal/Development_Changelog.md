@@ -67,3 +67,25 @@ The public user-facing release history is maintained in the root `CHANGELOG.md`.
 ### Opponents pit-exit hot-loop reset cleanup
 - Changed race-scoped pit-exit reset handling to clear once on Race → non-Race transition instead of resetting every non-race telemetry tick.
 - Added a small OpponentsEngine race-active latch that is also cleared by `OpponentsEngine.Reset()`.
+
+### Opponents native-only cutover
+- Removed Opponents runtime dependency on `IRacingExtraProperties` player, class leaderboard, and class-ahead/behind feeds.
+- Replaced Opponents identity, same-class ordering, and lap enrichment with native session-driver + telemetry arrays (`PlayerCarIdx`, `CarIdxLap`, `CarIdxLapDistPct`, `CarIdxClassPosition`, `CarIdxBestLapTime`, `CarIdxLastLapTime`, `CarIdxOnPitRoad`, `CarIdxTrackSurface`).
+- Replaced Opponents gap and pit-exit math with a native progress/pace model (lap+distance based) and retained explicit invalid outputs when prerequisites are missing.
+- Added bounded Opponents invalid-state logging for native prerequisite failures; no hidden fallback path to Extra Properties remains in Opponents.
+- Kept H2H selector seam and CarSA ownership boundaries unchanged.
+
+### Opponents native follow-up correctness fixes
+- Prevented unknown/non-positive `PositionInClass` rows from sorting ahead of valid class positions in the class-position ordering path.
+- Cleared the temporary pit-out bypass latch after it serves the final-120s suppression bypass, restoring normal late-race suppression.
+- Reset pit-exit predictor state on invalid native snapshot so stale pit-exit snapshot/audit data cannot leak.
+
+### Opponents CarSA true-gap seam (Ahead1/Behind1)
+- Added a narrow CarSA checkpoint-time seam (`TryGetCheckpointGapSec`) and wired Opponents to prefer it for `Opp.Ahead1.GapToPlayerSec` and `Opp.Behind1.GapToPlayerSec`.
+- Kept existing progress/pace gap math as fallback and left neighbor selection ownership unchanged in Opponents.
+
+### Opponents class-position warm-up fallback guard
+- Prevented class-position ordering from activating while the player class position is unset/non-positive, so neighbor selection falls back to lap-progress ordering until player class position is valid.
+
+### Opponents class-color normalization parse-order fix
+- Fixed class-color normalization to parse plain numeric strings as decimal by default, preserving correct `ClassColor:CarNumber` identity keys when native `CarClassColor` values arrive as decimal text.

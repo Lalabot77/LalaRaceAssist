@@ -6213,7 +6213,13 @@ namespace LaunchPlugin
             bool isRaceSessionNow = IsRaceSession(sessionTypeForOpponents);
             bool pitExitRecently = (DateTime.UtcNow - _lastPitLaneSeenUtc).TotalSeconds < 1.0;
             bool pitTripActive = _wasInPitThisLap || inLane || pitExitRecently;
-            double trackPct = SafeReadDouble(pluginManager, "IRacingExtraProperties.iRacing_Player_LapDistPct", double.NaN);
+            int playerCarIdx = SafeReadInt(pluginManager, "DataCorePlugin.GameRawData.Telemetry.PlayerCarIdx", -1);
+            float[] carIdxLapDistPct = SafeReadFloatArray(pluginManager, "DataCorePlugin.GameRawData.Telemetry.CarIdxLapDistPct");
+            double trackPct = double.NaN;
+            if (carIdxLapDistPct != null && playerCarIdx >= 0 && playerCarIdx < carIdxLapDistPct.Length)
+            {
+                trackPct = carIdxLapDistPct[playerCarIdx];
+            }
             double sessionTimeSec = ResolveShiftAssistSessionTimeSec(pluginManager);
             double sessionTimeRemainingSec = SafeReadDouble(pluginManager, "DataCorePlugin.GameRawData.Telemetry.SessionTimeRemain", double.NaN);
             int sessionState = SafeReadInt(pluginManager, "DataCorePlugin.GameRawData.Telemetry.SessionState", 0);
@@ -6224,8 +6230,6 @@ namespace LaunchPlugin
             bool verboseLogs = IsVerboseDebugLoggingOn;
             _opponentsEngine?.Update(data, pluginManager, isOpponentsEligibleSessionNow, isRaceSessionNow, completedLaps, myPaceSec, pitLossSec, pitTripActive, inLane, trackPct, sessionTimeSec, sessionTimeRemainingSec, verboseLogs);
 
-            int playerCarIdx = SafeReadInt(pluginManager, "DataCorePlugin.GameRawData.Telemetry.PlayerCarIdx", -1);
-            float[] carIdxLapDistPct = SafeReadFloatArray(pluginManager, "DataCorePlugin.GameRawData.Telemetry.CarIdxLapDistPct");
             int[] carIdxLap = SafeReadIntArray(pluginManager, "DataCorePlugin.GameRawData.Telemetry.CarIdxLap");
             int[] carIdxTrackSurface = SafeReadIntArray(pluginManager, "DataCorePlugin.GameRawData.Telemetry.CarIdxTrackSurface");
             int[] carIdxTrackSurfaceMaterial = SafeReadIntArray(pluginManager, "DataCorePlugin.GameRawData.Telemetry.CarIdxTrackSurfaceMaterial");
@@ -11267,11 +11271,31 @@ namespace LaunchPlugin
             bool pitExitRecently = (DateTime.UtcNow - _lastPitLaneSeenUtc).TotalSeconds < 1.0;
             bool pitTripActive = _wasInPitThisLap || onPitRoad || pitExitRecently;
 
-            double trackPct = SafeReadDouble(pluginManager, "IRacingExtraProperties.iRacing_Player_LapDistPct", double.NaN);
+            int playerCarIdxForOpp = SafeReadInt(pluginManager, "DataCorePlugin.GameRawData.Telemetry.PlayerCarIdx", -1);
+            float[] carIdxLapDistPctForOpp = SafeReadFloatArray(pluginManager, "DataCorePlugin.GameRawData.Telemetry.CarIdxLapDistPct");
+            double trackPct = double.NaN;
+            if (carIdxLapDistPctForOpp != null && playerCarIdxForOpp >= 0 && playerCarIdxForOpp < carIdxLapDistPctForOpp.Length)
+            {
+                trackPct = carIdxLapDistPctForOpp[playerCarIdxForOpp];
+            }
             double sessionTimeSec = SafeReadDouble(pluginManager, "DataCorePlugin.GameRawData.Telemetry.SessionTime", 0.0);
             double sessionTimeRemainingSec = SafeReadDouble(pluginManager, "DataCorePlugin.GameRawData.Telemetry.SessionTimeRemain", double.NaN);
             bool verboseLogs = IsVerboseDebugLoggingOn;
-            _opponentsEngine.Update(data, pluginManager, isOpponentsEligibleSessionNow, isRaceSessionNow, completedLaps, myPaceSec, pitLossSec, pitTripActive, onPitRoad, trackPct, sessionTimeSec, sessionTimeRemainingSec, verboseLogs);
+            _opponentsEngine.Update(
+                data,
+                pluginManager,
+                isOpponentsEligibleSessionNow,
+                isRaceSessionNow,
+                completedLaps,
+                myPaceSec,
+                pitLossSec,
+                pitTripActive,
+                onPitRoad,
+                trackPct,
+                sessionTimeSec,
+                sessionTimeRemainingSec,
+                verboseLogs,
+                tryGetCheckpointGapSec: _carSaEngine?.TryGetCheckpointGapSec);
         }
 
         private static double SafeReadDouble(PluginManager pluginManager, string propertyName, double fallback)
