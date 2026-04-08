@@ -11281,7 +11281,21 @@ namespace LaunchPlugin
             double sessionTimeSec = SafeReadDouble(pluginManager, "DataCorePlugin.GameRawData.Telemetry.SessionTime", 0.0);
             double sessionTimeRemainingSec = SafeReadDouble(pluginManager, "DataCorePlugin.GameRawData.Telemetry.SessionTimeRemain", double.NaN);
             bool verboseLogs = IsVerboseDebugLoggingOn;
-            _opponentsEngine.Update(data, pluginManager, isOpponentsEligibleSessionNow, isRaceSessionNow, completedLaps, myPaceSec, pitLossSec, pitTripActive, onPitRoad, trackPct, sessionTimeSec, sessionTimeRemainingSec, verboseLogs, _carSaEngine?.TryGetCheckpointGapSec);
+            _opponentsEngine.Update(
+                data,
+                pluginManager,
+                isOpponentsEligibleSessionNow,
+                isRaceSessionNow,
+                completedLaps,
+                myPaceSec,
+                pitLossSec,
+                pitTripActive,
+                onPitRoad,
+                trackPct,
+                sessionTimeSec,
+                sessionTimeRemainingSec,
+                verboseLogs,
+                tryGetCheckpointGapSec: _carSaEngine?.TryGetCheckpointGapSec);
         }
 
         private static double SafeReadDouble(PluginManager pluginManager, string propertyName, double fallback)
