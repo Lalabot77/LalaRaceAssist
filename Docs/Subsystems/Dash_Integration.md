@@ -54,6 +54,8 @@ Hide or clear visuals when:
 - the relevant dash visibility toggle goes false,
 - a widget’s source data is clearly invalid / unavailable.
 
+If runtime data appears stalled after a session boundary, the plugin now exposes a manual recovery re-arm path via the Overview reset button and the `PrimaryDashMode` action binding; both invoke the same transient runtime reset orchestration in-plugin.
+
 ## Pit Entry Assist binding
 ### Primary properties
 - `Pit.EntryAssistActive`

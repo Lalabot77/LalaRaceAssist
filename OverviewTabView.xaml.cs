@@ -96,7 +96,7 @@ namespace LaunchPlugin
 
         private void ResetPlugin_Click(object sender, RoutedEventArgs e)
         {
-            // Not implemented yet.
+            _plugin?.TriggerManualRecoveryReset("Manual reset button");
         }
 
         private void RefreshStatusSnapshot()

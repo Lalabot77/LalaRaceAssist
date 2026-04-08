@@ -9,23 +9,22 @@ Branch: work
 - No Git remote is configured in this checkout (`git remote -v` returns empty).
 
 ## Documentation sync status
-- Opponents has been cut over to a native-only implementation for identity, same-class ordering, lap enrichment, and pit-exit prediction.
-- Opponents no longer reads `IRacingExtraProperties.iRacing_Player_*`, `IRacingExtraProperties.iRacing_ClassLeaderboard_Driver_XX_*`, `IRacingExtraProperties.iRacing_DriverAheadInClass_*`, or `IRacingExtraProperties.iRacing_DriverBehindInClass_*`.
-- H2H ownership/seam remains unchanged (`H2HRace.*` still consumes `Opp.Ahead1` / `Opp.Behind1`).
-- CarSA ownership remains unchanged (read seam only; Opponents did not absorb CarSA responsibilities).
-- Opponents now logs explicit native invalid-state reasons and leaves outputs invalid/empty when native prerequisites are incomplete.
-- Native class-position ordering now pushes unknown/non-positive `PositionInClass` rows to the end so they cannot displace valid class neighbors.
-- Native class-position ordering now also requires a valid positive player `PositionInClass`; otherwise Opponents uses lap-progress ordering until class positions stabilize.
-- Pit-exit final-120s bypass latch (`_pendingSettledPitOut`) now self-clears after use, restoring normal suppression behavior.
-- Invalid-native-snapshot handling now resets the pit-exit predictor to prevent stale snapshot/audit leakage.
-- `Opp.Ahead1`/`Opp.Behind1` gap publication now prefers CarSA checkpoint-time gap seam when available, with progress/pace fallback preserved.
-- Opponents class-color normalization now treats unprefixed numeric text as decimal first (with explicit `0x`/`#` hex override), preventing decimal `CarClassColor` values from being misread as hex.
-- PR534 class-color normalization fix has been re-run on `work` as a fresh commit so the same change can be re-submitted in a new PR after accidental closure.
+- Implemented the session-change starvation fix in `LalaLaunch.DataUpdate`: refuel cooldown is now localized to the refuel-learning block and no longer exits the full tick.
+- Added a unified transient runtime recovery seam: `ManualRecoveryReset(string reason)` in `LalaLaunch`.
+- Repurposed existing `PrimaryDashMode` action to trigger manual recovery reset while keeping action name compatibility intact.
+- Wired landing-tab `ResetPlugin_Click` to the same manual recovery reset seam.
+- Consolidated session token and session-type transition reset execution through `ManualRecoveryReset("Session transition")` (with fuel-model transition handling preserved).
+- Added a canonical INFO log for the recovery seam trigger reason.
 
 ## Reviewed documentation set
 ### Changed in this sweep
-- `Opponents.cs`
-- `Docs/Subsystems/Opponents.md`
+- `LalaLaunch.cs`
+- `OverviewTabView.xaml.cs`
+- `Docs/Subsystems/Fuel_Model.md`
+- `Docs/Subsystems/Shift_Assist.md`
+- `Docs/Subsystems/Dash_Integration.md`
+- `Docs/Internal/SimHubLogMessages.md`
+- `Docs/Internal/Plugin_UI_Tooltips.md`
 - `Docs/Internal/Development_Changelog.md`
 - `Docs/RepoStatus.md`
 
@@ -33,11 +32,23 @@ Branch: work
 - `Docs/Project_Index.md`
 - `Docs/Internal/CODEX_CONTRACT.txt`
 - `Docs/Internal/Architecture_Guardrails.md`
-- `Docs/Subsystems/H2H.md`
-- `LalaLaunch.cs`
-- `Docs/Subsystems/CarSA.md`
+- `Docs/Internal/CODEX_TASK_TEMPLATE.txt`
 - `Docs/Internal/SimHubParameterInventory.md`
-- `Docs/Internal/SimHubLogMessages.md`
+- `Docs/Subsystems/Fuel_Planner_Tab.md`
+- `Docs/Subsystems/Message_System_V1.md`
+- `Docs/Subsystems/CarSA.md`
+- `Docs/Subsystems/H2H.md`
+- `OverviewTabView.xaml`
+- `FuelCalcs.cs`
+- `ShiftAssistEngine.cs`
+- `ShiftAssistAudio.cs`
+- `ShiftAssistLearningEngine.cs`
+
+## Delivery status highlights
+- Fixed DataUpdate starvation path by removing the global early-return from refuel cooldown handling.
+- Added bounded runtime-only recovery reset orchestration without altering profile persistence, learned targets, or subsystem algorithms.
+- Session transitions now use the same reset orchestration path, reducing reset asymmetry risk.
+- Opponents rewrite remained out of scope; `Opponents.cs` was not modified.
 
 ## Validation note
-- Validation recorded against `HEAD` (Opponents native-only cutover; Extra Properties dependency removed from Opponents runtime path).
+- Validation recorded against `HEAD` (`DataUpdate starvation fix + manual recovery reset wiring + docs sync`).

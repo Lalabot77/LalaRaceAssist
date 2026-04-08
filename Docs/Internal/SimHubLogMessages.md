@@ -17,7 +17,7 @@ Scope: Info-level logs emitted via `SimHub.Logging.Current.Info(...)`. Use the t
 - **Message system logs** (`MSGV1`) surface missing evaluators and active stack debug—check when adding new messages.
 
 ## Action, dash, and launch controls
-- **`[LalaPlugin:Dash] PrimaryDashMode action fired (placeholder).`** — Action binding confirmed; no behaviour implemented yet.【F:LalaLaunch.cs†L10-L50】
+- **`[LalaPlugin:Runtime] manual recovery reset triggered (reason: <reason>).`** — Unified transient runtime re-arm path fired (Overview reset button, `PrimaryDashMode` action, or session-transition reset path). Includes trigger reason in the log line.
 - **`[LalaPlugin:Dash] DeclutterMode action fired -> DeclutterMode=0/1/2.`** — Declutter control pressed; cycles the 0/1/2 export used for dash visibility bindings.【F:LalaLaunch.cs†L10-L50】
 - **`[LalaPlugin:Dash] SecondaryDashMode action fired (legacy) -> DeclutterMode=0/1/2.`** — Legacy alias for the same declutter cycle to preserve old bindings.【F:LalaLaunch.cs†L10-L50】
 - **`[LalaPlugin:Dash] Event marker action fired (pressed latched).`** — Event marker action pressed; pulses the event marker latch for CSV tracing.【F:LalaLaunch.cs†L10-L70】

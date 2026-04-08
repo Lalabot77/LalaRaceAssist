@@ -96,6 +96,7 @@ Branch: work
 - Missing or invalid custom WAV -> one-time warning and fallback to embedded default sound.
 - Embedded resource extraction/playback failure -> error/warn logs; logical cue still proceeds.
 - No target RPM / invalid gear / low throttle -> state reports `NoData` or `On` without beep trigger.
+- Session-transition hardening note: Shift Assist remains tick-driven from `LalaLaunch.DataUpdate`, but refuel-cooldown handling no longer short-circuits the entire tick loop, preventing prior starvation of Shift Assist runtime/audio updates during cooldown windows.
 
 ## Test checklist
 - Enable Shift Assist and confirm `ShiftAssist.State` transitions away from `Off`.
