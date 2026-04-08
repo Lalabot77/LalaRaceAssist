@@ -17,6 +17,7 @@ Branch: work
 - Native class-position ordering now pushes unknown/non-positive `PositionInClass` rows to the end so they cannot displace valid class neighbors.
 - Pit-exit final-120s bypass latch (`_pendingSettledPitOut`) now self-clears after use, restoring normal suppression behavior.
 - Invalid-native-snapshot handling now resets the pit-exit predictor to prevent stale snapshot/audit leakage.
+- `Opp.Ahead1`/`Opp.Behind1` gap publication now prefers CarSA checkpoint-time gap seam when available, with progress/pace fallback preserved.
 
 ## Reviewed documentation set
 ### Changed in this sweep

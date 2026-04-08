@@ -12,6 +12,7 @@ namespace LaunchPlugin
         private readonly EntityCache _entityCache = new EntityCache();
         private readonly NativeRaceModel _raceModel = new NativeRaceModel();
         private readonly PitExitPredictor _pitExitPredictor;
+        private TryGetCheckpointGapSec _tryGetCheckpointGapSec;
 
         private bool _gateActive;
         private bool _gateOpenedLogged;
@@ -21,6 +22,7 @@ namespace LaunchPlugin
         private string _lastNativeInvalidReason = string.Empty;
 
         public OpponentOutputs Outputs { get; } = new OpponentOutputs();
+        public delegate bool TryGetCheckpointGapSec(int playerCarIdx, int targetCarIdx, out double signedGapSec);
 
         public OpponentsEngine()
         {
@@ -41,9 +43,10 @@ namespace LaunchPlugin
             _pitExitPredictor.Reset();
         }
 
-        public void Update(GameData data, PluginManager pluginManager, bool isEligibleSession, bool isRaceSession, int completedLaps, double myPaceSec, double pitLossSec, bool pitTripActive, bool onPitRoad, double trackPct, double sessionTimeSec, double sessionTimeRemainingSec, bool debugEnabled)
+        public void Update(GameData data, PluginManager pluginManager, bool isEligibleSession, bool isRaceSession, int completedLaps, double myPaceSec, double pitLossSec, bool pitTripActive, bool onPitRoad, double trackPct, double sessionTimeSec, double sessionTimeRemainingSec, bool debugEnabled, TryGetCheckpointGapSec tryGetCheckpointGapSec)
         {
             var _ = data;
+            _tryGetCheckpointGapSec = tryGetCheckpointGapSec;
 
             if (!isEligibleSession)
             {
@@ -143,9 +146,9 @@ namespace LaunchPlugin
             Outputs.Behind1.Reset();
             Outputs.Behind2.Reset();
 
-            PopulateTarget(Outputs.Ahead1, _raceModel.Ahead1, myPaceSec, true);
+            PopulateTarget(Outputs.Ahead1, _raceModel.Ahead1, myPaceSec, true, true);
             PopulateTarget(Outputs.Ahead2, _raceModel.Ahead2, myPaceSec, true);
-            PopulateTarget(Outputs.Behind1, _raceModel.Behind1, myPaceSec, false);
+            PopulateTarget(Outputs.Behind1, _raceModel.Behind1, myPaceSec, false, true);
             PopulateTarget(Outputs.Behind2, _raceModel.Behind2, myPaceSec, false);
 
             Outputs.LeaderBlendedPaceSec = _raceModel.GetBlendedPaceForPosition(1);
@@ -160,7 +163,7 @@ namespace LaunchPlugin
             Outputs.SummaryBehind2 = summaries.Behind2;
         }
 
-        private void PopulateTarget(OpponentTargetOutput target, NativeCarRow row, double myPaceSec, bool isAhead)
+        private void PopulateTarget(OpponentTargetOutput target, NativeCarRow row, double myPaceSec, bool isAhead, bool preferCarSaGap = false)
         {
             if (target == null)
             {
@@ -177,6 +180,24 @@ namespace LaunchPlugin
             target.CarNumber = row.CarNumber ?? string.Empty;
             target.ClassColor = row.ClassColor ?? string.Empty;
             target.GapToPlayerSec = row.GapToPlayerSec;
+
+            if (preferCarSaGap
+                && _tryGetCheckpointGapSec != null
+                && _raceModel.TryGetPlayerRow(out var playerRow)
+                && playerRow != null
+                && playerRow.CarIdx >= 0
+                && row.CarIdx >= 0
+                && _tryGetCheckpointGapSec(playerRow.CarIdx, row.CarIdx, out double signedGapSec)
+                && !double.IsNaN(signedGapSec)
+                && !double.IsInfinity(signedGapSec))
+            {
+                double absoluteGap = Math.Abs(signedGapSec);
+                bool signMatchesSide = isAhead ? signedGapSec > 0.0 : signedGapSec < 0.0;
+                if (signMatchesSide && absoluteGap > 0.0 && absoluteGap <= 30.0)
+                {
+                    target.GapToPlayerSec = absoluteGap;
+                }
+            }
 
             var entity = _entityCache.Touch(row.IdentityKey, row.Name, row.CarNumber, row.ClassColor);
             if (entity != null)
