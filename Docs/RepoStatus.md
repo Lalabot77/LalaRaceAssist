@@ -20,6 +20,7 @@ Branch: work
 - Invalid-native-snapshot handling now resets the pit-exit predictor to prevent stale snapshot/audit leakage.
 - `Opp.Ahead1`/`Opp.Behind1` gap publication now prefers CarSA checkpoint-time gap seam when available, with progress/pace fallback preserved.
 - Opponents class-color normalization now treats unprefixed numeric text as decimal first (with explicit `0x`/`#` hex override), preventing decimal `CarClassColor` values from being misread as hex.
+- PR534 class-color normalization fix has been re-run on `work` as a fresh commit so the same change can be re-submitted in a new PR after accidental closure.
 
 ## Reviewed documentation set
 ### Changed in this sweep
