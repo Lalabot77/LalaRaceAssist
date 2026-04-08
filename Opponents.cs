@@ -44,14 +44,23 @@ namespace LaunchPlugin
         public void Update(GameData data, PluginManager pluginManager, bool isEligibleSession, bool isRaceSession, int completedLaps, double myPaceSec, double pitLossSec, bool pitTripActive, bool onPitRoad, double trackPct, double sessionTimeSec, double sessionTimeRemainingSec, bool debugEnabled)
         {
             var _ = data; // intentional discard to keep signature aligned with caller
-            string playerClassColor;
-            string playerCarNumber;
-            if (!TryResolvePlayerIdentityFromSessionData(pluginManager, out playerClassColor, out playerCarNumber))
+            string fallbackClassColor = SafeReadString(pluginManager, "IRacingExtraProperties.iRacing_Player_ClassColor");
+            string fallbackCarNumber = SafeReadString(pluginManager, "IRacingExtraProperties.iRacing_Player_CarNumber");
+
+            string playerClassColor = fallbackClassColor;
+            string playerCarNumber = fallbackCarNumber;
+
+            bool hasFallbackIdentity = HasCompleteIdentity(fallbackClassColor, fallbackCarNumber);
+            if (!hasFallbackIdentity
+                && TryResolvePlayerIdentityFromSessionData(pluginManager, out string nativeClassColor, out string nativeCarNumber))
             {
-                playerClassColor = SafeReadString(pluginManager, "IRacingExtraProperties.iRacing_Player_ClassColor");
-                playerCarNumber = SafeReadString(pluginManager, "IRacingExtraProperties.iRacing_Player_CarNumber");
+                playerClassColor = nativeClassColor;
+                playerCarNumber = nativeCarNumber;
             }
-            _playerIdentityKey = MakeIdentityKey(playerClassColor, playerCarNumber);
+
+            _playerIdentityKey = HasCompleteIdentity(playerClassColor, playerCarNumber)
+                ? MakeIdentityKey(playerClassColor, playerCarNumber)
+                : string.Empty;
 
             if (!isEligibleSession)
             {
@@ -475,7 +484,7 @@ namespace LaunchPlugin
                 }
 
                 classColor = SafeReadColorHex(pluginManager, $"{basePath}.CarClassColor");
-                return !string.IsNullOrWhiteSpace(classColor) || !string.IsNullOrWhiteSpace(carNumber);
+                return HasCompleteIdentity(classColor, carNumber);
             }
 
             return false;
@@ -502,7 +511,7 @@ namespace LaunchPlugin
 
                 carNumber = SafeReadString(pluginManager, $"{basePath}.CarNumber");
                 classColor = SafeReadColorHex(pluginManager, $"{basePath}.CarClassColor");
-                return !string.IsNullOrWhiteSpace(classColor) || !string.IsNullOrWhiteSpace(carNumber);
+                return HasCompleteIdentity(classColor, carNumber);
             }
 
             return false;
@@ -524,6 +533,11 @@ namespace LaunchPlugin
             {
                 return -1;
             }
+        }
+
+        private static bool HasCompleteIdentity(string classColor, string carNumber)
+        {
+            return !string.IsNullOrWhiteSpace(classColor) && !string.IsNullOrWhiteSpace(carNumber);
         }
 
         private static string SafeReadColorHex(PluginManager pluginManager, string propertyName)

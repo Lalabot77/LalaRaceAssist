@@ -11,7 +11,7 @@ Phase-1 Head-to-Head (`H2HRace.*`) consumes Opponents only as a **race-target se
 - Runs in **live opponent sessions** (Practice, Qualifying/Open Qualify, Lone Qualify, Race); resets caches/outputs when session leaves that eligibility scope (for example Offline Testing).
 - No completed-lap gate is applied; once the session is eligible, leaderboard-neighbor `Opp.*` outputs may publish immediately.
 - Pit-exit prediction remains race-scoped; `PitExit.*` reset once on Race → non-Race transitions (not every non-race tick).
-- Uses **IRacingExtraProperties only**; no Dahl DLL or SDK arrays.
+- Class leaderboard and neighbour math still use **IRacingExtraProperties** feeds; player identity can fall back to `SessionData.DriverInfo` when `iRacing_Player_*` identity is incomplete. No Dahl DLL or SDK arrays are used.
 
 ## Identity model
 - Stable key: `ClassColor:CarNumber`. Empty class+number returns blank identity (slot ignored).
@@ -21,7 +21,7 @@ Phase-1 Head-to-Head (`H2HRace.*`) consumes Opponents only as a **race-target se
 ## Data inputs
 - Nearby targets: `iRacing_DriverAheadInClass_00/01_*`, `iRacing_DriverBehindInClass_00/01_*` for Name, CarNumber, ClassColor, RelativeGapToPlayer, LastLapTime, BestLapTime, IsInPit, IsConnected. These feeds are still ingested for cache continuity and debug slot-rebind logging, but they no longer determine published race-target identity for `Opp.Ahead1/2.*` or `Opp.Behind1/2.*`.
 - Leaderboard scan (00–63 until empty row): `iRacing_ClassLeaderboard_Driver_XX_*` for Name, CarNumber, ClassColor, Position, PositionInClass, RelativeGapToLeader, IsInPit/IsConnected, LastLapTime, BestLapTime.
-- Player identity: now resolves natively from `SessionData.DriverInfo.*` by `Telemetry.PlayerCarIdx` first, with bounded fallback to `iRacing_Player_ClassColor` + `iRacing_Player_CarNumber` only if session-info identity is not yet available. Pit-exit receives pit loss from LalaLaunch’s stop-loss calculation (validated to ≥0).
+- Player identity: Opponents now prefers `iRacing_Player_ClassColor` + `iRacing_Player_CarNumber` for compatibility with the active Extra-Properties leaderboard row identity format. If that fallback identity is incomplete, Opponents uses `SessionData.DriverInfo.*` resolved by `Telemetry.PlayerCarIdx`, but only when both class color and car number are present (partial native identity is rejected). Pit-exit receives pit loss from LalaLaunch’s stop-loss calculation (validated to ≥0).
 
 ## Extra Properties dependency map (current implementation)
 Opponents still has a large `IRacingExtraProperties` dependency surface for class-leaderboard and same-class gap reconstruction:
@@ -29,8 +29,10 @@ Opponents still has a large `IRacingExtraProperties` dependency surface for clas
 - **Still Extra-Properties-backed (active runtime path):**
   - `iRacing_ClassLeaderboard_Driver_XX_*` (`Name`, `CarNumber`, `ClassColor`, `Position`, `PositionInClass`, `RelativeGapToLeader`, `IsInPit`, `IsConnected`, `LastLapTime`, `BestLapTime`).
   - `iRacing_DriverAheadInClass_00/01_*` and `iRacing_DriverBehindInClass_00/01_*` (cache continuity + debug slot rebind logs).
-- **Now native-first (with fallback):**
-  - Player identity (`ClassColor`, `CarNumber`) resolves via `SessionData.DriverInfo.DriversXX` / `CompetingDrivers[]` using `Telemetry.PlayerCarIdx`, then falls back to `iRacing_Player_*` only when native identity is unavailable.
+- **Now guarded fallback-native (format-safe):**
+  - Opponents uses `iRacing_Player_*` identity when complete.
+  - Native `SessionData.DriverInfo.DriversXX` / `CompetingDrivers[]` (`Telemetry.PlayerCarIdx`) is used only when `iRacing_Player_*` is incomplete, and only when native class color + car number are both present.
+  - A partial native identity (for example `?:<carNumber>`) is not accepted and cannot suppress a stronger fallback identity.
 - **Indirect consumers:**
   - `H2HRace.*` remains a selector consumer of `Opp.Ahead1` / `Opp.Behind1`. H2H does not own race selector identity and does not rebuild class leaderboard state itself.
 
@@ -61,7 +63,7 @@ Minimal fields needed to reproduce current `Opp.*` + `PitExit.*` behavior:
 - **Lower confidence (not first-step safe):** exact `RelativeGapToLeader` parity for lapped/multi-lap race states without Extra Properties.
 
 ### Recommended migration order
-1. **Completed in this task:** player identity native-first session-info resolution (fallback retained).
+1. **Completed in this task:** guarded player identity seam that keeps Extra-Properties-compatible identity first and allows native fallback only when complete.
 2. Introduce an Opponents-local native leaderboard row helper that hydrates identity/class/lap-time/order from session+telemetry without changing published behavior.
 3. Dual-run validation (native rows + current Extra Properties rows) with debug-only mismatch counters (no output contract changes).
 4. Switch same-class neighbour selection to native ordering source after mismatch thresholds are acceptable.
