@@ -15,6 +15,7 @@ Branch: work
 - CarSA ownership remains unchanged (read seam only; Opponents did not absorb CarSA responsibilities).
 - Opponents now logs explicit native invalid-state reasons and leaves outputs invalid/empty when native prerequisites are incomplete.
 - Native class-position ordering now pushes unknown/non-positive `PositionInClass` rows to the end so they cannot displace valid class neighbors.
+- Native class-position ordering now also requires a valid positive player `PositionInClass`; otherwise Opponents uses lap-progress ordering until class positions stabilize.
 - Pit-exit final-120s bypass latch (`_pendingSettledPitOut`) now self-clears after use, restoring normal suppression behavior.
 - Invalid-native-snapshot handling now resets the pit-exit predictor to prevent stale snapshot/audit leakage.
 - `Opp.Ahead1`/`Opp.Behind1` gap publication now prefers CarSA checkpoint-time gap seam when available, with progress/pace fallback preserved.
@@ -22,11 +23,8 @@ Branch: work
 ## Reviewed documentation set
 ### Changed in this sweep
 - `Opponents.cs`
-- `LalaLaunch.cs`
 - `Docs/Subsystems/Opponents.md`
-- `Docs/Subsystems/CarSA.md`
-- `Docs/Internal/SimHubParameterInventory.md`
-- `Docs/Internal/SimHubLogMessages.md`
+- `Docs/Internal/Development_Changelog.md`
 - `Docs/RepoStatus.md`
 
 ### Reviewed and left unchanged
@@ -34,6 +32,10 @@ Branch: work
 - `Docs/Internal/CODEX_CONTRACT.txt`
 - `Docs/Internal/Architecture_Guardrails.md`
 - `Docs/Subsystems/H2H.md`
+- `LalaLaunch.cs`
+- `Docs/Subsystems/CarSA.md`
+- `Docs/Internal/SimHubParameterInventory.md`
+- `Docs/Internal/SimHubLogMessages.md`
 
 ## Validation note
 - Validation recorded against `HEAD` (Opponents native-only cutover; Extra Properties dependency removed from Opponents runtime path).

@@ -722,7 +722,7 @@ namespace LaunchPlugin
                     return;
                 }
 
-                _usingClassPosition = CanUseClassPosition(sameClass);
+                _usingClassPosition = CanUseClassPosition(sameClass, Player);
                 if (_usingClassPosition)
                 {
                     foreach (var row in sameClass)
@@ -799,9 +799,14 @@ namespace LaunchPlugin
                 return Math.Abs(ComputeProgressDeltaLaps(player, leader) * _paceReferenceSec);
             }
 
-            private static bool CanUseClassPosition(List<NativeCarRow> sameClass)
+            private static bool CanUseClassPosition(List<NativeCarRow> sameClass, NativeCarRow player)
             {
-                if (sameClass == null || sameClass.Count == 0)
+                if (sameClass == null || sameClass.Count == 0 || player == null)
+                {
+                    return false;
+                }
+
+                if (player.PositionInClass <= 0)
                 {
                     return false;
                 }

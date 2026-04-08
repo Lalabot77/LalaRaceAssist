@@ -34,6 +34,7 @@ Opponents now reads from:
 
 ## Same-class ordering model
 - Primary: use native `CarIdxClassPosition` when sufficient same-class rows report valid positions.
+- Guard: class-position ordering is enabled only when the player has a valid positive class position; otherwise Opponents falls back to lap-progress ordering to avoid warm-up misordering.
 - Fallback: class-filtered order by `CarIdxLap` then `CarIdxLapDistPct` (descending), with guards:
   - skip cars without valid lap distance (`0..1`)
   - skip cars not in world (`CarIdxTrackSurface < 0`)

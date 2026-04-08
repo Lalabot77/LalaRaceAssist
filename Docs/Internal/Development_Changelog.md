@@ -83,3 +83,6 @@ The public user-facing release history is maintained in the root `CHANGELOG.md`.
 ### Opponents CarSA true-gap seam (Ahead1/Behind1)
 - Added a narrow CarSA checkpoint-time seam (`TryGetCheckpointGapSec`) and wired Opponents to prefer it for `Opp.Ahead1.GapToPlayerSec` and `Opp.Behind1.GapToPlayerSec`.
 - Kept existing progress/pace gap math as fallback and left neighbor selection ownership unchanged in Opponents.
+
+### Opponents class-position warm-up fallback guard
+- Prevented class-position ordering from activating while the player class position is unset/non-positive, so neighbor selection falls back to lap-progress ordering until player class position is valid.
