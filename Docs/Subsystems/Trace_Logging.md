@@ -1,7 +1,7 @@
 # Trace Logging
 
-Validated against commit: 298accf
-Last updated: 2026-03-24
+Validated against commit: HEAD
+Last updated: 2026-04-09
 Branch: work
 
 ## Purpose
@@ -13,6 +13,8 @@ Trace Logging captures **post-race forensic data** for:
 - Session summary and per-lap trace exports
 
 It is intentionally low-frequency and human-readable.
+
+This subsystem documents **session summary / per-lap race traces**. Launch trace lifecycle and Launch Analysis file handling are owned by Launch Mode (`Docs/Subsystems/Launch_Mode.md`).
 
 ---
 

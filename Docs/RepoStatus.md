@@ -9,18 +9,17 @@ Branch: work
 - No Git remote is configured in this checkout (`git remote -v` returns empty).
 
 ## Documentation sync status
-- Added a new Debug-only global setting `ShiftAssistMuteInReplay` (default `true`) to suppress Shift Assist audio specifically during replay sessions.
-- Replay detection now uses `DataCorePlugin.GameData.ReplayMode` as the primary signal, with `DataCorePlugin.GameRawData.Telemetry.IsReplayPlaying` as an optional supporting signal.
-- Replay mute is evaluated continuously at runtime (not latched); audio suppression clears automatically as soon as replay is no longer active.
-- Shift Assist cue generation, shift-light latches/exports, learning, delay capture, and debug CSV flow remain unchanged.
+- Launch trace shutdown no longer unconditionally discards the current trace pointer; plugin end path is close/flush only.
+- Added explicit launch-trace lifecycle state so finalized completed traces are protected while explicit abort/invalid current-run discards remain intact.
+- Added conservative empty launch-trace housekeeping (no telemetry rows + no usable summary) so useless header-only traces are deleted and not listed in Launch Analysis.
 
 ## Reviewed documentation set
 ### Changed in this sweep
 - `LalaLaunch.cs`
-- `GlobalSettingsView.xaml`
-- `Docs/Subsystems/Shift_Assist.md`
-- `Docs/Internal/Plugin_UI_Tooltips.md`
-- `Docs/Internal/SimHubParameterInventory.md`
+- `Docs/Subsystems/Launch_Mode.md`
+- `Docs/Subsystems/Trace_Logging.md`
+- `Docs/Internal/SimHubLogMessages.md`
+- `Docs/Internal/Development_Changelog.md`
 - `Docs/RepoStatus.md`
 
 ### Reviewed and left unchanged
@@ -28,13 +27,13 @@ Branch: work
 - `Docs/Internal/CODEX_CONTRACT.txt`
 - `Docs/Internal/Architecture_Guardrails.md`
 - `Docs/Internal/CODEX_TASK_TEMPLATE.txt`
-- `Docs/Internal/SimHubLogMessages.md`
-- `Docs/Internal/Code_Snapshot.md`
+- `LaunchAnalysisControl.xaml.cs`
+- `Docs/Internal/Plugin_UI_Tooltips.md`
 
 ## Delivery status highlights
-- Added `Mute Shift Assist sound in replay` toggle in Debug Options with explicit tooltip semantics.
-- Shift Assist runtime audio path now applies a narrow replay-only gate at playback call sites.
-- The replay-only gate does not alter Shift Assist engine cue timing or learning/target calculations.
+- Valid completed launch traces are retained across plugin shutdown; end-service performs close/flush without pointer-based deletion.
+- Abort/cancel/unsuccessful launch paths still discard the current invalid trace explicitly.
+- Empty/header-only launch traces (no telemetry rows and no usable summary) are cleaned up conservatively and excluded from Launch Analysis listing.
 
 ## Validation note
-- Validation recorded against `HEAD` (`Debug replay-only Shift Assist audio mute toggle + runtime gate + docs sync`).
+- Validation recorded against `HEAD` (`Launch trace shutdown retention fix + empty-trace housekeeping + docs sync`).
