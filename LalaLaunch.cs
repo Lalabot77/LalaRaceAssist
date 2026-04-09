@@ -3635,25 +3635,71 @@ namespace LaunchPlugin
             }
         }
 
-        // Save the refuel rate into the active car profile and persist profiles.json
-        public void SaveRefuelRateToActiveProfile(double rateLps)
+        private enum RefuelRateSaveOutcome
         {
+            Invalid = 0,
+            Saved = 1,
+            BlockedLocked = 2
+        }
+
+        private bool IsUsableStoredRefuelRate(double rateLps)
+        {
+            if (double.IsNaN(rateLps) || double.IsInfinity(rateLps))
+            {
+                return false;
+            }
+
+            // Keep "usable" in the same practical domain expected by runtime learning and the Profiles UI slider.
+            return rateLps > 0.0 && rateLps <= MaxRateLps;
+        }
+
+        // Save the refuel rate into the active car profile and persist profiles.json.
+        // Locked first-fill fail-safe: if locked but existing stored rate is unusable, allow one population save.
+        private RefuelRateSaveOutcome SaveRefuelRateToActiveProfile(double rateLps, out double runtimeRateLps)
+        {
+            runtimeRateLps = rateLps;
             try
             {
                 if (rateLps > 0 && ActiveProfile != null)
                 {
+                    bool storedUsable = IsUsableStoredRefuelRate(ActiveProfile.RefuelRate);
+                    if (ActiveProfile.RefuelRateLocked)
+                    {
+                        if (storedUsable)
+                        {
+                            runtimeRateLps = ActiveProfile.RefuelRate;
+                            if (IsVerboseDebugLoggingOn)
+                            {
+                                SimHub.Logging.Current.Debug($"[LalaPlugin:Refuel Rate] Locked; blocked learned overwrite for '{ActiveProfile.ProfileName}' (candidate {rateLps:F2} L/s).");
+                            }
+                            return RefuelRateSaveOutcome.BlockedLocked;
+                        }
+                        // Locked fail-safe first-fill path: permit initial population when no usable stored value exists.
+                    }
+
                     ActiveProfile.RefuelRate = rateLps;   // property already exists on CarProfile
                     ProfilesViewModel?.SaveProfiles();    // persist immediately
+                    runtimeRateLps = ActiveProfile.RefuelRate;
                     if (IsVerboseDebugLoggingOn)
                     {
                         SimHub.Logging.Current.Debug($"[LalaPlugin:Profiles] Refuel rate saved for '{ActiveProfile.ProfileName}': {rateLps:F3} L/s");
                     }
+                    return RefuelRateSaveOutcome.Saved;
                 }
             }
             catch (Exception ex)
             {
                 SimHub.Logging.Current.Warn($"[LalaPlugin:Profiles] Refuel rate save failed: {ex.Message}");
             }
+
+            return RefuelRateSaveOutcome.Invalid;
+        }
+
+        // Existing callers (manual set paths) can keep this simple signature.
+        public bool SaveRefuelRateToActiveProfile(double rateLps)
+        {
+            double ignoredRuntimeRate;
+            return SaveRefuelRateToActiveProfile(rateLps, out ignoredRuntimeRate) == RefuelRateSaveOutcome.Saved;
         }
 
         public string CurrentTrackKey { get; private set; } = string.Empty;
@@ -6622,13 +6668,17 @@ namespace LaunchPlugin
 
                                 var savedRate = _refuelRateEmaLps;
 
-                                SaveRefuelRateToActiveProfile(savedRate);
-                                FuelCalculator?.SetLastRefuelRate(savedRate);
+                                double runtimeRefuelRate = savedRate;
+                                var saveOutcome = SaveRefuelRateToActiveProfile(savedRate, out runtimeRefuelRate);
+                                FuelCalculator?.SetLastRefuelRate(runtimeRefuelRate);
                                 _refuelLearnCooldownEnd = sessionTime + LearnCooldownSec;
 
-                                SimHub.Logging.Current.Info(
-                                    $"[LalaPlugin:Refuel Rate] Learned refuel rate {savedRate:F2} L/s (raw {rate:F2} L/s, added {fuelAdded:F1} L over {duration:F1} s). " +
-                                    $"Cooldown until {_refuelLearnCooldownEnd:F1} s.");
+                                if (saveOutcome == RefuelRateSaveOutcome.Saved)
+                                {
+                                    SimHub.Logging.Current.Info(
+                                        $"[LalaPlugin:Refuel Rate] Learned refuel rate {runtimeRefuelRate:F2} L/s (raw {rate:F2} L/s, added {fuelAdded:F1} L over {duration:F1} s). " +
+                                        $"Cooldown until {_refuelLearnCooldownEnd:F1} s.");
+                                }
                             }
 
                         }
@@ -6994,11 +7044,16 @@ namespace LaunchPlugin
                 _shiftAssistBeepPrimaryLatched = false;
                 _shiftAssistBeepUrgentLatched = false;
             }
+            bool replayAudioSuppressed = IsShiftAssistReplayAudioSuppressed(PluginManager);
             DateTime issuedUtc = DateTime.MinValue;
             bool audioIssued = false;
-            if (_shiftAssistAudio != null)
+            if (_shiftAssistAudio != null && !replayAudioSuppressed)
             {
                 audioIssued = _shiftAssistAudio.TryPlayBeep(out issuedUtc);
+            }
+            else if (replayAudioSuppressed)
+            {
+                _shiftAssistAudio?.HardStop();
             }
 
             _shiftAssistAudioIssuedPulse = audioIssued;
@@ -7014,7 +7069,8 @@ namespace LaunchPlugin
             var settings = Settings;
             bool beepSoundEnabled = settings?.ShiftAssistBeepSoundEnabled != false;
             bool beepVolumeEnabled = (settings?.ShiftAssistBeepVolumePct ?? 100) > 0;
-            if (!beepSoundEnabled || !beepVolumeEnabled)
+            bool replayAudioSuppressed = IsShiftAssistReplayAudioSuppressed(pluginManager);
+            if (!beepSoundEnabled || !beepVolumeEnabled || replayAudioSuppressed)
             {
                 _shiftAssistAudio?.HardStop();
             }
@@ -7335,6 +7391,7 @@ namespace LaunchPlugin
                 && isUrgentBeep
                 && urgentEnabled
                 && beepSoundEnabled
+                && !replayAudioSuppressed
                 && baseVolPct > 0
                 && urgentVolPctDerived > 0
                 && cueConditionActive
@@ -7349,6 +7406,10 @@ namespace LaunchPlugin
                 else if (!beepSoundEnabled)
                 {
                     urgentSuppressedReason = "OFF_SOUND_DISABLED";
+                }
+                else if (replayAudioSuppressed)
+                {
+                    urgentSuppressedReason = "OFF_REPLAY_MUTED";
                 }
                 else if (baseVolPct <= 0)
                 {
@@ -7400,7 +7461,7 @@ namespace LaunchPlugin
                 DateTime triggerUtc = nowUtc;
                 DateTime issuedUtc = DateTime.MinValue;
                 bool audioIssued = false;
-                if (_shiftAssistAudio != null)
+                if (_shiftAssistAudio != null && !replayAudioSuppressed)
                 {
                     if (!isUrgentBeep)
                     {
@@ -7462,6 +7523,84 @@ namespace LaunchPlugin
 
             bool exportedBeepLatched = _shiftAssistBeepLatched;
             WriteShiftAssistDebugCsv(nowUtc, sessionTimeSec, gear, effectiveGear, maxForwardGears, rpm, throttle01, targetRpm, leadTimeMs, beep, exportedBeepLatched, speedMps, accelDerivedMps2, lonAccelTelemetryMps2, _shiftAssistLastLearningTick, learnRedlineSource, redlineRpm, urgentEligible, urgentSuppressedReason, urgentAttempted, urgentPlayed, urgentPlayError, beepTypeForCsv);
+        }
+
+        private bool IsShiftAssistReplayAudioSuppressed(PluginManager pluginManager)
+        {
+            if (Settings?.ShiftAssistMuteInReplay != true)
+            {
+                return false;
+            }
+
+            return IsShiftAssistReplayActive(pluginManager);
+        }
+
+        private static bool IsShiftAssistReplayActive(PluginManager pluginManager)
+        {
+            if (pluginManager == null)
+            {
+                return false;
+            }
+
+            object replayModeRaw = null;
+            try
+            {
+                replayModeRaw = pluginManager.GetPropertyValue("DataCorePlugin.GameData.ReplayMode");
+            }
+            catch
+            {
+                replayModeRaw = null;
+            }
+
+            if (IsReplayModeActiveValue(replayModeRaw))
+            {
+                return true;
+            }
+
+            bool? telemetryReplay = null;
+            try
+            {
+                telemetryReplay = TryReadNullableBool(pluginManager.GetPropertyValue("DataCorePlugin.GameRawData.Telemetry.IsReplayPlaying"));
+            }
+            catch
+            {
+                telemetryReplay = null;
+            }
+
+            return telemetryReplay == true;
+        }
+
+        private static bool IsReplayModeActiveValue(object raw)
+        {
+            if (raw == null)
+            {
+                return false;
+            }
+
+            string replayModeText = raw as string;
+            if (!string.IsNullOrWhiteSpace(replayModeText))
+            {
+                replayModeText = replayModeText.Trim();
+                if (string.Equals(replayModeText, "Replay", StringComparison.OrdinalIgnoreCase)
+                    || string.Equals(replayModeText, "RePlay", StringComparison.OrdinalIgnoreCase))
+                {
+                    return true;
+                }
+            }
+
+            int replayModeValue;
+            if (TryReadNullableInt(raw, out replayModeValue))
+            {
+                return replayModeValue != 0;
+            }
+
+            bool? replayModeBool = TryReadNullableBool(raw);
+            if (replayModeBool.HasValue)
+            {
+                return replayModeBool.Value;
+            }
+
+            return false;
         }
 
         private int ResolveShiftAssistMaxForwardGears(PluginManager pluginManager)
@@ -14594,6 +14733,7 @@ namespace LaunchPlugin
         public string ShiftAssistCustomWavPath { get; set; } = "";
         public bool EnableShiftAssistDebugCsv { get; set; } = false;
         public int ShiftAssistDebugCsvMaxHz { get; set; } = LalaLaunch.ShiftAssistDebugCsvMaxHzDefault;
+        public bool ShiftAssistMuteInReplay { get; set; } = true;
         public double NotRelevantGapSec { get; set; } = LalaLaunch.CarSANotRelevantGapSecDefault;
         public Dictionary<int, string> CarSAStatusEBackgroundColors { get; set; } = new Dictionary<int, string>
         {

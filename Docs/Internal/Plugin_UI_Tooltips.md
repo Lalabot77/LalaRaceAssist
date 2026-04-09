@@ -161,7 +161,8 @@ Branch: work
 - L48: Saves all profiles to the JSON file.
 - L52: `CAR` tab header replaces the old `DASH` tab.
 - L64: Average refuel rate (L/s). Updates after a live refuel event if available.
-- L70: Set the refuel rate (L/s). Live refuel events can update this value.
+- L70: Set the refuel rate (L/s). Live refuel events can update this value while unlocked.
+- L73: Lock to prevent live refuel learning from overwriting this value.
 - L77: Base tank capacity for this car. Use Learn from Live to pull from live max fuel.
 - L86: Base tank size (L). Leave blank to use the default.
 - L91: Capture the current live max fuel as the base tank size.
@@ -212,6 +213,7 @@ Branch: work
 - `GlobalSettingsView.xaml` shows the warning text `Debug mode is for troubleshooting only. Leave this off unless asked to enable it.` directly below `Enable debugging mode`.
 - `GlobalSettingsView.xaml` `Enable Debug Logging` tooltip says it enables verbose logging for troubleshooting the plugin.
 - `GlobalSettingsView.xaml` `PitExit Verbose Logging` tooltip says it adds PitExit math audit details to pit-in snapshots for troubleshooting.
+- `GlobalSettingsView.xaml` `Mute Shift Assist sound in replay` tooltip says replay sessions suppress only Shift Assist audio while lights, learning, and other Shift Assist logic continue normally.
 - `GlobalSettingsView.xaml` `Shift Assist Debug CSV` tooltip explains per-tick diagnostic CSV logging.
 - `GlobalSettingsView.xaml` `Shift Assist Debug Max Hz` textbox tooltip documents valid range (1..60 Hz).
 

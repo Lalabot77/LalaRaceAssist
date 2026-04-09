@@ -230,6 +230,7 @@ namespace LaunchPlugin
                     car.PreRaceMode = defaultProfile.PreRaceMode;
                     car.TireChangeTime = defaultProfile.TireChangeTime;
                     car.RefuelRate = defaultProfile.RefuelRate;
+                    car.RefuelRateLocked = defaultProfile.RefuelRateLocked;
                     car.BaseTankLitres = defaultProfile.BaseTankLitres;
                     car.DryConditionMultipliers = defaultProfile.DryConditionMultipliers?.Clone() ?? ConditionMultipliers.CreateDefaultDry();
                     car.WetConditionMultipliers = defaultProfile.WetConditionMultipliers?.Clone() ?? ConditionMultipliers.CreateDefaultWet();
@@ -1377,6 +1378,7 @@ namespace LaunchPlugin
                 newProfile.AntiStallThreshold = defaultProfile.AntiStallThreshold;
                 newProfile.PreRaceMode = defaultProfile.PreRaceMode;
                 newProfile.RefuelRate = defaultProfile.RefuelRate;
+                newProfile.RefuelRateLocked = defaultProfile.RefuelRateLocked;
                 newProfile.BaseTankLitres = defaultProfile.BaseTankLitres;
                 newProfile.RejoinWarningLingerTime = defaultProfile.RejoinWarningLingerTime;
                 newProfile.RejoinWarningMinSpeed = defaultProfile.RejoinWarningMinSpeed;
@@ -1500,6 +1502,7 @@ namespace LaunchPlugin
             destination.SpinYawRateThreshold = source.SpinYawRateThreshold;
             destination.TrafficApproachWarnSeconds = source.TrafficApproachWarnSeconds;
             destination.RefuelRate = source.RefuelRate;
+            destination.RefuelRateLocked = source.RefuelRateLocked;
             destination.BaseTankLitres = source.BaseTankLitres;
             destination.PitEntryDecelMps2 = source.PitEntryDecelMps2;
             destination.PitEntryBufferM = source.PitEntryBufferM;
@@ -1996,6 +1999,7 @@ namespace LaunchPlugin
                     PreRaceMode = 3,
                     TireChangeTime = 22,
                     RefuelRate = 3.7,
+                    RefuelRateLocked = false,
                     BaseTankLitres = null,
                     PitEntryDecelMps2 = 13.5,
                     PitEntryBufferM = 15.0,
