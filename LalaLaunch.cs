@@ -3636,24 +3636,36 @@ namespace LaunchPlugin
         }
 
         // Save the refuel rate into the active car profile and persist profiles.json
-        public void SaveRefuelRateToActiveProfile(double rateLps)
+        public bool SaveRefuelRateToActiveProfile(double rateLps)
         {
             try
             {
                 if (rateLps > 0 && ActiveProfile != null)
                 {
+                    if (ActiveProfile.RefuelRateLocked)
+                    {
+                        if (IsVerboseDebugLoggingOn)
+                        {
+                            SimHub.Logging.Current.Debug($"[LalaPlugin:Refuel Rate] Locked; blocked learned overwrite for '{ActiveProfile.ProfileName}' (candidate {rateLps:F2} L/s).");
+                        }
+                        return false;
+                    }
+
                     ActiveProfile.RefuelRate = rateLps;   // property already exists on CarProfile
                     ProfilesViewModel?.SaveProfiles();    // persist immediately
                     if (IsVerboseDebugLoggingOn)
                     {
                         SimHub.Logging.Current.Debug($"[LalaPlugin:Profiles] Refuel rate saved for '{ActiveProfile.ProfileName}': {rateLps:F3} L/s");
                     }
+                    return true;
                 }
             }
             catch (Exception ex)
             {
                 SimHub.Logging.Current.Warn($"[LalaPlugin:Profiles] Refuel rate save failed: {ex.Message}");
             }
+
+            return false;
         }
 
         public string CurrentTrackKey { get; private set; } = string.Empty;
@@ -6552,13 +6564,16 @@ namespace LaunchPlugin
 
                                 var savedRate = _refuelRateEmaLps;
 
-                                SaveRefuelRateToActiveProfile(savedRate);
+                                bool refuelRateSaved = SaveRefuelRateToActiveProfile(savedRate);
                                 FuelCalculator?.SetLastRefuelRate(savedRate);
                                 _refuelLearnCooldownEnd = sessionTime + LearnCooldownSec;
 
-                                SimHub.Logging.Current.Info(
-                                    $"[LalaPlugin:Refuel Rate] Learned refuel rate {savedRate:F2} L/s (raw {rate:F2} L/s, added {fuelAdded:F1} L over {duration:F1} s). " +
-                                    $"Cooldown until {_refuelLearnCooldownEnd:F1} s.");
+                                if (refuelRateSaved)
+                                {
+                                    SimHub.Logging.Current.Info(
+                                        $"[LalaPlugin:Refuel Rate] Learned refuel rate {savedRate:F2} L/s (raw {rate:F2} L/s, added {fuelAdded:F1} L over {duration:F1} s). " +
+                                        $"Cooldown until {_refuelLearnCooldownEnd:F1} s.");
+                                }
                             }
 
                         }

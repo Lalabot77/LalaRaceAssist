@@ -51,6 +51,7 @@ Out of scope:
 - Track/car dry and wet fuel averages.
 - Track/car lap-time baselines used to keep acceptance and projection behavior defensible.
 - Condition lock state that prevents telemetry-driven overwrites when a condition has been intentionally frozen.
+- Car-level refuel rate (`CarProfile.RefuelRate`) plus a persisted lock (`CarProfile.RefuelRateLocked`) that can block auto-learned refuel-rate overwrites while still allowing runtime learning/validation to run.
 
 ### Pace / projection dependency
 - Projection lap-time selection from the Pace & Projection subsystem.
@@ -75,6 +76,7 @@ Out of scope:
 ### Persistence state
 - Dry and wet condition stats persist independently.
 - Each condition has its own sample count, last-updated metadata, and lock gate.
+- Refuel rate persistence is car-scoped and now includes a dedicated lock gate; when locked, runtime refuel learning does not overwrite the stored profile value.
 - Session-transition seeding is used to reduce race-session cold starts.
 
 ### Projection and pit-window state

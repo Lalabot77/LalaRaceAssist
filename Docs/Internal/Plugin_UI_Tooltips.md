@@ -161,7 +161,8 @@ Branch: work
 - L48: Saves all profiles to the JSON file.
 - L52: `CAR` tab header replaces the old `DASH` tab.
 - L64: Average refuel rate (L/s). Updates after a live refuel event if available.
-- L70: Set the refuel rate (L/s). Live refuel events can update this value.
+- L70: Set the refuel rate (L/s). Live refuel events can update this value while unlocked.
+- L73: Lock to prevent live refuel learning from overwriting this value.
 - L77: Base tank capacity for this car. Use Learn from Live to pull from live max fuel.
 - L86: Base tank size (L). Leave blank to use the default.
 - L91: Capture the current live max fuel as the base tank size.

@@ -9,14 +9,22 @@ Branch: work
 - No Git remote is configured in this checkout (`git remote -v` returns empty).
 
 ## Documentation sync status
-- Updated Opponents native ordering policy to use RaceProgress (`CarIdxLap + CarIdxLapDistPct`) as the primary same-class neighbor selector.
-- Kept native `CarIdxClassPosition` as anchor/validation context only so delayed official position updates no longer block immediate target switching after live overtakes.
-- Preserved existing Opponents output contracts (`Ahead1/2`, `Behind1/2`) and H2H race-selector integration seam.
+- Added a persisted car-level refuel-rate lock (`CarProfile.RefuelRateLocked`) with backward-compatible default-unlocked JSON behavior.
+- Added a `Locked` control to the existing Profiles → CAR refuel-rate row, following existing lock UX patterns used elsewhere in the plugin.
+- Gated refuel-rate auto-persist so valid learned rates no longer overwrite a locked profile value; unlocked flow remains unchanged.
+- Added concise verbose-debug observability for blocked overwrite attempts (`[LalaPlugin:Refuel Rate] Locked; blocked learned overwrite ...`).
 
 ## Reviewed documentation set
 ### Changed in this sweep
-- `Opponents.cs`
-- `Docs/Subsystems/Opponents.md`
+- `CarProfiles.cs`
+- `ProfilesManagerView.xaml`
+- `ProfilesManagerViewModel.cs`
+- `LalaLaunch.cs`
+- `Docs/Subsystems/Fuel_Model.md`
+- `Docs/Subsystems/Fuel_Planner_Tab.md`
+- `Docs/Internal/Plugin_UI_Tooltips.md`
+- `Docs/Internal/SimHubParameterInventory.md`
+- `Docs/Internal/SimHubLogMessages.md`
 - `Docs/Internal/Development_Changelog.md`
 - `Docs/RepoStatus.md`
 
@@ -25,16 +33,14 @@ Branch: work
 - `Docs/Internal/CODEX_CONTRACT.txt`
 - `Docs/Internal/Architecture_Guardrails.md`
 - `Docs/Internal/CODEX_TASK_TEMPLATE.txt`
-- `Docs/Internal/SimHubParameterInventory.md`
-- `Docs/Subsystems/CarSA.md`
-- `Docs/Subsystems/H2H.md`
-- `Docs/Internal/SimHubLogMessages.md`
-- `LalaLaunch.cs`
+- `FuelCalcs.cs`
+- `FuelCalculatorView.xaml`
 
 ## Delivery status highlights
-- Fixed Opponents same-class ordering lag by making RaceProgress-first ordering authoritative for live neighbor selection.
-- Retained class-position values for anchor/validation context, but removed them as the primary live ordering driver.
-- Kept CarSA timing seam usage for Ahead1/Behind1 gap seconds and left H2H selector contracts unchanged.
+- Refuel-rate learning now respects a persisted lock gate, preventing auto-overwrite of trusted stored rates when locked.
+- Existing unlocked behavior is preserved: valid learned refuel rates continue to save to the active profile.
+- Existing profiles remain backward-compatible and default to unlocked when the new field is absent.
+- Profile create/copy/default flows now preserve/carry the refuel-rate lock field consistently.
 
 ## Validation note
-- Validation recorded against `HEAD` (`Opponents RaceProgress-first ordering fix + docs sync`).
+- Validation recorded against `HEAD` (`Refuel-rate lock gate + Profiles UI lock control + docs sync`).

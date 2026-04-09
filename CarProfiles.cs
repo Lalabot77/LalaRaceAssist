@@ -111,6 +111,20 @@ namespace LaunchPlugin
         // --- NEW Per-Car Property ---
         private double _refuelRate = 2.7;
         public double RefuelRate { get => _refuelRate; set { if (_refuelRate != value) { _refuelRate = value; OnPropertyChanged(); } } }
+        private bool _refuelRateLocked;
+        [JsonProperty]
+        public bool RefuelRateLocked
+        {
+            get => _refuelRateLocked;
+            set
+            {
+                if (_refuelRateLocked != value)
+                {
+                    _refuelRateLocked = value;
+                    OnPropertyChanged();
+                }
+            }
+        }
 
         private double? _baseTankLitres;
         [JsonProperty]

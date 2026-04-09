@@ -82,6 +82,7 @@ Scope: Info-level logs emitted via `SimHub.Logging.Current.Info(...)`. Use the t
 - **`[LalaPlugin:Pit Cycle] PitLoss locked, blocked candidate Xs source=...`** — Pit lane loss candidate was blocked due to a locked profile value; candidate details saved for UI display.【F:LalaLaunch.cs†L3201-L3212】
 - **`[LalaPlugin:Pit Cycle] Pit Lite Data used for DTL.`** — Consumed PitLite out-lap candidate to save pit loss.【F:LalaLaunch.cs†L3004-L3035】
 - **`[LalaPlugin:Refuel Rate] Learned refuel rate ... Cooldown until ...`** — Refuel EMA learning completed from detected fuel added/time. 【F:LalaLaunch.cs†L3488-L3507】
+- **`[LalaPlugin:Refuel Rate] Locked; blocked learned overwrite for '...' (candidate ... L/s).`** — Verbose-debug-only line emitted when a valid learned refuel-rate candidate is intentionally ignored because the active profile has `RefuelRateLocked=true`.
 - **`[LalaPlugin:Pit Lite] ...`** — See PitCycleLite section below for entry/exit/out-lap/publish logs.
 - **`[LalaPlugin:Pit Cycle] ...`** — See PitEngine section below for DTL/direct computations and pit-lap captures.
 
