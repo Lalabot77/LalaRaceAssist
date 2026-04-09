@@ -4198,6 +4198,11 @@ namespace LaunchPlugin
         private DateTime _shiftAssistLearnSavedPulseUntilUtc = DateTime.MinValue;
         private ShiftAssistLearningTick _shiftAssistLastLearningTick = new ShiftAssistLearningTick { State = ShiftAssistLearningState.Off };
         private DateTime _shiftAssistRuntimeStatsLastRefreshUtc = DateTime.MinValue;
+        private bool _brakeTrigger;
+        private int _brakeClock;
+        private double _brakeMax;
+        private int _brakeSampleCount;
+        private double _brakePreviousPeakPct;
 
         private double _lastFuel = 0.0;
 
@@ -4581,6 +4586,7 @@ namespace LaunchPlugin
             AttachCore("Fuel.IsPitWindowOpen", () => IsPitWindowOpen);
             AttachCore("Fuel.PitWindowOpeningLap", () => PitWindowOpeningLap);
             AttachCore("Fuel.PitWindowClosingLap", () => PitWindowClosingLap);
+            AttachCore("Brake.PreviousPeakPct", () => _brakePreviousPeakPct);
             AttachCore("Fuel.PitWindowState", () => PitWindowState);
             AttachCore("Fuel.PitWindowLabel", () => PitWindowLabel);
             AttachCore("Fuel.LapsRemainingInTank", () => LapsRemainingInTank);
@@ -6989,6 +6995,41 @@ namespace LaunchPlugin
                 // Brake: confirmed in SimHub property tab
                 double brakeRaw = SafeReadDouble(pluginManager, "DataCorePlugin.GameData.Brake", 0.0);
                 double brake01 = brakeRaw > 1.5 ? (brakeRaw / 100.0) : brakeRaw;
+
+                if (!_brakeTrigger && brake01 > 0.0)
+                {
+                    _brakeTrigger = true;
+                    _brakeClock = 0;
+                    _brakeMax = brake01;
+                    _brakeSampleCount = 0;
+                }
+
+                if (_brakeTrigger)
+                {
+                    if (_brakeSampleCount < 40)
+                    {
+                        if (brake01 > _brakeMax)
+                        {
+                            _brakeMax = brake01;
+                        }
+
+                        _brakeSampleCount++;
+                        _brakeClock++;
+
+                        if (_brakeSampleCount >= 40)
+                        {
+                            _brakePreviousPeakPct = _brakeMax;
+                        }
+                    }
+
+                    if (_brakeSampleCount >= 40 && brake01 <= 0.0)
+                    {
+                        _brakeTrigger = false;
+                        _brakeClock = 0;
+                        _brakeMax = 0.0;
+                        _brakeSampleCount = 0;
+                    }
+                }
 
                 // LongAccel: confirmed in SimHub property tab (m/s^2 in most setups)
                 double longAccel = SafeReadDouble(pluginManager, "DataCorePlugin.GameRawData.Telemetry.LongAccel", 0.0);

@@ -9,17 +9,13 @@ Branch: work
 - No Git remote is configured in this checkout (`git remote -v` returns empty).
 
 ## Documentation sync status
-- Player-facing `PositionInClass` publication now uses Opponents effective/live race-order context for player rows where race-context position is intended.
-- Added explicit player race-context class-position exports for H2H player rows and Car player row so player/target rows stay internally consistent on the same panel.
-- Preserved subsystem ownership boundaries (Opponents race-order owner, CarSA spatial owner, H2H consumer/publisher).
+- Added `Brake.PreviousPeakPct` export with Dahl-style brake-peak semantics.
+- Runtime capture now starts at brake > 0, tracks max brake for 40 samples, latches the peak at completion, and only resets after brake returns to zero.
+- No dashboard/UI behavior was changed.
 
 ## Reviewed documentation set
 ### Changed in this sweep
 - `LalaLaunch.cs`
-- `H2HEngine.cs`
-- `Docs/Subsystems/Opponents.md`
-- `Docs/Subsystems/H2H.md`
-- `Docs/Subsystems/CarSA.md`
 - `Docs/Internal/SimHubParameterInventory.md`
 - `Docs/Internal/Development_Changelog.md`
 - `Docs/RepoStatus.md`
@@ -28,12 +24,12 @@ Branch: work
 - `Docs/Project_Index.md`
 - `Docs/Internal/Architecture_Guardrails.md`
 - `Docs/Internal/CODEX_TASK_TEMPLATE.txt`
-- `Opponents.cs`
+- `Docs/Subsystems/Launch_Mode.md`
 
 ## Delivery status highlights
-- `Car.Player.PositionInClass` now publishes effective/live race-order class position when available (with native fallback only when unavailable).
-- `H2HRace.Player.PositionInClass` and `H2HTrack.Player.PositionInClass` now publish from the same effective/live seam used for target rows.
-- Opponent target row contracts and pit-exit behavior remain unchanged.
+- `Brake.PreviousPeakPct` now publishes the maximum brake input from the most recent completed braking capture window.
+- Capture window length is fixed at 40 samples per Dahl behavior parity.
+- The latched export remains unchanged between completed captures.
 
 ## Validation note
-- Validation recorded against `HEAD` (`Player PositionInClass race-context alignment across Car/H2H player rows + docs sync`).
+- Validation recorded against `HEAD` (`Dahl-style Brake.PreviousPeakPct export + docs sync`).

@@ -2,7 +2,7 @@
 
 **CANONICAL CONTRACT**
 
-Validated against: 498b4ca
+Validated against: HEAD
 Last reviewed: 2026-04-09
 Last updated: 2026-04-09
 Branch: work
@@ -10,6 +10,11 @@ Branch: work
 - All exports are attached in `LalaLaunch.cs` during `Init()` via `AttachCore`/`AttachVerbose`. Core values are refreshed in `DataUpdate` (500 ms poll for fuel/pace/pit via `_poll500ms`; per-tick for launch/dash/messaging). Verbose rows require `SimhubPublish.VERBOSE`.【F:LalaLaunch.cs†L2644-L3120】【F:LalaLaunch.cs†L3411-L3775】
 - Legacy spreadsheet removed; this file is canonical.
 - “Defined in” lists the class/method that computes the value before `AttachCore/AttachVerbose` publishes it.
+
+## Brake
+| Exported name | Type | Units / meaning | Update cadence | Defined in |
+| --- | --- | --- | --- | --- |
+| Brake.PreviousPeakPct | double | Maximum brake input recorded during the most recent completed 40-sample braking capture (Dahl-style brake peak). Capture starts when brake rises above zero, latches on sample 40, and arms the next capture only after brake returns to zero. | Per tick. | `LalaLaunch.cs` — runtime `DataUpdate` brake capture state + `AttachCore`. |
 
 ## Fuel
 | Exported name | Type | Units / meaning | Update cadence | Defined in |
