@@ -1023,10 +1023,11 @@
                                            Margin="0,0,10,0"
                                            VerticalAlignment="Center"
                                            ToolTip="Best dry lap time stored for this track."/>
-                                        <TextBox Grid.Row="0" Grid.Column="1"
-                                             TextAlignment="Right"
-                                             Text="{Binding BestLapTimeDryText, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
-                                             ToolTip="Manual override for best dry lap time (m:ss.fff)."/>
+                                        <TextBlock Grid.Row="0" Grid.Column="1"
+                                               TextAlignment="Right"
+                                               VerticalAlignment="Center"
+                                               Text="{Binding BestLapTimeDryText, Mode=OneWay}"
+                                               ToolTip="Best dry lap time is telemetry-owned from validated laps (read-only)."/>
                                         <TextBlock Grid.Row="0" Grid.Column="2"
                                                Margin="12,0,0,0"
                                                VerticalAlignment="Center"
@@ -1178,10 +1179,11 @@
                                            Margin="0,0,10,0"
                                            VerticalAlignment="Center"
                                            ToolTip="Best wet lap time stored for this track."/>
-                                        <TextBox Grid.Row="0" Grid.Column="1"
-                                             TextAlignment="Right"
-                                             Text="{Binding BestLapTimeWetText, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
-                                             ToolTip="Manual override for best wet lap time (m:ss.fff)."/>
+                                        <TextBlock Grid.Row="0" Grid.Column="1"
+                                           TextAlignment="Right"
+                                           VerticalAlignment="Center"
+                                           Text="{Binding BestLapTimeWetText, Mode=OneWay}"
+                                           ToolTip="Best wet lap time is telemetry-owned from validated laps (read-only)."/>
                                         <TextBlock Grid.Row="0" Grid.Column="2"
                                            Margin="12,0,0,0"
                                            VerticalAlignment="Center"

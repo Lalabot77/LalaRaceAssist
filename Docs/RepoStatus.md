@@ -9,31 +9,38 @@ Branch: work
 - No Git remote is configured in this checkout (`git remote -v` returns empty).
 
 ## Documentation sync status
-- Player-facing `PositionInClass` publication now uses Opponents effective/live race-order context for player rows where race-context position is intended.
-- Added explicit player race-context class-position exports for H2H player rows and Car player row so player/target rows stay internally consistent on the same panel.
-- Preserved subsystem ownership boundaries (Opponents race-order owner, CarSA spatial owner, H2H consumer/publisher).
+- Added standalone `LapRef.*` runtime export family for offline player-reference lap comparison (player, session best, profile best, and per-sector comparisons).
+- Added new `LapReferenceEngine` with validated-lap snapshot capture, in-memory session-best tracking, and profile-best materialization.
+- Extended profile `TrackStats` with compatibility-safe optional dry/wet PB sector fields (`BestLapSector1..6Dry/WetMs`) and wired persistence via existing PB seam.
+- Removed manual PB editing workflow from Profiles Track data UI: dry/wet PB now display read-only and remain telemetry-owned.
+- Neutralized `TrackStats` manual PB text mutation path so PB text setters no longer parse/write PB millisecond values.
 
 ## Reviewed documentation set
 ### Changed in this sweep
-- `LalaLaunch.cs`
-- `H2HEngine.cs`
-- `Docs/Subsystems/Opponents.md`
-- `Docs/Subsystems/H2H.md`
-- `Docs/Subsystems/CarSA.md`
-- `Docs/Internal/SimHubParameterInventory.md`
+- `CarProfiles.cs`
+- `ProfilesManagerView.xaml`
+- `Docs/Subsystems/Profiles_And_PB.md`
+- `Docs/Subsystems/LapRef.md`
+- `Docs/Internal/Plugin_UI_Tooltips.md`
 - `Docs/Internal/Development_Changelog.md`
 - `Docs/RepoStatus.md`
 
 ### Reviewed and left unchanged
-- `Docs/Project_Index.md`
 - `Docs/Internal/Architecture_Guardrails.md`
 - `Docs/Internal/CODEX_TASK_TEMPLATE.txt`
-- `Opponents.cs`
+- `Docs/Project_Index.md`
+- `Docs/Subsystems/H2H.md`
+- `Docs/Subsystems/CarSA.md`
+- `Docs/Subsystems/Fuel_Model.md`
+- `ProfilesManagerViewModel.cs`
+- `LapReferenceEngine.cs`
+- `LalaLaunch.cs`
 
 ## Delivery status highlights
-- `Car.Player.PositionInClass` now publishes effective/live race-order class position when available (with native fallback only when unavailable).
-- `H2HRace.Player.PositionInClass` and `H2HTrack.Player.PositionInClass` now publish from the same effective/live seam used for target rows.
-- Opponent target row contracts and pit-exit behavior remain unchanged.
+- `LapRef.*` now publishes player/session/profile reference lap rows with fixed 6-sector states and condition-aware comparisons.
+- H2H, CarSA derivation ownership, and Opponents contracts remain unchanged; LapRef consumes CarSA fixed-sector cache read-only.
+- Profile PB updates continue through `TryUpdatePBByCondition(...)` and now persist condition-specific PB sectors only when real sector data exists.
+- Profiles UI no longer allows manual dry/wet PB editing; PB remains telemetry-only to keep profile-best lap/sector consistency for LapRef.
 
 ## Validation note
-- Validation recorded against `HEAD` (`Player PositionInClass race-context alignment across Car/H2H player rows + docs sync`).
+- Validation recorded against `HEAD` (`PB telemetry-only follow-up: remove manual PB editing path + docs sync`).
