@@ -41,8 +41,12 @@ Opponents now reads from:
 - Opponents owns this ordering; CarSA ownership is unchanged.
 
 ## Gap and fight model (native)
-- `Opp.Ahead1.GapToPlayerSec` and `Opp.Behind1.GapToPlayerSec` now prefer a CarSA checkpoint-time seam (`TryGetCheckpointGapSec`) when available and sane.
-- Fallback for those slots (and primary for Ahead2/Behind2) remains progress delta (`Lap + LapDistPct`) scaled by a pace reference.
+- Gap export semantics are explicitly split:
+  - `Gap.TrackSec` = progress/pace track-gap estimate from native RaceProgress delta.
+  - `Gap.RelativeSec` = preferred relative gap (CarSA checkpoint seam for slot 1 per side when valid; otherwise fallback to `Gap.TrackSec`).
+  - `GapToPlayerSec` = legacy-compatible mirror of the preferred relative gap value.
+- `Opp.Ahead1.Gap.RelativeSec` and `Opp.Behind1.Gap.RelativeSec` can use the CarSA checkpoint-time seam (`TryGetCheckpointGapSec`) when available and sane.
+- Fallback for those slots (and primary for Ahead2+ / Behind2+) remains progress delta (`Lap + LapDistPct`) scaled by a pace reference.
 - Pace reference prefers current player pace input from LalaLaunch, then player best/last lap fallback.
 - `PaceDeltaSecPerLap` and `LapsToFight` behavior remains unchanged in shape (same thresholds and NaN invalid behavior).
 

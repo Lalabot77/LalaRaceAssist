@@ -214,9 +214,8 @@ namespace LaunchPlugin
             target.LicLevel = row.LicLevel;
             target.UserID = row.UserID;
             target.TeamID = row.TeamID;
-            target.GapToPlayerSec = row.GapToPlayerSec;
-            target.GapTrackSec = row.GapToPlayerSec;
-            target.GapRelativeSec = row.GapToPlayerSec;
+            double trackGapSec = row.GapToPlayerSec;
+            double preferredRelativeGapSec = trackGapSec;
 
             if (preferCarSaGap
                 && _tryGetCheckpointGapSec != null
@@ -232,10 +231,14 @@ namespace LaunchPlugin
                 bool signMatchesSide = isAhead ? signedGapSec > 0.0 : signedGapSec < 0.0;
                 if (signMatchesSide && absoluteGap > 0.0 && absoluteGap <= 30.0)
                 {
-                    target.GapToPlayerSec = absoluteGap;
-                    target.GapRelativeSec = absoluteGap;
+                    preferredRelativeGapSec = absoluteGap;
                 }
             }
+
+            double legacyGapSec = preferredRelativeGapSec;
+            target.GapTrackSec = trackGapSec;
+            target.GapRelativeSec = preferredRelativeGapSec;
+            target.GapToPlayerSec = legacyGapSec;
 
             var entity = _entityCache.Touch(row.IdentityKey, row.Name, row.CarNumber, row.ClassColor);
             if (entity != null)

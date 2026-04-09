@@ -9,10 +9,12 @@ Branch: work
 - No Git remote is configured in this checkout (`git remote -v` returns empty).
 
 ## Documentation sync status
-- Follow-up fixed Opponents pit-lap cache lifecycle so `LapsSincePit` state is cleared on full reset/session transition but preserved across normal per-tick model rebuilds.
-- Added stale carIdx pruning for pit-lap cache entries against currently visible rows.
-- Added optional Opp per-slot metadata exports (`IRating`, `SafetyRating`, `Licence`, `LicLevel`, `UserID`, `TeamID`, `IsFriend`, `IsTeammate`, `IsBad`) sourced from existing DriverInfo and existing friend/tag sets.
-- Refreshed touched documentation headers (`Last updated`/review stamps where used) and synced canonical docs to final behavior.
+- Final tidy pass cleaned Opp slot export attachment lambdas by using local lookup delegates and removing repeated direct `GetAheadSlot/GetBehindSlot` chains in friend/tag flag lambdas.
+- Clarified Opp gap semantics in code/docs:
+  - `Gap.TrackSec` = native progress/pace track estimate
+  - `Gap.RelativeSec` = preferred relative gap (checkpoint seam when valid, else track fallback)
+  - `GapToPlayerSec` = legacy-compatible mirror of preferred relative
+- Kept Opp export naming and compatibility unchanged.
 
 ## Reviewed documentation set
 ### Changed in this sweep
@@ -21,7 +23,6 @@ Branch: work
 - `Docs/Subsystems/Opponents.md`
 - `Docs/Internal/SimHubParameterInventory.md`
 - `Docs/Internal/Development_Changelog.md`
-- `Docs/Internal/CODEX_CONTRACT.txt`
 - `Docs/RepoStatus.md`
 
 ### Reviewed and left unchanged
@@ -34,10 +35,10 @@ Branch: work
 - `H2HEngine.cs`
 
 ## Delivery status highlights
-- Closed the stale `LapsSincePit` cache leak risk by splitting transient reset vs full reset inside Opponents NativeRaceModel and pruning stale carIdx entries.
-- Kept Opp 5-slot naming and legacy slot compatibility unchanged.
-- Added optional Opp metadata fields without widening ownership boundaries or redesigning pit-exit/CarSA logic.
+- Removed repeated direct Opp slot chain lookups in the Opp export attachment block and kept behavior/names unchanged.
+- Made Opp gap field semantics explicit and consistent between implementation and docs.
+- Kept Opp 5-slot naming, gap-source model, and legacy `GapToPlayerSec` compatibility unchanged.
 - Kept pit-exit predictor algorithm shape unchanged.
 
 ## Validation note
-- Validation recorded against `HEAD` (`Opp follow-up: pit-lap cache reset fix + optional metadata + doc header hygiene`).
+- Validation recorded against `HEAD` (`Opp final tidy: lambda cleanup + explicit gap semantics`).
