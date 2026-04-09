@@ -14,7 +14,7 @@ Branch: work
 ## Brake
 | Exported name | Type | Units / meaning | Update cadence | Defined in |
 | --- | --- | --- | --- | --- |
-| Brake.PreviousPeakPct | double | Maximum brake input recorded during the most recent completed 40-sample braking capture (Dahl-style brake peak). Capture starts when brake rises above zero, latches on sample 40, and arms the next capture only after brake returns to zero. | Per tick. | `LalaLaunch.cs` — runtime `DataUpdate` brake capture state + `AttachCore`. |
+| Brake.PreviousPeakPct | double | Maximum brake input recorded during the most recent completed 40-sample braking capture (Dahl-style brake peak). Capture starts when brake rises above zero, latches on sample 40, and arms the next capture only after brake falls to ≤2% (`brake01 <= 0.02`). | Per tick. | `LalaLaunch.cs` — runtime `DataUpdate` brake capture state + `AttachCore`. |
 
 ## Fuel
 | Exported name | Type | Units / meaning | Update cadence | Defined in |

@@ -10,7 +10,7 @@ Branch: work
 
 ## Documentation sync status
 - Added `Brake.PreviousPeakPct` export with Dahl-style brake-peak semantics.
-- Runtime capture now starts at brake > 0, tracks max brake for 40 samples, latches the peak at completion, and only resets after brake returns to zero.
+- Runtime capture now starts at brake > 0, tracks max brake for 40 samples, latches the peak at completion, and resets after completion once brake falls to `<= 0.02`.
 - No dashboard/UI behavior was changed.
 
 ## Reviewed documentation set
@@ -29,7 +29,7 @@ Branch: work
 ## Delivery status highlights
 - `Brake.PreviousPeakPct` now publishes the maximum brake input from the most recent completed braking capture window.
 - Capture window length is fixed at 40 samples per Dahl behavior parity.
-- The latched export remains unchanged between completed captures.
+- The latched export remains unchanged between completed captures, and re-arms when post-capture brake drops to `<= 0.02`.
 
 ## Validation note
-- Validation recorded against `HEAD` (`Dahl-style Brake.PreviousPeakPct export + docs sync`).
+- Validation recorded against `HEAD` (`Brake.PreviousPeakPct reset threshold follow-up (<= 0.02) + docs sync`).

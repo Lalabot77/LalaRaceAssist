@@ -4199,7 +4199,6 @@ namespace LaunchPlugin
         private ShiftAssistLearningTick _shiftAssistLastLearningTick = new ShiftAssistLearningTick { State = ShiftAssistLearningState.Off };
         private DateTime _shiftAssistRuntimeStatsLastRefreshUtc = DateTime.MinValue;
         private bool _brakeTrigger;
-        private int _brakeClock;
         private double _brakeMax;
         private int _brakeSampleCount;
         private double _brakePreviousPeakPct;
@@ -6999,7 +6998,6 @@ namespace LaunchPlugin
                 if (!_brakeTrigger && brake01 > 0.0)
                 {
                     _brakeTrigger = true;
-                    _brakeClock = 0;
                     _brakeMax = brake01;
                     _brakeSampleCount = 0;
                 }
@@ -7014,7 +7012,6 @@ namespace LaunchPlugin
                         }
 
                         _brakeSampleCount++;
-                        _brakeClock++;
 
                         if (_brakeSampleCount >= 40)
                         {
@@ -7022,10 +7019,9 @@ namespace LaunchPlugin
                         }
                     }
 
-                    if (_brakeSampleCount >= 40 && brake01 <= 0.0)
+                    if (_brakeSampleCount >= 40 && brake01 <= 0.02)
                     {
                         _brakeTrigger = false;
-                        _brakeClock = 0;
                         _brakeMax = 0.0;
                         _brakeSampleCount = 0;
                     }
