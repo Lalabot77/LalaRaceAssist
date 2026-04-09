@@ -9,32 +9,36 @@ Branch: work
 - No Git remote is configured in this checkout (`git remote -v` returns empty).
 
 ## Documentation sync status
-- Added a new Debug-only global setting `ShiftAssistMuteInReplay` (default `true`) to suppress Shift Assist audio specifically during replay sessions.
-- Replay detection now uses `DataCorePlugin.GameData.ReplayMode` as the primary signal, with `DataCorePlugin.GameRawData.Telemetry.IsReplayPlaying` as an optional supporting signal.
-- Replay mute is evaluated continuously at runtime (not latched); audio suppression clears automatically as soon as replay is no longer active.
-- Shift Assist cue generation, shift-light latches/exports, learning, delay capture, and debug CSV flow remain unchanged.
+- Final tidy pass cleaned Opp slot export attachment lambdas by using local lookup delegates and removing repeated direct `GetAheadSlot/GetBehindSlot` chains in friend/tag flag lambdas.
+- Clarified Opp gap semantics in code/docs:
+  - `Gap.TrackSec` = native progress/pace track estimate
+  - `Gap.RelativeSec` = preferred relative gap (checkpoint seam when valid, else track fallback)
+  - `GapToPlayerSec` = legacy-compatible mirror of preferred relative
+- Kept Opp export naming and compatibility unchanged.
 
 ## Reviewed documentation set
 ### Changed in this sweep
+- `Opponents.cs`
 - `LalaLaunch.cs`
-- `GlobalSettingsView.xaml`
-- `Docs/Subsystems/Shift_Assist.md`
-- `Docs/Internal/Plugin_UI_Tooltips.md`
+- `Docs/Subsystems/Opponents.md`
 - `Docs/Internal/SimHubParameterInventory.md`
+- `Docs/Internal/Development_Changelog.md`
 - `Docs/RepoStatus.md`
 
 ### Reviewed and left unchanged
 - `Docs/Project_Index.md`
-- `Docs/Internal/CODEX_CONTRACT.txt`
 - `Docs/Internal/Architecture_Guardrails.md`
 - `Docs/Internal/CODEX_TASK_TEMPLATE.txt`
 - `Docs/Internal/SimHubLogMessages.md`
-- `Docs/Internal/Code_Snapshot.md`
+- `Docs/Subsystems/H2H.md`
+- `Docs/Subsystems/CarSA.md`
+- `H2HEngine.cs`
 
 ## Delivery status highlights
-- Added `Mute Shift Assist sound in replay` toggle in Debug Options with explicit tooltip semantics.
-- Shift Assist runtime audio path now applies a narrow replay-only gate at playback call sites.
-- The replay-only gate does not alter Shift Assist engine cue timing or learning/target calculations.
+- Removed repeated direct Opp slot chain lookups in the Opp export attachment block and kept behavior/names unchanged.
+- Made Opp gap field semantics explicit and consistent between implementation and docs.
+- Kept Opp 5-slot naming, gap-source model, and legacy `GapToPlayerSec` compatibility unchanged.
+- Kept pit-exit predictor algorithm shape unchanged.
 
 ## Validation note
-- Validation recorded against `HEAD` (`Debug replay-only Shift Assist audio mute toggle + runtime gate + docs sync`).
+- Validation recorded against `HEAD` (`Opp final tidy: lambda cleanup + explicit gap semantics`).

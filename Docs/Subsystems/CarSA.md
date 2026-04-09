@@ -6,6 +6,7 @@ CarSA provides **session-agnostic**, **class-aware** spatial awareness using iRa
 CarSA is independent of the Opponents subsystem (live-session native same-class neighbors + race-scoped native pit-exit prediction) and does not change Opponents or Rejoin Assist behavior.
 Head-to-Head now consumes CarSA in two narrow ways:
 - `H2HTrack.*` uses CarSA as the **track-target selector seam** (the current ahead/behind slot sets, `CarIdx`, and already-resolved cosmetic metadata).
+- `H2HTrack.*` selector ownership remains CarSA-owned; published `PositionInClass` can use Opponents effective/live class-position context when available, without moving race-order selection ownership into CarSA.
 - Both `H2HRace.*` and `H2HTrack.*` now read `S1..S6State` / `S1..S6DeltaSec` from the CarSA-owned per-car fixed-6-sector cache through the narrow CarSA accessor seam.
 `H2HRace.*` still uses CarSA only as a bounded local live-session fallback when a known Opponents-selected identity needs help re-resolving `CarIdx`; selector ownership remains in Opponents.
 Opponents also consumes a narrow timing seam (`TryGetCheckpointGapSec(playerCarIdx, targetCarIdx, out signedGapSec)`) to improve `Opp.Ahead1/Behind1.GapToPlayerSec` with checkpoint-time-derived true gaps; Opponents keeps neighbor selection ownership.

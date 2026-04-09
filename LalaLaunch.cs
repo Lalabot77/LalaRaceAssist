@@ -5000,38 +5000,102 @@ namespace LaunchPlugin
             AttachCore("MSG.Trigger.trackmarkers.lines_refreshed", () => IsTrackMarkerPulseActive(_trackMarkerLinesRefreshedPulseUtc));
 
             double SafeOppValue(double v) => (double.IsNaN(v) || double.IsInfinity(v)) ? 0.0 : v;
+            Func<int, OpponentsEngine.OpponentTargetOutput> getAheadSlot = i => _opponentsEngine?.Outputs?.GetAheadSlot(i);
+            Func<int, OpponentsEngine.OpponentTargetOutput> getBehindSlot = i => _opponentsEngine?.Outputs?.GetBehindSlot(i);
+            for (int slot = 1; slot <= 5; slot++)
+            {
+                int slotIndex = slot - 1;
+                string aheadPrefix = "Opp.Ahead" + slot.ToString(CultureInfo.InvariantCulture);
+                string behindPrefix = "Opp.Behind" + slot.ToString(CultureInfo.InvariantCulture);
 
-            AttachCore("Opp.Ahead1.Name", () => _opponentsEngine?.Outputs.Ahead1.Name ?? string.Empty);
-            AttachCore("Opp.Ahead1.CarNumber", () => _opponentsEngine?.Outputs.Ahead1.CarNumber ?? string.Empty);
-            AttachCore("Opp.Ahead1.ClassColor", () => _opponentsEngine?.Outputs.Ahead1.ClassColor ?? string.Empty);
-            AttachCore("Opp.Ahead1.GapToPlayerSec", () => SafeOppValue(_opponentsEngine?.Outputs.Ahead1.GapToPlayerSec ?? 0.0));
-            AttachCore("Opp.Ahead1.BlendedPaceSec", () => SafeOppValue(_opponentsEngine?.Outputs.Ahead1.BlendedPaceSec ?? 0.0));
-            AttachCore("Opp.Ahead1.PaceDeltaSecPerLap", () => SafeOppValue(_opponentsEngine?.Outputs.Ahead1.PaceDeltaSecPerLap ?? double.NaN));
-            AttachCore("Opp.Ahead1.LapsToFight", () => SafeOppValue(_opponentsEngine?.Outputs.Ahead1.LapsToFight ?? double.NaN));
+                AttachCore(aheadPrefix + ".CarIdx", () => getAheadSlot(slotIndex)?.CarIdx ?? -1);
+                AttachCore(aheadPrefix + ".Name", () => getAheadSlot(slotIndex)?.Name ?? string.Empty);
+                AttachCore(aheadPrefix + ".AbbrevName", () => getAheadSlot(slotIndex)?.AbbrevName ?? string.Empty);
+                AttachCore(aheadPrefix + ".CarNumber", () => getAheadSlot(slotIndex)?.CarNumber ?? string.Empty);
+                AttachCore(aheadPrefix + ".ClassName", () => getAheadSlot(slotIndex)?.ClassName ?? string.Empty);
+                AttachCore(aheadPrefix + ".ClassColor", () => getAheadSlot(slotIndex)?.ClassColor ?? string.Empty);
+                AttachCore(aheadPrefix + ".ClassColorHex", () => getAheadSlot(slotIndex)?.ClassColorHex ?? string.Empty);
+                AttachCore(aheadPrefix + ".IsValid", () => getAheadSlot(slotIndex)?.IsValid ?? false);
+                AttachCore(aheadPrefix + ".IsOnTrack", () => getAheadSlot(slotIndex)?.IsOnTrack ?? false);
+                AttachCore(aheadPrefix + ".IsOnPitRoad", () => getAheadSlot(slotIndex)?.IsOnPitRoad ?? false);
+                AttachCore(aheadPrefix + ".PositionInClass", () => getAheadSlot(slotIndex)?.PositionInClass ?? 0);
+                AttachCore(aheadPrefix + ".LastLap", () => getAheadSlot(slotIndex)?.LastLap ?? string.Empty);
+                AttachCore(aheadPrefix + ".LastLapTimeSec", () => SafeOppValue(getAheadSlot(slotIndex)?.LastLapTimeSec ?? double.NaN));
+                AttachCore(aheadPrefix + ".BestLap", () => getAheadSlot(slotIndex)?.BestLap ?? string.Empty);
+                AttachCore(aheadPrefix + ".BestLapTimeSec", () => SafeOppValue(getAheadSlot(slotIndex)?.BestLapTimeSec ?? double.NaN));
+                AttachCore(aheadPrefix + ".LapsSincePit", () => getAheadSlot(slotIndex)?.LapsSincePit ?? -1);
+                AttachCore(aheadPrefix + ".IRating", () => getAheadSlot(slotIndex)?.IRating ?? 0);
+                AttachCore(aheadPrefix + ".SafetyRating", () => SafeOppValue(getAheadSlot(slotIndex)?.SafetyRating ?? double.NaN));
+                AttachCore(aheadPrefix + ".Licence", () => getAheadSlot(slotIndex)?.Licence ?? string.Empty);
+                AttachCore(aheadPrefix + ".LicLevel", () => getAheadSlot(slotIndex)?.LicLevel ?? 0);
+                AttachCore(aheadPrefix + ".UserID", () => getAheadSlot(slotIndex)?.UserID ?? 0);
+                AttachCore(aheadPrefix + ".TeamID", () => getAheadSlot(slotIndex)?.TeamID ?? 0);
+                AttachCore(aheadPrefix + ".IsFriend", () =>
+                {
+                    var slotData = getAheadSlot(slotIndex);
+                    return slotData != null && slotData.UserID > 0 && _friendUserIds.Contains(slotData.UserID);
+                });
+                AttachCore(aheadPrefix + ".IsTeammate", () =>
+                {
+                    var slotData = getAheadSlot(slotIndex);
+                    return slotData != null && slotData.UserID > 0 && _teammateUserIds.Contains(slotData.UserID);
+                });
+                AttachCore(aheadPrefix + ".IsBad", () =>
+                {
+                    var slotData = getAheadSlot(slotIndex);
+                    return slotData != null && slotData.UserID > 0 && _badUserIds.Contains(slotData.UserID);
+                });
+                AttachCore(aheadPrefix + ".Gap.RelativeSec", () => SafeOppValue(getAheadSlot(slotIndex)?.GapRelativeSec ?? 0.0));
+                AttachCore(aheadPrefix + ".Gap.TrackSec", () => SafeOppValue(getAheadSlot(slotIndex)?.GapTrackSec ?? 0.0));
+                AttachCore(aheadPrefix + ".GapToPlayerSec", () => SafeOppValue(getAheadSlot(slotIndex)?.GapToPlayerSec ?? 0.0));
+                AttachCore(aheadPrefix + ".BlendedPaceSec", () => SafeOppValue(getAheadSlot(slotIndex)?.BlendedPaceSec ?? 0.0));
+                AttachCore(aheadPrefix + ".PaceDeltaSecPerLap", () => SafeOppValue(getAheadSlot(slotIndex)?.PaceDeltaSecPerLap ?? double.NaN));
+                AttachCore(aheadPrefix + ".LapsToFight", () => SafeOppValue(getAheadSlot(slotIndex)?.LapsToFight ?? double.NaN));
 
-            AttachCore("Opp.Ahead2.Name", () => _opponentsEngine?.Outputs.Ahead2.Name ?? string.Empty);
-            AttachCore("Opp.Ahead2.CarNumber", () => _opponentsEngine?.Outputs.Ahead2.CarNumber ?? string.Empty);
-            AttachCore("Opp.Ahead2.ClassColor", () => _opponentsEngine?.Outputs.Ahead2.ClassColor ?? string.Empty);
-            AttachCore("Opp.Ahead2.GapToPlayerSec", () => SafeOppValue(_opponentsEngine?.Outputs.Ahead2.GapToPlayerSec ?? 0.0));
-            AttachCore("Opp.Ahead2.BlendedPaceSec", () => SafeOppValue(_opponentsEngine?.Outputs.Ahead2.BlendedPaceSec ?? 0.0));
-            AttachCore("Opp.Ahead2.PaceDeltaSecPerLap", () => SafeOppValue(_opponentsEngine?.Outputs.Ahead2.PaceDeltaSecPerLap ?? double.NaN));
-            AttachCore("Opp.Ahead2.LapsToFight", () => SafeOppValue(_opponentsEngine?.Outputs.Ahead2.LapsToFight ?? double.NaN));
-
-            AttachCore("Opp.Behind1.Name", () => _opponentsEngine?.Outputs.Behind1.Name ?? string.Empty);
-            AttachCore("Opp.Behind1.CarNumber", () => _opponentsEngine?.Outputs.Behind1.CarNumber ?? string.Empty);
-            AttachCore("Opp.Behind1.ClassColor", () => _opponentsEngine?.Outputs.Behind1.ClassColor ?? string.Empty);
-            AttachCore("Opp.Behind1.GapToPlayerSec", () => SafeOppValue(_opponentsEngine?.Outputs.Behind1.GapToPlayerSec ?? 0.0));
-            AttachCore("Opp.Behind1.BlendedPaceSec", () => SafeOppValue(_opponentsEngine?.Outputs.Behind1.BlendedPaceSec ?? 0.0));
-            AttachCore("Opp.Behind1.PaceDeltaSecPerLap", () => SafeOppValue(_opponentsEngine?.Outputs.Behind1.PaceDeltaSecPerLap ?? double.NaN));
-            AttachCore("Opp.Behind1.LapsToFight", () => SafeOppValue(_opponentsEngine?.Outputs.Behind1.LapsToFight ?? double.NaN));
-
-            AttachCore("Opp.Behind2.Name", () => _opponentsEngine?.Outputs.Behind2.Name ?? string.Empty);
-            AttachCore("Opp.Behind2.CarNumber", () => _opponentsEngine?.Outputs.Behind2.CarNumber ?? string.Empty);
-            AttachCore("Opp.Behind2.ClassColor", () => _opponentsEngine?.Outputs.Behind2.ClassColor ?? string.Empty);
-            AttachCore("Opp.Behind2.GapToPlayerSec", () => SafeOppValue(_opponentsEngine?.Outputs.Behind2.GapToPlayerSec ?? 0.0));
-            AttachCore("Opp.Behind2.BlendedPaceSec", () => SafeOppValue(_opponentsEngine?.Outputs.Behind2.BlendedPaceSec ?? 0.0));
-            AttachCore("Opp.Behind2.PaceDeltaSecPerLap", () => SafeOppValue(_opponentsEngine?.Outputs.Behind2.PaceDeltaSecPerLap ?? double.NaN));
-            AttachCore("Opp.Behind2.LapsToFight", () => SafeOppValue(_opponentsEngine?.Outputs.Behind2.LapsToFight ?? double.NaN));
+                AttachCore(behindPrefix + ".CarIdx", () => getBehindSlot(slotIndex)?.CarIdx ?? -1);
+                AttachCore(behindPrefix + ".Name", () => getBehindSlot(slotIndex)?.Name ?? string.Empty);
+                AttachCore(behindPrefix + ".AbbrevName", () => getBehindSlot(slotIndex)?.AbbrevName ?? string.Empty);
+                AttachCore(behindPrefix + ".CarNumber", () => getBehindSlot(slotIndex)?.CarNumber ?? string.Empty);
+                AttachCore(behindPrefix + ".ClassName", () => getBehindSlot(slotIndex)?.ClassName ?? string.Empty);
+                AttachCore(behindPrefix + ".ClassColor", () => getBehindSlot(slotIndex)?.ClassColor ?? string.Empty);
+                AttachCore(behindPrefix + ".ClassColorHex", () => getBehindSlot(slotIndex)?.ClassColorHex ?? string.Empty);
+                AttachCore(behindPrefix + ".IsValid", () => getBehindSlot(slotIndex)?.IsValid ?? false);
+                AttachCore(behindPrefix + ".IsOnTrack", () => getBehindSlot(slotIndex)?.IsOnTrack ?? false);
+                AttachCore(behindPrefix + ".IsOnPitRoad", () => getBehindSlot(slotIndex)?.IsOnPitRoad ?? false);
+                AttachCore(behindPrefix + ".PositionInClass", () => getBehindSlot(slotIndex)?.PositionInClass ?? 0);
+                AttachCore(behindPrefix + ".LastLap", () => getBehindSlot(slotIndex)?.LastLap ?? string.Empty);
+                AttachCore(behindPrefix + ".LastLapTimeSec", () => SafeOppValue(getBehindSlot(slotIndex)?.LastLapTimeSec ?? double.NaN));
+                AttachCore(behindPrefix + ".BestLap", () => getBehindSlot(slotIndex)?.BestLap ?? string.Empty);
+                AttachCore(behindPrefix + ".BestLapTimeSec", () => SafeOppValue(getBehindSlot(slotIndex)?.BestLapTimeSec ?? double.NaN));
+                AttachCore(behindPrefix + ".LapsSincePit", () => getBehindSlot(slotIndex)?.LapsSincePit ?? -1);
+                AttachCore(behindPrefix + ".IRating", () => getBehindSlot(slotIndex)?.IRating ?? 0);
+                AttachCore(behindPrefix + ".SafetyRating", () => SafeOppValue(getBehindSlot(slotIndex)?.SafetyRating ?? double.NaN));
+                AttachCore(behindPrefix + ".Licence", () => getBehindSlot(slotIndex)?.Licence ?? string.Empty);
+                AttachCore(behindPrefix + ".LicLevel", () => getBehindSlot(slotIndex)?.LicLevel ?? 0);
+                AttachCore(behindPrefix + ".UserID", () => getBehindSlot(slotIndex)?.UserID ?? 0);
+                AttachCore(behindPrefix + ".TeamID", () => getBehindSlot(slotIndex)?.TeamID ?? 0);
+                AttachCore(behindPrefix + ".IsFriend", () =>
+                {
+                    var slotData = getBehindSlot(slotIndex);
+                    return slotData != null && slotData.UserID > 0 && _friendUserIds.Contains(slotData.UserID);
+                });
+                AttachCore(behindPrefix + ".IsTeammate", () =>
+                {
+                    var slotData = getBehindSlot(slotIndex);
+                    return slotData != null && slotData.UserID > 0 && _teammateUserIds.Contains(slotData.UserID);
+                });
+                AttachCore(behindPrefix + ".IsBad", () =>
+                {
+                    var slotData = getBehindSlot(slotIndex);
+                    return slotData != null && slotData.UserID > 0 && _badUserIds.Contains(slotData.UserID);
+                });
+                AttachCore(behindPrefix + ".Gap.RelativeSec", () => SafeOppValue(getBehindSlot(slotIndex)?.GapRelativeSec ?? 0.0));
+                AttachCore(behindPrefix + ".Gap.TrackSec", () => SafeOppValue(getBehindSlot(slotIndex)?.GapTrackSec ?? 0.0));
+                AttachCore(behindPrefix + ".GapToPlayerSec", () => SafeOppValue(getBehindSlot(slotIndex)?.GapToPlayerSec ?? 0.0));
+                AttachCore(behindPrefix + ".BlendedPaceSec", () => SafeOppValue(getBehindSlot(slotIndex)?.BlendedPaceSec ?? 0.0));
+                AttachCore(behindPrefix + ".PaceDeltaSecPerLap", () => SafeOppValue(getBehindSlot(slotIndex)?.PaceDeltaSecPerLap ?? double.NaN));
+                AttachCore(behindPrefix + ".LapsToFight", () => SafeOppValue(getBehindSlot(slotIndex)?.LapsToFight ?? double.NaN));
+            }
 
             AttachCore("Opp.Leader.BlendedPaceSec", () => SafeOppValue(_opponentsEngine != null ? _opponentsEngine.Outputs.LeaderBlendedPaceSec : double.NaN));
             AttachCore("Opp.P2.BlendedPaceSec", () => SafeOppValue(_opponentsEngine != null ? _opponentsEngine.Outputs.P2BlendedPaceSec : double.NaN));
@@ -5039,8 +5103,14 @@ namespace LaunchPlugin
             AttachCore("Opponents_SummaryBehind", () => _opponentsEngine?.Outputs.SummaryBehind ?? string.Empty);
             AttachCore("Opponents_SummaryAhead1", () => _opponentsEngine?.Outputs.SummaryAhead1 ?? string.Empty);
             AttachCore("Opponents_SummaryAhead2", () => _opponentsEngine?.Outputs.SummaryAhead2 ?? string.Empty);
+            AttachCore("Opponents_SummaryAhead3", () => _opponentsEngine?.Outputs.SummaryAhead3 ?? string.Empty);
+            AttachCore("Opponents_SummaryAhead4", () => _opponentsEngine?.Outputs.SummaryAhead4 ?? string.Empty);
+            AttachCore("Opponents_SummaryAhead5", () => _opponentsEngine?.Outputs.SummaryAhead5 ?? string.Empty);
             AttachCore("Opponents_SummaryBehind1", () => _opponentsEngine?.Outputs.SummaryBehind1 ?? string.Empty);
             AttachCore("Opponents_SummaryBehind2", () => _opponentsEngine?.Outputs.SummaryBehind2 ?? string.Empty);
+            AttachCore("Opponents_SummaryBehind3", () => _opponentsEngine?.Outputs.SummaryBehind3 ?? string.Empty);
+            AttachCore("Opponents_SummaryBehind4", () => _opponentsEngine?.Outputs.SummaryBehind4 ?? string.Empty);
+            AttachCore("Opponents_SummaryBehind5", () => _opponentsEngine?.Outputs.SummaryBehind5 ?? string.Empty);
 
             AttachCore("PitExit.Valid", () => _opponentsEngine?.Outputs.PitExit.Valid ?? false);
             AttachCore("PitExit.PredictedPositionInClass", () => _opponentsEngine?.Outputs.PitExit.PredictedPositionInClass ?? 0);
@@ -10460,7 +10530,7 @@ namespace LaunchPlugin
                     Name = slot.Name ?? string.Empty,
                     CarNumber = slot.CarNumber ?? string.Empty,
                     ClassColor = NormalizeH2HClassColor(slotClassColor),
-                    PositionInClass = slot.PositionInClass > 0 ? slot.PositionInClass : 0
+                    PositionInClass = GetEffectivePositionInClassForPublishedContext(slot.CarIdx, slot.PositionInClass)
                 };
             }
 
@@ -10473,7 +10543,7 @@ namespace LaunchPlugin
             string name = current?.Name ?? string.Empty;
             string carNumber = current?.CarNumber ?? string.Empty;
             string classColor = NormalizeH2HClassColor(current?.ClassColor);
-            int positionInClass = 0;
+            int positionInClass = current != null ? current.PositionInClass : 0;
             bool sameIdentityAsPrevious = previousOutput != null
                 && !string.IsNullOrWhiteSpace(previousOutput.IdentityKey)
                 && string.Equals(previousOutput.IdentityKey, identityKey, StringComparison.Ordinal);
@@ -10509,7 +10579,7 @@ namespace LaunchPlugin
                 carIdx = resolvedCarIdx;
                 if (carIdx >= 0 && carIdx < _carSaClassPositionByIdx.Length && _carSaClassPositionByIdx[carIdx] > 0)
                 {
-                    positionInClass = _carSaClassPositionByIdx[carIdx];
+                    positionInClass = GetEffectivePositionInClassForPublishedContext(carIdx, _carSaClassPositionByIdx[carIdx]);
                 }
             }
             else if (TryResolveH2HRaceCarIdxFromCarSa(identityKey, carNumber, name, out resolvedCarIdx))
@@ -10517,7 +10587,7 @@ namespace LaunchPlugin
                 carIdx = resolvedCarIdx;
                 if (carIdx >= 0 && carIdx < _carSaClassPositionByIdx.Length && _carSaClassPositionByIdx[carIdx] > 0)
                 {
-                    positionInClass = _carSaClassPositionByIdx[carIdx];
+                    positionInClass = GetEffectivePositionInClassForPublishedContext(carIdx, _carSaClassPositionByIdx[carIdx]);
                 }
                 if (string.IsNullOrWhiteSpace(name))
                 {
@@ -10546,6 +10616,16 @@ namespace LaunchPlugin
                 ClassColor = NormalizeH2HClassColor(classColor),
                 PositionInClass = positionInClass > 0 ? positionInClass : 0
             };
+        }
+
+        private int GetEffectivePositionInClassForPublishedContext(int carIdx, int fallbackPositionInClass)
+        {
+            if (_opponentsEngine != null && _opponentsEngine.TryGetEffectivePositionInClassByCarIdx(carIdx, out int effectivePos) && effectivePos > 0)
+            {
+                return effectivePos;
+            }
+
+            return fallbackPositionInClass > 0 ? fallbackPositionInClass : 0;
         }
 
         private bool TryResolveH2HRaceCarIdxFromCarSa(string identityKey, string requestedCarNumber, string requestedName, out int carIdx)

@@ -56,6 +56,7 @@ Rules:
 - Avoid adding internal-only refactors, housekeeping, or process-only notes to root `CHANGELOG.md` unless explicitly requested.
 - Task closeout must include a short changelog classification note in the final summary.
 - Documentation must reflect final behavior.
+- When modifying a documentation file, refresh that file's own header metadata (for example `Last updated` / validation stamp fields where present) to match the task outcome.
 - Remove outdated statements.
 - Do not mention deprecated settings unless marked `legacy (unused)`.
 - Do not document inactive systems as active features.
