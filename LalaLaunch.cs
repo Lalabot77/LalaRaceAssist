@@ -7507,6 +7507,17 @@ namespace LaunchPlugin
                 return false;
             }
 
+            string replayModeText = raw as string;
+            if (!string.IsNullOrWhiteSpace(replayModeText))
+            {
+                replayModeText = replayModeText.Trim();
+                if (string.Equals(replayModeText, "Replay", StringComparison.OrdinalIgnoreCase)
+                    || string.Equals(replayModeText, "RePlay", StringComparison.OrdinalIgnoreCase))
+                {
+                    return true;
+                }
+            }
+
             int replayModeValue;
             if (TryReadNullableInt(raw, out replayModeValue))
             {
