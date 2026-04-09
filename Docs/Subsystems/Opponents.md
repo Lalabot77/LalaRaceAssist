@@ -6,7 +6,7 @@ Branch: work
 
 Purpose: own all opponent-facing calculations for strict same-class race-target selection, lap-time enrichment, and race-scoped pit-exit forecasting with SimHub exports under `Opp.*` and `PitExit.*`.
 
-Phase-1 Head-to-Head (`H2HRace.*`) consumes Opponents only as a **race-target selector seam** (`Opp.Ahead1` / `Opp.Behind1`) and as an optional effective-class-position context seam for published `PositionInClass`. H2H timing/state ownership remains in H2H/CarSA.
+Phase-1 Head-to-Head (`H2HRace.*`) consumes Opponents only as a **race-target selector seam** (`Opp.Ahead1` / `Opp.Behind1`) and as the effective-class-position context seam for published `PositionInClass` (target + player rows). H2H timing/state ownership remains in H2H/CarSA.
 
 ## Gating and scope
 - Runs in live opponent sessions (Practice, Qualifying/Open Qualify, Lone Qualify, Race).
