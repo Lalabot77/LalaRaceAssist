@@ -987,6 +987,29 @@ namespace LaunchPlugin
                 return row != null ? row.BlendedPaceSec : double.NaN;
             }
 
+            public double GetPaceReferenceSec()
+            {
+                if (!double.IsNaN(_paceReferenceSec) && !double.IsInfinity(_paceReferenceSec) && _paceReferenceSec > 0.0)
+                {
+                    return _paceReferenceSec;
+                }
+
+                if (Player != null)
+                {
+                    if (ValidLapTime(Player.BestLapSec))
+                    {
+                        return Player.BestLapSec;
+                    }
+
+                    if (ValidLapTime(Player.LastLapSec))
+                    {
+                        return Player.LastLapSec;
+                    }
+                }
+
+                return 120.0;
+            }
+
             public NativeCarRow GetAheadSlot(int index)
             {
                 return index >= 0 && index < _aheadSlots.Length ? _aheadSlots[index] : null;
@@ -1053,6 +1076,8 @@ namespace LaunchPlugin
 
         private class PitExitPredictor
         {
+            private const double OffPitRoadRefreshMinIntervalSec = 1.0;
+
             private readonly PitExitOutput _output;
             private bool _lastValid;
             private int _lastPredictedPos;
@@ -1061,9 +1086,8 @@ namespace LaunchPlugin
             private bool _lastOnPitRoad;
             private bool _hasSnapshot;
             private PitExitSnapshot _snapshot;
-            private int _lastSeg = -1;
-            private double _lastTrackPct = double.NaN;
-            private int _lastCompletedLaps = -1;
+            private double _lastOffPitRoadRefreshSessionTimeSec = double.NaN;
+            private DateTime _lastOffPitRoadRefreshUtc = DateTime.MinValue;
             private bool _pitTripLockActive;
             private double _pitEntryProgressLaps = double.NaN;
             private double _pitLossLockedSec;
@@ -1086,9 +1110,8 @@ namespace LaunchPlugin
                 _lastOnPitRoad = false;
                 _hasSnapshot = false;
                 _snapshot = new PitExitSnapshot();
-                _lastSeg = -1;
-                _lastTrackPct = double.NaN;
-                _lastCompletedLaps = -1;
+                _lastOffPitRoadRefreshSessionTimeSec = double.NaN;
+                _lastOffPitRoadRefreshUtc = DateTime.MinValue;
                 _pitTripLockActive = false;
                 _pitEntryProgressLaps = double.NaN;
                 _pitLossLockedSec = 0.0;
@@ -1119,30 +1142,37 @@ namespace LaunchPlugin
                     _pitExitTrackPct = double.NaN;
                 }
 
-                bool hasTrackPct = !double.IsNaN(trackPct) && !double.IsInfinity(trackPct);
-                bool lapCrossed = _lastCompletedLaps >= 0 && completedLaps > _lastCompletedLaps;
-                if (lapCrossed || (hasTrackPct && _lastTrackPct > 0.80 && trackPct < 0.20))
+                if (!onPitRoad && !pitTripActive)
                 {
-                    _lastSeg = -1;
-                }
-
-                if (!onPitRoad && hasTrackPct)
-                {
-                    int seg = (int)(trackPct * 4.0);
-                    if (seg < 0) seg = 0;
-                    if (seg > 3) seg = 3;
-                    if (seg == _lastSeg)
+                    bool hasSessionTime = !double.IsNaN(sessionTimeSec) && !double.IsInfinity(sessionTimeSec);
+                    if (hasSessionTime)
                     {
-                        _lastTrackPct = trackPct;
-                        _lastCompletedLaps = completedLaps;
-                        return;
+                        bool timeWentBackward = !double.IsNaN(_lastOffPitRoadRefreshSessionTimeSec)
+                            && sessionTimeSec < _lastOffPitRoadRefreshSessionTimeSec;
+                        if (timeWentBackward)
+                        {
+                            _lastOffPitRoadRefreshSessionTimeSec = double.NaN;
+                        }
+
+                        if (!double.IsNaN(_lastOffPitRoadRefreshSessionTimeSec)
+                            && (sessionTimeSec - _lastOffPitRoadRefreshSessionTimeSec) < OffPitRoadRefreshMinIntervalSec)
+                        {
+                            return;
+                        }
+
+                        _lastOffPitRoadRefreshSessionTimeSec = sessionTimeSec;
                     }
+                    else
+                    {
+                        if (_lastOffPitRoadRefreshUtc != DateTime.MinValue
+                            && (DateTime.UtcNow - _lastOffPitRoadRefreshUtc).TotalSeconds < OffPitRoadRefreshMinIntervalSec)
+                        {
+                            return;
+                        }
 
-                    _lastSeg = seg;
+                        _lastOffPitRoadRefreshUtc = DateTime.UtcNow;
+                    }
                 }
-
-                _lastTrackPct = trackPct;
-                _lastCompletedLaps = completedLaps;
 
                 if (!raceModel.TryGetPlayerRow(out var player))
                 {
@@ -1159,11 +1189,7 @@ namespace LaunchPlugin
 
                 double playerProgress = player.Lap + player.LapDistPct;
                 double pitLoss = (pitLossSec > 0.0 && !double.IsNaN(pitLossSec) && !double.IsInfinity(pitLossSec)) ? pitLossSec : 0.0;
-                double paceRef = !double.IsNaN(player.BestLapSec) ? player.BestLapSec : (!double.IsNaN(player.LastLapSec) ? player.LastLapSec : 120.0);
-                if (paceRef <= 0.0 || double.IsNaN(paceRef) || double.IsInfinity(paceRef))
-                {
-                    paceRef = 120.0;
-                }
+                double paceRef = raceModel.GetPaceReferenceSec();
 
                 bool pitTripStarted = pitTripActive && !_lastPitTripActive;
                 bool pitTripEnded = !pitTripActive && _lastPitTripActive;

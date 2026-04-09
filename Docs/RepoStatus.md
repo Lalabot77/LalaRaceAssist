@@ -9,17 +9,14 @@ Branch: work
 - No Git remote is configured in this checkout (`git remote -v` returns empty).
 
 ## Documentation sync status
-- Player-facing `PositionInClass` publication now uses Opponents effective/live race-order context for player rows where race-context position is intended.
-- Added explicit player race-context class-position exports for H2H player rows and Car player row so player/target rows stay internally consistent on the same panel.
-- Preserved subsystem ownership boundaries (Opponents race-order owner, CarSA spatial owner, H2H consumer/publisher).
+- Opponents Pit Exit off-pit-road refresh now uses a bounded time-based cadence (minimum interval) rather than lap-quarter gating, while keeping pit-road/active-pit-trip responsiveness.
+- Pit Exit nearest ahead/behind gap-second conversion now uses the shared Opponents pace-reference seam instead of a separate local fallback chain.
+- Preserved subsystem ownership boundaries (Opponents race-order owner and Pit Exit owner, CarSA spatial/timing owner, H2H consumer/publisher).
 
 ## Reviewed documentation set
 ### Changed in this sweep
-- `LalaLaunch.cs`
-- `H2HEngine.cs`
+- `Opponents.cs`
 - `Docs/Subsystems/Opponents.md`
-- `Docs/Subsystems/H2H.md`
-- `Docs/Subsystems/CarSA.md`
 - `Docs/Internal/SimHubParameterInventory.md`
 - `Docs/Internal/Development_Changelog.md`
 - `Docs/RepoStatus.md`
@@ -28,12 +25,14 @@ Branch: work
 - `Docs/Project_Index.md`
 - `Docs/Internal/Architecture_Guardrails.md`
 - `Docs/Internal/CODEX_TASK_TEMPLATE.txt`
-- `Opponents.cs`
+- `Docs/Internal/SimHubLogMessages.md`
+- `Docs/Subsystems/CarSA.md`
+- `Docs/Subsystems/H2H.md`
 
 ## Delivery status highlights
-- `Car.Player.PositionInClass` now publishes effective/live race-order class position when available (with native fallback only when unavailable).
-- `H2HRace.Player.PositionInClass` and `H2HTrack.Player.PositionInClass` now publish from the same effective/live seam used for target rows.
-- Opponent target row contracts and pit-exit behavior remain unchanged.
+- Pit Exit refresh cadence off pit road is now time-bounded, improving freshness versus prior lap-quarter update gating.
+- Pit Exit nearest ahead/behind gap-second conversion is now aligned to the shared Opponents pace-reference seam.
+- Pit Exit remains Opponents-owned, race-scoped, and full same-class-field comparison based; late-race last-120s suppression remains unchanged.
 
 ## Validation note
-- Validation recorded against `HEAD` (`Player PositionInClass race-context alignment across Car/H2H player rows + docs sync`).
+- Validation recorded against `HEAD` (`Opponents Pit Exit cadence + pace-reference hardening with docs sync`).

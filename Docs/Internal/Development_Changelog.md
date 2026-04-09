@@ -33,6 +33,12 @@ The public user-facing release history is maintained in the root `CHANGELOG.md`.
 
 ## Post-v1.0 development
 
+### Opponents Pit Exit cadence + pace-reference hardening
+- Replaced Pit Exit off-pit-road lap-quarter refresh gating with a bounded time-based refresh interval so `PitExit.*` updates stay fresher while remaining conservative on runtime cost.
+- Kept on-pit-road and active pit-trip updates responsive and preserved the existing final-120s suppression behavior unchanged.
+- Unified Pit Exit nearest ahead/behind gap-seconds conversion onto the shared Opponents pace-reference seam instead of a separate local best/last fallback chain.
+- Preserved subsystem ownership boundaries and Pit Exit architecture (Opponents-owned full same-class scan, no CarSA/H2H/dashboard logic changes).
+
 ### Player PositionInClass live-context alignment (Car + H2H player rows)
 - Aligned player-facing `PositionInClass` publication to the existing Opponents effective/live race-order seam so player rows use the same race-context truth as H2H/Opp target rows.
 - Added/updated player-facing exports for consistent dash consumption: `Car.Player.PositionInClass`, `H2HRace.Player.PositionInClass`, and `H2HTrack.Player.PositionInClass`.
