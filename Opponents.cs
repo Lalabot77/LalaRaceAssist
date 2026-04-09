@@ -9,6 +9,9 @@ namespace LaunchPlugin
 {
     public class OpponentsEngine
     {
+        private const int NeighborSlotCount = 5;
+        private const int TrackSurfaceOnTrack = 3;
+
         private readonly EntityCache _entityCache = new EntityCache();
         private readonly NativeRaceModel _raceModel = new NativeRaceModel();
         private readonly PitExitPredictor _pitExitPredictor;
@@ -139,17 +142,24 @@ namespace LaunchPlugin
             return true;
         }
 
+        public bool TryGetEffectivePositionInClassByCarIdx(int carIdx, out int positionInClass)
+        {
+            positionInClass = 0;
+            return _raceModel.TryGetEffectivePositionByCarIdx(carIdx, out positionInClass);
+        }
+
         private void PublishRaceOutputs(double myPaceSec)
         {
-            Outputs.Ahead1.Reset();
-            Outputs.Ahead2.Reset();
-            Outputs.Behind1.Reset();
-            Outputs.Behind2.Reset();
+            for (int i = 0; i < NeighborSlotCount; i++)
+            {
+                var aheadOutput = Outputs.GetAheadSlot(i);
+                var behindOutput = Outputs.GetBehindSlot(i);
+                if (aheadOutput != null) aheadOutput.Reset();
+                if (behindOutput != null) behindOutput.Reset();
 
-            PopulateTarget(Outputs.Ahead1, _raceModel.Ahead1, myPaceSec, true, true);
-            PopulateTarget(Outputs.Ahead2, _raceModel.Ahead2, myPaceSec, true);
-            PopulateTarget(Outputs.Behind1, _raceModel.Behind1, myPaceSec, false, true);
-            PopulateTarget(Outputs.Behind2, _raceModel.Behind2, myPaceSec, false);
+                PopulateTarget(aheadOutput, _raceModel.GetAheadSlot(i), myPaceSec, true, i == 0);
+                PopulateTarget(behindOutput, _raceModel.GetBehindSlot(i), myPaceSec, false, i == 0);
+            }
 
             Outputs.LeaderBlendedPaceSec = _raceModel.GetBlendedPaceForPosition(1);
             Outputs.P2BlendedPaceSec = _raceModel.GetBlendedPaceForPosition(2);
@@ -159,8 +169,14 @@ namespace LaunchPlugin
             Outputs.SummaryBehind = summaries.Behind;
             Outputs.SummaryAhead1 = summaries.Ahead1;
             Outputs.SummaryAhead2 = summaries.Ahead2;
+            Outputs.SummaryAhead3 = summaries.Ahead3;
+            Outputs.SummaryAhead4 = summaries.Ahead4;
+            Outputs.SummaryAhead5 = summaries.Ahead5;
             Outputs.SummaryBehind1 = summaries.Behind1;
             Outputs.SummaryBehind2 = summaries.Behind2;
+            Outputs.SummaryBehind3 = summaries.Behind3;
+            Outputs.SummaryBehind4 = summaries.Behind4;
+            Outputs.SummaryBehind5 = summaries.Behind5;
         }
 
         private void PopulateTarget(OpponentTargetOutput target, NativeCarRow row, double myPaceSec, bool isAhead, bool preferCarSaGap = false)
@@ -177,9 +193,24 @@ namespace LaunchPlugin
             }
 
             target.Name = row.Name ?? string.Empty;
+            target.AbbrevName = row.AbbrevName ?? string.Empty;
             target.CarNumber = row.CarNumber ?? string.Empty;
+            target.CarIdx = row.CarIdx;
+            target.ClassName = row.ClassName ?? string.Empty;
             target.ClassColor = row.ClassColor ?? string.Empty;
+            target.ClassColorHex = NormalizeClassColorHexHash(row.ClassColor);
+            target.IsValid = true;
+            target.IsOnTrack = row.IsOnTrack;
+            target.IsOnPitRoad = row.IsInPit;
+            target.PositionInClass = row.EffectivePositionInClass > 0 ? row.EffectivePositionInClass : 0;
+            target.LastLapTimeSec = row.LastLapSec;
+            target.BestLapTimeSec = row.BestLapSec;
+            target.LastLap = FormatLapTime(row.LastLapSec);
+            target.BestLap = FormatLapTime(row.BestLapSec);
+            target.LapsSincePit = row.LapsSincePit;
             target.GapToPlayerSec = row.GapToPlayerSec;
+            target.GapTrackSec = row.GapToPlayerSec;
+            target.GapRelativeSec = row.GapToPlayerSec;
 
             if (preferCarSaGap
                 && _tryGetCheckpointGapSec != null
@@ -196,6 +227,7 @@ namespace LaunchPlugin
                 if (signMatchesSide && absoluteGap > 0.0 && absoluteGap <= 30.0)
                 {
                     target.GapToPlayerSec = absoluteGap;
+                    target.GapRelativeSec = absoluteGap;
                 }
             }
 
@@ -244,8 +276,14 @@ namespace LaunchPlugin
         {
             string ahead1 = BuildTargetSummary("A1", outputs.Ahead1, true);
             string ahead2 = BuildTargetSummary("A2", outputs.Ahead2, true);
+            string ahead3 = BuildTargetSummary("A3", outputs.Ahead3, true);
+            string ahead4 = BuildTargetSummary("A4", outputs.Ahead4, true);
+            string ahead5 = BuildTargetSummary("A5", outputs.Ahead5, true);
             string behind1 = BuildTargetSummary("B1", outputs.Behind1, false);
             string behind2 = BuildTargetSummary("B2", outputs.Behind2, false);
+            string behind3 = BuildTargetSummary("B3", outputs.Behind3, false);
+            string behind4 = BuildTargetSummary("B4", outputs.Behind4, false);
+            string behind5 = BuildTargetSummary("B5", outputs.Behind5, false);
 
             return new OpponentSummaries
             {
@@ -253,8 +291,14 @@ namespace LaunchPlugin
                 Behind = BuildSideSummary("Behind", behind1, behind2),
                 Ahead1 = ahead1,
                 Ahead2 = ahead2,
+                Ahead3 = ahead3,
+                Ahead4 = ahead4,
+                Ahead5 = ahead5,
                 Behind1 = behind1,
-                Behind2 = behind2
+                Behind2 = behind2,
+                Behind3 = behind3,
+                Behind4 = behind4,
+                Behind5 = behind5
             };
         }
 
@@ -318,6 +362,46 @@ namespace LaunchPlugin
             }
 
             return lapsToFight.ToString("0.#", CultureInfo.InvariantCulture);
+        }
+
+        private static string FormatLapTime(double seconds)
+        {
+            if (double.IsNaN(seconds) || double.IsInfinity(seconds) || seconds <= 0.0)
+            {
+                return string.Empty;
+            }
+
+            TimeSpan ts = TimeSpan.FromSeconds(seconds);
+            if (ts.TotalHours >= 1.0)
+            {
+                return ts.ToString(@"h\:mm\:ss\.fff", CultureInfo.InvariantCulture);
+            }
+
+            if (ts.TotalMinutes >= 1.0)
+            {
+                return ts.ToString(@"m\:ss\.fff", CultureInfo.InvariantCulture);
+            }
+
+            return ts.ToString(@"s\.fff", CultureInfo.InvariantCulture);
+        }
+
+        private static string NormalizeClassColorHexHash(string classColor)
+        {
+            string normalized = NormalizeClassColor(classColor);
+            if (string.IsNullOrWhiteSpace(normalized))
+            {
+                return string.Empty;
+            }
+
+            string hex = normalized.StartsWith("0x", StringComparison.OrdinalIgnoreCase)
+                ? normalized.Substring(2)
+                : normalized;
+            if (hex.Length != 6)
+            {
+                return string.Empty;
+            }
+
+            return "#" + hex.ToUpperInvariant();
         }
 
         private static double SanitizePace(double paceSec)
@@ -579,9 +663,10 @@ namespace LaunchPlugin
                 int[] carIdxLap, float[] carIdxLapDist, float[] carIdxBestLap, float[] carIdxLastLap, int[] carIdxClassPos, bool[] carIdxOnPitRoad, int[] carIdxTrackSurface)
             {
                 string name = ReadString(pluginManager, basePath + ".UserName");
+                string abbrevName = ReadString(pluginManager, basePath + ".AbbrevName");
                 if (string.IsNullOrWhiteSpace(name))
                 {
-                    name = ReadString(pluginManager, basePath + ".AbbrevName");
+                    name = abbrevName;
                 }
 
                 string number = ReadString(pluginManager, basePath + ".CarNumber");
@@ -595,7 +680,8 @@ namespace LaunchPlugin
                 }
 
                 string classColor = NormalizeClassColor(ReadString(pluginManager, basePath + ".CarClassColor"));
-                return BuildTelemetryRow(carIdx, name, number, classColor, carIdxLap, carIdxLapDist, carIdxBestLap, carIdxLastLap, carIdxClassPos, carIdxOnPitRoad, carIdxTrackSurface);
+                string className = ReadString(pluginManager, basePath + ".CarClassShortName");
+                return BuildTelemetryRow(carIdx, name, abbrevName, number, classColor, className, carIdxLap, carIdxLapDist, carIdxBestLap, carIdxLastLap, carIdxClassPos, carIdxOnPitRoad, carIdxTrackSurface);
             }
 
             private static NativeCarRow BuildRowFromCompeting(PluginManager pluginManager, string basePath, int carIdx,
@@ -607,12 +693,14 @@ namespace LaunchPlugin
                     name = ReadString(pluginManager, basePath + ".TeamName");
                 }
 
+                string abbrevName = ReadString(pluginManager, basePath + ".AbbrevName");
                 string number = ReadString(pluginManager, basePath + ".CarNumber");
                 string classColor = NormalizeClassColor(ReadString(pluginManager, basePath + ".CarClassColor"));
-                return BuildTelemetryRow(carIdx, name, number, classColor, carIdxLap, carIdxLapDist, carIdxBestLap, carIdxLastLap, carIdxClassPos, carIdxOnPitRoad, carIdxTrackSurface);
+                string className = ReadString(pluginManager, basePath + ".CarClassShortName");
+                return BuildTelemetryRow(carIdx, name, abbrevName, number, classColor, className, carIdxLap, carIdxLapDist, carIdxBestLap, carIdxLastLap, carIdxClassPos, carIdxOnPitRoad, carIdxTrackSurface);
             }
 
-            private static NativeCarRow BuildTelemetryRow(int carIdx, string name, string number, string classColor,
+            private static NativeCarRow BuildTelemetryRow(int carIdx, string name, string abbrevName, string number, string classColor, string className,
                 int[] carIdxLap, float[] carIdxLapDist, float[] carIdxBestLap, float[] carIdxLastLap, int[] carIdxClassPos, bool[] carIdxOnPitRoad, int[] carIdxTrackSurface)
             {
                 if (carIdx < 0 || carIdx >= carIdxLap.Length || carIdx >= carIdxLapDist.Length)
@@ -626,6 +714,7 @@ namespace LaunchPlugin
                 int trackSurface = (carIdxTrackSurface != null && carIdx < carIdxTrackSurface.Length) ? carIdxTrackSurface[carIdx] : -1;
                 bool inWorld = IsInWorld(trackSurface);
                 bool onPitRoad = carIdxOnPitRoad != null && carIdx < carIdxOnPitRoad.Length && carIdxOnPitRoad[carIdx];
+                bool onTrack = trackSurface == TrackSurfaceOnTrack;
 
                 double bestLap = (carIdxBestLap != null && carIdx < carIdxBestLap.Length) ? carIdxBestLap[carIdx] : float.NaN;
                 double lastLap = (carIdxLastLap != null && carIdx < carIdxLastLap.Length) ? carIdxLastLap[carIdx] : float.NaN;
@@ -639,19 +728,23 @@ namespace LaunchPlugin
                 {
                     CarIdx = carIdx,
                     Name = name ?? string.Empty,
+                    AbbrevName = abbrevName ?? string.Empty,
                     CarNumber = carNumber,
                     ClassColor = classColor,
+                    ClassName = className ?? string.Empty,
                     IdentityKey = identityKey,
                     Lap = lap,
                     LapDistPct = validLapDist ? lapDist : double.NaN,
                     HasValidLapDist = validLapDist,
                     IsConnected = inWorld,
+                    IsOnTrack = onTrack,
                     IsInPit = onPitRoad,
                     BestLapSec = ValidLapTime(bestLap) ? bestLap : double.NaN,
                     LastLapSec = ValidLapTime(lastLap) ? lastLap : double.NaN,
-                    PositionInClass = classPos,
+                    OfficialPositionInClass = classPos,
                     ProgressPositionInClass = 0,
-                    EffectivePositionInClass = classPos > 0 ? classPos : 0
+                    EffectivePositionInClass = classPos > 0 ? classPos : 0,
+                    LapsSincePit = -1
                 };
             }
 
@@ -664,14 +757,16 @@ namespace LaunchPlugin
         private class NativeRaceModel
         {
             private readonly List<NativeCarRow> _rows = new List<NativeCarRow>();
-            private bool _usingClassPosition;
             private double _paceReferenceSec = 120.0;
+            private readonly NativeCarRow[] _aheadSlots = new NativeCarRow[NeighborSlotCount];
+            private readonly NativeCarRow[] _behindSlots = new NativeCarRow[NeighborSlotCount];
+            private readonly Dictionary<int, int> _lastPitLapByCarIdx = new Dictionary<int, int>();
 
             public NativeCarRow Player { get; private set; }
-            public NativeCarRow Ahead1 { get; private set; }
-            public NativeCarRow Ahead2 { get; private set; }
-            public NativeCarRow Behind1 { get; private set; }
-            public NativeCarRow Behind2 { get; private set; }
+            public NativeCarRow Ahead1 => GetAheadSlot(0);
+            public NativeCarRow Ahead2 => GetAheadSlot(1);
+            public NativeCarRow Behind1 => GetBehindSlot(0);
+            public NativeCarRow Behind2 => GetBehindSlot(1);
 
             public IReadOnlyList<NativeCarRow> Rows => _rows;
 
@@ -679,11 +774,8 @@ namespace LaunchPlugin
             {
                 _rows.Clear();
                 Player = null;
-                Ahead1 = null;
-                Ahead2 = null;
-                Behind1 = null;
-                Behind2 = null;
-                _usingClassPosition = false;
+                Array.Clear(_aheadSlots, 0, _aheadSlots.Length);
+                Array.Clear(_behindSlots, 0, _behindSlots.Length);
                 _paceReferenceSec = 120.0;
             }
 
@@ -730,7 +822,6 @@ namespace LaunchPlugin
                     return;
                 }
 
-                _usingClassPosition = CanUseClassPosition(sameClass, Player);
                 sameClass = sameClass
                     .Where(r => r.HasValidLapDist)
                     .OrderByDescending(r => r.Lap)
@@ -738,12 +829,27 @@ namespace LaunchPlugin
                     .ThenBy(r => r.CarIdx)
                     .ToList();
 
+                foreach (var row in sameClass)
+                {
+                    if (row.IsInPit)
+                    {
+                        _lastPitLapByCarIdx[row.CarIdx] = row.Lap;
+                    }
+                }
+
                 for (int i = 0; i < sameClass.Count; i++)
                 {
                     sameClass[i].ProgressPositionInClass = i + 1;
-                    sameClass[i].EffectivePositionInClass = sameClass[i].PositionInClass > 0
-                        ? sameClass[i].PositionInClass
-                        : sameClass[i].ProgressPositionInClass;
+                    sameClass[i].EffectivePositionInClass = sameClass[i].ProgressPositionInClass;
+
+                    if (_lastPitLapByCarIdx.TryGetValue(sameClass[i].CarIdx, out var lastPitLap))
+                    {
+                        sameClass[i].LapsSincePit = Math.Max(0, sameClass[i].Lap - lastPitLap);
+                    }
+                    else
+                    {
+                        sameClass[i].LapsSincePit = -1;
+                    }
                 }
 
                 int playerIndex = sameClass.FindIndex(r => string.Equals(r.IdentityKey, Player.IdentityKey, StringComparison.Ordinal));
@@ -752,15 +858,15 @@ namespace LaunchPlugin
                     return;
                 }
 
-                Ahead1 = playerIndex - 1 >= 0 ? sameClass[playerIndex - 1] : null;
-                Ahead2 = playerIndex - 2 >= 0 ? sameClass[playerIndex - 2] : null;
-                Behind1 = playerIndex + 1 < sameClass.Count ? sameClass[playerIndex + 1] : null;
-                Behind2 = playerIndex + 2 < sameClass.Count ? sameClass[playerIndex + 2] : null;
+                for (int offset = 1; offset <= NeighborSlotCount; offset++)
+                {
+                    int slotIndex = offset - 1;
+                    _aheadSlots[slotIndex] = playerIndex - offset >= 0 ? sameClass[playerIndex - offset] : null;
+                    _behindSlots[slotIndex] = playerIndex + offset < sameClass.Count ? sameClass[playerIndex + offset] : null;
 
-                ApplyGapToPlayer(Player, Ahead1);
-                ApplyGapToPlayer(Player, Ahead2);
-                ApplyGapToPlayer(Player, Behind1);
-                ApplyGapToPlayer(Player, Behind2);
+                    ApplyGapToPlayer(Player, _aheadSlots[slotIndex]);
+                    ApplyGapToPlayer(Player, _behindSlots[slotIndex]);
+                }
             }
 
             public bool TryGetPlayerRow(out NativeCarRow player)
@@ -780,6 +886,29 @@ namespace LaunchPlugin
                 return row != null ? row.BlendedPaceSec : double.NaN;
             }
 
+            public NativeCarRow GetAheadSlot(int index)
+            {
+                return index >= 0 && index < _aheadSlots.Length ? _aheadSlots[index] : null;
+            }
+
+            public NativeCarRow GetBehindSlot(int index)
+            {
+                return index >= 0 && index < _behindSlots.Length ? _behindSlots[index] : null;
+            }
+
+            public bool TryGetEffectivePositionByCarIdx(int carIdx, out int positionInClass)
+            {
+                positionInClass = 0;
+                var row = _rows.FirstOrDefault(r => r.CarIdx == carIdx);
+                if (row == null || row.EffectivePositionInClass <= 0)
+                {
+                    return false;
+                }
+
+                positionInClass = row.EffectivePositionInClass;
+                return true;
+            }
+
             public double ComputeGapToClassLeaderSec(NativeCarRow player)
             {
                 if (player == null)
@@ -797,22 +926,6 @@ namespace LaunchPlugin
                 }
 
                 return Math.Abs(ComputeProgressDeltaLaps(player, leader) * _paceReferenceSec);
-            }
-
-            private static bool CanUseClassPosition(List<NativeCarRow> sameClass, NativeCarRow player)
-            {
-                if (sameClass == null || sameClass.Count == 0 || player == null)
-                {
-                    return false;
-                }
-
-                if (player.PositionInClass <= 0)
-                {
-                    return false;
-                }
-
-                int valid = sameClass.Count(r => r.PositionInClass > 0);
-                return valid >= Math.Max(2, sameClass.Count / 2);
             }
 
             private void ApplyGapToPlayer(NativeCarRow player, NativeCarRow target)
@@ -1239,14 +1352,17 @@ namespace LaunchPlugin
             public int CarIdx;
             public string IdentityKey;
             public string Name;
+            public string AbbrevName;
             public string CarNumber;
             public string ClassColor;
+            public string ClassName;
             public int PositionOverall;
-            public int PositionInClass;
+            public int OfficialPositionInClass;
             public int ProgressPositionInClass;
             public int EffectivePositionInClass;
             public double GapToPlayerSec;
             public bool IsConnected;
+            public bool IsOnTrack;
             public bool IsInPit;
             public int Lap;
             public double LapDistPct;
@@ -1254,6 +1370,7 @@ namespace LaunchPlugin
             public double BestLapSec;
             public double LastLapSec;
             public double BlendedPaceSec;
+            public int LapsSincePit;
         }
 
         public class OpponentOutputs
@@ -1263,10 +1380,25 @@ namespace LaunchPlugin
                 PitExit = new PitExitOutput();
             }
 
-            public OpponentTargetOutput Ahead1 { get; } = new OpponentTargetOutput();
-            public OpponentTargetOutput Ahead2 { get; } = new OpponentTargetOutput();
-            public OpponentTargetOutput Behind1 { get; } = new OpponentTargetOutput();
-            public OpponentTargetOutput Behind2 { get; } = new OpponentTargetOutput();
+            private readonly OpponentTargetOutput[] _aheadSlots =
+            {
+                new OpponentTargetOutput(), new OpponentTargetOutput(), new OpponentTargetOutput(), new OpponentTargetOutput(), new OpponentTargetOutput()
+            };
+            private readonly OpponentTargetOutput[] _behindSlots =
+            {
+                new OpponentTargetOutput(), new OpponentTargetOutput(), new OpponentTargetOutput(), new OpponentTargetOutput(), new OpponentTargetOutput()
+            };
+
+            public OpponentTargetOutput Ahead1 => _aheadSlots[0];
+            public OpponentTargetOutput Ahead2 => _aheadSlots[1];
+            public OpponentTargetOutput Ahead3 => _aheadSlots[2];
+            public OpponentTargetOutput Ahead4 => _aheadSlots[3];
+            public OpponentTargetOutput Ahead5 => _aheadSlots[4];
+            public OpponentTargetOutput Behind1 => _behindSlots[0];
+            public OpponentTargetOutput Behind2 => _behindSlots[1];
+            public OpponentTargetOutput Behind3 => _behindSlots[2];
+            public OpponentTargetOutput Behind4 => _behindSlots[3];
+            public OpponentTargetOutput Behind5 => _behindSlots[4];
             public OpponentTargetOutput Leader { get; } = new OpponentTargetOutput();
             public OpponentTargetOutput P2 { get; } = new OpponentTargetOutput();
             public PitExitOutput PitExit { get; }
@@ -1274,17 +1406,24 @@ namespace LaunchPlugin
             public string SummaryBehind { get; set; } = string.Empty;
             public string SummaryAhead1 { get; set; } = string.Empty;
             public string SummaryAhead2 { get; set; } = string.Empty;
+            public string SummaryAhead3 { get; set; } = string.Empty;
+            public string SummaryAhead4 { get; set; } = string.Empty;
+            public string SummaryAhead5 { get; set; } = string.Empty;
             public string SummaryBehind1 { get; set; } = string.Empty;
             public string SummaryBehind2 { get; set; } = string.Empty;
+            public string SummaryBehind3 { get; set; } = string.Empty;
+            public string SummaryBehind4 { get; set; } = string.Empty;
+            public string SummaryBehind5 { get; set; } = string.Empty;
             public double LeaderBlendedPaceSec { get; set; } = double.NaN;
             public double P2BlendedPaceSec { get; set; } = double.NaN;
 
+            public OpponentTargetOutput GetAheadSlot(int index) => index >= 0 && index < _aheadSlots.Length ? _aheadSlots[index] : null;
+            public OpponentTargetOutput GetBehindSlot(int index) => index >= 0 && index < _behindSlots.Length ? _behindSlots[index] : null;
+
             public void Reset()
             {
-                Ahead1.Reset();
-                Ahead2.Reset();
-                Behind1.Reset();
-                Behind2.Reset();
+                for (int i = 0; i < _aheadSlots.Length; i++) _aheadSlots[i].Reset();
+                for (int i = 0; i < _behindSlots.Length; i++) _behindSlots[i].Reset();
                 Leader.Reset();
                 P2.Reset();
                 PitExit.Reset();
@@ -1292,8 +1431,14 @@ namespace LaunchPlugin
                 SummaryBehind = string.Empty;
                 SummaryAhead1 = string.Empty;
                 SummaryAhead2 = string.Empty;
+                SummaryAhead3 = string.Empty;
+                SummaryAhead4 = string.Empty;
+                SummaryAhead5 = string.Empty;
                 SummaryBehind1 = string.Empty;
                 SummaryBehind2 = string.Empty;
+                SummaryBehind3 = string.Empty;
+                SummaryBehind4 = string.Empty;
+                SummaryBehind5 = string.Empty;
                 LeaderBlendedPaceSec = double.NaN;
                 P2BlendedPaceSec = double.NaN;
             }
@@ -1305,15 +1450,36 @@ namespace LaunchPlugin
             public string Behind { get; set; } = string.Empty;
             public string Ahead1 { get; set; } = string.Empty;
             public string Ahead2 { get; set; } = string.Empty;
+            public string Ahead3 { get; set; } = string.Empty;
+            public string Ahead4 { get; set; } = string.Empty;
+            public string Ahead5 { get; set; } = string.Empty;
             public string Behind1 { get; set; } = string.Empty;
             public string Behind2 { get; set; } = string.Empty;
+            public string Behind3 { get; set; } = string.Empty;
+            public string Behind4 { get; set; } = string.Empty;
+            public string Behind5 { get; set; } = string.Empty;
         }
 
         public class OpponentTargetOutput
         {
+            public int CarIdx { get; set; } = -1;
             public string Name { get; set; } = string.Empty;
+            public string AbbrevName { get; set; } = string.Empty;
             public string CarNumber { get; set; } = string.Empty;
+            public string ClassName { get; set; } = string.Empty;
             public string ClassColor { get; set; } = string.Empty;
+            public string ClassColorHex { get; set; } = string.Empty;
+            public bool IsValid { get; set; }
+            public bool IsOnTrack { get; set; }
+            public bool IsOnPitRoad { get; set; }
+            public int PositionInClass { get; set; }
+            public string LastLap { get; set; } = string.Empty;
+            public double LastLapTimeSec { get; set; } = double.NaN;
+            public string BestLap { get; set; } = string.Empty;
+            public double BestLapTimeSec { get; set; } = double.NaN;
+            public int LapsSincePit { get; set; } = -1;
+            public double GapRelativeSec { get; set; } = 0.0;
+            public double GapTrackSec { get; set; } = 0.0;
             public double GapToPlayerSec { get; set; } = 0.0;
             public double BlendedPaceSec { get; set; } = double.NaN;
             public double PaceDeltaSecPerLap { get; set; } = double.NaN;
@@ -1321,9 +1487,24 @@ namespace LaunchPlugin
 
             public void Reset()
             {
+                CarIdx = -1;
                 Name = string.Empty;
+                AbbrevName = string.Empty;
                 CarNumber = string.Empty;
+                ClassName = string.Empty;
                 ClassColor = string.Empty;
+                ClassColorHex = string.Empty;
+                IsValid = false;
+                IsOnTrack = false;
+                IsOnPitRoad = false;
+                PositionInClass = 0;
+                LastLap = string.Empty;
+                LastLapTimeSec = double.NaN;
+                BestLap = string.Empty;
+                BestLapTimeSec = double.NaN;
+                LapsSincePit = -1;
+                GapRelativeSec = 0.0;
+                GapTrackSec = 0.0;
                 GapToPlayerSec = 0.0;
                 BlendedPaceSec = double.NaN;
                 PaceDeltaSecPerLap = double.NaN;

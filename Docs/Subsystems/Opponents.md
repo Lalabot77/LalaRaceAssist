@@ -6,7 +6,7 @@ Branch: work
 
 Purpose: own all opponent-facing calculations for strict same-class race-target selection, lap-time enrichment, and race-scoped pit-exit forecasting with SimHub exports under `Opp.*` and `PitExit.*`.
 
-Phase-1 Head-to-Head (`H2HRace.*`) consumes Opponents only as a **race-target selector seam** (`Opp.Ahead1` / `Opp.Behind1`). H2H timing/state ownership remains in H2H/CarSA.
+Phase-1 Head-to-Head (`H2HRace.*`) consumes Opponents only as a **race-target selector seam** (`Opp.Ahead1` / `Opp.Behind1`) and as an optional effective-class-position context seam for published `PositionInClass`. H2H timing/state ownership remains in H2H/CarSA.
 
 ## Gating and scope
 - Runs in live opponent sessions (Practice, Qualifying/Open Qualify, Lone Qualify, Race).
@@ -37,7 +37,7 @@ Opponents now reads from:
 - Live same-class target selection is **RaceProgress-first**: class-filtered order by `CarIdxLap` then `CarIdxLapDistPct` (descending), with guards:
   - skip cars without valid lap distance (`0..1`)
   - skip cars not in world (`CarIdxTrackSurface < 0`)
-- Native `CarIdxClassPosition` remains available as an **anchor/validation input** and for positional context exports/snapshots, but it no longer blocks immediate Ahead/Behind target switching during live overtakes.
+- Native `CarIdxClassPosition` remains available as an **official/anchor input** only; published live race-context `PositionInClass` uses the effective RaceProgress-first order so official timing lag does not block immediate context updates.
 - Opponents owns this ordering; CarSA ownership is unchanged.
 
 ## Gap and fight model (native)
@@ -64,9 +64,17 @@ Opponents now reads from:
 - Logging is cadence-limited / reason-change driven to avoid spam.
 
 ## Outputs
-- `Opp.Ahead1/2.*`, `Opp.Behind1/2.*` (Name/CarNumber/ClassColor/GapToPlayerSec/BlendedPaceSec/PaceDeltaSecPerLap/LapsToFight).
+- `Opp.Ahead1..5.*`, `Opp.Behind1..5.*` under the existing flat `Opp.*` namespace.
+  - Compatibility: existing `Opp.Ahead1/2.*` and `Opp.Behind1/2.*` names remain unchanged.
+  - Minimum per-slot shape includes:
+    - identity/cosmetic: `CarIdx`, `Name`, `AbbrevName`, `CarNumber`, `ClassName`, `ClassColor`, `ClassColorHex`
+    - validity/position/pit: `IsValid`, `IsOnTrack`, `IsOnPitRoad`, `PositionInClass` (effective/live race order)
+    - lap context: `LastLap`, `LastLapTimeSec`, `BestLap`, `BestLapTimeSec`, `LapsSincePit`
+    - race gaps/fight: `Gap.RelativeSec`, `Gap.TrackSec`, `PaceDeltaSecPerLap`, `LapsToFight`
+  - Legacy continuity fields still published: `GapToPlayerSec`, `BlendedPaceSec`.
 - `Opp.Leader.BlendedPaceSec`, `Opp.P2.BlendedPaceSec`.
-- `Opponents_SummaryAhead/Behind` and per-slot variants.
+- `Opponents_SummaryAhead/Behind` and per-slot variants (`Ahead1..5`, `Behind1..5`).
+  - Top-level `Opponents_SummaryAhead/Behind` remains short/readable (first two slots emphasis) for dash compatibility.
 - `PitExit.Valid`, `PitExit.PredictedPositionInClass`, `PitExit.CarsAheadAfterPitCount`, `PitExit.Summary`, `PitExit.Ahead.*`, `PitExit.Behind.*`.
 
 ## Known limitations vs old Extra-Properties-backed behavior

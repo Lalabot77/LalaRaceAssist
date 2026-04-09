@@ -9,14 +9,19 @@ Branch: work
 - No Git remote is configured in this checkout (`git remote -v` returns empty).
 
 ## Documentation sync status
-- Updated Opponents native ordering policy to use RaceProgress (`CarIdxLap + CarIdxLapDistPct`) as the primary same-class neighbor selector.
-- Kept native `CarIdxClassPosition` as anchor/validation context only so delayed official position updates no longer block immediate target switching after live overtakes.
-- Preserved existing Opponents output contracts (`Ahead1/2`, `Behind1/2`) and H2H race-selector integration seam.
+- Expanded Opponents race-order outputs from `Ahead1/2` + `Behind1/2` to `Ahead1..5` + `Behind1..5` under the existing flat `Opp.*` namespace, with backward-compatible legacy names retained.
+- Added richer race-order-safe Opp per-slot metadata (identity/cosmetic, validity/pit-state, effective live `PositionInClass`, lap context, and gap/fight metrics).
+- Kept top-level `Opponents_SummaryAhead/Behind` readability stable while adding per-slot summary outputs through slot 5.
+- Aligned published live `PositionInClass` context across Opponents/H2H consumers to effective RaceProgress-first semantics, while preserving subsystem ownership boundaries.
 
 ## Reviewed documentation set
 ### Changed in this sweep
 - `Opponents.cs`
+- `LalaLaunch.cs`
 - `Docs/Subsystems/Opponents.md`
+- `Docs/Subsystems/H2H.md`
+- `Docs/Subsystems/CarSA.md`
+- `Docs/Internal/SimHubParameterInventory.md`
 - `Docs/Internal/Development_Changelog.md`
 - `Docs/RepoStatus.md`
 
@@ -25,16 +30,14 @@ Branch: work
 - `Docs/Internal/CODEX_CONTRACT.txt`
 - `Docs/Internal/Architecture_Guardrails.md`
 - `Docs/Internal/CODEX_TASK_TEMPLATE.txt`
-- `Docs/Internal/SimHubParameterInventory.md`
-- `Docs/Subsystems/CarSA.md`
-- `Docs/Subsystems/H2H.md`
 - `Docs/Internal/SimHubLogMessages.md`
-- `LalaLaunch.cs`
+- `H2HEngine.cs`
 
 ## Delivery status highlights
-- Fixed Opponents same-class ordering lag by making RaceProgress-first ordering authoritative for live neighbor selection.
-- Retained class-position values for anchor/validation context, but removed them as the primary live ordering driver.
-- Kept CarSA timing seam usage for Ahead1/Behind1 gap seconds and left H2H selector contracts unchanged.
+- Expanded Opponents neighbor export coverage to 5 ahead/5 behind without breaking existing dash bindings using `Opp.Ahead1/2.*` and `Opp.Behind1/2.*`.
+- Added flat Opp metadata exports per slot for race-order-safe identity, validity/pit, lap-context, and gap/fight values.
+- Aligned H2H published `PositionInClass` context to effective/live race ordering via Opponents context seam while retaining CarSA track-target selector ownership.
+- Kept pit-exit algorithm shape unchanged (no broad predictor redesign in this task).
 
 ## Validation note
-- Validation recorded against `HEAD` (`Opponents RaceProgress-first ordering fix + docs sync`).
+- Validation recorded against `HEAD` (`Opp 5-slot export + live PositionInClass alignment + docs sync`).
