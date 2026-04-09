@@ -1,7 +1,7 @@
 # Launch Mode
 
 Validated against commit: HEAD
-Last updated: 2026-03-22
+Last updated: 2026-04-09
 Branch: work
 
 ## Purpose
@@ -111,6 +111,7 @@ Canonical message wording remains in `Docs/Internal/SimHubLogMessages.md` where 
 - Rejoin state must be current before launch-block checks run.
 - Launch update/order must happen before final launch-result display logic.
 - Launch trace and summary writers are downstream of the live launch state rather than independent features.
+- Plugin shutdown closes/flushed launch-trace IO only; shutdown is not the place where valid completed traces are classified for deletion.
 
 ## Reset rules
 Launch state resets on:
@@ -120,11 +121,17 @@ Launch state resets on:
 - manual disable / re-enable flow,
 - any broader runtime reset that clears transient launch state.
 
+Launch trace discard ownership:
+- Explicit abort / cancelled / unsuccessful launch paths may discard the **current in-progress run** trace.
+- A successfully completed launch trace is finalized and protected from later shutdown cleanup.
+- Header-only / obviously empty launch traces are treated as useless and can be removed during trace housekeeping.
+
 ## Failure modes / safeguards
 - **Blocked by pits or serious rejoin:** launch will not arm or continue.
 - **Manual-prime timeout:** launch returns to idle and behaves as user-disabled until re-enabled.
 - **File IO issues:** traces/summaries may fail to save, but the live launch state machine still completes independently.
 - **Replay or unusual timing:** validate with logs rather than assuming live-session timing behavior is identical.
+- **Empty/header-only launch traces:** launch-trace housekeeping may remove files that contain no telemetry rows and no usable launch summary so they do not pollute Launch Analysis file lists.
 
 ## Test checklist
 - Trigger `LaunchMode` from idle and confirm manual-prime behavior.

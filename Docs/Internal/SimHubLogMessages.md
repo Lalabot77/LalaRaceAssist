@@ -152,6 +152,9 @@ Scope: Info-level logs emitted via `SimHub.Logging.Current.Info(...)`. Use the t
 
 ## File and trace housekeeping
 - **`[LaunchTrace] Deleted trace file: <path>`** — Launch trace file deletion via UI command.【F:LaunchAnalysisControl.xaml.cs†L55-L70】
+- **`[LalaPlugin:Launch Trace] Skip discard for finalized trace: <path>`** — Verbose-debug guard rail: discard was requested but the current trace had already been finalized/kept, so no deletion occurred.【F:LalaLaunch.cs†L14647-L14653】
+- **`[LalaPlugin:Launch Trace] Removed empty launch trace on shutdown: <path>`** — Verbose-debug housekeeping removed an obviously empty launch trace (no telemetry rows and no usable summary) during plugin end-service closeout.【F:LalaLaunch.cs†L15109-L15118】
+- **`[LalaPlugin:Launch Trace] Removed empty launch trace file: <path>`** — Verbose-debug housekeeping removed an obviously empty historical launch trace during Launch Analysis file-list discovery so it is not shown as selectable.【F:LalaLaunch.cs†L15159-L15169】
 - **`[LalaPlugin:SessionSummary] AppendSummaryRow called green=... checkered=...`** — Session summary CSV writer invoked; row is only appended when green and checkered are both seen.【F:SessionSummaryLogger.cs†L50-L74】
 
 ## Pit Entry Assist

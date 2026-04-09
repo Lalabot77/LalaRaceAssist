@@ -9,19 +9,17 @@ Branch: work
 - No Git remote is configured in this checkout (`git remote -v` returns empty).
 
 ## Documentation sync status
-- Final tidy pass cleaned Opp slot export attachment lambdas by using local lookup delegates and removing repeated direct `GetAheadSlot/GetBehindSlot` chains in friend/tag flag lambdas.
-- Clarified Opp gap semantics in code/docs:
-  - `Gap.TrackSec` = native progress/pace track estimate
-  - `Gap.RelativeSec` = preferred relative gap (checkpoint seam when valid, else track fallback)
-  - `GapToPlayerSec` = legacy-compatible mirror of preferred relative
-- Kept Opp export naming and compatibility unchanged.
+- Launch trace shutdown no longer unconditionally discards the current trace pointer; plugin end path is close/flush only.
+- Added explicit launch-trace lifecycle state so finalized completed traces are protected while explicit abort/invalid current-run discards remain intact.
+- Added conservative empty launch-trace housekeeping (no telemetry rows + no usable summary) so useless header-only traces are deleted and not listed in Launch Analysis.
 
 ## Reviewed documentation set
 ### Changed in this sweep
 - `Opponents.cs`
 - `LalaLaunch.cs`
-- `Docs/Subsystems/Opponents.md`
-- `Docs/Internal/SimHubParameterInventory.md`
+- `Docs/Subsystems/Launch_Mode.md`
+- `Docs/Subsystems/Trace_Logging.md`
+- `Docs/Internal/SimHubLogMessages.md`
 - `Docs/Internal/Development_Changelog.md`
 - `Docs/RepoStatus.md`
 
@@ -29,16 +27,13 @@ Branch: work
 - `Docs/Project_Index.md`
 - `Docs/Internal/Architecture_Guardrails.md`
 - `Docs/Internal/CODEX_TASK_TEMPLATE.txt`
-- `Docs/Internal/SimHubLogMessages.md`
-- `Docs/Subsystems/H2H.md`
-- `Docs/Subsystems/CarSA.md`
-- `H2HEngine.cs`
+- `LaunchAnalysisControl.xaml.cs`
+- `Docs/Internal/Plugin_UI_Tooltips.md`
 
 ## Delivery status highlights
-- Removed repeated direct Opp slot chain lookups in the Opp export attachment block and kept behavior/names unchanged.
-- Made Opp gap field semantics explicit and consistent between implementation and docs.
-- Kept Opp 5-slot naming, gap-source model, and legacy `GapToPlayerSec` compatibility unchanged.
-- Kept pit-exit predictor algorithm shape unchanged.
+- Valid completed launch traces are retained across plugin shutdown; end-service performs close/flush without pointer-based deletion.
+- Abort/cancel/unsuccessful launch paths still discard the current invalid trace explicitly.
+- Empty/header-only launch traces (no telemetry rows and no usable summary) are cleaned up conservatively and excluded from Launch Analysis listing.
 
 ## Validation note
-- Validation recorded against `HEAD` (`Opp final tidy: lambda cleanup + explicit gap semantics`).
+- Validation recorded against `HEAD` (`Launch trace shutdown retention fix + empty-trace housekeeping + docs sync`).

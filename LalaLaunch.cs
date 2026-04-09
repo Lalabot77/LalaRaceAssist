@@ -5534,14 +5534,9 @@ namespace LaunchPlugin
 
         public void End(PluginManager pluginManager)
         {
-            // --- Cleanup trace logger for current run ---
-            _telemetryTraceLogger?.DiscardCurrentTrace();
-
-            // Stop trace first
+            // Shutdown behavior for launch traces is close/flush only.
+            // Explicit runtime abort/invalid paths own discard decisions.
             _telemetryTraceLogger?.EndService();
-
-            // Optionally discard only if you really want to delete last file on exit
-            // _telemetryTraceLogger?.DiscardCurrentTrace();
 
             ResetOffTrackDebugExportState();
             ResetCarSaDebugExportState();
@@ -14439,6 +14434,9 @@ namespace LaunchPlugin
                 return;
             }
 
+            _telemetryTraceLogger?.StopLaunchTrace();
+            _telemetryTraceLogger?.MarkCurrentTraceCompleted();
+
             if (Settings.EnableCsvLogging && !_hasLoggedCurrentRun)
             {
                 try
@@ -14481,7 +14479,6 @@ namespace LaunchPlugin
                     string summaryLine = summary.GetSummaryForCsvLine();
 
                     // --- Log to trace (if enabled) ---
-                    _telemetryTraceLogger?.StopLaunchTrace();
                     _telemetryTraceLogger?.AppendLaunchSummaryToTrace(summaryLine);
 
                     // --- Write to CSV file ---
@@ -14800,15 +14797,29 @@ namespace LaunchPlugin
     /// </summary>
     public class TelemetryTraceLogger
     {
+        private const string LaunchTraceHeaderPrefix = "Timestamp (UTC),";
         private StreamWriter _traceWriter;
         private string _currentFilePath;
         private DateTime _traceStartTime;
         private readonly LaunchPlugin.LalaLaunch _plugin;
+        private bool _currentTraceDiscardEligible;
+        private bool _currentTraceCompleted;
+        private int _currentTraceTelemetryRowCount;
+        private bool _currentTraceHasUsableSummary;
 
         public void DiscardCurrentTrace()
         {
             try
             {
+                if (!_currentTraceDiscardEligible)
+                {
+                    if (_plugin?.IsVerboseDebugLoggingEnabledForExternal == true)
+                    {
+                        SimHub.Logging.Current.Debug($"[LalaPlugin:Launch Trace] Skip discard for finalized trace: {_currentFilePath}");
+                    }
+                    return;
+                }
+
                 if (!string.IsNullOrWhiteSpace(_currentFilePath) && File.Exists(_currentFilePath))
                 {
                     File.Delete(_currentFilePath);
@@ -14824,7 +14835,7 @@ namespace LaunchPlugin
             }
             finally
             {
-                _currentFilePath = null;
+                ResetCurrentTraceState();
             }
         }
 
@@ -14842,6 +14853,7 @@ namespace LaunchPlugin
         public string StartLaunchTrace(string carModel, string trackName)
         {
             StopLaunchTrace(); // Ensure any previous trace is stopped and file is closed
+            ResetCurrentTraceState();
 
             string folder = GetCurrentTracePath();
             System.IO.Directory.CreateDirectory(folder); // Ensure the directory exists
@@ -14863,6 +14875,10 @@ namespace LaunchPlugin
                 // --- CRITICAL: Only assign the file path and start time AFTER the file is successfully opened ---
                 _currentFilePath = newFilePath;
                 _traceStartTime = DateTime.UtcNow;
+                _currentTraceDiscardEligible = true;
+                _currentTraceCompleted = false;
+                _currentTraceTelemetryRowCount = 0;
+                _currentTraceHasUsableSummary = false;
 
             if (_plugin?.IsVerboseDebugLoggingEnabledForExternal == true)
             {
@@ -14875,7 +14891,7 @@ namespace LaunchPlugin
                 SimHub.Logging.Current.Error($"[LalaPlugin:Launch Trace] Failed to start new launch trace: {ex.Message}");
                 // Ensure state is clean on failure
                 _traceWriter = null;
-                _currentFilePath = null;
+                ResetCurrentTraceState();
                 return "Error_TraceFile";
             }
         }
@@ -14928,6 +14944,7 @@ namespace LaunchPlugin
                     // Format line using InvariantCulture to ensure consistent decimal separators (dots)
                     string line = $"{DateTime.UtcNow:yyyy-MM-dd HH:mm:ss.fff},{speedKmh.ToString("F2", CultureInfo.InvariantCulture)},{gameClutch.ToString("F1", CultureInfo.InvariantCulture)},{paddleClutch.ToString("F1", CultureInfo.InvariantCulture)},{throttle.ToString("F1", CultureInfo.InvariantCulture)},{rpms.ToString("F0", CultureInfo.InvariantCulture)},{accelSurge.ToString("F3", CultureInfo.InvariantCulture)},{tractionLoss.ToString("F2", CultureInfo.InvariantCulture)}";
                     _traceWriter.WriteLine(line);
+                    _currentTraceTelemetryRowCount++;
                 }
                 catch (Exception ex)
                 {
@@ -14968,6 +14985,7 @@ namespace LaunchPlugin
 
                 // Append all lines at once using File.AppendAllLines to ensure atomicity
                 System.IO.File.AppendAllLines(_currentFilePath, summaryContent);
+                _currentTraceHasUsableSummary = true;
             if (_plugin?.IsVerboseDebugLoggingEnabledForExternal == true)
             {
                 SimHub.Logging.Current.Debug($"[LalaPlugin:Launch Trace] Successfully appended launch summary to {_currentFilePath}");
@@ -14977,6 +14995,17 @@ namespace LaunchPlugin
             {
                 SimHub.Logging.Current.Error($"[LalaPlugin:Launch Trace] Failed to append launch summary: {ex.Message}");
             }
+        }
+
+        public void MarkCurrentTraceCompleted()
+        {
+            if (string.IsNullOrWhiteSpace(_currentFilePath))
+            {
+                return;
+            }
+
+            _currentTraceCompleted = true;
+            _currentTraceDiscardEligible = false;
         }
 
         /// <summary>
@@ -15014,6 +15043,8 @@ namespace LaunchPlugin
         {
 
             StopLaunchTrace(); // Ensure the file is closed on plugin shutdown
+
+            CleanupCurrentTraceIfObviouslyEmpty();
         }
 
         /// <summary>
@@ -15051,10 +15082,22 @@ namespace LaunchPlugin
 
             try
             {
-                // Return files from the provided tracePath
-                return System.IO.Directory.GetFiles(tracePath, "LaunchTrace_*.csv")
-                                        .OrderByDescending(f => System.IO.File.GetCreationTime(f))
-                                        .ToList();
+                var files = System.IO.Directory.GetFiles(tracePath, "LaunchTrace_*.csv")
+                    .OrderByDescending(f => System.IO.File.GetCreationTime(f))
+                    .ToList();
+
+                var result = new List<string>(files.Count);
+                foreach (var file in files)
+                {
+                    if (TryDeleteObviouslyEmptyTraceFile(file))
+                    {
+                        continue;
+                    }
+
+                    result.Add(file);
+                }
+
+                return result;
             }
             catch (Exception ex)
             {
@@ -15125,6 +15168,158 @@ namespace LaunchPlugin
             }
 
             return (dataRows, summary);
+        }
+
+        private void ResetCurrentTraceState()
+        {
+            _currentFilePath = null;
+            _currentTraceDiscardEligible = false;
+            _currentTraceCompleted = false;
+            _currentTraceTelemetryRowCount = 0;
+            _currentTraceHasUsableSummary = false;
+        }
+
+        private void CleanupCurrentTraceIfObviouslyEmpty()
+        {
+            if (string.IsNullOrWhiteSpace(_currentFilePath))
+            {
+                return;
+            }
+
+            if (!File.Exists(_currentFilePath))
+            {
+                ResetCurrentTraceState();
+                return;
+            }
+
+            if (_currentTraceCompleted && (_currentTraceTelemetryRowCount > 0 || _currentTraceHasUsableSummary))
+            {
+                return;
+            }
+
+            bool hasTelemetryRows;
+            bool hasUsableSummary;
+            if (!TryAnalyzeTraceFile(_currentFilePath, out hasTelemetryRows, out hasUsableSummary))
+            {
+                return;
+            }
+
+            if (!hasTelemetryRows && !hasUsableSummary)
+            {
+                try
+                {
+                    File.Delete(_currentFilePath);
+                    if (_plugin?.IsVerboseDebugLoggingEnabledForExternal == true)
+                    {
+                        SimHub.Logging.Current.Debug($"[LalaPlugin:Launch Trace] Removed empty launch trace on shutdown: {_currentFilePath}");
+                    }
+                    ResetCurrentTraceState();
+                }
+                catch (Exception ex)
+                {
+                    SimHub.Logging.Current.Error($"[LalaPlugin:Launch Trace] Failed to remove empty launch trace on shutdown: {ex.Message}");
+                }
+            }
+        }
+
+        private bool TryDeleteObviouslyEmptyTraceFile(string filePath)
+        {
+            try
+            {
+                if (string.IsNullOrWhiteSpace(filePath) || !File.Exists(filePath))
+                {
+                    return false;
+                }
+
+                if (!string.IsNullOrWhiteSpace(_currentFilePath) &&
+                    _traceWriter != null &&
+                    string.Equals(filePath, _currentFilePath, StringComparison.OrdinalIgnoreCase))
+                {
+                    // Never delete an active trace being written.
+                    return false;
+                }
+
+                bool hasTelemetryRows;
+                bool hasUsableSummary;
+                if (!TryAnalyzeTraceFile(filePath, out hasTelemetryRows, out hasUsableSummary))
+                {
+                    return false;
+                }
+
+                if (hasTelemetryRows || hasUsableSummary)
+                {
+                    return false;
+                }
+
+                File.Delete(filePath);
+                if (_plugin?.IsVerboseDebugLoggingEnabledForExternal == true)
+                {
+                    SimHub.Logging.Current.Debug($"[LalaPlugin:Launch Trace] Removed empty launch trace file: {filePath}");
+                }
+                return true;
+            }
+            catch (Exception ex)
+            {
+                SimHub.Logging.Current.Error($"[LalaPlugin:Launch Trace] Failed to remove empty launch trace file '{filePath}': {ex.Message}");
+                return false;
+            }
+        }
+
+        private bool TryAnalyzeTraceFile(string filePath, out bool hasTelemetryRows, out bool hasUsableSummary)
+        {
+            hasTelemetryRows = false;
+            hasUsableSummary = false;
+
+            try
+            {
+                var lines = File.ReadAllLines(filePath);
+                bool expectSummaryLine = false;
+                foreach (var raw in lines)
+                {
+                    string line = raw?.Trim() ?? string.Empty;
+                    if (string.IsNullOrWhiteSpace(line))
+                    {
+                        continue;
+                    }
+
+                    if (line.StartsWith(LaunchTraceHeaderPrefix, StringComparison.OrdinalIgnoreCase))
+                    {
+                        continue;
+                    }
+
+                    if (string.Equals(line, "[LaunchSummaryHeader]", StringComparison.Ordinal))
+                    {
+                        continue;
+                    }
+
+                    if (string.Equals(line, "[LaunchSummary]", StringComparison.Ordinal))
+                    {
+                        expectSummaryLine = true;
+                        continue;
+                    }
+
+                    if (expectSummaryLine)
+                    {
+                        if (ParseSummaryLine(line) != null)
+                        {
+                            hasUsableSummary = true;
+                        }
+                        expectSummaryLine = false;
+                        continue;
+                    }
+
+                    if (ParseTelemetryDataRow(line) != null)
+                    {
+                        hasTelemetryRows = true;
+                    }
+                }
+
+                return true;
+            }
+            catch
+            {
+                return false;
+            }
         }
 
 
