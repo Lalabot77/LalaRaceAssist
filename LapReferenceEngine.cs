@@ -235,7 +235,7 @@ namespace LaunchPlugin
             return !double.IsNaN(value) && !double.IsInfinity(value) && value > 0.0;
         }
 
-        private sealed class LapReferenceSnapshot
+        internal sealed class LapReferenceSnapshot
         {
             private readonly bool[] _hasSector = new bool[SegmentCount];
             private readonly double[] _sectorSec = new double[SegmentCount];
@@ -398,7 +398,7 @@ namespace LaunchPlugin
                 return _sectorSec[index];
             }
 
-            public void AssignFromSnapshot(LapReferenceSnapshot snapshot)
+            internal void AssignFromSnapshot(LapReferenceSnapshot snapshot)
             {
                 if (snapshot == null || !snapshot.HasLapTime)
                 {

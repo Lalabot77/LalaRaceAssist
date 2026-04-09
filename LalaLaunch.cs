@@ -12450,13 +12450,11 @@ namespace LaunchPlugin
                 return false;
             }
 
-            bool hasFixedSectorSnapshot = _carSaEngine != null
-                && _carSaEngine.TryGetFixedSectorCacheSnapshot(playerCarIdx, out CarSAEngine.FixedSectorCacheSnapshot fixedSectorSnapshot);
+            CarSAEngine.FixedSectorCacheSnapshot fixedSectorSnapshot = default(CarSAEngine.FixedSectorCacheSnapshot);
 
-            if (!hasFixedSectorSnapshot)
-            {
-                fixedSectorSnapshot = default(CarSAEngine.FixedSectorCacheSnapshot);
-            }
+            bool hasFixedSectorSnapshot =
+                _carSaEngine != null &&
+                _carSaEngine.TryGetFixedSectorCacheSnapshot(playerCarIdx, out fixedSectorSnapshot);
 
             bool isNewSessionBest = _lapReferenceEngine.CaptureValidatedLap(
                 lastLapSec,
