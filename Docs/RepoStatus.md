@@ -9,31 +9,36 @@ Branch: work
 - No Git remote is configured in this checkout (`git remote -v` returns empty).
 
 ## Documentation sync status
-- Launch trace shutdown no longer unconditionally discards the current trace pointer; plugin end path is close/flush only.
-- Added explicit launch-trace lifecycle state so finalized completed traces are protected while explicit abort/invalid current-run discards remain intact.
-- Added conservative empty launch-trace housekeeping (no telemetry rows + no usable summary) so useless header-only traces are deleted and not listed in Launch Analysis.
+- Added standalone `LapRef.*` runtime export family for offline player-reference lap comparison (player, session best, profile best, and per-sector comparisons).
+- Added new `LapReferenceEngine` with validated-lap snapshot capture, in-memory session-best tracking, and profile-best materialization.
+- Extended profile `TrackStats` with compatibility-safe optional dry/wet PB sector fields (`BestLapSector1..6Dry/WetMs`) and wired persistence via existing PB seam.
 
 ## Reviewed documentation set
 ### Changed in this sweep
-- `Opponents.cs`
+- `LapReferenceEngine.cs`
 - `LalaLaunch.cs`
-- `Docs/Subsystems/Launch_Mode.md`
-- `Docs/Subsystems/Trace_Logging.md`
+- `LaunchPlugin.csproj`
+- `CarProfiles.cs`
+- `ProfilesManagerViewModel.cs`
+- `Docs/Project_Index.md`
+- `Docs/Subsystems/H2H.md`
+- `Docs/Subsystems/CarSA.md`
+- `Docs/Subsystems/Profiles_And_PB.md`
+- `Docs/Subsystems/LapRef.md`
+- `Docs/Internal/SimHubParameterInventory.md`
 - `Docs/Internal/SimHubLogMessages.md`
-- `Docs/Internal/Development_Changelog.md`
 - `Docs/RepoStatus.md`
 
 ### Reviewed and left unchanged
-- `Docs/Project_Index.md`
 - `Docs/Internal/Architecture_Guardrails.md`
 - `Docs/Internal/CODEX_TASK_TEMPLATE.txt`
-- `LaunchAnalysisControl.xaml.cs`
+- `Docs/Subsystems/Fuel_Model.md`
 - `Docs/Internal/Plugin_UI_Tooltips.md`
 
 ## Delivery status highlights
-- Valid completed launch traces are retained across plugin shutdown; end-service performs close/flush without pointer-based deletion.
-- Abort/cancel/unsuccessful launch paths still discard the current invalid trace explicitly.
-- Empty/header-only launch traces (no telemetry rows and no usable summary) are cleaned up conservatively and excluded from Launch Analysis listing.
+- `LapRef.*` now publishes player/session/profile reference lap rows with fixed 6-sector states and condition-aware comparisons.
+- H2H, CarSA derivation ownership, and Opponents contracts remain unchanged; LapRef consumes CarSA fixed-sector cache read-only.
+- Profile PB updates continue through `TryUpdatePBByCondition(...)` and now persist condition-specific PB sectors only when real sector data exists.
 
 ## Validation note
-- Validation recorded against `HEAD` (`Launch trace shutdown retention fix + empty-trace housekeeping + docs sync`).
+- Validation recorded against `HEAD` (`LapRef offline reference comparison + profile PB sector persistence + docs sync`).

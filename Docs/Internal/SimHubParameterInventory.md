@@ -93,6 +93,18 @@ Branch: work
 | H2HRace.Ahead/Behind.S1..S6State / H2HTrack.Ahead/Behind.S1..S6State | int | Cache-based sector-state contract: `0 = empty`, `1 = pending`, `2 = valid`. `empty` means the target sector is missing/invalid in the CarSA cache. `pending` means the target sector is valid but the player sector is missing/invalid. `valid` means both target and player sectors are valid in cache. State is no longer driven by target-bind timing windows or row rebuild mechanics. | Per tick. | `H2HEngine.cs` + `AttachCore`. |
 | H2HRace.Ahead/Behind.S1..S6DeltaSec / H2HTrack.Ahead/Behind.S1..S6DeltaSec | double | Cache-based per-sector delta versus the player for the fixed 6-sector model. Delta is `0` when the target sector is missing, `0` when the player sector is missing, and otherwise `target.DurationSec - player.DurationSec` using the CarSA snapshots for the selected target and player. On target swap, H2H publishes immediately from the new target's existing cache if present; if not, the row naturally shows `empty`/`0` without a bind-clear wait. | Per tick. | `H2HEngine.cs` + `AttachCore`. |
 
+## Lap Reference (LapRef)
+| Exported name | Type | Units / meaning | Update cadence | Defined in |
+| --- | --- | --- | --- | --- |
+| LapRef.Valid | bool | True when LapRef has usable runtime context (player car idx + combo identity). | Per tick. | `LapReferenceEngine.cs` + `LalaLaunch.cs` + `AttachCore`. |
+| LapRef.Mode | string | Active condition mode (`Dry` / `Wet`) from runtime `_isWetMode` routing. | Per tick. | `LalaLaunch.cs` wet-mode routing + `LapReferenceEngine.cs` + `AttachCore`. |
+| LapRef.PlayerCarIdx / LapRef.ActiveSegment | int/int | Player `CarIdx` and current active segment context (1..6; 0 when unknown). | Per tick. | `LalaLaunch.cs` + `LapReferenceEngine.cs` + `AttachCore`. |
+| LapRef.Player.* | mixed | Player reference side outputs: `Valid`, `LapTimeSec`, `ActiveSegment`, and `S1..S6State` / `S1..S6Sec`. Snapshot is captured only from the existing validated-lap gate; sectors are real CarSA fixed-sector values when present, otherwise empty (`0`). | Per tick after capture. | `LapReferenceEngine.cs` + `LalaLaunch.cs` + `AttachCore`. |
+| LapRef.SessionBest.* | mixed | In-memory session-best validated snapshot (`Valid`, `LapTimeSec`, `ActiveSegment`, `S1..S6State`, `S1..S6Sec`). Lower validated lap time wins; lap time can remain valid even with missing sectors. | Per tick after capture. | `LapReferenceEngine.cs` + `LalaLaunch.cs` + `AttachCore`. |
+| LapRef.ProfileBest.* | mixed | Profile all-time best side (`Valid`, `LapTimeSec`, `ActiveSegment`, `S1..S6State`, `S1..S6Sec`) rematerialized from active profile/track/condition each tick using `BestLapMsDry/Wet` and optional `BestLapSector1..6Dry/WetMs`. | Per tick. | `CarProfiles.cs` + `LapReferenceEngine.cs` + `LalaLaunch.cs` + `AttachCore`. |
+| LapRef.Compare.SessionBest.* | mixed | Per-sector comparison versus session best: `S1..S6State`, `S1..S6DeltaSec`. Delta publishes only when both sectors are real; otherwise state is non-valid and delta is `0`. | Per tick. | `LapReferenceEngine.cs` + `AttachCore`. |
+| LapRef.Compare.ProfileBest.* | mixed | Per-sector comparison versus profile best: `S1..S6State`, `S1..S6DeltaSec`. Same validity and delta rules as session-best comparison. | Per tick. | `LapReferenceEngine.cs` + `AttachCore`. |
+
 ## CarSA (Car System)
 | Exported name | Type | Units / meaning | Update cadence | Defined in |
 | --- | --- | --- | --- | --- |

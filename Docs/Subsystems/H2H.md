@@ -1,13 +1,15 @@
 # Head-to-Head (H2H)
 
 Validated against commit: HEAD
-Last updated: 2026-03-20
+Last updated: 2026-04-09
 Branch: work
 
 ## Purpose
 Head-to-Head is a standalone dash-facing comparison subsystem that publishes two concurrent export families:
 - `H2HRace.*` = class race targets ahead/behind
 - `H2HTrack.*` = class on-track targets ahead/behind
+
+LapRef (`LapRef.*`) is a separate offline player-reference subsystem and does not alter H2H contracts or behavior.
 
 The feature provides a flat, explicit contract for Dash Studio consumption with player/ahead/behind lap summaries, direct `LastLapColor` exports, fixed 6-sector state, sector deltas published from the CarSA-owned cache, canonical `#RRGGBB` class colors, and active-segment outputs.
 
