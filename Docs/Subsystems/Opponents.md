@@ -1,7 +1,7 @@
 # Opponents subsystem
 
 Validated against commit: HEAD
-Last updated: 2026-04-08
+Last updated: 2026-04-09
 Branch: work
 
 Purpose: own all opponent-facing calculations for strict same-class race-target selection, lap-time enrichment, and race-scoped pit-exit forecasting with SimHub exports under `Opp.*` and `PitExit.*`.
@@ -71,6 +71,7 @@ Opponents now reads from:
     - validity/position/pit: `IsValid`, `IsOnTrack`, `IsOnPitRoad`, `PositionInClass` (effective/live race order)
     - lap context: `LastLap`, `LastLapTimeSec`, `BestLap`, `BestLapTimeSec`, `LapsSincePit`
     - race gaps/fight: `Gap.RelativeSec`, `Gap.TrackSec`, `PaceDeltaSecPerLap`, `LapsToFight`
+    - optional metadata: `IRating`, `SafetyRating`, `Licence`, `LicLevel`, `UserID`, `TeamID`, `IsFriend`, `IsTeammate`, `IsBad`
   - Legacy continuity fields still published: `GapToPlayerSec`, `BlendedPaceSec`.
 - `Opp.Leader.BlendedPaceSec`, `Opp.P2.BlendedPaceSec`.
 - `Opponents_SummaryAhead/Behind` and per-slot variants (`Ahead1..5`, `Behind1..5`).

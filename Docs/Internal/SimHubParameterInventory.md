@@ -3,8 +3,8 @@
 **CANONICAL CONTRACT**
 
 Validated against: 498b4ca
-Last reviewed: 2026-02-23
-Last updated: 2026-02-23
+Last reviewed: 2026-04-09
+Last updated: 2026-04-09
 Branch: work
 
 - All exports are attached in `LalaLaunch.cs` during `Init()` via `AttachCore`/`AttachVerbose`. Core values are refreshed in `DataUpdate` (500 ms poll for fuel/pace/pit via `_poll500ms`; per-tick for launch/dash/messaging). Verbose rows require `SimhubPublish.VERBOSE`.【F:LalaLaunch.cs†L2644-L3120】【F:LalaLaunch.cs†L3411-L3775】
@@ -74,6 +74,7 @@ Branch: work
 | --- | --- | --- | --- | --- |
 | Opp.Ahead1..5.* / Opp.Behind1..5.* | mixed | Race-order same-class neighbors from the native RaceProgress-first ordering model (up to five each side). Backward compatibility is preserved for existing `Opp.Ahead1/2.*` and `Opp.Behind1/2.*`. | Per tick in eligible live sessions. | `Opponents.cs` + `AttachCore`. |
 | Opp.AheadN/Opp.BehindN identity + validity + lap context | mixed | Per slot: `CarIdx`, `Name`, `AbbrevName`, `CarNumber`, `ClassName`, `ClassColor`, `ClassColorHex`, `IsValid`, `IsOnTrack`, `IsOnPitRoad`, `PositionInClass` (effective/live), `LastLap`, `LastLapTimeSec`, `BestLap`, `BestLapTimeSec`, `LapsSincePit` for each `N=1..5`. | Per tick in eligible live sessions. | `Opponents.cs` + `AttachCore`. |
+| Opp.AheadN/Opp.BehindN optional driver/tag metadata | mixed | Per slot optional metadata: `IRating`, `SafetyRating`, `Licence`, `LicLevel`, `UserID`, `TeamID`, `IsFriend`, `IsTeammate`, `IsBad` (friend/tag flags derive from existing Lala friend/tag sets via `UserID`). | Per tick in eligible live sessions. | `Opponents.cs` + `LalaLaunch.cs` + `AttachCore`. |
 | Opp.AheadN/Opp.BehindN gap + fight metrics | mixed | `Gap.RelativeSec` (checkpoint seam preferred for slot 1 per side when sane; otherwise progress model), `Gap.TrackSec` (progress model), plus `GapToPlayerSec` legacy mirror, `BlendedPaceSec`, `PaceDeltaSecPerLap`, and `LapsToFight`. | Per tick in eligible live sessions. | `Opponents.cs`, `CarSAEngine.cs` seam + `AttachCore`. |
 | Opp.Leader.BlendedPaceSec / Opp.P2.BlendedPaceSec | double | Blended pace for class position 1 and 2 from native same-class order resolution. | Per tick in eligible live sessions. | `Opponents.cs` + `AttachCore`. |
 | Opponents_SummaryAhead / Opponents_SummaryBehind (+ per-slot variants) | string | Top-level summaries keep short readability (A1/A2 and B1/B2 shape), while per-slot summaries now include `Ahead1..5` and `Behind1..5`. | Per tick in eligible live sessions. | `Opponents.cs` + `AttachCore`. |

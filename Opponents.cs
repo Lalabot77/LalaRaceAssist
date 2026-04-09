@@ -208,6 +208,12 @@ namespace LaunchPlugin
             target.LastLap = FormatLapTime(row.LastLapSec);
             target.BestLap = FormatLapTime(row.BestLapSec);
             target.LapsSincePit = row.LapsSincePit;
+            target.IRating = row.IRating;
+            target.SafetyRating = row.SafetyRating;
+            target.Licence = row.Licence ?? string.Empty;
+            target.LicLevel = row.LicLevel;
+            target.UserID = row.UserID;
+            target.TeamID = row.TeamID;
             target.GapToPlayerSec = row.GapToPlayerSec;
             target.GapTrackSec = row.GapToPlayerSec;
             target.GapRelativeSec = row.GapToPlayerSec;
@@ -681,7 +687,14 @@ namespace LaunchPlugin
 
                 string classColor = NormalizeClassColor(ReadString(pluginManager, basePath + ".CarClassColor"));
                 string className = ReadString(pluginManager, basePath + ".CarClassShortName");
-                return BuildTelemetryRow(carIdx, name, abbrevName, number, classColor, className, carIdxLap, carIdxLapDist, carIdxBestLap, carIdxLastLap, carIdxClassPos, carIdxOnPitRoad, carIdxTrackSurface);
+                int iRating = ReadInt(pluginManager, basePath + ".IRating", 0);
+                int licLevel = ReadInt(pluginManager, basePath + ".LicLevel", 0);
+                int userId = ReadInt(pluginManager, basePath + ".UserID", 0);
+                int teamId = ReadInt(pluginManager, basePath + ".TeamID", 0);
+                string licString = ReadString(pluginManager, basePath + ".LicString");
+                ParseLicence(licString, out string licence, out double safetyRating);
+                return BuildTelemetryRow(carIdx, name, abbrevName, number, classColor, className, iRating, licence, safetyRating, licLevel, userId, teamId,
+                    carIdxLap, carIdxLapDist, carIdxBestLap, carIdxLastLap, carIdxClassPos, carIdxOnPitRoad, carIdxTrackSurface);
             }
 
             private static NativeCarRow BuildRowFromCompeting(PluginManager pluginManager, string basePath, int carIdx,
@@ -697,10 +710,18 @@ namespace LaunchPlugin
                 string number = ReadString(pluginManager, basePath + ".CarNumber");
                 string classColor = NormalizeClassColor(ReadString(pluginManager, basePath + ".CarClassColor"));
                 string className = ReadString(pluginManager, basePath + ".CarClassShortName");
-                return BuildTelemetryRow(carIdx, name, abbrevName, number, classColor, className, carIdxLap, carIdxLapDist, carIdxBestLap, carIdxLastLap, carIdxClassPos, carIdxOnPitRoad, carIdxTrackSurface);
+                int iRating = ReadInt(pluginManager, basePath + ".IRating", 0);
+                int licLevel = ReadInt(pluginManager, basePath + ".LicLevel", 0);
+                int userId = ReadInt(pluginManager, basePath + ".UserID", 0);
+                int teamId = ReadInt(pluginManager, basePath + ".TeamID", 0);
+                string licString = ReadString(pluginManager, basePath + ".LicString");
+                ParseLicence(licString, out string licence, out double safetyRating);
+                return BuildTelemetryRow(carIdx, name, abbrevName, number, classColor, className, iRating, licence, safetyRating, licLevel, userId, teamId,
+                    carIdxLap, carIdxLapDist, carIdxBestLap, carIdxLastLap, carIdxClassPos, carIdxOnPitRoad, carIdxTrackSurface);
             }
 
             private static NativeCarRow BuildTelemetryRow(int carIdx, string name, string abbrevName, string number, string classColor, string className,
+                int iRating, string licence, double safetyRating, int licLevel, int userId, int teamId,
                 int[] carIdxLap, float[] carIdxLapDist, float[] carIdxBestLap, float[] carIdxLastLap, int[] carIdxClassPos, bool[] carIdxOnPitRoad, int[] carIdxTrackSurface)
             {
                 if (carIdx < 0 || carIdx >= carIdxLap.Length || carIdx >= carIdxLapDist.Length)
@@ -732,6 +753,12 @@ namespace LaunchPlugin
                     CarNumber = carNumber,
                     ClassColor = classColor,
                     ClassName = className ?? string.Empty,
+                    IRating = iRating > 0 ? iRating : 0,
+                    Licence = licence ?? string.Empty,
+                    SafetyRating = safetyRating,
+                    LicLevel = licLevel > 0 ? licLevel : 0,
+                    UserID = userId > 0 ? userId : 0,
+                    TeamID = teamId > 0 ? teamId : 0,
                     IdentityKey = identityKey,
                     Lap = lap,
                     LapDistPct = validLapDist ? lapDist : double.NaN,
@@ -751,6 +778,54 @@ namespace LaunchPlugin
             private static bool ValidLapTime(double value)
             {
                 return !double.IsNaN(value) && !double.IsInfinity(value) && value > 0.0 && value < 10000.0;
+            }
+
+            private static void ParseLicence(string licString, out string licence, out double safetyRating)
+            {
+                licence = string.Empty;
+                safetyRating = double.NaN;
+
+                if (string.IsNullOrWhiteSpace(licString))
+                {
+                    return;
+                }
+
+                string trimmed = licString.Trim();
+                string[] parts = trimmed.Split(new[] { ' ' }, StringSplitOptions.RemoveEmptyEntries);
+                if (parts.Length > 0)
+                {
+                    licence = parts[0];
+                }
+
+                if (parts.Length > 1 && double.TryParse(parts[1], NumberStyles.Float, CultureInfo.InvariantCulture, out double parsed))
+                {
+                    safetyRating = parsed;
+                    return;
+                }
+
+                int numericStart = -1;
+                for (int i = 0; i < trimmed.Length; i++)
+                {
+                    char c = trimmed[i];
+                    if ((c >= '0' && c <= '9') || c == '.')
+                    {
+                        numericStart = i;
+                        break;
+                    }
+                }
+
+                if (numericStart >= 0)
+                {
+                    string numeric = trimmed.Substring(numericStart);
+                    if (double.TryParse(numeric, NumberStyles.Float, CultureInfo.InvariantCulture, out parsed))
+                    {
+                        safetyRating = parsed;
+                        if (string.IsNullOrWhiteSpace(licence))
+                        {
+                            licence = trimmed.Substring(0, numericStart).Trim();
+                        }
+                    }
+                }
             }
         }
 
@@ -772,22 +847,30 @@ namespace LaunchPlugin
 
             public void Reset()
             {
+                ClearTransientState();
+                _lastPitLapByCarIdx.Clear();
+                _paceReferenceSec = 120.0;
+            }
+
+            private void ClearTransientState()
+            {
                 _rows.Clear();
                 Player = null;
                 Array.Clear(_aheadSlots, 0, _aheadSlots.Length);
                 Array.Clear(_behindSlots, 0, _behindSlots.Length);
-                _paceReferenceSec = 120.0;
             }
 
             public void Build(NativeSnapshot snapshot, double myPaceSec, EntityCache cache)
             {
-                Reset();
+                ClearTransientState();
                 _rows.AddRange(snapshot.Rows.Where(r => r != null && r.IsConnected && !string.IsNullOrWhiteSpace(r.IdentityKey)));
                 Player = _rows.FirstOrDefault(r => string.Equals(r.IdentityKey, snapshot.PlayerIdentityKey, StringComparison.Ordinal));
                 if (Player == null)
                 {
                     return;
                 }
+
+                PrunePitLapStateToVisibleRows();
 
                 _paceReferenceSec = !double.IsNaN(myPaceSec) ? myPaceSec : snapshot.PaceReferenceSec;
                 if (double.IsNaN(_paceReferenceSec) || _paceReferenceSec <= 0.0)
@@ -866,6 +949,21 @@ namespace LaunchPlugin
 
                     ApplyGapToPlayer(Player, _aheadSlots[slotIndex]);
                     ApplyGapToPlayer(Player, _behindSlots[slotIndex]);
+                }
+            }
+
+            private void PrunePitLapStateToVisibleRows()
+            {
+                if (_lastPitLapByCarIdx.Count == 0)
+                {
+                    return;
+                }
+
+                var visibleCarIdx = new HashSet<int>(_rows.Select(r => r.CarIdx));
+                var stale = _lastPitLapByCarIdx.Keys.Where(k => !visibleCarIdx.Contains(k)).ToList();
+                for (int i = 0; i < stale.Count; i++)
+                {
+                    _lastPitLapByCarIdx.Remove(stale[i]);
                 }
             }
 
@@ -1356,6 +1454,12 @@ namespace LaunchPlugin
             public string CarNumber;
             public string ClassColor;
             public string ClassName;
+            public int IRating;
+            public string Licence;
+            public double SafetyRating;
+            public int LicLevel;
+            public int UserID;
+            public int TeamID;
             public int PositionOverall;
             public int OfficialPositionInClass;
             public int ProgressPositionInClass;
@@ -1478,6 +1582,15 @@ namespace LaunchPlugin
             public string BestLap { get; set; } = string.Empty;
             public double BestLapTimeSec { get; set; } = double.NaN;
             public int LapsSincePit { get; set; } = -1;
+            public int IRating { get; set; } = 0;
+            public double SafetyRating { get; set; } = double.NaN;
+            public string Licence { get; set; } = string.Empty;
+            public int LicLevel { get; set; } = 0;
+            public int UserID { get; set; } = 0;
+            public int TeamID { get; set; } = 0;
+            public bool IsFriend { get; set; }
+            public bool IsTeammate { get; set; }
+            public bool IsBad { get; set; }
             public double GapRelativeSec { get; set; } = 0.0;
             public double GapTrackSec { get; set; } = 0.0;
             public double GapToPlayerSec { get; set; } = 0.0;
@@ -1503,6 +1616,15 @@ namespace LaunchPlugin
                 BestLap = string.Empty;
                 BestLapTimeSec = double.NaN;
                 LapsSincePit = -1;
+                IRating = 0;
+                SafetyRating = double.NaN;
+                Licence = string.Empty;
+                LicLevel = 0;
+                UserID = 0;
+                TeamID = 0;
+                IsFriend = false;
+                IsTeammate = false;
+                IsBad = false;
                 GapRelativeSec = 0.0;
                 GapTrackSec = 0.0;
                 GapToPlayerSec = 0.0;
