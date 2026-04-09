@@ -33,10 +33,16 @@ The public user-facing release history is maintained in the root `CHANGELOG.md`.
 
 ## Post-v1.0 development
 
-### PB telemetry-only safety follow-up (LapRef)
-- Removed manual dry/wet PB editing from Profiles Track workflow by making PB fields read-only display values in `ProfilesManagerView.xaml`.
-- Neutralized `TrackStats` PB text setters so `BestLapTimeDryText` / `BestLapTimeWetText` no longer parse and mutate persisted PB milliseconds.
-- Preserved existing telemetry PB seam (`TryUpdatePBByCondition(...)`), condition-specific PB sector persistence, and dry/wet relearn clears.
+### Opponents Pit Exit cadence + pace-reference hardening
+- Replaced Pit Exit off-pit-road lap-quarter refresh gating with a bounded time-based refresh interval so `PitExit.*` updates stay fresher while remaining conservative on runtime cost.
+- Kept on-pit-road and active pit-trip updates responsive and preserved the existing final-120s suppression behavior unchanged.
+- Unified Pit Exit nearest ahead/behind gap-seconds conversion onto the shared Opponents pace-reference seam instead of a separate local best/last fallback chain.
+- Preserved subsystem ownership boundaries and Pit Exit architecture (Opponents-owned full same-class scan, no CarSA/H2H/dashboard logic changes).
+
+### Player PositionInClass live-context alignment (Car + H2H player rows)
+- Aligned player-facing `PositionInClass` publication to the existing Opponents effective/live race-order seam so player rows use the same race-context truth as H2H/Opp target rows.
+- Added/updated player-facing exports for consistent dash consumption: `Car.Player.PositionInClass`, `H2HRace.Player.PositionInClass`, and `H2HTrack.Player.PositionInClass`.
+- Kept ownership boundaries intact: Opponents remains race-order owner, CarSA remains session-agnostic spatial owner, and H2H remains consumer/publisher only.
 
 ### Opponents 5-slot export expansion + live PositionInClass alignment
 - Expanded Opponents race-order publication from 2 to 5 slots each side under the existing flat `Opp.*` namespace (`Opp.Ahead1..5.*`, `Opp.Behind1..5.*`) while preserving backward compatibility for existing `Ahead1/2` and `Behind1/2` bindings.

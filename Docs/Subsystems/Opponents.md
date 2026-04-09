@@ -57,10 +57,15 @@ Opponents now reads from:
 ## Pit-exit prediction model (native)
 - Uses same-class progress model only (no leaderboard-relative gap inputs).
 - Predicts player post-stop progress from locked pit-entry progress + pit loss while pit trip is active.
-- Compares predicted player progress against class rivals to derive:
+- Nearest ahead/behind pit-exit gap seconds now use the same Opponents-owned pace reference seam used by native race-model gap conversion (runtime player pace input when valid, then native player best/last fallback, then 120s guard fallback), rather than a separate local fallback chain.
+- Compares predicted player progress against the full same-class rival set to derive:
   - `PitExit.PredictedPositionInClass`
   - `PitExit.CarsAheadAfterPitCount`
   - nearest ahead/behind identities and gaps.
+- Refresh cadence:
+  - on pit road or active pit trip: per Opponents update tick (responsive path)
+  - off pit road and no active pit trip: bounded time-based refresh interval (currently 1.0s minimum spacing) instead of lap-quarter gating.
+- Final-120s suppression behavior remains unchanged.
 
 ## Invalid-state behavior and logging
 - If native prerequisites are missing/incomplete (for example missing player row or invalid identity), Opponents publishes invalid/empty outputs and logs:
