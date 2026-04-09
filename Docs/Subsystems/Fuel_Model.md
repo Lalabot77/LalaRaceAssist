@@ -76,7 +76,8 @@ Out of scope:
 ### Persistence state
 - Dry and wet condition stats persist independently.
 - Each condition has its own sample count, last-updated metadata, and lock gate.
-- Refuel rate persistence is car-scoped and now includes a dedicated lock gate; when locked, runtime refuel learning does not overwrite the stored profile value.
+- Refuel rate persistence is car-scoped and now includes a dedicated lock gate; when locked with a usable stored value, runtime refuel learning does not overwrite the stored profile value and runtime/planner keep using the locked stored rate.
+- Locked fail-safe first-fill: if a profile is locked but has no usable stored refuel rate, the first valid learned rate is allowed to populate once; subsequent locked overwrite attempts are blocked normally.
 - Session-transition seeding is used to reduce race-session cold starts.
 
 ### Projection and pit-window state

@@ -69,7 +69,7 @@
                                             <ColumnDefinition Width="Auto" />
                                         </Grid.ColumnDefinitions>
                                         <Slider Grid.Column="0" VerticalAlignment="Center" Value="{Binding RefuelRate, Mode=TwoWay}" Minimum="1" Maximum="10" SmallChange="0.05" TickFrequency="0.05" IsSnapToTickEnabled="True"
-                                                ToolTip="Set the refuel rate (L/s). Live refuel events can update this value."/>
+                                                ToolTip="Set the refuel rate (L/s). Live refuel events can update this value while unlocked."/>
                                         <TextBlock Grid.Column="1" Text="{Binding RefuelRate, StringFormat=N2}" VerticalAlignment="Center" Margin="10,0,0,0" MinWidth="35" TextAlignment="Right"/>
                                         <CheckBox Grid.Column="2"
                                                   Margin="12,0,0,0"

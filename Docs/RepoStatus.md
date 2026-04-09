@@ -9,20 +9,17 @@ Branch: work
 - No Git remote is configured in this checkout (`git remote -v` returns empty).
 
 ## Documentation sync status
-- Added a persisted car-level refuel-rate lock (`CarProfile.RefuelRateLocked`) with backward-compatible default-unlocked JSON behavior.
-- Added a `Locked` control to the existing Profiles → CAR refuel-rate row, following existing lock UX patterns used elsewhere in the plugin.
-- Gated refuel-rate auto-persist so valid learned rates no longer overwrite a locked profile value; unlocked flow remains unchanged.
-- Added concise verbose-debug observability for blocked overwrite attempts (`[LalaPlugin:Refuel Rate] Locked; blocked learned overwrite ...`).
+- Follow-up fix: locked refuel-rate overwrite blocks now preserve both persistence and runtime/planner applied value when a usable stored locked rate exists.
+- Added locked first-fill fail-safe: if locked but no usable stored refuel rate exists, the first valid learned candidate may populate once, after which lock blocking resumes normally.
+- Updated Profiles → CAR refuel slider tooltip text to explicitly say live refuel events update the value while unlocked.
+- Kept existing unlocked flow unchanged and retained concise verbose-debug observability for blocked overwrite attempts (`[LalaPlugin:Refuel Rate] Locked; blocked learned overwrite ...`).
 
 ## Reviewed documentation set
 ### Changed in this sweep
-- `CarProfiles.cs`
-- `ProfilesManagerView.xaml`
-- `ProfilesManagerViewModel.cs`
 - `LalaLaunch.cs`
 - `Docs/Subsystems/Fuel_Model.md`
 - `Docs/Subsystems/Fuel_Planner_Tab.md`
-- `Docs/Internal/Plugin_UI_Tooltips.md`
+- `ProfilesManagerView.xaml`
 - `Docs/Internal/SimHubParameterInventory.md`
 - `Docs/Internal/SimHubLogMessages.md`
 - `Docs/Internal/Development_Changelog.md`
@@ -35,12 +32,15 @@ Branch: work
 - `Docs/Internal/CODEX_TASK_TEMPLATE.txt`
 - `FuelCalcs.cs`
 - `FuelCalculatorView.xaml`
+- `CarProfiles.cs`
+- `ProfilesManagerViewModel.cs`
+- `Docs/Internal/Plugin_UI_Tooltips.md`
 
 ## Delivery status highlights
-- Refuel-rate learning now respects a persisted lock gate, preventing auto-overwrite of trusted stored rates when locked.
-- Existing unlocked behavior is preserved: valid learned refuel rates continue to save to the active profile.
-- Existing profiles remain backward-compatible and default to unlocked when the new field is absent.
-- Profile create/copy/default flows now preserve/carry the refuel-rate lock field consistently.
+- Locked refuel-rate overwrite attempts now keep runtime/planner on the locked stored value (not the blocked learned candidate).
+- Locked profiles with unusable stored refuel rates can self-heal via one-time first-fill from the first valid learned candidate.
+- Existing unlocked behavior remains unchanged: valid learned refuel rates continue to save/apply.
+- Existing profiles remain backward-compatible and default unlocked when the lock field is absent.
 
 ## Validation note
-- Validation recorded against `HEAD` (`Refuel-rate lock gate + Profiles UI lock control + docs sync`).
+- Validation recorded against `HEAD` (`Refuel-rate lock runtime fix + locked first-fill fail-safe + docs sync`).
