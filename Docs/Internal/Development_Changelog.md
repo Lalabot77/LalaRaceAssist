@@ -33,11 +33,9 @@ The public user-facing release history is maintained in the root `CHANGELOG.md`.
 
 ## Post-v1.0 development
 
-### Opponents Pit Exit cadence + pace-reference hardening
-- Replaced Pit Exit off-pit-road lap-quarter refresh gating with a bounded time-based refresh interval so `PitExit.*` updates stay fresher while remaining conservative on runtime cost.
-- Kept on-pit-road and active pit-trip updates responsive and preserved the existing final-120s suppression behavior unchanged.
-- Unified Pit Exit nearest ahead/behind gap-seconds conversion onto the shared Opponents pace-reference seam instead of a separate local best/last fallback chain.
-- Preserved subsystem ownership boundaries and Pit Exit architecture (Opponents-owned full same-class scan, no CarSA/H2H/dashboard logic changes).
+### Brake previous-peak manual/session reset hardening
+- Added a dedicated brake capture runtime reset (`ResetBrakeCaptureState`) and invoked it from `ManualRecoveryReset`, which is used by session transitions and `PrimaryDashMode` manual recovery.
+- Manual/session recovery now clears active capture progress and resets `Brake.PreviousPeakPct` to `0.0`, preventing stale peaks from previous runs/sessions from being published as fresh captures.
 
 ### Player PositionInClass live-context alignment (Car + H2H player rows)
 - Aligned player-facing `PositionInClass` publication to the existing Opponents effective/live race-order seam so player rows use the same race-context truth as H2H/Opp target rows.
@@ -85,6 +83,14 @@ The public user-facing release history is maintained in the root `CHANGELOG.md`.
 ### Shift Assist learning
 - Refined Learning v2 adjacent-gear crossover solve with a small internal relative early-bias tolerance (`a_next >= a_curr * (1 - pct)`) so learned shift RPMs land modestly earlier without flat RPM subtraction, hard cap shaping, or reintroducing the prior absolute accel-margin bias.
 - Preserved all existing Learning v2 invariants: speed-domain curves, ratio-based RPM conversion, stability buffer before publish, gear-1 exclusion, no-fallback publication, and safe clamp (`redline - 200`).
+
+### Brake previous-peak reset threshold follow-up
+- Updated Dahl-style `Brake.PreviousPeakPct` capture reset threshold from `brake01 <= 0.0` to `brake01 <= 0.02` so completed captures can re-arm during slight trail-brake residuals.
+- Removed unused brake capture clock state from `LalaLaunch.cs` (`_brakeClock`) with no behavior change beyond the reset-threshold update.
+
+### Brake previous-peak export (Dahl-style)
+- Added `Brake.PreviousPeakPct` export in the runtime update path to mirror Dahl `BrakeCurvePeak` behavior.
+- Capture now starts when brake rises above zero, tracks max brake for a 40-sample window, latches at sample 40, and only resets/arms for a new capture after completion plus brake return-to-zero.
 
 ### Opponents / H2H session eligibility
 - Expanded Opponents leaderboard-neighbor publication scope from race-only to live opponent sessions (Practice, Qualifying/Open Qualify, Lone Qualify, Race), while keeping Offline Testing out of scope.

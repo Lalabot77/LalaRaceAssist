@@ -9,14 +9,14 @@ Branch: work
 - No Git remote is configured in this checkout (`git remote -v` returns empty).
 
 ## Documentation sync status
-- Opponents Pit Exit off-pit-road refresh now uses a bounded time-based cadence (minimum interval) rather than lap-quarter gating, while keeping pit-road/active-pit-trip responsiveness.
-- Pit Exit nearest ahead/behind gap-second conversion now uses the shared Opponents pace-reference seam instead of a separate local fallback chain.
-- Preserved subsystem ownership boundaries (Opponents race-order owner and Pit Exit owner, CarSA spatial/timing owner, H2H consumer/publisher).
+- Hardened `Brake.PreviousPeakPct` runtime recovery behavior to clear brake-capture state on manual/session resets.
+- Runtime capture still starts at brake > 0, tracks max brake for 40 samples, latches the peak at completion, and re-arms after completion once brake falls to `<= 0.02`.
+- Manual/session recovery now clears active capture progress and resets the latched export to `0.0` to prevent stale cross-session peaks.
+- No dashboard/UI behavior was changed.
 
 ## Reviewed documentation set
 ### Changed in this sweep
-- `Opponents.cs`
-- `Docs/Subsystems/Opponents.md`
+- `LalaLaunch.cs`
 - `Docs/Internal/SimHubParameterInventory.md`
 - `Docs/Internal/Development_Changelog.md`
 - `Docs/RepoStatus.md`
@@ -24,14 +24,12 @@ Branch: work
 ### Reviewed and left unchanged
 - `Docs/Internal/Architecture_Guardrails.md`
 - `Docs/Internal/CODEX_TASK_TEMPLATE.txt`
-- `Docs/Internal/SimHubLogMessages.md`
-- `Docs/Subsystems/CarSA.md`
-- `Docs/Subsystems/H2H.md`
+- `Docs/Subsystems/Launch_Mode.md`
 
 ## Delivery status highlights
-- Pit Exit refresh cadence off pit road is now time-bounded, improving freshness versus prior lap-quarter update gating.
-- Pit Exit nearest ahead/behind gap-second conversion is now aligned to the shared Opponents pace-reference seam.
-- Pit Exit remains Opponents-owned, race-scoped, and full same-class-field comparison based; late-race last-120s suppression remains unchanged.
+- `Brake.PreviousPeakPct` publishes the maximum brake input from the most recent completed 40-sample braking capture window.
+- `ManualRecoveryReset` now clears brake-capture runtime state (trigger/max/sample count) and resets `Brake.PreviousPeakPct` to `0.0`.
+- Session transitions and `PrimaryDashMode` action recovery both use that reset path, so stale pre-reset peaks cannot complete/publish as a fresh capture.
 
 ## Validation note
-- Validation recorded against `HEAD` (`Opponents Pit Exit cadence + pace-reference hardening with docs sync`).
+- Validation recorded against `HEAD` (`Brake.PreviousPeakPct manual/session reset hardening + docs sync`).
