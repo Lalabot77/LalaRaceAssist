@@ -4239,6 +4239,7 @@ namespace LaunchPlugin
             AttachCore(prefix + ".ClassSessionBestLapSec", () => familyGetter()?.ClassSessionBestLapSec ?? 0.0);
             AttachCore(prefix + ".Player.LastLapSec", () => familyGetter()?.Player.LastLapSec ?? 0.0);
             AttachCore(prefix + ".Player.BestLapSec", () => familyGetter()?.Player.BestLapSec ?? 0.0);
+            AttachCore(prefix + ".Player.PositionInClass", () => familyGetter()?.Player.PositionInClass ?? 0);
             AttachCore(prefix + ".Player.LastLapDeltaToBestSec", () => familyGetter()?.Player.LastLapDeltaToBestSec ?? 0.0);
             AttachCore(prefix + ".Player.LiveDeltaToBestSec", () => familyGetter()?.Player.LiveDeltaToBestSec ?? 0.0);
             AttachCore(prefix + ".Player.LastLapColor", () => familyGetter()?.Player.LastLapColor ?? string.Empty);
@@ -5147,6 +5148,7 @@ namespace LaunchPlugin
             AttachCore("Car.Player.SessionFlagsRaw", () => SoftDebugEnabled ? (_carSaEngine?.Outputs.Debug.PlayerSessionFlagsRaw ?? -1) : -1);
             AttachCore("Car.Player.TrackSurfaceMaterialRaw", () => SoftDebugEnabled ? (_carSaEngine?.Outputs.Debug.PlayerTrackSurfaceMaterialRaw ?? -1) : -1);
             AttachCore("Car.Player.CarIdx", () => _carSaEngine?.Outputs.PlayerSlot.CarIdx ?? -1);
+            AttachCore("Car.Player.PositionInClass", () => _carSaEngine?.Outputs.PlayerSlot.PositionInClass ?? 0);
             AttachCore("Car.Player.ClassName", () => _carSaEngine?.Outputs.PlayerSlot.ClassName ?? string.Empty);
             AttachCore("Car.Player.ClassColor", () => _carSaEngine?.Outputs.PlayerSlot.ClassColor ?? string.Empty);
             AttachCore("Car.Player.ClassColorHex", () => _carSaEngine?.Outputs.PlayerSlot.ClassColorHex ?? string.Empty);
@@ -6515,6 +6517,7 @@ namespace LaunchPlugin
                     _h2hEngine.Update(
                         sessionTimeSec,
                         playerCarIdx,
+                        GetEffectivePositionInClassForPublishedContext(playerCarIdx, playerCarIdx >= 0 && playerCarIdx < _carSaClassPositionByIdx.Length ? _carSaClassPositionByIdx[playerCarIdx] : 0),
                         carIdxLapDistPct,
                         carIdxLap,
                         playerBestLapTimeSec,
@@ -10381,6 +10384,7 @@ namespace LaunchPlugin
             CarSASlot playerSlot = _carSaEngine.Outputs.PlayerSlot;
             if (playerCarIdx < 0 || playerCarIdx >= CarSAEngine.MaxCars)
             {
+                playerSlot.PositionInClass = 0;
                 playerSlot.ClassName = string.Empty;
                 playerSlot.ClassColor = string.Empty;
                 playerSlot.ClassColorHex = string.Empty;
@@ -10400,6 +10404,10 @@ namespace LaunchPlugin
                 playerSlot.LapTimeUpdateVisibilitySec = 0.0;
                 return;
             }
+
+            playerSlot.PositionInClass = GetEffectivePositionInClassForPublishedContext(
+                playerCarIdx,
+                _carSaClassPositionByIdx[playerCarIdx] > 0 ? _carSaClassPositionByIdx[playerCarIdx] : 0);
 
             double lapTimeUpdateExpirySec = _carSaLapTimeUpdateExpireAtSecByIdx[playerCarIdx];
             double lapTimeUpdateRemainingSec = (!double.IsNaN(lapTimeUpdateExpirySec) && lapTimeUpdateExpirySec > sessionTimeSec)

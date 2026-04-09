@@ -41,6 +41,7 @@ namespace LaunchPlugin
         public void Update(
             double sessionTimeSec,
             int playerCarIdx,
+            int playerPositionInClass,
             float[] carIdxLapDistPct,
             int[] carIdxLap,
             double playerBestLapSec,
@@ -56,10 +57,10 @@ namespace LaunchPlugin
             TargetSelector trackBehindSelector)
         {
             UpdateFamily(Outputs.Race, _raceRuntime, sessionTimeSec, playerCarIdx, carIdxLapDistPct, carIdxLap, playerBestLapSec, playerLastLapSec,
-                classSessionBestLapSec, bestLapTimeSecByIdx, lastLapTimeSecByIdx, classPositionByIdx, fixedSectorCacheReader, raceAheadSelector, raceBehindSelector);
+                playerPositionInClass, classSessionBestLapSec, bestLapTimeSecByIdx, lastLapTimeSecByIdx, classPositionByIdx, fixedSectorCacheReader, raceAheadSelector, raceBehindSelector);
 
             UpdateFamily(Outputs.Track, _trackRuntime, sessionTimeSec, playerCarIdx, carIdxLapDistPct, carIdxLap, playerBestLapSec, playerLastLapSec,
-                classSessionBestLapSec, bestLapTimeSecByIdx, lastLapTimeSecByIdx, classPositionByIdx, fixedSectorCacheReader, trackAheadSelector, trackBehindSelector);
+                playerPositionInClass, classSessionBestLapSec, bestLapTimeSecByIdx, lastLapTimeSecByIdx, classPositionByIdx, fixedSectorCacheReader, trackAheadSelector, trackBehindSelector);
         }
 
         private static void UpdateFamily(
@@ -71,6 +72,7 @@ namespace LaunchPlugin
             int[] carIdxLap,
             double playerBestLapSec,
             double playerLastLapSec,
+            int playerPositionInClass,
             double classSessionBestLapSec,
             double[] bestLapTimeSecByIdx,
             double[] lastLapTimeSecByIdx,
@@ -86,7 +88,7 @@ namespace LaunchPlugin
 
             family.ClassSessionBestLapSec = SanitizeLapTime(classSessionBestLapSec);
 
-            UpdatePlayer(family.Player, runtime.Player, sessionTimeSec, playerCarIdx, carIdxLapDistPct, carIdxLap, playerBestLapSec, playerLastLapSec, classSessionBestLapSec);
+            UpdatePlayer(family.Player, runtime.Player, sessionTimeSec, playerCarIdx, playerPositionInClass, carIdxLapDistPct, carIdxLap, playerBestLapSec, playerLastLapSec, classSessionBestLapSec);
             UpdateTarget(family.Ahead, runtime.Ahead, aheadSelector, sessionTimeSec, runtime.Player, family.Player,
                 carIdxLapDistPct, carIdxLap, bestLapTimeSecByIdx, lastLapTimeSecByIdx, classPositionByIdx, classSessionBestLapSec, playerCarIdx, fixedSectorCacheReader);
             UpdateTarget(family.Behind, runtime.Behind, behindSelector, sessionTimeSec, runtime.Player, family.Player,
@@ -98,6 +100,7 @@ namespace LaunchPlugin
             ParticipantRuntime runtime,
             double sessionTimeSec,
             int playerCarIdx,
+            int playerPositionInClass,
             float[] carIdxLapDistPct,
             int[] carIdxLap,
             double playerBestLapSec,
@@ -117,6 +120,7 @@ namespace LaunchPlugin
             output.LastLapDeltaToBestSec = ComputeLastLapDeltaToBest(output.LastLapSec, output.BestLapSec);
             output.LiveDeltaToBestSec = hasContext ? ComputeLiveDeltaToBest(runtime, sessionTimeSec, output.BestLapSec) : 0.0;
             output.LastLapColor = ComputeLastLapColor(output.LastLapSec, output.BestLapSec, classSessionBestLapSec);
+            output.PositionInClass = playerPositionInClass > 0 ? playerPositionInClass : 0;
             output.ActiveSegment = hasContext ? runtime.ActiveSegment : 0;
             output.LapRef = hasContext ? runtime.LapRef : 0;
         }

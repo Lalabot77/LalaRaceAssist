@@ -9,17 +9,18 @@ Branch: work
 - No Git remote is configured in this checkout (`git remote -v` returns empty).
 
 ## Documentation sync status
-- Launch trace shutdown no longer unconditionally discards the current trace pointer; plugin end path is close/flush only.
-- Added explicit launch-trace lifecycle state so finalized completed traces are protected while explicit abort/invalid current-run discards remain intact.
-- Added conservative empty launch-trace housekeeping (no telemetry rows + no usable summary) so useless header-only traces are deleted and not listed in Launch Analysis.
+- Player-facing `PositionInClass` publication now uses Opponents effective/live race-order context for player rows where race-context position is intended.
+- Added explicit player race-context class-position exports for H2H player rows and Car player row so player/target rows stay internally consistent on the same panel.
+- Preserved subsystem ownership boundaries (Opponents race-order owner, CarSA spatial owner, H2H consumer/publisher).
 
 ## Reviewed documentation set
 ### Changed in this sweep
-- `Opponents.cs`
 - `LalaLaunch.cs`
-- `Docs/Subsystems/Launch_Mode.md`
-- `Docs/Subsystems/Trace_Logging.md`
-- `Docs/Internal/SimHubLogMessages.md`
+- `H2HEngine.cs`
+- `Docs/Subsystems/Opponents.md`
+- `Docs/Subsystems/H2H.md`
+- `Docs/Subsystems/CarSA.md`
+- `Docs/Internal/SimHubParameterInventory.md`
 - `Docs/Internal/Development_Changelog.md`
 - `Docs/RepoStatus.md`
 
@@ -27,13 +28,12 @@ Branch: work
 - `Docs/Project_Index.md`
 - `Docs/Internal/Architecture_Guardrails.md`
 - `Docs/Internal/CODEX_TASK_TEMPLATE.txt`
-- `LaunchAnalysisControl.xaml.cs`
-- `Docs/Internal/Plugin_UI_Tooltips.md`
+- `Opponents.cs`
 
 ## Delivery status highlights
-- Valid completed launch traces are retained across plugin shutdown; end-service performs close/flush without pointer-based deletion.
-- Abort/cancel/unsuccessful launch paths still discard the current invalid trace explicitly.
-- Empty/header-only launch traces (no telemetry rows and no usable summary) are cleaned up conservatively and excluded from Launch Analysis listing.
+- `Car.Player.PositionInClass` now publishes effective/live race-order class position when available (with native fallback only when unavailable).
+- `H2HRace.Player.PositionInClass` and `H2HTrack.Player.PositionInClass` now publish from the same effective/live seam used for target rows.
+- Opponent target row contracts and pit-exit behavior remain unchanged.
 
 ## Validation note
-- Validation recorded against `HEAD` (`Launch trace shutdown retention fix + empty-trace housekeeping + docs sync`).
+- Validation recorded against `HEAD` (`Player PositionInClass race-context alignment across Car/H2H player rows + docs sync`).
