@@ -162,6 +162,12 @@
                                        Text="Tip: find your PlayerCarIdx in SimHub property list"/>
                         </StackPanel>
                         <StackPanel Orientation="Horizontal" Margin="0,10,0,0">
+                            <styles:SHToggleCheckbox Content="Mute Shift Assist sound in replay"
+                                                     Margin="0,0,15,0"
+                                                     IsChecked="{Binding Settings.ShiftAssistMuteInReplay, Mode=TwoWay}"
+                                                     ToolTip="Suppress Shift Assist sound during replay sessions. Shift lights, learning, and other Shift Assist logic continue to run normally."/>
+                        </StackPanel>
+                        <StackPanel Orientation="Horizontal" Margin="0,10,0,0">
                             <styles:SHToggleCheckbox x:Name="ShiftAssistDebugCsvToggle"
                                                      Content="Shift Assist Debug CSV"
                                                      Margin="0,0,15,0"

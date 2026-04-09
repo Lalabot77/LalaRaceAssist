@@ -12,7 +12,7 @@ Branch: work
 ## Inputs (source + cadence)
 - Per-tick telemetry: gear, RPM, throttle.
 - Active car profile shift targets, resolved by active gear stack id.
-- Global Shift Assist settings: enable toggle, learning mode toggle, beep duration, lead-time ms, beep sound toggle/volume, urgent sound toggle, custom WAV enable/path, debug CSV toggle/max Hz.
+- Global Shift Assist settings: enable toggle, learning mode toggle, beep duration, lead-time ms, beep sound toggle/volume, urgent sound toggle, custom WAV enable/path, debug CSV toggle/max Hz, and debug-only replay audio mute toggle (`ShiftAssistMuteInReplay`, default enabled).
 - Audio fallback assets: embedded default WAV extracted to plugin common storage.
 
 ## Internal state
@@ -86,6 +86,7 @@ Branch: work
 - Runs from `LalaLaunch.DataUpdate` once per tick after settings/profile resolution.
 - Requires `ActiveProfile` to expose shift targets for the active stack and gear.
 - Audio playback is optional for logic correctness; cue state/exports still update if playback fails.
+- Debug replay mute gate: when `ShiftAssistMuteInReplay` is enabled and replay is active (`DataCorePlugin.GameData.ReplayMode` primary; `DataCorePlugin.GameRawData.Telemetry.IsReplayPlaying` as supporting signal), only audio playback is suppressed. Cue evaluation, shift lights, learning, delay capture, exports, and debug CSV continue unchanged and resume audio immediately once replay is no longer active (no replay-state latching).
 
 ## Reset rules
 - Disabled state resets pending delay capture and keeps engine state off/no-data as applicable.
