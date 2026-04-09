@@ -133,7 +133,7 @@ namespace LaunchPlugin
                 return false;
             }
 
-            posClass = player.PositionInClass;
+            posClass = player.EffectivePositionInClass;
             posOverall = player.PositionOverall;
             gapToLeaderSec = _raceModel.ComputeGapToClassLeaderSec(player);
             return true;
@@ -649,7 +649,9 @@ namespace LaunchPlugin
                     IsInPit = onPitRoad,
                     BestLapSec = ValidLapTime(bestLap) ? bestLap : double.NaN,
                     LastLapSec = ValidLapTime(lastLap) ? lastLap : double.NaN,
-                    PositionInClass = classPos
+                    PositionInClass = classPos,
+                    ProgressPositionInClass = 0,
+                    EffectivePositionInClass = classPos > 0 ? classPos : 0
                 };
             }
 
@@ -729,27 +731,19 @@ namespace LaunchPlugin
                 }
 
                 _usingClassPosition = CanUseClassPosition(sameClass, Player);
-                if (_usingClassPosition)
-                {
-                    foreach (var row in sameClass)
-                    {
-                        row.SortKey = row.PositionInClass > 0 ? row.PositionInClass : double.MaxValue;
-                    }
-                    sameClass = sameClass.OrderBy(r => r.SortKey).ToList();
-                }
-                else
-                {
-                    sameClass = sameClass
-                        .Where(r => r.HasValidLapDist)
-                        .OrderByDescending(r => r.Lap)
-                        .ThenByDescending(r => r.LapDistPct)
-                        .ThenBy(r => r.CarIdx)
-                        .ToList();
+                sameClass = sameClass
+                    .Where(r => r.HasValidLapDist)
+                    .OrderByDescending(r => r.Lap)
+                    .ThenByDescending(r => r.LapDistPct)
+                    .ThenBy(r => r.CarIdx)
+                    .ToList();
 
-                    for (int i = 0; i < sameClass.Count; i++)
-                    {
-                        sameClass[i].PositionInClass = i + 1;
-                    }
+                for (int i = 0; i < sameClass.Count; i++)
+                {
+                    sameClass[i].ProgressPositionInClass = i + 1;
+                    sameClass[i].EffectivePositionInClass = sameClass[i].PositionInClass > 0
+                        ? sameClass[i].PositionInClass
+                        : sameClass[i].ProgressPositionInClass;
                 }
 
                 int playerIndex = sameClass.FindIndex(r => string.Equals(r.IdentityKey, Player.IdentityKey, StringComparison.Ordinal));
@@ -782,7 +776,7 @@ namespace LaunchPlugin
                     return double.NaN;
                 }
 
-                var row = _rows.FirstOrDefault(r => string.Equals(r.ClassColor, Player.ClassColor, StringComparison.Ordinal) && r.PositionInClass == positionInClass);
+                var row = _rows.FirstOrDefault(r => string.Equals(r.ClassColor, Player.ClassColor, StringComparison.Ordinal) && r.EffectivePositionInClass == positionInClass);
                 return row != null ? row.BlendedPaceSec : double.NaN;
             }
 
@@ -794,7 +788,7 @@ namespace LaunchPlugin
                 }
 
                 var leader = _rows.Where(r => string.Equals(r.ClassColor, player.ClassColor, StringComparison.Ordinal))
-                    .OrderBy(r => r.PositionInClass <= 0 ? int.MaxValue : r.PositionInClass)
+                    .OrderBy(r => r.EffectivePositionInClass <= 0 ? int.MaxValue : r.EffectivePositionInClass)
                     .FirstOrDefault();
 
                 if (leader == null)
@@ -1061,7 +1055,7 @@ namespace LaunchPlugin
                 {
                     Valid = true,
                     PlayerIdentityKey = playerIdentityKey,
-                    PlayerPositionInClass = player.PositionInClass,
+                    PlayerPositionInClass = player.EffectivePositionInClass,
                     PlayerPositionOverall = player.PositionOverall,
                     PlayerGapToLeader = double.NaN,
                     PitLossSec = pitLoss,
@@ -1249,6 +1243,8 @@ namespace LaunchPlugin
             public string ClassColor;
             public int PositionOverall;
             public int PositionInClass;
+            public int ProgressPositionInClass;
+            public int EffectivePositionInClass;
             public double GapToPlayerSec;
             public bool IsConnected;
             public bool IsInPit;
@@ -1257,7 +1253,6 @@ namespace LaunchPlugin
             public bool HasValidLapDist;
             public double BestLapSec;
             public double LastLapSec;
-            public double SortKey;
             public double BlendedPaceSec;
         }
 

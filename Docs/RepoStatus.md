@@ -1,7 +1,7 @@
 # Repository status
 
 Validated against commit: HEAD
-Last updated: 2026-04-08
+Last updated: 2026-04-09
 Branch: work
 
 ## Current repo/link status
@@ -9,22 +9,14 @@ Branch: work
 - No Git remote is configured in this checkout (`git remote -v` returns empty).
 
 ## Documentation sync status
-- Implemented the session-change starvation fix in `LalaLaunch.DataUpdate`: refuel cooldown is now localized to the refuel-learning block and no longer exits the full tick.
-- Added a unified transient runtime recovery seam: `ManualRecoveryReset(string reason)` in `LalaLaunch`.
-- Repurposed existing `PrimaryDashMode` action to trigger manual recovery reset while keeping action name compatibility intact.
-- Wired landing-tab `ResetPlugin_Click` to the same manual recovery reset seam.
-- Consolidated session token and session-type transition reset execution through `ManualRecoveryReset("Session transition")` (with fuel-model transition handling preserved).
-- Added a canonical INFO log for the recovery seam trigger reason.
+- Updated Opponents native ordering policy to use RaceProgress (`CarIdxLap + CarIdxLapDistPct`) as the primary same-class neighbor selector.
+- Kept native `CarIdxClassPosition` as anchor/validation context only so delayed official position updates no longer block immediate target switching after live overtakes.
+- Preserved existing Opponents output contracts (`Ahead1/2`, `Behind1/2`) and H2H race-selector integration seam.
 
 ## Reviewed documentation set
 ### Changed in this sweep
-- `LalaLaunch.cs`
-- `OverviewTabView.xaml.cs`
-- `Docs/Subsystems/Fuel_Model.md`
-- `Docs/Subsystems/Shift_Assist.md`
-- `Docs/Subsystems/Dash_Integration.md`
-- `Docs/Internal/SimHubLogMessages.md`
-- `Docs/Internal/Plugin_UI_Tooltips.md`
+- `Opponents.cs`
+- `Docs/Subsystems/Opponents.md`
 - `Docs/Internal/Development_Changelog.md`
 - `Docs/RepoStatus.md`
 
@@ -34,21 +26,15 @@ Branch: work
 - `Docs/Internal/Architecture_Guardrails.md`
 - `Docs/Internal/CODEX_TASK_TEMPLATE.txt`
 - `Docs/Internal/SimHubParameterInventory.md`
-- `Docs/Subsystems/Fuel_Planner_Tab.md`
-- `Docs/Subsystems/Message_System_V1.md`
 - `Docs/Subsystems/CarSA.md`
 - `Docs/Subsystems/H2H.md`
-- `OverviewTabView.xaml`
-- `FuelCalcs.cs`
-- `ShiftAssistEngine.cs`
-- `ShiftAssistAudio.cs`
-- `ShiftAssistLearningEngine.cs`
+- `Docs/Internal/SimHubLogMessages.md`
+- `LalaLaunch.cs`
 
 ## Delivery status highlights
-- Fixed DataUpdate starvation path by removing the global early-return from refuel cooldown handling.
-- Added bounded runtime-only recovery reset orchestration without altering profile persistence, learned targets, or subsystem algorithms.
-- Session transitions now use the same reset orchestration path, reducing reset asymmetry risk.
-- Opponents rewrite remained out of scope; `Opponents.cs` was not modified.
+- Fixed Opponents same-class ordering lag by making RaceProgress-first ordering authoritative for live neighbor selection.
+- Retained class-position values for anchor/validation context, but removed them as the primary live ordering driver.
+- Kept CarSA timing seam usage for Ahead1/Behind1 gap seconds and left H2H selector contracts unchanged.
 
 ## Validation note
-- Validation recorded against `HEAD` (`DataUpdate starvation fix + manual recovery reset wiring + docs sync`).
+- Validation recorded against `HEAD` (`Opponents RaceProgress-first ordering fix + docs sync`).
