@@ -1,7 +1,7 @@
 # Profiles and Personal Bests
 
-Validated against commit: b45bc8f
-Last updated: 2026-03-24
+Validated against commit: HEAD
+Last updated: 2026-04-09
 Branch: work
 
 ## Purpose
@@ -9,6 +9,7 @@ Profiles and PBs provide **persistent baselines** for:
 - Fuel per lap (dry/wet)
 - Lap time (dry/wet)
 - Pit lane loss per track
+- PB fixed-sector data (dry/wet, optional S1..S6 ms fields)
 - Condition lock flags and condition multipliers
 - Optional per-car base tank capacity
 
@@ -34,6 +35,7 @@ They seed live models but never override confirmed live data when locks are enab
 ## Internal State
 - Per-car profile settings (launch, fuel, dash, pit entry defaults).
 - Per-track stats (dry/wet fuel windows, avg lap times, PBs, pit loss, lock flags).
+- Per-track PB sectors: `BestLapSector1..6DryMs` and `BestLapSector1..6WetMs` are optional and only populated when real fixed-sector data exists.
 - Condition-specific “last updated” metadata for PB, avg lap time, and fuel burn.
 - Track keys normalized to lowercase to avoid duplicates.
 
@@ -62,8 +64,10 @@ PB laps are captured when:
 - Lap is valid.
 - Lap improves the stored PB for the active condition.
 - Session context allows PB capture.
+- PB values are telemetry-owned in Profiles; the PB display is read-only in the Profiles workflow (no manual PB editing path).
 
 PB metadata (source + timestamp) is stored separately for dry and wet laps. The **active condition** (dry vs wet) is driven by live wet-mode detection (tyre compound), so PB capture always aligns to the current surface mode.
+When a PB update includes real sector values, condition-specific PB sector fields are persisted alongside the lap time. Missing sectors remain null and are never synthesized.
 
 ---
 
@@ -85,6 +89,7 @@ Profiles UI exposes buttons to reset and relearn track data:
 - Profile lap time (dry/wet)
 - Profile fuel per lap (dry/wet min/avg/max)
 - PB lap time (dry/wet)
+- PB fixed sectors (dry/wet, optional)
 - Track condition locks + pit-loss lock
 - Per-condition “last updated” display strings used in the Profiles UI
 - Base tank capacity (`BaseTankLitres`) used to clamp max-fuel overrides in Profile planning mode.
@@ -108,5 +113,6 @@ Profiles UI exposes buttons to reset and relearn track data:
 ## Test Checklist
 - Profile loads on session start and auto-selects the active car/track.
 - PB captured on valid improvement (dry and wet).
+- PB text is visible but non-editable in Profiles UI (dry and wet).
 - Fuel and avg lap updates persist after sample thresholds are met.
 - Relearn buttons clear the intended fields and reset locks/track markers.

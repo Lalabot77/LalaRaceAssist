@@ -736,10 +736,8 @@ namespace LaunchPlugin
 
         private int? _bestLapMsDry;
         private string _bestLapMsDryText;
-        private bool _suppressBestLapDrySync = false;
         private int? _bestLapMsWet;
         private string _bestLapMsWetText;
-        private bool _suppressBestLapWetSync = false;
 
         [JsonProperty]
         public int? BestLapMsDry
@@ -766,12 +764,7 @@ namespace LaunchPlugin
                         catch { }
                     }
 
-                    if (!_suppressBestLapDrySync)
-                    {
-                        _suppressBestLapDrySync = true;
-                        BestLapTimeDryText = MillisecondsToLapTimeString(_bestLapMsDry);
-                        _suppressBestLapDrySync = false;
-                    }
+                    _bestLapMsDryText = MillisecondsToLapTimeString(_bestLapMsDry);
                 }
             }
         }
@@ -784,18 +777,11 @@ namespace LaunchPlugin
             }
             set
             {
-                if (_bestLapMsDryText != value)
+                string normalized = MillisecondsToLapTimeString(BestLapMsDry);
+                if (_bestLapMsDryText != normalized)
                 {
-                    _bestLapMsDryText = value;
+                    _bestLapMsDryText = normalized;
                     OnPropertyChanged();
-                    var parsed = LapTimeStringToMilliseconds(value);
-                    if (!_isHydrating && !_suppressBestLapDrySync && parsed.HasValue && BestLapMsDry != parsed)
-                    {
-                        MarkBestLapUpdatedDry("Manual");
-                    }
-                    _suppressBestLapDrySync = true;
-                    BestLapMsDry = parsed;
-                    _suppressBestLapDrySync = false;
                 }
             }
         }
@@ -825,12 +811,7 @@ namespace LaunchPlugin
                         catch { }
                     }
 
-                    if (!_suppressBestLapWetSync)
-                    {
-                        _suppressBestLapWetSync = true;
-                        BestLapTimeWetText = MillisecondsToLapTimeString(_bestLapMsWet);
-                        _suppressBestLapWetSync = false;
-                    }
+                    _bestLapMsWetText = MillisecondsToLapTimeString(_bestLapMsWet);
                 }
             }
         }
@@ -840,18 +821,11 @@ namespace LaunchPlugin
             get => _bestLapMsWetText;
             set
             {
-                if (_bestLapMsWetText != value)
+                string normalized = MillisecondsToLapTimeString(BestLapMsWet);
+                if (_bestLapMsWetText != normalized)
                 {
-                    _bestLapMsWetText = value;
+                    _bestLapMsWetText = normalized;
                     OnPropertyChanged();
-                    var parsed = LapTimeStringToMilliseconds(value);
-                    if (!_isHydrating && !_suppressBestLapWetSync && parsed.HasValue && BestLapMsWet != parsed)
-                    {
-                        MarkBestLapUpdatedWet("Manual");
-                    }
-                    _suppressBestLapWetSync = true;
-                    BestLapMsWet = parsed;
-                    _suppressBestLapWetSync = false;
                 }
             }
         }
@@ -867,6 +841,135 @@ namespace LaunchPlugin
 
             if (BestLapMsDry.HasValue && BestLapMsDry.Value > 0) return BestLapMsDry;
             return null;
+        }
+
+        [JsonProperty(NullValueHandling = NullValueHandling.Ignore)]
+        public int? BestLapSector1DryMs { get; set; }
+        [JsonProperty(NullValueHandling = NullValueHandling.Ignore)]
+        public int? BestLapSector2DryMs { get; set; }
+        [JsonProperty(NullValueHandling = NullValueHandling.Ignore)]
+        public int? BestLapSector3DryMs { get; set; }
+        [JsonProperty(NullValueHandling = NullValueHandling.Ignore)]
+        public int? BestLapSector4DryMs { get; set; }
+        [JsonProperty(NullValueHandling = NullValueHandling.Ignore)]
+        public int? BestLapSector5DryMs { get; set; }
+        [JsonProperty(NullValueHandling = NullValueHandling.Ignore)]
+        public int? BestLapSector6DryMs { get; set; }
+
+        [JsonProperty(NullValueHandling = NullValueHandling.Ignore)]
+        public int? BestLapSector1WetMs { get; set; }
+        [JsonProperty(NullValueHandling = NullValueHandling.Ignore)]
+        public int? BestLapSector2WetMs { get; set; }
+        [JsonProperty(NullValueHandling = NullValueHandling.Ignore)]
+        public int? BestLapSector3WetMs { get; set; }
+        [JsonProperty(NullValueHandling = NullValueHandling.Ignore)]
+        public int? BestLapSector4WetMs { get; set; }
+        [JsonProperty(NullValueHandling = NullValueHandling.Ignore)]
+        public int? BestLapSector5WetMs { get; set; }
+        [JsonProperty(NullValueHandling = NullValueHandling.Ignore)]
+        public int? BestLapSector6WetMs { get; set; }
+
+        public int? GetBestLapSectorMsForCondition(bool isWetEffective, int sectorIndex)
+        {
+            if (sectorIndex < 0 || sectorIndex >= 6)
+            {
+                return null;
+            }
+
+            if (isWetEffective)
+            {
+                switch (sectorIndex)
+                {
+                    case 0: return BestLapSector1WetMs;
+                    case 1: return BestLapSector2WetMs;
+                    case 2: return BestLapSector3WetMs;
+                    case 3: return BestLapSector4WetMs;
+                    case 4: return BestLapSector5WetMs;
+                    case 5: return BestLapSector6WetMs;
+                    default: return null;
+                }
+            }
+
+            switch (sectorIndex)
+            {
+                case 0: return BestLapSector1DryMs;
+                case 1: return BestLapSector2DryMs;
+                case 2: return BestLapSector3DryMs;
+                case 3: return BestLapSector4DryMs;
+                case 4: return BestLapSector5DryMs;
+                case 5: return BestLapSector6DryMs;
+                default: return null;
+            }
+        }
+
+        public bool SetBestLapSectorsForCondition(bool isWetEffective, int?[] sectorMs)
+        {
+            if (sectorMs == null)
+            {
+                return false;
+            }
+
+            bool changed = false;
+            for (int i = 0; i < 6; i++)
+            {
+                int? next = (i < sectorMs.Length && sectorMs[i].HasValue && sectorMs[i].Value > 0)
+                    ? sectorMs[i].Value
+                    : (int?)null;
+                int? current = GetBestLapSectorMsForCondition(isWetEffective, i);
+                if (current != next)
+                {
+                    changed = true;
+                }
+
+                if (isWetEffective)
+                {
+                    switch (i)
+                    {
+                        case 0: BestLapSector1WetMs = next; break;
+                        case 1: BestLapSector2WetMs = next; break;
+                        case 2: BestLapSector3WetMs = next; break;
+                        case 3: BestLapSector4WetMs = next; break;
+                        case 4: BestLapSector5WetMs = next; break;
+                        case 5: BestLapSector6WetMs = next; break;
+                    }
+                }
+                else
+                {
+                    switch (i)
+                    {
+                        case 0: BestLapSector1DryMs = next; break;
+                        case 1: BestLapSector2DryMs = next; break;
+                        case 2: BestLapSector3DryMs = next; break;
+                        case 3: BestLapSector4DryMs = next; break;
+                        case 4: BestLapSector5DryMs = next; break;
+                        case 5: BestLapSector6DryMs = next; break;
+                    }
+                }
+            }
+
+            return changed;
+        }
+
+        public void ClearBestLapSectorsForCondition(bool isWetEffective)
+        {
+            if (isWetEffective)
+            {
+                BestLapSector1WetMs = null;
+                BestLapSector2WetMs = null;
+                BestLapSector3WetMs = null;
+                BestLapSector4WetMs = null;
+                BestLapSector5WetMs = null;
+                BestLapSector6WetMs = null;
+            }
+            else
+            {
+                BestLapSector1DryMs = null;
+                BestLapSector2DryMs = null;
+                BestLapSector3DryMs = null;
+                BestLapSector4DryMs = null;
+                BestLapSector5DryMs = null;
+                BestLapSector6DryMs = null;
+            }
         }
         private double? _pitLaneLossSeconds;
         [JsonProperty] public double? PitLaneLossSeconds { get => _pitLaneLossSeconds; set { if (_pitLaneLossSeconds != value) { _pitLaneLossSeconds = value; OnPropertyChanged(); OnPropertyChanged(nameof(PitLaneLossSecondsText)); } } }
@@ -1363,9 +1466,8 @@ namespace LaunchPlugin
 
         public void RelearnDryConditions()
         {
-            _suppressBestLapDrySync = true;
             BestLapMsDry = 0;
-            _suppressBestLapDrySync = false;
+            ClearBestLapSectorsForCondition(false);
             _bestLapMsDryText = string.Empty;
             OnPropertyChanged(nameof(BestLapTimeDryText));
 
@@ -1405,9 +1507,8 @@ namespace LaunchPlugin
 
         public void RelearnWetConditions()
         {
-            _suppressBestLapWetSync = true;
             BestLapMsWet = 0;
-            _suppressBestLapWetSync = false;
+            ClearBestLapSectorsForCondition(true);
             _bestLapMsWetText = string.Empty;
             OnPropertyChanged(nameof(BestLapTimeWetText));
 
