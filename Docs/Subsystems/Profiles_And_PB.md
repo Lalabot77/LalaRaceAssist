@@ -1,6 +1,6 @@
 # Profiles and Personal Bests
 
-Validated against commit: b45bc8f
+Validated against commit: HEAD
 Last updated: 2026-04-09
 Branch: work
 
@@ -64,6 +64,7 @@ PB laps are captured when:
 - Lap is valid.
 - Lap improves the stored PB for the active condition.
 - Session context allows PB capture.
+- PB values are telemetry-owned in Profiles; the PB display is read-only in the Profiles workflow (no manual PB editing path).
 
 PB metadata (source + timestamp) is stored separately for dry and wet laps. The **active condition** (dry vs wet) is driven by live wet-mode detection (tyre compound), so PB capture always aligns to the current surface mode.
 When a PB update includes real sector values, condition-specific PB sector fields are persisted alongside the lap time. Missing sectors remain null and are never synthesized.
@@ -112,5 +113,6 @@ Profiles UI exposes buttons to reset and relearn track data:
 ## Test Checklist
 - Profile loads on session start and auto-selects the active car/track.
 - PB captured on valid improvement (dry and wet).
+- PB text is visible but non-editable in Profiles UI (dry and wet).
 - Fuel and avg lap updates persist after sample thresholds are met.
 - Relearn buttons clear the intended fields and reset locks/track markers.

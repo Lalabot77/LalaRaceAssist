@@ -33,6 +33,11 @@ The public user-facing release history is maintained in the root `CHANGELOG.md`.
 
 ## Post-v1.0 development
 
+### PB telemetry-only safety follow-up (LapRef)
+- Removed manual dry/wet PB editing from Profiles Track workflow by making PB fields read-only display values in `ProfilesManagerView.xaml`.
+- Neutralized `TrackStats` PB text setters so `BestLapTimeDryText` / `BestLapTimeWetText` no longer parse and mutate persisted PB milliseconds.
+- Preserved existing telemetry PB seam (`TryUpdatePBByCondition(...)`), condition-specific PB sector persistence, and dry/wet relearn clears.
+
 ### Opponents 5-slot export expansion + live PositionInClass alignment
 - Expanded Opponents race-order publication from 2 to 5 slots each side under the existing flat `Opp.*` namespace (`Opp.Ahead1..5.*`, `Opp.Behind1..5.*`) while preserving backward compatibility for existing `Ahead1/2` and `Behind1/2` bindings.
 - Added richer race-order-safe per-slot metadata (identity/cosmetic, validity/pit state, effective `PositionInClass`, lap-context fields, and gap/fight metrics) without importing CarSA-local traffic/status semantics.

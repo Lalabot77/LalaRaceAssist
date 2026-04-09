@@ -39,6 +39,10 @@ Missing sectors remain empty. Lap time can still be valid without sector data.
 4. Existing profile PB seam persists lap-time PB; sector fields are persisted condition-wise when available.
 5. Each tick, LapRef rematerializes profile-best from active profile + track + wet/dry condition and publishes `LapRef.*`.
 
+PB safety note:
+- Profile PB remains telemetry-owned (validated-lap seam); Profiles UI no longer permits manual PB entry.
+- This preserves consistency between persisted PB lap times and optional persisted PB sector values.
+
 ## State semantics
 Fixed-sector state follows H2H-like semantics:
 - `0 = empty`

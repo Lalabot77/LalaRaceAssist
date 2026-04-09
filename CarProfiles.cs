@@ -736,10 +736,8 @@ namespace LaunchPlugin
 
         private int? _bestLapMsDry;
         private string _bestLapMsDryText;
-        private bool _suppressBestLapDrySync = false;
         private int? _bestLapMsWet;
         private string _bestLapMsWetText;
-        private bool _suppressBestLapWetSync = false;
 
         [JsonProperty]
         public int? BestLapMsDry
@@ -766,12 +764,7 @@ namespace LaunchPlugin
                         catch { }
                     }
 
-                    if (!_suppressBestLapDrySync)
-                    {
-                        _suppressBestLapDrySync = true;
-                        BestLapTimeDryText = MillisecondsToLapTimeString(_bestLapMsDry);
-                        _suppressBestLapDrySync = false;
-                    }
+                    _bestLapMsDryText = MillisecondsToLapTimeString(_bestLapMsDry);
                 }
             }
         }
@@ -784,18 +777,11 @@ namespace LaunchPlugin
             }
             set
             {
-                if (_bestLapMsDryText != value)
+                string normalized = MillisecondsToLapTimeString(BestLapMsDry);
+                if (_bestLapMsDryText != normalized)
                 {
-                    _bestLapMsDryText = value;
+                    _bestLapMsDryText = normalized;
                     OnPropertyChanged();
-                    var parsed = LapTimeStringToMilliseconds(value);
-                    if (!_isHydrating && !_suppressBestLapDrySync && parsed.HasValue && BestLapMsDry != parsed)
-                    {
-                        MarkBestLapUpdatedDry("Manual");
-                    }
-                    _suppressBestLapDrySync = true;
-                    BestLapMsDry = parsed;
-                    _suppressBestLapDrySync = false;
                 }
             }
         }
@@ -825,12 +811,7 @@ namespace LaunchPlugin
                         catch { }
                     }
 
-                    if (!_suppressBestLapWetSync)
-                    {
-                        _suppressBestLapWetSync = true;
-                        BestLapTimeWetText = MillisecondsToLapTimeString(_bestLapMsWet);
-                        _suppressBestLapWetSync = false;
-                    }
+                    _bestLapMsWetText = MillisecondsToLapTimeString(_bestLapMsWet);
                 }
             }
         }
@@ -840,18 +821,11 @@ namespace LaunchPlugin
             get => _bestLapMsWetText;
             set
             {
-                if (_bestLapMsWetText != value)
+                string normalized = MillisecondsToLapTimeString(BestLapMsWet);
+                if (_bestLapMsWetText != normalized)
                 {
-                    _bestLapMsWetText = value;
+                    _bestLapMsWetText = normalized;
                     OnPropertyChanged();
-                    var parsed = LapTimeStringToMilliseconds(value);
-                    if (!_isHydrating && !_suppressBestLapWetSync && parsed.HasValue && BestLapMsWet != parsed)
-                    {
-                        MarkBestLapUpdatedWet("Manual");
-                    }
-                    _suppressBestLapWetSync = true;
-                    BestLapMsWet = parsed;
-                    _suppressBestLapWetSync = false;
                 }
             }
         }
@@ -1492,9 +1466,7 @@ namespace LaunchPlugin
 
         public void RelearnDryConditions()
         {
-            _suppressBestLapDrySync = true;
             BestLapMsDry = 0;
-            _suppressBestLapDrySync = false;
             ClearBestLapSectorsForCondition(false);
             _bestLapMsDryText = string.Empty;
             OnPropertyChanged(nameof(BestLapTimeDryText));
@@ -1535,9 +1507,7 @@ namespace LaunchPlugin
 
         public void RelearnWetConditions()
         {
-            _suppressBestLapWetSync = true;
             BestLapMsWet = 0;
-            _suppressBestLapWetSync = false;
             ClearBestLapSectorsForCondition(true);
             _bestLapMsWetText = string.Empty;
             OnPropertyChanged(nameof(BestLapTimeWetText));
