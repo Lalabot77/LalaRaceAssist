@@ -213,6 +213,7 @@ Branch: work
 - `GlobalSettingsView.xaml` shows the warning text `Debug mode is for troubleshooting only. Leave this off unless asked to enable it.` directly below `Enable debugging mode`.
 - `GlobalSettingsView.xaml` `Enable Debug Logging` tooltip says it enables verbose logging for troubleshooting the plugin.
 - `GlobalSettingsView.xaml` `PitExit Verbose Logging` tooltip says it adds PitExit math audit details to pit-in snapshots for troubleshooting.
+- `GlobalSettingsView.xaml` `Mute Shift Assist sound in replay` tooltip says replay sessions suppress only Shift Assist audio while lights, learning, and other Shift Assist logic continue normally.
 - `GlobalSettingsView.xaml` `Shift Assist Debug CSV` tooltip explains per-tick diagnostic CSV logging.
 - `GlobalSettingsView.xaml` `Shift Assist Debug Max Hz` textbox tooltip documents valid range (1..60 Hz).
 

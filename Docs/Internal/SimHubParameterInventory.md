@@ -221,6 +221,7 @@ Branch: work
 Shift Assist runtime/settings notes:
 - `ShiftAssistUrgentEnabled` (bool, per-profile): enables/disables urgent secondary beep playback.
 - `ShiftAssistShiftLightMode` (int, per-profile): Shift Light routing mode (`0=PrimaryOnly`, `1=UrgentOnly`, `2=Both`, default `2`).
+- `ShiftAssistMuteInReplay` (bool, global Debug): when true (default), suppresses Shift Assist sound while replay is active; cue evaluation/lights/learning remain active.
 - No separate urgent volume parameter is used.
 - Urgent volume is derived at runtime as 50% of the main beep volume slider.
 

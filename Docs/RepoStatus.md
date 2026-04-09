@@ -9,20 +9,18 @@ Branch: work
 - No Git remote is configured in this checkout (`git remote -v` returns empty).
 
 ## Documentation sync status
-- Follow-up fix: locked refuel-rate overwrite blocks now preserve both persistence and runtime/planner applied value when a usable stored locked rate exists.
-- Added locked first-fill fail-safe: if locked but no usable stored refuel rate exists, the first valid learned candidate may populate once, after which lock blocking resumes normally.
-- Updated Profiles → CAR refuel slider tooltip text to explicitly say live refuel events update the value while unlocked.
-- Kept existing unlocked flow unchanged and retained concise verbose-debug observability for blocked overwrite attempts (`[LalaPlugin:Refuel Rate] Locked; blocked learned overwrite ...`).
+- Added a new Debug-only global setting `ShiftAssistMuteInReplay` (default `true`) to suppress Shift Assist audio specifically during replay sessions.
+- Replay detection now uses `DataCorePlugin.GameData.ReplayMode` as the primary signal, with `DataCorePlugin.GameRawData.Telemetry.IsReplayPlaying` as an optional supporting signal.
+- Replay mute is evaluated continuously at runtime (not latched); audio suppression clears automatically as soon as replay is no longer active.
+- Shift Assist cue generation, shift-light latches/exports, learning, delay capture, and debug CSV flow remain unchanged.
 
 ## Reviewed documentation set
 ### Changed in this sweep
 - `LalaLaunch.cs`
-- `Docs/Subsystems/Fuel_Model.md`
-- `Docs/Subsystems/Fuel_Planner_Tab.md`
-- `ProfilesManagerView.xaml`
+- `GlobalSettingsView.xaml`
+- `Docs/Subsystems/Shift_Assist.md`
+- `Docs/Internal/Plugin_UI_Tooltips.md`
 - `Docs/Internal/SimHubParameterInventory.md`
-- `Docs/Internal/SimHubLogMessages.md`
-- `Docs/Internal/Development_Changelog.md`
 - `Docs/RepoStatus.md`
 
 ### Reviewed and left unchanged
@@ -30,17 +28,13 @@ Branch: work
 - `Docs/Internal/CODEX_CONTRACT.txt`
 - `Docs/Internal/Architecture_Guardrails.md`
 - `Docs/Internal/CODEX_TASK_TEMPLATE.txt`
-- `FuelCalcs.cs`
-- `FuelCalculatorView.xaml`
-- `CarProfiles.cs`
-- `ProfilesManagerViewModel.cs`
-- `Docs/Internal/Plugin_UI_Tooltips.md`
+- `Docs/Internal/SimHubLogMessages.md`
+- `Docs/Internal/Code_Snapshot.md`
 
 ## Delivery status highlights
-- Locked refuel-rate overwrite attempts now keep runtime/planner on the locked stored value (not the blocked learned candidate).
-- Locked profiles with unusable stored refuel rates can self-heal via one-time first-fill from the first valid learned candidate.
-- Existing unlocked behavior remains unchanged: valid learned refuel rates continue to save/apply.
-- Existing profiles remain backward-compatible and default unlocked when the lock field is absent.
+- Added `Mute Shift Assist sound in replay` toggle in Debug Options with explicit tooltip semantics.
+- Shift Assist runtime audio path now applies a narrow replay-only gate at playback call sites.
+- The replay-only gate does not alter Shift Assist engine cue timing or learning/target calculations.
 
 ## Validation note
-- Validation recorded against `HEAD` (`Refuel-rate lock runtime fix + locked first-fill fail-safe + docs sync`).
+- Validation recorded against `HEAD` (`Debug replay-only Shift Assist audio mute toggle + runtime gate + docs sync`).
