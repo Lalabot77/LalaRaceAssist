@@ -1,7 +1,7 @@
 # Head-to-Head (H2H)
 
 Validated against commit: HEAD
-Last updated: 2026-03-20
+Last updated: 2026-04-09
 Branch: work
 
 ## Purpose
@@ -52,7 +52,7 @@ H2H sector publication is intentionally simple:
 
 ## Numeric semantics
 - `PositionInClass = 0` when unavailable.
-- Published `PositionInClass` for `H2HRace.*` and `H2HTrack.*` follows effective/live race-order semantics when available (RaceProgress-first context from Opponents), with local selector/native fallback only when effective context is unavailable.
+- Published `PositionInClass` for `H2HRace.*` and `H2HTrack.*` now includes both target rows and `Player.*` rows, and follows effective/live race-order semantics when available (RaceProgress-first context from Opponents), with local selector/native fallback only when effective context is unavailable.
 - `LiveDeltaToBestSec = 0` when insufficient data exists.
 - Sector delta values reset to `0` whenever their sector state is not `valid`.
 - Sector publication is **not bind-aware** after the cache switchover. H2H does not rebuild rows from target-bound stopwatch completions and does not carry a special lap-wrap sector-6 timing path; sector 6 simply publishes whenever CarSA records the `50→0` completion into cache.
@@ -64,6 +64,7 @@ Both `H2HRace.*` and `H2HTrack.*` expose the same flat shape:
 - family-level field: `ClassSessionBestLapSec`
 - `Ahead.*` / `Behind.*` identity fields: `Valid`, `CarIdx`, `IdentityKey`, `Name`, `CarNumber`, `ClassColor`, `PositionInClass`
 - `Player.*`, `Ahead.*`, `Behind.*` lap-summary fields: `LastLapSec`, `BestLapSec`, `LastLapDeltaToBestSec`, `LiveDeltaToBestSec`, `LastLapColor`, `ActiveSegment`, `LapRef`
+- `Player.*` identity/context field: `PositionInClass` (effective/live race-order context when available)
 - `Ahead.*` / `Behind.*` comparison fields: `LastLapDeltaToPlayerSec`, `LiveGapSec`
 - `Ahead.S1..S6DeltaSec`, `Ahead.S1..S6State`
 - `Behind.S1..S6DeltaSec`, `Behind.S1..S6State`
