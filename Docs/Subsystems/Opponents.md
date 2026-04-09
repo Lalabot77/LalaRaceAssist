@@ -34,11 +34,10 @@ Opponents now reads from:
 - Partial identity is rejected. If class color or car number is missing, identity is invalid and the row is not used for published Opp targets.
 
 ## Same-class ordering model
-- Primary: use native `CarIdxClassPosition` when sufficient same-class rows report valid positions.
-- Guard: class-position ordering is enabled only when the player has a valid positive class position; otherwise Opponents falls back to lap-progress ordering to avoid warm-up misordering.
-- Fallback: class-filtered order by `CarIdxLap` then `CarIdxLapDistPct` (descending), with guards:
+- Live same-class target selection is **RaceProgress-first**: class-filtered order by `CarIdxLap` then `CarIdxLapDistPct` (descending), with guards:
   - skip cars without valid lap distance (`0..1`)
   - skip cars not in world (`CarIdxTrackSurface < 0`)
+- Native `CarIdxClassPosition` remains available as an **anchor/validation input** and for positional context exports/snapshots, but it no longer blocks immediate Ahead/Behind target switching during live overtakes.
 - Opponents owns this ordering; CarSA ownership is unchanged.
 
 ## Gap and fight model (native)
