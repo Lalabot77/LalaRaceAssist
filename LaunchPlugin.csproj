@@ -141,6 +141,7 @@
     </Compile>
     <Compile Include="Opponents.cs" />
     <Compile Include="H2HEngine.cs" />
+    <Compile Include="LapReferenceEngine.cs" />
     <Compile Include="CarSAEngine.cs" />
     <Compile Include="CarSAStyleResolver.cs" />
     <Compile Include="CarSASlot.cs" />

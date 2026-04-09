@@ -549,6 +549,7 @@ namespace LaunchPlugin
         private bool _msgV1InfoLogged = false;
         private int _lastValidLapMs = 0;
         private int _lastValidLapNumber = -1;
+        private int?[] _lastValidatedLapRefSectorMs;
         private bool? _lastIsWetTyres = null;
 
 
@@ -2692,6 +2693,7 @@ namespace LaunchPlugin
                     {
                         _lastValidLapMs = (int)Math.Round(lastLapSec * 1000.0);
                         _lastValidLapNumber = completedLapsNow;
+                        TryCaptureLapReferenceValidatedLap(pluginManager, lastLapSec, completedLapsNow, out _lastValidatedLapRefSectorMs);
                     }
 
                     if (recordPaceForStats)
@@ -3891,6 +3893,7 @@ namespace LaunchPlugin
         private OpponentsEngine _opponentsEngine;
         private CarSAEngine _carSaEngine;
         private H2HEngine _h2hEngine;
+        private LapReferenceEngine _lapReferenceEngine;
         private readonly RadioFrequencyNameCache _radioFrequencyNameCache = new RadioFrequencyNameCache();
         private int _lastTransmitCarIdx = -1;
         private int _lastTransmitRadioIdx = -1;
@@ -4296,6 +4299,57 @@ namespace LaunchPlugin
             }
         }
 
+        private void AttachLapRefExports()
+        {
+            AttachCore("LapRef.Valid", () => _lapReferenceEngine?.Outputs?.Valid ?? false);
+            AttachCore("LapRef.Mode", () => _lapReferenceEngine?.Outputs?.Mode ?? string.Empty);
+            AttachCore("LapRef.PlayerCarIdx", () => _lapReferenceEngine?.Outputs?.PlayerCarIdx ?? -1);
+            AttachCore("LapRef.ActiveSegment", () => _lapReferenceEngine?.Outputs?.ActiveSegment ?? 0);
+
+            AttachLapRefSideExports("LapRef.Player", () => _lapReferenceEngine?.Outputs?.Player);
+            AttachLapRefSideExports("LapRef.SessionBest", () => _lapReferenceEngine?.Outputs?.SessionBest);
+            AttachLapRefSideExports("LapRef.ProfileBest", () => _lapReferenceEngine?.Outputs?.ProfileBest);
+
+            AttachLapRefCompareExports("LapRef.Compare.SessionBest", () => _lapReferenceEngine?.Outputs?.CompareSessionBest);
+            AttachLapRefCompareExports("LapRef.Compare.ProfileBest", () => _lapReferenceEngine?.Outputs?.CompareProfileBest);
+        }
+
+        private void AttachLapRefSideExports(string prefix, Func<LapReferenceEngine.LapReferenceSideOutput> sideGetter)
+        {
+            if (string.IsNullOrWhiteSpace(prefix) || sideGetter == null)
+            {
+                return;
+            }
+
+            AttachCore(prefix + ".Valid", () => sideGetter()?.Valid ?? false);
+            AttachCore(prefix + ".LapTimeSec", () => sideGetter()?.LapTimeSec ?? 0.0);
+            AttachCore(prefix + ".ActiveSegment", () => sideGetter()?.ActiveSegment ?? 0);
+
+            for (int i = 0; i < LapReferenceEngine.SegmentCount; i++)
+            {
+                int segmentIndex = i;
+                string segmentLabel = "S" + (i + 1).ToString(CultureInfo.InvariantCulture);
+                AttachCore(prefix + "." + segmentLabel + "State", () => sideGetter() != null ? sideGetter().GetSectorState(segmentIndex) : 0);
+                AttachCore(prefix + "." + segmentLabel + "Sec", () => sideGetter() != null ? sideGetter().GetSectorSec(segmentIndex) : 0.0);
+            }
+        }
+
+        private void AttachLapRefCompareExports(string prefix, Func<LapReferenceEngine.LapReferenceComparisonOutput> compareGetter)
+        {
+            if (string.IsNullOrWhiteSpace(prefix) || compareGetter == null)
+            {
+                return;
+            }
+
+            for (int i = 0; i < LapReferenceEngine.SegmentCount; i++)
+            {
+                int segmentIndex = i;
+                string segmentLabel = "S" + (i + 1).ToString(CultureInfo.InvariantCulture);
+                AttachCore(prefix + "." + segmentLabel + "State", () => compareGetter() != null ? compareGetter().GetSectorState(segmentIndex) : 0);
+                AttachCore(prefix + "." + segmentLabel + "DeltaSec", () => compareGetter() != null ? compareGetter().GetSectorDeltaSec(segmentIndex) : 0.0);
+            }
+        }
+
         private bool HardDebugEnabled => HARD_DEBUG_ENABLED;
         private bool SoftDebugEnabled => HardDebugEnabled && (Settings?.EnableSoftDebug == true);
         private bool IsDebugOnForLogic => SoftDebugEnabled;
@@ -4458,6 +4512,7 @@ namespace LaunchPlugin
             _opponentsEngine = new OpponentsEngine();
             _carSaEngine = new CarSAEngine();
             _h2hEngine = new H2HEngine();
+            _lapReferenceEngine = new LapReferenceEngine();
             ResetCarSaLapTimeUpdateState();
             ResetCarSaIdentityState();
 
@@ -5140,6 +5195,7 @@ namespace LaunchPlugin
             AttachCore("PitExit.Behind.GapSec", () => _opponentsEngine?.Outputs.PitExit.BehindGapSec ?? 0.0);
 
             AttachH2HExports();
+            AttachLapRefExports();
 
             AttachCore("Radio.TransmitShortName", () => _radioTransmitShortName ?? string.Empty);
             AttachCore("Radio.TransmitFullName", () => _radioTransmitFullName ?? string.Empty);
@@ -5973,6 +6029,7 @@ namespace LaunchPlugin
             _opponentsEngine?.Reset();
             _carSaEngine?.Reset();
             _h2hEngine?.Reset();
+            _lapReferenceEngine?.Reset();
             _radioFrequencyNameCache.Reset();
             ResetTransmitState();
             ResetCarSaIdentityState();
@@ -5988,6 +6045,7 @@ namespace LaunchPlugin
             _lastAnnouncedMaxFuel = -1;
             _lastValidLapMs = 0;
             _lastValidLapNumber = -1;
+            _lastValidatedLapRefSectorMs = null;
             _wetFuelPersistLogged = false;
             _dryFuelPersistLogged = false;
             _msgV1InfoLogged = false;
@@ -6546,6 +6604,8 @@ namespace LaunchPlugin
                         trackAheadSelector,
                         trackBehindSelector);
                 }
+
+                UpdateLapReferenceContext(playerCarIdx, carIdxLapDistPct, sessionTypeName);
                 if (_friendsDirty)
                 {
                     RefreshFriendUserIds();
@@ -6781,7 +6841,7 @@ namespace LaunchPlugin
                     bool accepted = false;
                     if (lapValidForPb)
                     {
-                        accepted = ProfilesViewModel.TryUpdatePBByCondition(CurrentCarModel, CurrentTrackKey, lapMs, _isWetMode);
+                        accepted = ProfilesViewModel.TryUpdatePBByCondition(CurrentCarModel, CurrentTrackKey, lapMs, _isWetMode, _lastValidatedLapRefSectorMs);
                         string pbLog = $"[LalaPlugin:Pace] candidate={lapMs}ms car='{CurrentCarModel}' trackKey='{CurrentTrackKey}' -> {(accepted ? "accepted" : "rejected")}";
                         if (accepted)
                             SimHub.Logging.Current.Info(pbLog);
@@ -12319,6 +12379,128 @@ namespace LaunchPlugin
 
             return (currentClassBestSec + CarSaLapTimeEpsilonSec) < previousClassBestSec
                 && Math.Abs(candidateBestLapSec - currentClassBestSec) <= CarSaLapTimeEpsilonSec;
+        }
+
+        private void UpdateLapReferenceContext(int playerCarIdx, float[] carIdxLapDistPct, string sessionTypeName)
+        {
+            if (_lapReferenceEngine == null)
+            {
+                return;
+            }
+
+            string carModel = CurrentCarModel ?? string.Empty;
+            string trackKey = !string.IsNullOrWhiteSpace(CurrentTrackKey) ? CurrentTrackKey : (CurrentTrackName ?? string.Empty);
+            bool isWetMode = _isWetMode;
+            int activeSegment = 0;
+            if (playerCarIdx >= 0 && carIdxLapDistPct != null && playerCarIdx < carIdxLapDistPct.Length)
+            {
+                activeSegment = ComputeLapRefActiveSegment(carIdxLapDistPct[playerCarIdx]);
+            }
+
+            double profileBestLapSec = 0.0;
+            int?[] profileBestSectors = null;
+            if (ActiveProfile != null && !string.IsNullOrWhiteSpace(trackKey))
+            {
+                var trackStats = ActiveProfile.ResolveTrackByNameOrKey(trackKey) ?? ActiveProfile.ResolveTrackByNameOrKey(CurrentTrackName);
+                if (trackStats != null)
+                {
+                    int? profileBestMs = trackStats.GetBestLapMsForCondition(isWetMode);
+                    if (profileBestMs.HasValue && profileBestMs.Value > 0)
+                    {
+                        profileBestLapSec = profileBestMs.Value / 1000.0;
+                    }
+
+                    profileBestSectors = new int?[LapReferenceEngine.SegmentCount];
+                    for (int i = 0; i < LapReferenceEngine.SegmentCount; i++)
+                    {
+                        profileBestSectors[i] = trackStats.GetBestLapSectorMsForCondition(isWetMode, i);
+                    }
+                }
+            }
+
+            _lapReferenceEngine.UpdateContext(
+                _currentSessionToken ?? string.Empty,
+                sessionTypeName ?? string.Empty,
+                carModel,
+                trackKey,
+                isWetMode,
+                playerCarIdx,
+                activeSegment,
+                profileBestLapSec,
+                profileBestSectors);
+        }
+
+        private bool TryCaptureLapReferenceValidatedLap(PluginManager pluginManager, double lastLapSec, int completedLapsNow, out int?[] capturedSectorMs)
+        {
+            capturedSectorMs = null;
+            if (_lapReferenceEngine == null || pluginManager == null)
+            {
+                return false;
+            }
+
+            int playerCarIdx = SafeReadInt(pluginManager, "DataCorePlugin.GameRawData.Telemetry.PlayerCarIdx", -1);
+            if (playerCarIdx < 0)
+            {
+                return false;
+            }
+
+            string trackKey = !string.IsNullOrWhiteSpace(CurrentTrackKey) ? CurrentTrackKey : (CurrentTrackName ?? string.Empty);
+            if (string.IsNullOrWhiteSpace(trackKey) || string.IsNullOrWhiteSpace(CurrentCarModel))
+            {
+                return false;
+            }
+
+            bool hasFixedSectorSnapshot = _carSaEngine != null
+                && _carSaEngine.TryGetFixedSectorCacheSnapshot(playerCarIdx, out CarSAEngine.FixedSectorCacheSnapshot fixedSectorSnapshot);
+
+            if (!hasFixedSectorSnapshot)
+            {
+                fixedSectorSnapshot = default(CarSAEngine.FixedSectorCacheSnapshot);
+            }
+
+            bool isNewSessionBest = _lapReferenceEngine.CaptureValidatedLap(
+                lastLapSec,
+                completedLapsNow,
+                0,
+                _isWetMode,
+                CurrentCarModel,
+                trackKey,
+                _currentSessionToken ?? string.Empty,
+                hasFixedSectorSnapshot,
+                fixedSectorSnapshot);
+
+            capturedSectorMs = new int?[LapReferenceEngine.SegmentCount];
+            if (hasFixedSectorSnapshot)
+            {
+                for (int i = 0; i < LapReferenceEngine.SegmentCount; i++)
+                {
+                    var sector = fixedSectorSnapshot.GetSector(i);
+                    if (sector.HasValue && sector.DurationSec > 0.0 && !double.IsNaN(sector.DurationSec) && !double.IsInfinity(sector.DurationSec))
+                    {
+                        capturedSectorMs[i] = (int)Math.Round(sector.DurationSec * 1000.0);
+                    }
+                }
+            }
+
+            if (isNewSessionBest)
+            {
+                SimHub.Logging.Current.Info($"[LalaPlugin:LapRef] Session best updated ({(_isWetMode ? "wet" : "dry")}): {lastLapSec:F3}s");
+            }
+
+            return true;
+        }
+
+        private static int ComputeLapRefActiveSegment(double lapPct)
+        {
+            if (double.IsNaN(lapPct) || double.IsInfinity(lapPct) || lapPct < 0.0 || lapPct >= 1.0)
+            {
+                return 0;
+            }
+
+            int segment = (int)Math.Floor(lapPct * LapReferenceEngine.SegmentCount) + 1;
+            if (segment < 1) return 1;
+            if (segment > LapReferenceEngine.SegmentCount) return LapReferenceEngine.SegmentCount;
+            return segment;
         }
 
         private int FindClassLeaderCarIdx(string playerClassShort, int[] classPositions, int[] trackSurfaces)

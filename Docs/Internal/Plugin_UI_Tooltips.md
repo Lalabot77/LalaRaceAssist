@@ -192,6 +192,8 @@ Branch: work
 - L817: Track-scoped pace delta used for planning (sec).
 - L826: Edit saved data for the selected track.
 - L833: Pit lane loss and pit entry/exit markers for this track.
+- L1028: Best dry lap time is telemetry-owned from validated laps (read-only).
+- L1183: Best wet lap time is telemetry-owned from validated laps (read-only).
 - L1311: `Wet Fuel Multiplier` now sits in `Wet vs Dry Avg Deltas` as a track-scoped wet-condition planning control.
 - The remainder of the `TRACKS` tab continues to expose the existing pit-loss, marker, dry-condition, wet-condition, and delta editors; contingency/mode and race pace delta now persist per track in the top planning block, while `Wet Fuel Multiplier` now sits in the `Wet vs Dry Avg Deltas` section near the wet-condition context.
 

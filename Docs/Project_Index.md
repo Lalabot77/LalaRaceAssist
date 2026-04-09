@@ -1,7 +1,7 @@
 # Project Index
 
 Validated against commit: HEAD
-Last updated: 2026-03-22
+Last updated: 2026-04-09
 Branch: work
 
 ## What this repo is
@@ -49,6 +49,7 @@ These pages are the technical/canonical subsystem layer. They explain internal o
 - [Subsystems/Opponents.md](Subsystems/Opponents.md)
 - [Subsystems/CarSA.md](Subsystems/CarSA.md)
 - [Subsystems/H2H.md](Subsystems/H2H.md)
+- [Subsystems/LapRef.md](Subsystems/LapRef.md)
 - [Subsystems/Profiles_And_PB.md](Subsystems/Profiles_And_PB.md)
 - [Subsystems/Dash_Integration.md](Subsystems/Dash_Integration.md)
 - [Subsystems/Pace_And_Projection.md](Subsystems/Pace_And_Projection.md)

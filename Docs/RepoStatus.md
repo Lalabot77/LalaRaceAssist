@@ -22,7 +22,6 @@ Branch: work
 - `Docs/RepoStatus.md`
 
 ### Reviewed and left unchanged
-- `Docs/Project_Index.md`
 - `Docs/Internal/Architecture_Guardrails.md`
 - `Docs/Internal/CODEX_TASK_TEMPLATE.txt`
 - `Docs/Subsystems/Launch_Mode.md`

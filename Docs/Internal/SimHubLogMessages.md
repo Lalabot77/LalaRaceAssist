@@ -2,9 +2,9 @@
 
 **CANONICAL OBSERVABILITY MAP**
 
-Validated against: b9250e1
-Last reviewed: 2026-02-24
-Last updated: 2026-02-24
+Validated against: HEAD
+Last reviewed: 2026-04-09
+Last updated: 2026-04-09
 Branch: work
 
 Scope: Info-level logs emitted via `SimHub.Logging.Current.Info(...)`. Use the tag prefixes to filter in SimHub’s log view. Placeholder logs are noted; no deprecated messages are currently removed in code. Legacy/alternate copies of this list do not exist.
@@ -92,6 +92,8 @@ Scope: Info-level logs emitted via `SimHub.Logging.Current.Info(...)`. Use the t
 - **`[LalaPlugin:Profile] Session start snapshot: Car='...'  Track='...'`** — Live snapshot cleared and session identity pushed to Fuel tab on session change.【F:LalaLaunch.cs†L3308-L3365】
 - **`[LalaPlugin:Profile] New live combo detected. Auto-selecting profile for Car='...' Track='...'`** — Auto-selection fired once per new car/track combo in DataUpdate.【F:LalaLaunch.cs†L3598-L3625】
 - **`[LalaPlugin:Pace] PB Updated: car @ track -> lap`** — PB update accepted via ProfilesManagerViewModel.【F:ProfilesManagerViewModel.cs†L66-L88】
+- **`[LalaPlugin:LapRef] Session best updated (dry|wet): <seconds>s`** — LapRef captured a new in-session validated best snapshot for the active condition.
+- **`[LalaPlugin:LapRef] Profile PB sectors persisted (dry|wet) for <car> @ '<track>'.`** — Profile PB update included real fixed-sector data and wrote condition-specific PB sector fields.
 - **`[LalaPlugin:Profiles] Track resolved: key='...'`** — Track resolution during profile operations.【F:ProfilesManagerViewModel.cs†L160-L182】
 - **`[LalaPlugin:Profiles] Default Settings profile not found, creating baseline profile.`** — Baseline profile auto-created on load miss.【F:ProfilesManagerViewModel.cs†L551-L570】
 - **`[LalaPlugin:Profile] PitLoss lock set to ... for '...'`** — Pit lane loss lock toggled for the selected track in the Profiles UI.【F:ProfilesManagerViewModel.cs†L405-L421】

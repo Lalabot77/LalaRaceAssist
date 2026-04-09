@@ -9,6 +9,7 @@ Head-to-Head now consumes CarSA in two narrow ways:
 - `H2HTrack.*` selector ownership remains CarSA-owned; published `PositionInClass` can use Opponents effective/live class-position context when available, without moving race-order selection ownership into CarSA.
 - `Car.Player.PositionInClass` and H2H player-row `PositionInClass` publication can consume the Opponents effective/live class-position seam when available; CarSA remains the session-agnostic spatial owner.
 - Both `H2HRace.*` and `H2HTrack.*` now read `S1..S6State` / `S1..S6DeltaSec` from the CarSA-owned per-car fixed-6-sector cache through the narrow CarSA accessor seam.
+LapRef (`LapRef.*`) also consumes the same fixed-6-sector cache as a read-only player-reference input; CarSA remains the sole owner of sector derivation and cache mutation rules.
 `H2HRace.*` still uses CarSA only as a bounded local live-session fallback when a known Opponents-selected identity needs help re-resolving `CarIdx`; selector ownership remains in Opponents.
 Opponents also consumes a narrow timing seam (`TryGetCheckpointGapSec(playerCarIdx, targetCarIdx, out signedGapSec)`) to improve `Opp.Ahead1/Behind1.GapToPlayerSec` with checkpoint-time-derived true gaps; Opponents keeps neighbor selection ownership.
 

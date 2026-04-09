@@ -98,7 +98,7 @@ namespace LaunchPlugin
         /// <summary>
         /// Try to update personal best for the given car+track based on track condition. Returns true if updated.
         /// </summary>
-        public bool TryUpdatePBByCondition(string carName, string trackKey, int lapMs, bool isWetEffective)
+        public bool TryUpdatePBByCondition(string carName, string trackKey, int lapMs, bool isWetEffective, int?[] sectorMs = null)
         {
             if (string.IsNullOrWhiteSpace(carName) || string.IsNullOrWhiteSpace(trackKey))
             {
@@ -139,12 +139,14 @@ namespace LaunchPlugin
                 ts.BestLapMsWet = lapMs;
                 ts.BestLapTimeWetText = ts.MillisecondsToLapTimeString(ts.BestLapMsWet);
                 ts.MarkBestLapUpdatedWet("Telemetry");
+                ts.SetBestLapSectorsForCondition(true, sectorMs);
             }
             else
             {
                 ts.BestLapMsDry = lapMs;
                 ts.BestLapTimeDryText = ts.MillisecondsToLapTimeString(ts.BestLapMsDry);
                 ts.MarkBestLapUpdatedDry("Telemetry");
+                ts.SetBestLapSectorsForCondition(false, sectorMs);
             }
             SaveProfiles();
 
@@ -155,6 +157,24 @@ namespace LaunchPlugin
 
             var pbText = isWetEffective ? ts.BestLapTimeWetText : ts.BestLapTimeDryText;
             SimHub.Logging.Current.Info($"[LalaPlugin:Pace] PB Updated ({(isWetEffective ? "wet" : "dry")}): {carName} @ '{ts.DisplayName}' -> {pbText}");
+            if (sectorMs != null)
+            {
+                bool hasAnySector = false;
+                int limit = Math.Min(6, sectorMs.Length);
+                for (int i = 0; i < limit; i++)
+                {
+                    if (sectorMs[i].HasValue && sectorMs[i].Value > 0)
+                    {
+                        hasAnySector = true;
+                        break;
+                    }
+                }
+
+                if (hasAnySector)
+                {
+                    SimHub.Logging.Current.Info($"[LalaPlugin:LapRef] Profile PB sectors persisted ({(isWetEffective ? "wet" : "dry")}) for {carName} @ '{ts.DisplayName}'.");
+                }
+            }
             return true;
         }
 
