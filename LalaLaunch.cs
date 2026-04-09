@@ -4203,6 +4203,14 @@ namespace LaunchPlugin
         private int _brakeSampleCount;
         private double _brakePreviousPeakPct;
 
+        private void ResetBrakeCaptureState()
+        {
+            _brakeTrigger = false;
+            _brakeMax = 0.0;
+            _brakeSampleCount = 0;
+            _brakePreviousPeakPct = 0.0;
+        }
+
         private double _lastFuel = 0.0;
 
         // ---Temporary for Testing Purposes ---
@@ -6011,6 +6019,7 @@ namespace LaunchPlugin
             ResetFinishTimingState();
             ResetSmoothedOutputs();
             _pendingSmoothingReset = true;
+            ResetBrakeCaptureState();
             _msgV1Engine?.ResetSession();
             _trackMarkerCapturedPulse.Reset();
             _trackMarkerLengthDeltaPulse.Reset();

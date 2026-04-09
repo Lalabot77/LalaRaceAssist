@@ -9,8 +9,9 @@ Branch: work
 - No Git remote is configured in this checkout (`git remote -v` returns empty).
 
 ## Documentation sync status
-- Added `Brake.PreviousPeakPct` export with Dahl-style brake-peak semantics.
-- Runtime capture now starts at brake > 0, tracks max brake for 40 samples, latches the peak at completion, and resets after completion once brake falls to `<= 0.02`.
+- Hardened `Brake.PreviousPeakPct` runtime recovery behavior to clear brake-capture state on manual/session resets.
+- Runtime capture still starts at brake > 0, tracks max brake for 40 samples, latches the peak at completion, and re-arms after completion once brake falls to `<= 0.02`.
+- Manual/session recovery now clears active capture progress and resets the latched export to `0.0` to prevent stale cross-session peaks.
 - No dashboard/UI behavior was changed.
 
 ## Reviewed documentation set
@@ -27,9 +28,9 @@ Branch: work
 - `Docs/Subsystems/Launch_Mode.md`
 
 ## Delivery status highlights
-- `Brake.PreviousPeakPct` now publishes the maximum brake input from the most recent completed braking capture window.
-- Capture window length is fixed at 40 samples per Dahl behavior parity.
-- The latched export remains unchanged between completed captures, and re-arms when post-capture brake drops to `<= 0.02`.
+- `Brake.PreviousPeakPct` publishes the maximum brake input from the most recent completed 40-sample braking capture window.
+- `ManualRecoveryReset` now clears brake-capture runtime state (trigger/max/sample count) and resets `Brake.PreviousPeakPct` to `0.0`.
+- Session transitions and `PrimaryDashMode` action recovery both use that reset path, so stale pre-reset peaks cannot complete/publish as a fresh capture.
 
 ## Validation note
-- Validation recorded against `HEAD` (`Brake.PreviousPeakPct reset threshold follow-up (<= 0.02) + docs sync`).
+- Validation recorded against `HEAD` (`Brake.PreviousPeakPct manual/session reset hardening + docs sync`).
