@@ -52,6 +52,7 @@ H2H sector publication is intentionally simple:
 
 ## Numeric semantics
 - `PositionInClass = 0` when unavailable.
+- Published `PositionInClass` for `H2HRace.*` and `H2HTrack.*` follows effective/live race-order semantics when available (RaceProgress-first context from Opponents), with local selector/native fallback only when effective context is unavailable.
 - `LiveDeltaToBestSec = 0` when insufficient data exists.
 - Sector delta values reset to `0` whenever their sector state is not `valid`.
 - Sector publication is **not bind-aware** after the cache switchover. H2H does not rebuild rows from target-bound stopwatch completions and does not carry a special lap-wrap sector-6 timing path; sector 6 simply publishes whenever CarSA records the `50→0` completion into cache.

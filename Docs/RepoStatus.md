@@ -15,6 +15,7 @@ Branch: work
 
 ## Reviewed documentation set
 ### Changed in this sweep
+- `Opponents.cs`
 - `LalaLaunch.cs`
 - `Docs/Subsystems/Launch_Mode.md`
 - `Docs/Subsystems/Trace_Logging.md`
@@ -24,7 +25,6 @@ Branch: work
 
 ### Reviewed and left unchanged
 - `Docs/Project_Index.md`
-- `Docs/Internal/CODEX_CONTRACT.txt`
 - `Docs/Internal/Architecture_Guardrails.md`
 - `Docs/Internal/CODEX_TASK_TEMPLATE.txt`
 - `LaunchAnalysisControl.xaml.cs`
