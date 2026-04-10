@@ -33,14 +33,22 @@ The public user-facing release history is maintained in the root `CHANGELOG.md`.
 
 ## Post-v1.0 development
 
-### CarSA dead debug comparison scaffold prune
-- Removed dead internal CarSA debug comparison scaffolding in `LalaLaunch.cs` that sampled legacy Dahl/iRacing relative-gap properties without feeding active debug CSV output, SimHub exports, or user-facing behavior.
-- Removed the now-orphaned comparison-gap reset helper used only by that dead scaffolding.
-- Kept active CarSA debug CSV schema/cadence behavior unchanged and left Opponents/Pit/H2H/Fuel runtime behavior untouched.
+### Opponents Pit Exit v2 follow-up: rival pit-road baseline seeding fix
+- Fixed a PR 547 active-cycle classification bug where same-class rivals already on pit road at our cycle start could be misclassified as post-start entrants when the rival pit-road state map was initially empty.
+- Active-cycle start now seeds rival pit-road baseline state from the current same-class field before off→on transition detection, so only true later entrants are marked as “entered after our start.”
+- Preserved all other PR 547 behavior (pre-pit path, active-cycle countdown model, full same-class scan, and ownership boundaries).
 
-### Brake previous-peak manual/session reset hardening
-- Added a dedicated brake capture runtime reset (`ResetBrakeCaptureState`) and invoked it from `ManualRecoveryReset`, which is used by session transitions and `PrimaryDashMode` manual recovery.
-- Manual/session recovery now clears active capture progress and resets `Brake.PreviousPeakPct` to `0.0`, preventing stale peaks from previous runs/sessions from being published as fresh captures.
+### Opponents Pit Exit v2 active pit-cycle realism (bounded heuristic)
+- Kept pre-pit Pit Exit behavior unchanged when the player is not on pit road and has no active pit trip.
+- Added an active pit-cycle mode (`onPitRoad || pitTripActive`) that latches cycle start and uses a simple remaining pit-cycle countdown (`latched total stop loss - elapsed cycle time`) instead of repeatedly applying a fresh full pit-loss event while already in the stop.
+- Added same-class rival pit-road transition tracking during the active cycle and excluded rivals behind who entered pit road after our cycle start from normal on-track pass-before-exit threat treatment while they remain on pit road.
+- Preserved Opponents ownership boundaries, full same-class field scan, and RaceProgress-first backbone; no strategy/fuel-planner simulation was introduced.
+
+### Opponents Pit Exit cadence + pace-reference hardening
+- Replaced Pit Exit off-pit-road lap-quarter refresh gating with a bounded time-based refresh interval so `PitExit.*` updates stay fresher while remaining conservative on runtime cost.
+- Kept on-pit-road and active pit-trip updates responsive and preserved the existing final-120s suppression behavior unchanged.
+- Unified Pit Exit nearest ahead/behind gap-seconds conversion onto the shared Opponents pace-reference seam instead of a separate local best/last fallback chain.
+- Preserved subsystem ownership boundaries and Pit Exit architecture (Opponents-owned full same-class scan, no CarSA/H2H/dashboard logic changes).
 
 ### Player PositionInClass live-context alignment (Car + H2H player rows)
 - Aligned player-facing `PositionInClass` publication to the existing Opponents effective/live race-order seam so player rows use the same race-context truth as H2H/Opp target rows.

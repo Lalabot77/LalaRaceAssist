@@ -9,13 +9,14 @@ Branch: work
 - No Git remote is configured in this checkout (`git remote -v` returns empty).
 
 ## Documentation sync status
-- Removed dead CarSA debug comparison scaffolding in `LalaLaunch.cs` that sampled legacy Dahl/iRacing relative-gap properties but did not feed active debug CSV schema, SimHub exports, or user-facing behavior.
-- Kept the active CarSA debug export pipeline unchanged (`CarSA_Debug_*.csv` schema and cadence behavior preserved).
-- Preserved subsystem ownership boundaries and runtime behavior (Opponents native-only unchanged, CarSA session-agnostic ownership unchanged, H2H consumer/publisher seams unchanged).
+- Opponents Pit Exit now uses a two-phase model: unchanged pre-pit behavior off pit road, plus active pit-cycle remaining-time prediction while on pit road / active pit trip.
+- Active pit-cycle prediction now seeds same-class rival pit-road baseline state at cycle start before transition detection, then tracks post-start pit-road entries and excludes rivals behind who pit after our cycle starts from normal on-track pass-before-exit threat treatment while they remain on pit road.
+- Preserved subsystem ownership boundaries (Opponents race-order owner and Pit Exit owner, CarSA spatial/timing owner, H2H consumer/publisher).
 
 ## Reviewed documentation set
 ### Changed in this sweep
-- `LalaLaunch.cs`
+- `Opponents.cs`
+- `Docs/Subsystems/Opponents.md`
 - `Docs/Internal/Development_Changelog.md`
 - `Docs/RepoStatus.md`
 
@@ -27,9 +28,9 @@ Branch: work
 - `Docs/Internal/SimHubLogMessages.md`
 
 ## Delivery status highlights
-- Removed only dead internal CarSA debug comparison paths (legacy Dahl/iRacing relative-gap sampling arrays/property lists and their reset helper).
-- Active CarSA debug CSV header/row shape remained unchanged.
-- No release-facing exports changed and no Opponents/Pit/H2H/Fuel behavior changed.
+- Pit Exit pre-pit behavior remains stable while active pit-cycle prediction now uses remaining countdown time instead of repeatedly applying full fresh pit loss mid-stop.
+- Same-class rivals already on pit road at our active-cycle start are no longer misclassified as post-start entrants due to initial empty-state; only true later entrants are classified as post-start pit entries.
+- Pit Exit remains Opponents-owned, race-scoped, and full same-class-field comparison based; late-race last-120s suppression remains unchanged.
 
 ## Validation note
-- Validation recorded against `HEAD` (`CarSA dead debug comparison scaffold prune + docs sync`).
+- Validation recorded against `HEAD` (`Opponents Pit Exit v2 follow-up: seeded rival pit-road baseline fix with docs sync`).
