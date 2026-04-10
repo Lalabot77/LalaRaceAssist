@@ -3,8 +3,8 @@
 **CANONICAL CONTRACT**
 
 Validated against: HEAD
-Last reviewed: 2026-04-09
-Last updated: 2026-04-09
+Last reviewed: 2026-04-10
+Last updated: 2026-04-10
 Branch: work
 
 - All exports are attached in `LalaLaunch.cs` during `Init()` via `AttachCore`/`AttachVerbose`. Core values are refreshed in `DataUpdate` (500 ms poll for fuel/pace/pit via `_poll500ms`; per-tick for launch/dash/messaging). Verbose rows require `SimhubPublish.VERBOSE`.【F:LalaLaunch.cs†L2644-L3120】【F:LalaLaunch.cs†L3411-L3775】
@@ -85,6 +85,8 @@ Branch: work
 | Opponents_SummaryAhead / Opponents_SummaryBehind (+ per-slot variants) | string | Top-level summaries keep short readability (A1/A2 and B1/B2 shape), while per-slot summaries now include `Ahead1..5` and `Behind1..5`. | Per tick in eligible live sessions. | `Opponents.cs` + `AttachCore`. |
 | PitExit.Valid | bool | True when race-scoped native pit-exit predictor has enough native identity/progress inputs. | Per tick on pit road/active pit trip; bounded time cadence off pit road when no active pit trip (currently ≥1.0s between refreshes). | `Opponents.cs` + `AttachCore`. |
 | PitExit.PredictedPositionInClass / CarsAheadAfterPitCount | int/int | Native progress-based post-stop class-position prediction using a phase split: pre-pit keeps existing full-loss behavior, while active pit-cycle mode uses a remaining pit-cycle countdown (latched total-loss minus elapsed cycle time) against the full same-class field. | Per tick on pit road/active pit trip; bounded time cadence off pit road when no active pit trip (currently ≥1.0s between refreshes). | `Opponents.cs` + `AttachCore`. |
+| PitExit.RemainingCountdownSec | double | Active-cycle remaining countdown (seconds) from the pit-exit predictor. Publishes `>0` while the active pit-cycle countdown is running, else `0` when inactive/unavailable. | Per tick on pit road/active pit trip; bounded time cadence off pit road when no active pit trip (currently ≥1.0s between refreshes). | `Opponents.cs` + `AttachCore`. |
+| PitExit.ActivePitCycle | bool | `true` while the player is in the active pit-cycle prediction phase (`onPitRoad || pitTripActive`), otherwise `false`. | Per tick on pit road/active pit trip; bounded time cadence off pit road when no active pit trip (currently ≥1.0s between refreshes). | `Opponents.cs` + `AttachCore`. |
 | PitExit.Summary | string | Human summary for native pit-exit prediction (`P#`, nearest ahead/behind, pit-loss used). During active pit-cycle updates, `loss` reflects the remaining countdown estimate used by the predictor. | Per tick on pit road/active pit trip; bounded time cadence off pit road when no active pit trip (currently ≥1.0s between refreshes). | `Opponents.cs` + `AttachCore`. |
 | PitExit.Ahead.* / PitExit.Behind.* | mixed | Nearest same-class cars ahead/behind after predicted stop, using native progress deltas and pace scaling from the shared Opponents pace-reference seam. In active pit-cycle mode, rivals behind who entered pit road after our cycle started are excluded as normal on-track pass-before-exit threats while they remain on pit road. | Per tick on pit road/active pit trip; bounded time cadence off pit road when no active pit trip (currently ≥1.0s between refreshes). | `Opponents.cs` + `AttachCore`. |
 

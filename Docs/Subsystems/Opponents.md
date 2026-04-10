@@ -1,7 +1,7 @@
 # Opponents subsystem
 
 Validated against commit: HEAD
-Last updated: 2026-04-09
+Last updated: 2026-04-10
 Branch: work
 
 Purpose: own all opponent-facing calculations for strict same-class race-target selection, lap-time enrichment, and race-scoped pit-exit forecasting with SimHub exports under `Opp.*` and `PitExit.*`.
@@ -65,6 +65,8 @@ Opponents now reads from:
 - Compares predicted player progress against the full same-class rival set to derive:
   - `PitExit.PredictedPositionInClass`
   - `PitExit.CarsAheadAfterPitCount`
+  - `PitExit.RemainingCountdownSec` (`>0` while active countdown is running, else `0`)
+  - `PitExit.ActivePitCycle` (`true` while active pit-cycle prediction phase is running)
   - nearest ahead/behind identities and gaps.
 - Refresh cadence:
   - on pit road or active pit trip: per Opponents update tick (responsive path)
@@ -89,7 +91,7 @@ Opponents now reads from:
 - `Opp.Leader.BlendedPaceSec`, `Opp.P2.BlendedPaceSec`.
 - `Opponents_SummaryAhead/Behind` and per-slot variants (`Ahead1..5`, `Behind1..5`).
   - Top-level `Opponents_SummaryAhead/Behind` remains short/readable (first two slots emphasis) for dash compatibility.
-- `PitExit.Valid`, `PitExit.PredictedPositionInClass`, `PitExit.CarsAheadAfterPitCount`, `PitExit.Summary`, `PitExit.Ahead.*`, `PitExit.Behind.*`.
+- `PitExit.Valid`, `PitExit.PredictedPositionInClass`, `PitExit.CarsAheadAfterPitCount`, `PitExit.RemainingCountdownSec`, `PitExit.ActivePitCycle`, `PitExit.Summary`, `PitExit.Ahead.*`, `PitExit.Behind.*`.
 
 ## Known limitations vs old Extra-Properties-backed behavior
 - No direct leaderboard `RelativeGapToLeader` parity path.
