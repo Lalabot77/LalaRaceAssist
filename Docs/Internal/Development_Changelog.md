@@ -33,6 +33,11 @@ The public user-facing release history is maintained in the root `CHANGELOG.md`.
 
 ## Post-v1.0 development
 
+### Opponents Pit Exit v2 follow-up: rival pit-road baseline seeding fix
+- Fixed a PR 547 active-cycle classification bug where same-class rivals already on pit road at our cycle start could be misclassified as post-start entrants when the rival pit-road state map was initially empty.
+- Active-cycle start now seeds rival pit-road baseline state from the current same-class field before off→on transition detection, so only true later entrants are marked as “entered after our start.”
+- Preserved all other PR 547 behavior (pre-pit path, active-cycle countdown model, full same-class scan, and ownership boundaries).
+
 ### Opponents Pit Exit v2 active pit-cycle realism (bounded heuristic)
 - Kept pre-pit Pit Exit behavior unchanged when the player is not on pit road and has no active pit trip.
 - Added an active pit-cycle mode (`onPitRoad || pitTripActive`) that latches cycle start and uses a simple remaining pit-cycle countdown (`latched total stop loss - elapsed cycle time`) instead of repeatedly applying a fresh full pit-loss event while already in the stop.

@@ -1228,7 +1228,21 @@ namespace LaunchPlugin
                     _activePitCycleStartSessionTimeSec = (!double.IsNaN(sessionTimeSec) && !double.IsInfinity(sessionTimeSec)) ? sessionTimeSec : double.NaN;
                     _activePitCycleStartProgressLaps = playerProgress;
                     _activePitCycleTotalLossSec = pitLoss;
+                    _rivalPitRoadStateByIdentity.Clear();
                     _rivalsEnteredPitAfterOurStart.Clear();
+
+                    for (int i = 0; i < classRows.Count; i++)
+                    {
+                        var row = classRows[i];
+                        if (row == null
+                            || string.IsNullOrWhiteSpace(row.IdentityKey)
+                            || string.Equals(row.IdentityKey, playerIdentityKey, StringComparison.Ordinal))
+                        {
+                            continue;
+                        }
+
+                        _rivalPitRoadStateByIdentity[row.IdentityKey] = row.IsInPit;
+                    }
                 }
                 else if (_activePitCycle && pitLoss > _activePitCycleTotalLossSec)
                 {
