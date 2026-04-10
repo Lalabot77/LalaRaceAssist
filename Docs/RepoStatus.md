@@ -9,27 +9,29 @@ Branch: work
 - No Git remote is configured in this checkout (`git remote -v` returns empty).
 
 ## Documentation sync status
-- Removed dead CarSA debug comparison scaffolding in `LalaLaunch.cs` that sampled legacy Dahl/iRacing relative-gap properties but did not feed active debug CSV schema, SimHub exports, or user-facing behavior.
-- Kept the active CarSA debug export pipeline unchanged (`CarSA_Debug_*.csv` schema and cadence behavior preserved).
-- Preserved subsystem ownership boundaries and runtime behavior (Opponents native-only unchanged, CarSA session-agnostic ownership unchanged, H2H consumer/publisher seams unchanged).
+- Pit Entry Assist distance authority is now stored/plugin-owned pit-entry markers only.
+- Removed pit-entry fallback branches that previously read `IRacingExtraProperties.iRacing_DistanceToPitEntry` and `IRacingExtraProperties.iRacing_PitEntryTrkPct`.
+- Added a one-time warning log when stored marker authority is unavailable and legacy pit-entry Extra Properties fallbacks are disabled.
 
 ## Reviewed documentation set
 ### Changed in this sweep
-- `LalaLaunch.cs`
+- `PitEngine.cs`
+- `Docs/Subsystems/Pit_Entry_Assist.md`
+- `Docs/Internal/SimHubParameterInventory.md`
+- `Docs/Internal/SimHubLogMessages.md`
 - `Docs/Internal/Development_Changelog.md`
 - `Docs/RepoStatus.md`
 
 ### Reviewed and left unchanged
 - `Docs/Internal/Architecture_Guardrails.md`
 - `Docs/Internal/CODEX_TASK_TEMPLATE.txt`
-- `Docs/Subsystems/CarSA.md`
-- `Docs/Internal/SimHubParameterInventory.md`
-- `Docs/Internal/SimHubLogMessages.md`
+- `Docs/Subsystems/Track_Markers.md`
+- `Docs/Subsystems/Pit_Timing_And_PitLoss.md`
 
 ## Delivery status highlights
-- Removed only dead internal CarSA debug comparison paths (legacy Dahl/iRacing relative-gap sampling arrays/property lists and their reset helper).
-- Active CarSA debug CSV header/row shape remained unchanged.
-- No release-facing exports changed and no Opponents/Pit/H2H/Fuel behavior changed.
+- Removed only Pit Entry Assist pit-entry distance fallback reads from iRacing Extra Properties (`DistanceToPitEntry`, `PitEntryTrkPct`).
+- Kept pit-speed fallback behavior unchanged (`WeekendInfo.TrackPitSpeedLimit` primary, `iRacing_PitSpeedLimitKph` fallback).
+- Updated pit subsystem/log/export docs to reflect stored-marker-only authority for pit-entry distance.
 
 ## Validation note
-- Validation recorded against `HEAD` (`CarSA dead debug comparison scaffold prune + docs sync`).
+- Validation recorded against `HEAD` (`Pit Entry Assist stored-marker authority cutover + fallback removal docs sync`).

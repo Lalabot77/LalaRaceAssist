@@ -2,8 +2,8 @@
 
 **Subsystem doc**
 
-Validated against commit: b45bc8f
-Last updated: 2026-03-24
+Validated against commit: HEAD
+Last updated: 2026-04-10
 Last reviewed: 2026-01-14
 Branch: work
 
@@ -50,9 +50,9 @@ If the pit screen is dismissed or resets to auto, manual arming immediately fall
 ## Pit Entry Assist — Core Calculations
 
 - **Distance to pit entry (`Pit.EntryDistanceToLine_m`):**
-  - Primary: stored track markers (entry pct + cached track length) when valid for the current track.
-  - Fallback 1: `IRacingExtraProperties.iRacing_DistanceToPitEntry`.
-  - Fallback 2: `(pitEntryPct − carPct) × trackLength` using `IRacingExtraProperties.iRacing_PitEntryTrkPct` and cached session track length.
+  - Source of truth: stored track markers (entry pct + cached track length) when valid for the current track.
+  - Legacy Extra Properties fallbacks for pit-entry distance/pct are removed.
+  - If stored markers are unavailable/invalid for the active track/session, assist stays off and emits a warning log (one-time until markers become valid again).
   - Clamped to **0–500 m** working window; assist resets if ≥500 m or invalid.
 
 - **Speed delta (`Pit.EntrySpeedDelta_kph`):** Current speed − pit speed limit (session pit speed, fallback to iRacing extra).

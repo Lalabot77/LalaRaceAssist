@@ -33,6 +33,11 @@ The public user-facing release history is maintained in the root `CHANGELOG.md`.
 
 ## Post-v1.0 development
 
+### Pit Entry Assist aggressive fallback removal (stored-marker authority only)
+- Removed pit-entry distance fallback branches in `PitEngine.UpdatePitEntryAssist` that previously read `IRacingExtraProperties.iRacing_DistanceToPitEntry` and `IRacingExtraProperties.iRacing_PitEntryTrkPct`.
+- Pit Entry Assist distance authority is now stored/plugin-owned track markers only; when stored marker inputs are unavailable/invalid, assist is reset/off for that tick.
+- Added a one-time warning log while unavailable: pit-entry legacy Extra Properties fallbacks are disabled, so missing stored markers now explicitly surface in SimHub logs instead of silently using fallback data.
+
 ### CarSA dead debug comparison scaffold prune
 - Removed dead internal CarSA debug comparison scaffolding in `LalaLaunch.cs` that sampled legacy Dahl/iRacing relative-gap properties without feeding active debug CSV output, SimHub exports, or user-facing behavior.
 - Removed the now-orphaned comparison-gap reset helper used only by that dead scaffolding.
