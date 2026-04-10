@@ -67,6 +67,7 @@ namespace LaunchPlugin
         private double _pitEntryFirstCompliantDToLine_m;
         private double _pitEntryFirstCompliantRawDToLine_m;
         private double _pitEntryLastDistanceRaw_m = double.NaN;
+        private bool _pitEntryMissingMarkerWarned = false;
 
 
         // --- State management for the Pace Delta calculation ---
@@ -119,6 +120,7 @@ namespace LaunchPlugin
             _trackMarkerSessionState.Clear();
             _trackMarkerTriggers.Clear();
             _pitEntryLastDistanceRaw_m = double.NaN;
+            _pitEntryMissingMarkerWarned = false;
             PitEntryLineDebrief = "normal";
             PitEntryLineDebriefText = string.Empty;
             PitEntryLineTimeLoss_s = 0.0;
@@ -307,7 +309,7 @@ namespace LaunchPlugin
             bool limiterOn = (data?.NewData?.PitLimiterOn ?? 0) != 0;
             bool autoArmed = (CurrentPitPhase == PitPhase.EnteringPits) || (limiterOn && PitEntrySpeedDelta_kph > 2.0);
 
-            // Distance to pit entry (PREFERRED: stored markers; FALLBACK: iRacingExtra)
+            // Distance to pit entry (authoritative source: stored markers only)
             double dToEntry_m = double.NaN;
 
             // Precompute stored marker validity
@@ -324,37 +326,26 @@ namespace LaunchPlugin
                              !double.IsNaN(sessionTrackLenM) && sessionTrackLenM >= MinTrackLengthM && sessionTrackLenM <= MaxTrackLengthM &&
                              !string.Equals(_trackMarkersLastKey, "unknown", StringComparison.OrdinalIgnoreCase);
 
-            // 1) PRIMARY: use stored pct + cached track length
+            // PRIMARY: use stored pct + cached track length
             if (useStored)
             {
                 double trackLen_m = sessionTrackLenM;
                 double dp = storedEntryPct - carPct;
                 if (dp < 0) dp += 1.0;
                 dToEntry_m = dp * trackLen_m;
+                _pitEntryMissingMarkerWarned = false;
             }
             else
             {
-                // 2) FALLBACK: iRacingExtra distance
-                dToEntry_m = ReadDouble(pluginManager, "IRacingExtraProperties.iRacing_DistanceToPitEntry", double.NaN);
-                bool dOk = !double.IsNaN(dToEntry_m) && dToEntry_m >= 0.0 && dToEntry_m <= 5000.0;
-
-                if (!dOk)
+                if (!_pitEntryMissingMarkerWarned)
                 {
-                    // 3) LAST RESORT: iRacingExtra pct + cached track length (if available)
-                    double pitEntryPct = ReadDouble(pluginManager, "IRacingExtraProperties.iRacing_PitEntryTrkPct", double.NaN);
-
-                    if (double.IsNaN(carPct) || double.IsNaN(pitEntryPct) ||
-                        double.IsNaN(sessionTrackLenM) || sessionTrackLenM < MinTrackLengthM || sessionTrackLenM > MaxTrackLengthM)
-                    {
-                        ResetPitEntryAssistOutputs();
-                        return;
-                    }
-
-                    double trackLen_m = sessionTrackLenM;
-                    double dp = pitEntryPct - carPct;
-                    if (dp < 0) dp += 1.0;
-                    dToEntry_m = dp * trackLen_m;
+                    _pitEntryMissingMarkerWarned = true;
+                    SimHub.Logging.Current.Warn(
+                        $"[LalaPlugin:PitEntryAssist] Stored pit-entry marker unavailable for track='{_trackMarkersLastKey}'. " +
+                        "Legacy iRacingExtraProperties pit-entry fallbacks are disabled (DistanceToPitEntry, PitEntryTrkPct).");
                 }
+                ResetPitEntryAssistOutputs();
+                return;
             }
 
             double dToEntryRaw_m = dToEntry_m;
