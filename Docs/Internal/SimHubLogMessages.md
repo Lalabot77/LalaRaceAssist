@@ -3,11 +3,11 @@
 **CANONICAL OBSERVABILITY MAP**
 
 Validated against: HEAD
-Last reviewed: 2026-04-09
-Last updated: 2026-04-09
+Last reviewed: 2026-04-10
+Last updated: 2026-04-10
 Branch: work
 
-Scope: Info-level logs emitted via `SimHub.Logging.Current.Info(...)`. Use the tag prefixes to filter in SimHub’s log view. Placeholder logs are noted; no deprecated messages are currently removed in code. Legacy/alternate copies of this list do not exist.
+Scope: Info/Warn logs emitted via `SimHub.Logging.Current.Info(...)` and `SimHub.Logging.Current.Warn(...)`. Use the tag prefixes to filter in SimHub’s log view. Placeholder logs are noted; no deprecated messages are currently removed in code. Legacy/alternate copies of this list do not exist.
 
 ## How to read logs for debugging
 - **Filter by tag prefix** (e.g., `[LalaPlugin:Fuel Burn]`, `[LalaPlugin:Pit Cycle]`, `[LalaPlugin:Finish]`) to isolate subsystems.
@@ -160,6 +160,7 @@ Scope: Info-level logs emitted via `SimHub.Logging.Current.Info(...)`. Use the t
 - **`[LalaPlugin:SessionSummary] AppendSummaryRow called green=... checkered=...`** — Session summary CSV writer invoked; row is only appended when green and checkered are both seen.【F:SessionSummaryLogger.cs†L50-L74】
 
 ## Pit Entry Assist
+- **`[LalaPlugin:PitEntryAssist] Stored pit-entry marker unavailable for track='...'. Legacy iRacingExtraProperties pit-entry fallbacks are disabled (DistanceToPitEntry, PitEntryTrkPct).`** — Warns once while stored marker authority is unavailable; assist outputs are reset/off until stored marker inputs become valid again (warning can fire again after stored inputs recover and later drop).【F:PitEngine.cs†L336-L348】
 - **`[LalaPlugin:PitEntryAssist] ACTIVATE dToLineRaw=... dToLineGuided=... dReq=... margin=... spdΔ=... decel=... buffer=... cue=...`** — Edge-triggered when the assist arms (EnteringPits, limiter overspeed, or pit-screen manual arming). Captures raw/guided distance, constant-decel requirement, margin, speed delta, profiled decel, buffer, and cue at arming time.【F:PitEngine.cs†L428-L446】
 - **`[LalaPlugin:PitEntryAssist] ENTRY LINE SAFE/NORMAL: Speed Δ at Line ...kph, Below Limiter at ...m, Time Loss: +...s`** — Edge-triggered on the pit-lane entry transition when below the limiter. Includes the first compliant distance and computed time loss vs the limiter.【F:PitEngine.cs†L460-L495】
 - **`[LalaPlugin:PitEntryAssist] ENTRY LINE BAD: Speed Δ at Line ...kph, Braked ...m too late`** — Edge-triggered on the pit-lane entry transition when still above the limiter; time loss is omitted/zero.【F:PitEngine.cs†L496-L507】

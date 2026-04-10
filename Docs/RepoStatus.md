@@ -9,28 +9,29 @@ Branch: work
 - No Git remote is configured in this checkout (`git remote -v` returns empty).
 
 ## Documentation sync status
-- Opponents Pit Exit now uses a two-phase model: unchanged pre-pit behavior off pit road, plus active pit-cycle remaining-time prediction while on pit road / active pit trip.
-- Active pit-cycle prediction now seeds same-class rival pit-road baseline state at cycle start before transition detection, then tracks post-start pit-road entries and excludes rivals behind who pit after our cycle starts from normal on-track pass-before-exit threat treatment while they remain on pit road.
-- Preserved subsystem ownership boundaries (Opponents race-order owner and Pit Exit owner, CarSA spatial/timing owner, H2H consumer/publisher).
+- Pit Entry Assist distance authority is now stored/plugin-owned pit-entry markers only.
+- Removed pit-entry fallback branches that previously read `IRacingExtraProperties.iRacing_DistanceToPitEntry` and `IRacingExtraProperties.iRacing_PitEntryTrkPct`.
+- Added a one-time warning log when stored marker authority is unavailable and legacy pit-entry Extra Properties fallbacks are disabled.
 
 ## Reviewed documentation set
 ### Changed in this sweep
-- `Opponents.cs`
-- `Docs/Subsystems/Opponents.md`
+- `PitEngine.cs`
+- `Docs/Subsystems/Pit_Entry_Assist.md`
+- `Docs/Internal/SimHubParameterInventory.md`
+- `Docs/Internal/SimHubLogMessages.md`
 - `Docs/Internal/Development_Changelog.md`
 - `Docs/RepoStatus.md`
 
 ### Reviewed and left unchanged
 - `Docs/Internal/Architecture_Guardrails.md`
 - `Docs/Internal/CODEX_TASK_TEMPLATE.txt`
-- `Docs/Subsystems/CarSA.md`
-- `Docs/Internal/SimHubParameterInventory.md`
-- `Docs/Internal/SimHubLogMessages.md`
+- `Docs/Subsystems/Track_Markers.md`
+- `Docs/Subsystems/Pit_Timing_And_PitLoss.md`
 
 ## Delivery status highlights
-- Pit Exit pre-pit behavior remains stable while active pit-cycle prediction now uses remaining countdown time instead of repeatedly applying full fresh pit loss mid-stop.
-- Same-class rivals already on pit road at our active-cycle start are no longer misclassified as post-start entrants due to initial empty-state; only true later entrants are classified as post-start pit entries.
-- Pit Exit remains Opponents-owned, race-scoped, and full same-class-field comparison based; late-race last-120s suppression remains unchanged.
+- Removed only Pit Entry Assist pit-entry distance fallback reads from iRacing Extra Properties (`DistanceToPitEntry`, `PitEntryTrkPct`).
+- Kept pit-speed fallback behavior unchanged (`WeekendInfo.TrackPitSpeedLimit` primary, `iRacing_PitSpeedLimitKph` fallback).
+- Updated pit subsystem/log/export docs to reflect stored-marker-only authority for pit-entry distance.
 
 ## Validation note
-- Validation recorded against `HEAD` (`Opponents Pit Exit v2 follow-up: seeded rival pit-road baseline fix with docs sync`).
+- Validation recorded against `HEAD` (`Pit Entry Assist stored-marker authority cutover + fallback removal docs sync`).

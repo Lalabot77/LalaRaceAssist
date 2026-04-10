@@ -3,8 +3,8 @@
 **CANONICAL CONTRACT**
 
 Validated against: HEAD
-Last reviewed: 2026-04-09
-Last updated: 2026-04-09
+Last reviewed: 2026-04-10
+Last updated: 2026-04-10
 Branch: work
 
 - All exports are attached in `LalaLaunch.cs` during `Init()` via `AttachCore`/`AttachVerbose`. Core values are refreshed in `DataUpdate` (500 ms poll for fuel/pace/pit via `_poll500ms`; per-tick for launch/dash/messaging). Verbose rows require `SimhubPublish.VERBOSE`.【F:LalaLaunch.cs†L2644-L3120】【F:LalaLaunch.cs†L3411-L3775】
@@ -170,8 +170,8 @@ Branch: work
 | PitLite.LossSource | string | Whether DTL or direct loss was published. | Per publication; **verbose**. | `PitCycleLite.cs` + `AttachVerbose`【F:PitCycleLite.cs†L170-L217】【F:LalaLaunch.cs†L2796-L2799】 |
 | PitLite.LastSaved.Sec / LastSaved.Source | double/string | Most recent saved pit-lite candidate and provenance. | On save; **verbose**. | `PitCycleLite.cs` + `AttachVerbose`【F:PitCycleLite.cs†L170-L217】【F:LalaLaunch.cs†L2797-L2799】 |
 | PitLite.Live.SeenEntryThisLap / SeenExitThisLap | bool | Entry/exit edges observed this lap. | Per tick; **verbose**. | `PitCycleLite.cs` + `AttachVerbose`【F:PitCycleLite.cs†L122-L163】【F:LalaLaunch.cs†L2801-L2805】 |
-| Pit.EntryAssistActive | bool | True while pit entry assist is armed (EnteringPits or limiter ON with overspeed >2 kph) and distance is within the 0–500 m window. | Per tick. | `PitEngine.UpdatePitEntryAssist` + `AttachCore`【F:PitEngine.cs†L240-L343】【F:LalaLaunch.cs†L2751-L2760】 |
-| Pit.EntryDistanceToLine_m | double | Distance to pit entry guidance line (raw distance minus profile buffer). Clamped 0–500 m; assist resets when raw distance ≥500 m. | Per tick when armed. | `PitEngine.UpdatePitEntryAssist` + `AttachCore`【F:PitEngine.cs†L353-L417】【F:LalaLaunch.cs†L2751-L2754】 |
+| Pit.EntryAssistActive | bool | True while pit entry assist is armed (EnteringPits or limiter ON with overspeed >2 kph, including pit-screen manual arming) and stored pit-entry markers are valid for the current track/session. | Per tick. | `PitEngine.UpdatePitEntryAssist` + `AttachCore`【F:PitEngine.cs†L275-L427】【F:LalaLaunch.cs†L4694-L4702】 |
+| Pit.EntryDistanceToLine_m | double | Distance to pit entry guidance line (raw stored-marker distance minus profile buffer). Clamped 0–500 m; assist resets when raw distance ≥500 m or stored marker inputs are unavailable. | Per tick when armed. | `PitEngine.UpdatePitEntryAssist` + `AttachCore`【F:PitEngine.cs†L310-L419】【F:LalaLaunch.cs†L4695-L4700】 |
 | Pit.EntryRequiredDistance_m | double | Constant-decel distance needed to reach pit speed at the guidance line using the profiled decel. | Per tick when armed. | `PitEngine.UpdatePitEntryAssist` + `AttachCore`【F:PitEngine.cs†L397-L418】【F:LalaLaunch.cs†L2752-L2754】 |
 | Pit.EntryMargin_m | double | Guidance distance remaining minus required distance; positive = early, negative = late. Primary dash signal. | Per tick when armed. | `PitEngine.UpdatePitEntryAssist` + `AttachCore`【F:PitEngine.cs†L405-L417】【F:LalaLaunch.cs†L2752-L2755】 |
 | Pit.EntryCue | int | Pit entry cue level (0 OFF, 1 OK, 2 BRAKE SOON, 3 BRAKE NOW, 4 LATE) derived from margin vs. buffer. | Per tick when armed. | `PitEngine.UpdatePitEntryAssist` + `AttachCore`【F:PitEngine.cs†L334-L339】【F:LalaLaunch.cs†L2754-L2756】 |
