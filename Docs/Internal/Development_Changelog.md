@@ -33,6 +33,12 @@ The public user-facing release history is maintained in the root `CHANGELOG.md`.
 
 ## Post-v1.0 development
 
+### Opponents Pit Exit v2 active pit-cycle realism (bounded heuristic)
+- Kept pre-pit Pit Exit behavior unchanged when the player is not on pit road and has no active pit trip.
+- Added an active pit-cycle mode (`onPitRoad || pitTripActive`) that latches cycle start and uses a simple remaining pit-cycle countdown (`latched total stop loss - elapsed cycle time`) instead of repeatedly applying a fresh full pit-loss event while already in the stop.
+- Added same-class rival pit-road transition tracking during the active cycle and excluded rivals behind who entered pit road after our cycle start from normal on-track pass-before-exit threat treatment while they remain on pit road.
+- Preserved Opponents ownership boundaries, full same-class field scan, and RaceProgress-first backbone; no strategy/fuel-planner simulation was introduced.
+
 ### Opponents Pit Exit cadence + pace-reference hardening
 - Replaced Pit Exit off-pit-road lap-quarter refresh gating with a bounded time-based refresh interval so `PitExit.*` updates stay fresher while remaining conservative on runtime cost.
 - Kept on-pit-road and active pit-trip updates responsive and preserved the existing final-120s suppression behavior unchanged.

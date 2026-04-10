@@ -1091,6 +1091,12 @@ namespace LaunchPlugin
             private bool _pitTripLockActive;
             private double _pitEntryProgressLaps = double.NaN;
             private double _pitLossLockedSec;
+            private bool _activePitCycle;
+            private double _activePitCycleStartSessionTimeSec = double.NaN;
+            private double _activePitCycleStartProgressLaps = double.NaN;
+            private double _activePitCycleTotalLossSec;
+            private readonly Dictionary<string, bool> _rivalPitRoadStateByIdentity = new Dictionary<string, bool>(StringComparer.Ordinal);
+            private readonly HashSet<string> _rivalsEnteredPitAfterOurStart = new HashSet<string>(StringComparer.Ordinal);
             private bool _pendingSettledPitOut;
             private int _pendingSettledPitOutLap = -1;
             private double _pitExitSessionTimeSec = double.NaN;
@@ -1115,6 +1121,12 @@ namespace LaunchPlugin
                 _pitTripLockActive = false;
                 _pitEntryProgressLaps = double.NaN;
                 _pitLossLockedSec = 0.0;
+                _activePitCycle = false;
+                _activePitCycleStartSessionTimeSec = double.NaN;
+                _activePitCycleStartProgressLaps = double.NaN;
+                _activePitCycleTotalLossSec = 0.0;
+                _rivalPitRoadStateByIdentity.Clear();
+                _rivalsEnteredPitAfterOurStart.Clear();
                 _pendingSettledPitOut = false;
                 _pendingSettledPitOutLap = -1;
                 _pitExitSessionTimeSec = double.NaN;
@@ -1190,6 +1202,9 @@ namespace LaunchPlugin
                 double playerProgress = player.Lap + player.LapDistPct;
                 double pitLoss = (pitLossSec > 0.0 && !double.IsNaN(pitLossSec) && !double.IsInfinity(pitLossSec)) ? pitLossSec : 0.0;
                 double paceRef = raceModel.GetPaceReferenceSec();
+                bool activePitPhase = onPitRoad || pitTripActive;
+                bool activePitPhaseStarted = activePitPhase && !_activePitCycle;
+                bool activePitPhaseEnded = !activePitPhase && _activePitCycle;
 
                 bool pitTripStarted = pitTripActive && !_lastPitTripActive;
                 bool pitTripEnded = !pitTripActive && _lastPitTripActive;
@@ -1207,9 +1222,95 @@ namespace LaunchPlugin
                     _pitLossLockedSec = 0.0;
                 }
 
-                double progressUsed = (_pitTripLockActive && !double.IsNaN(_pitEntryProgressLaps)) ? _pitEntryProgressLaps : playerProgress;
-                double pitLossUsed = _pitTripLockActive ? _pitLossLockedSec : pitLoss;
-                double playerPredictedProgressAfterPit = progressUsed - (pitLossUsed / paceRef);
+                if (activePitPhaseStarted)
+                {
+                    _activePitCycle = true;
+                    _activePitCycleStartSessionTimeSec = (!double.IsNaN(sessionTimeSec) && !double.IsInfinity(sessionTimeSec)) ? sessionTimeSec : double.NaN;
+                    _activePitCycleStartProgressLaps = playerProgress;
+                    _activePitCycleTotalLossSec = pitLoss;
+                    _rivalsEnteredPitAfterOurStart.Clear();
+                }
+                else if (_activePitCycle && pitLoss > _activePitCycleTotalLossSec)
+                {
+                    _activePitCycleTotalLossSec = pitLoss;
+                }
+
+                if (activePitPhaseEnded)
+                {
+                    _activePitCycle = false;
+                    _activePitCycleStartSessionTimeSec = double.NaN;
+                    _activePitCycleStartProgressLaps = double.NaN;
+                    _activePitCycleTotalLossSec = 0.0;
+                    _rivalsEnteredPitAfterOurStart.Clear();
+                }
+
+                double playerPredictedProgressAfterPit;
+                double pitLossUsed;
+                if (activePitPhase && _activePitCycle)
+                {
+                    double elapsedSec = 0.0;
+                    if (!double.IsNaN(_activePitCycleStartSessionTimeSec)
+                        && !double.IsNaN(sessionTimeSec)
+                        && !double.IsInfinity(sessionTimeSec)
+                        && sessionTimeSec >= _activePitCycleStartSessionTimeSec)
+                    {
+                        elapsedSec = sessionTimeSec - _activePitCycleStartSessionTimeSec;
+                    }
+
+                    pitLossUsed = _activePitCycleTotalLossSec - elapsedSec;
+                    if (double.IsNaN(pitLossUsed) || double.IsInfinity(pitLossUsed) || pitLossUsed < 0.0)
+                    {
+                        pitLossUsed = 0.0;
+                    }
+
+                    playerPredictedProgressAfterPit = playerProgress - (pitLossUsed / paceRef);
+                }
+                else
+                {
+                    double progressUsed = (_pitTripLockActive && !double.IsNaN(_pitEntryProgressLaps)) ? _pitEntryProgressLaps : playerProgress;
+                    pitLossUsed = _pitTripLockActive ? _pitLossLockedSec : pitLoss;
+                    playerPredictedProgressAfterPit = progressUsed - (pitLossUsed / paceRef);
+                }
+
+                HashSet<string> seenRivalIdentities = null;
+                if (activePitPhase && _activePitCycle)
+                {
+                    seenRivalIdentities = new HashSet<string>(StringComparer.Ordinal);
+                    foreach (var row in classRows)
+                    {
+                        if (string.IsNullOrWhiteSpace(row.IdentityKey) || string.Equals(row.IdentityKey, playerIdentityKey, StringComparison.Ordinal))
+                        {
+                            continue;
+                        }
+
+                        seenRivalIdentities.Add(row.IdentityKey);
+                        bool wasOnPitRoad;
+                        _rivalPitRoadStateByIdentity.TryGetValue(row.IdentityKey, out wasOnPitRoad);
+                        bool enteredPitRoadNow = row.IsInPit && !wasOnPitRoad;
+                        if (enteredPitRoadNow)
+                        {
+                            double ourStartProgress = !double.IsNaN(_activePitCycleStartProgressLaps) ? _activePitCycleStartProgressLaps : playerProgress;
+                            double rivalProgress = row.Lap + row.LapDistPct;
+                            if (!double.IsNaN(rivalProgress) && !double.IsInfinity(rivalProgress) && rivalProgress < ourStartProgress)
+                            {
+                                _rivalsEnteredPitAfterOurStart.Add(row.IdentityKey);
+                            }
+                        }
+
+                        _rivalPitRoadStateByIdentity[row.IdentityKey] = row.IsInPit;
+                    }
+
+                    var staleKeys = _rivalPitRoadStateByIdentity.Keys.Where(k => !seenRivalIdentities.Contains(k)).ToList();
+                    for (int i = 0; i < staleKeys.Count; i++)
+                    {
+                        _rivalPitRoadStateByIdentity.Remove(staleKeys[i]);
+                    }
+                }
+                else
+                {
+                    _rivalPitRoadStateByIdentity.Clear();
+                    _rivalsEnteredPitAfterOurStart.Clear();
+                }
 
                 int carsAheadAfterPit = 0;
                 double nearestAheadDelta = double.NegativeInfinity;
@@ -1227,6 +1328,14 @@ namespace LaunchPlugin
                     double candidateProgress = row.Lap + row.LapDistPct;
                     double delta = candidateProgress - playerPredictedProgressAfterPit;
                     if (double.IsNaN(delta) || double.IsInfinity(delta))
+                    {
+                        continue;
+                    }
+
+                    bool excludeFromOnTrackThreats = activePitPhase
+                        && _rivalsEnteredPitAfterOurStart.Contains(row.IdentityKey)
+                        && row.IsInPit;
+                    if (excludeFromOnTrackThreats)
                     {
                         continue;
                     }

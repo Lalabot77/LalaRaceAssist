@@ -56,7 +56,10 @@ Opponents now reads from:
 
 ## Pit-exit prediction model (native)
 - Uses same-class progress model only (no leaderboard-relative gap inputs).
-- Predicts player post-stop progress from locked pit-entry progress + pit loss while pit trip is active.
+- Phase split:
+  - **Pre-pit phase** (`!onPitRoad && !pitTripActive`): preserves the existing pre-pit model.
+  - **Active pit-cycle phase** (`onPitRoad || pitTripActive`): latches player active-cycle start and uses a simple remaining pit-cycle countdown (`remaining = latched total stop loss - elapsed session time in cycle`, floored at 0) rather than repeatedly treating the stop as a fresh full-loss event.
+- During active pit-cycle phase, same-class rivals are still scanned across the full class field, but a rival behind who enters pit road after our active cycle starts is no longer treated as a normal on-track pass-before-exit threat while that rival remains on pit road.
 - Nearest ahead/behind pit-exit gap seconds now use the same Opponents-owned pace reference seam used by native race-model gap conversion (runtime player pace input when valid, then native player best/last fallback, then 120s guard fallback), rather than a separate local fallback chain.
 - Compares predicted player progress against the full same-class rival set to derive:
   - `PitExit.PredictedPositionInClass`
