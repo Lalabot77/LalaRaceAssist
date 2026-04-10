@@ -1,7 +1,7 @@
 # Repository status
 
 Validated against commit: HEAD
-Last updated: 2026-04-09
+Last updated: 2026-04-10
 Branch: work
 
 ## Current repo/link status
@@ -23,9 +23,9 @@ Branch: work
 ### Reviewed and left unchanged
 - `Docs/Internal/Architecture_Guardrails.md`
 - `Docs/Internal/CODEX_TASK_TEMPLATE.txt`
-- `Docs/Internal/SimHubLogMessages.md`
 - `Docs/Subsystems/CarSA.md`
-- `Docs/Subsystems/H2H.md`
+- `Docs/Internal/SimHubParameterInventory.md`
+- `Docs/Internal/SimHubLogMessages.md`
 
 ## Delivery status highlights
 - Pit Exit pre-pit behavior remains stable while active pit-cycle prediction now uses remaining countdown time instead of repeatedly applying full fresh pit loss mid-stop.

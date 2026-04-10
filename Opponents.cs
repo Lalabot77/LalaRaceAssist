@@ -148,6 +148,14 @@ namespace LaunchPlugin
             return _raceModel.TryGetEffectivePositionByCarIdx(carIdx, out positionInClass);
         }
 
+        private static bool IsValidLapTimeSec(double value)
+        {
+            return !double.IsNaN(value)
+                && !double.IsInfinity(value)
+                && value > 0.0
+                && value < 10000.0;
+        }
+
         private void PublishRaceOutputs(double myPaceSec)
         {
             for (int i = 0; i < NeighborSlotCount; i++)
@@ -663,7 +671,7 @@ namespace LaunchPlugin
                     return snapshot;
                 }
 
-                snapshot.PaceReferenceSec = ValidLapTime(player.BestLapSec) ? player.BestLapSec : (ValidLapTime(player.LastLapSec) ? player.LastLapSec : 120.0);
+                snapshot.PaceReferenceSec = IsValidLapTimeSec(player.BestLapSec) ? player.BestLapSec : (IsValidLapTimeSec(player.LastLapSec) ? player.LastLapSec : 120.0);
                 snapshot.IsValid = true;
                 return snapshot;
             }
@@ -769,8 +777,8 @@ namespace LaunchPlugin
                     IsConnected = inWorld,
                     IsOnTrack = onTrack,
                     IsInPit = onPitRoad,
-                    BestLapSec = ValidLapTime(bestLap) ? bestLap : double.NaN,
-                    LastLapSec = ValidLapTime(lastLap) ? lastLap : double.NaN,
+                    BestLapSec = IsValidLapTimeSec(bestLap) ? bestLap : double.NaN,
+                    LastLapSec = IsValidLapTimeSec(lastLap) ? lastLap : double.NaN,
                     OfficialPositionInClass = classPos,
                     ProgressPositionInClass = 0,
                     EffectivePositionInClass = classPos > 0 ? classPos : 0,
@@ -778,10 +786,7 @@ namespace LaunchPlugin
                 };
             }
 
-            private static bool ValidLapTime(double value)
-            {
-                return !double.IsNaN(value) && !double.IsInfinity(value) && value > 0.0 && value < 10000.0;
-            }
+            
 
             private static void ParseLicence(string licString, out string licence, out double safetyRating)
             {
@@ -996,12 +1001,12 @@ namespace LaunchPlugin
 
                 if (Player != null)
                 {
-                    if (ValidLapTime(Player.BestLapSec))
+                    if (IsValidLapTimeSec(Player.BestLapSec))
                     {
                         return Player.BestLapSec;
                     }
 
-                    if (ValidLapTime(Player.LastLapSec))
+                    if (IsValidLapTimeSec(Player.LastLapSec))
                     {
                         return Player.LastLapSec;
                     }

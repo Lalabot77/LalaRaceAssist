@@ -3956,42 +3956,6 @@ namespace LaunchPlugin
         private readonly bool[] _carSaEventLastAheadConflict = new bool[CarSaDebugExportSlotCount];
         private readonly bool[] _carSaEventLastBehindConflict = new bool[CarSaDebugExportSlotCount];
         private bool _carSaEventLastStateInitialized;
-        private static readonly string[] CarSaDebugAheadDahlProperties =
-        {
-            "DahlDesign.CarAhead01Relative",
-            "DahlDesign.CarAhead02Relative",
-            "DahlDesign.CarAhead03Relative",
-            "DahlDesign.CarAhead04Relative",
-            "DahlDesign.CarAhead05Relative"
-        };
-        private static readonly string[] CarSaDebugBehindDahlProperties =
-        {
-            "DahlDesign.CarBehind01Relative",
-            "DahlDesign.CarBehind02Relative",
-            "DahlDesign.CarBehind03Relative",
-            "DahlDesign.CarBehind04Relative",
-            "DahlDesign.CarBehind05Relative"
-        };
-        private static readonly string[] CarSaDebugAheadIRacingProperties =
-        {
-            "IRacingExtraProperties.iRacing_DriverAhead_00_RelativeGapToPlayer",
-            "IRacingExtraProperties.iRacing_DriverAhead_01_RelativeGapToPlayer",
-            "IRacingExtraProperties.iRacing_DriverAhead_02_RelativeGapToPlayer",
-            "IRacingExtraProperties.iRacing_DriverAhead_03_RelativeGapToPlayer",
-            "IRacingExtraProperties.iRacing_DriverAhead_04_RelativeGapToPlayer"
-        };
-        private static readonly string[] CarSaDebugBehindIRacingProperties =
-        {
-            "IRacingExtraProperties.iRacing_DriverBehind_00_RelativeGapToPlayer",
-            "IRacingExtraProperties.iRacing_DriverBehind_01_RelativeGapToPlayer",
-            "IRacingExtraProperties.iRacing_DriverBehind_02_RelativeGapToPlayer",
-            "IRacingExtraProperties.iRacing_DriverBehind_03_RelativeGapToPlayer",
-            "IRacingExtraProperties.iRacing_DriverBehind_04_RelativeGapToPlayer"
-        };
-        private readonly double[] _carSaDebugAheadDahlRelativeGapSec = new double[CarSaDebugExportSlotCount];
-        private readonly double[] _carSaDebugBehindDahlRelativeGapSec = new double[CarSaDebugExportSlotCount];
-        private readonly double[] _carSaDebugAheadIRacingRelativeGapSec = new double[CarSaDebugExportSlotCount];
-        private readonly double[] _carSaDebugBehindIRacingRelativeGapSec = new double[CarSaDebugExportSlotCount];
         private Dictionary<string, int> _carSaClassRankByColor;
         private string _carSaClassRankToken;
         private string _carSaClassRankSource;
@@ -4201,6 +4165,18 @@ namespace LaunchPlugin
         private DateTime _shiftAssistLearnSavedPulseUntilUtc = DateTime.MinValue;
         private ShiftAssistLearningTick _shiftAssistLastLearningTick = new ShiftAssistLearningTick { State = ShiftAssistLearningState.Off };
         private DateTime _shiftAssistRuntimeStatsLastRefreshUtc = DateTime.MinValue;
+        private bool _brakeTrigger;
+        private double _brakeMax;
+        private int _brakeSampleCount;
+        private double _brakePreviousPeakPct;
+
+        private void ResetBrakeCaptureState()
+        {
+            _brakeTrigger = false;
+            _brakeMax = 0.0;
+            _brakeSampleCount = 0;
+            _brakePreviousPeakPct = 0.0;
+        }
 
         private double _lastFuel = 0.0;
 
@@ -4636,6 +4612,7 @@ namespace LaunchPlugin
             AttachCore("Fuel.IsPitWindowOpen", () => IsPitWindowOpen);
             AttachCore("Fuel.PitWindowOpeningLap", () => PitWindowOpeningLap);
             AttachCore("Fuel.PitWindowClosingLap", () => PitWindowClosingLap);
+            AttachCore("Brake.PreviousPeakPct", () => _brakePreviousPeakPct);
             AttachCore("Fuel.PitWindowState", () => PitWindowState);
             AttachCore("Fuel.PitWindowLabel", () => PitWindowLabel);
             AttachCore("Fuel.LapsRemainingInTank", () => LapsRemainingInTank);
@@ -6064,6 +6041,7 @@ namespace LaunchPlugin
             ResetFinishTimingState();
             ResetSmoothedOutputs();
             _pendingSmoothingReset = true;
+            ResetBrakeCaptureState();
             _msgV1Engine?.ResetSession();
             _trackMarkerCapturedPulse.Reset();
             _trackMarkerLengthDeltaPulse.Reset();
@@ -6515,14 +6493,6 @@ namespace LaunchPlugin
                 bool carSaDebugExportEnabled = debugMaster && Settings?.EnableCarSADebugExport == true;
                 if (carSaDebugExportEnabled)
                 {
-                    for (int i = 0; i < CarSaDebugExportSlotCount; i++)
-                    {
-                        _carSaDebugAheadDahlRelativeGapSec[i] = SafeReadDouble(pluginManager, CarSaDebugAheadDahlProperties[i], double.NaN);
-                        _carSaDebugBehindDahlRelativeGapSec[i] = SafeReadDouble(pluginManager, CarSaDebugBehindDahlProperties[i], double.NaN);
-                        _carSaDebugAheadIRacingRelativeGapSec[i] = SafeReadDouble(pluginManager, CarSaDebugAheadIRacingProperties[i], double.NaN);
-                        _carSaDebugBehindIRacingRelativeGapSec[i] = SafeReadDouble(pluginManager, CarSaDebugBehindIRacingProperties[i], double.NaN);
-                    }
-
                     UpdateCarSaDebugCadenceState(trackPct, _carSaEngine.Outputs.Debug);
                 }
 
@@ -7049,6 +7019,38 @@ namespace LaunchPlugin
                 // Brake: confirmed in SimHub property tab
                 double brakeRaw = SafeReadDouble(pluginManager, "DataCorePlugin.GameData.Brake", 0.0);
                 double brake01 = brakeRaw > 1.5 ? (brakeRaw / 100.0) : brakeRaw;
+
+                if (!_brakeTrigger && brake01 > 0.0)
+                {
+                    _brakeTrigger = true;
+                    _brakeMax = brake01;
+                    _brakeSampleCount = 0;
+                }
+
+                if (_brakeTrigger)
+                {
+                    if (_brakeSampleCount < 40)
+                    {
+                        if (brake01 > _brakeMax)
+                        {
+                            _brakeMax = brake01;
+                        }
+
+                        _brakeSampleCount++;
+
+                        if (_brakeSampleCount >= 40)
+                        {
+                            _brakePreviousPeakPct = _brakeMax;
+                        }
+                    }
+
+                    if (_brakeSampleCount >= 40 && brake01 <= 0.02)
+                    {
+                        _brakeTrigger = false;
+                        _brakeMax = 0.0;
+                        _brakeSampleCount = 0;
+                    }
+                }
 
                 // LongAccel: confirmed in SimHub property tab (m/s^2 in most setups)
                 double longAccel = SafeReadDouble(pluginManager, "DataCorePlugin.GameRawData.Telemetry.LongAccel", 0.0);
@@ -9374,23 +9376,6 @@ namespace LaunchPlugin
             _carSaEventsExportBuffer.Clear();
             _carSaEventsExportPendingLines = 0;
             _carSaEventLastStateInitialized = false;
-            ResetCarSaDebugGapArray(_carSaDebugAheadDahlRelativeGapSec);
-            ResetCarSaDebugGapArray(_carSaDebugBehindDahlRelativeGapSec);
-            ResetCarSaDebugGapArray(_carSaDebugAheadIRacingRelativeGapSec);
-            ResetCarSaDebugGapArray(_carSaDebugBehindIRacingRelativeGapSec);
-        }
-
-        private static void ResetCarSaDebugGapArray(double[] values)
-        {
-            if (values == null)
-            {
-                return;
-            }
-
-            for (int i = 0; i < values.Length; i++)
-            {
-                values[i] = double.NaN;
-            }
         }
 
         private void ResetCarSaIdentityState()
@@ -12404,13 +12389,11 @@ namespace LaunchPlugin
                 return false;
             }
 
-            bool hasFixedSectorSnapshot = _carSaEngine != null
-                && _carSaEngine.TryGetFixedSectorCacheSnapshot(playerCarIdx, out CarSAEngine.FixedSectorCacheSnapshot fixedSectorSnapshot);
+            CarSAEngine.FixedSectorCacheSnapshot fixedSectorSnapshot = default(CarSAEngine.FixedSectorCacheSnapshot);
 
-            if (!hasFixedSectorSnapshot)
-            {
-                fixedSectorSnapshot = default(CarSAEngine.FixedSectorCacheSnapshot);
-            }
+            bool hasFixedSectorSnapshot =
+                _carSaEngine != null &&
+                _carSaEngine.TryGetFixedSectorCacheSnapshot(playerCarIdx, out fixedSectorSnapshot);
 
             bool isNewSessionBest = _lapReferenceEngine.CaptureValidatedLap(
                 lastLapSec,
