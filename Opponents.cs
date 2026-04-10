@@ -1413,6 +1413,8 @@ namespace LaunchPlugin
                 _output.Valid = true;
                 _output.PredictedPositionInClass = predictedPos;
                 _output.CarsAheadAfterPitCount = carsAheadAfterPit;
+                _output.RemainingCountdownSec = (activePitPhase && _activePitCycle) ? pitLossUsed : 0.0;
+                _output.ActivePitCycle = activePitPhase && _activePitCycle;
                 _output.Summary = "PitExit: P" + predictedPos.ToString(CultureInfo.InvariantCulture) + " after stop (A=" +
                     (string.IsNullOrWhiteSpace(_output.AheadCarNumber) ? "-" : _output.AheadCarNumber + "+" + _output.AheadGapSec.ToString("F1", CultureInfo.InvariantCulture) + "s") +
                     ", B=" +
@@ -1429,6 +1431,8 @@ namespace LaunchPlugin
                     PitLossSec = pitLoss,
                     PredictedPositionInClass = predictedPos,
                     CarsAheadAfterPit = carsAheadAfterPit,
+                    RemainingCountdownSec = _output.RemainingCountdownSec,
+                    ActivePitCycle = _output.ActivePitCycle,
                     AheadName = _output.AheadName,
                     AheadCarNumber = _output.AheadCarNumber,
                     AheadClassColor = _output.AheadClassColor,
@@ -1808,6 +1812,8 @@ namespace LaunchPlugin
             public bool PitTripLockActive { get; set; }
             public int PredictedPositionInClass { get; set; }
             public int CarsAheadAfterPit { get; set; }
+            public double RemainingCountdownSec { get; set; }
+            public bool ActivePitCycle { get; set; }
             public string AheadName { get; set; } = string.Empty;
             public string AheadCarNumber { get; set; } = string.Empty;
             public string AheadClassColor { get; set; } = string.Empty;
@@ -1823,6 +1829,8 @@ namespace LaunchPlugin
             public bool Valid { get; set; }
             public int PredictedPositionInClass { get; set; }
             public int CarsAheadAfterPitCount { get; set; }
+            public double RemainingCountdownSec { get; set; }
+            public bool ActivePitCycle { get; set; }
             public string Summary { get; set; } = string.Empty;
             public string AheadName { get; set; } = string.Empty;
             public string AheadCarNumber { get; set; } = string.Empty;
@@ -1838,6 +1846,8 @@ namespace LaunchPlugin
                 Valid = false;
                 PredictedPositionInClass = 0;
                 CarsAheadAfterPitCount = 0;
+                RemainingCountdownSec = 0.0;
+                ActivePitCycle = false;
                 Summary = string.Empty;
                 AheadName = string.Empty;
                 AheadCarNumber = string.Empty;
