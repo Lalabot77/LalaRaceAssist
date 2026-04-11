@@ -1825,8 +1825,17 @@ namespace LaunchPlugin
             _lastAnnouncedMaxFuel = -1;
         }
 
+        private void ResetProjectionFallbackState()
+        {
+            _lastProjectedLapsRemaining = 0.0;
+            _lastSimLapsRemaining = 0.0;
+            _lastProjectionLapSecondsUsed = 0.0;
+        }
+
         private void ResetLiveFuelModelForNewSession(string newSessionType, bool applySeeds)
         {
+            ResetProjectionFallbackState();
+
             // Clear per-lap / model state
             ResetLiveMaxFuelTracking();
             _recentDryFuelLaps.Clear();
@@ -3137,7 +3146,7 @@ namespace LaunchPlugin
             {
                 LapsRemainingInTank = currentFuel / fuelPerLapForCalc;
 
-                double simLapsRemaining = 0.0;
+                double simLapsRemaining = ResolveSimLapsRemaining();
 
                 bool isTimedRace = !double.IsNaN(sessionTimeRemain);
                 double projectionLapSeconds = GetProjectionLapSeconds(data);
@@ -5984,6 +5993,7 @@ namespace LaunchPlugin
         {
             string reasonLabel = string.IsNullOrWhiteSpace(reason) ? "unspecified" : reason.Trim();
             SimHub.Logging.Current.Info($"[LalaPlugin:Runtime] manual recovery reset triggered (reason: {reasonLabel}).");
+            ResetProjectionFallbackState();
 
             _rejoinEngine?.Reset();
             _pit?.Reset();
@@ -13153,6 +13163,27 @@ namespace LaunchPlugin
 
             LiveProjectedDriveSecondsRemaining = projectedSeconds;
             return projectedLaps;
+        }
+
+        private double ResolveSimLapsRemaining()
+        {
+            double simLapsRemaining = SafeReadDouble(PluginManager, "DataCorePlugin.GameData.LapsRemaining", double.NaN);
+            if (!double.IsNaN(simLapsRemaining) && simLapsRemaining > 0.0)
+            {
+                return simLapsRemaining;
+            }
+
+            if (_lastSimLapsRemaining > 0.0)
+            {
+                return _lastSimLapsRemaining;
+            }
+
+            if (_lastProjectedLapsRemaining > 0.0)
+            {
+                return _lastProjectedLapsRemaining;
+            }
+
+            return 0.0;
         }
 
         private double ComputeLiveMaxFuelFromSimhub(PluginManager pluginManager)

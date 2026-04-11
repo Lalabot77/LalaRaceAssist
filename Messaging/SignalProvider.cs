@@ -15,7 +15,8 @@ namespace LaunchPlugin.Messaging
         private readonly PluginManager _pluginManager;
         private readonly LalaLaunch _plugin;
         private readonly Dictionary<string, Func<object>> _accessors;
-        private readonly HashSet<string> _legacyExtraSignalWarned = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+        private static readonly HashSet<string> LegacyExtraSignalWarned = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+        private static readonly object LegacyExtraSignalWarnedLock = new object();
 
         public SignalProvider(PluginManager pluginManager, LalaLaunch plugin)
         {
@@ -118,9 +119,18 @@ namespace LaunchPlugin.Messaging
 
         private object LegacyExtraSignalUnavailable(string signalId)
         {
-            if (!_legacyExtraSignalWarned.Contains(signalId))
+            bool shouldWarn = false;
+            lock (LegacyExtraSignalWarnedLock)
             {
-                _legacyExtraSignalWarned.Add(signalId);
+                if (!LegacyExtraSignalWarned.Contains(signalId))
+                {
+                    LegacyExtraSignalWarned.Add(signalId);
+                    shouldWarn = true;
+                }
+            }
+
+            if (shouldWarn)
+            {
                 SimHub.Logging.Current.Warn(
                     $"[LalaPlugin:MSGV1] Signal '{signalId}' has no native/plugin-owned authority. " +
                     "Legacy IRacingExtraProperties fallback is removed; signal remains unavailable.");

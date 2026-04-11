@@ -20,6 +20,18 @@ Branch: work
 - `Docs/Internal/Development_Changelog.md`
 - `Docs/RepoStatus.md`
 
+### Changed in follow-up hotfix
+- `LalaLaunch.cs`
+- `Messaging/SignalProvider.cs`
+- `Docs/Internal/SimHubLogMessages.md`
+- `Docs/Internal/Development_Changelog.md`
+- `Docs/RepoStatus.md`
+
+### Changed in stale-fallback reset follow-up
+- `LalaLaunch.cs`
+- `Docs/Internal/Development_Changelog.md`
+- `Docs/RepoStatus.md`
+
 ### Reviewed and left unchanged
 - `Docs/Internal/Architecture_Guardrails.md`
 - `Docs/Internal/CODEX_TASK_TEMPLATE.txt`
