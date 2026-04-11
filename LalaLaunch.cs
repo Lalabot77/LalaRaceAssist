@@ -3137,7 +3137,7 @@ namespace LaunchPlugin
             {
                 LapsRemainingInTank = currentFuel / fuelPerLapForCalc;
 
-                double simLapsRemaining = 0.0;
+                double simLapsRemaining = ResolveSimLapsRemaining();
 
                 bool isTimedRace = !double.IsNaN(sessionTimeRemain);
                 double projectionLapSeconds = GetProjectionLapSeconds(data);
@@ -13161,6 +13161,27 @@ namespace LaunchPlugin
 
             LiveProjectedDriveSecondsRemaining = projectedSeconds;
             return projectedLaps;
+        }
+
+        private double ResolveSimLapsRemaining()
+        {
+            double simLapsRemaining = SafeReadDouble(PluginManager, "DataCorePlugin.GameData.LapsRemaining", double.NaN);
+            if (!double.IsNaN(simLapsRemaining) && simLapsRemaining > 0.0)
+            {
+                return simLapsRemaining;
+            }
+
+            if (_lastSimLapsRemaining > 0.0)
+            {
+                return _lastSimLapsRemaining;
+            }
+
+            if (_lastProjectedLapsRemaining > 0.0)
+            {
+                return _lastProjectedLapsRemaining;
+            }
+
+            return 0.0;
         }
 
         private double ComputeLiveMaxFuelFromSimhub(PluginManager pluginManager)
