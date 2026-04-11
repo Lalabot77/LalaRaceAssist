@@ -4173,16 +4173,14 @@ namespace LaunchPlugin
         private DateTime _shiftAssistLearnSavedPulseUntilUtc = DateTime.MinValue;
         private ShiftAssistLearningTick _shiftAssistLastLearningTick = new ShiftAssistLearningTick { State = ShiftAssistLearningState.Off };
         private DateTime _shiftAssistRuntimeStatsLastRefreshUtc = DateTime.MinValue;
-        private bool _brakeTrigger;
-        private double _brakeMax;
-        private int _brakeSampleCount;
+        private bool _brakeEventActive;
+        private double _brakeEventPeak;
         private double _brakePreviousPeakPct;
 
         private void ResetBrakeCaptureState()
         {
-            _brakeTrigger = false;
-            _brakeMax = 0.0;
-            _brakeSampleCount = 0;
+            _brakeEventActive = false;
+            _brakeEventPeak = 0.0;
             _brakePreviousPeakPct = 0.0;
         }
 
@@ -7024,40 +7022,34 @@ namespace LaunchPlugin
                 // Throttle: your codebase treats it like 0..100, so normalise to 0..1
                 double throttleRaw = data.NewData?.Throttle ?? 0.0;
                 double throttle01 = throttleRaw > 1.5 ? (throttleRaw / 100.0) : throttleRaw;
+                throttle01 = Math.Max(0.0, Math.Min(1.0, throttle01));
 
                 // Brake: confirmed in SimHub property tab
                 double brakeRaw = SafeReadDouble(pluginManager, "DataCorePlugin.GameData.Brake", 0.0);
                 double brake01 = brakeRaw > 1.5 ? (brakeRaw / 100.0) : brakeRaw;
+                brake01 = Math.Max(0.0, Math.Min(1.0, brake01));
 
-                if (!_brakeTrigger && brake01 > 0.0)
+                bool startOrActive = brake01 > 0.05 && throttle01 < 0.20;
+                bool endEvent = brake01 <= 0.05 || throttle01 >= 0.20;
+
+                if (!_brakeEventActive && startOrActive)
                 {
-                    _brakeTrigger = true;
-                    _brakeMax = brake01;
-                    _brakeSampleCount = 0;
+                    _brakeEventActive = true;
+                    _brakeEventPeak = brake01;
                 }
 
-                if (_brakeTrigger)
+                if (_brakeEventActive)
                 {
-                    if (_brakeSampleCount < 40)
+                    if (brake01 > _brakeEventPeak)
                     {
-                        if (brake01 > _brakeMax)
-                        {
-                            _brakeMax = brake01;
-                        }
-
-                        _brakeSampleCount++;
-
-                        if (_brakeSampleCount >= 40)
-                        {
-                            _brakePreviousPeakPct = _brakeMax;
-                        }
+                        _brakeEventPeak = brake01;
                     }
 
-                    if (_brakeSampleCount >= 40 && brake01 <= 0.02)
+                    if (endEvent)
                     {
-                        _brakeTrigger = false;
-                        _brakeMax = 0.0;
-                        _brakeSampleCount = 0;
+                        _brakePreviousPeakPct = Math.Max(0.0, Math.Min(1.0, _brakeEventPeak));
+                        _brakeEventActive = false;
+                        _brakeEventPeak = 0.0;
                     }
                 }
 

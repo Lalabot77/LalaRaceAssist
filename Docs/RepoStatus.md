@@ -9,29 +9,14 @@ Branch: work
 - No Git remote is configured in this checkout (`git remote -v` returns empty).
 
 ## Documentation sync status
-- Completed a repo-wide runtime sweep removing remaining `IRacingExtraProperties` fallback reads from in-scope runtime code paths.
-- H2H class-best is now native-only (`H2H*.ClassSessionBestLapSec` remains `0` when native class-best authority is unavailable) with a bounded warning log.
-- Pit Entry Assist pit-speed authority is now native session-only; legacy pit-speed fallback is removed with a bounded warning log when authority is unavailable.
-- Messaging legacy ExtraProperties traffic/signal paths are removed; unavailable signals/lanes now remain unavailable with bounded warnings instead of silent fallback.
-- Hotfix follow-up applied for fallback-removal regressions:
-  - MSGV1 removed-signal warning state now persists across `SignalProvider` re-instantiation, preventing per-tick warning spam.
-  - Pace/projection no longer hardcodes `simLapsRemaining=0`; timed-race projection now keeps a native/runtime fallback seed (`DataCorePlugin.GameData.LapsRemaining` then last-known runtime values) without reintroducing ExtraProperties.
-- Follow-up correction applied for stale session carry-over:
-  - Projection fallback carry-state is now cleared on session/fuel-model resets and manual recovery, preventing prior-session laps-remaining leakage into a fresh session before native laps-remaining becomes available.
-- Preserved subsystem ownership boundaries (Opponents remains native-only race-order owner, CarSA session-agnostic spatial owner, H2H consumer/publisher only).
+- Replaced `Brake.PreviousPeakPct` capture from a fixed 40-sample Dahl-style window to an event-based braking detector.
+- New braking event contract: start when `brake > 0.05` and `throttle < 0.20`; track running peak while active; end when `brake <= 0.05` or `throttle >= 0.20`; latch peak on event end.
+- Brake/throttle processing remains normalized `0..1` inside plugin runtime with no in-plugin ×100 scaling, and no speed guard was added so stationary testing remains valid.
 
 ## Reviewed documentation set
 ### Changed in this sweep
 - `LalaLaunch.cs`
-- `PitEngine.cs`
-- `MessagingSystem.cs`
-- `Messaging/SignalProvider.cs`
-- `ProfilesManagerViewModel.cs`
-- `Docs/Subsystems/H2H.md`
-- `Docs/Subsystems/Pit_Entry_Assist.md`
-- `Docs/Subsystems/Message_System_V1.md`
 - `Docs/Internal/SimHubParameterInventory.md`
-- `Docs/Internal/SimHubLogMessages.md`
 - `Docs/Internal/Development_Changelog.md`
 - `Docs/RepoStatus.md`
 
@@ -50,13 +35,13 @@ Branch: work
 ### Reviewed and left unchanged
 - `Docs/Internal/Architecture_Guardrails.md`
 - `Docs/Internal/CODEX_TASK_TEMPLATE.txt`
-- `Docs/Subsystems/Opponents.md`
-- `Docs/Subsystems/CarSA.md`
+- `Docs/Subsystems/Launch_Mode.md`
+- `Docs/Subsystems/Dash_Integration.md`
 
 ## Delivery status highlights
-- No in-scope runtime `IRacingExtraProperties` reads remain in C# code; removed paths now either use existing native/plugin-owned sources or intentionally publish unavailable/invalid outputs.
-- Opponents remains native-only and unchanged in ownership model.
-- Warning logs are bounded (one-time or recovery-driven) for removed fallback authorities in H2H, Pit Entry Assist, MessagingSystem, and MSGV1 signal provider.
+- Removed previous `_brakeTrigger` / `_brakeSampleCount` 40-sample latch path and replaced it with minimal event-state variables (`_brakeEventActive`, `_brakeEventPeak`, `_brakePreviousPeakPct`).
+- `Brake.PreviousPeakPct` now updates only when a braking event ends (brake release or throttle application), avoiding corner-exit throttle contamination and enabling deterministic stationary validation.
+- Manual/session recovery still clears active brake state and resets `Brake.PreviousPeakPct` to `0.0`.
 
 ## Validation note
-- Validation recorded against `HEAD` (`Hotfix follow-up for stale laps-remaining fallback leakage across session reset`).
+- Validation recorded against `HEAD` (`Brake.PreviousPeakPct event-based detector replacement`).
