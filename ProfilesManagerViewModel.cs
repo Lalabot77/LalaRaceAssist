@@ -1235,7 +1235,6 @@ namespace LaunchPlugin
             if (string.IsNullOrWhiteSpace(propertyName)
                 || propertyName.StartsWith("LalaLaunch.", StringComparison.OrdinalIgnoreCase)
                 || propertyName.StartsWith("DataCorePlugin.", StringComparison.OrdinalIgnoreCase)
-                || propertyName.StartsWith("IRacingExtraProperties.", StringComparison.OrdinalIgnoreCase)
                 || propertyName.StartsWith("ShakeIT", StringComparison.OrdinalIgnoreCase))
             {
                 return null;

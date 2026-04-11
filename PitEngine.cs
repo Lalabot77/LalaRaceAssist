@@ -68,6 +68,7 @@ namespace LaunchPlugin
         private double _pitEntryFirstCompliantRawDToLine_m;
         private double _pitEntryLastDistanceRaw_m = double.NaN;
         private bool _pitEntryMissingMarkerWarned = false;
+        private bool _pitEntryMissingPitLimitWarned = false;
 
 
         // --- State management for the Pace Delta calculation ---
@@ -121,6 +122,7 @@ namespace LaunchPlugin
             _trackMarkerTriggers.Clear();
             _pitEntryLastDistanceRaw_m = double.NaN;
             _pitEntryMissingMarkerWarned = false;
+            _pitEntryMissingPitLimitWarned = false;
             PitEntryLineDebrief = "normal";
             PitEntryLineDebriefText = string.Empty;
             PitEntryLineTimeLoss_s = 0.0;
@@ -290,18 +292,23 @@ namespace LaunchPlugin
             // IMPORTANT: use the engine’s pit-lane edge (set in Update())
             bool crossedPitLineThisTick = isInPitLane && !_wasInPitLane;
 
-            // Pit limit (prefer session data, fallback to iRacingExtra)
+            // Pit limit (native session data only)
             double pitLimitKph =
                 ReadDouble(pluginManager, "DataCorePlugin.GameRawData.SessionData.WeekendInfo.TrackPitSpeedLimit", double.NaN);
 
             if (double.IsNaN(pitLimitKph) || pitLimitKph <= 0.1)
-                pitLimitKph = ReadDouble(pluginManager, "IRacingExtraProperties.iRacing_PitSpeedLimitKph", double.NaN);
-
-            if (double.IsNaN(pitLimitKph) || pitLimitKph <= 0.1)
             {
+                if (!_pitEntryMissingPitLimitWarned)
+                {
+                    _pitEntryMissingPitLimitWarned = true;
+                    SimHub.Logging.Current.Warn(
+                        "[LalaPlugin:PitEntryAssist] Session pit-speed authority unavailable. " +
+                        "Legacy IRacingExtraProperties pit-speed fallback is removed; Pit Entry Assist outputs remain reset/off until session pit limit is valid.");
+                }
                 ResetPitEntryAssistOutputs();
                 return;
             }
+            _pitEntryMissingPitLimitWarned = false;
 
             PitEntrySpeedDelta_kph = speedKph - pitLimitKph;
 
@@ -966,7 +973,6 @@ namespace LaunchPlugin
             {
                 string rawKey = Convert.ToString(pluginManager.GetPropertyValue("DataCorePlugin.GameData.TrackCode") ?? string.Empty);
                 string rawName = Convert.ToString(
-                    pluginManager.GetPropertyValue("IRacingExtraProperties.iRacing_TrackDisplayName") ??
                     pluginManager.GetPropertyValue("DataCorePlugin.GameData.TrackNameWithConfig") ??
                     pluginManager.GetPropertyValue("DataCorePlugin.GameData.TrackName") ??
                     string.Empty);

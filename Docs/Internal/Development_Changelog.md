@@ -174,3 +174,15 @@ The public user-facing release history is maintained in the root `CHANGELOG.md`.
 - Exported active pit-cycle state as `PitExit.ActivePitCycle` (`true` only during active pit-cycle prediction phase).
 - Wired both exports in `LalaLaunch.cs` under the existing `PitExit.*` attach path without changing pit-exit prediction logic.
 - Updated Opponents subsystem docs, SimHub parameter inventory, and RepoStatus for canonical contract alignment.
+
+## 2026-04-10 — Repo-wide iRacingExtraProperties runtime fallback removal sweep
+- Classification: **both** (runtime behavior cleanup + internal docs/contract alignment).
+- Removed remaining runtime `IRacingExtraProperties` reads from `LalaLaunch.cs`, `PitEngine.cs`, `MessagingSystem.cs`, and `Messaging/SignalProvider.cs`.
+- H2H class session-best is now native-only; when native class-best authority is unavailable, `H2H*.ClassSessionBestLapSec` stays `0` and a bounded warning is logged.
+- Removed leader-lap ExtraProperties candidates and retained native `DataCorePlugin` leader sources only.
+- Removed wet-tyre ExtraProperties fallback (`iRacing_Player_TireCompound`); wet mode now uses native `PlayerTireCompound` only.
+- Removed car/track display fallback reads and class-color fallback reads from ExtraProperties in `LalaLaunch.cs`.
+- Removed Pit Entry Assist pit-speed fallback (`iRacing_PitSpeedLimitKph`); assist now uses native session pit limit only and logs a bounded warning when unavailable.
+- Removed legacy ExtraProperties signal accessors in MSGV1 `SignalProvider`; affected signals now intentionally remain unavailable with one-time-per-signal warnings.
+- Removed legacy ExtraProperties traffic fast-path in `MessagingSystem`; native/session context path remains.
+- Removed `IRacingExtraProperties.` prefix bypass from `ProfilesManagerViewModel` property helper to eliminate compatibility alias treatment.

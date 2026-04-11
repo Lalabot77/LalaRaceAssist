@@ -71,7 +71,7 @@ Important workflow rules:
 - Wheelspin / traction-loss visuals depend on optional ShakeIt Motors export setup (`TractionLoss` property).
 - Primary Dash navigation behavior may evolve as dashboard workflows are refined.
 - In plugin UI, **Primary Dash Mode** binding is currently a placeholder and does not perform an action.
-- `RSC.iRacingExtraProperties.dll` remains required for now.
+- Legacy `RSC.iRacingExtraProperties.dll` fallback paths are removed from active runtime code.
 
 ## 5. The main user-facing systems
 

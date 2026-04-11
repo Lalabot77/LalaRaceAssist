@@ -17,10 +17,10 @@ Lala Race Assist Plugin is a SimHub plugin for **iRacing** that helps the driver
 
 Go to the bottom left of the left menu and click "Add/Remove Features". Find the Lala Plugin, activate it, and enable the show-in-left-menu option.
 
-### Required for now
+### Required files
 
 - `LaunchPlugin.dll`
-- `RSC.iRacingExtraProperties.dll`
+- `RSC.iRacingExtraProperties.dll` is no longer required for active plugin runtime paths.
 
 ### Plugin Activation
 
@@ -65,7 +65,7 @@ That exposes `[ShakeITMotorsV3Plugin.Export.TractionLoss.All]` for dashboards or
 - Wheelspin / traction-loss visuals require the optional `TractionLoss` ShakeIt export above.
 - Primary Dash navigation behavior may continue to evolve during early public releases.
 - In plugin UI, **Primary Dash Mode** binding is currently a placeholder and does not perform an action.
-- **`RSC.iRacingExtraProperties.dll` is still required**.
+- Legacy `RSC.iRacingExtraProperties.dll` fallback paths are removed from active runtime code.
 
 ## 4. First plugin check
 

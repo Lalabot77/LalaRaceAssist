@@ -3137,9 +3137,7 @@ namespace LaunchPlugin
             {
                 LapsRemainingInTank = currentFuel / fuelPerLapForCalc;
 
-                double simLapsRemaining = Convert.ToDouble(
-                    PluginManager.GetPropertyValue("IRacingExtraProperties.iRacing_LapsRemainingFloat") ?? 0.0
-                );
+                double simLapsRemaining = 0.0;
 
                 bool isTimedRace = !double.IsNaN(sessionTimeRemain);
                 double projectionLapSeconds = GetProjectionLapSeconds(data);
@@ -3893,6 +3891,7 @@ namespace LaunchPlugin
         private OpponentsEngine _opponentsEngine;
         private CarSAEngine _carSaEngine;
         private H2HEngine _h2hEngine;
+        private bool _h2hClassSessionBestNativeMissingWarned;
         private LapReferenceEngine _lapReferenceEngine;
         private readonly RadioFrequencyNameCache _radioFrequencyNameCache = new RadioFrequencyNameCache();
         private int _lastTransmitCarIdx = -1;
@@ -6186,14 +6185,12 @@ namespace LaunchPlugin
             {
                 string trackKey = Convert.ToString(pluginManager.GetPropertyValue("DataCorePlugin.GameData.TrackCode"));
                 string trackDisplay = FirstNonEmpty(
-                    pluginManager.GetPropertyValue("IRacingExtraProperties.iRacing_TrackDisplayName"),
                     pluginManager.GetPropertyValue("DataCorePlugin.GameData.TrackNameWithConfig"),
                     pluginManager.GetPropertyValue("DataCorePlugin.GameData.TrackName")
                 );
 
                 string carModel = FirstNonEmpty(
-                    pluginManager.GetPropertyValue("DataCorePlugin.GameData.CarModel"),
-                    pluginManager.GetPropertyValue("IRacingExtraProperties.iRacing_CarModel")
+                    pluginManager.GetPropertyValue("DataCorePlugin.GameData.CarModel")
                 );
 
                 if (string.Equals(trackKey, "unknown", StringComparison.OrdinalIgnoreCase)) trackKey = string.Empty;
@@ -6572,8 +6569,8 @@ namespace LaunchPlugin
                 UpdateCarSaFriendFlags(_carSaEngine.Outputs.AheadSlots);
                 UpdateCarSaFriendFlags(_carSaEngine.Outputs.BehindSlots);
                 UpdateCarSaPlayerFriendFlag();
-                string playerClassColor = GetCarClassColorHex(pluginManager, "IRacingExtraProperties.iRacing_Player_ClassColor");
-                if (string.IsNullOrWhiteSpace(playerClassColor) && playerCarIdx >= 0)
+                string playerClassColor = string.Empty;
+                if (playerCarIdx >= 0)
                 {
                     if (TryGetCarIdentityFromSessionInfo(pluginManager, playerCarIdx, out _, out _, out var fallbackClassColor))
                     {
@@ -12193,86 +12190,19 @@ namespace LaunchPlugin
 
             if (classBestLapSec > 0.0)
             {
+                _h2hClassSessionBestNativeMissingWarned = false;
                 return classBestLapSec;
             }
 
-            return ReadH2HClassSessionBestFallbackLapSec(PluginManager);
-        }
-
-        private static double ReadH2HClassSessionBestFallbackLapSec(PluginManager pluginManager)
-        {
-            return TryReadLapTimeSeconds(pluginManager, "IRacingExtraProperties.iRacing_Session_PlayerClassBestLapTime", out double lapTimeSec)
-                ? lapTimeSec
-                : 0.0;
-        }
-
-        private static bool TryReadLapTimeSeconds(PluginManager pluginManager, string propertyName, out double lapTimeSec)
-        {
-            lapTimeSec = 0.0;
-            if (pluginManager == null || string.IsNullOrWhiteSpace(propertyName))
+            if (!_h2hClassSessionBestNativeMissingWarned)
             {
-                return false;
+                _h2hClassSessionBestNativeMissingWarned = true;
+                SimHub.Logging.Current.Warn(
+                    "[LalaPlugin:H2H] Native class session-best lap unavailable; legacy IRacingExtraProperties fallback is removed. " +
+                    "H2H class-best output remains 0 until native class-best is available.");
             }
 
-            object rawValue;
-            try
-            {
-                rawValue = pluginManager.GetPropertyValue(propertyName);
-            }
-            catch
-            {
-                return false;
-            }
-
-            if (rawValue == null)
-            {
-                return false;
-            }
-
-            if (rawValue is TimeSpan timeSpan && timeSpan.TotalSeconds > 0.0)
-            {
-                lapTimeSec = timeSpan.TotalSeconds;
-                return true;
-            }
-
-            if (rawValue is double rawDouble && rawDouble > 0.0)
-            {
-                lapTimeSec = rawDouble;
-                return true;
-            }
-
-            if (rawValue is float rawFloat && rawFloat > 0.0f)
-            {
-                lapTimeSec = rawFloat;
-                return true;
-            }
-
-            if (rawValue is decimal rawDecimal && rawDecimal > 0m)
-            {
-                lapTimeSec = (double)rawDecimal;
-                return true;
-            }
-
-            string rawText = Convert.ToString(rawValue, CultureInfo.InvariantCulture);
-            if (string.IsNullOrWhiteSpace(rawText))
-            {
-                return false;
-            }
-
-            rawText = rawText.Trim();
-            if (TimeSpan.TryParse(rawText, CultureInfo.InvariantCulture, out TimeSpan parsedTimeSpan) && parsedTimeSpan.TotalSeconds > 0.0)
-            {
-                lapTimeSec = parsedTimeSpan.TotalSeconds;
-                return true;
-            }
-
-            if (double.TryParse(rawText, NumberStyles.Float | NumberStyles.AllowThousands, CultureInfo.InvariantCulture, out double parsedDouble) && parsedDouble > 0.0)
-            {
-                lapTimeSec = parsedDouble;
-                return true;
-            }
-
-            return false;
+            return 0.0;
         }
 
         private bool IsNewSessionBestInClass(int carIdx, double candidateBestLapSec, float[] currentBestLapTimes, double[] previousBestLapTimes)
@@ -13677,16 +13607,9 @@ namespace LaunchPlugin
                 return 0.0;
             }
 
-            // Candidate sources – ordered by preference
+            // Candidate sources – ordered by preference (native-only)
             var candidates = new (string Name, object Raw)[]
             {
-            // Verified working class-leader property:
-            ("IRacingExtraProperties.iRacing_ClassLeaderboard_Driver_00_LastLapTime",
-                pluginManager.GetPropertyValue("IRacingExtraProperties.iRacing_ClassLeaderboard_Driver_00_LastLapTime")),
-
-            // Legacy / fallback properties (may or may not exist in your SimHub version):
-            ("IRacingExtraProperties.iRacing_LeaderLastLapTime",
-                pluginManager.GetPropertyValue("IRacingExtraProperties.iRacing_LeaderLastLapTime")),
             ("DataCorePlugin.GameData.LeaderLastLapTime",
                 pluginManager.GetPropertyValue("DataCorePlugin.GameData.LeaderLastLapTime")),
             ("DataCorePlugin.GameData.LeaderAverageLapTime",
@@ -13870,7 +13793,7 @@ namespace LaunchPlugin
         {
             source = "unknown";
             playerTireCompoundRaw = -1;
-            extraPropRaw = null;
+            extraPropRaw = "legacy_disabled";
 
             // 1) iRacing primary: PlayerTireCompound (0=dry, 1=wet)
             object rawPlayer = pluginManager.GetPropertyValue("DataCorePlugin.GameRawData.Telemetry.PlayerTireCompound");
@@ -13882,27 +13805,7 @@ namespace LaunchPlugin
                 return playerCompound.Value == 1;
             }
 
-            // 2) ExtraProperties: iRacing_Player_TireCompound ("S"=dry, "M"=wet)
-            object rawExtra = pluginManager.GetPropertyValue("iRacingExtraProperties.iRacing_Player_TireCompound");
-            extraPropRaw = rawExtra == null ? "null" : Convert.ToString(rawExtra, CultureInfo.InvariantCulture) ?? "null";
-            string extra = extraPropRaw;
-            if (!string.IsNullOrWhiteSpace(extra))
-            {
-                string trimmed = extra.Trim();
-                if (string.Equals(trimmed, "M", StringComparison.OrdinalIgnoreCase))
-                {
-                    source = "ExtraProp";
-                    return true;
-                }
-
-                if (string.Equals(trimmed, "S", StringComparison.OrdinalIgnoreCase))
-                {
-                    source = "ExtraProp";
-                    return false;
-                }
-            }
-
-            // Nothing usable found
+            // No fallback path; legacy iRacingExtraProperties tyre-compound source is removed.
             return false;
         }
 

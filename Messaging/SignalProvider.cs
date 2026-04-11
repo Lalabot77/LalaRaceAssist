@@ -15,6 +15,7 @@ namespace LaunchPlugin.Messaging
         private readonly PluginManager _pluginManager;
         private readonly LalaLaunch _plugin;
         private readonly Dictionary<string, Func<object>> _accessors;
+        private readonly HashSet<string> _legacyExtraSignalWarned = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
 
         public SignalProvider(PluginManager pluginManager, LalaLaunch plugin)
         {
@@ -77,19 +78,19 @@ namespace LaunchPlugin.Messaging
                 { "CompletedLaps", () => _pluginManager?.GetPropertyValue("DataCorePlugin.GameData.CompletedLaps") },
                 { "PitServiceFuelDone", () => ReadPitServiceFuelDone() },
 
-                // Traffic / iRacingExtraProperties
-                { "TrafficBehindGapSeconds", () => _pluginManager?.GetPropertyValue("IRacingExtraProperties.iRacing_DriverBehind_00_RelativeGapToPlayer") },
-                { "TrafficBehindDistanceM", () => _pluginManager?.GetPropertyValue("IRacingExtraProperties.iRacing_DriverBehind_00_DistanceToPlayer") },
-                { "TrafficBehindClass", () => _pluginManager?.GetPropertyValue("IRacingExtraProperties.iRacing_DriverBehind_00_ClassName") },
-                { "PlayerClassName", () => _pluginManager?.GetPropertyValue("IRacingExtraProperties.iRacing_Player_ClassName") },
-                { "DriverAheadGapSeconds", () => _pluginManager?.GetPropertyValue("IRacingExtraProperties.iRacing_DriverAhead_00_RelativeGapToPlayer") },
+                // Traffic (legacy iRacingExtraProperties signal path removed)
+                { "TrafficBehindGapSeconds", () => LegacyExtraSignalUnavailable("TrafficBehindGapSeconds") },
+                { "TrafficBehindDistanceM", () => LegacyExtraSignalUnavailable("TrafficBehindDistanceM") },
+                { "TrafficBehindClass", () => LegacyExtraSignalUnavailable("TrafficBehindClass") },
+                { "PlayerClassName", () => LegacyExtraSignalUnavailable("PlayerClassName") },
+                { "DriverAheadGapSeconds", () => LegacyExtraSignalUnavailable("DriverAheadGapSeconds") },
                 { "FasterClassApproachLine", () => _plugin?.CurrentFasterClassApproachLine },
 
                 // Pace / incident
                 { "PlayerPaceLast5LapAvg", () => _plugin?.Pace_Last5LapAvgSec },
                 { "PlayerClassPosition", () => _pluginManager?.GetPropertyValue("DataCorePlugin.GameData.PositionInClass") },
                 { "IncidentCount", () => _pluginManager?.GetPropertyValue("DataCorePlugin.GameRawData.Telemetry.PlayerCarDriverIncidentCount") },
-                { "SlowDownTimeRemaining", () => _pluginManager?.GetPropertyValue("IRacingExtraProperties.iRacing_SlowDownTime") },
+                { "SlowDownTimeRemaining", () => LegacyExtraSignalUnavailable("SlowDownTimeRemaining") },
                 { "IncidentAheadWarning", () => false }, // placeholder until implemented
 
                 // Track markers (pit entry/exit assist)
@@ -113,6 +114,19 @@ namespace LaunchPlugin.Messaging
             {
                 return false;
             }
+        }
+
+        private object LegacyExtraSignalUnavailable(string signalId)
+        {
+            if (!_legacyExtraSignalWarned.Contains(signalId))
+            {
+                _legacyExtraSignalWarned.Add(signalId);
+                SimHub.Logging.Current.Warn(
+                    $"[LalaPlugin:MSGV1] Signal '{signalId}' has no native/plugin-owned authority. " +
+                    "Legacy IRacingExtraProperties fallback is removed; signal remains unavailable.");
+            }
+
+            return null;
         }
     }
 }

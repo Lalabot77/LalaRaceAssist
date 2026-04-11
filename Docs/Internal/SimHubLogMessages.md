@@ -76,6 +76,11 @@ Scope: Info/Warn logs emitted via `SimHub.Logging.Current.Info(...)` and `SimHub
 - **`[LalaPlugin:PitExit] Math audit: native progress model active (...)`** — Pit-in audit line confirming native progress/pit-loss-lock model context.
 - **`[LalaPlugin:PitExit] Pit-out snapshot: lap=... t=... posClass=... posOverall=... predPosClassNow=... carsAheadNow=... lane=... box=... direct=... pitTripActive=... entryGapLdr=... gapLdrLiveNow=... gapLdrUsed=... predGapAfterPit=... lock=...`** — One-time pit exit snapshot logging rejoin position, latched pit lane timings, and locked pit-trip context values.【F:LalaLaunch.cs†L4754-L4784】
 
+## H2H and messaging fallback-removal warnings
+- **`[LalaPlugin:H2H] Native class session-best lap unavailable; legacy IRacingExtraProperties fallback is removed. H2H class-best output remains 0 until native class-best is available.`** — One-time warning emitted when H2H class-best has no native authority; output remains `0` until native class-best recovers.
+- **`[LalaPlugin:Messaging] Legacy IRacingExtraProperties traffic fast-path disabled. MessagingSystem now uses native/session opponent context only; output may remain empty when no native context is available.`** — One-time warning emitted when the old ExtraProperties traffic fast-path is intentionally disabled.
+- **`[LalaPlugin:MSGV1] Signal '<signalId>' has no native/plugin-owned authority. Legacy IRacingExtraProperties fallback is removed; signal remains unavailable.`** — One-time-per-signal warning for MSGV1 signal ids previously sourced from ExtraProperties.
+
 ## Pit, refuel, and PitLite
 - **`[LalaPlugin:Pit Cycle] Saved PitLaneLoss = Xs (src).`** — Persisted pit lane loss from PitLite/DTL (debounced).【F:LalaLaunch.cs†L2950-L3004】
 - **`[LalaPlugin:Pit Cycle] Persist decision: action=SKIP reason=...`** — Pit-loss candidate rejected (NaN/invalid or non-positive) before any write attempt.【F:LalaLaunch.cs†L3251-L3332】
@@ -161,6 +166,7 @@ Scope: Info/Warn logs emitted via `SimHub.Logging.Current.Info(...)` and `SimHub
 
 ## Pit Entry Assist
 - **`[LalaPlugin:PitEntryAssist] Stored pit-entry marker unavailable for track='...'. Legacy iRacingExtraProperties pit-entry fallbacks are disabled (DistanceToPitEntry, PitEntryTrkPct).`** — Warns once while stored marker authority is unavailable; assist outputs are reset/off until stored marker inputs become valid again (warning can fire again after stored inputs recover and later drop).【F:PitEngine.cs†L336-L348】
+- **`[LalaPlugin:PitEntryAssist] Session pit-speed authority unavailable. Legacy IRacingExtraProperties pit-speed fallback is removed; Pit Entry Assist outputs remain reset/off until session pit limit is valid.`** — Warns once while session pit-speed authority is unavailable; assist outputs remain reset/off until native session pit limit recovers.
 - **`[LalaPlugin:PitEntryAssist] ACTIVATE dToLineRaw=... dToLineGuided=... dReq=... margin=... spdΔ=... decel=... buffer=... cue=...`** — Edge-triggered when the assist arms (EnteringPits, limiter overspeed, or pit-screen manual arming). Captures raw/guided distance, constant-decel requirement, margin, speed delta, profiled decel, buffer, and cue at arming time.【F:PitEngine.cs†L428-L446】
 - **`[LalaPlugin:PitEntryAssist] ENTRY LINE SAFE/NORMAL: Speed Δ at Line ...kph, Below Limiter at ...m, Time Loss: +...s`** — Edge-triggered on the pit-lane entry transition when below the limiter. Includes the first compliant distance and computed time loss vs the limiter.【F:PitEngine.cs†L460-L495】
 - **`[LalaPlugin:PitEntryAssist] ENTRY LINE BAD: Speed Δ at Line ...kph, Braked ...m too late`** — Edge-triggered on the pit-lane entry transition when still above the limiter; time loss is omitted/zero.【F:PitEngine.cs†L496-L507】

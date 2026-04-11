@@ -9,29 +9,37 @@ Branch: work
 - No Git remote is configured in this checkout (`git remote -v` returns empty).
 
 ## Documentation sync status
-- Opponents Pit Exit now exports active-cycle countdown state for dashboards: `PitExit.RemainingCountdownSec` and `PitExit.ActivePitCycle`, sourced directly from the existing active pit-cycle remaining-time predictor.
-- Active pit-cycle prediction now seeds same-class rival pit-road baseline state at cycle start before transition detection, then tracks post-start pit-road entries and excludes rivals behind who pit after our cycle starts from normal on-track pass-before-exit threat treatment while they remain on pit road.
-- Preserved subsystem ownership boundaries (Opponents race-order owner and Pit Exit owner, CarSA spatial/timing owner, H2H consumer/publisher).
+- Completed a repo-wide runtime sweep removing remaining `IRacingExtraProperties` fallback reads from in-scope runtime code paths.
+- H2H class-best is now native-only (`H2H*.ClassSessionBestLapSec` remains `0` when native class-best authority is unavailable) with a bounded warning log.
+- Pit Entry Assist pit-speed authority is now native session-only; legacy pit-speed fallback is removed with a bounded warning log when authority is unavailable.
+- Messaging legacy ExtraProperties traffic/signal paths are removed; unavailable signals/lanes now remain unavailable with bounded warnings instead of silent fallback.
+- Preserved subsystem ownership boundaries (Opponents remains native-only race-order owner, CarSA session-agnostic spatial owner, H2H consumer/publisher only).
 
 ## Reviewed documentation set
 ### Changed in this sweep
-- `Opponents.cs`
 - `LalaLaunch.cs`
-- `Docs/Subsystems/Opponents.md`
+- `PitEngine.cs`
+- `MessagingSystem.cs`
+- `Messaging/SignalProvider.cs`
+- `ProfilesManagerViewModel.cs`
+- `Docs/Subsystems/H2H.md`
+- `Docs/Subsystems/Pit_Entry_Assist.md`
+- `Docs/Subsystems/Message_System_V1.md`
 - `Docs/Internal/SimHubParameterInventory.md`
+- `Docs/Internal/SimHubLogMessages.md`
 - `Docs/Internal/Development_Changelog.md`
 - `Docs/RepoStatus.md`
 
 ### Reviewed and left unchanged
 - `Docs/Internal/Architecture_Guardrails.md`
 - `Docs/Internal/CODEX_TASK_TEMPLATE.txt`
+- `Docs/Subsystems/Opponents.md`
 - `Docs/Subsystems/CarSA.md`
-- `Docs/Internal/SimHubLogMessages.md`
 
 ## Delivery status highlights
-- Pit Exit pre-pit behavior remains unchanged; this task only surfaces the active-cycle countdown and active-cycle boolean through the existing `PitExit.*` export family for dash use.
-- Export semantics are explicit: `PitExit.RemainingCountdownSec` publishes `>0` only while active countdown is running and `0` when inactive/unavailable; `PitExit.ActivePitCycle` is `true` only during active pit-cycle prediction.
-- Pit Exit remains Opponents-owned, race-scoped, and full same-class-field comparison based; late-race last-120s suppression remains unchanged.
+- No in-scope runtime `IRacingExtraProperties` reads remain in C# code; removed paths now either use existing native/plugin-owned sources or intentionally publish unavailable/invalid outputs.
+- Opponents remains native-only and unchanged in ownership model.
+- Warning logs are bounded (one-time or recovery-driven) for removed fallback authorities in H2H, Pit Entry Assist, MessagingSystem, and MSGV1 signal provider.
 
 ## Validation note
-- Validation recorded against `HEAD` (`Opponents Pit Exit export follow-up: dash-facing active-cycle countdown + state`).
+- Validation recorded against `HEAD` (`Repo-wide iRacingExtraProperties runtime fallback removal sweep`).

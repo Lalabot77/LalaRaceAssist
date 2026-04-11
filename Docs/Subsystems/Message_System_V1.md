@@ -1,7 +1,7 @@
 # Message System V1
 
 Validated against commit: 9f784a9
-Last updated: 2026-03-24
+Last updated: 2026-04-10
 Branch: work
 
 ## Purpose
@@ -17,6 +17,7 @@ Evaluate message definitions against telemetry and plugin signals, maintain an a
 - MsgCx action pulses (driver cancel/override).
 - Pit marker pulses (`TrackMarkers.Pulse.*`) produced by `PitEngine`/`LalaLaunch`.
 - Legacy MSG lane signals from `MessagingSystem` (e.g., `MSG.OvertakeApproachLine`, `MSG.OtherClassBehindGap`) feeding catalog evaluators; there is no `MSGOtherClassBehindGap` alias.
+- Legacy `IRacingExtraProperties` traffic/slowdown signal paths are removed; signals without native/plugin-owned authority now remain unavailable and log a bounded warning.
 
 ---
 
