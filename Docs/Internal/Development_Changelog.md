@@ -39,6 +39,12 @@ The public user-facing release history is maintained in the root `CHANGELOG.md`.
 - Restored a non-ExtraProperties laps-remaining fallback path in `LalaLaunch.cs`: projection now seeds `simLapsRemaining` from native `DataCorePlugin.GameData.LapsRemaining` when available, then falls back to prior runtime values (`_lastSimLapsRemaining`, `_lastProjectedLapsRemaining`) instead of hardcoded `0.0`.
 - Kept `IRacingExtraProperties` fully removed; no legacy fallback reads were reintroduced.
 
+## 2026-04-11 — Hotfix follow-up for stale laps-remaining fallback leakage across session reset
+- Classification: **internal-only** (runtime reset-state correction).
+- Fixed stale prior-session laps-remaining reuse by clearing projection fallback carry state (`_lastSimLapsRemaining`, `_lastProjectedLapsRemaining`, `_lastProjectionLapSecondsUsed`) in both `ResetLiveFuelModelForNewSession(...)` and `ManualRecoveryReset(...)`.
+- This preserves current-session fallback reuse during temporary native dropouts while preventing prior-session leakage into fresh sessions.
+- Kept `ResolveSimLapsRemaining()` fallback concept intact and did not reintroduce `IRacingExtraProperties`.
+
 ### Pit Entry Assist aggressive fallback removal (stored-marker authority only)
 - Removed pit-entry distance fallback branches in `PitEngine.UpdatePitEntryAssist` that previously read `IRacingExtraProperties.iRacing_DistanceToPitEntry` and `IRacingExtraProperties.iRacing_PitEntryTrkPct`.
 - Pit Entry Assist distance authority is now stored/plugin-owned track markers only; when stored marker inputs are unavailable/invalid, assist is reset/off for that tick.

@@ -1825,8 +1825,17 @@ namespace LaunchPlugin
             _lastAnnouncedMaxFuel = -1;
         }
 
+        private void ResetProjectionFallbackState()
+        {
+            _lastProjectedLapsRemaining = 0.0;
+            _lastSimLapsRemaining = 0.0;
+            _lastProjectionLapSecondsUsed = 0.0;
+        }
+
         private void ResetLiveFuelModelForNewSession(string newSessionType, bool applySeeds)
         {
+            ResetProjectionFallbackState();
+
             // Clear per-lap / model state
             ResetLiveMaxFuelTracking();
             _recentDryFuelLaps.Clear();
@@ -5986,6 +5995,7 @@ namespace LaunchPlugin
         {
             string reasonLabel = string.IsNullOrWhiteSpace(reason) ? "unspecified" : reason.Trim();
             SimHub.Logging.Current.Info($"[LalaPlugin:Runtime] manual recovery reset triggered (reason: {reasonLabel}).");
+            ResetProjectionFallbackState();
 
             _rejoinEngine?.Reset();
             _pit?.Reset();

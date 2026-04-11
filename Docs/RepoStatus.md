@@ -16,6 +16,8 @@ Branch: work
 - Hotfix follow-up applied for fallback-removal regressions:
   - MSGV1 removed-signal warning state now persists across `SignalProvider` re-instantiation, preventing per-tick warning spam.
   - Pace/projection no longer hardcodes `simLapsRemaining=0`; timed-race projection now keeps a native/runtime fallback seed (`DataCorePlugin.GameData.LapsRemaining` then last-known runtime values) without reintroducing ExtraProperties.
+- Follow-up correction applied for stale session carry-over:
+  - Projection fallback carry-state is now cleared on session/fuel-model resets and manual recovery, preventing prior-session laps-remaining leakage into a fresh session before native laps-remaining becomes available.
 - Preserved subsystem ownership boundaries (Opponents remains native-only race-order owner, CarSA session-agnostic spatial owner, H2H consumer/publisher only).
 
 ## Reviewed documentation set
@@ -40,6 +42,11 @@ Branch: work
 - `Docs/Internal/Development_Changelog.md`
 - `Docs/RepoStatus.md`
 
+### Changed in stale-fallback reset follow-up
+- `LalaLaunch.cs`
+- `Docs/Internal/Development_Changelog.md`
+- `Docs/RepoStatus.md`
+
 ### Reviewed and left unchanged
 - `Docs/Internal/Architecture_Guardrails.md`
 - `Docs/Internal/CODEX_TASK_TEMPLATE.txt`
@@ -52,4 +59,4 @@ Branch: work
 - Warning logs are bounded (one-time or recovery-driven) for removed fallback authorities in H2H, Pit Entry Assist, MessagingSystem, and MSGV1 signal provider.
 
 ## Validation note
-- Validation recorded against `HEAD` (`Hotfix follow-up for MSGV1 warning-state persistence + projection fallback seeding`).
+- Validation recorded against `HEAD` (`Hotfix follow-up for stale laps-remaining fallback leakage across session reset`).
