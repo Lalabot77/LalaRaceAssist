@@ -68,6 +68,7 @@ namespace LaunchPlugin
         // Very short hold to avoid flicker if the signal blips
         private DateTime _lastHitUtc = DateTime.MinValue;
         private const double HoldAfterMissSec = 0.35;
+        private bool _legacyExtraPropertiesWarned;
 
         public void Update(GameData data, PluginManager pm)
         {
@@ -79,32 +80,21 @@ namespace LaunchPlugin
                 return;
             }
 
-            // 1) --- RSC FAST-PATH (RobRomain) -----------------------------------------
-            // If these properties exist, use them. Otherwise skip to our own logic.
-            string myClassRsc = GetString(pm, "IRacingExtraProperties.iRacing_Player_ClassName");
-            double etaRsc = GetDouble(pm, "IRacingExtraProperties.iRacing_DriverBehind_00_RelativeGapToPlayer", double.NaN);
-            string oppClassRsc = GetString(pm, "IRacingExtraProperties.iRacing_DriverBehind_00_ClassName");
-            int oppPosClassRsc = GetInt(pm, "IRacingExtraProperties.iRacing_DriverBehind_00_PositionInClass", 0);
+            // Legacy iRacingExtraProperties fast-path removed in native-only cleanup.
+            if (!_legacyExtraPropertiesWarned)
+            {
+                _legacyExtraPropertiesWarned = true;
+                SimHub.Logging.Current.Warn(
+                    "[LalaPlugin:Messaging] Legacy IRacingExtraProperties traffic fast-path disabled. " +
+                    "MessagingSystem now uses native/session opponent context only; output may remain empty when no native context is available.");
+            }
 
             // Guard the threshold locally too
             var gate = WarnSeconds;
             if (!(gate > 0)) gate = 5.0;     // fallback
             if (gate > 60) gate = 60;        // sanity cap
 
-            if (!string.IsNullOrEmpty(myClassRsc) &&
-                !string.IsNullOrEmpty(oppClassRsc) &&
-                IsFinitePositive(etaRsc) &&
-                etaRsc <= gate &&
-                !StringEqualsCI(oppClassRsc, myClassRsc))
-            {
-                // Good to publish straight away
-                OvertakeApproachLine = $"P{Math.Max(0, oppPosClassRsc)} {oppClassRsc} {etaRsc:0.0}s";
-                OtherClassBehindGap = etaRsc;
-                _lastHitUtc = DateTime.UtcNow;
-                return;
-            }
-
-            // 2) --- FALLBACK A: SimHub OpponentsBehindOnTrack -------------------------
+            // SimHub OpponentsBehindOnTrack path
             // Use Opponents list (it’s already sorted by “behind”), minimal work.
             string myClass = data.NewData.CarClass ?? string.Empty;
             var behind = data.NewData.OpponentsBehindOnTrack;

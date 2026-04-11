@@ -1,7 +1,7 @@
 # Head-to-Head (H2H)
 
 Validated against commit: HEAD
-Last updated: 2026-04-09
+Last updated: 2026-04-10
 Branch: work
 
 ## Purpose
@@ -58,7 +58,7 @@ H2H sector publication is intentionally simple:
 - `LiveDeltaToBestSec = 0` when insufficient data exists.
 - Sector delta values reset to `0` whenever their sector state is not `valid`.
 - Sector publication is **not bind-aware** after the cache switchover. H2H does not rebuild rows from target-bound stopwatch completions and does not carry a special lap-wrap sector-6 timing path; sector 6 simply publishes whenever CarSA records the `50→0` completion into cache.
-- `LastLapColor` uses direct dash-ready `#RRGGBB` outputs: white `#FFFFFF` for a normal last lap, lime `#00FF00` when the corresponding published last lap is also that participant's valid PB, and magenta `#FF00FF` when that valid PB also matches the same-class session-best; session-best overrides PB, and invalid faster raw last laps do not trigger PB/session-best coloring. Class session-best resolution keeps the normal same-class H2H source first and falls back only when needed to `IRacingExtraProperties.iRacing_Session_PlayerClassBestLapTime` parsed to seconds.
+- `LastLapColor` uses direct dash-ready `#RRGGBB` outputs: white `#FFFFFF` for a normal last lap, lime `#00FF00` when the corresponding published last lap is also that participant's valid PB, and magenta `#FF00FF` when that valid PB also matches the same-class session-best; session-best overrides PB, and invalid faster raw last laps do not trigger PB/session-best coloring. Class session-best resolution is native-only; when no native class-best authority is available, H2H class session-best remains `0`.
 - `Valid` is true only when a side has a resolved live target and usable H2H timing context.
 
 ## Export contract summary

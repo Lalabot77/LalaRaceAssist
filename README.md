@@ -57,7 +57,7 @@ The dashboard docs now include a dedicated Primary Driver Dash guide covering th
 ## Install Summary
 
 1. Copy the 2 plugin *.dll files into your SimHub root installation.
-2. Keep **`RSC.iRacingExtraProperties.dll` required for now**.
+2. `RSC.iRacingExtraProperties.dll` is **no longer required** for current plugin runtime paths.
 3. Restart SimHub.
 4. Import the dashboards you want to use.
 5. Open the plugin and begin with **Strategy**, then review **Profiles**, **Dash Control**, and **Settings**.
@@ -69,7 +69,7 @@ The dashboard docs now include a dedicated Primary Driver Dash guide covering th
 - Wheelspin / traction-loss indicators depend on optional **ShakeIt Motors** export setup (`TractionLoss` property). Without that optional export, those indicators are unavailable.
 - Primary Dash navigation behavior is still evolving as the dashboard package is refined for early testers.
 - In plugin UI, **Primary Dash Mode** binding is currently a future placeholder and does not perform an action yet.
-- **`RSC.iRacingExtraProperties.dll` remains required** in this release line.
+- Legacy `RSC.iRacingExtraProperties.dll` fallback paths are removed from active runtime code.
 
 ## Support and Feedback
 

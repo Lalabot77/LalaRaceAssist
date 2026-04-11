@@ -55,7 +55,7 @@ If the pit screen is dismissed or resets to auto, manual arming immediately fall
   - If stored markers are unavailable/invalid for the active track/session, assist stays off and emits a warning log (one-time until markers become valid again).
   - Clamped to **0–500 m** working window; assist resets if ≥500 m or invalid.
 
-- **Speed delta (`Pit.EntrySpeedDelta_kph`):** Current speed − pit speed limit (session pit speed, fallback to iRacing extra).
+- **Speed delta (`Pit.EntrySpeedDelta_kph`):** Current speed − pit speed limit (native session pit speed only).
 
 - **Required braking distance (`Pit.EntryRequiredDistance_m`):** Constant-decel model: `(v² − vTarget²) / (2 × decel)` when above pit speed. Uses per-profile decel (clamped 5–25 m/s²).
 
