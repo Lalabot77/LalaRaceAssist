@@ -191,3 +191,9 @@ The public user-facing release history is maintained in the root `CHANGELOG.md`.
 - Removed legacy ExtraProperties signal accessors in MSGV1 `SignalProvider`; affected signals now intentionally remain unavailable with one-time-per-signal warnings.
 - Removed legacy ExtraProperties traffic fast-path in `MessagingSystem`; native/session context path remains.
 - Removed `IRacingExtraProperties.` prefix bypass from `ProfilesManagerViewModel` property helper to eliminate compatibility alias treatment.
+
+## 2026-04-12 — Launch trace mixed-file parser summary-header hotfix
+- Classification: **internal-only** (housekeeping parser correctness + log-noise reduction; no user workflow or format changes).
+- Fixed launch trace housekeeping analysis to explicitly skip the summary CSV header row that follows `[LaunchSummaryHeader]`.
+- Prevented valid mixed trace files from routing `TimestampUtc,...` through telemetry row parsing, eliminating the false telemetry DateTime parse error during Launch Analysis file scans.
+- Kept launch trace naming/CSV format/summary schema unchanged; empty/header-only cleanup and completed trace retention rules remain intact.
