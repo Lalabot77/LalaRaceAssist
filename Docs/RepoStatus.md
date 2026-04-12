@@ -11,7 +11,7 @@ Branch: work
 ## Documentation sync status
 - Replaced `Brake.PreviousPeakPct` capture from a fixed 40-sample Dahl-style window to an event-based braking detector.
 - New braking event contract: start when `brake > 0.05` and `throttle < 0.20`; track running peak while active; end when `brake <= 0.02` or `throttle >= 0.20`; latch peak on event end.
-- Added post-publish latch/re-arm lock for `Brake.PreviousPeakPct`: after event end, detector must observe at least three consecutive `brake <= 0.02` ticks before a new event can begin.
+- Added post-publish latch/re-arm lock for `Brake.PreviousPeakPct`: after event end, detector must observe at least three consecutive ticks where either `brake <= 0.02` or `throttle >= 0.20` before a new event can begin.
 - Brake/throttle processing remains normalized `0..1` inside plugin runtime with no in-plugin ×100 scaling, and no speed guard was added so stationary testing remains valid.
 
 ## Reviewed documentation set

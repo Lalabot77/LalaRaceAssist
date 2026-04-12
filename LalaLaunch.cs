@@ -7041,7 +7041,7 @@ namespace LaunchPlugin
 
                 if (_brakeLatchedWaitingForRelease)
                 {
-                    if (brake01 <= 0.02)
+                    if (brake01 <= 0.02 || throttle01 >= 0.20)
                     {
                         _brakeReleaseTicks++;
                         if (_brakeReleaseTicks >= 3)
