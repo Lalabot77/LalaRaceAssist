@@ -3,8 +3,8 @@
 **CANONICAL CONTRACT**
 
 Validated against: HEAD
-Last reviewed: 2026-04-11
-Last updated: 2026-04-11
+Last reviewed: 2026-04-12
+Last updated: 2026-04-12
 Branch: work
 
 - All exports are attached in `LalaLaunch.cs` during `Init()` via `AttachCore`/`AttachVerbose`. Core values are refreshed in `DataUpdate` (500 ms poll for fuel/pace/pit via `_poll500ms`; per-tick for launch/dash/messaging). Verbose rows require `SimhubPublish.VERBOSE`.【F:LalaLaunch.cs†L2644-L3120】【F:LalaLaunch.cs†L3411-L3775】
@@ -14,7 +14,7 @@ Branch: work
 ## Brake
 | Exported name | Type | Units / meaning | Update cadence | Defined in |
 | --- | --- | --- | --- | --- |
-| Brake.PreviousPeakPct | double | Peak brake input from the most recently completed braking event (normalized 0–1). Event begins when brake exceeds 5% while throttle is below 20%; while active, peak tracks `max(peak, brake)`. Event ends when brake falls to 5% or below, or throttle rises to 20% or above; on end, the event peak is latched to this export. Manual/session recovery resets clear active event state and set the latched export to `0.0` so stale prior-session peaks cannot leak forward. | Per tick. | `LalaLaunch.cs` — runtime `DataUpdate` brake event detector + `AttachCore`. |
+| Brake.PreviousPeakPct | double | Peak brake input from the most recently completed braking event (normalized 0–1). Event begins when brake exceeds 5% while throttle is below 20%; while active, peak tracks `max(peak, brake)`. Event ends when brake falls to 2% or below, or throttle rises to 20% or above; on end, the event peak is latched to this export and capture enters a short re-arm lock that requires at least two consecutive release ticks (`brake <= 0.02`) before a new event can start. Manual/session recovery resets clear active + latched state/counters and set the export to `0.0` so stale prior-session peaks cannot leak forward. | Per tick. | `LalaLaunch.cs` — runtime `DataUpdate` brake event detector + `AttachCore`. |
 
 ## Fuel
 | Exported name | Type | Units / meaning | Update cadence | Defined in |

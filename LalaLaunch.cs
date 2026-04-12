@@ -4175,12 +4175,16 @@ namespace LaunchPlugin
         private DateTime _shiftAssistRuntimeStatsLastRefreshUtc = DateTime.MinValue;
         private bool _brakeEventActive;
         private double _brakeEventPeak;
+        private bool _brakeLatchedWaitingForRelease;
+        private int _brakeReleaseTicks;
         private double _brakePreviousPeakPct;
 
         private void ResetBrakeCaptureState()
         {
             _brakeEventActive = false;
             _brakeEventPeak = 0.0;
+            _brakeLatchedWaitingForRelease = false;
+            _brakeReleaseTicks = 0;
             _brakePreviousPeakPct = 0.0;
         }
 
@@ -7029,13 +7033,37 @@ namespace LaunchPlugin
                 double brake01 = brakeRaw > 1.5 ? (brakeRaw / 100.0) : brakeRaw;
                 brake01 = Math.Max(0.0, Math.Min(1.0, brake01));
 
-                bool startOrActive = brake01 > 0.05 && throttle01 < 0.20;
-                bool endEvent = brake01 <= 0.05 || throttle01 >= 0.20;
+                bool canStartEvent = !_brakeEventActive
+                    && !_brakeLatchedWaitingForRelease
+                    && brake01 > 0.05
+                    && throttle01 < 0.20;
+                bool endEvent = brake01 <= 0.02 || throttle01 >= 0.20;
 
-                if (!_brakeEventActive && startOrActive)
+                if (_brakeLatchedWaitingForRelease)
+                {
+                    if (brake01 <= 0.02)
+                    {
+                        _brakeReleaseTicks++;
+                        if (_brakeReleaseTicks >= 2)
+                        {
+                            _brakeLatchedWaitingForRelease = false;
+                            _brakeReleaseTicks = 0;
+                        }
+                    }
+                    else
+                    {
+                        _brakeReleaseTicks = 0;
+                    }
+                }
+                else
+                {
+                    _brakeReleaseTicks = 0;
+                }
+
+                if (canStartEvent)
                 {
                     _brakeEventActive = true;
-                    _brakeEventPeak = brake01;
+                    _brakeEventPeak = Math.Max(0.0, Math.Min(1.0, brake01));
                 }
 
                 if (_brakeEventActive)
@@ -7050,6 +7078,8 @@ namespace LaunchPlugin
                         _brakePreviousPeakPct = Math.Max(0.0, Math.Min(1.0, _brakeEventPeak));
                         _brakeEventActive = false;
                         _brakeEventPeak = 0.0;
+                        _brakeLatchedWaitingForRelease = true;
+                        _brakeReleaseTicks = 0;
                     }
                 }
 
