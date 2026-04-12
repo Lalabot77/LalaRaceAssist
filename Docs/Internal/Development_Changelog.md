@@ -35,7 +35,7 @@ The public user-facing release history is maintained in the root `CHANGELOG.md`.
 
 ### Brake previous-peak detector hysteresis + re-arm lock refinement
 - Refined `Brake.PreviousPeakPct` event detection in `LalaLaunch.cs` to use start/end hysteresis thresholds: start at `brake > 0.05 && throttle < 0.20`, end at `brake <= 0.02 || throttle >= 0.20`.
-- Added explicit latch/re-arm behavior after publish so a completed event cannot immediately retrigger; re-arm now requires two consecutive release ticks with `brake <= 0.02`.
+- Added explicit latch/re-arm behavior after publish so a completed event cannot immediately retrigger; re-arm now requires three consecutive release ticks with `brake <= 0.02`.
 - Preserved existing external contract (`Brake.PreviousPeakPct` updates only on event end, normalized `0..1` inputs, no speed gate) and reset paths now clear active/latch/counter state together.
 
 ### Brake previous-peak event-based detector replacement

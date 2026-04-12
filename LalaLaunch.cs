@@ -7044,7 +7044,7 @@ namespace LaunchPlugin
                     if (brake01 <= 0.02)
                     {
                         _brakeReleaseTicks++;
-                        if (_brakeReleaseTicks >= 2)
+                        if (_brakeReleaseTicks >= 3)
                         {
                             _brakeLatchedWaitingForRelease = false;
                             _brakeReleaseTicks = 0;
@@ -7063,7 +7063,8 @@ namespace LaunchPlugin
                 if (canStartEvent)
                 {
                     _brakeEventActive = true;
-                    _brakeEventPeak = Math.Max(0.0, Math.Min(1.0, brake01));
+                    _brakeEventPeak = brake01;
+                    _brakeReleaseTicks = 0;
                 }
 
                 if (_brakeEventActive)
