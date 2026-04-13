@@ -9,6 +9,9 @@ Branch: work
 - No Git remote is configured in this checkout (`git remote -v` returns empty).
 
 ## Documentation sync status
+- Boxed refuel gauge seam now splits latch timing by meaning in `LalaLaunch.cs`: `Fuel.Pit.Box.WillAddLatched` latches immediately on boxed+refuel-selected state, while `Fuel.Pit.Box.EntryFuel` still waits for first refuel-flow signal.
+- In-box refuel deselect now clears boxed refuel exports immediately (`Fuel.Pit.Box.EntryFuel`, `Fuel.Pit.Box.WillAddLatched`, `Fuel.Pit.AddedSoFar`, `Fuel.Pit.WillAddRemaining`) instead of waiting for full box-phase reset.
+- Preserved runtime fuel-math semantics for `Fuel.Pit.WillAdd`, `Fuel.Pit.FuelOnExit`, and `Fuel.Delta.LitresWillAdd`.
 - Added fixed boxed-service modeled overhead: `CalculatePitBoxModeledTargetSeconds()` now returns `max(fuelTime, tireTime) + 1.0s`, representing stationary box overhead only (boxing/settle/service slop), not lane travel.
 - Kept downstream seams aligned via single upstream ownership: `Pit.Box.TargetSec`, `Pit.Box.RemainingSec`, and `Fuel.Live.TotalStopLoss` now inherit the same +1.0s boxed-service correction naturally through the shared modeled target seam.
 - Follow-up fixed `Pit.Box.LastDeltaSec` stop-end sampling: stop delta now uses current pit stop elapsed authority at the active→inactive transition, with cached elapsed used only as an invalid-value fallback.
@@ -22,6 +25,7 @@ Branch: work
 ## Reviewed documentation set
 ### Changed in pit-box countdown latch + delta follow-ups
 - `LalaLaunch.cs`
+- `Docs/Subsystems/Fuel_Model.md`
 - `Docs/Subsystems/Pit_Timing_And_PitLoss.md`
 - `Docs/Internal/SimHubParameterInventory.md`
 - `Docs/Internal/Development_Changelog.md`
