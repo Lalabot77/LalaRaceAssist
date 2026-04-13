@@ -1,7 +1,7 @@
 # Fuel Model
 
 Validated against commit: HEAD
-Last updated: 2026-03-22
+Last updated: 2026-04-13
 Branch: work
 
 ## Purpose
@@ -136,6 +136,15 @@ Using current fuel, stable burn, projection laps, tank-space limits, and pit-men
 - fuel to add,
 - stops required,
 - current-stint burn target and burn band.
+
+`Fuel.Pit.WillAdd` remains runtime math output (`min(requestedAdd, tankSpaceAvailable)`) and is intentionally clamp-driven. During an in-box fill, rising current fuel can reduce remaining tank space, so `WillAdd` may step down near end-of-stop; this is expected from the clamp model and is retained for runtime semantics.
+
+For pit-popup gauge stability, a dedicated boxed-refuel seam now exports:
+- `Fuel.Pit.Box.EntryFuel` (latched fuel at in-box refuel entry),
+- `Fuel.Pit.AddedSoFar` (`max(0, FuelNow - EntryFuel)`),
+- `Fuel.Pit.WillAddRemaining` (`max(0, Fuel.Pit.WillAdd - AddedSoFar)`).
+
+Latch semantics are lifecycle-based (not `WillAdd`-driven): within valid boxed service, `EntryFuel` latches once on first refuel-flow detection (`fuel rise` or refuel-learning active seam) while refuel is selected, then remains active for the rest of that boxed phase. Values reset only when boxed service ends. This keeps dashboard logic simple and avoids clamp-driven active-state twitching.
 
 ### 7) Pit-window state machine
 Pit window state is race-only and depends on both stable confidence and tank feasibility.

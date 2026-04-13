@@ -9,33 +9,35 @@ Branch: work
 - No Git remote is configured in this checkout (`git remote -v` returns empty).
 
 ## Documentation sync status
-- Added driver-facing `Pit.Box.*` in-box countdown exports: `Pit.Box.Active`, `Pit.Box.ElapsedSec`, `Pit.Box.RemainingSec`, and `Pit.Box.TargetSec`.
-- Countdown semantics are now split correctly: `Pit.Box.TargetSec` is modeled fixed-duration service time (`max(fuelTime, tireTime)`), while `Pit.Box.RemainingSec` is repair-aware (`max(modeledRemainingSec, repairRemainingSec)`), preventing elapsed-time double subtraction against repair-left telemetry.
-- Countdown remains boxed-phase only and conservative: active only in valid in-box service state; all countdown fields publish `0` when inactive/unavailable (including drive-throughs and missed-box phases).
+- Added pit fuel-gauge helper exports for boxed refuel context: `Fuel.Pit.Box.EntryFuel`, `Fuel.Pit.AddedSoFar`, and `Fuel.Pit.WillAddRemaining`.
+- Confirmed and documented that `Fuel.Pit.WillAdd` end-of-stop twitch is expected clamp behavior (`min(requestedAdd, maxTank-currentFuel)`) as tank space tightens near completion.
+- Preserved runtime fuel semantics for `Fuel.Pit.WillAdd`, `Fuel.Pit.FuelOnExit`, and `Fuel.Delta.LitresWillAdd`; new exports provide a UI-facing countdown seam without changing planner/runtime ownership boundaries.
+- Follow-up hardened boxed refuel latch lifecycle: latch starts on boxed flow signal (fuel rise or refuel-learning seam), stays active for the full boxed phase, and resets only when boxed service ends.
+- Fixed follow-up compile blocker (CS0841) in `DataUpdate` by using an in-scope fuel sample when updating pit refuel gauge values.
 
 ## Reviewed documentation set
-### Changed in pit-box countdown sweep
+### Changed in pit-box fuel-gauge seam sweep
 - `LalaLaunch.cs`
-- `GlobalSettingsView.xaml`
 - `Docs/Internal/SimHubParameterInventory.md`
-- `Docs/Subsystems/Pit_Timing_And_PitLoss.md`
-- `Docs/Internal/Plugin_UI_Tooltips.md`
+- `Docs/Subsystems/Fuel_Model.md`
 - `Docs/Internal/Development_Changelog.md`
 - `Docs/RepoStatus.md`
 
 ### Reviewed and left unchanged
 - `Docs/Internal/Architecture_Guardrails.md`
 - `Docs/Internal/CODEX_TASK_TEMPLATE.txt`
-- `Docs/Subsystems/Launch_Mode.md`
-- `Docs/Subsystems/Dash_Integration.md`
+- `Docs/Subsystems/Pit_Timing_And_PitLoss.md`
 - `Docs/Internal/SimHubLogMessages.md`
+- `README.md`
+- `CHANGELOG.md`
+- `Docs/Quick_Start.md`
+- `Docs/User_Guide.md`
 
 ## Delivery status highlights
-- Added repair-aware boxed service targeting in `LalaLaunch` so mandatory repair-left time is included concurrently while boxed; optional repair-left time is included only when the new setting is enabled.
-- Hotfixed repair-left countdown semantics so `PitRepairLeft`/`PitOptRepairLeft` remain live remaining-time authority (not treated as total target seconds).
-- Added user setting toggle `Pit.Box: include optional repairs in service countdown` in `GlobalSettingsView` (default off).
-- Contract tidy-up: optional-repair toggle remains a persisted/UI plugin setting (not a `Settings.*` SimHub export), and parameter inventory wording now reflects that.
-- Kept strict safe defaults: countdown exports are hard-zero when inactive or unavailable.
+- Added a bounded runtime latch seam for boxed refuel gauge support (`EntryFuel` latch + `AddedSoFar` + `WillAddRemaining`) with per-tick updates and hard reset outside valid boxed refuel context.
+- Kept pre-box behavior unchanged (blue fuel now + existing `Fuel.Pit.WillAdd` semantics) while enabling in-box purple-as-remaining gauge behavior via `Fuel.Pit.WillAddRemaining`.
+- Kept logging unchanged (no new fuel log spam path); updated canonical docs for new exports and `WillAdd` clamp/twitch rationale.
+- Follow-up now avoids `Pit_WillAdd` as refuel-active signal and uses boxed lifecycle + flow detection instead, preventing clamp-driven false active transitions.
 
 ## Validation note
-- Validation recorded against `HEAD` (`Pit.Box in-box countdown exports + docs sync`).
+- Validation recorded against `HEAD` (`Fuel pit-box gauge seam follow-up: compile fix + latch hardening`).
