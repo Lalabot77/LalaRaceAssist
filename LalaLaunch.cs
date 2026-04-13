@@ -12909,14 +12909,19 @@ namespace LaunchPlugin
                 && _pit.CurrentPitPhase == PitPhase.InBox;
 
             bool wasActive = _pitBoxCountdownActive;
-            double lastElapsedSec = _pitBoxElapsedSec;
             double lastTargetSec = _pitBoxTargetSec;
 
             if (!active)
             {
                 if (wasActive && lastTargetSec > 0.0)
                 {
-                    double deltaSec = lastTargetSec - Math.Max(0.0, lastElapsedSec);
+                    double finalElapsedSec = _pit.PitStopElapsedSec;
+                    if (double.IsNaN(finalElapsedSec) || double.IsInfinity(finalElapsedSec) || finalElapsedSec < 0.0)
+                    {
+                        finalElapsedSec = Math.Max(0.0, _pitBoxElapsedSec);
+                    }
+
+                    double deltaSec = lastTargetSec - finalElapsedSec;
                     if (double.IsNaN(deltaSec) || double.IsInfinity(deltaSec))
                     {
                         deltaSec = 0.0;
