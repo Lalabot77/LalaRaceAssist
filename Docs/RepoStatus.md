@@ -9,6 +9,8 @@ Branch: work
 - No Git remote is configured in this checkout (`git remote -v` returns empty).
 
 ## Documentation sync status
+- Added fixed boxed-service modeled overhead: `CalculatePitBoxModeledTargetSeconds()` now returns `max(fuelTime, tireTime) + 1.0s`, representing stationary box overhead only (boxing/settle/service slop), not lane travel.
+- Kept downstream seams aligned via single upstream ownership: `Pit.Box.TargetSec`, `Pit.Box.RemainingSec`, and `Fuel.Live.TotalStopLoss` now inherit the same +1.0s boxed-service correction naturally through the shared modeled target seam.
 - Follow-up fixed `Pit.Box.LastDeltaSec` stop-end sampling: stop delta now uses current pit stop elapsed authority at the active→inactive transition, with cached elapsed used only as an invalid-value fallback.
 - Follow-up fixed PR 561 latch basis: settle-phase `Pit.Box.TargetSec` now freezes the effective target `max(modeledTargetSec, repairRemainingSec)` so repairs seen before latch are included in the frozen stop target.
 - `Pit.Box.TargetSec` now latches/freeze after a brief in-box settle period (1.0s elapsed) so late stop-model drift does not move the active countdown.
@@ -20,6 +22,8 @@ Branch: work
 ## Reviewed documentation set
 ### Changed in pit-box countdown latch + delta follow-ups
 - `LalaLaunch.cs`
+- `Docs/Subsystems/Pit_Timing_And_PitLoss.md`
+- `Docs/Internal/SimHubParameterInventory.md`
 - `Docs/Internal/Development_Changelog.md`
 - `Docs/RepoStatus.md`
 
@@ -33,6 +37,8 @@ Branch: work
 - `Docs/User_Guide.md`
 
 ## Delivery status highlights
+- Added fixed `+1.0s` stationary boxed-service overhead at the canonical modeled box-target seam (`max(fuelTime, tireTime) + 1.0`).
+- Kept pit-lane/direct-travel timing semantics unchanged; adjustment is boxed service only.
 - Fixed the stop-end delta sampling seam so `Pit.Box.LastDeltaSec` uses transition-time elapsed authority instead of prior-tick cached elapsed.
 - Implemented a pit-box target latch seam that freezes `Pit.Box.TargetSec` once stop-in-box timing is established.
 - Follow-up hardened the latch basis so repair authority seen during settle is captured in the frozen target.
