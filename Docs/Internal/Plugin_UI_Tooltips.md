@@ -1,7 +1,7 @@
 ﻿# Plugin UI Tooltips
 
 Validated against commit: HEAD
-Last updated: 2026-03-22
+Last updated: 2026-04-13
 Branch: work
 
 ## CopyProfileDialog.xaml
@@ -215,6 +215,7 @@ Branch: work
 - `GlobalSettingsView.xaml` shows the warning text `Debug mode is for troubleshooting only. Leave this off unless asked to enable it.` directly below `Enable debugging mode`.
 - `GlobalSettingsView.xaml` `Enable Debug Logging` tooltip says it enables verbose logging for troubleshooting the plugin.
 - `GlobalSettingsView.xaml` `PitExit Verbose Logging` tooltip says it adds PitExit math audit details to pit-in snapshots for troubleshooting.
+- `GlobalSettingsView.xaml` `Pit.Box: include optional repairs in service countdown` toggle tooltip says optional repair time is included in Pit.Box target/remaining and shared total-stop-loss prediction when enabled; mandatory repairs remain included by default when valid while boxed.
 - `GlobalSettingsView.xaml` `Mute Shift Assist sound in replay` tooltip says replay sessions suppress only Shift Assist audio while lights, learning, and other Shift Assist logic continue normally.
 - `GlobalSettingsView.xaml` `Shift Assist Debug CSV` tooltip explains per-tick diagnostic CSV logging.
 - `GlobalSettingsView.xaml` `Shift Assist Debug Max Hz` textbox tooltip documents valid range (1..60 Hz).

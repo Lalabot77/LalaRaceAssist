@@ -111,6 +111,11 @@
                 <ContentControl x:Name="LaunchSettingsHost" Margin="0,10,0,0"/>
             </Expander>
 
+            <styles:SHToggleCheckbox Content="Pit.Box: include optional repairs in service countdown"
+                                     Margin="0,0,0,10"
+                                     IsChecked="{Binding Settings.PitBoxIncludeOptionalRepairs, Mode=TwoWay}"
+                                     ToolTip="When enabled, optional repair time is included in Pit.Box target/remaining countdown and shared total-stop-loss prediction. Mandatory repair time is always included when native authority is valid while boxed."/>
+
             <StackPanel Visibility="{Binding HardDebugEnabledForUi, Converter={StaticResource BooleanToVisibilityConverter}}">
                 <TextBlock Text="DEBUG" FontSize="16" FontWeight="Bold" Margin="0,5,10,0"/>
                 <styles:SHToggleCheckbox x:Name="DebugMasterToggle"
