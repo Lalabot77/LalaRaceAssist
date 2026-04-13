@@ -12180,8 +12180,7 @@ namespace LaunchPlugin
                 return;
             }
 
-            double carPct = data.NewData.TrackPositionPercent;
-            if (carPct > 1.5) carPct *= 0.01;
+            double carPct = _pit.PlayerTrackPercentNormalized;
             if (carPct < 0.0 || carPct > 1.0 || double.IsNaN(carPct) || double.IsInfinity(carPct))
             {
                 _pitBoxDistanceM = 0;

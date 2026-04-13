@@ -62,6 +62,7 @@ namespace LaunchPlugin
         public string PitEntryLineDebrief { get; private set; } = "normal";
         public string PitEntryLineDebriefText { get; private set; } = string.Empty;
         public double PitEntryLineTimeLoss_s { get; private set; } = 0.0;
+        public double PlayerTrackPercentNormalized { get; private set; } = double.NaN;
         public double PlayerPitBoxTrackPct { get; private set; } = double.NaN;
         private bool _pitEntryAssistWasActive;
         private bool _pitEntryFirstCompliantCaptured;
@@ -127,6 +128,7 @@ namespace LaunchPlugin
             PitEntryLineDebrief = "normal";
             PitEntryLineDebriefText = string.Empty;
             PitEntryLineTimeLoss_s = 0.0;
+            PlayerTrackPercentNormalized = double.NaN;
             PlayerPitBoxTrackPct = double.NaN;
         }
 
@@ -154,6 +156,7 @@ namespace LaunchPlugin
             _trackMarkersLastKey = trackKey;
             var sessionState = GetSessionState(trackKey, create: true);
             double carPct = NormalizeTrackPercent(data?.NewData?.TrackPositionPercent ?? double.NaN);
+            PlayerTrackPercentNormalized = carPct;
             PlayerPitBoxTrackPct = ReadPlayerPitBoxTrackPct(pluginManager);
 
             if (double.IsNaN(sessionState.SessionStartTrackLengthM))
@@ -1354,7 +1357,7 @@ namespace LaunchPlugin
                 }
                 else
                 {
-                    double carPct = NormalizeTrackPercent(data.NewData.TrackPositionPercent);
+                    double carPct = PlayerTrackPercentNormalized;
                     double boxPct = PlayerPitBoxTrackPct;
 
                     if (!double.IsNaN(boxPct) && !double.IsNaN(carPct))
@@ -1436,7 +1439,7 @@ namespace LaunchPlugin
                 }
                 else
                 {
-                    double carPct = NormalizeTrackPercent(data.NewData.TrackPositionPercent);
+                    double carPct = PlayerTrackPercentNormalized;
                     double boxPct = PlayerPitBoxTrackPct;
 
                     if (!double.IsNaN(boxPct) && !double.IsNaN(carPct))
