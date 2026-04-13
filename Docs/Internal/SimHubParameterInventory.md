@@ -186,6 +186,8 @@ Branch: work
 | Pit.EntryLineTimeLoss_s | double | Time loss in seconds versus pit limit from the first compliant point to the pit entry line (0 if not computed). | Latched on pit entry line. | `PitEngine.UpdatePitEntryAssist` + `AttachCore`【F:PitEngine.cs†L452-L510】【F:LalaLaunch.cs†L3045-L3049】 |
 | PitExit.DistanceM | int | Forward distance in metres to the stored pit exit marker (wraps at S/F). Returns 0 if data missing. | Per tick. | `LalaLaunch.cs` — `UpdatePitExitDisplayValues` + `AttachCore`【F:LalaLaunch.cs†L4216-L4248】【F:LalaLaunch.cs†L3068-L3069】 |
 | PitExit.TimeS | int | Estimated time in seconds to pit exit using current speed (0 if speed too small or data missing). | Per tick. | `LalaLaunch.cs` — `UpdatePitExitDisplayValues` + `AttachCore`【F:LalaLaunch.cs†L4216-L4248】【F:LalaLaunch.cs†L3068-L3069】 |
+| Pit.Box.DistanceM | int | Forward wrapped distance in metres to the player pit box using native player track percent + native `DriverPitTrkPct` + session track length authority. Returns 0 when not in pit lane or when any authority is invalid/missing. | Per tick while in pit lane (0 outside pit lane). | `PitEngine.cs` (`PlayerPitBoxTrackPct`) + `LalaLaunch.cs` (`UpdatePitBoxDisplayValues`) + `AttachCore`. |
+| Pit.Box.TimeS | int | Estimated seconds to the player pit box using current speed and `Pit.Box.DistanceM`. Returns 0 when speed is too low/invalid or authority is invalid/missing. | Per tick while in pit lane (0 outside pit lane). | `LalaLaunch.cs` — `UpdatePitBoxDisplayValues` + `AttachCore`. |
 
 ## Launch
 | Exported name | Type | Units / meaning | Update cadence | Defined in |

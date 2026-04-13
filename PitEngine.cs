@@ -62,6 +62,8 @@ namespace LaunchPlugin
         public string PitEntryLineDebrief { get; private set; } = "normal";
         public string PitEntryLineDebriefText { get; private set; } = string.Empty;
         public double PitEntryLineTimeLoss_s { get; private set; } = 0.0;
+        public double PlayerTrackPercentNormalized { get; private set; } = double.NaN;
+        public double PlayerPitBoxTrackPct { get; private set; } = double.NaN;
         private bool _pitEntryAssistWasActive;
         private bool _pitEntryFirstCompliantCaptured;
         private double _pitEntryFirstCompliantDToLine_m;
@@ -126,6 +128,8 @@ namespace LaunchPlugin
             PitEntryLineDebrief = "normal";
             PitEntryLineDebriefText = string.Empty;
             PitEntryLineTimeLoss_s = 0.0;
+            PlayerTrackPercentNormalized = double.NaN;
+            PlayerPitBoxTrackPct = double.NaN;
         }
 
         public string PitEntryCueText
@@ -152,6 +156,8 @@ namespace LaunchPlugin
             _trackMarkersLastKey = trackKey;
             var sessionState = GetSessionState(trackKey, create: true);
             double carPct = NormalizeTrackPercent(data?.NewData?.TrackPositionPercent ?? double.NaN);
+            PlayerTrackPercentNormalized = carPct;
+            PlayerPitBoxTrackPct = ReadPlayerPitBoxTrackPct(pluginManager);
 
             if (double.IsNaN(sessionState.SessionStartTrackLengthM))
             {
@@ -1024,6 +1030,23 @@ namespace LaunchPlugin
             return !double.IsNaN(pct) && pct > 0.0 && pct <= 1.0;
         }
 
+        private double ReadPlayerPitBoxTrackPct(PluginManager pluginManager)
+        {
+            if (pluginManager == null) return double.NaN;
+
+            try
+            {
+                object pitBoxTrackPctRaw = pluginManager.GetPropertyValue("DataCorePlugin.GameRawData.SessionData.DriverInfo.DriverPitTrkPct");
+                if (pitBoxTrackPctRaw == null) return double.NaN;
+
+                return NormalizeTrackPercent(Convert.ToDouble(pitBoxTrackPctRaw));
+            }
+            catch
+            {
+                return double.NaN;
+            }
+        }
+
         private string GetTrackMarkersFolderPath()
         {
             return PluginStorage.GetPluginFolder();
@@ -1334,11 +1357,10 @@ namespace LaunchPlugin
                 }
                 else
                 {
-                    double carPct = data.NewData.TrackPositionPercent;
-                    var boxObj = pluginManager.GetPropertyValue("DataCorePlugin.GameRawData.SessionData.DriverInfo.DriverPitTrkPct");
-                    double boxPct = (boxObj != null) ? Convert.ToDouble(boxObj) : -1.0;
+                    double carPct = PlayerTrackPercentNormalized;
+                    double boxPct = PlayerPitBoxTrackPct;
 
-                    if (boxPct >= 0.0)
+                    if (!double.IsNaN(boxPct) && !double.IsNaN(carPct))
                     {
                         double delta = (boxPct - carPct + 1.0) % 1.0;
                         _afterBoxThisLane = (delta >= 0.5); // box is behind → already passed it
@@ -1417,11 +1439,10 @@ namespace LaunchPlugin
                 }
                 else
                 {
-                    double carPct = data.NewData.TrackPositionPercent;
-                    var boxObj = pluginManager.GetPropertyValue("DataCorePlugin.GameRawData.SessionData.DriverInfo.DriverPitTrkPct");
-                    double boxPct = (boxObj != null) ? Convert.ToDouble(boxObj) : -1.0;
+                    double carPct = PlayerTrackPercentNormalized;
+                    double boxPct = PlayerPitBoxTrackPct;
 
-                    if (boxPct >= 0.0)
+                    if (!double.IsNaN(boxPct) && !double.IsNaN(carPct))
                     {
                         double delta = (boxPct - carPct + 1.0) % 1.0;
                         CurrentPitPhase = (delta < 0.5)

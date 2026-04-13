@@ -4069,6 +4069,8 @@ namespace LaunchPlugin
         private readonly TrackMarkerPulse<TrackMarkerLockedMismatchMessage> _trackMarkerLockedMismatchPulse = new TrackMarkerPulse<TrackMarkerLockedMismatchMessage>();
         private int _pitExitDistanceM = 0;
         private int _pitExitTimeS = 0;
+        private int _pitBoxDistanceM = 0;
+        private int _pitBoxTimeS = 0;
         private const double PitExitSpeedEpsilonMps = 0.1;
 
         // ==== Refuel learning state (hardened) ====
@@ -5035,6 +5037,8 @@ namespace LaunchPlugin
             AttachCore("TrackMarkers.Session.NeedsExitRefresh", () => _pit?.TrackMarkersSessionNeedsExitRefresh ?? false);
             AttachCore("PitExit.DistanceM", () => _pitExitDistanceM);
             AttachCore("PitExit.TimeS", () => _pitExitTimeS);
+            AttachCore("Pit.Box.DistanceM", () => _pitBoxDistanceM);
+            AttachCore("Pit.Box.TimeS", () => _pitBoxTimeS);
             AttachCore("TrackMarkers.Trigger.FirstCapture", () => IsTrackMarkerPulseActive(_trackMarkerFirstCapturePulseUtc));
             AttachCore("TrackMarkers.Trigger.TrackLengthChanged", () => IsTrackMarkerPulseActive(_trackMarkerTrackLengthChangedPulseUtc));
             AttachCore("TrackMarkers.Trigger.LinesRefreshed", () => IsTrackMarkerPulseActive(_trackMarkerLinesRefreshedPulseUtc));
@@ -6378,11 +6382,13 @@ namespace LaunchPlugin
             if (inLane)
             {
                 UpdatePitExitDisplayValues(data, true);
+                UpdatePitBoxDisplayValues(data, true);
             }
             else
             {
                 // Clear once when not in pit lane
                 UpdatePitExitDisplayValues(data, false);
+                UpdatePitBoxDisplayValues(data, false);
             }
 
             // --- Rejoin assist update & lap incident tracking ---
@@ -12156,6 +12162,64 @@ namespace LaunchPlugin
 
             _pitExitDistanceM = Math.Max(0, (int)Math.Round(distanceM, MidpointRounding.AwayFromZero));
             _pitExitTimeS = Math.Max(0, (int)Math.Round(timeS, MidpointRounding.AwayFromZero));
+        }
+
+        private void UpdatePitBoxDisplayValues(GameData data, bool inPitLane)
+        {
+            if (!inPitLane)
+            {
+                _pitBoxDistanceM = 0;
+                _pitBoxTimeS = 0;
+                return;
+            }
+
+            if (data?.NewData == null || _pit == null)
+            {
+                _pitBoxDistanceM = 0;
+                _pitBoxTimeS = 0;
+                return;
+            }
+
+            double carPct = _pit.PlayerTrackPercentNormalized;
+            if (carPct < 0.0 || carPct > 1.0 || double.IsNaN(carPct) || double.IsInfinity(carPct))
+            {
+                _pitBoxDistanceM = 0;
+                _pitBoxTimeS = 0;
+                return;
+            }
+
+            double boxPct = _pit.PlayerPitBoxTrackPct;
+            double trackLenM = _pit.TrackMarkersSessionTrackLengthM;
+            if (double.IsNaN(boxPct) || double.IsNaN(trackLenM) || trackLenM <= 0.0)
+            {
+                _pitBoxDistanceM = 0;
+                _pitBoxTimeS = 0;
+                return;
+            }
+
+            double deltaPct = boxPct - carPct;
+            if (deltaPct < 0.0) deltaPct += 1.0;
+
+            double distanceM = deltaPct * trackLenM;
+            if (double.IsNaN(distanceM) || double.IsInfinity(distanceM) || distanceM < 0.0)
+            {
+                _pitBoxDistanceM = 0;
+                _pitBoxTimeS = 0;
+                return;
+            }
+
+            double speedMps = data.NewData.SpeedKmh / 3.6;
+            double timeS = (speedMps > PitExitSpeedEpsilonMps && !double.IsNaN(speedMps) && !double.IsInfinity(speedMps))
+                ? (distanceM / speedMps)
+                : 0.0;
+
+            if (double.IsNaN(timeS) || double.IsInfinity(timeS) || timeS < 0.0)
+            {
+                timeS = 0.0;
+            }
+
+            _pitBoxDistanceM = Math.Max(0, (int)Math.Round(distanceM, MidpointRounding.AwayFromZero));
+            _pitBoxTimeS = Math.Max(0, (int)Math.Round(timeS, MidpointRounding.AwayFromZero));
         }
 
         private void RefreshClassMetadata(PluginManager pluginManager)

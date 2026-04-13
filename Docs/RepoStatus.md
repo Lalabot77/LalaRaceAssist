@@ -9,31 +9,16 @@ Branch: work
 - No Git remote is configured in this checkout (`git remote -v` returns empty).
 
 ## Documentation sync status
-- Launch trace housekeeping mixed-file parser now skips the summary CSV header row after `[LaunchSummaryHeader]`, preventing false telemetry parse errors on valid trace files.
-- Launch trace naming, telemetry CSV schema, and launch summary section format remain unchanged.
-- Empty/header-only trace cleanup rules and completed-trace retention behavior remain unchanged.
+- Added plugin-owned pit-box exports for dash use: `Pit.Box.DistanceM` and `Pit.Box.TimeS`.
+- Pit-box authority now comes from native session/player sources only (`DriverPitTrkPct`, player track percent, and session track length via existing PitEngine seams).
+- `Pit.Box.*` fail-safe behavior is strict: publish `0` outside pit lane, and publish `0` when authority/speed inputs are invalid (no fallback to `IRacingExtraProperties`).
 
 ## Reviewed documentation set
-### Changed in this sweep
+### Changed in pit-box export sweep
+- `PitEngine.cs`
 - `LalaLaunch.cs`
 - `Docs/Internal/SimHubParameterInventory.md`
-- `Docs/Internal/Development_Changelog.md`
-- `Docs/RepoStatus.md`
-
-### Changed in follow-up hotfix
-- `LalaLaunch.cs`
-- `Messaging/SignalProvider.cs`
-- `Docs/Internal/SimHubLogMessages.md`
-- `Docs/Internal/Development_Changelog.md`
-- `Docs/RepoStatus.md`
-
-### Changed in stale-fallback reset follow-up
-- `LalaLaunch.cs`
-- `Docs/Internal/Development_Changelog.md`
-- `Docs/RepoStatus.md`
-
-### Changed in launch trace summary-header hotfix
-- `LalaLaunch.cs`
+- `Docs/Subsystems/Pit_Timing_And_PitLoss.md`
 - `Docs/Internal/Development_Changelog.md`
 - `Docs/RepoStatus.md`
 
@@ -45,9 +30,9 @@ Branch: work
 - `Docs/Internal/SimHubLogMessages.md`
 
 ## Delivery status highlights
-- `TryAnalyzeTraceFile(...)` now tracks `[LaunchSummaryHeader]` and skips the following summary CSV header row explicitly.
-- Launch Analysis housekeeping/list discovery no longer misroutes `TimestampUtc,...` metadata rows through telemetry parsing.
-- `ReadLaunchTraceFile(...)` behavior remains unchanged and continues to parse telemetry rows plus `[LaunchSummary]` payload lines as before.
+- Added a plugin-owned pit-box percent seam in `PitEngine` (`PlayerPitBoxTrackPct`) fed from native `DriverPitTrkPct` with normalized percent handling.
+- Added plugin-owned dash exports `Pit.Box.DistanceM` and `Pit.Box.TimeS` in `LalaLaunch` using wrapped pct delta and session track length, mirroring existing pit-exit display math style.
+- Kept strict safe defaults: all pit-box outputs return `0` outside pit lane or on invalid authority, and time returns `0` when speed is too low/invalid.
 
 ## Validation note
-- Validation recorded against `HEAD` (`Launch trace mixed-file parser summary-header hotfix`).
+- Validation recorded against `HEAD` (`plugin-owned pit-box distance/time exports`).
