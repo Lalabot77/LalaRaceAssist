@@ -4079,6 +4079,12 @@ namespace LaunchPlugin
         private double _pitBoxElapsedSec = 0.0;
         private double _pitBoxRemainingSec = 0.0;
         private double _pitBoxTargetSec = 0.0;
+        private double _pitBoxLatchedTargetSec = 0.0;
+        private bool _pitBoxTargetLatched = false;
+        private double _pitBoxLastDeltaSec = 0.0;
+        private DateTime _pitBoxLastDeltaExpiresUtc = DateTime.MinValue;
+        private const double PitBoxTargetLatchSettleSeconds = 1.0;
+        private const double PitBoxLastDeltaWindowSeconds = 5.0;
         private bool _pitRefuelEntryLatched = false;
         private bool _pitRefuelWasBoxed = false;
         private double _pitRefuelBoxEntryFuelCandidate = 0.0;
@@ -5059,6 +5065,7 @@ namespace LaunchPlugin
             AttachCore("Pit.Box.ElapsedSec", () => _pitBoxElapsedSec);
             AttachCore("Pit.Box.RemainingSec", () => _pitBoxRemainingSec);
             AttachCore("Pit.Box.TargetSec", () => _pitBoxTargetSec);
+            AttachCore("Pit.Box.LastDeltaSec", () => _pitBoxLastDeltaSec);
             AttachCore("TrackMarkers.Trigger.FirstCapture", () => IsTrackMarkerPulseActive(_trackMarkerFirstCapturePulseUtc));
             AttachCore("TrackMarkers.Trigger.TrackLengthChanged", () => IsTrackMarkerPulseActive(_trackMarkerTrackLengthChangedPulseUtc));
             AttachCore("TrackMarkers.Trigger.LinesRefreshed", () => IsTrackMarkerPulseActive(_trackMarkerLinesRefreshedPulseUtc));
@@ -12802,6 +12809,25 @@ namespace LaunchPlugin
             return Math.Max(modeledRemainingSec, repairRemainingSec);
         }
 
+        private void ResetPitBoxCountdownState()
+        {
+            _pitBoxCountdownActive = false;
+            _pitBoxElapsedSec = 0.0;
+            _pitBoxRemainingSec = 0.0;
+            _pitBoxTargetSec = 0.0;
+            _pitBoxLatchedTargetSec = 0.0;
+            _pitBoxTargetLatched = false;
+        }
+
+        private void UpdatePitBoxLastDeltaVisibility()
+        {
+            if (_pitBoxLastDeltaExpiresUtc <= DateTime.UtcNow)
+            {
+                _pitBoxLastDeltaSec = 0.0;
+                _pitBoxLastDeltaExpiresUtc = DateTime.MinValue;
+            }
+        }
+
         private bool IsInValidPitBoxServiceState()
         {
             if (_pit == null || _pit.CurrentPitPhase != PitPhase.InBox)
@@ -12882,12 +12908,31 @@ namespace LaunchPlugin
                 && _pit != null
                 && _pit.CurrentPitPhase == PitPhase.InBox;
 
+            bool wasActive = _pitBoxCountdownActive;
+            double lastTargetSec = _pitBoxTargetSec;
+
             if (!active)
             {
-                _pitBoxCountdownActive = false;
-                _pitBoxElapsedSec = 0.0;
-                _pitBoxTargetSec = 0.0;
-                _pitBoxRemainingSec = 0.0;
+                if (wasActive && lastTargetSec > 0.0)
+                {
+                    double finalElapsedSec = _pit.PitStopElapsedSec;
+                    if (double.IsNaN(finalElapsedSec) || double.IsInfinity(finalElapsedSec) || finalElapsedSec < 0.0)
+                    {
+                        finalElapsedSec = Math.Max(0.0, _pitBoxElapsedSec);
+                    }
+
+                    double deltaSec = lastTargetSec - finalElapsedSec;
+                    if (double.IsNaN(deltaSec) || double.IsInfinity(deltaSec))
+                    {
+                        deltaSec = 0.0;
+                    }
+
+                    _pitBoxLastDeltaSec = deltaSec;
+                    _pitBoxLastDeltaExpiresUtc = DateTime.UtcNow.AddSeconds(PitBoxLastDeltaWindowSeconds);
+                }
+
+                ResetPitBoxCountdownState();
+                UpdatePitBoxLastDeltaVisibility();
                 return;
             }
 
@@ -12895,14 +12940,39 @@ namespace LaunchPlugin
             if (double.IsNaN(elapsedSec) || double.IsInfinity(elapsedSec) || elapsedSec < 0.0)
                 elapsedSec = 0.0;
 
-            double targetSec = CalculatePitBoxModeledTargetSeconds();
-            if (double.IsNaN(targetSec) || double.IsInfinity(targetSec) || targetSec < 0.0)
-                targetSec = 0.0;
+            if (!wasActive)
+            {
+                _pitBoxLastDeltaSec = 0.0;
+                _pitBoxLastDeltaExpiresUtc = DateTime.MinValue;
+            }
+
+            double modeledTargetSec = CalculatePitBoxModeledTargetSeconds();
+            if (double.IsNaN(modeledTargetSec) || double.IsInfinity(modeledTargetSec) || modeledTargetSec < 0.0)
+                modeledTargetSec = 0.0;
+
+            double repairRemainingSec = CalculatePitBoxRepairRemainingSeconds();
+            if (double.IsNaN(repairRemainingSec) || double.IsInfinity(repairRemainingSec) || repairRemainingSec < 0.0)
+                repairRemainingSec = 0.0;
+
+            double effectiveTargetSec = Math.Max(modeledTargetSec, repairRemainingSec);
+
+            if (!_pitBoxTargetLatched)
+            {
+                _pitBoxLatchedTargetSec = effectiveTargetSec;
+                if (elapsedSec >= PitBoxTargetLatchSettleSeconds)
+                {
+                    _pitBoxTargetLatched = true;
+                }
+            }
+
+            double targetSec = _pitBoxTargetLatched ? _pitBoxLatchedTargetSec : effectiveTargetSec;
+            double remainingSec = Math.Max(Math.Max(0.0, targetSec - elapsedSec), repairRemainingSec);
 
             _pitBoxCountdownActive = true;
             _pitBoxElapsedSec = elapsedSec;
             _pitBoxTargetSec = targetSec;
-            _pitBoxRemainingSec = CalculatePitBoxRemainingSeconds(elapsedSec, targetSec);
+            _pitBoxRemainingSec = remainingSec;
+            UpdatePitBoxLastDeltaVisibility();
         }
 
         private void ResetPitRefuelGaugeValues()

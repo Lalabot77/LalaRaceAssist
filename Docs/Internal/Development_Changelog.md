@@ -33,6 +33,22 @@ The public user-facing release history is maintained in the root `CHANGELOG.md`.
 
 ## Post-v1.0 development
 
+### Pit.Box.LastDeltaSec stop-end sampling fix (final elapsed authority)
+- Fixed `LalaLaunch.cs` pit-box transition handling so `Pit.Box.LastDeltaSec` is computed from the current stop-end elapsed authority (`_pit.PitStopElapsedSec`) when the boxed countdown becomes inactive.
+- Added a guarded fallback to the cached countdown elapsed only if the stop-end authority value is invalid, preventing off-by-one-tick positive bias near target stops.
+- Preserved the existing `Pit.Box.LastDeltaSec` contract (`latched target - final elapsed`, positive=quicker, negative=slower) and existing 5-second visibility window behavior.
+
+### Pit box latch follow-up: freeze effective target (repairs included)
+- Fixed the PR 561 pit-box latch basis in `LalaLaunch.cs` so settle-phase latching now uses the live effective target `max(modeledTargetSec, repairRemainingSec)` instead of modeled-only target.
+- This preserves non-repair stop behavior while ensuring repair-involved stops freeze a repair-aware `Pit.Box.TargetSec`.
+- `Pit.Box.RemainingSec` and `Pit.Box.LastDeltaSec` now align with the same frozen effective target semantics for repair stops.
+
+### Pit box countdown target latch + short-lived post-stop delta export
+- Updated boxed countdown behavior in `LalaLaunch.cs` so `Pit.Box.TargetSec` now latches/freeze after a short in-box settle window (1.0s elapsed), preventing late-stop target drift from moving the countdown.
+- Updated `Pit.Box.RemainingSec` to count down from the latched target (still repair-aware through native repair-left authority).
+- Added `Pit.Box.LastDeltaSec`, computed at stop end as `(latched target - final elapsed)`, where positive means quicker than target and negative means slower; export auto-resets to `0` after a 5-second visibility window.
+- Ensured stale post-stop deltas do not leak into later stops by clearing `Pit.Box.LastDeltaSec` when a new boxed stop becomes active.
+
 ### Plugin-owned pit-box distance/time exports for dash use
 - Added plugin-owned `Pit.Box.DistanceM` and `Pit.Box.TimeS` exports in `LalaLaunch.cs` for in-lane pit-box guidance, with fail-safe zero publication outside pit lane or when authority inputs are invalid.
 - Added `PitEngine.PlayerPitBoxTrackPct` as the native/session authority seam for player pit-box track percent (`DataCorePlugin.GameRawData.SessionData.DriverInfo.DriverPitTrkPct`) and reused it in pit-phase logic paths.
