@@ -10,14 +10,16 @@ Branch: work
 
 ## Documentation sync status
 - Added driver-facing `Pit.Box.*` in-box countdown exports: `Pit.Box.Active`, `Pit.Box.ElapsedSec`, `Pit.Box.RemainingSec`, and `Pit.Box.TargetSec`.
-- Countdown uses existing pit timing + service math only: elapsed comes from `PitEngine.PitStopElapsedSec`; target comes from current modeled service target `max(fuelTime, tireTime)` built from existing runtime fuel/tyre components.
+- Countdown uses existing pit timing + service math only: elapsed comes from `PitEngine.PitStopElapsedSec`; target now comes from concurrent service model `max(fuelTime, tireTime, mandatoryRepairTime[, optionalRepairTime when enabled])` while boxed.
 - Countdown is boxed-phase only and conservative: active only in valid in-box service state; all countdown fields publish `0` when inactive/unavailable (including drive-throughs and missed-box phases).
 
 ## Reviewed documentation set
 ### Changed in pit-box countdown sweep
 - `LalaLaunch.cs`
+- `GlobalSettingsView.xaml`
 - `Docs/Internal/SimHubParameterInventory.md`
 - `Docs/Subsystems/Pit_Timing_And_PitLoss.md`
+- `Docs/Internal/Plugin_UI_Tooltips.md`
 - `Docs/Internal/Development_Changelog.md`
 - `Docs/RepoStatus.md`
 
@@ -29,8 +31,8 @@ Branch: work
 - `Docs/Internal/SimHubLogMessages.md`
 
 ## Delivery status highlights
-- Added driver-facing in-box countdown exports in `LalaLaunch` without changing pit-exit prediction contracts.
-- Reused existing pit stall elapsed timer and existing service-time model inputs (fuel add/refuel rate + tyre change time) with no fabricated setup/repair timing.
+- Added repair-aware boxed service targeting in `LalaLaunch` so mandatory repair-left time is included concurrently while boxed; optional repair-left time is included only when the new setting is enabled.
+- Added user setting toggle `Pit.Box: include optional repairs in service countdown` in `GlobalSettingsView` (default off).
 - Kept strict safe defaults: countdown exports are hard-zero when inactive or unavailable.
 
 ## Validation note

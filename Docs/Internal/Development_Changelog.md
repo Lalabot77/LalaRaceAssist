@@ -197,6 +197,13 @@ The public user-facing release history is maintained in the root `CHANGELOG.md`.
 - Countdown target is the existing modeled service target only: `max(fuelTime, tireTime)` where `fuelTime = Pit_WillAdd / EffectiveRefuelRateLps` and tyre time uses existing tyre-change selection/time.
 - Countdown is explicitly in-box service phase only (`in pit lane && in pit stall && PitPhase.InBox`) and hard-zeros when inactive/unavailable (including drive-through/missed-box states).
 
+## 2026-04-13 — Pit.Box repair-aware target + optional-repair setting
+- Classification: **both** (user-facing setting + runtime pit timing/prediction behavior alignment + docs updates).
+- Extended the shared pit-box service target seam to include repairs concurrently while boxed using native repair-left authority: `max(fuelTime, tireTime, mandatoryRepairTime[, optionalRepairTime])`.
+- Mandatory repair-left time is now included by default when valid in boxed service state; optional repair-left time is included only when the new global setting is enabled.
+- Added global setting `PitBoxIncludeOptionalRepairs` (default `false`) and exposed it in Settings UI (`GlobalSettingsView`) so drivers can opt in optional repairs.
+- Kept ownership and timing invariants intact: no second timer, no PitExit logic rewrite, and downstream pit-exit prediction continues consuming the same shared total-stop-loss seam.
+
 ## 2026-04-10 — Repo-wide iRacingExtraProperties runtime fallback removal sweep
 - Classification: **both** (runtime behavior cleanup + internal docs/contract alignment).
 - Removed remaining runtime `IRacingExtraProperties` reads from `LalaLaunch.cs`, `PitEngine.cs`, `MessagingSystem.cs`, and `Messaging/SignalProvider.cs`.

@@ -12748,7 +12748,93 @@ namespace LaunchPlugin
             if (fuelTime < 0.0 || double.IsNaN(fuelTime) || double.IsInfinity(fuelTime)) fuelTime = 0.0;
 
             double tireTime = GetEffectiveTireChangeTimeSeconds();
-            return Math.Max(fuelTime, tireTime);
+            double targetSec = Math.Max(fuelTime, tireTime);
+
+            if (!IsInValidPitBoxServiceState())
+            {
+                return targetSec;
+            }
+
+            double mandatoryRepairSec = ReadPitRepairSeconds(
+                "DataCorePlugin.GameRawData.Telemetry.PitRepairLeft",
+                "DataCorePlugin.GameData.PitRepairLeft");
+            if (mandatoryRepairSec > 0.0)
+            {
+                targetSec = Math.Max(targetSec, mandatoryRepairSec);
+            }
+
+            if (Settings?.PitBoxIncludeOptionalRepairs == true)
+            {
+                double optionalRepairSec = ReadPitRepairSeconds(
+                    "DataCorePlugin.GameRawData.Telemetry.PitOptRepairLeft",
+                    "DataCorePlugin.GameData.PitOptRepairLeft");
+                if (optionalRepairSec > 0.0)
+                {
+                    targetSec = Math.Max(targetSec, optionalRepairSec);
+                }
+            }
+
+            return targetSec;
+        }
+
+        private bool IsInValidPitBoxServiceState()
+        {
+            if (_pit == null || _pit.CurrentPitPhase != PitPhase.InBox)
+            {
+                return false;
+            }
+
+            bool inPitLane = _pit.IsOnPitRoad;
+            bool inPitStall = false;
+
+            try
+            {
+                inPitStall = Convert.ToBoolean(
+                    PluginManager?.GetPropertyValue("DataCorePlugin.GameRawData.Telemetry.PlayerCarInPitStall") ?? false);
+            }
+            catch
+            {
+                inPitStall = false;
+            }
+
+            return inPitLane && inPitStall;
+        }
+
+        private double ReadPitRepairSeconds(string primaryPropertyName, string fallbackPropertyName)
+        {
+            double seconds = ReadPitRepairSecondsInternal(primaryPropertyName);
+            if (seconds > 0.0)
+            {
+                return seconds;
+            }
+
+            return ReadPitRepairSecondsInternal(fallbackPropertyName);
+        }
+
+        private double ReadPitRepairSecondsInternal(string propertyName)
+        {
+            if (string.IsNullOrWhiteSpace(propertyName) || PluginManager == null)
+            {
+                return 0.0;
+            }
+
+            try
+            {
+                object raw = PluginManager.GetPropertyValue(propertyName);
+                if (raw == null) return 0.0;
+
+                double seconds = Convert.ToDouble(raw, CultureInfo.InvariantCulture);
+                if (double.IsNaN(seconds) || double.IsInfinity(seconds) || seconds <= 0.0)
+                {
+                    return 0.0;
+                }
+
+                return seconds;
+            }
+            catch
+            {
+                return 0.0;
+            }
         }
 
         private double CalculateTotalStopLossSeconds()
@@ -14924,6 +15010,7 @@ namespace LaunchPlugin
         public int CarSARawTelemetryMode { get; set; } = 1;
         public int OffTrackDebugProbeCarIdx { get; set; } = -1;
         public bool PitExitVerboseLogging { get; set; } = false;
+        public bool PitBoxIncludeOptionalRepairs { get; set; } = false;
         public double ResultsDisplayTime { get; set; } = 5.0; // Corrected to 5 seconds
         public double FuelReadyConfidence { get; set; } = LalaLaunch.FuelReadyConfidenceDefault;
         public int StintFuelMarginPct { get; set; } = LalaLaunch.StintFuelMarginPctDefault;
