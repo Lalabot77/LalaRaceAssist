@@ -12943,21 +12943,28 @@ namespace LaunchPlugin
             if (double.IsNaN(modeledTargetSec) || double.IsInfinity(modeledTargetSec) || modeledTargetSec < 0.0)
                 modeledTargetSec = 0.0;
 
+            double repairRemainingSec = CalculatePitBoxRepairRemainingSeconds();
+            if (double.IsNaN(repairRemainingSec) || double.IsInfinity(repairRemainingSec) || repairRemainingSec < 0.0)
+                repairRemainingSec = 0.0;
+
+            double effectiveTargetSec = Math.Max(modeledTargetSec, repairRemainingSec);
+
             if (!_pitBoxTargetLatched)
             {
-                _pitBoxLatchedTargetSec = modeledTargetSec;
+                _pitBoxLatchedTargetSec = effectiveTargetSec;
                 if (elapsedSec >= PitBoxTargetLatchSettleSeconds)
                 {
                     _pitBoxTargetLatched = true;
                 }
             }
 
-            double targetSec = _pitBoxTargetLatched ? _pitBoxLatchedTargetSec : modeledTargetSec;
+            double targetSec = _pitBoxTargetLatched ? _pitBoxLatchedTargetSec : effectiveTargetSec;
+            double remainingSec = Math.Max(Math.Max(0.0, targetSec - elapsedSec), repairRemainingSec);
 
             _pitBoxCountdownActive = true;
             _pitBoxElapsedSec = elapsedSec;
             _pitBoxTargetSec = targetSec;
-            _pitBoxRemainingSec = CalculatePitBoxRemainingSeconds(elapsedSec, targetSec);
+            _pitBoxRemainingSec = remainingSec;
             UpdatePitBoxLastDeltaVisibility();
         }
 

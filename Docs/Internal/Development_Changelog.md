@@ -33,6 +33,11 @@ The public user-facing release history is maintained in the root `CHANGELOG.md`.
 
 ## Post-v1.0 development
 
+### Pit box latch follow-up: freeze effective target (repairs included)
+- Fixed the PR 561 pit-box latch basis in `LalaLaunch.cs` so settle-phase latching now uses the live effective target `max(modeledTargetSec, repairRemainingSec)` instead of modeled-only target.
+- This preserves non-repair stop behavior while ensuring repair-involved stops freeze a repair-aware `Pit.Box.TargetSec`.
+- `Pit.Box.RemainingSec` and `Pit.Box.LastDeltaSec` now align with the same frozen effective target semantics for repair stops.
+
 ### Pit box countdown target latch + short-lived post-stop delta export
 - Updated boxed countdown behavior in `LalaLaunch.cs` so `Pit.Box.TargetSec` now latches/freeze after a short in-box settle window (1.0s elapsed), preventing late-stop target drift from moving the countdown.
 - Updated `Pit.Box.RemainingSec` to count down from the latched target (still repair-aware through native repair-left authority).

@@ -9,6 +9,7 @@ Branch: work
 - No Git remote is configured in this checkout (`git remote -v` returns empty).
 
 ## Documentation sync status
+- Follow-up fixed PR 561 latch basis: settle-phase `Pit.Box.TargetSec` now freezes the effective target `max(modeledTargetSec, repairRemainingSec)` so repairs seen before latch are included in the frozen stop target.
 - `Pit.Box.TargetSec` now latches/freeze after a brief in-box settle period (1.0s elapsed) so late stop-model drift does not move the active countdown.
 - `Pit.Box.RemainingSec` now counts down from that latched target while preserving repair-left authority behavior (`max(modeledRemaining, repairRemaining)`).
 - Added `Pit.Box.LastDeltaSec` with post-stop semantics: computed at stop end as `(latched target - final elapsed)`, positive=quicker, negative=slower, visible for 5 seconds, then reset to `0`.
@@ -34,6 +35,7 @@ Branch: work
 
 ## Delivery status highlights
 - Implemented a pit-box target latch seam that freezes `Pit.Box.TargetSec` once stop-in-box timing is established.
+- Follow-up hardened the latch basis so repair authority seen during settle is captured in the frozen target.
 - Added short-lived `Pit.Box.LastDeltaSec` export for stop-end comparison (`target - elapsed`) with a strict 5-second non-zero window.
 - Kept PitExit/Opponents ownership and behavior unchanged; work remained inside pit timing export logic.
 - No new log lines were added; `Docs/Internal/SimHubLogMessages.md` remained unchanged.
