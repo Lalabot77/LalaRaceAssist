@@ -3,8 +3,8 @@
 **CANONICAL CONTRACT**
 
 Validated against: HEAD
-Last reviewed: 2026-04-12
-Last updated: 2026-04-12
+Last reviewed: 2026-04-13
+Last updated: 2026-04-13
 Branch: work
 
 - All exports are attached in `LalaLaunch.cs` during `Init()` via `AttachCore`/`AttachVerbose`. Core values are refreshed in `DataUpdate` (500 ms poll for fuel/pace/pit via `_poll500ms`; per-tick for launch/dash/messaging). Verbose rows require `SimhubPublish.VERBOSE`.【F:LalaLaunch.cs†L2644-L3120】【F:LalaLaunch.cs†L3411-L3775】
@@ -50,6 +50,10 @@ Branch: work
 | Fuel.Live.TireChangeTime_S | double | Estimated tyre change seconds for current selection. | 500 ms poll. | `LalaLaunch.cs` — `GetEffectiveTireChangeTimeSeconds` + `AttachCore`【F:LalaLaunch.cs†L1911-L1950】【F:LalaLaunch.cs†L2717-L2720】 |
 | Fuel.Live.PitLaneLoss_S | double | Pit lane loss from profile/learned value used by strategy. | 500 ms poll. | `LalaLaunch.cs` — `_pit.LastTotalPitCycleTimeLoss` persistence + `AttachCore`【F:LalaLaunch.cs†L1408-L1462】【F:LalaLaunch.cs†L2717-L2721】 |
 | Fuel.Live.TotalStopLoss | double | Pit lane loss + service time composite for strategy displays. | 500 ms poll. | `LalaLaunch.cs` — `CalculateTotalStopLossSeconds` + `AttachCore`【F:LalaLaunch.cs†L1911-L1950】【F:LalaLaunch.cs†L2719-L2722】 |
+| Pit.Box.Active | bool | Driver box-service countdown active flag. `true` only while in valid in-box service state (`in pit lane && in pit stall && PitPhase.InBox`). | Per tick. | `LalaLaunch.cs` — `UpdatePitBoxCountdownValues` + `AttachCore`. |
+| Pit.Box.ElapsedSec | double | In-box elapsed seconds for countdown. Reuses existing `PitEngine.PitStopElapsedSec` timer (no separate timer). | Per tick while active; else `0`. | `LalaLaunch.cs` — `UpdatePitBoxCountdownValues` + `AttachCore`. |
+| Pit.Box.TargetSec | double | Current modeled box-service target seconds using existing runtime service model `max(fuelTime, tireTime)` where `fuelTime = Pit_WillAdd / EffectiveRefuelRateLps` and `tireTime = FuelCalculator.TireChangeTime` when tyre change is selected. | Per tick while active; else `0`. | `LalaLaunch.cs` — `CalculatePitBoxServiceTargetSeconds` + `UpdatePitBoxCountdownValues` + `AttachCore`. |
+| Pit.Box.RemainingSec | double | Countdown seconds remaining in box service, computed as `max(0, Pit.Box.TargetSec - Pit.Box.ElapsedSec)`. | Per tick while active; else `0`. | `LalaLaunch.cs` — `UpdatePitBoxCountdownValues` + `AttachCore`. |
 | Fuel.Live.DriveTimeAfterZero | double | Extra drive seconds after timer zero (planner/live observed). | 500 ms poll. | `LalaLaunch.cs` — `UpdateLiveFuelCalcs` after-zero model + `AttachCore`【F:LalaLaunch.cs†L1911-L1993】【F:LalaLaunch.cs†L2721-L2724】 |
 | Fuel.After0.PlannerSeconds / Fuel.After0.LiveEstimateSeconds / Fuel.After0.Source | double/double/string | Planner-configured after-zero allowance, live observed estimate, and source label (“planner”/“live”). | 500 ms poll. | `LalaLaunch.cs` — `UpdateLiveFuelCalcs` + `AttachCore`【F:LalaLaunch.cs†L1911-L1993】【F:LalaLaunch.cs†L2722-L2726】 |
 | LalaLaunch.PreRace.Selected / LalaLaunch.PreRace.SelectedText | int/string | Driver-selected pre-race info mode (0 No Stop, 1 Single Stop, 2 Multi Stop, 3 Auto) and display label. Selection is persisted via a dedicated PreRace-only mode field (`SelectedPreRaceMode` / persisted `PreRaceMode`) and only affects the PreRace outputs (not planner/live fuel engines). | 500 ms poll. | `LalaLaunch.cs` — pre-race block in `UpdateLiveFuelCalcs` + `AttachCore`. |

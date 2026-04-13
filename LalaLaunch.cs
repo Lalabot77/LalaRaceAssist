@@ -4071,6 +4071,10 @@ namespace LaunchPlugin
         private int _pitExitTimeS = 0;
         private int _pitBoxDistanceM = 0;
         private int _pitBoxTimeS = 0;
+        private bool _pitBoxCountdownActive = false;
+        private double _pitBoxElapsedSec = 0.0;
+        private double _pitBoxRemainingSec = 0.0;
+        private double _pitBoxTargetSec = 0.0;
         private const double PitExitSpeedEpsilonMps = 0.1;
 
         // ==== Refuel learning state (hardened) ====
@@ -5039,6 +5043,10 @@ namespace LaunchPlugin
             AttachCore("PitExit.TimeS", () => _pitExitTimeS);
             AttachCore("Pit.Box.DistanceM", () => _pitBoxDistanceM);
             AttachCore("Pit.Box.TimeS", () => _pitBoxTimeS);
+            AttachCore("Pit.Box.Active", () => _pitBoxCountdownActive);
+            AttachCore("Pit.Box.ElapsedSec", () => _pitBoxElapsedSec);
+            AttachCore("Pit.Box.RemainingSec", () => _pitBoxRemainingSec);
+            AttachCore("Pit.Box.TargetSec", () => _pitBoxTargetSec);
             AttachCore("TrackMarkers.Trigger.FirstCapture", () => IsTrackMarkerPulseActive(_trackMarkerFirstCapturePulseUtc));
             AttachCore("TrackMarkers.Trigger.TrackLengthChanged", () => IsTrackMarkerPulseActive(_trackMarkerTrackLengthChangedPulseUtc));
             AttachCore("TrackMarkers.Trigger.LinesRefreshed", () => IsTrackMarkerPulseActive(_trackMarkerLinesRefreshedPulseUtc));
@@ -6390,6 +6398,7 @@ namespace LaunchPlugin
                 UpdatePitExitDisplayValues(data, false);
                 UpdatePitBoxDisplayValues(data, false);
             }
+            UpdatePitBoxCountdownValues(inLane, isInPitStall);
 
             // --- Rejoin assist update & lap incident tracking ---
             _rejoinEngine?.Update(data, pluginManager, IsLaunchActive);
@@ -12731,21 +12740,56 @@ namespace LaunchPlugin
             return baseTime < 0.0 ? 0.0 : baseTime;
         }
 
-        private double CalculateTotalStopLossSeconds()
+        private double CalculatePitBoxServiceTargetSeconds()
         {
-            double pitLaneLoss = FuelCalculator?.PitLaneTimeLoss ?? 0.0;
-            if (pitLaneLoss < 0.0) pitLaneLoss = 0.0;
-
             double willAdd = Pit_WillAdd;
             double refuelRate = FuelCalculator?.EffectiveRefuelRateLps ?? 0.0;
             double fuelTime = (willAdd > 0.0 && refuelRate > 0.0) ? (willAdd / refuelRate) : 0.0;
             if (fuelTime < 0.0 || double.IsNaN(fuelTime) || double.IsInfinity(fuelTime)) fuelTime = 0.0;
 
             double tireTime = GetEffectiveTireChangeTimeSeconds();
-            double boxTime = Math.Max(fuelTime, tireTime);
+            return Math.Max(fuelTime, tireTime);
+        }
+
+        private double CalculateTotalStopLossSeconds()
+        {
+            double pitLaneLoss = FuelCalculator?.PitLaneTimeLoss ?? 0.0;
+            if (pitLaneLoss < 0.0) pitLaneLoss = 0.0;
+
+            double boxTime = CalculatePitBoxServiceTargetSeconds();
 
             double total = pitLaneLoss + boxTime;
             return (total < 0.0 || double.IsNaN(total) || double.IsInfinity(total)) ? 0.0 : total;
+        }
+
+        private void UpdatePitBoxCountdownValues(bool inPitLane, bool isInPitStall)
+        {
+            bool active = inPitLane
+                && isInPitStall
+                && _pit != null
+                && _pit.CurrentPitPhase == PitPhase.InBox;
+
+            if (!active)
+            {
+                _pitBoxCountdownActive = false;
+                _pitBoxElapsedSec = 0.0;
+                _pitBoxTargetSec = 0.0;
+                _pitBoxRemainingSec = 0.0;
+                return;
+            }
+
+            double elapsedSec = _pit.PitStopElapsedSec;
+            if (double.IsNaN(elapsedSec) || double.IsInfinity(elapsedSec) || elapsedSec < 0.0)
+                elapsedSec = 0.0;
+
+            double targetSec = CalculatePitBoxServiceTargetSeconds();
+            if (double.IsNaN(targetSec) || double.IsInfinity(targetSec) || targetSec < 0.0)
+                targetSec = 0.0;
+
+            _pitBoxCountdownActive = true;
+            _pitBoxElapsedSec = elapsedSec;
+            _pitBoxTargetSec = targetSec;
+            _pitBoxRemainingSec = Math.Max(0.0, targetSec - elapsedSec);
         }
 
         private static string FormatSecondsOrNA(double seconds)

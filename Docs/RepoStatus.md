@@ -1,7 +1,7 @@
 # Repository status
 
 Validated against commit: HEAD
-Last updated: 2026-04-12
+Last updated: 2026-04-13
 Branch: work
 
 ## Current repo/link status
@@ -9,13 +9,12 @@ Branch: work
 - No Git remote is configured in this checkout (`git remote -v` returns empty).
 
 ## Documentation sync status
-- Added plugin-owned pit-box exports for dash use: `Pit.Box.DistanceM` and `Pit.Box.TimeS`.
-- Pit-box authority now comes from native session/player sources only (`DriverPitTrkPct`, player track percent, and session track length via existing PitEngine seams).
-- `Pit.Box.*` fail-safe behavior is strict: publish `0` outside pit lane, and publish `0` when authority/speed inputs are invalid (no fallback to `IRacingExtraProperties`).
+- Added driver-facing `Pit.Box.*` in-box countdown exports: `Pit.Box.Active`, `Pit.Box.ElapsedSec`, `Pit.Box.RemainingSec`, and `Pit.Box.TargetSec`.
+- Countdown uses existing pit timing + service math only: elapsed comes from `PitEngine.PitStopElapsedSec`; target comes from current modeled service target `max(fuelTime, tireTime)` built from existing runtime fuel/tyre components.
+- Countdown is boxed-phase only and conservative: active only in valid in-box service state; all countdown fields publish `0` when inactive/unavailable (including drive-throughs and missed-box phases).
 
 ## Reviewed documentation set
-### Changed in pit-box export sweep
-- `PitEngine.cs`
+### Changed in pit-box countdown sweep
 - `LalaLaunch.cs`
 - `Docs/Internal/SimHubParameterInventory.md`
 - `Docs/Subsystems/Pit_Timing_And_PitLoss.md`
@@ -30,9 +29,9 @@ Branch: work
 - `Docs/Internal/SimHubLogMessages.md`
 
 ## Delivery status highlights
-- Added a plugin-owned pit-box percent seam in `PitEngine` (`PlayerPitBoxTrackPct`) fed from native `DriverPitTrkPct` with normalized percent handling.
-- Added plugin-owned dash exports `Pit.Box.DistanceM` and `Pit.Box.TimeS` in `LalaLaunch` using wrapped pct delta and session track length, mirroring existing pit-exit display math style.
-- Kept strict safe defaults: all pit-box outputs return `0` outside pit lane or on invalid authority, and time returns `0` when speed is too low/invalid.
+- Added driver-facing in-box countdown exports in `LalaLaunch` without changing pit-exit prediction contracts.
+- Reused existing pit stall elapsed timer and existing service-time model inputs (fuel add/refuel rate + tyre change time) with no fabricated setup/repair timing.
+- Kept strict safe defaults: countdown exports are hard-zero when inactive or unavailable.
 
 ## Validation note
-- Validation recorded against `HEAD` (`plugin-owned pit-box distance/time exports`).
+- Validation recorded against `HEAD` (`Pit.Box in-box countdown exports + docs sync`).

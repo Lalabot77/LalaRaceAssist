@@ -190,6 +190,13 @@ The public user-facing release history is maintained in the root `CHANGELOG.md`.
 - Wired both exports in `LalaLaunch.cs` under the existing `PitExit.*` attach path without changing pit-exit prediction logic.
 - Updated Opponents subsystem docs, SimHub parameter inventory, and RepoStatus for canonical contract alignment.
 
+## 2026-04-13 — Pit.Box in-box service countdown contract
+- Classification: **both** (new driver-facing exports + internal docs/contract alignment).
+- Added `Pit.Box.Active`, `Pit.Box.ElapsedSec`, `Pit.Box.RemainingSec`, and `Pit.Box.TargetSec` exports in `LalaLaunch.cs`.
+- Countdown `ElapsedSec` now explicitly reuses the existing `PitEngine.PitStopElapsedSec` timer; no second box timer was introduced.
+- Countdown target is the existing modeled service target only: `max(fuelTime, tireTime)` where `fuelTime = Pit_WillAdd / EffectiveRefuelRateLps` and tyre time uses existing tyre-change selection/time.
+- Countdown is explicitly in-box service phase only (`in pit lane && in pit stall && PitPhase.InBox`) and hard-zeros when inactive/unavailable (including drive-through/missed-box states).
+
 ## 2026-04-10 — Repo-wide iRacingExtraProperties runtime fallback removal sweep
 - Classification: **both** (runtime behavior cleanup + internal docs/contract alignment).
 - Removed remaining runtime `IRacingExtraProperties` reads from `LalaLaunch.cs`, `PitEngine.cs`, `MessagingSystem.cs`, and `Messaging/SignalProvider.cs`.
