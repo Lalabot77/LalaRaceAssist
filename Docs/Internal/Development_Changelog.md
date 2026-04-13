@@ -33,6 +33,14 @@ The public user-facing release history is maintained in the root `CHANGELOG.md`.
 
 ## Post-v1.0 development
 
+### Pit-loss baseline standardization (drive-through) + fixed pit-exit transition allowance
+- Standardized pit-loss semantics and guidance so learned/stored pit-lane loss is explicitly a **drive-through baseline** (clean limiter-speed lane travel, no box stop).
+- Added fixed `PitExitTransitionAllowanceSec = 2.75` in `LalaLaunch.cs` at the shared boxed-stop prediction seam (`CalculateTotalStopLossSeconds`), yielding:
+  - `TotalStopLoss = pit-lane baseline + boxed service model + 2.75s transition allowance`.
+- Kept pure lane-travel outputs unchanged (`Fuel.LastPitLaneTravelTime`, `PitExit.TimeS` remain travel-only).
+- Kept ownership boundaries intact: Pit timing remains pit-loss owner, Opponents continues consuming the shared stop-loss seam for race-scoped pit-exit countdown prediction.
+- Classification: **both** (runtime prediction semantics + user-facing learning guidance/docs).
+
 ### Player track-percent export + blended pit-exit time-to-exit export
 - Added `Car.Player.TrackPct` in `LalaLaunch.cs` as a plugin-owned player lap-distance percent (`CarIdxLapDistPct`) normalized to `0..1`, publishing `0` when unavailable/invalid.
 - Added `PitExit.TimeToExitSec` in `LalaLaunch.cs` as an additive blended dash export that uses `PitExit.RemainingCountdownSec` at low speed and converges toward `PitExit.TimeS` near pit-limiter speed.

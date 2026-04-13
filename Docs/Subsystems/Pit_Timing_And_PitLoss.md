@@ -32,6 +32,17 @@ Out of scope:
 - Planner usage of pit loss (see `Fuel_Planner_Tab.md`).
 - Dash presentation logic (see `Subsystems/Dash_Integration.md`).
 
+## Canonical pit-loss definition (drive-through baseline)
+
+- **Learned/stored pit lane loss is drive-through baseline only** (clean limiter-speed pass through pit lane, no box stop).
+- Boxed-stop runtime predictions add stopped-box components separately:
+  - boxed service model (`max(fuelTime, tireTime) + 1.0s` stationary service overhead, repair-aware),
+  - fixed pit-box transition allowance `+2.75s` (slow-in/settle/launch-out to limiter).
+
+Canonical boxed-stop prediction contract:
+
+`boxed stop loss = learned drive-through baseline + boxed service model + 2.75s transition allowance`
+
 ---
 
 ## Inputs (source + cadence)
@@ -164,6 +175,18 @@ Published values update:
 - Planner-accessible pit loss fields.
 
 Once published, the value remains until superseded by a newer valid cycle.
+
+### Driver workflow requirement for learning
+
+When learning pit-lane-loss baseline for a combo:
+
+1. Record pit entry/exit markers as usual.
+2. Complete the normal in-lap / out-lap capture flow.
+3. Run a **clean drive-through at pit limiter speed** to establish baseline.
+4. **Do not stop in the box** for the baseline learning pass.
+5. Lock the learned value in Profiles once validated.
+
+This keeps stored pit-lane loss semantically clean and avoids mixing box-transition overhead into the baseline.
 
 #### Locking and blocked candidates
 - Per-track pit loss values can be **locked** in Profiles. When locked, new candidates are **not** applied to the stored pit loss value.

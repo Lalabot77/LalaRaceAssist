@@ -4088,6 +4088,7 @@ namespace LaunchPlugin
         private const double PitBoxTargetLatchSettleSeconds = 1.0;
         private const double PitBoxLastDeltaWindowSeconds = 5.0;
         private const double PitBoxModeledServiceOverheadSeconds = 1.0;
+        private const double PitExitTransitionAllowanceSec = 2.75;
         private bool _pitRefuelEntryLatched = false;
         private bool _pitRefuelTargetLatched = false;
         private bool _pitRefuelWasBoxed = false;
@@ -13028,8 +13029,7 @@ namespace LaunchPlugin
             double modeledBoxTargetSec = CalculatePitBoxModeledTargetSeconds();
             double repairRemainingSec = CalculatePitBoxRepairRemainingSeconds();
             double boxTime = Math.Max(modeledBoxTargetSec, repairRemainingSec);
-
-            double total = pitLaneLoss + boxTime;
+            double total = pitLaneLoss + boxTime + PitExitTransitionAllowanceSec;
             return (total < 0.0 || double.IsNaN(total) || double.IsInfinity(total)) ? 0.0 : total;
         }
 
