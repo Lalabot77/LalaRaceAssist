@@ -12,6 +12,8 @@ Branch: work
 - Added pit fuel-gauge helper exports for boxed refuel context: `Fuel.Pit.Box.EntryFuel`, `Fuel.Pit.AddedSoFar`, and `Fuel.Pit.WillAddRemaining`.
 - Confirmed and documented that `Fuel.Pit.WillAdd` end-of-stop twitch is expected clamp behavior (`min(requestedAdd, maxTank-currentFuel)`) as tank space tightens near completion.
 - Preserved runtime fuel semantics for `Fuel.Pit.WillAdd`, `Fuel.Pit.FuelOnExit`, and `Fuel.Delta.LitresWillAdd`; new exports provide a UI-facing countdown seam without changing planner/runtime ownership boundaries.
+- Follow-up hardened boxed refuel latch lifecycle: latch starts on boxed flow signal (fuel rise or refuel-learning seam), stays active for the full boxed phase, and resets only when boxed service ends.
+- Fixed follow-up compile blocker (CS0841) in `DataUpdate` by using an in-scope fuel sample when updating pit refuel gauge values.
 
 ## Reviewed documentation set
 ### Changed in pit-box fuel-gauge seam sweep
@@ -35,6 +37,7 @@ Branch: work
 - Added a bounded runtime latch seam for boxed refuel gauge support (`EntryFuel` latch + `AddedSoFar` + `WillAddRemaining`) with per-tick updates and hard reset outside valid boxed refuel context.
 - Kept pre-box behavior unchanged (blue fuel now + existing `Fuel.Pit.WillAdd` semantics) while enabling in-box purple-as-remaining gauge behavior via `Fuel.Pit.WillAddRemaining`.
 - Kept logging unchanged (no new fuel log spam path); updated canonical docs for new exports and `WillAdd` clamp/twitch rationale.
+- Follow-up now avoids `Pit_WillAdd` as refuel-active signal and uses boxed lifecycle + flow detection instead, preventing clamp-driven false active transitions.
 
 ## Validation note
-- Validation recorded against `HEAD` (`Fuel pit-box gauge seam exports + WillAdd twitch documentation`).
+- Validation recorded against `HEAD` (`Fuel pit-box gauge seam follow-up: compile fix + latch hardening`).

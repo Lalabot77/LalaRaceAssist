@@ -144,7 +144,7 @@ For pit-popup gauge stability, a dedicated boxed-refuel seam now exports:
 - `Fuel.Pit.AddedSoFar` (`max(0, FuelNow - EntryFuel)`),
 - `Fuel.Pit.WillAddRemaining` (`max(0, Fuel.Pit.WillAdd - AddedSoFar)`).
 
-These UI-facing values are active only in valid boxed refuel context and reset to `0` outside that context, so dashboard logic does not need to synthesize latches in JS.
+Latch semantics are lifecycle-based (not `WillAdd`-driven): within valid boxed service, `EntryFuel` latches once on first refuel-flow detection (`fuel rise` or refuel-learning active seam) while refuel is selected, then remains active for the rest of that boxed phase. Values reset only when boxed service ends. This keeps dashboard logic simple and avoids clamp-driven active-state twitching.
 
 ### 7) Pit-window state machine
 Pit window state is race-only and depends on both stable confidence and tank feasibility.

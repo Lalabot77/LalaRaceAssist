@@ -222,6 +222,15 @@ The public user-facing release history is maintained in the root `CHANGELOG.md`.
 - Investigated end-of-stop `Fuel.Pit.WillAdd` twitch: root cause is expected clamp behavior (`WillAdd = min(requestedAdd, maxTank-currentFuel)`) as tank space tightens near completion, not a planner/runtime bug.
 - Left `Fuel.Pit.WillAdd`, `Fuel.Pit.FuelOnExit`, and `Fuel.Delta.LitresWillAdd` semantics unchanged; documented the clamp behavior and directed UI countdown usage to `Fuel.Pit.WillAddRemaining`.
 
+## 2026-04-13 — Pit refuel gauge follow-up (compile + latch hardening)
+- Classification: **internal-only** (bug fix + seam hardening with no runtime fuel-math contract change).
+- Fixed CS0841 compile blocker by passing an in-scope authoritative fuel sample (`data.NewData?.Fuel`) to `UpdatePitRefuelGaugeValues(...)` from `DataUpdate`.
+- Replaced `Pit_WillAdd`-driven refuel-active detection with lifecycle-based boxed latch semantics:
+  - latch trigger requires boxed service + refuel selected + flow signal (`fuel rise` or `_isRefuelling` seam),
+  - once latched, phase remains active for the rest of boxed service,
+  - reset occurs only when boxed service ends.
+- Kept all existing runtime fuel outputs/semantics unchanged: `Fuel.Pit.WillAdd`, `Fuel.Pit.FuelOnExit`, and `Fuel.Delta.LitresWillAdd`.
+
 ## 2026-04-10 — Repo-wide iRacingExtraProperties runtime fallback removal sweep
 - Classification: **both** (runtime behavior cleanup + internal docs/contract alignment).
 - Removed remaining runtime `IRacingExtraProperties` reads from `LalaLaunch.cs`, `PitEngine.cs`, `MessagingSystem.cs`, and `Messaging/SignalProvider.cs`.
