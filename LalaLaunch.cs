@@ -4089,6 +4089,7 @@ namespace LaunchPlugin
         private const double PitBoxLastDeltaWindowSeconds = 5.0;
         private const double PitBoxModeledServiceOverheadSeconds = 1.0;
         private bool _pitRefuelEntryLatched = false;
+        private bool _pitRefuelTargetLatched = false;
         private bool _pitRefuelWasBoxed = false;
         private double _pitRefuelBoxEntryFuelCandidate = 0.0;
         private double _pitRefuelLastObservedFuel = 0.0;
@@ -13109,6 +13110,7 @@ namespace LaunchPlugin
         private void ResetPitRefuelGaugeValues()
         {
             _pitRefuelEntryLatched = false;
+            _pitRefuelTargetLatched = false;
             _pitRefuelWasBoxed = false;
             _pitRefuelBoxEntryFuelCandidate = 0.0;
             Pit_Box_EntryFuel = 0.0;
@@ -13134,23 +13136,40 @@ namespace LaunchPlugin
                 _pitRefuelLastObservedFuel = safeCurrentFuel;
             }
 
+            if (!_isRefuelSelected)
+            {
+                _pitRefuelEntryLatched = false;
+                _pitRefuelTargetLatched = false;
+                _pitRefuelBoxEntryFuelCandidate = safeCurrentFuel;
+                Pit_Box_EntryFuel = 0.0;
+                Pit_Box_WillAddLatched = 0.0;
+                Pit_AddedSoFar = 0.0;
+                Pit_WillAddRemaining = 0.0;
+                _pitRefuelLastObservedFuel = safeCurrentFuel;
+                return;
+            }
+
+            if (!_pitRefuelTargetLatched)
+            {
+                Pit_Box_WillAddLatched = Math.Max(0.0, Pit_WillAdd);
+                _pitRefuelTargetLatched = true;
+            }
+
             bool fuelRiseDetected = (safeCurrentFuel - _pitRefuelLastObservedFuel) > FuelNoiseEps;
             bool flowSignalDetected = fuelRiseDetected || _isRefuelling;
 
             if (!_pitRefuelEntryLatched)
             {
-                if (_isRefuelSelected && flowSignalDetected)
+                if (flowSignalDetected)
                 {
                     Pit_Box_EntryFuel = _pitRefuelBoxEntryFuelCandidate;
-                    Pit_Box_WillAddLatched = Pit_WillAdd;
                     _pitRefuelEntryLatched = true;
                 }
                 else
                 {
                     Pit_Box_EntryFuel = 0.0;
-                    Pit_Box_WillAddLatched = 0.0;
                     Pit_AddedSoFar = 0.0;
-                    Pit_WillAddRemaining = 0.0;
+                    Pit_WillAddRemaining = Pit_Box_WillAddLatched;
                     _pitRefuelLastObservedFuel = safeCurrentFuel;
                     return;
                 }

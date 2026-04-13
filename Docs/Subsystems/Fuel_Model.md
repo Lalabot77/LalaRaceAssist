@@ -141,11 +141,11 @@ Using current fuel, stable burn, projection laps, tank-space limits, and pit-men
 
 For pit-popup gauge stability, a dedicated boxed-refuel seam now exports:
 - `Fuel.Pit.Box.EntryFuel` (latched fuel at in-box refuel entry),
-- `Fuel.Pit.Box.WillAddLatched` (latched purple target captured once from `Fuel.Pit.WillAdd` at boxed refuel latch),
+- `Fuel.Pit.Box.WillAddLatched` (latched purple target captured early from `Fuel.Pit.WillAdd` when boxed service is active and refuel is selected),
 - `Fuel.Pit.AddedSoFar` (`max(0, FuelNow - EntryFuel)`),
 - `Fuel.Pit.WillAddRemaining` (`max(0, Fuel.Pit.Box.WillAddLatched - AddedSoFar)`).
 
-Latch semantics are lifecycle-based (not `WillAdd`-driven): within valid boxed service, `EntryFuel` latches once on first refuel-flow detection (`fuel rise` or refuel-learning active seam) while refuel is selected, then remains active for the rest of that boxed phase. Values reset only when boxed service ends. This keeps dashboard logic simple and avoids clamp-driven active-state twitching.
+Latch semantics are lifecycle-based (not `WillAdd`-driven): within valid boxed service, `WillAddLatched` latches immediately when refuel is selected so boxed UI targets are available on box entry, while `EntryFuel` still latches on first refuel-flow detection (`fuel rise` or refuel-learning active seam). If refuel is deselected while still boxed, boxed refuel latches clear to zero immediately (`EntryFuel`, `WillAddLatched`, `AddedSoFar`, `WillAddRemaining`) so no stale pending-fuel countdown remains. Values also reset when boxed service ends. This keeps dashboard logic simple and avoids clamp-driven active-state twitching.
 
 ### 7) Pit-window state machine
 Pit window state is race-only and depends on both stable confidence and tank feasibility.
