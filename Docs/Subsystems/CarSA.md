@@ -191,6 +191,7 @@ Hot/Cool intent uses `DeltaBestSec` with seconds-based bands (full system in Pra
 
 ## Raw telemetry flags
 - Player-level raw flags are published as `Car.Player.PaceFlagsRaw`, `Car.Player.SessionFlagsRaw`, `Car.Player.TrackSurfaceMaterialRaw` when soft debug + raw telemetry mode are enabled.
+- Player raw track position is exported as `Car.Player.TrackPct` (plugin-owned normalized `CarIdxLapDistPct` in `0..1`; invalid/unavailable -> `0`). This is lap-distance context only and not race-order position.
 - Slot-level raw flags (`SessionFlagsRaw`, `TrackSurfaceMaterialRaw`) are populated when raw telemetry mode includes slots (and soft debug is on).
 - Debug outputs report whether each raw array was readable and the read mode/failure reason.
 

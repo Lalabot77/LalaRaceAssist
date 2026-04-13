@@ -4073,6 +4073,8 @@ namespace LaunchPlugin
         private readonly TrackMarkerPulse<TrackMarkerLockedMismatchMessage> _trackMarkerLockedMismatchPulse = new TrackMarkerPulse<TrackMarkerLockedMismatchMessage>();
         private int _pitExitDistanceM = 0;
         private int _pitExitTimeS = 0;
+        private double _pitExitTimeToExitSec = 0.0;
+        private double _carPlayerTrackPct = 0.0;
         private int _pitBoxDistanceM = 0;
         private int _pitBoxTimeS = 0;
         private bool _pitBoxCountdownActive = false;
@@ -5060,6 +5062,7 @@ namespace LaunchPlugin
             AttachCore("TrackMarkers.Session.NeedsExitRefresh", () => _pit?.TrackMarkersSessionNeedsExitRefresh ?? false);
             AttachCore("PitExit.DistanceM", () => _pitExitDistanceM);
             AttachCore("PitExit.TimeS", () => _pitExitTimeS);
+            AttachCore("PitExit.TimeToExitSec", () => _pitExitTimeToExitSec);
             AttachCore("Pit.Box.DistanceM", () => _pitBoxDistanceM);
             AttachCore("Pit.Box.TimeS", () => _pitBoxTimeS);
             AttachCore("Pit.Box.Active", () => _pitBoxCountdownActive);
@@ -5225,6 +5228,7 @@ namespace LaunchPlugin
             AttachCore("Car.Player.SessionFlagsRaw", () => SoftDebugEnabled ? (_carSaEngine?.Outputs.Debug.PlayerSessionFlagsRaw ?? -1) : -1);
             AttachCore("Car.Player.TrackSurfaceMaterialRaw", () => SoftDebugEnabled ? (_carSaEngine?.Outputs.Debug.PlayerTrackSurfaceMaterialRaw ?? -1) : -1);
             AttachCore("Car.Player.CarIdx", () => _carSaEngine?.Outputs.PlayerSlot.CarIdx ?? -1);
+            AttachCore("Car.Player.TrackPct", () => _carPlayerTrackPct);
             AttachCore("Car.Player.PositionInClass", () => _carSaEngine?.Outputs.PlayerSlot.PositionInClass ?? 0);
             AttachCore("Car.Player.ClassName", () => _carSaEngine?.Outputs.PlayerSlot.ClassName ?? string.Empty);
             AttachCore("Car.Player.ClassColor", () => _carSaEngine?.Outputs.PlayerSlot.ClassColor ?? string.Empty);
@@ -6481,6 +6485,8 @@ namespace LaunchPlugin
             {
                 trackPct = carIdxLapDistPct[playerCarIdx];
             }
+
+            _carPlayerTrackPct = SanitizeTrackPercent(trackPct);
             double sessionTimeSec = ResolveShiftAssistSessionTimeSec(pluginManager);
             double sessionTimeRemainingSec = SafeReadDouble(pluginManager, "DataCorePlugin.GameRawData.Telemetry.SessionTimeRemain", double.NaN);
             int sessionState = SafeReadInt(pluginManager, "DataCorePlugin.GameRawData.Telemetry.SessionState", 0);
@@ -6490,6 +6496,7 @@ namespace LaunchPlugin
             bool debugMaster = IsDebugOnForLogic;
             bool verboseLogs = IsVerboseDebugLoggingOn;
             _opponentsEngine?.Update(data, pluginManager, isOpponentsEligibleSessionNow, isRaceSessionNow, completedLaps, myPaceSec, pitLossSec, pitTripActive, inLane, trackPct, sessionTimeSec, sessionTimeRemainingSec, verboseLogs);
+            UpdatePitExitTimeToExitSec(pluginManager, inLane, speedKph);
 
             int[] carIdxLap = SafeReadIntArray(pluginManager, "DataCorePlugin.GameRawData.Telemetry.CarIdxLap");
             int[] carIdxTrackSurface = SafeReadIntArray(pluginManager, "DataCorePlugin.GameRawData.Telemetry.CarIdxTrackSurface");
@@ -12193,6 +12200,128 @@ namespace LaunchPlugin
 
             _pitExitDistanceM = Math.Max(0, (int)Math.Round(distanceM, MidpointRounding.AwayFromZero));
             _pitExitTimeS = Math.Max(0, (int)Math.Round(timeS, MidpointRounding.AwayFromZero));
+        }
+
+        private static double SanitizeTrackPercent(double trackPct)
+        {
+            if (double.IsNaN(trackPct) || double.IsInfinity(trackPct))
+            {
+                return 0.0;
+            }
+
+            if (trackPct > 1.5)
+            {
+                trackPct *= 0.01;
+            }
+
+            if (trackPct < 0.0 || trackPct > 1.0)
+            {
+                return 0.0;
+            }
+
+            return trackPct;
+        }
+
+        private void UpdatePitExitTimeToExitSec(PluginManager pluginManager, bool inPitLane, double speedKph)
+        {
+            if (!inPitLane)
+            {
+                _pitExitTimeToExitSec = 0.0;
+                return;
+            }
+
+            double remainingCountdownSec = _opponentsEngine?.Outputs.PitExit.RemainingCountdownSec ?? double.NaN;
+            if (double.IsNaN(remainingCountdownSec) || double.IsInfinity(remainingCountdownSec) || remainingCountdownSec < 0.0)
+            {
+                remainingCountdownSec = double.NaN;
+            }
+
+            double timeS = _pitExitTimeS;
+            if (double.IsNaN(timeS) || double.IsInfinity(timeS) || timeS < 0.0)
+            {
+                timeS = double.NaN;
+            }
+
+            bool hasRemaining = !double.IsNaN(remainingCountdownSec);
+            bool hasTimeS = !double.IsNaN(timeS);
+
+            if (!hasRemaining && !hasTimeS)
+            {
+                _pitExitTimeToExitSec = 0.0;
+                return;
+            }
+
+            if (hasRemaining && !hasTimeS)
+            {
+                _pitExitTimeToExitSec = Math.Max(0.0, remainingCountdownSec);
+                return;
+            }
+
+            if (!hasRemaining && hasTimeS)
+            {
+                _pitExitTimeToExitSec = Math.Max(0.0, timeS);
+                return;
+            }
+
+            double pitLimiterKph;
+            if (!TryResolvePitLimiterSpeedKph(pluginManager, out pitLimiterKph) || pitLimiterKph <= 30.0)
+            {
+                _pitExitTimeToExitSec = Math.Max(0.0, remainingCountdownSec);
+                return;
+            }
+
+            double safeSpeedKph = speedKph;
+            if (double.IsNaN(safeSpeedKph) || double.IsInfinity(safeSpeedKph) || safeSpeedKph < 0.0)
+            {
+                safeSpeedKph = 0.0;
+            }
+
+            double blend = Clamp01((safeSpeedKph - 30.0) / (pitLimiterKph - 30.0));
+            double blended = ((1.0 - blend) * remainingCountdownSec) + (blend * timeS);
+            if (double.IsNaN(blended) || double.IsInfinity(blended) || blended < 0.0)
+            {
+                blended = 0.0;
+            }
+
+            _pitExitTimeToExitSec = blended;
+        }
+
+        private static bool TryResolvePitLimiterSpeedKph(PluginManager pluginManager, out double pitLimiterKph)
+        {
+            pitLimiterKph = double.NaN;
+
+            int primaryLimiterKph;
+            if (TryReadNullableInt(pluginManager, "DataCorePlugin.GameData.PitLimiterSpeed", out primaryLimiterKph) && primaryLimiterKph > 0)
+            {
+                pitLimiterKph = primaryLimiterKph;
+                return true;
+            }
+
+            string pitLimitText = GetString(pluginManager, "DataCorePlugin.GameRawData.SessionData.WeekendInfo.TrackPitSpeedLimit");
+            if (string.IsNullOrWhiteSpace(pitLimitText))
+            {
+                return false;
+            }
+
+            var match = System.Text.RegularExpressions.Regex.Match(pitLimitText, @"[-+]?\d+(?:\.\d+)?");
+            if (!match.Success)
+            {
+                return false;
+            }
+
+            double parsedLimiterKph;
+            if (!double.TryParse(match.Value, NumberStyles.Float, CultureInfo.InvariantCulture, out parsedLimiterKph))
+            {
+                return false;
+            }
+
+            if (double.IsNaN(parsedLimiterKph) || double.IsInfinity(parsedLimiterKph) || parsedLimiterKph <= 0.0)
+            {
+                return false;
+            }
+
+            pitLimiterKph = parsedLimiterKph;
+            return true;
         }
 
         private void UpdatePitBoxDisplayValues(GameData data, bool inPitLane)
