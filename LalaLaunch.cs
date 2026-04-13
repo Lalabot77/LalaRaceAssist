@@ -12231,7 +12231,7 @@ namespace LaunchPlugin
             }
 
             double remainingCountdownSec = _opponentsEngine?.Outputs.PitExit.RemainingCountdownSec ?? double.NaN;
-            if (double.IsNaN(remainingCountdownSec) || double.IsInfinity(remainingCountdownSec) || remainingCountdownSec < 0.0)
+            if (double.IsNaN(remainingCountdownSec) || double.IsInfinity(remainingCountdownSec) || remainingCountdownSec <= 0.0)
             {
                 remainingCountdownSec = double.NaN;
             }

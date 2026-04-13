@@ -9,6 +9,7 @@ Branch: work
 - No Git remote is configured in this checkout (`git remote -v` returns empty).
 
 ## Documentation sync status
+- Follow-up tightened `PitExit.TimeToExitSec` input validity: `PitExit.RemainingCountdownSec <= 0` now counts as unavailable for blend input selection.
 - Added `Car.Player.TrackPct` as a plugin-owned player lap-distance export from player `CarIdxLapDistPct`, normalized to `0..1` with invalid/unavailable fallback to `0`.
 - Added additive `PitExit.TimeToExitSec` as a blended pit-exit time-to-exit export for dash use.
 - Blending remains intentionally simple: early phase follows `PitExit.RemainingCountdownSec`, later phase converges toward `PitExit.TimeS` as speed approaches limiter speed.
@@ -42,4 +43,4 @@ Branch: work
 - No new log lines were added; `Docs/Internal/SimHubLogMessages.md` remained unchanged.
 
 ## Validation note
-- Validation recorded against `HEAD` (`Car.Player.TrackPct + PitExit.TimeToExitSec additive export task`).
+- Validation recorded against `HEAD` (`PitExit.TimeToExitSec zero-countdown availability fix`).

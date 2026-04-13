@@ -37,6 +37,7 @@ The public user-facing release history is maintained in the root `CHANGELOG.md`.
 - Added `Car.Player.TrackPct` in `LalaLaunch.cs` as a plugin-owned player lap-distance percent (`CarIdxLapDistPct`) normalized to `0..1`, publishing `0` when unavailable/invalid.
 - Added `PitExit.TimeToExitSec` in `LalaLaunch.cs` as an additive blended dash export that uses `PitExit.RemainingCountdownSec` at low speed and converges toward `PitExit.TimeS` near pit-limiter speed.
 - Limiter-speed authority chain for blending: `DataCorePlugin.GameData.PitLimiterSpeed` (primary) with fallback parse of `DataCorePlugin.GameRawData.SessionData.WeekendInfo.TrackPitSpeedLimit`; invalid limiter/input paths clamp safely and keep existing exports unchanged.
+- Follow-up tightened blend input validity: `PitExit.RemainingCountdownSec <= 0` is now treated as unavailable, preventing inactive-cycle zero countdowns from collapsing `PitExit.TimeToExitSec` when kinematic `PitExit.TimeS` is still positive.
 
 ### Pit box modeled service overhead (+1.0s fixed stationary allowance)
 - Added a fixed `+1.0s` boxed-service overhead at the canonical modeled boxed-service seam in `LalaLaunch.cs` (`CalculatePitBoxModeledTargetSeconds`).
