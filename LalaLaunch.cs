@@ -600,6 +600,9 @@ namespace LaunchPlugin
         public double Pit_NeedToAdd { get; private set; }
         public double Pit_TankSpaceAvailable { get; private set; }
         public double Pit_WillAdd { get; private set; }
+        public double Pit_Box_EntryFuel { get; private set; }
+        public double Pit_AddedSoFar { get; private set; }
+        public double Pit_WillAddRemaining { get; private set; }
         public double Pit_DeltaAfterStop { get; private set; }
         public double Pit_FuelOnExit { get; private set; }
         public double Pit_FuelSaveDeltaAfterStop { get; private set; }
@@ -4075,6 +4078,7 @@ namespace LaunchPlugin
         private double _pitBoxElapsedSec = 0.0;
         private double _pitBoxRemainingSec = 0.0;
         private double _pitBoxTargetSec = 0.0;
+        private bool _pitRefuelEntryLatched = false;
         private const double PitExitSpeedEpsilonMps = 0.1;
 
         // ==== Refuel learning state (hardened) ====
@@ -4655,6 +4659,9 @@ namespace LaunchPlugin
             AttachCore("Fuel.Pit.NeedToAdd", () => Pit_NeedToAdd);
             AttachCore("Fuel.Pit.TankSpaceAvailable", () => Pit_TankSpaceAvailable);
             AttachCore("Fuel.Pit.WillAdd", () => Pit_WillAdd);
+            AttachCore("Fuel.Pit.Box.EntryFuel", () => Pit_Box_EntryFuel);
+            AttachCore("Fuel.Pit.AddedSoFar", () => Pit_AddedSoFar);
+            AttachCore("Fuel.Pit.WillAddRemaining", () => Pit_WillAddRemaining);
             AttachCore("Fuel.Pit.DeltaAfterStop", () => Pit_DeltaAfterStop);
             AttachCore("Fuel.Pit.DeltaAfterStop_S", () => Pit_DeltaAfterStop_S);
             AttachCore("Fuel.Pit.FuelSaveDeltaAfterStop", () => Pit_FuelSaveDeltaAfterStop);
@@ -6399,6 +6406,7 @@ namespace LaunchPlugin
                 UpdatePitBoxDisplayValues(data, false);
             }
             UpdatePitBoxCountdownValues(inLane, isInPitStall);
+            UpdatePitRefuelGaugeValues(currentFuel);
 
             // --- Rejoin assist update & lap incident tracking ---
             _rejoinEngine?.Update(data, pluginManager, IsLaunchActive);
@@ -12891,6 +12899,48 @@ namespace LaunchPlugin
             _pitBoxRemainingSec = CalculatePitBoxRemainingSeconds(elapsedSec, targetSec);
         }
 
+        private bool IsPitBoxRefuelActive()
+        {
+            if (!_pitBoxCountdownActive || !_isRefuelSelected)
+            {
+                return false;
+            }
+
+            if (Pit_WillAdd > 0.0)
+            {
+                return true;
+            }
+
+            return Pit_AddedSoFar > 0.0;
+        }
+
+        private void ResetPitRefuelGaugeValues()
+        {
+            _pitRefuelEntryLatched = false;
+            Pit_Box_EntryFuel = 0.0;
+            Pit_AddedSoFar = 0.0;
+            Pit_WillAddRemaining = 0.0;
+        }
+
+        private void UpdatePitRefuelGaugeValues(double currentFuel)
+        {
+            bool refuelActive = IsPitBoxRefuelActive();
+            if (!refuelActive)
+            {
+                ResetPitRefuelGaugeValues();
+                return;
+            }
+
+            if (!_pitRefuelEntryLatched)
+            {
+                Pit_Box_EntryFuel = Math.Max(0.0, currentFuel);
+                _pitRefuelEntryLatched = true;
+            }
+
+            Pit_AddedSoFar = Math.Max(0.0, currentFuel - Pit_Box_EntryFuel);
+            Pit_WillAddRemaining = Math.Max(0.0, Pit_WillAdd - Pit_AddedSoFar);
+        }
+
         private static string FormatSecondsOrNA(double seconds)
         {
             return (double.IsNaN(seconds) || double.IsInfinity(seconds))
@@ -13036,6 +13086,7 @@ namespace LaunchPlugin
             Pit_NeedToAdd = 0;
             Pit_TankSpaceAvailable = 0;
             Pit_WillAdd = 0;
+            ResetPitRefuelGaugeValues();
             Pit_FuelOnExit = 0;
             Pit_DeltaAfterStop = 0;
             Pit_FuelSaveDeltaAfterStop = 0;

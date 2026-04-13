@@ -215,6 +215,13 @@ The public user-facing release history is maintained in the root `CHANGELOG.md`.
 - Kept `Pit.Box.TargetSec` honest as modeled fixed-duration service time only (`max(fuelTime, tireTime)`), while `Pit.Box.RemainingSec` now resolves as `max(modeledRemainingSec, repairRemainingSec)` during valid boxed service state.
 - Preserved pit-exit/shared stop-loss seam behavior by keeping repair-aware box authority in `CalculateTotalStopLossSeconds` via `max(modeledTargetSec, repairRemainingSec)`.
 
+## 2026-04-13 — Fuel pit-box refuel gauge seam + WillAdd twitch analysis
+- Classification: **both** (new dash-facing exports + internal contract clarification).
+- Added boxed-refuel gauge exports in `LalaLaunch.cs`: `Fuel.Pit.Box.EntryFuel`, `Fuel.Pit.AddedSoFar`, and `Fuel.Pit.WillAddRemaining`.
+- `EntryFuel` now latches once when valid boxed refuel context becomes active; `AddedSoFar` and `WillAddRemaining` update live during the stop and all three values reset to `0` when boxed refuel context is inactive.
+- Investigated end-of-stop `Fuel.Pit.WillAdd` twitch: root cause is expected clamp behavior (`WillAdd = min(requestedAdd, maxTank-currentFuel)`) as tank space tightens near completion, not a planner/runtime bug.
+- Left `Fuel.Pit.WillAdd`, `Fuel.Pit.FuelOnExit`, and `Fuel.Delta.LitresWillAdd` semantics unchanged; documented the clamp behavior and directed UI countdown usage to `Fuel.Pit.WillAddRemaining`.
+
 ## 2026-04-10 — Repo-wide iRacingExtraProperties runtime fallback removal sweep
 - Classification: **both** (runtime behavior cleanup + internal docs/contract alignment).
 - Removed remaining runtime `IRacingExtraProperties` reads from `LalaLaunch.cs`, `PitEngine.cs`, `MessagingSystem.cs`, and `Messaging/SignalProvider.cs`.
