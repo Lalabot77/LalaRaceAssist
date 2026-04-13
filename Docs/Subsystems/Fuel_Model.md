@@ -141,8 +141,9 @@ Using current fuel, stable burn, projection laps, tank-space limits, and pit-men
 
 For pit-popup gauge stability, a dedicated boxed-refuel seam now exports:
 - `Fuel.Pit.Box.EntryFuel` (latched fuel at in-box refuel entry),
+- `Fuel.Pit.Box.WillAddLatched` (latched purple target captured once from `Fuel.Pit.WillAdd` at boxed refuel latch),
 - `Fuel.Pit.AddedSoFar` (`max(0, FuelNow - EntryFuel)`),
-- `Fuel.Pit.WillAddRemaining` (`max(0, Fuel.Pit.WillAdd - AddedSoFar)`).
+- `Fuel.Pit.WillAddRemaining` (`max(0, Fuel.Pit.Box.WillAddLatched - AddedSoFar)`).
 
 Latch semantics are lifecycle-based (not `WillAdd`-driven): within valid boxed service, `EntryFuel` latches once on first refuel-flow detection (`fuel rise` or refuel-learning active seam) while refuel is selected, then remains active for the rest of that boxed phase. Values reset only when boxed service ends. This keeps dashboard logic simple and avoids clamp-driven active-state twitching.
 

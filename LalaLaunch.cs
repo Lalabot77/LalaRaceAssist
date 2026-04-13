@@ -601,6 +601,7 @@ namespace LaunchPlugin
         public double Pit_TankSpaceAvailable { get; private set; }
         public double Pit_WillAdd { get; private set; }
         public double Pit_Box_EntryFuel { get; private set; }
+        public double Pit_Box_WillAddLatched { get; private set; }
         public double Pit_AddedSoFar { get; private set; }
         public double Pit_WillAddRemaining { get; private set; }
         public double Pit_DeltaAfterStop { get; private set; }
@@ -4663,6 +4664,7 @@ namespace LaunchPlugin
             AttachCore("Fuel.Pit.TankSpaceAvailable", () => Pit_TankSpaceAvailable);
             AttachCore("Fuel.Pit.WillAdd", () => Pit_WillAdd);
             AttachCore("Fuel.Pit.Box.EntryFuel", () => Pit_Box_EntryFuel);
+            AttachCore("Fuel.Pit.Box.WillAddLatched", () => Pit_Box_WillAddLatched);
             AttachCore("Fuel.Pit.AddedSoFar", () => Pit_AddedSoFar);
             AttachCore("Fuel.Pit.WillAddRemaining", () => Pit_WillAddRemaining);
             AttachCore("Fuel.Pit.DeltaAfterStop", () => Pit_DeltaAfterStop);
@@ -12909,6 +12911,7 @@ namespace LaunchPlugin
             _pitRefuelWasBoxed = false;
             _pitRefuelBoxEntryFuelCandidate = 0.0;
             Pit_Box_EntryFuel = 0.0;
+            Pit_Box_WillAddLatched = 0.0;
             Pit_AddedSoFar = 0.0;
             Pit_WillAddRemaining = 0.0;
         }
@@ -12938,11 +12941,13 @@ namespace LaunchPlugin
                 if (_isRefuelSelected && flowSignalDetected)
                 {
                     Pit_Box_EntryFuel = _pitRefuelBoxEntryFuelCandidate;
+                    Pit_Box_WillAddLatched = Pit_WillAdd;
                     _pitRefuelEntryLatched = true;
                 }
                 else
                 {
                     Pit_Box_EntryFuel = 0.0;
+                    Pit_Box_WillAddLatched = 0.0;
                     Pit_AddedSoFar = 0.0;
                     Pit_WillAddRemaining = 0.0;
                     _pitRefuelLastObservedFuel = safeCurrentFuel;
@@ -12951,7 +12956,7 @@ namespace LaunchPlugin
             }
 
             Pit_AddedSoFar = Math.Max(0.0, safeCurrentFuel - Pit_Box_EntryFuel);
-            Pit_WillAddRemaining = Math.Max(0.0, Pit_WillAdd - Pit_AddedSoFar);
+            Pit_WillAddRemaining = Math.Max(0.0, Pit_Box_WillAddLatched - Pit_AddedSoFar);
             _pitRefuelLastObservedFuel = safeCurrentFuel;
         }
 
