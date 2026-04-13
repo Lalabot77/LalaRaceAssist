@@ -204,6 +204,11 @@ The public user-facing release history is maintained in the root `CHANGELOG.md`.
 - Added global setting `PitBoxIncludeOptionalRepairs` (default `false`) and exposed it in Settings UI (`GlobalSettingsView`) so drivers can opt in optional repairs.
 - Kept ownership and timing invariants intact: no second timer, no PitExit logic rewrite, and downstream pit-exit prediction continues consuming the same shared total-stop-loss seam.
 
+## 2026-04-13 — Pit.Box contract tidy-up (settings export mismatch)
+- Classification: **internal-only** (docs contract correction).
+- Removed the mistaken `Settings.PitBoxIncludeOptionalRepairs` row from `SimHubParameterInventory` because no matching `AttachCore("Settings.*")` export exists in runtime code.
+- Kept runtime behavior unchanged: setting remains UI/persisted JSON + runtime seam input only.
+
 ## 2026-04-10 — Repo-wide iRacingExtraProperties runtime fallback removal sweep
 - Classification: **both** (runtime behavior cleanup + internal docs/contract alignment).
 - Removed remaining runtime `IRacingExtraProperties` reads from `LalaLaunch.cs`, `PitEngine.cs`, `MessagingSystem.cs`, and `Messaging/SignalProvider.cs`.

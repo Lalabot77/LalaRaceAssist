@@ -33,6 +33,7 @@ Branch: work
 ## Delivery status highlights
 - Added repair-aware boxed service targeting in `LalaLaunch` so mandatory repair-left time is included concurrently while boxed; optional repair-left time is included only when the new setting is enabled.
 - Added user setting toggle `Pit.Box: include optional repairs in service countdown` in `GlobalSettingsView` (default off).
+- Contract tidy-up: optional-repair toggle remains a persisted/UI plugin setting (not a `Settings.*` SimHub export), and parameter inventory wording now reflects that.
 - Kept strict safe defaults: countdown exports are hard-zero when inactive or unavailable.
 
 ## Validation note
