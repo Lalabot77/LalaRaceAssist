@@ -12740,7 +12740,7 @@ namespace LaunchPlugin
             return baseTime < 0.0 ? 0.0 : baseTime;
         }
 
-        private double CalculatePitBoxServiceTargetSeconds()
+        private double CalculatePitBoxModeledTargetSeconds()
         {
             double willAdd = Pit_WillAdd;
             double refuelRate = FuelCalculator?.EffectiveRefuelRateLps ?? 0.0;
@@ -12748,19 +12748,23 @@ namespace LaunchPlugin
             if (fuelTime < 0.0 || double.IsNaN(fuelTime) || double.IsInfinity(fuelTime)) fuelTime = 0.0;
 
             double tireTime = GetEffectiveTireChangeTimeSeconds();
-            double targetSec = Math.Max(fuelTime, tireTime);
+            return Math.Max(fuelTime, tireTime);
+        }
 
+        private double CalculatePitBoxRepairRemainingSeconds()
+        {
             if (!IsInValidPitBoxServiceState())
             {
-                return targetSec;
+                return 0.0;
             }
 
+            double repairRemainingSec = 0.0;
             double mandatoryRepairSec = ReadPitRepairSeconds(
                 "DataCorePlugin.GameRawData.Telemetry.PitRepairLeft",
                 "DataCorePlugin.GameData.PitRepairLeft");
             if (mandatoryRepairSec > 0.0)
             {
-                targetSec = Math.Max(targetSec, mandatoryRepairSec);
+                repairRemainingSec = Math.Max(repairRemainingSec, mandatoryRepairSec);
             }
 
             if (Settings?.PitBoxIncludeOptionalRepairs == true)
@@ -12770,11 +12774,18 @@ namespace LaunchPlugin
                     "DataCorePlugin.GameData.PitOptRepairLeft");
                 if (optionalRepairSec > 0.0)
                 {
-                    targetSec = Math.Max(targetSec, optionalRepairSec);
+                    repairRemainingSec = Math.Max(repairRemainingSec, optionalRepairSec);
                 }
             }
 
-            return targetSec;
+            return repairRemainingSec;
+        }
+
+        private double CalculatePitBoxRemainingSeconds(double elapsedSec, double modeledTargetSec)
+        {
+            double modeledRemainingSec = Math.Max(0.0, modeledTargetSec - elapsedSec);
+            double repairRemainingSec = CalculatePitBoxRepairRemainingSeconds();
+            return Math.Max(modeledRemainingSec, repairRemainingSec);
         }
 
         private bool IsInValidPitBoxServiceState()
@@ -12842,7 +12853,9 @@ namespace LaunchPlugin
             double pitLaneLoss = FuelCalculator?.PitLaneTimeLoss ?? 0.0;
             if (pitLaneLoss < 0.0) pitLaneLoss = 0.0;
 
-            double boxTime = CalculatePitBoxServiceTargetSeconds();
+            double modeledBoxTargetSec = CalculatePitBoxModeledTargetSeconds();
+            double repairRemainingSec = CalculatePitBoxRepairRemainingSeconds();
+            double boxTime = Math.Max(modeledBoxTargetSec, repairRemainingSec);
 
             double total = pitLaneLoss + boxTime;
             return (total < 0.0 || double.IsNaN(total) || double.IsInfinity(total)) ? 0.0 : total;
@@ -12868,14 +12881,14 @@ namespace LaunchPlugin
             if (double.IsNaN(elapsedSec) || double.IsInfinity(elapsedSec) || elapsedSec < 0.0)
                 elapsedSec = 0.0;
 
-            double targetSec = CalculatePitBoxServiceTargetSeconds();
+            double targetSec = CalculatePitBoxModeledTargetSeconds();
             if (double.IsNaN(targetSec) || double.IsInfinity(targetSec) || targetSec < 0.0)
                 targetSec = 0.0;
 
             _pitBoxCountdownActive = true;
             _pitBoxElapsedSec = elapsedSec;
             _pitBoxTargetSec = targetSec;
-            _pitBoxRemainingSec = Math.Max(0.0, targetSec - elapsedSec);
+            _pitBoxRemainingSec = CalculatePitBoxRemainingSeconds(elapsedSec, targetSec);
         }
 
         private static string FormatSecondsOrNA(double seconds)
