@@ -27,6 +27,7 @@ Branch: work
 - `Docs/Internal/CODEX_TASK_TEMPLATE.txt`
 - `Docs/Subsystems/Launch_Mode.md`
 - `Docs/Subsystems/Dash_Integration.md`
+- `Docs/Internal/SimHubLogMessages.md`
 
 ## Delivery status highlights
 - Added a plugin-owned pit-box percent seam in `PitEngine` (`PlayerPitBoxTrackPct`) fed from native `DriverPitTrkPct` with normalized percent handling.

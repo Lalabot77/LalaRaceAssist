@@ -15470,6 +15470,7 @@ namespace LaunchPlugin
             {
                 var lines = File.ReadAllLines(filePath);
                 bool expectSummaryLine = false;
+                bool skipSummaryHeaderCsvLine = false;
                 foreach (var raw in lines)
                 {
                     string line = raw?.Trim() ?? string.Empty;
@@ -15485,6 +15486,13 @@ namespace LaunchPlugin
 
                     if (string.Equals(line, "[LaunchSummaryHeader]", StringComparison.Ordinal))
                     {
+                        skipSummaryHeaderCsvLine = true;
+                        continue;
+                    }
+
+                    if (skipSummaryHeaderCsvLine)
+                    {
+                        skipSummaryHeaderCsvLine = false;
                         continue;
                     }
 
