@@ -9,27 +9,27 @@ Branch: work
 - No Git remote is configured in this checkout (`git remote -v` returns empty).
 
 ## Documentation sync status
-- Added fixed boxed-service modeled overhead: `CalculatePitBoxModeledTargetSeconds()` now returns `max(fuelTime, tireTime) + 1.0s`, representing stationary box overhead only (boxing/settle/service slop), not lane travel.
-- Kept downstream seams aligned via single upstream ownership: `Pit.Box.TargetSec`, `Pit.Box.RemainingSec`, and `Fuel.Live.TotalStopLoss` now inherit the same +1.0s boxed-service correction naturally through the shared modeled target seam.
-- Follow-up fixed `Pit.Box.LastDeltaSec` stop-end sampling: stop delta now uses current pit stop elapsed authority at the active→inactive transition, with cached elapsed used only as an invalid-value fallback.
-- Follow-up fixed PR 561 latch basis: settle-phase `Pit.Box.TargetSec` now freezes the effective target `max(modeledTargetSec, repairRemainingSec)` so repairs seen before latch are included in the frozen stop target.
-- `Pit.Box.TargetSec` now latches/freeze after a brief in-box settle period (1.0s elapsed) so late stop-model drift does not move the active countdown.
-- `Pit.Box.RemainingSec` now counts down from that latched target while preserving repair-left authority behavior (`max(modeledRemaining, repairRemaining)`).
-- Added `Pit.Box.LastDeltaSec` with post-stop semantics: computed at stop end as `(latched target - final elapsed)`, positive=quicker, negative=slower, visible for 5 seconds, then reset to `0`.
-- Added reset hygiene for pit-box countdown internals and post-stop delta visibility so stale values do not leak into subsequent stops.
-- Updated canonical subsystem/export docs and internal development changelog to match the new pit-box behavior contract.
+- Follow-up tightened `PitExit.TimeToExitSec` input validity: `PitExit.RemainingCountdownSec <= 0` now counts as unavailable for blend input selection.
+- Added `Car.Player.TrackPct` as a plugin-owned player lap-distance export from player `CarIdxLapDistPct`, normalized to `0..1` with invalid/unavailable fallback to `0`.
+- Added additive `PitExit.TimeToExitSec` as a blended pit-exit time-to-exit export for dash use.
+- Blending remains intentionally simple: early phase follows `PitExit.RemainingCountdownSec`, later phase converges toward `PitExit.TimeS` as speed approaches limiter speed.
+- Limiter-speed source chain implemented as `DataCorePlugin.GameData.PitLimiterSpeed` (primary) then parsed `DataCorePlugin.GameRawData.SessionData.WeekendInfo.TrackPitSpeedLimit` (fallback).
+- Existing `PitExit.RemainingCountdownSec` and `PitExit.TimeS` exports were kept unchanged.
+- Updated canonical subsystem/export docs and internal changelog to match behavior.
 
 ## Reviewed documentation set
-### Changed in pit-box countdown latch + delta follow-ups
+### Changed in player track-pct + pit-exit blend task
 - `LalaLaunch.cs`
-- `Docs/Subsystems/Pit_Timing_And_PitLoss.md`
 - `Docs/Internal/SimHubParameterInventory.md`
+- `Docs/Subsystems/Pit_Timing_And_PitLoss.md`
+- `Docs/Subsystems/CarSA.md`
 - `Docs/Internal/Development_Changelog.md`
 - `Docs/RepoStatus.md`
 
 ### Reviewed and left unchanged
+- `Docs/Project_Index.md`
+- `Docs/Internal/CODEX_CONTRACT.txt`
 - `Docs/Internal/Architecture_Guardrails.md`
-- `Docs/Internal/CODEX_TASK_TEMPLATE.txt`
 - `Docs/Internal/SimHubLogMessages.md`
 - `README.md`
 - `CHANGELOG.md`
@@ -37,14 +37,10 @@ Branch: work
 - `Docs/User_Guide.md`
 
 ## Delivery status highlights
-- Added fixed `+1.0s` stationary boxed-service overhead at the canonical modeled box-target seam (`max(fuelTime, tireTime) + 1.0`).
-- Kept pit-lane/direct-travel timing semantics unchanged; adjustment is boxed service only.
-- Fixed the stop-end delta sampling seam so `Pit.Box.LastDeltaSec` uses transition-time elapsed authority instead of prior-tick cached elapsed.
-- Implemented a pit-box target latch seam that freezes `Pit.Box.TargetSec` once stop-in-box timing is established.
-- Follow-up hardened the latch basis so repair authority seen during settle is captured in the frozen target.
-- Added short-lived `Pit.Box.LastDeltaSec` export for stop-end comparison (`target - elapsed`) with a strict 5-second non-zero window.
-- Kept PitExit/Opponents ownership and behavior unchanged; work remained inside pit timing export logic.
+- Kept ownership boundaries intact: Opponents remains race-scoped pit-exit prediction owner; CarSA ownership was not widened.
+- Added plugin-owned `Car.Player.TrackPct` under the existing `Car.Player.*` family with strict normalization/sanitization behavior.
+- Added plugin-owned `PitExit.TimeToExitSec` without changing Opponents predictor internals or removing legacy pit-exit exports.
 - No new log lines were added; `Docs/Internal/SimHubLogMessages.md` remained unchanged.
 
 ## Validation note
-- Validation recorded against `HEAD` (`Pit.Box.LastDeltaSec transition-time elapsed sampling fix`).
+- Validation recorded against `HEAD` (`PitExit.TimeToExitSec zero-countdown availability fix`).
