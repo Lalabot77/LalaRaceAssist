@@ -231,6 +231,12 @@ The public user-facing release history is maintained in the root `CHANGELOG.md`.
   - reset occurs only when boxed service ends.
 - Kept all existing runtime fuel outputs/semantics unchanged: `Fuel.Pit.WillAdd`, `Fuel.Pit.FuelOnExit`, and `Fuel.Delta.LitresWillAdd`.
 
+## 2026-04-13 — Boxed refuel stable target export (`Fuel.Pit.Box.WillAddLatched`)
+- Classification: **both** (new dash-facing export + internal contract/docs alignment).
+- Added `Fuel.Pit.Box.WillAddLatched` in `LalaLaunch.cs` as a boxed-latched UI target captured once from live `Fuel.Pit.WillAdd` when boxed refuel latch first activates.
+- Kept `Fuel.Pit.WillAdd` runtime semantics unchanged (`min(requestedAdd, maxTank-currentFuel)` live clamp behavior remains authoritative for runtime math).
+- Updated boxed countdown semantics to use the latched target (`Fuel.Pit.WillAddRemaining = max(0, Fuel.Pit.Box.WillAddLatched - Fuel.Pit.AddedSoFar)`) so in-stop tank-space clamp shrink does not move the purple target.
+
 ## 2026-04-10 — Repo-wide iRacingExtraProperties runtime fallback removal sweep
 - Classification: **both** (runtime behavior cleanup + internal docs/contract alignment).
 - Removed remaining runtime `IRacingExtraProperties` reads from `LalaLaunch.cs`, `PitEngine.cs`, `MessagingSystem.cs`, and `Messaging/SignalProvider.cs`.
