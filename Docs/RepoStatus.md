@@ -9,33 +9,16 @@ Branch: work
 - No Git remote is configured in this checkout (`git remote -v` returns empty).
 
 ## Documentation sync status
-- Replaced `Brake.PreviousPeakPct` capture from a fixed 40-sample Dahl-style window to an event-based braking detector.
-- New braking event contract: start when `brake > 0.05` and `throttle < 0.20`; track running peak while active; end when `brake <= 0.02` or `throttle >= 0.20`; latch peak on event end.
-- Added post-publish latch/re-arm lock for `Brake.PreviousPeakPct`: after event end, detector must observe at least three consecutive ticks where either `brake <= 0.02` or `throttle >= 0.20` before a new event can begin.
-- Brake/throttle processing remains normalized `0..1` inside plugin runtime with no in-plugin ×100 scaling, and no speed guard was added so stationary testing remains valid.
+- Added plugin-owned pit-box exports for dash use: `Pit.Box.DistanceM` and `Pit.Box.TimeS`.
+- Pit-box authority now comes from native session/player sources only (`DriverPitTrkPct`, player track percent, and session track length via existing PitEngine seams).
+- `Pit.Box.*` fail-safe behavior is strict: publish `0` outside pit lane, and publish `0` when authority/speed inputs are invalid (no fallback to `IRacingExtraProperties`).
 
 ## Reviewed documentation set
-### Changed in this sweep
+### Changed in pit-box export sweep
+- `PitEngine.cs`
 - `LalaLaunch.cs`
 - `Docs/Internal/SimHubParameterInventory.md`
-- `Docs/Internal/Development_Changelog.md`
-- `Docs/RepoStatus.md`
-
-### Changed in follow-up hotfix
-- `LalaLaunch.cs`
-- `Messaging/SignalProvider.cs`
-- `Docs/Internal/SimHubLogMessages.md`
-- `Docs/Internal/Development_Changelog.md`
-- `Docs/RepoStatus.md`
-
-### Changed in stale-fallback reset follow-up
-- `LalaLaunch.cs`
-- `Docs/Internal/Development_Changelog.md`
-- `Docs/RepoStatus.md`
-
-### Changed in brake detector hysteresis/re-arm refinement
-- `LalaLaunch.cs`
-- `Docs/Internal/SimHubParameterInventory.md`
+- `Docs/Subsystems/Pit_Timing_And_PitLoss.md`
 - `Docs/Internal/Development_Changelog.md`
 - `Docs/RepoStatus.md`
 
@@ -46,9 +29,9 @@ Branch: work
 - `Docs/Subsystems/Dash_Integration.md`
 
 ## Delivery status highlights
-- Removed previous `_brakeTrigger` / `_brakeSampleCount` 40-sample latch path and replaced it with minimal event-state variables (`_brakeEventActive`, `_brakeEventPeak`, `_brakePreviousPeakPct`).
-- `Brake.PreviousPeakPct` still updates only when a braking event ends (brake release or throttle application), while start/end hysteresis plus re-arm lock reduce trail-brake fragmentation and immediate long-corner re-triggers.
-- Manual/session recovery clears active/latch/counter brake state and resets `Brake.PreviousPeakPct` to `0.0`.
+- Added a plugin-owned pit-box percent seam in `PitEngine` (`PlayerPitBoxTrackPct`) fed from native `DriverPitTrkPct` with normalized percent handling.
+- Added plugin-owned dash exports `Pit.Box.DistanceM` and `Pit.Box.TimeS` in `LalaLaunch` using wrapped pct delta and session track length, mirroring existing pit-exit display math style.
+- Kept strict safe defaults: all pit-box outputs return `0` outside pit lane or on invalid authority, and time returns `0` when speed is too low/invalid.
 
 ## Validation note
-- Validation recorded against `HEAD` (`Brake.PreviousPeakPct hysteresis + re-arm lock refinement`).
+- Validation recorded against `HEAD` (`plugin-owned pit-box distance/time exports`).

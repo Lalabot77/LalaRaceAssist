@@ -1,7 +1,7 @@
 # Pit Timing and Pit Loss
 
 Validated against commit: 298accf
-Last updated: 2026-03-24
+Last updated: 2026-04-12
 Branch: work
 
 ## Purpose
@@ -183,6 +183,7 @@ Typical outputs include:
 - `Fuel.Live.RefuelRate_Lps`
 - `Fuel.Live.TireChangeTime_S`
 - `PitExit.DistanceM` / `PitExit.TimeS` (pit-exit waypoint distance/time using stored exit marker + live speed). These remain zero outside the pit lane and refresh on the 250 ms poll cadence, matching pit-lane state to avoid noisy updates when circulating on track.
+- `Pit.Box.DistanceM` / `Pit.Box.TimeS` (player pit-box waypoint distance/time using native `DriverPitTrkPct`, player track percent, session track length, and live speed). These remain zero outside the pit lane, and also fail-safe to zero when authority inputs are missing/invalid.
 
 These values feed directly into:
 - Fuel Model pit projections.
