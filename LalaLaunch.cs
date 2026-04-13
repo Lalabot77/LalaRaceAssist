@@ -4085,6 +4085,7 @@ namespace LaunchPlugin
         private DateTime _pitBoxLastDeltaExpiresUtc = DateTime.MinValue;
         private const double PitBoxTargetLatchSettleSeconds = 1.0;
         private const double PitBoxLastDeltaWindowSeconds = 5.0;
+        private const double PitBoxModeledServiceOverheadSeconds = 1.0;
         private bool _pitRefuelEntryLatched = false;
         private bool _pitRefuelWasBoxed = false;
         private double _pitRefuelBoxEntryFuelCandidate = 0.0;
@@ -12769,7 +12770,8 @@ namespace LaunchPlugin
             if (fuelTime < 0.0 || double.IsNaN(fuelTime) || double.IsInfinity(fuelTime)) fuelTime = 0.0;
 
             double tireTime = GetEffectiveTireChangeTimeSeconds();
-            return Math.Max(fuelTime, tireTime);
+            double modeledServiceSec = Math.Max(fuelTime, tireTime);
+            return modeledServiceSec + PitBoxModeledServiceOverheadSeconds;
         }
 
         private double CalculatePitBoxRepairRemainingSeconds()

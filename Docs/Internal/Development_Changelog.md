@@ -33,6 +33,11 @@ The public user-facing release history is maintained in the root `CHANGELOG.md`.
 
 ## Post-v1.0 development
 
+### Pit box modeled service overhead (+1.0s fixed stationary allowance)
+- Added a fixed `+1.0s` boxed-service overhead at the canonical modeled boxed-service seam in `LalaLaunch.cs` (`CalculatePitBoxModeledTargetSeconds`).
+- Modeled boxed target is now `max(fuelTime, tireTime) + 1.0`, preserving existing refuel-rate, tire-time, and fuel-add semantics.
+- Kept ownership aligned by applying this once upstream so downstream consumers (`Pit.Box.TargetSec`, `Pit.Box.RemainingSec`, and `Fuel.Live.TotalStopLoss`) inherit the same boxed-service correction without lane-travel changes or double-counting.
+
 ### Pit.Box.LastDeltaSec stop-end sampling fix (final elapsed authority)
 - Fixed `LalaLaunch.cs` pit-box transition handling so `Pit.Box.LastDeltaSec` is computed from the current stop-end elapsed authority (`_pit.PitStopElapsedSec`) when the boxed countdown becomes inactive.
 - Added a guarded fallback to the cached countdown elapsed only if the stop-end authority value is invalid, preventing off-by-one-tick positive bias near target stops.
