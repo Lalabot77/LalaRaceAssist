@@ -209,6 +209,12 @@ The public user-facing release history is maintained in the root `CHANGELOG.md`.
 - Removed the mistaken `Settings.PitBoxIncludeOptionalRepairs` row from `SimHubParameterInventory` because no matching `AttachCore("Settings.*")` export exists in runtime code.
 - Kept runtime behavior unchanged: setting remains UI/persisted JSON + runtime seam input only.
 
+## 2026-04-13 — Pit.Box repair-left countdown semantic hotfix
+- Classification: **both** (driver-facing countdown correctness + internal contract alignment).
+- Fixed in-box countdown semantics so live repair-left telemetry is no longer treated as a total target and reduced again by elapsed time.
+- Kept `Pit.Box.TargetSec` honest as modeled fixed-duration service time only (`max(fuelTime, tireTime)`), while `Pit.Box.RemainingSec` now resolves as `max(modeledRemainingSec, repairRemainingSec)` during valid boxed service state.
+- Preserved pit-exit/shared stop-loss seam behavior by keeping repair-aware box authority in `CalculateTotalStopLossSeconds` via `max(modeledTargetSec, repairRemainingSec)`.
+
 ## 2026-04-10 — Repo-wide iRacingExtraProperties runtime fallback removal sweep
 - Classification: **both** (runtime behavior cleanup + internal docs/contract alignment).
 - Removed remaining runtime `IRacingExtraProperties` reads from `LalaLaunch.cs`, `PitEngine.cs`, `MessagingSystem.cs`, and `Messaging/SignalProvider.cs`.

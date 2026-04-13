@@ -10,8 +10,8 @@ Branch: work
 
 ## Documentation sync status
 - Added driver-facing `Pit.Box.*` in-box countdown exports: `Pit.Box.Active`, `Pit.Box.ElapsedSec`, `Pit.Box.RemainingSec`, and `Pit.Box.TargetSec`.
-- Countdown uses existing pit timing + service math only: elapsed comes from `PitEngine.PitStopElapsedSec`; target now comes from concurrent service model `max(fuelTime, tireTime, mandatoryRepairTime[, optionalRepairTime when enabled])` while boxed.
-- Countdown is boxed-phase only and conservative: active only in valid in-box service state; all countdown fields publish `0` when inactive/unavailable (including drive-throughs and missed-box phases).
+- Countdown semantics are now split correctly: `Pit.Box.TargetSec` is modeled fixed-duration service time (`max(fuelTime, tireTime)`), while `Pit.Box.RemainingSec` is repair-aware (`max(modeledRemainingSec, repairRemainingSec)`), preventing elapsed-time double subtraction against repair-left telemetry.
+- Countdown remains boxed-phase only and conservative: active only in valid in-box service state; all countdown fields publish `0` when inactive/unavailable (including drive-throughs and missed-box phases).
 
 ## Reviewed documentation set
 ### Changed in pit-box countdown sweep
@@ -32,6 +32,7 @@ Branch: work
 
 ## Delivery status highlights
 - Added repair-aware boxed service targeting in `LalaLaunch` so mandatory repair-left time is included concurrently while boxed; optional repair-left time is included only when the new setting is enabled.
+- Hotfixed repair-left countdown semantics so `PitRepairLeft`/`PitOptRepairLeft` remain live remaining-time authority (not treated as total target seconds).
 - Added user setting toggle `Pit.Box: include optional repairs in service countdown` in `GlobalSettingsView` (default off).
 - Contract tidy-up: optional-repair toggle remains a persisted/UI plugin setting (not a `Settings.*` SimHub export), and parameter inventory wording now reflects that.
 - Kept strict safe defaults: countdown exports are hard-zero when inactive or unavailable.
