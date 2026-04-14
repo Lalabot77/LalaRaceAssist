@@ -94,9 +94,10 @@ For a new car/track combination:
 
 1. Start with **Strategy** and confirm the selected profile and track.
 2. Drive a few clean laps so the plugin can begin learning fuel, pace and pit entry/exit points.
-3. Review **Profiles** before locking anything.
-4. Import the dashboards you actually plan to use.
-5. Add only the core controls you need at first:
+3. For pit-lane-loss learning, run one clean **drive-through** at limiter speed (no box stop) so the saved baseline is lane travel only.
+4. Review **Profiles** before locking anything.
+5. Import the dashboards you actually plan to use.
+6. Add only the core controls you need at first:
    - **Cancel Message**
    - **Toggle Pit Screen**
    - **Next Dash**

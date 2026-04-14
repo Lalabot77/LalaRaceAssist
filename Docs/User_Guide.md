@@ -169,6 +169,8 @@ Use that pattern for:
 - launch defaults,
 - assist thresholds that repeatedly affect what you see while driving.
 
+Pit-loss baseline rule: learn pit-lane loss using a clean **drive-through** (limiter speed, no box stop), then lock when validated.
+
 If a system is wrong once, keep driving. If it is wrong repeatedly, review the saved data or thresholds behind it instead of assuming the dashboard art is the problem.
 
 ## 7. Practical best practice
