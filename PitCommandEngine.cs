@@ -132,10 +132,10 @@ namespace LaunchPlugin
                 case PitCommandAction.ClearAll: return "#clear$";
                 case PitCommandAction.ClearTyres: return "#cleartires$";
                 case PitCommandAction.ToggleFuel: return "#!fuel$";
-                case PitCommandAction.FuelAdd1: return "#fuel +1k$";
-                case PitCommandAction.FuelRemove1: return "#fuel -1k$";
-                case PitCommandAction.FuelAdd10: return "#fuel +10k$";
-                case PitCommandAction.FuelRemove10: return "#fuel -10k$";
+                case PitCommandAction.FuelAdd1: return "#fuel +1$";
+                case PitCommandAction.FuelRemove1: return "#fuel -1$";
+                case PitCommandAction.FuelAdd10: return "#fuel +10$";
+                case PitCommandAction.FuelRemove10: return "#fuel -10$";
                 case PitCommandAction.FuelSetMax: return "#fuel +150$";
                 case PitCommandAction.ToggleTyresAll: return "#!t$";
                 case PitCommandAction.ToggleFastRepair: return "#!fr$";
