@@ -33,6 +33,13 @@ The public user-facing release history is maintained in the root `CHANGELOG.md`.
 
 ## Post-v1.0 development
 
+### Pit box pre-entry countdown visibility + pit-limit-aware brake-now helper
+- Extended `Pit.Box.DistanceM` / `Pit.Box.TimeS` publication in `LalaLaunch.cs` so the pit-box countdown can appear slightly before pit-lane entry when pit-owned visibility authority is active: in pit lane, `PitPhase.EnteringPits`, or fallback player track-percent band `[0.80..1.00] ∪ [0.00..0.20]`.
+- Kept fail-safe behavior: both exports still publish `0` when authority inputs are missing/invalid or when outside the visibility gate; `Pit.Box.TimeS` remains conservative (`0` when speed is too low/invalid).
+- Added plugin-owned `Pit.Box.BrakeNow` export for BoxEntry dash visibility so dashboards no longer need fixed-distance arithmetic.
+- `Pit.Box.BrakeNow` is calibrated from the existing 80 kph/25 m behavior and scales by pit limit (`triggerDistanceM = 25.0 * (pitLimitKph / 80.0)`), then gates on valid pit-box authority, valid pit-limit authority, speed `>2` kph, positive distance, and the same in-lane/pre-entry visibility gate.
+- Pit-limit authority chain remains plugin-owned and consistent with existing seams: `DataCorePlugin.GameData.PitLimiterSpeed` primary, parsed `DataCorePlugin.GameRawData.SessionData.WeekendInfo.TrackPitSpeedLimit` fallback.
+
 ### Pit-loss baseline standardization (drive-through) + fixed pit-exit transition allowance
 - Standardized pit-loss semantics and guidance so learned/stored pit-lane loss is explicitly a **drive-through baseline** (clean limiter-speed lane travel, no box stop).
 - Added fixed `PitExitTransitionAllowanceSec = 2.75` in `LalaLaunch.cs` at the shared boxed-stop prediction seam (`CalculateTotalStopLossSeconds`), yielding:
