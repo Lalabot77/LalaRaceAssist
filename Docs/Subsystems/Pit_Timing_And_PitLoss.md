@@ -1,7 +1,7 @@
 # Pit Timing and Pit Loss
 
-Validated against commit: 298accf
-Last updated: 2026-04-13
+Validated against commit: HEAD
+Last updated: 2026-04-15
 Branch: work
 
 ## Purpose
@@ -207,7 +207,8 @@ Typical outputs include:
 - `Fuel.Live.TireChangeTime_S`
 - `PitExit.DistanceM` / `PitExit.TimeS` (pit-exit waypoint distance/time using stored exit marker + live speed). These remain zero outside the pit lane and refresh on the 250 ms poll cadence, matching pit-lane state to avoid noisy updates when circulating on track.
 - `PitExit.TimeToExitSec` (plugin-owned blended pit-exit time-to-exit for dash timing): early/low-speed phase follows `PitExit.RemainingCountdownSec`, then blends toward `PitExit.TimeS` as player speed approaches pit-limiter speed. Blend uses limiter authority chain `DataCorePlugin.GameData.PitLimiterSpeed` then parsed `DataCorePlugin.GameRawData.SessionData.WeekendInfo.TrackPitSpeedLimit`; publishes `0` outside pit lane and guards invalid values.
-- `Pit.Box.DistanceM` / `Pit.Box.TimeS` (player pit-box waypoint distance/time using native `DriverPitTrkPct`, player track percent, session track length, and live speed). These remain zero outside the pit lane, and also fail-safe to zero when authority inputs are missing/invalid.
+- `Pit.Box.DistanceM` / `Pit.Box.TimeS` (player pit-box waypoint distance/time using native `DriverPitTrkPct`, player track percent, session track length, and live speed). These publish in pit lane, and may also publish in a short pit-owned pre-entry window when authority is valid (`PitPhase.EnteringPits` or fallback player track-percent band near start/finish: `[0.80..1.00] ∪ [0.00..0.20]`). Outside that gate—or when authority inputs are missing/invalid—they publish `0`.
+- `Pit.Box.BrakeNow` (plugin-owned BoxEntry “BRAKE NOW” visibility helper). Publishes `true` only when pit-box authority + pit-limit authority are valid, speed is sane (`>2 kph`), distance is positive, pit box is within dynamic threshold `25.0 * (pitLimitKph / 80.0)`, and the same in-lane/pre-entry visibility gate is active. Limiter authority chain: `DataCorePlugin.GameData.PitLimiterSpeed` primary, parsed `DataCorePlugin.GameRawData.SessionData.WeekendInfo.TrackPitSpeedLimit` fallback; publishes `false` when unavailable/invalid.
 - `Pit.Box.Active` / `Pit.Box.ElapsedSec` / `Pit.Box.RemainingSec` / `Pit.Box.TargetSec` / `Pit.Box.LastDeltaSec` (driver-facing in-box service countdown contract). `Active` is true only while the player is in a valid in-box service state (`in pit lane && in pit stall && PitPhase.InBox`). `ElapsedSec` reuses the existing pit stop elapsed timer from `PitEngine` (no second timer). During the short settle period (1.0s elapsed), the live effective target is `max(modeledTargetSec, repairRemainingSec)` where `modeledTargetSec = (max(fuelTime, tireTime) + 1.0s boxed-service overhead)` and `repairRemainingSec` is boxed native repair-left authority (`PitRepairLeft`, plus `PitOptRepairLeft` when optional repairs are enabled). The `+1.0s` overhead is stationary box-service allowance only (boxing/settle/pickup-release slop), not lane travel. At settle threshold, that effective target is latched/frozen for the stop and exported as `Pit.Box.TargetSec`, so late stop telemetry drift no longer moves the countdown target. `RemainingSec` stays repair-aware and is computed each tick as `max(max(0, TargetSec - ElapsedSec), repairRemainingSec)`. `Pit.Box.LastDeltaSec` is computed on stop end as `(latched TargetSec - final ElapsedSec)` where positive means quicker than target and negative means slower than target; it is non-zero only for 5 seconds after stop end and then automatically returns to `0`. All exports publish `0`/`false` when inactive or unavailable (including drive-throughs and missed-box states).
 
 These values feed directly into:

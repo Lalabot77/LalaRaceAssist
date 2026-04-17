@@ -4077,6 +4077,7 @@ namespace LaunchPlugin
         private double _carPlayerTrackPct = 0.0;
         private int _pitBoxDistanceM = 0;
         private int _pitBoxTimeS = 0;
+        private bool _pitBoxBrakeNow = false;
         private bool _pitBoxCountdownActive = false;
         private double _pitBoxElapsedSec = 0.0;
         private double _pitBoxRemainingSec = 0.0;
@@ -5067,6 +5068,7 @@ namespace LaunchPlugin
             AttachCore("PitExit.TimeToExitSec", () => _pitExitTimeToExitSec);
             AttachCore("Pit.Box.DistanceM", () => _pitBoxDistanceM);
             AttachCore("Pit.Box.TimeS", () => _pitBoxTimeS);
+            AttachCore("Pit.Box.BrakeNow", () => _pitBoxBrakeNow);
             AttachCore("Pit.Box.Active", () => _pitBoxCountdownActive);
             AttachCore("Pit.Box.ElapsedSec", () => _pitBoxElapsedSec);
             AttachCore("Pit.Box.RemainingSec", () => _pitBoxRemainingSec);
@@ -6416,13 +6418,13 @@ namespace LaunchPlugin
             if (inLane)
             {
                 UpdatePitExitDisplayValues(data, true);
-                UpdatePitBoxDisplayValues(data, true);
+                UpdatePitBoxDisplayValues(data, pluginManager, true);
             }
             else
             {
                 // Clear once when not in pit lane
                 UpdatePitExitDisplayValues(data, false);
-                UpdatePitBoxDisplayValues(data, false);
+                UpdatePitBoxDisplayValues(data, pluginManager, false);
             }
             double currentFuelNow = data.NewData?.Fuel ?? 0.0;
             UpdatePitBoxCountdownValues(inLane, isInPitStall);
@@ -12326,12 +12328,35 @@ namespace LaunchPlugin
             return true;
         }
 
-        private void UpdatePitBoxDisplayValues(GameData data, bool inPitLane)
+        private bool IsPitBoxVisibilityGateActive(bool inPitLane)
         {
-            if (!inPitLane)
+            if (inPitLane)
+            {
+                return true;
+            }
+
+            if (_pit != null && _pit.CurrentPitPhase == PitPhase.EnteringPits)
+            {
+                return true;
+            }
+
+            double carPct = _pit != null ? _pit.PlayerTrackPercentNormalized : double.NaN;
+            if (double.IsNaN(carPct) || double.IsInfinity(carPct) || carPct < 0.0 || carPct > 1.0)
+            {
+                return false;
+            }
+
+            return carPct >= 0.80 || carPct <= 0.20;
+        }
+
+        private void UpdatePitBoxDisplayValues(GameData data, PluginManager pluginManager, bool inPitLane)
+        {
+            bool visibilityGateActive = IsPitBoxVisibilityGateActive(inPitLane);
+            if (!visibilityGateActive)
             {
                 _pitBoxDistanceM = 0;
                 _pitBoxTimeS = 0;
+                _pitBoxBrakeNow = false;
                 return;
             }
 
@@ -12339,6 +12364,7 @@ namespace LaunchPlugin
             {
                 _pitBoxDistanceM = 0;
                 _pitBoxTimeS = 0;
+                _pitBoxBrakeNow = false;
                 return;
             }
 
@@ -12347,6 +12373,7 @@ namespace LaunchPlugin
             {
                 _pitBoxDistanceM = 0;
                 _pitBoxTimeS = 0;
+                _pitBoxBrakeNow = false;
                 return;
             }
 
@@ -12356,6 +12383,7 @@ namespace LaunchPlugin
             {
                 _pitBoxDistanceM = 0;
                 _pitBoxTimeS = 0;
+                _pitBoxBrakeNow = false;
                 return;
             }
 
@@ -12367,10 +12395,17 @@ namespace LaunchPlugin
             {
                 _pitBoxDistanceM = 0;
                 _pitBoxTimeS = 0;
+                _pitBoxBrakeNow = false;
                 return;
             }
 
-            double speedMps = data.NewData.SpeedKmh / 3.6;
+            double speedKph = data.NewData.SpeedKmh;
+            if (double.IsNaN(speedKph) || double.IsInfinity(speedKph) || speedKph < 0.0)
+            {
+                speedKph = 0.0;
+            }
+
+            double speedMps = speedKph / 3.6;
             double timeS = (speedMps > PitExitSpeedEpsilonMps && !double.IsNaN(speedMps) && !double.IsInfinity(speedMps))
                 ? (distanceM / speedMps)
                 : 0.0;
@@ -12382,6 +12417,26 @@ namespace LaunchPlugin
 
             _pitBoxDistanceM = Math.Max(0, (int)Math.Round(distanceM, MidpointRounding.AwayFromZero));
             _pitBoxTimeS = Math.Max(0, (int)Math.Round(timeS, MidpointRounding.AwayFromZero));
+
+            _pitBoxBrakeNow = false;
+            if (distanceM <= 0.0 || speedKph <= 2.0)
+            {
+                return;
+            }
+
+            double pitLimitKph;
+            if (!TryResolvePitLimiterSpeedKph(pluginManager, out pitLimitKph) || pitLimitKph <= 0.0)
+            {
+                return;
+            }
+
+            double triggerDistanceM = 25.0 * (pitLimitKph / 80.0);
+            if (double.IsNaN(triggerDistanceM) || double.IsInfinity(triggerDistanceM) || triggerDistanceM <= 0.0)
+            {
+                return;
+            }
+
+            _pitBoxBrakeNow = distanceM <= triggerDistanceM;
         }
 
         private void RefreshClassMetadata(PluginManager pluginManager)
