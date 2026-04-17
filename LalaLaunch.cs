@@ -247,6 +247,29 @@ namespace LaunchPlugin
             }
         }
 
+        public void PitClearAll() => ExecutePitCommand(PitCommandAction.ClearAll);
+        public void PitClearTyres() => ExecutePitCommand(PitCommandAction.ClearTyres);
+        public void PitToggleFuel() => ExecutePitCommand(PitCommandAction.ToggleFuel);
+        public void PitFuelAdd1() => ExecutePitCommand(PitCommandAction.FuelAdd1);
+        public void PitFuelRemove1() => ExecutePitCommand(PitCommandAction.FuelRemove1);
+        public void PitFuelAdd10() => ExecutePitCommand(PitCommandAction.FuelAdd10);
+        public void PitFuelRemove10() => ExecutePitCommand(PitCommandAction.FuelRemove10);
+        public void PitFuelSetMax() => ExecutePitCommand(PitCommandAction.FuelSetMax);
+        public void PitToggleTyresAll() => ExecutePitCommand(PitCommandAction.ToggleTyresAll);
+        public void PitToggleFastRepair() => ExecutePitCommand(PitCommandAction.ToggleFastRepair);
+        public void PitToggleAutoFuel() => ExecutePitCommand(PitCommandAction.ToggleAutoFuel);
+        public void PitWindshield() => ExecutePitCommand(PitCommandAction.Windshield);
+
+        // Compatibility aliases retained for existing dash bindings.
+        public void PitFuelAdd() => PitFuelAdd1();
+        public void PitFuelRemove() => PitFuelRemove1();
+        public void PitToggleTiresAll() => PitToggleTyresAll();
+
+        private void ExecutePitCommand(PitCommandAction action)
+        {
+            _pitCommandEngine.Execute(action, PluginManager, Pit_TankSpaceAvailable);
+        }
+
         public void SetTrackMarkersLocked(bool locked)
         {
             var key = GetCanonicalTrackKeyForMarkers();
@@ -4149,6 +4172,7 @@ namespace LaunchPlugin
         private const int ShiftAssistLearnSavePulseMs = 250;
         private readonly ShiftAssistEngine _shiftAssistEngine = new ShiftAssistEngine();
         private readonly ShiftAssistLearningEngine _shiftAssistLearningEngine = new ShiftAssistLearningEngine();
+        private readonly PitCommandEngine _pitCommandEngine = new PitCommandEngine();
         private ShiftAssistAudio _shiftAssistAudio;
         private string _shiftAssistActiveGearStackId = "Default";
         private int _shiftAssistTargetCurrentGear;
@@ -4529,6 +4553,21 @@ namespace LaunchPlugin
             // --- ACTIONS (exposed to Controls & Events) ---
             this.AddAction("MsgCx", (a, b) => MsgCx());
             this.AddAction("TogglePitScreen", (a, b) => TogglePitScreen());
+            this.AddAction("Pit.ClearAll", (a, b) => PitClearAll());
+            this.AddAction("Pit.ClearTires", (a, b) => PitClearTyres());
+            this.AddAction("Pit.ToggleFuel", (a, b) => PitToggleFuel());
+            this.AddAction("Pit.FuelAdd1", (a, b) => PitFuelAdd1());
+            this.AddAction("Pit.FuelRemove1", (a, b) => PitFuelRemove1());
+            this.AddAction("Pit.FuelAdd10", (a, b) => PitFuelAdd10());
+            this.AddAction("Pit.FuelRemove10", (a, b) => PitFuelRemove10());
+            this.AddAction("Pit.FuelSetMax", (a, b) => PitFuelSetMax());
+            this.AddAction("Pit.ToggleTiresAll", (a, b) => PitToggleTyresAll());
+            this.AddAction("Pit.ToggleFastRepair", (a, b) => PitToggleFastRepair());
+            this.AddAction("Pit.ToggleAutoFuel", (a, b) => PitToggleAutoFuel());
+            this.AddAction("Pit.Windshield", (a, b) => PitWindshield());
+            // compatibility aliases from PR568
+            this.AddAction("Pit.FuelAdd", (a, b) => PitFuelAdd1());
+            this.AddAction("Pit.FuelRemove", (a, b) => PitFuelRemove1());
             this.AddAction("PrimaryDashMode", (a, b) => PrimaryDashMode());
             this.AddAction("DeclutterMode", (a, b) => DeclutterMode0());
             this.AddAction("ToggleDarkMode", (a, b) => ToggleDarkMode());
@@ -4627,7 +4666,7 @@ namespace LaunchPlugin
             this.AddAction("ShiftAssist_ToggleLock_G6", (a, b) => ExecuteShiftAssistLockAction(6, current => !current, "ShiftAssist_ToggleLock_G6"));
             this.AddAction("ShiftAssist_ToggleLock_G7", (a, b) => ExecuteShiftAssistLockAction(7, current => !current, "ShiftAssist_ToggleLock_G7"));
             this.AddAction("ShiftAssist_ToggleLock_G8", (a, b) => ExecuteShiftAssistLockAction(8, current => !current, "ShiftAssist_ToggleLock_G8"));
-            SimHub.Logging.Current.Info("[LalaPlugin:Init] Actions registered: MsgCx, TogglePitScreen, PrimaryDashMode, DeclutterMode, ToggleDarkMode, SecondaryDashMode (legacy), EventMarker, LaunchMode, TrackMarkersLock, TrackMarkersUnlock, Debug_Hide_1_Toggle, Debug_Hide_2_Toggle, Debug_Hide_3_Toggle, ShiftAssist_ResetDelayStats, ShiftAssist_ToggleShiftAssist, ShiftAssist_ToggleDebugCsv, ShiftAssist_TestBeep, ShiftAssist_Learn_ResetSamples, ShiftAssist_ResetTargets_ActiveStack, ShiftAssist_ResetTargets_ActiveStack_AndSamples, ShiftAssist_ApplyLearnedToTargets_ActiveStack_OverrideLocks, ShiftAssist_Lock_G1..G8, ShiftAssist_Unlock_G1..G8, ShiftAssist_ToggleLock_G1..G8");
+            SimHub.Logging.Current.Info("[LalaPlugin:Init] Actions registered: MsgCx, TogglePitScreen, Pit.ClearAll, Pit.ClearTires, Pit.ToggleFuel, Pit.FuelAdd1, Pit.FuelRemove1, Pit.FuelAdd10, Pit.FuelRemove10, Pit.FuelSetMax, Pit.ToggleTiresAll, Pit.ToggleFastRepair, Pit.ToggleAutoFuel, Pit.Windshield (+ aliases Pit.FuelAdd/Pit.FuelRemove), PrimaryDashMode, DeclutterMode, ToggleDarkMode, SecondaryDashMode (legacy), EventMarker, LaunchMode, TrackMarkersLock, TrackMarkersUnlock, Debug_Hide_1_Toggle, Debug_Hide_2_Toggle, Debug_Hide_3_Toggle, ShiftAssist_ResetDelayStats, ShiftAssist_ToggleShiftAssist, ShiftAssist_ToggleDebugCsv, ShiftAssist_TestBeep, ShiftAssist_Learn_ResetSamples, ShiftAssist_ResetTargets_ActiveStack, ShiftAssist_ResetTargets_ActiveStack_AndSamples, ShiftAssist_ApplyLearnedToTargets_ActiveStack_OverrideLocks, ShiftAssist_Lock_G1..G8, ShiftAssist_Unlock_G1..G8, ShiftAssist_ToggleLock_G1..G8");
 
             AttachCore("LalaLaunch.Friends.Count", () => _friendsCount);
 
@@ -4824,6 +4863,10 @@ namespace LaunchPlugin
             AttachCore("Debug.Hide_3", () => Settings?.DebugHide3 == true ? 1 : 0);
             AttachCore("PitScreenActive", () => _pitScreenActive);
             AttachCore("PitScreenMode", () => _pitScreenMode);
+            AttachCore("Pit.Command.DisplayText", () => _pitCommandEngine.DisplayText);
+            AttachCore("Pit.Command.Active", () => _pitCommandEngine.Active);
+            AttachCore("Pit.Command.LastAction", () => _pitCommandEngine.LastAction);
+            AttachCore("Pit.Command.LastRaw", () => _pitCommandEngine.LastRaw);
             AttachCore("Pit.EntryLineDebrief", () => _pit.PitEntryLineDebrief);
             AttachCore("Pit.EntryLineDebriefText", () => _pit.PitEntryLineDebriefText);
             AttachCore("Pit.EntryLineTimeLoss_s", () => _pit.PitEntryLineTimeLoss_s);

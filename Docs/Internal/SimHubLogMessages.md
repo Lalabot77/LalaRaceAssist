@@ -3,8 +3,8 @@
 **CANONICAL OBSERVABILITY MAP**
 
 Validated against: HEAD
-Last reviewed: 2026-04-11
-Last updated: 2026-04-11
+Last reviewed: 2026-04-17
+Last updated: 2026-04-17
 Branch: work
 
 Scope: Info/Warn logs emitted via `SimHub.Logging.Current.Info(...)` and `SimHub.Logging.Current.Warn(...)`. Use the tag prefixes to filter in SimHub’s log view. Placeholder logs are noted; no deprecated messages are currently removed in code. Legacy/alternate copies of this list do not exist.
@@ -27,11 +27,16 @@ Scope: Info/Warn logs emitted via `SimHub.Logging.Current.Info(...)` and `SimHub
 - **`[LalaPlugin:Launch] LaunchMode pressed -> aborting (state=...).`** — Launch button used as cancel; state reset and user-disabled latched.【F:LalaLaunch.cs†L17-L45】
 - **`[LalaPlugin:PitScreen] Toggle pressed IN PITS -> dismissed=..., manual=...`** — Pit screen dismiss toggle used while on pit road.【F:LalaLaunch.cs†L47-L87】
 - **`[LalaPlugin:PitScreen] Toggle pressed ON TRACK -> manual=...`** — Pit screen manual force toggle used on track.【F:LalaLaunch.cs†L47-L87】
+- **`[LalaPlugin:PitCommand] chat injection unavailable: iRacing is not the foreground window.`** — One-time warning when direct chat injection cannot start because iRacing is not foreground.
+- **`[LalaPlugin:PitCommand] chat injection local submission issue while sending command text (transport attempt unconfirmed).`** — One-time warning when local text submission reports an issue before state confirmation.
+- **`[LalaPlugin:PitCommand] action=<Action> transport=chat-injection local-transport-issue raw='<raw>' normalized='<normalized>'`** — Best-effort transport-stage issue before state confirmation; action publishes `Pit Cmd Fail`.
+- **`[LalaPlugin:PitCommand] action=<Action> expected-state-mismatch expected=<bool> before=<before> after=<after> transport=chat-injection`** — Stateful command did not produce expected before/after toggle confirmation; action publishes `Pit Cmd Fail`.
+- **`[LalaPlugin:PitCommand] action=<Action> transport=chat-injection attempted=true confirmed=<true|false> before=<before> raw='<raw>' normalized='<normalized>'`** — Action fire audit line for pit commands; for stateful commands, `confirmed` (before/after check) remains the authoritative outcome.
 - **`[LalaPlugin:MsgCx] MsgCx action fired (pressed latched + engines notified).`** — MsgCx action invoked; message engines receive cancel signal.【F:LalaLaunch.cs†L87-L118】
 - **`[LalaPlugin:Launch] State change: <old> -> <new>.`** — Launch state machine transition (e.g., primed → logging).【F:LalaLaunch.cs†L2470-L2494】
 - **`[LalaPlugin:Launch Trace] <reason> – cancelling to Idle.`** — Launch trace aborted to idle with the provided reason (debounced).【F:LalaLaunch.cs†L3048-L3074】
 - **`[LalaPlugin:Launch] ManualPrimed timeout fired ...`** — Manual prime exceeded 30 s; launch cancelled and user-disabled latched.【F:LalaLaunch.cs†L4993-L5004】
-- **`[LalaPlugin:Init] Actions registered: MsgCx, TogglePitScreen, PrimaryDashMode, DeclutterMode, ToggleDarkMode, SecondaryDashMode (legacy), EventMarker, LaunchMode, TrackMarkersLock, TrackMarkersUnlock`** — Init-time action registration summary for SimHub bindings.
+- **`[LalaPlugin:Init] Actions registered: MsgCx, TogglePitScreen, Pit.ClearAll, Pit.ClearTires, Pit.ToggleFuel, Pit.FuelAdd1, Pit.FuelRemove1, Pit.FuelAdd10, Pit.FuelRemove10, Pit.FuelSetMax, Pit.ToggleTiresAll, Pit.ToggleFastRepair, Pit.ToggleAutoFuel, Pit.Windshield (+ aliases Pit.FuelAdd/Pit.FuelRemove), PrimaryDashMode, DeclutterMode, ToggleDarkMode, SecondaryDashMode (legacy), EventMarker, LaunchMode, TrackMarkersLock, TrackMarkersUnlock`** — Init-time action registration summary for SimHub bindings.
 - **`[LalaPlugin:DarkMode] ToggleDarkMode action fired -> Mode=<old>(<label>)-><new>(<label>).`** — Dark mode cycle action fired from Controls & Events.
 - **`[LalaPlugin:DarkMode] Lovely availability changed -> available=<true|false>.`** — Runtime Lovely detection status changed (logged once per transition).
 - **`[LalaPlugin:DarkMode] Auto Active transition -> active=..., Alt=..., Precip=..., S=..., W=..., F=..., on<2.0, off>4.0.`** — Auto hysteresis transition with brightness-factor inputs and thresholds.

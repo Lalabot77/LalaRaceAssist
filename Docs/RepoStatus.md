@@ -1,7 +1,7 @@
 # Repository status
 
 Validated against commit: HEAD
-Last updated: 2026-04-15
+Last updated: 2026-04-17
 Branch: work
 
 ## Current repo/link status
@@ -9,17 +9,27 @@ Branch: work
 - No Git remote is configured in this checkout (`git remote -v` returns empty).
 
 ## Documentation sync status
-- Extended `Pit.Box.DistanceM` and `Pit.Box.TimeS` publication window so pit-box countdown can appear slightly before pit-lane entry when pit-owned authority is valid.
-- New visibility gate: in pit lane OR pit-owned pre-entry context (`PitPhase.EnteringPits`) OR fallback player track-percent band `[0.80..1.00] ∪ [0.00..0.20]`; outside gate or invalid authority still publishes `0`.
-- Added plugin-owned dash helper export `Pit.Box.BrakeNow` with pit-limit-aware threshold scaling (`25.0 * pitLimitKph / 80.0`) using existing limiter authority chain (`GameData.PitLimiterSpeed` then parsed `WeekendInfo.TrackPitSpeedLimit`).
-- Kept ownership boundaries intact: pit-owned logic remains in plugin runtime (`LalaLaunch.cs` + `PitEngine` authority seams), dashboards stay presentation-only.
-- Updated subsystem/internal docs and development changelog to match final runtime/export contract.
+- Reworked pit command transport to direct chat-command injection while keeping plugin-owned pit action endpoints for Strategy Dash / PitPopUp (`LalaLaunch.Pit.*`).
+- Expanded plugin-owned pit action set (`ClearTires`, ±1/±10 fuel steps, `FuelSetMax`, `ToggleAutoFuel`, `Windshield`) with compatibility aliases retained for `Pit.FuelAdd` and `Pit.FuelRemove`.
+- Added short-lived pit command feedback exports (`Pit.Command.DisplayText`, `Pit.Command.Active`) plus low-cost diagnostics (`Pit.Command.LastAction`, `Pit.Command.LastRaw`).
+- Added explicit failure handling:
+  - chat injection unavailability/failure warnings,
+  - before/after mismatch warnings for stateful toggles,
+  - user-facing `Pit Cmd Fail` fallback text.
+- Tightened pit-command logging semantics so transport-stage warnings are explicitly best-effort; state-confirmation mismatch remains the authoritative failure signal for stateful actions.
+- Added explicit `Tank Full` user-facing case for fuel-add actions using existing pit tank-space authority.
+- Kept pit read-side authority unchanged: pit service status/selection remains telemetry-based (`dpFuelFill`, tyre selectors, `PlayerCarPitSvStatus` and related seams).
+- Updated subsystem/user/internal docs and development changelog to match final direct-chat transport and feedback/failure contract.
 
 ## Reviewed documentation set
-### Changed in pit-box pre-entry visibility + pit-limit-aware brake-now helper task
+### Changed in plugin-owned pit command actions task
+- `PitCommandEngine.cs`
 - `LalaLaunch.cs`
-- `Docs/Subsystems/Pit_Timing_And_PitLoss.md`
+- `LaunchPlugin.csproj`
+- `Docs/Subsystems/Dash_Integration.md`
+- `Docs/Pit_Assist.md`
 - `Docs/Internal/SimHubParameterInventory.md`
+- `Docs/Internal/SimHubLogMessages.md`
 - `Docs/Internal/Development_Changelog.md`
 - `Docs/RepoStatus.md`
 
@@ -27,16 +37,18 @@ Branch: work
 - `Docs/Project_Index.md`
 - `Docs/Internal/CODEX_CONTRACT.txt`
 - `Docs/Internal/Architecture_Guardrails.md`
-- `Docs/Internal/SimHubLogMessages.md`
+- `Docs/Subsystems/Pit_Timing_And_PitLoss.md`
+- `Docs/Quick_Start.md`
+- `Docs/User_Guide.md`
 - `README.md`
 - `CHANGELOG.md`
 - `Docs/Quick_Start.md`
 - `Docs/User_Guide.md`
 
 ## Delivery status highlights
-- Kept ownership boundaries intact: pit-box distance/time + brake-now helper remain plugin-owned pit logic; no dashboard JSON edits were required.
-- Preserved existing export names (`Pit.Box.DistanceM`, `Pit.Box.TimeS`) while extending visibility gating only.
-- No new log lines were added; `Docs/Internal/SimHubLogMessages.md` remained unchanged.
+- Kept ownership boundaries intact: dashboards remain presentation/control surfaces while plugin-owned actions own pit command dispatch.
+- Preserved focused helper ownership (`PitCommandEngine`) for transport/mapping/feedback/failure logic instead of widening central runtime loops.
+- Added bounded observability and short-lived user feedback exports so command success/failure is visible on dash and in SimHub logs.
 
 ## Validation note
-- Validation recorded against `HEAD` (`Pit.Box pre-entry visibility extension + new pit-limit-aware Pit.Box.BrakeNow helper export`).
+- Validation recorded against `HEAD` (`Pit command transport switched to direct chat injection with confirmed feedback/failure handling`).
