@@ -62,16 +62,16 @@ namespace LaunchPlugin
             }
 
             bool? before = ReadToggleState(action, pluginManager);
-            bool sent = TryInjectChatCommand(command);
-            if (!sent)
+            bool transportAttempted = TryInjectChatCommand(command);
+            if (!transportAttempted)
             {
                 PublishMessage("Pit Cmd Fail");
-                SimHub.Logging.Current.Warn($"[LalaPlugin:PitCommand] action={action} transport=chat-injection send-failed raw='{raw}' normalized='{command}'");
+                SimHub.Logging.Current.Warn($"[LalaPlugin:PitCommand] action={action} transport=chat-injection local-transport-issue raw='{raw}' normalized='{command}'");
                 return;
             }
 
             bool confirmed = ConfirmAndPublishFeedback(action, pluginManager, before);
-            SimHub.Logging.Current.Info($"[LalaPlugin:PitCommand] action={action} transport=chat-injection executed={sent} confirmed={confirmed} before={FormatNullable(before)} raw='{raw}' normalized='{command}'");
+            SimHub.Logging.Current.Info($"[LalaPlugin:PitCommand] action={action} transport=chat-injection attempted=true confirmed={confirmed} before={FormatNullable(before)} raw='{raw}' normalized='{command}'");
         }
 
         private bool ConfirmAndPublishFeedback(PitCommandAction action, PluginManager pluginManager, bool? before)
@@ -277,31 +277,27 @@ namespace LaunchPlugin
                 return false;
             }
 
-            if (!TapVirtualKey(Keys.T))
-            {
-                WarnOnce("open_chat_failed", "[LalaPlugin:PitCommand] chat injection failed while opening chat input.");
-                return false;
-            }
+            TapVirtualKey(Keys.T);
 
             Thread.Sleep(40);
 
             if (!SendUnicodeText(command))
             {
-                WarnOnce("type_failed", "[LalaPlugin:PitCommand] chat injection failed while typing command text.");
+                WarnOnce("type_failed", "[LalaPlugin:PitCommand] chat injection local submission issue while sending command text (transport attempt unconfirmed).");
                 return false;
             }
 
             Thread.Sleep(20);
-            return TapVirtualKey(Keys.Enter);
+            TapVirtualKey(Keys.Enter);
+            return true;
         }
 
-        private static bool TapVirtualKey(Keys key)
+        private static void TapVirtualKey(Keys key)
         {
             byte vk = (byte)key;
             keybd_event(vk, 0, 0, UIntPtr.Zero);
             Thread.Sleep(12);
             keybd_event(vk, 0, KeyEventKeyUp, UIntPtr.Zero);
-            return true;
         }
 
         private static bool SendUnicodeText(string text)

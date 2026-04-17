@@ -16,6 +16,7 @@ Branch: work
   - chat injection unavailability/failure warnings,
   - before/after mismatch warnings for stateful toggles,
   - user-facing `Pit Cmd Fail` fallback text.
+- Tightened pit-command logging semantics so transport-stage warnings are explicitly best-effort; state-confirmation mismatch remains the authoritative failure signal for stateful actions.
 - Added explicit `Tank Full` user-facing case for fuel-add actions using existing pit tank-space authority.
 - Kept pit read-side authority unchanged: pit service status/selection remains telemetry-based (`dpFuelFill`, tyre selectors, `PlayerCarPitSvStatus` and related seams).
 - Updated subsystem/user/internal docs and development changelog to match final direct-chat transport and feedback/failure contract.

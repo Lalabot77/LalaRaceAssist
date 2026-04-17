@@ -28,11 +28,10 @@ Scope: Info/Warn logs emitted via `SimHub.Logging.Current.Info(...)` and `SimHub
 - **`[LalaPlugin:PitScreen] Toggle pressed IN PITS -> dismissed=..., manual=...`** — Pit screen dismiss toggle used while on pit road.【F:LalaLaunch.cs†L47-L87】
 - **`[LalaPlugin:PitScreen] Toggle pressed ON TRACK -> manual=...`** — Pit screen manual force toggle used on track.【F:LalaLaunch.cs†L47-L87】
 - **`[LalaPlugin:PitCommand] chat injection unavailable: iRacing is not the foreground window.`** — One-time warning when direct chat injection cannot start because iRacing is not foreground.
-- **`[LalaPlugin:PitCommand] chat injection failed while opening chat input.`** — One-time warning when chat open keypress fails.
-- **`[LalaPlugin:PitCommand] chat injection failed while typing command text.`** — One-time warning when command text injection fails.
-- **`[LalaPlugin:PitCommand] action=<Action> transport=chat-injection send-failed raw='<raw>' normalized='<normalized>'`** — Command send failed after transport attempt; action publishes `Pit Cmd Fail`.
+- **`[LalaPlugin:PitCommand] chat injection local submission issue while sending command text (transport attempt unconfirmed).`** — One-time warning when local text submission reports an issue before state confirmation.
+- **`[LalaPlugin:PitCommand] action=<Action> transport=chat-injection local-transport-issue raw='<raw>' normalized='<normalized>'`** — Best-effort transport-stage issue before state confirmation; action publishes `Pit Cmd Fail`.
 - **`[LalaPlugin:PitCommand] action=<Action> expected-state-mismatch expected=<bool> before=<before> after=<after> transport=chat-injection`** — Stateful command did not produce expected before/after toggle confirmation; action publishes `Pit Cmd Fail`.
-- **`[LalaPlugin:PitCommand] action=<Action> transport=chat-injection executed=<true|false> confirmed=<true|false> before=<before> raw='<raw>' normalized='<normalized>'`** — Action fire audit line for pit commands including transport status and state-confirmation result.
+- **`[LalaPlugin:PitCommand] action=<Action> transport=chat-injection attempted=true confirmed=<true|false> before=<before> raw='<raw>' normalized='<normalized>'`** — Action fire audit line for pit commands; for stateful commands, `confirmed` (before/after check) remains the authoritative outcome.
 - **`[LalaPlugin:MsgCx] MsgCx action fired (pressed latched + engines notified).`** — MsgCx action invoked; message engines receive cancel signal.【F:LalaLaunch.cs†L87-L118】
 - **`[LalaPlugin:Launch] State change: <old> -> <new>.`** — Launch state machine transition (e.g., primed → logging).【F:LalaLaunch.cs†L2470-L2494】
 - **`[LalaPlugin:Launch Trace] <reason> – cancelling to Idle.`** — Launch trace aborted to idle with the provided reason (debounced).【F:LalaLaunch.cs†L3048-L3074】

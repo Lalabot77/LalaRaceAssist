@@ -4171,7 +4171,7 @@ namespace LaunchPlugin
         private const int ShiftAssistLearnSavePulseMs = 250;
         private readonly ShiftAssistEngine _shiftAssistEngine = new ShiftAssistEngine();
         private readonly ShiftAssistLearningEngine _shiftAssistLearningEngine = new ShiftAssistLearningEngine();
-        private readonly PitCommandEngine _pitCommandEngine = new PitCommandEngine(() => Settings);
+        private readonly PitCommandEngine _pitCommandEngine = new PitCommandEngine();
         private ShiftAssistAudio _shiftAssistAudio;
         private string _shiftAssistActiveGearStackId = "Default";
         private int _shiftAssistTargetCurrentGear;

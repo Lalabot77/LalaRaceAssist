@@ -42,6 +42,7 @@ The public user-facing release history is maintained in the root `CHANGELOG.md`.
   - `Pit.Command.LastAction`
   - `Pit.Command.LastRaw`
 - Added before/after confirmation for stateful toggle commands where telemetry authority is available; mismatch paths now publish `Pit Cmd Fail` and emit bounded warning logs with action + expected/before/after context.
+- Tightened transport-result semantics: transport-stage logs are now explicitly best-effort, while authoritative success/failure for stateful commands remains the before/after confirmation result.
 - Added explicit `Tank Full` user-facing case for fuel-add commands using existing `Pit_TankSpaceAvailable` authority.
 - Classification: **both** (runtime pit-command transport/feedback behavior + user-facing pit-command workflow guidance).
 
