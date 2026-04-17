@@ -32,13 +32,13 @@ This document is the canonical dash-facing contract layer. It does **not** redef
 ### Rejoin / pit / messages
 - Rejoin widgets should respect the explicit rejoin exports rather than infer active state from message text alone.
 - Pit-screen / pit-entry widgets should combine pit visibility toggles with pit-specific active flags.
-- Pit command buttons in strategy/pit widgets must bind to plugin-owned actions (`LalaLaunch.Pit.ClearAll`, `LalaLaunch.Pit.FuelAdd`, `LalaLaunch.Pit.FuelRemove`, `LalaLaunch.Pit.ToggleFuel`, `LalaLaunch.Pit.ToggleTiresAll`, `LalaLaunch.Pit.ToggleFastRepair`) rather than `IRacingExtraProperties` action ids.
+- Pit command buttons in strategy/pit widgets must bind to plugin-owned actions (`LalaLaunch.Pit.ClearAll`, `LalaLaunch.Pit.ClearTires`, `LalaLaunch.Pit.ToggleFuel`, `LalaLaunch.Pit.FuelAdd1`, `LalaLaunch.Pit.FuelRemove1`, `LalaLaunch.Pit.FuelAdd10`, `LalaLaunch.Pit.FuelRemove10`, `LalaLaunch.Pit.FuelSetMax`, `LalaLaunch.Pit.ToggleTiresAll`, `LalaLaunch.Pit.ToggleFastRepair`, `LalaLaunch.Pit.ToggleAutoFuel`, `LalaLaunch.Pit.Windshield`) rather than `IRacingExtraProperties` action ids.
 - Message-dash widgets should consume the message engine outputs directly rather than rebuilding message priority logic in SimHub expressions.
 
 ### Pit command transport contract
 - Dashboards trigger pit actions only; transport ownership is in-plugin.
-- Current runtime transport is macro-hotkey based. `LalaLaunch.Pit.CommandTransportMode` exposes the effective mode (`macro-hotkey` or `sdk-requested-fallback-macro-hotkey`) for troubleshooting.
-- If `PitCommandTransportMode` is configured to `sdk`, the plugin logs a one-time warning and intentionally falls back to macro hotkeys because no writable iRacing SDK pit-command seam is currently available in this plugin reference set.
+- Current runtime transport is direct chat-command injection (`open chat` → `type command` → `send`), with explicit failure logs when chat injection is unavailable.
+- Dashboards can bind short-lived user feedback exports `LalaLaunch.Pit.Command.DisplayText` and `LalaLaunch.Pit.Command.Active` for command confirmations/failures.
 
 ### H2H / traffic
 - `H2HRace.*` and `H2HTrack.*` are already flattened for dashboard binding; dashboards should not try to recreate selector logic.

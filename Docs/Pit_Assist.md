@@ -42,24 +42,25 @@ Trust pit popups most when your pit data is good. That usually means:
 Pit command buttons should now be bound to plugin-owned Controls & Events actions:
 
 - `LalaLaunch.Pit.ClearAll`
-- `LalaLaunch.Pit.FuelAdd`
-- `LalaLaunch.Pit.FuelRemove`
+- `LalaLaunch.Pit.ClearTires`
 - `LalaLaunch.Pit.ToggleFuel`
+- `LalaLaunch.Pit.FuelAdd1`
+- `LalaLaunch.Pit.FuelRemove1`
+- `LalaLaunch.Pit.FuelAdd10`
+- `LalaLaunch.Pit.FuelRemove10`
+- `LalaLaunch.Pit.FuelSetMax`
 - `LalaLaunch.Pit.ToggleTiresAll`
 - `LalaLaunch.Pit.ToggleFastRepair`
+- `LalaLaunch.Pit.ToggleAutoFuel`
+- `LalaLaunch.Pit.Windshield`
 
 These actions replace any old dashboard bindings that directly called `IRacingExtraProperties` pit-command actions.
 
-### Required setup (macro-hotkey transport)
+### Runtime caveat
 
-Current pit-command transport is macro-hotkey based:
+LalaLaunch now injects iRacing pit chat commands directly (no dedicated user macro-hotkey setup required).
 
-1. In iRacing, assign pit chat macros for clear/fuel add/fuel remove/toggle fuel/toggle tires/fast repair.
-2. Bind those macros to keyboard keys.
-3. In LalaLaunch settings JSON, set matching `PitMacroKey*` values (defaults are `F13..F18`).
-4. In SimHub dashboard controls, bind pit buttons to the `LalaLaunch.Pit.*` actions above (not Extra Properties actions).
-
-If `PitCommandTransportMode` is set to `sdk`, LalaLaunch currently logs an explicit fallback warning and still uses macro hotkeys.
+If chat injection cannot run (for example iRacing is not the foreground window), LalaLaunch publishes `Pit Cmd Fail` and logs a pit-command warning so the failure is visible.
 
 ## 3. Pit Entry Assist
 

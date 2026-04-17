@@ -33,7 +33,20 @@ The public user-facing release history is maintained in the root `CHANGELOG.md`.
 
 ## Post-v1.0 development
 
+### Pit command follow-up (PR 568): direct chat injection + confirmed feedback exports
+- Reworked `PitCommandEngine` transport from macro-hotkey binding to direct iRacing chat command injection (`open chat` → `type command` → `send`), keeping plugin-owned `LalaLaunch.Pit.*` actions as the dashboard command surface.
+- Expanded pit action set to include `Pit.ClearTires`, `Pit.FuelAdd1`, `Pit.FuelRemove1`, `Pit.FuelAdd10`, `Pit.FuelRemove10`, `Pit.FuelSetMax`, `Pit.ToggleAutoFuel`, and `Pit.Windshield` (while keeping `Pit.FuelAdd` / `Pit.FuelRemove` aliases for compatibility).
+- Added short-lived pit command feedback exports and diagnostics:
+  - `Pit.Command.DisplayText`
+  - `Pit.Command.Active`
+  - `Pit.Command.LastAction`
+  - `Pit.Command.LastRaw`
+- Added before/after confirmation for stateful toggle commands where telemetry authority is available; mismatch paths now publish `Pit Cmd Fail` and emit bounded warning logs with action + expected/before/after context.
+- Added explicit `Tank Full` user-facing case for fuel-add commands using existing `Pit_TankSpaceAvailable` authority.
+- Classification: **both** (runtime pit-command transport/feedback behavior + user-facing pit-command workflow guidance).
+
 ### Plugin-owned pit command actions (Strategy Dash/PitPopUp) with explicit SDK-first fallback contract
+- Superseded by the later **direct chat injection** follow-up entry above; retained as historical record of PR 568 baseline.
 - Added plugin-owned pit command actions in `LalaLaunch` Controls & Events registration: `Pit.ClearAll`, `Pit.FuelAdd`, `Pit.FuelRemove`, `Pit.ToggleFuel`, `Pit.ToggleTiresAll`, and `Pit.ToggleFastRepair`.
 - Added focused `PitCommandEngine` transport helper so `LalaLaunch` remains action-registration surface while transport/mapping/logging remain subsystem-local.
 - Implemented explicit transport contract:
