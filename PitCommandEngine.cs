@@ -137,10 +137,10 @@ namespace LaunchPlugin
                 case PitCommandAction.FuelAdd10: return "#fuel +10k$";
                 case PitCommandAction.FuelRemove10: return "#fuel -10k$";
                 case PitCommandAction.FuelSetMax: return "#fuel +150$";
-                case PitCommandAction.ToggleTyresAll: return "#!tires$";
+                case PitCommandAction.ToggleTyresAll: return "#!t$";
                 case PitCommandAction.ToggleFastRepair: return "#!fr$";
                 case PitCommandAction.ToggleAutoFuel: return "#!autofuel$";
-                case PitCommandAction.Windshield: return "#ws$";
+                case PitCommandAction.Windshield: return "#!ws$";
                 default: return string.Empty;
             }
         }
