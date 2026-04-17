@@ -42,7 +42,8 @@ Branch: work
 - `Docs/User_Guide.md`
 - `README.md`
 - `CHANGELOG.md`
-- `Docs/Subsystems/Fuel_Model.md`
+- `Docs/Quick_Start.md`
+- `Docs/User_Guide.md`
 
 ## Delivery status highlights
 - Kept ownership boundaries intact: dashboards remain presentation/control surfaces while plugin-owned actions own pit command dispatch.
