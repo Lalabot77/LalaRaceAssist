@@ -37,6 +37,30 @@ Trust pit popups most when your pit data is good. That usually means:
 - Use **Toggle Pit Screen** if you want to force the pit screen on or off.
 - Use **Cancel Message** if a popup needs to be dismissed right now.
 
+### Pit command button mapping (Strategy Dash + PitPopUp)
+
+Pit command buttons should now be bound to plugin-owned Controls & Events actions:
+
+- `LalaLaunch.Pit.ClearAll`
+- `LalaLaunch.Pit.FuelAdd`
+- `LalaLaunch.Pit.FuelRemove`
+- `LalaLaunch.Pit.ToggleFuel`
+- `LalaLaunch.Pit.ToggleTiresAll`
+- `LalaLaunch.Pit.ToggleFastRepair`
+
+These actions replace any old dashboard bindings that directly called `IRacingExtraProperties` pit-command actions.
+
+### Required setup (macro-hotkey transport)
+
+Current pit-command transport is macro-hotkey based:
+
+1. In iRacing, assign pit chat macros for clear/fuel add/fuel remove/toggle fuel/toggle tires/fast repair.
+2. Bind those macros to keyboard keys.
+3. In LalaLaunch settings JSON, set matching `PitMacroKey*` values (defaults are `F13..F18`).
+4. In SimHub dashboard controls, bind pit buttons to the `LalaLaunch.Pit.*` actions above (not Extra Properties actions).
+
+If `PitCommandTransportMode` is set to `sdk`, LalaLaunch currently logs an explicit fallback warning and still uses macro hotkeys.
+
 ## 3. Pit Entry Assist
 
 Pit Entry Assist helps you arrive at the pit entry line at the right speed. It uses saved marker context plus braking guidance to tell you whether you are:

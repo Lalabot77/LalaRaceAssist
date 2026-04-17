@@ -247,6 +247,36 @@ namespace LaunchPlugin
             }
         }
 
+        public void PitClearAll()
+        {
+            _pitCommandEngine.Execute(PitCommandAction.ClearAll, PluginManager);
+        }
+
+        public void PitFuelAdd()
+        {
+            _pitCommandEngine.Execute(PitCommandAction.FuelAdd, PluginManager);
+        }
+
+        public void PitFuelRemove()
+        {
+            _pitCommandEngine.Execute(PitCommandAction.FuelRemove, PluginManager);
+        }
+
+        public void PitToggleFuel()
+        {
+            _pitCommandEngine.Execute(PitCommandAction.ToggleFuel, PluginManager);
+        }
+
+        public void PitToggleTiresAll()
+        {
+            _pitCommandEngine.Execute(PitCommandAction.ToggleTiresAll, PluginManager);
+        }
+
+        public void PitToggleFastRepair()
+        {
+            _pitCommandEngine.Execute(PitCommandAction.ToggleFastRepair, PluginManager);
+        }
+
         public void SetTrackMarkersLocked(bool locked)
         {
             var key = GetCanonicalTrackKeyForMarkers();
@@ -4148,6 +4178,7 @@ namespace LaunchPlugin
         private const int ShiftAssistLearnSavePulseMs = 250;
         private readonly ShiftAssistEngine _shiftAssistEngine = new ShiftAssistEngine();
         private readonly ShiftAssistLearningEngine _shiftAssistLearningEngine = new ShiftAssistLearningEngine();
+        private readonly PitCommandEngine _pitCommandEngine = new PitCommandEngine(() => Settings);
         private ShiftAssistAudio _shiftAssistAudio;
         private string _shiftAssistActiveGearStackId = "Default";
         private int _shiftAssistTargetCurrentGear;
@@ -4528,6 +4559,12 @@ namespace LaunchPlugin
             // --- ACTIONS (exposed to Controls & Events) ---
             this.AddAction("MsgCx", (a, b) => MsgCx());
             this.AddAction("TogglePitScreen", (a, b) => TogglePitScreen());
+            this.AddAction("Pit.ClearAll", (a, b) => PitClearAll());
+            this.AddAction("Pit.FuelAdd", (a, b) => PitFuelAdd());
+            this.AddAction("Pit.FuelRemove", (a, b) => PitFuelRemove());
+            this.AddAction("Pit.ToggleFuel", (a, b) => PitToggleFuel());
+            this.AddAction("Pit.ToggleTiresAll", (a, b) => PitToggleTiresAll());
+            this.AddAction("Pit.ToggleFastRepair", (a, b) => PitToggleFastRepair());
             this.AddAction("PrimaryDashMode", (a, b) => PrimaryDashMode());
             this.AddAction("DeclutterMode", (a, b) => DeclutterMode0());
             this.AddAction("ToggleDarkMode", (a, b) => ToggleDarkMode());
@@ -4626,7 +4663,7 @@ namespace LaunchPlugin
             this.AddAction("ShiftAssist_ToggleLock_G6", (a, b) => ExecuteShiftAssistLockAction(6, current => !current, "ShiftAssist_ToggleLock_G6"));
             this.AddAction("ShiftAssist_ToggleLock_G7", (a, b) => ExecuteShiftAssistLockAction(7, current => !current, "ShiftAssist_ToggleLock_G7"));
             this.AddAction("ShiftAssist_ToggleLock_G8", (a, b) => ExecuteShiftAssistLockAction(8, current => !current, "ShiftAssist_ToggleLock_G8"));
-            SimHub.Logging.Current.Info("[LalaPlugin:Init] Actions registered: MsgCx, TogglePitScreen, PrimaryDashMode, DeclutterMode, ToggleDarkMode, SecondaryDashMode (legacy), EventMarker, LaunchMode, TrackMarkersLock, TrackMarkersUnlock, Debug_Hide_1_Toggle, Debug_Hide_2_Toggle, Debug_Hide_3_Toggle, ShiftAssist_ResetDelayStats, ShiftAssist_ToggleShiftAssist, ShiftAssist_ToggleDebugCsv, ShiftAssist_TestBeep, ShiftAssist_Learn_ResetSamples, ShiftAssist_ResetTargets_ActiveStack, ShiftAssist_ResetTargets_ActiveStack_AndSamples, ShiftAssist_ApplyLearnedToTargets_ActiveStack_OverrideLocks, ShiftAssist_Lock_G1..G8, ShiftAssist_Unlock_G1..G8, ShiftAssist_ToggleLock_G1..G8");
+            SimHub.Logging.Current.Info("[LalaPlugin:Init] Actions registered: MsgCx, TogglePitScreen, Pit.ClearAll, Pit.FuelAdd, Pit.FuelRemove, Pit.ToggleFuel, Pit.ToggleTiresAll, Pit.ToggleFastRepair, PrimaryDashMode, DeclutterMode, ToggleDarkMode, SecondaryDashMode (legacy), EventMarker, LaunchMode, TrackMarkersLock, TrackMarkersUnlock, Debug_Hide_1_Toggle, Debug_Hide_2_Toggle, Debug_Hide_3_Toggle, ShiftAssist_ResetDelayStats, ShiftAssist_ToggleShiftAssist, ShiftAssist_ToggleDebugCsv, ShiftAssist_TestBeep, ShiftAssist_Learn_ResetSamples, ShiftAssist_ResetTargets_ActiveStack, ShiftAssist_ResetTargets_ActiveStack_AndSamples, ShiftAssist_ApplyLearnedToTargets_ActiveStack_OverrideLocks, ShiftAssist_Lock_G1..G8, ShiftAssist_Unlock_G1..G8, ShiftAssist_ToggleLock_G1..G8");
 
             AttachCore("LalaLaunch.Friends.Count", () => _friendsCount);
 
@@ -4823,6 +4860,7 @@ namespace LaunchPlugin
             AttachCore("Debug.Hide_3", () => Settings?.DebugHide3 == true ? 1 : 0);
             AttachCore("PitScreenActive", () => _pitScreenActive);
             AttachCore("PitScreenMode", () => _pitScreenMode);
+            AttachCore("Pit.CommandTransportMode", () => _pitCommandEngine.ActiveTransportModeLabel);
             AttachCore("Pit.EntryLineDebrief", () => _pit.PitEntryLineDebrief);
             AttachCore("Pit.EntryLineDebriefText", () => _pit.PitEntryLineDebriefText);
             AttachCore("Pit.EntryLineTimeLoss_s", () => _pit.PitEntryLineTimeLoss_s);
@@ -15318,6 +15356,13 @@ namespace LaunchPlugin
         public double FuelReadyConfidence { get; set; } = LalaLaunch.FuelReadyConfidenceDefault;
         public int StintFuelMarginPct { get; set; } = LalaLaunch.StintFuelMarginPctDefault;
         public bool EnableAutoDashSwitch { get; set; } = true;
+        public string PitCommandTransportMode { get; set; } = "macro_hotkey";
+        public string PitMacroKeyClearAll { get; set; } = "F13";
+        public string PitMacroKeyFuelAdd { get; set; } = "F14";
+        public string PitMacroKeyFuelRemove { get; set; } = "F15";
+        public string PitMacroKeyToggleFuel { get; set; } = "F16";
+        public string PitMacroKeyToggleTiresAll { get; set; } = "F17";
+        public string PitMacroKeyToggleFastRepair { get; set; } = "F18";
         private int _darkModeMode = 1;
         public int DarkModeMode
         {

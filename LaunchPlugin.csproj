@@ -121,6 +121,7 @@
     <Compile Include="SessionSummaryModel.cs" />
     <Compile Include="SessionSummaryRuntime.cs" />
     <Compile Include="SessionTraceLapRow.cs" />
+    <Compile Include="PitCommandEngine.cs" />
     <Compile Include="ShiftAssistAudio.cs" />
     <Compile Include="ShiftAssistEngine.cs" />
     <Compile Include="ShiftAssistLearningEngine.cs" />

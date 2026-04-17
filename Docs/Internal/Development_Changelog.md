@@ -33,6 +33,18 @@ The public user-facing release history is maintained in the root `CHANGELOG.md`.
 
 ## Post-v1.0 development
 
+### Plugin-owned pit command actions (Strategy Dash/PitPopUp) with explicit SDK-first fallback contract
+- Added plugin-owned pit command actions in `LalaLaunch` Controls & Events registration: `Pit.ClearAll`, `Pit.FuelAdd`, `Pit.FuelRemove`, `Pit.ToggleFuel`, `Pit.ToggleTiresAll`, and `Pit.ToggleFastRepair`.
+- Added focused `PitCommandEngine` transport helper so `LalaLaunch` remains action-registration surface while transport/mapping/logging remain subsystem-local.
+- Implemented explicit transport contract:
+  - `PitCommandTransportMode=macro_hotkey` (default) uses configured macro key taps (`PitMacroKey*`, default `F13..F18`).
+  - `PitCommandTransportMode=sdk` logs a one-time unavailability warning and falls back to macro hotkeys because no writable iRacing SDK pit-command seam is available in current plugin references.
+- Added pit command observability:
+  - per-fire action/transport/result log lines,
+  - one-time invalid/missing binding warnings,
+  - `Pit.CommandTransportMode` export for dashboard troubleshooting.
+- Classification: **both** (runtime action ownership/transport + user-facing pit-button binding/setup guidance).
+
 ### Pit-loss baseline standardization (drive-through) + fixed pit-exit transition allowance
 - Standardized pit-loss semantics and guidance so learned/stored pit-lane loss is explicitly a **drive-through baseline** (clean limiter-speed lane travel, no box stop).
 - Added fixed `PitExitTransitionAllowanceSec = 2.75` in `LalaLaunch.cs` at the shared boxed-stop prediction seam (`CalculateTotalStopLossSeconds`), yielding:

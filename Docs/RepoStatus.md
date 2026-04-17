@@ -1,7 +1,7 @@
 # Repository status
 
 Validated against commit: HEAD
-Last updated: 2026-04-13
+Last updated: 2026-04-17
 Branch: work
 
 ## Current repo/link status
@@ -9,20 +9,23 @@ Branch: work
 - No Git remote is configured in this checkout (`git remote -v` returns empty).
 
 ## Documentation sync status
-- Standardized pit-loss learning contract to drive-through baseline semantics in user/canonical docs.
-- Added fixed `PitExitTransitionAllowanceSec = 2.75` at the shared total-stop-loss seam (`CalculateTotalStopLossSeconds`) so boxed-stop prediction now uses:
-  - `learned drive-through pit-lane baseline + boxed service model + 2.75s transition allowance`.
-- Kept pure lane-travel outputs unchanged (`Fuel.LastPitLaneTravelTime`, `PitExit.TimeS`).
-- Kept ownership boundaries intact: Opponents still consumes the shared pit-loss seam for race-scoped pit-exit countdown prediction; dashboard layer remains presentation-only.
-- Updated subsystem/user/internal docs and development changelog to match final runtime semantics.
+- Added plugin-owned pit command action endpoints for Strategy Dash / PitPopUp (`LalaLaunch.Pit.*`) and removed remaining dashboard dependency on `IRacingExtraProperties` pit action bindings.
+- Added focused `PitCommandEngine` helper with explicit transport ownership and observability:
+  - SDK-first mode is explicit but currently unavailable in this plugin reference set (one-time warning + fallback),
+  - macro-hotkey fallback is the active transport path (`PitMacroKey*`, default `F13..F18`),
+  - transport mode is surfaced as `Pit.CommandTransportMode`.
+- Kept pit read-side authority unchanged: pit service status/selection remains telemetry-based (`dpFuelFill`, tyre selectors, `PlayerCarPitSvStatus` and related seams).
+- Updated subsystem/user/internal docs and development changelog to match final action ownership and fallback setup contract.
 
 ## Reviewed documentation set
-### Changed in pit-loss baseline + pit-exit transition allowance task
+### Changed in plugin-owned pit command actions task
+- `PitCommandEngine.cs`
 - `LalaLaunch.cs`
-- `Docs/Subsystems/Pit_Timing_And_PitLoss.md`
+- `LaunchPlugin.csproj`
+- `Docs/Subsystems/Dash_Integration.md`
+- `Docs/Pit_Assist.md`
 - `Docs/Internal/SimHubParameterInventory.md`
-- `Docs/Quick_Start.md`
-- `Docs/User_Guide.md`
+- `Docs/Internal/SimHubLogMessages.md`
 - `Docs/Internal/Development_Changelog.md`
 - `Docs/RepoStatus.md`
 
@@ -30,15 +33,17 @@ Branch: work
 - `Docs/Project_Index.md`
 - `Docs/Internal/CODEX_CONTRACT.txt`
 - `Docs/Internal/Architecture_Guardrails.md`
-- `Docs/Internal/SimHubLogMessages.md`
+- `Docs/Subsystems/Pit_Timing_And_PitLoss.md`
+- `Docs/Quick_Start.md`
+- `Docs/User_Guide.md`
 - `README.md`
 - `CHANGELOG.md`
 - `Docs/Subsystems/Fuel_Model.md`
 
 ## Delivery status highlights
-- Kept ownership boundaries intact: Pit timing remains pit-loss owner and Opponents remains race-scoped pit-exit prediction owner.
-- Added a fixed transition allowance only at the shared stop-loss seam, avoiding blanket/double application.
-- No new log lines were added; `Docs/Internal/SimHubLogMessages.md` remained unchanged.
+- Kept ownership boundaries intact: dashboards remain presentation/control surfaces while plugin-owned actions now own pit command dispatch.
+- Isolated pit command transport/mapping logic into `PitCommandEngine` rather than widening unrelated `LalaLaunch` runtime logic.
+- Added explicit fallback visibility/logging so SDK-requested mode cannot fail silently.
 
 ## Validation note
-- Validation recorded against `HEAD` (`Pit-loss baseline standardized to drive-through + fixed 2.75s pit-exit transition allowance`).
+- Validation recorded against `HEAD` (`Plugin-owned pit command actions added with explicit SDK-first contract and macro-hotkey fallback`).

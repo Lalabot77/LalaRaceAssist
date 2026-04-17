@@ -3,8 +3,8 @@
 **CANONICAL CONTRACT**
 
 Validated against: HEAD
-Last reviewed: 2026-04-13
-Last updated: 2026-04-13
+Last reviewed: 2026-04-17
+Last updated: 2026-04-17
 Branch: work
 
 - All exports are attached in `LalaLaunch.cs` during `Init()` via `AttachCore`/`AttachVerbose`. Core values are refreshed in `DataUpdate` (500 ms poll for fuel/pace/pit via `_poll500ms`; per-tick for launch/dash/messaging). Verbose rows require `SimhubPublish.VERBOSE`.【F:LalaLaunch.cs†L2644-L3120】【F:LalaLaunch.cs†L3411-L3775】
@@ -319,6 +319,7 @@ Shift Assist runtime/settings notes:
 | LalaLaunch.Dash.DarkMode.ModeText | string | Dark Mode label derived from `Mode` (`"Off"`, `"Manual"`, `"Auto"`). Purely reflects configured mode and does not change when Lovely drives `Active`. Note: internal `AttachCore` key is `Dash.DarkMode.ModeText`; SimHub-visible parameter is `LalaLaunch.Dash.DarkMode.ModeText`. | Per tick. | `LalaLaunch.cs` `EvaluateDarkMode` + `AttachCore`. |
 | PitScreenActive | bool | Whether pit screen is currently shown. | Per tick. | `LalaLaunch.cs` — pit screen state + `AttachCore`【F:LalaLaunch.cs†L3732-L3878】【F:LalaLaunch.cs†L3158-L3162】 |
 | PitScreenMode | string | Pit screen mode (`auto` or `manual`). | Per tick. | `LalaLaunch.cs` — pit screen state + `AttachCore`【F:LalaLaunch.cs†L3837-L3878】【F:LalaLaunch.cs†L3158-L3162】 |
+| Pit.CommandTransportMode | string | Effective pit-command transport mode for troubleshooting. `macro-hotkey` = configured macro keypress transport; `sdk-requested-fallback-macro-hotkey` = SDK mode was requested but no writable SDK seam exists so runtime fell back to macro hotkeys. | Per tick. | `PitCommandEngine.cs` mode resolver + `LalaLaunch.cs` `AttachCore`. |
 | LalaDashShowLaunchScreen / LalaDashShowPitLimiter / LalaDashShowPitScreen / LalaDashShowRejoinAssist / LalaDashShowVerboseMessaging / LalaDashShowRaceFlags / LalaDashShowRadioMessages / LalaDashShowTraffic | bool | User visibility toggles for Lala dash. | Per tick. | `LaunchPluginSettings` persisted values + `AttachCore`【F:LalaLaunch.cs†L3177-L3185】 |
 | MsgDashShowLaunchScreen / MsgDashShowPitLimiter / MsgDashShowPitScreen / MsgDashShowRejoinAssist / MsgDashShowVerboseMessaging / MsgDashShowRaceFlags / MsgDashShowRadioMessages / MsgDashShowTraffic | bool | User visibility toggles for messaging dash. | Per tick. | `LaunchPluginSettings` persisted values + `AttachCore`【F:LalaLaunch.cs†L3187-L3195】 |
 | OverlayDashShowLaunchScreen / OverlayDashShowPitLimiter / OverlayDashShowPitScreen / OverlayDashShowRejoinAssist / OverlayDashShowVerboseMessaging / OverlayDashShowRaceFlags / OverlayDashShowRadioMessages / OverlayDashShowTraffic | bool | User visibility toggles for overlay dash. | Per tick. | `LaunchPluginSettings` persisted values + `AttachCore`【F:LalaLaunch.cs†L3197-L3205】 |
