@@ -37,6 +37,7 @@ LapRef also maintains a separate **live current-lap comparison view** for the pl
 - completed sectors for the current lap are read from CarSA fixed-sector cache
 - only completed sectors behind the current segment are treated as comparable
 - no partial current-sector elapsed values are synthesized
+- completed sector boxes persist across lap rollover and are overwritten progressively as new-lap sectors complete (H2H-like presentation continuity)
 
 ## Capture and update flow
 1. Existing validated-lap gate accepts a lap in `UpdateLiveFuelCalcs`.
@@ -45,6 +46,7 @@ LapRef also maintains a separate **live current-lap comparison view** for the pl
 4. Existing profile PB seam persists lap-time PB; sector fields are persisted condition-wise when available.
 5. Each tick, LapRef rematerializes profile-best from active profile + track + wet/dry condition.
 6. Each tick, LapRef also materializes the player **live current-lap comparison sectors** from the current CarSA cache snapshot + current active segment and publishes `LapRef.*`.
+   - This live row is not hard-cleared every tick; it preserves prior completed sectors at lap start and replaces each slot only when the corresponding new-lap sector is actually completed.
 
 PB safety note:
 - Profile PB remains telemetry-owned (validated-lap seam); Profiles UI no longer permits manual PB entry.
@@ -117,6 +119,11 @@ LapRef session-best/player snapshot state resets when:
 - car model changes
 - track key changes
 - wet/dry mode flips
+- explicit engine reset
+
+Lap rollover handling is intentionally separate from reset:
+- normal lap boundary progression does **not** clear visible completed sector boxes
+- completed sectors persist through the new-lap start until replaced by newly completed sectors for that lap
 
 Profile-best is rematerialized from profile data after reset.
 Family-level reset values:

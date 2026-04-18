@@ -33,6 +33,16 @@ The public user-facing release history is maintained in the root `CHANGELOG.md`.
 
 ## Post-v1.0 development
 
+### LapRef live sector rollover persistence fix
+- Updated `LapReferenceEngine` live player comparison snapshot handling so completed sector boxes are no longer hard-cleared every update tick.
+- Added a narrow lap-rollover seam for the live player row:
+  - detects segment wrap (`current < previous`) as lap rollover context
+  - rearms local current-lap capture state without forcing a visible full-row clear
+  - allows progressive slot overwrite as each new-lap sector completion arrives
+- Preserved reset boundaries: full live-sector clear still happens on true LapRef reset conditions (session token/type, car, track, wet/dry, explicit engine reset).
+- Left profile-best fallback semantics unchanged (lap-time-only PB rows with missing sectors remain valid/possible).
+- Classification: **internal-only** (presentation continuity fix; no export contract expansion).
+
 ### LapRef live current-lap comparison correction + output-prune follow-up
 - Corrected LapRef comparison/delta source so live comparison now uses current-lap progress instead of replaying the last validated snapshot sector-by-sector.
 - Added a dedicated live player comparison seam in `LapReferenceEngine`:

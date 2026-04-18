@@ -9,6 +9,12 @@ Branch: work
 - No Git remote is configured in this checkout (`git remote -v` returns empty).
 
 ## Documentation sync status
+- Fixed LapRef live player sector presentation across lap rollover:
+  - removed per-tick hard clear behavior from the live player comparison snapshot path
+  - completed sector boxes now persist through start/finish and are replaced progressively as new-lap sectors complete
+  - live-sector full clear remains tied to true LapRef reset conditions only (session/car/track/type/wet-dry/explicit reset)
+- Added a narrow local lap-rollover rearm seam in `LapReferenceEngine` to keep internal current-lap capture clean without causing visible zero/empty flash at new-lap start.
+- Kept profile-best fallback semantics unchanged (lap-time PB may still exist without sector payload).
 - Corrected LapRef live-comparison semantics: per-sector compare and top-level cumulative deltas now use player **current-lap completed sectors** from live CarSA cache context, not `_playerSnapshot` last-validated-lap sectors.
 - Kept references static: session-best and profile-best remain validated/reference snapshots with unchanged capture/persistence ownership.
 - Pruned redundant LapRef per-reference active-segment exports:
@@ -39,6 +45,12 @@ Branch: work
 - `LalaLaunch.cs`
 - `Docs/Subsystems/LapRef.md`
 - `Docs/Internal/SimHubParameterInventory.md`
+- `Docs/Internal/Development_Changelog.md`
+- `Docs/RepoStatus.md`
+
+### Changed in LapRef live rollover persistence task
+- `LapReferenceEngine.cs`
+- `Docs/Subsystems/LapRef.md`
 - `Docs/Internal/Development_Changelog.md`
 - `Docs/RepoStatus.md`
 
