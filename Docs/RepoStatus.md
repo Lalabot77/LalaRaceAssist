@@ -49,6 +49,20 @@ Branch: work
 - Fuel-add feedback now uses explicit `Fuel MAX` wording for max/clamp cases using existing pit tank-space authority.
 - Kept pit read-side authority unchanged: pit service status/selection remains telemetry-based (`dpFuelFill`, tyre selectors, `PlayerCarPitSvStatus` and related seams).
 - Updated subsystem/user/internal docs and development changelog to match final direct-chat transport and feedback/failure contract.
+- Added focused plugin-owned Pit Fuel Control state machine (`PitFuelControlEngine`) integrated into the existing Pit Command transport/feedback seam.
+- Added plugin-owned Pit Fuel Control actions:
+  - `Pit.FuelControl.SourceCycle`
+  - `Pit.FuelControl.ModeCycle`
+- Added plugin-owned Pit Fuel Control exports:
+  - `Pit.FuelControl.Source` / `SourceText`
+  - `Pit.FuelControl.Mode` / `ModeText`
+  - `Pit.FuelControl.TargetLitres`
+  - `Pit.FuelControl.OverrideActive`
+- Implemented locked behavior contract: PLAN validity gating, MAN/AUTO immediate sends, AUTO lap-cross updates on the existing lap-cross detector seam, MAX override hysteresis, and AUTO cancel-to-`MAN+STBY` on manual driver fuel override.
+- Kept dashboards as consumers only (no dashboard JSON/UI edits).
+- PR 572 follow-up tightened PLAN validity further: car + track/layout key + race basis + race length now all must match between planner and live session before PLAN is considered valid.
+- PR 572 follow-up moved pit fuel-control sends to a dedicated raw pit-command path that intentionally reuses built-in pit-command normalization before chat injection (trailing `$` consistency fix).
+- PR 572 follow-up made MAX override command explicit with a named clamp-safe overshoot constant rather than implicit magic literals.
 
 ## Reviewed documentation set
 ### Changed in LapRef rollover seam transient-zero follow-up
@@ -94,6 +108,27 @@ Branch: work
 - `Docs/Internal/Development_Changelog.md`
 - `Docs/RepoStatus.md`
 
+### Changed in Pit Fuel Control integration task
+- `PitFuelControlEngine.cs`
+- `PitCommandEngine.cs`
+- `LalaLaunch.cs`
+- `LaunchPlugin.csproj`
+- `Docs/Internal/SimHubParameterInventory.md`
+- `Docs/Internal/SimHubLogMessages.md`
+- `Docs/Internal/Development_Changelog.md`
+- `Docs/Subsystems/Dash_Integration.md`
+- `Docs/Pit_Assist.md`
+- `Docs/RepoStatus.md`
+
+### Changed in PR 572 follow-up correctness fixes
+- `PitFuelControlEngine.cs`
+- `PitCommandEngine.cs`
+- `LalaLaunch.cs`
+- `Docs/Internal/SimHubParameterInventory.md`
+- `Docs/Internal/SimHubLogMessages.md`
+- `Docs/Internal/Development_Changelog.md`
+- `Docs/RepoStatus.md`
+
 ### Changed in LapRef live-current comparison correction task
 - `LapReferenceEngine.cs`
 - `LalaLaunch.cs`
@@ -129,6 +164,7 @@ Branch: work
 - Kept ownership boundaries intact: dashboards remain presentation/control surfaces while plugin-owned actions own pit command dispatch.
 - Preserved focused helper ownership (`PitCommandEngine`) for transport/mapping/feedback/failure logic instead of widening central runtime loops.
 - Added bounded observability and short-lived user feedback exports so command success/failure is visible on dash and in SimHub logs.
+- Extended focused-helper ownership with `PitFuelControlEngine` for pit fuel source/mode state and decision logic while keeping `LalaLaunch` as action/export wiring.
 
 ## Validation note
 - Validation recorded against `HEAD` (`LapRef player sector display now persists through rollover while compare/cumulative eligibility is re-armed to current-lap-only truth at lap start`).

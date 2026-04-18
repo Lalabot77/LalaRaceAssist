@@ -99,6 +99,37 @@ namespace LaunchPlugin
             return true;
         }
 
+        public bool ExecuteRawPitCommand(string actionName, string rawCommandText, string feedbackLabel)
+        {
+            LastAction = string.IsNullOrWhiteSpace(actionName) ? "PitRawCommand" : actionName.Trim();
+            LastRaw = rawCommandText ?? string.Empty;
+
+            string normalized = NormalizeChatCommand(rawCommandText);
+            if (string.IsNullOrWhiteSpace(normalized))
+            {
+                PublishMessage("Pit Cmd Fail");
+                SimHub.Logging.Current.Warn("[LalaPlugin:PitCommand] raw-command send blocked: command text is empty after normalization.");
+                return false;
+            }
+
+            bool transportAttempted = TryInjectChatCommand(normalized);
+            if (!transportAttempted)
+            {
+                PublishMessage("Pit Cmd Fail");
+                SimHub.Logging.Current.Warn($"[LalaPlugin:PitCommand] raw-command transport=chat-injection local-transport-issue raw='{rawCommandText ?? string.Empty}' normalized='{normalized}'");
+                return false;
+            }
+
+            PublishMessage(string.IsNullOrWhiteSpace(feedbackLabel) ? "Fuel Set" : feedbackLabel.Trim());
+            SimHub.Logging.Current.Info($"[LalaPlugin:PitCommand] raw-command transport=chat-injection attempted=true raw='{rawCommandText ?? string.Empty}' normalized='{normalized}'");
+            return true;
+        }
+
+        public void PublishFeedback(string message)
+        {
+            PublishMessage(message);
+        }
+
         private bool ConfirmAndPublishFeedback(PitCommandAction action, PluginManager pluginManager, bool? before, double tankSpaceLitres)
         {
             if (!IsStatefulAction(action))

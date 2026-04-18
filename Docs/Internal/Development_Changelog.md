@@ -33,6 +33,40 @@ The public user-facing release history is maintained in the root `CHANGELOG.md`.
 
 ## Post-v1.0 development
 
+### PR 572 follow-up: Pit Fuel Control correctness fixes
+- Tightened PLAN validity in `PitFuelControlEngine` so PLAN now requires all of:
+  - planner car identity == live car identity,
+  - planner track/layout key == live track/layout key,
+  - planner race basis == live race basis (time-limited vs lap-limited),
+  - planner race length == live race length (with small tolerance for time-limited comparisons).
+- PLAN race-length matching now compares actual strategy fields (`FuelCalcs.RaceMinutes` / `RaceLaps`) against live session seams (`CurrentSessionInfo._SessionTime` / `_SessionLaps`) rather than basis-only gating.
+- Replaced implicit MAX magic value usage with explicit overshoot constant on raw command path (`MaxFuelOvershootLitres`), keeping clamp-safe iRacing semantics while avoiding dependency on potentially stale plugin-side max state.
+- Added dedicated raw pit-command transport path in `PitCommandEngine` (`ExecuteRawPitCommand`) and moved Pit Fuel Control sends to that path.
+- Raw pit-command path now reuses built-in pit-command normalization (`NormalizeChatCommand`) so trailing `$` is handled consistently with existing built-in pit actions before chat injection.
+- Classification: **internal-only** (bounded correctness and transport-normalization fixes for existing PR 572 feature surface).
+
+### Pit Fuel Control integration into plugin-owned Pit Command seam
+- Added focused `PitFuelControlEngine` to own pit-fuel source/mode state and behavior (`PUSH/NORM/SAVE/PLAN/STBY` + `OFF/MAN/AUTO`) without widening central runtime responsibilities in `LalaLaunch`.
+- Added new plugin-owned actions:
+  - `Pit.FuelControl.SourceCycle`
+  - `Pit.FuelControl.ModeCycle`
+- Added new exports:
+  - `Pit.FuelControl.Source`
+  - `Pit.FuelControl.SourceText`
+  - `Pit.FuelControl.Mode`
+  - `Pit.FuelControl.ModeText`
+  - `Pit.FuelControl.TargetLitres`
+  - `Pit.FuelControl.OverrideActive`
+- Reused existing pit-command transport/feedback seam via `PitCommandEngine` custom-message dispatch for fuel set sends and user-facing feedback messages.
+- Implemented locked behavior contract:
+  - immediate send in MAN/AUTO on source change,
+  - AUTO lap-cross updates via existing canonical lap-cross seam,
+  - PLAN validity gating (live/planner car+track+basis match),
+  - live-source MAX override hysteresis (`>1.10` arm, `<1.05` disarm),
+  - manual driver pit-fuel override detection while AUTO is active (transitions to `MAN + STBY`),
+  - short post-send suppression window to avoid telemetry-lag false positives.
+- Classification: **both** (new runtime pit-fuel command behavior and new plugin action/export surface for dashboards).
+
 ### LapRef rollover seam fix for transient zero-segment boundary samples
 - Tightened `LapReferenceEngine` rollover detection so current-lap compare/cumulative eligibility is re-armed on either:
   - normal wrap (`current > 0 && previous > 0 && current < previous`), or

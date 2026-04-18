@@ -128,6 +128,14 @@ namespace LaunchPlugin
         public bool HardDebugEnabledForUi => HardDebugEnabled;
         public bool IsLovelyAvailableForDarkMode { get; private set; }
 
+        public LalaLaunch()
+        {
+            _pitFuelControlEngine = new PitFuelControlEngine(
+                BuildPitFuelControlSnapshot,
+                SendPitFuelControlCommand,
+                message => _pitCommandEngine.PublishFeedback(message));
+        }
+
         // --- Dashboard Manager ---
         public ScreenManager Screens = new ScreenManager();
         //private int _declutterMode = 0;
@@ -260,6 +268,8 @@ namespace LaunchPlugin
         public void PitToggleFastRepair() => ExecutePitCommand(PitCommandAction.ToggleFastRepair);
         public void PitToggleAutoFuel() => ExecutePitCommand(PitCommandAction.ToggleAutoFuel);
         public void PitWindshield() => ExecutePitCommand(PitCommandAction.Windshield);
+        public void PitFuelControlSourceCycle() => _pitFuelControlEngine.SourceCycle();
+        public void PitFuelControlModeCycle() => _pitFuelControlEngine.ModeCycle();
         public void TriggerCustomMessageSlot(int slotNumber)
         {
             string customActionName = $"CustomMessage{slotNumber:00}";
@@ -298,6 +308,11 @@ namespace LaunchPlugin
         private void ExecutePitCommand(PitCommandAction action)
         {
             _pitCommandEngine.Execute(action, PluginManager, Pit_TankSpaceAvailable);
+        }
+
+        private bool SendPitFuelControlCommand(string actionName, string messageText, string feedbackLabel)
+        {
+            return _pitCommandEngine.ExecuteRawPitCommand(actionName, messageText, feedbackLabel);
         }
 
         public void SetTrackMarkersLocked(bool locked)
@@ -3649,6 +3664,13 @@ namespace LaunchPlugin
 
             UpdateSmoothedFuelOutputs(requestedAddLitresForSmooth);
 
+            _pitFuelControlEngine.OnTelemetryTick();
+
+            if (lapCrossed)
+            {
+                _pitFuelControlEngine.OnLapCross();
+            }
+
             if (lapCrossed && IsRaceSession(data.NewData?.SessionTypeName))
             {
                 double observedAfterZero = (_timerZeroSeen && sessionTime > _timerZeroSessionTime)
@@ -4203,6 +4225,7 @@ namespace LaunchPlugin
         private readonly ShiftAssistEngine _shiftAssistEngine = new ShiftAssistEngine();
         private readonly ShiftAssistLearningEngine _shiftAssistLearningEngine = new ShiftAssistLearningEngine();
         private readonly PitCommandEngine _pitCommandEngine = new PitCommandEngine();
+        private readonly PitFuelControlEngine _pitFuelControlEngine;
         private ShiftAssistAudio _shiftAssistAudio;
         private string _shiftAssistActiveGearStackId = "Default";
         private int _shiftAssistTargetCurrentGear;
@@ -4602,6 +4625,8 @@ namespace LaunchPlugin
             this.AddAction("Pit.ToggleFastRepair", (a, b) => PitToggleFastRepair());
             this.AddAction("Pit.ToggleAutoFuel", (a, b) => PitToggleAutoFuel());
             this.AddAction("Pit.Windshield", (a, b) => PitWindshield());
+            this.AddAction("Pit.FuelControl.SourceCycle", (a, b) => PitFuelControlSourceCycle());
+            this.AddAction("Pit.FuelControl.ModeCycle", (a, b) => PitFuelControlModeCycle());
             this.AddAction("CustomMessage01", (a, b) => TriggerCustomMessageSlot(1));
             this.AddAction("CustomMessage02", (a, b) => TriggerCustomMessageSlot(2));
             this.AddAction("CustomMessage03", (a, b) => TriggerCustomMessageSlot(3));
@@ -4713,7 +4738,7 @@ namespace LaunchPlugin
             this.AddAction("ShiftAssist_ToggleLock_G6", (a, b) => ExecuteShiftAssistLockAction(6, current => !current, "ShiftAssist_ToggleLock_G6"));
             this.AddAction("ShiftAssist_ToggleLock_G7", (a, b) => ExecuteShiftAssistLockAction(7, current => !current, "ShiftAssist_ToggleLock_G7"));
             this.AddAction("ShiftAssist_ToggleLock_G8", (a, b) => ExecuteShiftAssistLockAction(8, current => !current, "ShiftAssist_ToggleLock_G8"));
-            SimHub.Logging.Current.Info("[LalaPlugin:Init] Actions registered: MsgCx, TogglePitScreen, Pit.ClearAll, Pit.ClearTires, Pit.ToggleFuel, Pit.FuelAdd1, Pit.FuelRemove1, Pit.FuelAdd10, Pit.FuelRemove10, Pit.FuelSetMax, Pit.ToggleTiresAll, Pit.ToggleFastRepair, Pit.ToggleAutoFuel, Pit.Windshield, CustomMessage01..CustomMessage10 (+ aliases Pit.FuelAdd/Pit.FuelRemove), PrimaryDashMode, DeclutterMode, ToggleDarkMode, SecondaryDashMode (legacy), EventMarker, LaunchMode, TrackMarkersLock, TrackMarkersUnlock, Debug_Hide_1_Toggle, Debug_Hide_2_Toggle, Debug_Hide_3_Toggle, ShiftAssist_ResetDelayStats, ShiftAssist_ToggleShiftAssist, ShiftAssist_ToggleDebugCsv, ShiftAssist_TestBeep, ShiftAssist_Learn_ResetSamples, ShiftAssist_ResetTargets_ActiveStack, ShiftAssist_ResetTargets_ActiveStack_AndSamples, ShiftAssist_ApplyLearnedToTargets_ActiveStack_OverrideLocks, ShiftAssist_Lock_G1..G8, ShiftAssist_Unlock_G1..G8, ShiftAssist_ToggleLock_G1..G8");
+            SimHub.Logging.Current.Info("[LalaPlugin:Init] Actions registered: MsgCx, TogglePitScreen, Pit.ClearAll, Pit.ClearTires, Pit.ToggleFuel, Pit.FuelAdd1, Pit.FuelRemove1, Pit.FuelAdd10, Pit.FuelRemove10, Pit.FuelSetMax, Pit.ToggleTiresAll, Pit.ToggleFastRepair, Pit.ToggleAutoFuel, Pit.Windshield, Pit.FuelControl.SourceCycle, Pit.FuelControl.ModeCycle, CustomMessage01..CustomMessage10 (+ aliases Pit.FuelAdd/Pit.FuelRemove), PrimaryDashMode, DeclutterMode, ToggleDarkMode, SecondaryDashMode (legacy), EventMarker, LaunchMode, TrackMarkersLock, TrackMarkersUnlock, Debug_Hide_1_Toggle, Debug_Hide_2_Toggle, Debug_Hide_3_Toggle, ShiftAssist_ResetDelayStats, ShiftAssist_ToggleShiftAssist, ShiftAssist_ToggleDebugCsv, ShiftAssist_TestBeep, ShiftAssist_Learn_ResetSamples, ShiftAssist_ResetTargets_ActiveStack, ShiftAssist_ResetTargets_ActiveStack_AndSamples, ShiftAssist_ApplyLearnedToTargets_ActiveStack_OverrideLocks, ShiftAssist_Lock_G1..G8, ShiftAssist_Unlock_G1..G8, ShiftAssist_ToggleLock_G1..G8");
 
             AttachCore("LalaLaunch.Friends.Count", () => _friendsCount);
 
@@ -4914,6 +4939,12 @@ namespace LaunchPlugin
             AttachCore("Pit.Command.Active", () => _pitCommandEngine.Active);
             AttachCore("Pit.Command.LastAction", () => _pitCommandEngine.LastAction);
             AttachCore("Pit.Command.LastRaw", () => _pitCommandEngine.LastRaw);
+            AttachCore("Pit.FuelControl.Source", () => (int)_pitFuelControlEngine.Source);
+            AttachCore("Pit.FuelControl.SourceText", () => _pitFuelControlEngine.SourceText);
+            AttachCore("Pit.FuelControl.Mode", () => (int)_pitFuelControlEngine.Mode);
+            AttachCore("Pit.FuelControl.ModeText", () => _pitFuelControlEngine.ModeText);
+            AttachCore("Pit.FuelControl.TargetLitres", () => _pitFuelControlEngine.TargetLitres);
+            AttachCore("Pit.FuelControl.OverrideActive", () => _pitFuelControlEngine.OverrideActive);
             AttachCore("Pit.EntryLineDebrief", () => _pit.PitEntryLineDebrief);
             AttachCore("Pit.EntryLineDebriefText", () => _pit.PitEntryLineDebriefText);
             AttachCore("Pit.EntryLineTimeLoss_s", () => _pit.PitEntryLineTimeLoss_s);
@@ -6051,6 +6082,7 @@ namespace LaunchPlugin
             _lastPitWindowState = -1;
             _lastPitWindowLabel = string.Empty;
             _lastPitWindowLogUtc = DateTime.MinValue;
+            _pitFuelControlEngine?.ResetForSession();
             _opponentsEngine?.Reset();
             _h2hEngine?.Reset();
         }
@@ -6355,6 +6387,65 @@ namespace LaunchPlugin
             return "unknown";
         }
 
+        private PitFuelControlSnapshot BuildPitFuelControlSnapshot()
+        {
+            var snapshot = new PitFuelControlSnapshot();
+
+            string liveCarIdentity = !string.IsNullOrWhiteSpace(CurrentCarModel) && !CurrentCarModel.Equals("Unknown", StringComparison.OrdinalIgnoreCase)
+                ? CurrentCarModel
+                : string.Empty;
+            string liveTrackKeyIdentity = !string.IsNullOrWhiteSpace(CurrentTrackKey) && !CurrentTrackKey.Equals("unknown", StringComparison.OrdinalIgnoreCase)
+                ? CurrentTrackKey
+                : string.Empty;
+
+            snapshot.LiveCar = liveCarIdentity;
+            snapshot.LiveTrack = liveTrackKeyIdentity;
+
+            snapshot.PlannerCar = FuelCalculator?.SelectedCarProfile?.ProfileName ?? string.Empty;
+            snapshot.PlannerTrack = FuelCalculator?.SelectedTrackStats?.Key ?? string.Empty;
+            snapshot.HasPlannerBasis = FuelCalculator != null;
+            snapshot.PlannerBasisIsTimeLimited = FuelCalculator?.IsTimeLimitedRace == true;
+            snapshot.HasPlannerRaceLength = FuelCalculator != null;
+            snapshot.PlannerRaceLengthValue = snapshot.PlannerBasisIsTimeLimited
+                ? Math.Max(0.0, FuelCalculator?.RaceMinutes ?? 0.0)
+                : Math.Max(0.0, FuelCalculator?.RaceLaps ?? 0.0);
+
+            long liveSessionLaps = Convert.ToInt64(PluginManager?.GetPropertyValue("DataCorePlugin.GameRawData.CurrentSessionInfo._SessionLaps") ?? 0L);
+            double liveSessionTimeSeconds = SafeReadDouble(PluginManager, "DataCorePlugin.GameRawData.CurrentSessionInfo._SessionTime", double.NaN);
+
+            if (liveSessionTimeSeconds > 0.0)
+            {
+                snapshot.HasLiveBasis = true;
+                snapshot.LiveBasisIsTimeLimited = true;
+                snapshot.HasLiveRaceLength = true;
+                snapshot.LiveRaceLengthValue = liveSessionTimeSeconds / 60.0;
+            }
+            else if (liveSessionLaps > 0)
+            {
+                snapshot.HasLiveBasis = true;
+                snapshot.LiveBasisIsTimeLimited = false;
+                snapshot.HasLiveRaceLength = true;
+                snapshot.LiveRaceLengthValue = liveSessionLaps;
+            }
+            else
+            {
+                snapshot.HasLiveBasis = false;
+                snapshot.LiveBasisIsTimeLimited = false;
+                snapshot.HasLiveRaceLength = false;
+                snapshot.LiveRaceLengthValue = 0.0;
+            }
+
+            snapshot.TargetNormLitres = Math.Max(0.0, Pit_NeedToAdd);
+            snapshot.TargetPushLitres = Math.Max(0.0, Pit_WillAdd - Fuel_Delta_LitresWillAddPush);
+            snapshot.TargetSaveLitres = Math.Max(0.0, Pit_WillAdd - Fuel_Delta_LitresWillAddSave);
+            snapshot.TargetPlanLitres = Math.Max(0.0, FuelCalculator?.PlannerNextAddLitres ?? 0.0);
+            snapshot.StopsRequiredToEnd = Pit_StopsRequiredToEnd;
+            snapshot.CurrentFuelLitres = Math.Max(0.0, _lastFuelLevel);
+            snapshot.TankSpaceLitres = Math.Max(0.0, Pit_TankSpaceAvailable);
+            snapshot.TelemetryRequestedFuelLitres = SafeReadDouble(PluginManager, "DataCorePlugin.GameRawData.Telemetry.PitSvFuel", 0.0);
+            return snapshot;
+        }
+
         public void DataUpdate(PluginManager pluginManager, ref GameData data)
         {
             // ==== New, Simplified Car & Track Detection ====
@@ -6470,6 +6561,7 @@ namespace LaunchPlugin
                 _lastSessionId = currentSessionId;
                 _lastSubSessionId = currentSubSessionId;
                 _lastSessionToken = currentSessionToken;
+                _pitFuelControlEngine.ResetForSession();
                 ManualRecoveryReset("Session transition");
 
                 SimHub.Logging.Current.Info($"[LalaPlugin:Profile] Session start snapshot: Car='{CurrentCarModel}'  Track='{CurrentTrackName}'");
