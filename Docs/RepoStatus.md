@@ -9,6 +9,10 @@ Branch: work
 - No Git remote is configured in this checkout (`git remote -v` returns empty).
 
 ## Documentation sync status
+- PR follow-up corrected Pit Fuel Control live-target contingency ordering:
+  - `NORM/PUSH/SAVE` now apply contingency before clamp (`max(0, shortfall + contingency)`)
+  - avoids contingency-only overfuel commands when current fuel is already above the base live requirement
+  - `NORM` now aligns with the same direct requirement-minus-current seam family used by `PUSH/SAVE` (`-Fuel_Delta_LitresCurrent*`)
 - Corrected baseline fuel projection authority across race phases without adding new public property families:
   - SessionState `2/3` (grid/formation) now drives timed-race lookahead from `CurrentSessionInfo._SessionTime` with elapsed `Telemetry.SessionTime`
   - SessionState `4` keeps normal live running projection behavior
@@ -149,6 +153,12 @@ Branch: work
 - `Docs/Internal/Development_Changelog.md`
 - `Docs/RepoStatus.md`
 
+### Changed in PR follow-up contingency-before-clamp correction
+- `LalaLaunch.cs`
+- `Docs/Internal/SimHubParameterInventory.md`
+- `Docs/Internal/Development_Changelog.md`
+- `Docs/RepoStatus.md`
+
 ### Changed in LapRef live-current comparison correction task
 - `LapReferenceEngine.cs`
 - `LalaLaunch.cs`
@@ -189,4 +199,4 @@ Branch: work
 - Extended focused-helper ownership with `PitFuelControlEngine` for pit fuel source/mode state and decision logic while keeping `LalaLaunch` as action/export wiring.
 
 ## Validation note
-- Validation recorded against `HEAD` (`Fuel outputs now use session-definition timed lookahead during grid/formation and Pit Fuel Control live sources no longer depend on WillAdd clamp semantics`).
+- Validation recorded against `HEAD` (`Pit Fuel Control live targets now apply contingency before clamp for NORM/PUSH/SAVE, preventing contingency-only overfuel sends when already above base requirement`).

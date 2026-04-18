@@ -6447,9 +6447,9 @@ namespace LaunchPlugin
             double contingencyPushLitres = ResolveLivePitFuelControlContingencyLitres(PushFuelPerLap);
             double contingencySaveLitres = ResolveLivePitFuelControlContingencyLitres(FuelSaveFuelPerLap);
 
-            double normNeedLitres = Math.Max(0.0, Pit_NeedToAdd);
-            double pushNeedLitres = Math.Max(0.0, -Fuel_Delta_LitresCurrentPush);
-            double saveNeedLitres = Math.Max(0.0, -Fuel_Delta_LitresCurrentSave);
+            double normNeedLitres = -Fuel_Delta_LitresCurrent;
+            double pushNeedLitres = -Fuel_Delta_LitresCurrentPush;
+            double saveNeedLitres = -Fuel_Delta_LitresCurrentSave;
 
             snapshot.TargetNormLitres = Math.Max(0.0, normNeedLitres + contingencyNormLitres);
             snapshot.TargetPushLitres = Math.Max(0.0, pushNeedLitres + contingencyPushLitres);

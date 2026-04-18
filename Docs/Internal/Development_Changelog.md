@@ -33,6 +33,13 @@ The public user-facing release history is maintained in the root `CHANGELOG.md`.
 
 ## Post-v1.0 development
 
+### PR follow-up: apply Pit Fuel Control contingency before clamp
+- Corrected live Pit Fuel Control target composition in `LalaLaunch.BuildPitFuelControlSnapshot` so `NORM/PUSH/SAVE` now apply contingency before the non-negative clamp:
+  - `target = max(0, requirement + contingency - currentFuel)` (equivalently `max(0, shortfall + contingency)`),
+  - replaces the prior pattern that clamped shortfall first and then added contingency, which could over-command fuel when already above base requirement.
+- `NORM` now follows the same direct requirement-minus-current seam as `PUSH/SAVE` via `-Fuel_Delta_LitresCurrent*`, keeping live-source authority consistent and independent from clamp-driven add seams.
+- Classification: **both** (runtime pit-fuel target correction + internal contract/docs update).
+
 ### Fuel projection phase seam fix (grid/formation) + Pit Fuel Control authority remap
 - Corrected runtime fuel projection authority for SessionState `2/3` (grid/formation) in `LalaLaunch.UpdateLiveFuelCalcs`:
   - timed-race lookahead now uses session-definition authority `DataCorePlugin.GameRawData.CurrentSessionInfo._SessionTime` with elapsed `Telemetry.SessionTime` (`remaining = max(0, _SessionTime - SessionTime)`),
