@@ -24,11 +24,15 @@ namespace LaunchPlugin
         public string LiveTrack = string.Empty;
         public bool HasLiveBasis;
         public bool LiveBasisIsTimeLimited;
+        public bool HasLiveRaceLength;
+        public double LiveRaceLengthValue;
 
         public string PlannerCar = string.Empty;
         public string PlannerTrack = string.Empty;
         public bool HasPlannerBasis;
         public bool PlannerBasisIsTimeLimited;
+        public bool HasPlannerRaceLength;
+        public double PlannerRaceLengthValue;
 
         public double TargetPushLitres;
         public double TargetNormLitres;
@@ -46,9 +50,12 @@ namespace LaunchPlugin
         private const double OverrideArmStopsThreshold = 1.10;
         private const double OverrideDisarmStopsThreshold = 1.05;
         private const int PluginSendSuppressionMs = 900;
+        private const int MaxFuelOvershootLitres = 500;
+        private const double TimeRaceLengthToleranceMinutes = 0.10;
+        private const double LapRaceLengthToleranceLaps = 0.01;
 
         private readonly Func<PitFuelControlSnapshot> _snapshotProvider;
-        private readonly Func<string, string, string, bool> _customCommandSender;
+        private readonly Func<string, string, string, bool> _chatCommandSender;
         private readonly Action<string> _feedbackPublisher;
 
         private DateTime _suppressManualOverrideUntilUtc = DateTime.MinValue;
@@ -65,11 +72,11 @@ namespace LaunchPlugin
 
         public PitFuelControlEngine(
             Func<PitFuelControlSnapshot> snapshotProvider,
-            Func<string, string, string, bool> customCommandSender,
+            Func<string, string, string, bool> chatCommandSender,
             Action<string> feedbackPublisher)
         {
             _snapshotProvider = snapshotProvider;
-            _customCommandSender = customCommandSender;
+            _chatCommandSender = chatCommandSender;
             _feedbackPublisher = feedbackPublisher;
         }
 
@@ -230,11 +237,13 @@ namespace LaunchPlugin
             }
 
             bool useMax = OverrideActive;
-            string commandText = useMax ? "#fuel +150$" : string.Format("#fuel {0}$", roundedTarget);
+            string commandText = useMax
+                ? string.Format("#fuel +{0}$", MaxFuelOvershootLitres)
+                : string.Format("#fuel {0}$", roundedTarget);
             string feedback = BuildFeedbackText(isAutoUpdate, useMax, roundedTarget);
             string actionName = isAutoUpdate ? "Pit.FuelControl.AutoUpdate" : "Pit.FuelControl.SourceSet";
 
-            bool sent = _customCommandSender != null && _customCommandSender(actionName, commandText, feedback);
+            bool sent = _chatCommandSender != null && _chatCommandSender(actionName, commandText, feedback);
             if (sent)
             {
                 LastSentFuelLitres = roundedTarget;
@@ -359,7 +368,27 @@ namespace LaunchPlugin
                 return false;
             }
 
-            return snapshot.LiveBasisIsTimeLimited == snapshot.PlannerBasisIsTimeLimited;
+            if (snapshot.LiveBasisIsTimeLimited != snapshot.PlannerBasisIsTimeLimited)
+            {
+                return false;
+            }
+
+            if (!snapshot.HasLiveRaceLength || !snapshot.HasPlannerRaceLength)
+            {
+                return false;
+            }
+
+            if (snapshot.LiveRaceLengthValue <= 0.0 || snapshot.PlannerRaceLengthValue <= 0.0)
+            {
+                return false;
+            }
+
+            if (snapshot.LiveBasisIsTimeLimited)
+            {
+                return Math.Abs(snapshot.LiveRaceLengthValue - snapshot.PlannerRaceLengthValue) <= TimeRaceLengthToleranceMinutes;
+            }
+
+            return Math.Abs(snapshot.LiveRaceLengthValue - snapshot.PlannerRaceLengthValue) <= LapRaceLengthToleranceLaps;
         }
 
         private static double ResolveSourceTarget(PitFuelControlSnapshot snapshot, PitFuelControlSource source)

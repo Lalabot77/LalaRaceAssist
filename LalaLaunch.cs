@@ -312,7 +312,7 @@ namespace LaunchPlugin
 
         private bool SendPitFuelControlCommand(string actionName, string messageText, string feedbackLabel)
         {
-            return _pitCommandEngine.ExecuteCustomMessage(actionName, messageText, feedbackLabel);
+            return _pitCommandEngine.ExecuteRawPitCommand(actionName, messageText, feedbackLabel);
         }
 
         public void SetTrackMarkersLocked(bool locked)
@@ -6391,15 +6391,24 @@ namespace LaunchPlugin
         {
             var snapshot = new PitFuelControlSnapshot();
 
-            snapshot.LiveCar = CurrentCarModel ?? string.Empty;
-            snapshot.LiveTrack = (!string.IsNullOrWhiteSpace(CurrentTrackKey) && !CurrentTrackKey.Equals("unknown", StringComparison.OrdinalIgnoreCase))
+            string liveCarIdentity = !string.IsNullOrWhiteSpace(CurrentCarModel) && !CurrentCarModel.Equals("Unknown", StringComparison.OrdinalIgnoreCase)
+                ? CurrentCarModel
+                : string.Empty;
+            string liveTrackKeyIdentity = !string.IsNullOrWhiteSpace(CurrentTrackKey) && !CurrentTrackKey.Equals("unknown", StringComparison.OrdinalIgnoreCase)
                 ? CurrentTrackKey
-                : (CurrentTrackName ?? string.Empty);
+                : string.Empty;
+
+            snapshot.LiveCar = liveCarIdentity;
+            snapshot.LiveTrack = liveTrackKeyIdentity;
 
             snapshot.PlannerCar = FuelCalculator?.SelectedCarProfile?.ProfileName ?? string.Empty;
-            snapshot.PlannerTrack = FuelCalculator?.SelectedTrackStats?.Key ?? FuelCalculator?.SelectedTrack ?? string.Empty;
+            snapshot.PlannerTrack = FuelCalculator?.SelectedTrackStats?.Key ?? string.Empty;
             snapshot.HasPlannerBasis = FuelCalculator != null;
             snapshot.PlannerBasisIsTimeLimited = FuelCalculator?.IsTimeLimitedRace == true;
+            snapshot.HasPlannerRaceLength = FuelCalculator != null;
+            snapshot.PlannerRaceLengthValue = snapshot.PlannerBasisIsTimeLimited
+                ? Math.Max(0.0, FuelCalculator?.RaceMinutes ?? 0.0)
+                : Math.Max(0.0, FuelCalculator?.RaceLaps ?? 0.0);
 
             long liveSessionLaps = Convert.ToInt64(PluginManager?.GetPropertyValue("DataCorePlugin.GameRawData.CurrentSessionInfo._SessionLaps") ?? 0L);
             double liveSessionTimeSeconds = SafeReadDouble(PluginManager, "DataCorePlugin.GameRawData.CurrentSessionInfo._SessionTime", double.NaN);
@@ -6408,16 +6417,22 @@ namespace LaunchPlugin
             {
                 snapshot.HasLiveBasis = true;
                 snapshot.LiveBasisIsTimeLimited = true;
+                snapshot.HasLiveRaceLength = true;
+                snapshot.LiveRaceLengthValue = liveSessionTimeSeconds / 60.0;
             }
             else if (liveSessionLaps > 0)
             {
                 snapshot.HasLiveBasis = true;
                 snapshot.LiveBasisIsTimeLimited = false;
+                snapshot.HasLiveRaceLength = true;
+                snapshot.LiveRaceLengthValue = liveSessionLaps;
             }
             else
             {
                 snapshot.HasLiveBasis = false;
                 snapshot.LiveBasisIsTimeLimited = false;
+                snapshot.HasLiveRaceLength = false;
+                snapshot.LiveRaceLengthValue = 0.0;
             }
 
             snapshot.TargetNormLitres = Math.Max(0.0, Pit_NeedToAdd);

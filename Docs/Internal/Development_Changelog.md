@@ -33,6 +33,18 @@ The public user-facing release history is maintained in the root `CHANGELOG.md`.
 
 ## Post-v1.0 development
 
+### PR 572 follow-up: Pit Fuel Control correctness fixes
+- Tightened PLAN validity in `PitFuelControlEngine` so PLAN now requires all of:
+  - planner car identity == live car identity,
+  - planner track/layout key == live track/layout key,
+  - planner race basis == live race basis (time-limited vs lap-limited),
+  - planner race length == live race length (with small tolerance for time-limited comparisons).
+- PLAN race-length matching now compares actual strategy fields (`FuelCalcs.RaceMinutes` / `RaceLaps`) against live session seams (`CurrentSessionInfo._SessionTime` / `_SessionLaps`) rather than basis-only gating.
+- Replaced implicit MAX magic value usage with explicit overshoot constant on raw command path (`MaxFuelOvershootLitres`), keeping clamp-safe iRacing semantics while avoiding dependency on potentially stale plugin-side max state.
+- Added dedicated raw pit-command transport path in `PitCommandEngine` (`ExecuteRawPitCommand`) and moved Pit Fuel Control sends to that path.
+- Raw pit-command path now reuses built-in pit-command normalization (`NormalizeChatCommand`) so trailing `$` is handled consistently with existing built-in pit actions before chat injection.
+- Classification: **internal-only** (bounded correctness and transport-normalization fixes for existing PR 572 feature surface).
+
 ### Pit Fuel Control integration into plugin-owned Pit Command seam
 - Added focused `PitFuelControlEngine` to own pit-fuel source/mode state and behavior (`PUSH/NORM/SAVE/PLAN/STBY` + `OFF/MAN/AUTO`) without widening central runtime responsibilities in `LalaLaunch`.
 - Added new plugin-owned actions:

@@ -52,6 +52,9 @@ Branch: work
   - `Pit.FuelControl.OverrideActive`
 - Implemented locked behavior contract: PLAN validity gating, MAN/AUTO immediate sends, AUTO lap-cross updates on the existing lap-cross detector seam, MAX override hysteresis, and AUTO cancel-to-`MAN+STBY` on manual driver fuel override.
 - Kept dashboards as consumers only (no dashboard JSON/UI edits).
+- PR 572 follow-up tightened PLAN validity further: car + track/layout key + race basis + race length now all must match between planner and live session before PLAN is considered valid.
+- PR 572 follow-up moved pit fuel-control sends to a dedicated raw pit-command path that intentionally reuses built-in pit-command normalization before chat injection (trailing `$` consistency fix).
+- PR 572 follow-up made MAX override command explicit with a named clamp-safe overshoot constant rather than implicit magic literals.
 
 ## Reviewed documentation set
 ### Changed in LapRef active-segment + cumulative delta task
@@ -91,6 +94,15 @@ Branch: work
 - `Docs/Internal/Development_Changelog.md`
 - `Docs/Subsystems/Dash_Integration.md`
 - `Docs/Pit_Assist.md`
+- `Docs/RepoStatus.md`
+
+### Changed in PR 572 follow-up correctness fixes
+- `PitFuelControlEngine.cs`
+- `PitCommandEngine.cs`
+- `LalaLaunch.cs`
+- `Docs/Internal/SimHubParameterInventory.md`
+- `Docs/Internal/SimHubLogMessages.md`
+- `Docs/Internal/Development_Changelog.md`
 - `Docs/RepoStatus.md`
 
 ### Changed in LapRef live-current comparison correction task

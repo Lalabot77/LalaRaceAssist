@@ -35,6 +35,9 @@ Scope: Info/Warn logs emitted via `SimHub.Logging.Current.Info(...)` and `SimHub
 - **`[LalaPlugin:PitCommand] custom-message send blocked: message text is empty.`** — Custom-message action was triggered but the configured message text was blank; action publishes `Pit Cmd Fail`.
 - **`[LalaPlugin:PitCommand] custom-message transport=chat-injection local-transport-issue text='<text>'`** — Custom-message send hit a local transport-stage issue; action publishes `Pit Cmd Fail`.
 - **`[LalaPlugin:PitCommand] custom-message transport=chat-injection attempted=true text='<text>'`** — Custom-message send audit line when direct chat injection was attempted.
+- **`[LalaPlugin:PitCommand] raw-command send blocked: command text is empty after normalization.`** — Raw pit-command request was empty/invalid after command normalization; action publishes `Pit Cmd Fail`.
+- **`[LalaPlugin:PitCommand] raw-command transport=chat-injection local-transport-issue raw='<raw>' normalized='<normalized>'`** — Raw pit-command send hit a local transport-stage issue; action publishes `Pit Cmd Fail`.
+- **`[LalaPlugin:PitCommand] raw-command transport=chat-injection attempted=true raw='<raw>' normalized='<normalized>'`** — Raw pit-command send audit line for paths that intentionally reuse built-in pit-command normalization before injection.
 - **`[LalaPlugin:MsgCx] MsgCx action fired (pressed latched + engines notified).`** — MsgCx action invoked; message engines receive cancel signal.【F:LalaLaunch.cs†L87-L118】
 - **`[LalaPlugin:Launch] State change: <old> -> <new>.`** — Launch state machine transition (e.g., primed → logging).【F:LalaLaunch.cs†L2470-L2494】
 - **`[LalaPlugin:Launch Trace] <reason> – cancelling to Idle.`** — Launch trace aborted to idle with the provided reason (debounced).【F:LalaLaunch.cs†L3048-L3074】
