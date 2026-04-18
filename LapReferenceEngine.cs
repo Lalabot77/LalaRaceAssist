@@ -11,6 +11,7 @@ namespace LaunchPlugin
 
         private readonly LapReferenceSnapshot _playerSnapshot = new LapReferenceSnapshot();
         private readonly LapReferenceSnapshot _livePlayerComparisonSnapshot = new LapReferenceSnapshot();
+        private readonly LapReferenceSnapshot _livePlayerCurrentLapSnapshot = new LapReferenceSnapshot();
         private readonly LapReferenceSnapshot _sessionBestSnapshot = new LapReferenceSnapshot();
         private readonly LapReferenceSnapshot _profileBestSnapshot = new LapReferenceSnapshot();
 
@@ -19,6 +20,7 @@ namespace LaunchPlugin
         private string _carModel = string.Empty;
         private string _trackKey = string.Empty;
         private bool _isWet;
+        private int _lastLivePlayerActiveSegment;
 
         public LapReferenceEngine()
         {
@@ -37,8 +39,10 @@ namespace LaunchPlugin
 
             _playerSnapshot.Clear();
             _livePlayerComparisonSnapshot.Clear();
+            _livePlayerCurrentLapSnapshot.Clear();
             _sessionBestSnapshot.Clear();
             _profileBestSnapshot.Clear();
+            _lastLivePlayerActiveSegment = 0;
             Outputs.Reset();
         }
 
@@ -77,7 +81,9 @@ namespace LaunchPlugin
 
                 _playerSnapshot.Clear();
                 _livePlayerComparisonSnapshot.Clear();
+                _livePlayerCurrentLapSnapshot.Clear();
                 _sessionBestSnapshot.Clear();
+                _lastLivePlayerActiveSegment = 0;
             }
 
             MaterializeProfileBest(profileBestLapSec, profileBestSectorMs, isWet);
@@ -86,17 +92,17 @@ namespace LaunchPlugin
             Outputs.Mode = isWet ? "Wet" : "Dry";
             Outputs.PlayerCarIdx = playerCarIdx;
             Outputs.ActiveSegment = SanitizeSegment(playerActiveSegment);
-            BuildLivePlayerComparisonSnapshot(_livePlayerComparisonSnapshot, Outputs.ActiveSegment, hasLiveFixedSectorSnapshot, liveFixedSectorSnapshot);
+            BuildLivePlayerComparisonSnapshot(Outputs.ActiveSegment, hasLiveFixedSectorSnapshot, liveFixedSectorSnapshot);
             BuildLivePlayerOutput(Outputs.Player, _livePlayerComparisonSnapshot, Outputs.ActiveSegment, Outputs.Valid, _playerSnapshot);
 
             Outputs.SessionBest.AssignFromSnapshot(_sessionBestSnapshot);
             Outputs.ProfileBest.AssignFromSnapshot(_profileBestSnapshot);
 
-            BuildComparison(Outputs.CompareSessionBest, _livePlayerComparisonSnapshot, _sessionBestSnapshot);
-            BuildComparison(Outputs.CompareProfileBest, _livePlayerComparisonSnapshot, _profileBestSnapshot);
+            BuildComparison(Outputs.CompareSessionBest, _livePlayerCurrentLapSnapshot, _sessionBestSnapshot);
+            BuildComparison(Outputs.CompareProfileBest, _livePlayerCurrentLapSnapshot, _profileBestSnapshot);
 
-            BuildCumulativeDelta(_livePlayerComparisonSnapshot, _sessionBestSnapshot, out var deltaToSessionBestSec, out var deltaToSessionBestValid);
-            BuildCumulativeDelta(_livePlayerComparisonSnapshot, _profileBestSnapshot, out var deltaToProfileBestSec, out var deltaToProfileBestValid);
+            BuildCumulativeDelta(_livePlayerCurrentLapSnapshot, _sessionBestSnapshot, out var deltaToSessionBestSec, out var deltaToSessionBestValid);
+            BuildCumulativeDelta(_livePlayerCurrentLapSnapshot, _profileBestSnapshot, out var deltaToProfileBestSec, out var deltaToProfileBestValid);
             Outputs.DeltaToSessionBestSec = deltaToSessionBestSec;
             Outputs.DeltaToSessionBestValid = deltaToSessionBestValid;
             Outputs.DeltaToProfileBestSec = deltaToProfileBestSec;
@@ -249,19 +255,20 @@ namespace LaunchPlugin
             }
         }
 
-        private static void BuildLivePlayerComparisonSnapshot(
-            LapReferenceSnapshot destination,
+        private void BuildLivePlayerComparisonSnapshot(
             int activeSegment,
             bool hasLiveFixedSectorSnapshot,
             CarSAEngine.FixedSectorCacheSnapshot liveFixedSectorSnapshot)
         {
-            if (destination == null)
+            int previousActiveSegment = _lastLivePlayerActiveSegment;
+            _lastLivePlayerActiveSegment = activeSegment;
+
+            if (IsLapRollover(previousActiveSegment, activeSegment))
             {
-                return;
+                _livePlayerCurrentLapSnapshot.Clear();
             }
 
-            destination.Clear();
-            destination.ActiveSegment = activeSegment;
+            _livePlayerComparisonSnapshot.ActiveSegment = activeSegment;
 
             if (!hasLiveFixedSectorSnapshot)
             {
@@ -279,9 +286,29 @@ namespace LaunchPlugin
                 var sector = liveFixedSectorSnapshot.GetSector(i);
                 if (sector.HasValue && IsValidLapTime(sector.DurationSec))
                 {
-                    destination.SetSector(i, true, sector.DurationSec);
+                    _livePlayerCurrentLapSnapshot.SetSector(i, true, sector.DurationSec);
+                    _livePlayerComparisonSnapshot.SetSector(i, true, sector.DurationSec);
                 }
             }
+        }
+
+        private static bool IsLapRollover(int previousActiveSegment, int currentActiveSegment)
+        {
+            bool isNormalWrap =
+                currentActiveSegment > 0
+                && previousActiveSegment > 0
+                && currentActiveSegment < previousActiveSegment;
+
+            if (isNormalWrap)
+            {
+                return true;
+            }
+
+            bool isBoundaryTransitionIntoZero =
+                previousActiveSegment > 1
+                && currentActiveSegment == 0;
+
+            return isBoundaryTransitionIntoZero;
         }
 
         private static void BuildLivePlayerOutput(

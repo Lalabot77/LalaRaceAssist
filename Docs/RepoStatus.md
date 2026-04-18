@@ -9,15 +9,23 @@ Branch: work
 - No Git remote is configured in this checkout (`git remote -v` returns empty).
 
 ## Documentation sync status
-- PR 570 cleanup follow-up:
-  - custom-message triggers now refresh `Pit.Command.LastAction` and `Pit.Command.LastRaw` with truthful custom action/text diagnostics,
-  - parameter inventory now treats pit/custom settings fields as persisted UI/settings notes (not normal runtime export rows).
-- Polished pit-command user feedback text:
-  - `Clear All` feedback now publishes `Pit Clear All`.
-  - fuel-add paths now publish `Fuel MAX` when add actions hit effective max/clamp (including +1/+10 clamp edge cases and `FuelSetMax`).
-- Added Settings → `Pit Commands` expander with fixed built-in pit-action binding rows, driver-facing purpose text, focus reliability note, and preview-only `Auto-focus iRacing before pit/custom message send` setting surface.
-- Added Settings → `Custom Messages` expander with ten user-editable custom slots (friendly label + message text) and per-slot binding rows.
-- Added plugin-owned custom message actions `LalaLaunch.CustomMessage01..10` that dispatch via existing in-plugin direct chat injection and reuse short-lived `Pit.Command.*` feedback exports.
+- Hardened LapRef rollover seam for transient zero-segment boundary samples:
+  - current-lap compare/cumulative eligibility now re-arms on normal wrap (`current > 0 && previous > 0 && current < previous`) and on boundary transition into segment `0` from late-lap state (`previous > 1 && current == 0`)
+  - closes the `6 -> 0 -> 1` mapping path so stale prior-lap compare/cumulative validity does not leak into new-lap start
+  - kept player-row sector-box persistence behavior unchanged
+- Finalized LapRef live cumulative delta rollover semantics after the earlier sector-box persistence patch:
+  - kept player sector-box visual persistence across lap rollover
+  - separated current-lap compare eligibility from display persistence
+  - `LapRef.Compare.*` and top-level cumulative deltas now use current-lap comparable state only
+  - at lap start/rollover, cumulative valid flags now re-arm false and cumulative values publish `0` until new-lap comparable sectors exist
+- Removed dead rollover state from `LapReferenceEngine` (`_isLivePlayerLapRolloverArmed`) while retaining required rollover tracking (`_lastLivePlayerActiveSegment`) and current-lap comparable snapshot state.
+- Kept profile-best fallback semantics unchanged, including legacy lap-time PB rows with missing sectors.
+- Fixed LapRef live player sector presentation across lap rollover:
+  - removed per-tick hard clear behavior from the live player comparison snapshot path
+  - completed sector boxes now persist through start/finish and are replaced progressively as new-lap sectors complete
+  - live-sector full clear remains tied to true LapRef reset conditions only (session/car/track/type/wet-dry/explicit reset)
+- Added a narrow local lap-rollover rearm seam in `LapReferenceEngine` to keep internal current-lap capture clean without causing visible zero/empty flash at new-lap start.
+- Kept profile-best fallback semantics unchanged (lap-time PB may still exist without sector payload).
 - Corrected LapRef live-comparison semantics: per-sector compare and top-level cumulative deltas now use player **current-lap completed sectors** from live CarSA cache context, not `_playerSnapshot` last-validated-lap sectors.
 - Kept references static: session-best and profile-best remain validated/reference snapshots with unchanged capture/persistence ownership.
 - Pruned redundant LapRef per-reference active-segment exports:
@@ -57,6 +65,12 @@ Branch: work
 - PR 572 follow-up made MAX override command explicit with a named clamp-safe overshoot constant rather than implicit magic literals.
 
 ## Reviewed documentation set
+### Changed in LapRef rollover seam transient-zero follow-up
+- `LapReferenceEngine.cs`
+- `Docs/Subsystems/LapRef.md`
+- `Docs/Internal/Development_Changelog.md`
+- `Docs/RepoStatus.md`
+
 ### Changed in LapRef active-segment + cumulative delta task
 - `LapReferenceEngine.cs`
 - `LalaLaunch.cs`
@@ -65,6 +79,16 @@ Branch: work
 - `Docs/Internal/Development_Changelog.md`
 - `Docs/RepoStatus.md`
 
+### Changed in LapRef cumulative-delta rollover truth follow-up
+- `LapReferenceEngine.cs`
+- `Docs/Subsystems/LapRef.md`
+- `Docs/Internal/SimHubParameterInventory.md`
+- `Docs/Internal/Development_Changelog.md`
+- `Docs/RepoStatus.md`
+
+### Changed in LapRef live rollover persistence task
+- `LapReferenceEngine.cs`
+- `Docs/Subsystems/LapRef.md`
 ### Changed in pit command polish + Settings expansion task
 - `PitCommandEngine.cs`
 - `LalaLaunch.cs`
@@ -143,4 +167,4 @@ Branch: work
 - Extended focused-helper ownership with `PitFuelControlEngine` for pit fuel source/mode state and decision logic while keeping `LalaLaunch` as action/export wiring.
 
 ## Validation note
-- Validation recorded against `HEAD` (`LapRef comparison now uses live current-lap completed sectors, and redundant per-reference active-segment exports were pruned`).
+- Validation recorded against `HEAD` (`LapRef player sector display now persists through rollover while compare/cumulative eligibility is re-armed to current-lap-only truth at lap start`).

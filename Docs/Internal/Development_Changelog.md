@@ -67,6 +67,34 @@ The public user-facing release history is maintained in the root `CHANGELOG.md`.
   - short post-send suppression window to avoid telemetry-lag false positives.
 - Classification: **both** (new runtime pit-fuel command behavior and new plugin action/export surface for dashboards).
 
+### LapRef rollover seam fix for transient zero-segment boundary samples
+- Tightened `LapReferenceEngine` rollover detection so current-lap compare/cumulative eligibility is re-armed on either:
+  - normal wrap (`current > 0 && previous > 0 && current < previous`), or
+  - boundary transition into segment `0` from a late-lap segment (`previous > 1 && current == 0`).
+- This closes the `6 -> 0 -> 1` transient boundary path where lap-pct mapping can briefly emit `0`, ensuring current-lap comparable state is cleared at lap start before any new-lap sector completion.
+- Kept player-row sector-box persistence unchanged (display continuity still survives rollover), while compare/cumulative truth now reliably re-arms to empty at new-lap start.
+- Classification: **internal-only** (rollover correctness hardening inside existing LapRef export contract).
+
+### LapRef cumulative-delta rollover truth fix (post-persistence follow-up)
+- Finalized LapRef live-current compare semantics by separating **display persistence** from **compare eligibility** in `LapReferenceEngine`.
+- Kept player-row sector-box continuity across rollover, but moved `LapRef.Compare.*` and top-level cumulative deltas to consume current-lap comparable state only.
+- On normal lap rollover, current-lap comparable state now re-arms immediately:
+  - `LapRef.DeltaToSessionBestValid = false`
+  - `LapRef.DeltaToProfileBestValid = false`
+  - both cumulative delta values publish `0` until at least one new-lap comparable sector pair exists.
+- Removed dead rollover scaffolding from the prior patch (`_isLivePlayerLapRolloverArmed`) while retaining only needed state (`_livePlayerCurrentLapSnapshot`, `_lastLivePlayerActiveSegment`).
+- Preserved boundaries and invariants: CarSA sector ownership unchanged, H2H/Opponents unchanged, profile-best persistence/fallback semantics unchanged (including sectorless legacy PB rows).
+- Classification: **both** (runtime compare correctness fix + canonical LapRef/export docs updated).
+
+### LapRef live sector rollover persistence fix
+- Updated `LapReferenceEngine` live player comparison snapshot handling so completed sector boxes are no longer hard-cleared every update tick.
+- Added a narrow lap-rollover seam for the live player row:
+  - detects segment wrap (`current < previous`) as lap rollover context
+  - rearms local current-lap capture state without forcing a visible full-row clear
+  - allows progressive slot overwrite as each new-lap sector completion arrives
+- Preserved reset boundaries: full live-sector clear still happens on true LapRef reset conditions (session token/type, car, track, wet/dry, explicit engine reset).
+- Left profile-best fallback semantics unchanged (lap-time-only PB rows with missing sectors remain valid/possible).
+- Classification: **internal-only** (presentation continuity fix; no export contract expansion).
 ### PR 570 follow-up cleanup: custom-message diagnostics + inventory wording tidy
 - Updated custom-message dispatch plumbing so `Pit.Command.LastAction` and `Pit.Command.LastRaw` are now refreshed on every custom-message trigger (`CustomMessage01..10` + normalized sent text), preventing stale pit-action diagnostics after custom sends.
 - Kept change bounded: no transport redesign, no UI/dash expansion, no feedback-model rewrite.
