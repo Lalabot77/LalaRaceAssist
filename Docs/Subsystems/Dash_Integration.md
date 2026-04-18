@@ -32,7 +32,7 @@ This document is the canonical dash-facing contract layer. It does **not** redef
 ### Rejoin / pit / messages
 - Rejoin widgets should respect the explicit rejoin exports rather than infer active state from message text alone.
 - Pit-screen / pit-entry widgets should combine pit visibility toggles with pit-specific active flags.
-- Pit command buttons in strategy/pit widgets must bind to plugin-owned actions (`LalaLaunch.Pit.ClearAll`, `LalaLaunch.Pit.ClearTires`, `LalaLaunch.Pit.ToggleFuel`, `LalaLaunch.Pit.FuelAdd1`, `LalaLaunch.Pit.FuelRemove1`, `LalaLaunch.Pit.FuelAdd10`, `LalaLaunch.Pit.FuelRemove10`, `LalaLaunch.Pit.FuelSetMax`, `LalaLaunch.Pit.ToggleTiresAll`, `LalaLaunch.Pit.ToggleFastRepair`, `LalaLaunch.Pit.ToggleAutoFuel`, `LalaLaunch.Pit.Windshield`) rather than `IRacingExtraProperties` action ids.
+- Pit command buttons in strategy/pit widgets must bind to plugin-owned actions (`LalaLaunch.Pit.ClearAll`, `LalaLaunch.Pit.ClearTires`, `LalaLaunch.Pit.ToggleFuel`, `LalaLaunch.Pit.FuelAdd1`, `LalaLaunch.Pit.FuelRemove1`, `LalaLaunch.Pit.FuelAdd10`, `LalaLaunch.Pit.FuelRemove10`, `LalaLaunch.Pit.FuelSetMax`, `LalaLaunch.Pit.ToggleTiresAll`, `LalaLaunch.Pit.ToggleFastRepair`, `LalaLaunch.Pit.ToggleAutoFuel`, `LalaLaunch.Pit.Windshield`, `LalaLaunch.Pit.FuelControl.SourceCycle`, `LalaLaunch.Pit.FuelControl.ModeCycle`) rather than `IRacingExtraProperties` action ids.
 - Custom chat buttons should bind to plugin-owned actions `LalaLaunch.CustomMessage01..LalaLaunch.CustomMessage10` (configured in Settings → Custom Messages) rather than embedding transport/raw chat syntax in dash logic.
 - Message-dash widgets should consume the message engine outputs directly rather than rebuilding message priority logic in SimHub expressions.
 
@@ -40,6 +40,7 @@ This document is the canonical dash-facing contract layer. It does **not** redef
 - Dashboards trigger pit actions only; transport ownership is in-plugin.
 - Current runtime transport is direct chat-command injection (`open chat` → `type command` → `send`), with explicit failure logs when chat injection is unavailable.
 - Dashboards can bind short-lived user feedback exports `LalaLaunch.Pit.Command.DisplayText` and `LalaLaunch.Pit.Command.Active` for command confirmations/failures.
+- Dashboards can bind `LalaLaunch.Pit.FuelControl.*` exports (`Source/SourceText`, `Mode/ModeText`, `TargetLitres`, `OverrideActive`) for pit fuel control state display; dashboards do not own source/mode/plan validity logic.
 - The same transport seam also dispatches custom-message actions; dashboards should keep custom-message content authored in plugin Settings rather than hardcoding message text in dash scripts/buttons.
 
 ### H2H / traffic

@@ -99,6 +99,11 @@ namespace LaunchPlugin
             return true;
         }
 
+        public void PublishFeedback(string message)
+        {
+            PublishMessage(message);
+        }
+
         private bool ConfirmAndPublishFeedback(PitCommandAction action, PluginManager pluginManager, bool? before, double tankSpaceLitres)
         {
             if (!IsStatefulAction(action))

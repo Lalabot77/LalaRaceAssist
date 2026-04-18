@@ -33,6 +33,28 @@ The public user-facing release history is maintained in the root `CHANGELOG.md`.
 
 ## Post-v1.0 development
 
+### Pit Fuel Control integration into plugin-owned Pit Command seam
+- Added focused `PitFuelControlEngine` to own pit-fuel source/mode state and behavior (`PUSH/NORM/SAVE/PLAN/STBY` + `OFF/MAN/AUTO`) without widening central runtime responsibilities in `LalaLaunch`.
+- Added new plugin-owned actions:
+  - `Pit.FuelControl.SourceCycle`
+  - `Pit.FuelControl.ModeCycle`
+- Added new exports:
+  - `Pit.FuelControl.Source`
+  - `Pit.FuelControl.SourceText`
+  - `Pit.FuelControl.Mode`
+  - `Pit.FuelControl.ModeText`
+  - `Pit.FuelControl.TargetLitres`
+  - `Pit.FuelControl.OverrideActive`
+- Reused existing pit-command transport/feedback seam via `PitCommandEngine` custom-message dispatch for fuel set sends and user-facing feedback messages.
+- Implemented locked behavior contract:
+  - immediate send in MAN/AUTO on source change,
+  - AUTO lap-cross updates via existing canonical lap-cross seam,
+  - PLAN validity gating (live/planner car+track+basis match),
+  - live-source MAX override hysteresis (`>1.10` arm, `<1.05` disarm),
+  - manual driver pit-fuel override detection while AUTO is active (transitions to `MAN + STBY`),
+  - short post-send suppression window to avoid telemetry-lag false positives.
+- Classification: **both** (new runtime pit-fuel command behavior and new plugin action/export surface for dashboards).
+
 ### PR 570 follow-up cleanup: custom-message diagnostics + inventory wording tidy
 - Updated custom-message dispatch plumbing so `Pit.Command.LastAction` and `Pit.Command.LastRaw` are now refreshed on every custom-message trigger (`CustomMessage01..10` + normalized sent text), preventing stale pit-action diagnostics after custom sends.
 - Kept change bounded: no transport redesign, no UI/dash expansion, no feedback-model rewrite.
