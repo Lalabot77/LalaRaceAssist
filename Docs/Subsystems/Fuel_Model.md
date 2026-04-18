@@ -1,7 +1,7 @@
 # Fuel Model
 
 Validated against commit: HEAD
-Last updated: 2026-04-13
+Last updated: 2026-04-18
 Branch: work
 
 ## Purpose
@@ -126,6 +126,10 @@ The Fuel Model consumes the selected runtime projection lap time and combines it
 - session time remaining,
 - planner after-zero allowance,
 - live after-zero estimate once timer-zero has actually been observed.
+
+Session-phase authority is intentionally split:
+- SessionState `2/3` (grid/formation): timed-race lookahead uses race definition authority `CurrentSessionInfo._SessionTime` with runtime elapsed `SessionTime` (`remaining = max(0, _SessionTime - SessionTime)`), so baseline fuel-to-end outputs are not driven by near-zero live countdown behavior before green.
+- SessionState `4` (race-running): projection returns to the normal live running path.
 
 If the runtime projection path is invalid, the subsystem can still fall back to sim-provided laps-remaining behavior.
 
