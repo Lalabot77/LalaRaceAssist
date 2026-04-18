@@ -33,6 +33,16 @@ The public user-facing release history is maintained in the root `CHANGELOG.md`.
 
 ## Post-v1.0 development
 
+### LapRef timing-source alignment + PB trigger/rollover parity fix
+- Aligned LapRef validated lap-time capture to the same authoritative player seam trusted by H2H/core (`CarIdxLastLapTime` for player `CarIdx`), with guarded fallback to the validated-gate candidate only when that array seam is unavailable.
+- Updated the validated-lap → PB-trigger handoff so `_lastValidLapMs` now latches from that same authoritative captured lap value, eliminating first-beat misses caused by stale/non-authoritative lap-time capture at S/F.
+- Kept PB persistence invariants unchanged:
+  - PB lap-time update still occurs through existing `TryUpdatePBByCondition(...)` seam.
+  - sector fields persist only when real fixed-sector values exist.
+  - legacy lap-time-only PB rows (no sectors) remain valid and supported.
+- Tightened LapRef player-row rollover feel toward proven H2H behavior by sourcing display refresh directly from live CarSA fixed-sector cache presence (while compare/cumulative truth remains current-lap re-armed only).
+- Classification: **both** (runtime LapRef/PB correctness behavior + canonical LapRef/export docs update).
+
 ### PR 572 follow-up: Pit Fuel Control correctness fixes
 - Tightened PLAN validity in `PitFuelControlEngine` so PLAN now requires all of:
   - planner car identity == live car identity,

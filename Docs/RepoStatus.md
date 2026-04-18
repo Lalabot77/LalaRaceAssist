@@ -9,6 +9,17 @@ Branch: work
 - No Git remote is configured in this checkout (`git remote -v` returns empty).
 
 ## Documentation sync status
+- LapRef timing-source and PB-trigger alignment fix landed:
+  - LapRef validated-lap capture now resolves player lap time from authoritative `CarIdxLastLapTime` seam (same trusted player lap-time seam used by H2H/core), with guarded fallback only when unavailable.
+  - `_lastValidLapMs` (PB trigger handoff) now latches from that same authoritative captured lap value, removing first-expected-beat misses caused by stale capture values.
+  - `LapRef.Player.LapTimeSec` and `LapRef.SessionBest.LapTimeSec` now inherit the corrected capture seam through LapRef snapshot/session-best ownership.
+- LapRef rollover presentation parity tightened to proven H2H feel:
+  - player-row sector box refresh now consumes live CarSA fixed-sector cache presence directly (H2H-like display continuity),
+  - compare/cumulative truth remains current-lap-only and re-arms on rollover as before.
+- PB persistence invariants preserved:
+  - PB lap-time update stays on existing `TryUpdatePBByCondition(...)` seam,
+  - sector persistence remains conditional on real sector data only,
+  - legacy lap-time-only PB rows remain valid.
 - Hardened LapRef rollover seam for transient zero-segment boundary samples:
   - current-lap compare/cumulative eligibility now re-arms on normal wrap (`current > 0 && previous > 0 && current < previous`) and on boundary transition into segment `0` from late-lap state (`previous > 1 && current == 0`)
   - closes the `6 -> 0 -> 1` mapping path so stale prior-lap compare/cumulative validity does not leak into new-lap start
@@ -68,6 +79,14 @@ Branch: work
 ### Changed in LapRef rollover seam transient-zero follow-up
 - `LapReferenceEngine.cs`
 - `Docs/Subsystems/LapRef.md`
+- `Docs/Internal/Development_Changelog.md`
+- `Docs/RepoStatus.md`
+
+### Changed in LapRef timing-source + PB-trigger + rollover parity task
+- `LapReferenceEngine.cs`
+- `LalaLaunch.cs`
+- `Docs/Subsystems/LapRef.md`
+- `Docs/Internal/SimHubParameterInventory.md`
 - `Docs/Internal/Development_Changelog.md`
 - `Docs/RepoStatus.md`
 
@@ -167,4 +186,4 @@ Branch: work
 - Extended focused-helper ownership with `PitFuelControlEngine` for pit fuel source/mode state and decision logic while keeping `LalaLaunch` as action/export wiring.
 
 ## Validation note
-- Validation recorded against `HEAD` (`LapRef player sector display now persists through rollover while compare/cumulative eligibility is re-armed to current-lap-only truth at lap start`).
+- Validation recorded against `HEAD` (`LapRef capture now uses authoritative player last-lap seam for player/session-best/PB-trigger handoff, and player-row rollover sector refresh follows H2H-like CarSA cache continuity while compare/cumulative truth remains current-lap re-armed`).
