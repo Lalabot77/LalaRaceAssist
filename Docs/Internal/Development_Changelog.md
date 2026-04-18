@@ -33,6 +33,14 @@ The public user-facing release history is maintained in the root `CHANGELOG.md`.
 
 ## Post-v1.0 development
 
+### LapRef rollover seam fix for transient zero-segment boundary samples
+- Tightened `LapReferenceEngine` rollover detection so current-lap compare/cumulative eligibility is re-armed on either:
+  - normal wrap (`current > 0 && previous > 0 && current < previous`), or
+  - boundary transition into segment `0` from a late-lap segment (`previous > 1 && current == 0`).
+- This closes the `6 -> 0 -> 1` transient boundary path where lap-pct mapping can briefly emit `0`, ensuring current-lap comparable state is cleared at lap start before any new-lap sector completion.
+- Kept player-row sector-box persistence unchanged (display continuity still survives rollover), while compare/cumulative truth now reliably re-arms to empty at new-lap start.
+- Classification: **internal-only** (rollover correctness hardening inside existing LapRef export contract).
+
 ### LapRef cumulative-delta rollover truth fix (post-persistence follow-up)
 - Finalized LapRef live-current compare semantics by separating **display persistence** from **compare eligibility** in `LapReferenceEngine`.
 - Kept player-row sector-box continuity across rollover, but moved `LapRef.Compare.*` and top-level cumulative deltas to consume current-lap comparable state only.

@@ -9,6 +9,10 @@ Branch: work
 - No Git remote is configured in this checkout (`git remote -v` returns empty).
 
 ## Documentation sync status
+- Hardened LapRef rollover seam for transient zero-segment boundary samples:
+  - current-lap compare/cumulative eligibility now re-arms on normal wrap (`current > 0 && previous > 0 && current < previous`) and on boundary transition into segment `0` from late-lap state (`previous > 1 && current == 0`)
+  - closes the `6 -> 0 -> 1` mapping path so stale prior-lap compare/cumulative validity does not leak into new-lap start
+  - kept player-row sector-box persistence behavior unchanged
 - Finalized LapRef live cumulative delta rollover semantics after the earlier sector-box persistence patch:
   - kept player sector-box visual persistence across lap rollover
   - separated current-lap compare eligibility from display persistence
@@ -47,6 +51,12 @@ Branch: work
 - Updated subsystem/user/internal docs and development changelog to match final direct-chat transport and feedback/failure contract.
 
 ## Reviewed documentation set
+### Changed in LapRef rollover seam transient-zero follow-up
+- `LapReferenceEngine.cs`
+- `Docs/Subsystems/LapRef.md`
+- `Docs/Internal/Development_Changelog.md`
+- `Docs/RepoStatus.md`
+
 ### Changed in LapRef active-segment + cumulative delta task
 - `LapReferenceEngine.cs`
 - `LalaLaunch.cs`

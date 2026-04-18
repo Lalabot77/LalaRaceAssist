@@ -294,12 +294,21 @@ namespace LaunchPlugin
 
         private static bool IsLapRollover(int previousActiveSegment, int currentActiveSegment)
         {
-            if (previousActiveSegment <= 0 || currentActiveSegment <= 0)
+            bool isNormalWrap =
+                currentActiveSegment > 0
+                && previousActiveSegment > 0
+                && currentActiveSegment < previousActiveSegment;
+
+            if (isNormalWrap)
             {
-                return false;
+                return true;
             }
 
-            return currentActiveSegment < previousActiveSegment;
+            bool isBoundaryTransitionIntoZero =
+                previousActiveSegment > 1
+                && currentActiveSegment == 0;
+
+            return isBoundaryTransitionIntoZero;
         }
 
         private static void BuildLivePlayerOutput(

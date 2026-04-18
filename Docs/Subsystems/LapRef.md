@@ -119,6 +119,7 @@ Each comparison exposes:
   - each is true only when at least one real compared sector pair was included.
 - Lap rollover rule:
   - at normal start/finish rollover, cumulative valid flags re-arm to `false` and cumulative values publish `0`
+  - rollover detection also treats boundary transition samples (`previous > 1 && current == 0`) as lap-start re-arm events to handle transient lap-pct seam zeros (e.g., `6 -> 0 -> 1`)
   - cumulative values become valid again only after at least one current-lap completed sector contributes a real player/reference pair
 
 ## Reset behavior
