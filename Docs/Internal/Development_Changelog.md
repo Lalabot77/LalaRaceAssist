@@ -33,6 +33,37 @@ The public user-facing release history is maintained in the root `CHANGELOG.md`.
 
 ## Post-v1.0 development
 
+### LapRef live current-lap comparison correction + output-prune follow-up
+- Corrected LapRef comparison/delta source so live comparison now uses current-lap progress instead of replaying the last validated snapshot sector-by-sector.
+- Added a dedicated live player comparison seam in `LapReferenceEngine`:
+  - current active segment remains lap-pct driven (`1..6`, else `0`)
+  - only completed sectors behind the active segment are eligible for compare/delta
+  - current in-progress sector and future sectors remain excluded (no synthetic partial timing)
+- Kept session-best/profile-best as static reference snapshots (capture/persistence ownership unchanged).
+- Pruned redundant/misleading per-reference active-segment exports:
+  - kept `LapRef.ActiveSegment` and `LapRef.Player.ActiveSegment`
+  - removed `LapRef.SessionBest.ActiveSegment` and `LapRef.ProfileBest.ActiveSegment`
+- Kept top-level cumulative deltas because they remain dash-useful once sourced from completed current-lap sectors only:
+  - `LapRef.DeltaToSessionBestSec` / `LapRef.DeltaToSessionBestValid`
+  - `LapRef.DeltaToProfileBestSec` / `LapRef.DeltaToProfileBestValid`
+- Classification: **both** (runtime comparison behavior correction + export contract tightening).
+
+### LapRef active-segment mirroring + cumulative delta exports
+- Extended `LapReferenceEngine` so active segment is now explicitly live-player-driven for all LapRef rows:
+  - `LapRef.ActiveSegment`
+  - `LapRef.Player.ActiveSegment`
+  - `LapRef.SessionBest.ActiveSegment`
+  - `LapRef.ProfileBest.ActiveSegment`
+- Added new top-level cumulative delta exports for dash-friendly moving comparison:
+  - `LapRef.DeltaToSessionBestSec`
+  - `LapRef.DeltaToSessionBestValid`
+  - `LapRef.DeltaToProfileBestSec`
+  - `LapRef.DeltaToProfileBestValid`
+- Cumulative deltas now sum sectors `S1..S(active)` using only real sector pairs where both player and reference are valid; no synthetic sector data is introduced.
+- Kept existing per-sector compare outputs (`LapRef.Compare.*.S1..S6State/DeltaSec`) unchanged and additive.
+- Preserved subsystem boundaries: CarSA remains fixed-sector owner, H2H/Opponents behavior unchanged, and profile PB persistence rules unchanged.
+- Classification: **both** (runtime export behavior and dashboard-visible LapRef contract expansion).
+
 ### Pit command follow-up (PR 568): direct chat injection + confirmed feedback exports
 - Reworked `PitCommandEngine` transport from macro-hotkey binding to direct iRacing chat command injection (`open chat` → `type command` → `send`), keeping plugin-owned `LalaLaunch.Pit.*` actions as the dashboard command surface.
 - Expanded pit action set to include `Pit.ClearTires`, `Pit.FuelAdd1`, `Pit.FuelRemove1`, `Pit.FuelAdd10`, `Pit.FuelRemove10`, `Pit.FuelSetMax`, `Pit.ToggleAutoFuel`, and `Pit.Windshield` (while keeping `Pit.FuelAdd` / `Pit.FuelRemove` aliases for compatibility).

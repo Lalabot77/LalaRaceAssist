@@ -4329,16 +4329,20 @@ namespace LaunchPlugin
             AttachCore("LapRef.Mode", () => _lapReferenceEngine?.Outputs?.Mode ?? string.Empty);
             AttachCore("LapRef.PlayerCarIdx", () => _lapReferenceEngine?.Outputs?.PlayerCarIdx ?? -1);
             AttachCore("LapRef.ActiveSegment", () => _lapReferenceEngine?.Outputs?.ActiveSegment ?? 0);
+            AttachCore("LapRef.DeltaToSessionBestSec", () => _lapReferenceEngine?.Outputs?.DeltaToSessionBestSec ?? 0.0);
+            AttachCore("LapRef.DeltaToSessionBestValid", () => _lapReferenceEngine?.Outputs?.DeltaToSessionBestValid ?? false);
+            AttachCore("LapRef.DeltaToProfileBestSec", () => _lapReferenceEngine?.Outputs?.DeltaToProfileBestSec ?? 0.0);
+            AttachCore("LapRef.DeltaToProfileBestValid", () => _lapReferenceEngine?.Outputs?.DeltaToProfileBestValid ?? false);
 
-            AttachLapRefSideExports("LapRef.Player", () => _lapReferenceEngine?.Outputs?.Player);
-            AttachLapRefSideExports("LapRef.SessionBest", () => _lapReferenceEngine?.Outputs?.SessionBest);
-            AttachLapRefSideExports("LapRef.ProfileBest", () => _lapReferenceEngine?.Outputs?.ProfileBest);
+            AttachLapRefSideExports("LapRef.Player", () => _lapReferenceEngine?.Outputs?.Player, true);
+            AttachLapRefSideExports("LapRef.SessionBest", () => _lapReferenceEngine?.Outputs?.SessionBest, false);
+            AttachLapRefSideExports("LapRef.ProfileBest", () => _lapReferenceEngine?.Outputs?.ProfileBest, false);
 
             AttachLapRefCompareExports("LapRef.Compare.SessionBest", () => _lapReferenceEngine?.Outputs?.CompareSessionBest);
             AttachLapRefCompareExports("LapRef.Compare.ProfileBest", () => _lapReferenceEngine?.Outputs?.CompareProfileBest);
         }
 
-        private void AttachLapRefSideExports(string prefix, Func<LapReferenceEngine.LapReferenceSideOutput> sideGetter)
+        private void AttachLapRefSideExports(string prefix, Func<LapReferenceEngine.LapReferenceSideOutput> sideGetter, bool includeActiveSegment)
         {
             if (string.IsNullOrWhiteSpace(prefix) || sideGetter == null)
             {
@@ -4347,7 +4351,10 @@ namespace LaunchPlugin
 
             AttachCore(prefix + ".Valid", () => sideGetter()?.Valid ?? false);
             AttachCore(prefix + ".LapTimeSec", () => sideGetter()?.LapTimeSec ?? 0.0);
-            AttachCore(prefix + ".ActiveSegment", () => sideGetter()?.ActiveSegment ?? 0);
+            if (includeActiveSegment)
+            {
+                AttachCore(prefix + ".ActiveSegment", () => sideGetter()?.ActiveSegment ?? 0);
+            }
 
             for (int i = 0; i < LapReferenceEngine.SegmentCount; i++)
             {
@@ -12624,6 +12631,11 @@ namespace LaunchPlugin
             {
                 activeSegment = ComputeLapRefActiveSegment(carIdxLapDistPct[playerCarIdx]);
             }
+            CarSAEngine.FixedSectorCacheSnapshot liveFixedSectorSnapshot = default(CarSAEngine.FixedSectorCacheSnapshot);
+            bool hasLiveFixedSectorSnapshot =
+                playerCarIdx >= 0
+                && _carSaEngine != null
+                && _carSaEngine.TryGetFixedSectorCacheSnapshot(playerCarIdx, out liveFixedSectorSnapshot);
 
             double profileBestLapSec = 0.0;
             int?[] profileBestSectors = null;
@@ -12655,7 +12667,9 @@ namespace LaunchPlugin
                 playerCarIdx,
                 activeSegment,
                 profileBestLapSec,
-                profileBestSectors);
+                profileBestSectors,
+                hasLiveFixedSectorSnapshot,
+                liveFixedSectorSnapshot);
         }
 
         private bool TryCaptureLapReferenceValidatedLap(PluginManager pluginManager, double lastLapSec, int completedLapsNow, out int?[] capturedSectorMs)
