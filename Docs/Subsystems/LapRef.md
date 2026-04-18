@@ -8,7 +8,7 @@ Branch: work
 LapRef is a standalone dash-facing comparison subsystem for **player-only reference laps**.
 
 It compares:
-- player last validated lap context
+- player live current-lap progress context
 - session best validated lap (this session)
 - profile all-time best lap (active car/track/condition)
 
@@ -32,12 +32,19 @@ A captured validated lap snapshot carries:
 
 Missing sectors remain empty. Lap time can still be valid without sector data.
 
+LapRef also maintains a separate **live current-lap comparison view** for the player side:
+- active segment comes from live player lap pct mapping
+- completed sectors for the current lap are read from CarSA fixed-sector cache
+- only completed sectors behind the current segment are treated as comparable
+- no partial current-sector elapsed values are synthesized
+
 ## Capture and update flow
 1. Existing validated-lap gate accepts a lap in `UpdateLiveFuelCalcs`.
 2. LapRef captures snapshot from the player's CarSA fixed-sector cache (if available).
 3. Snapshot becomes player reference row and competes for in-memory session best.
 4. Existing profile PB seam persists lap-time PB; sector fields are persisted condition-wise when available.
-5. Each tick, LapRef rematerializes profile-best from active profile + track + wet/dry condition and publishes `LapRef.*`.
+5. Each tick, LapRef rematerializes profile-best from active profile + track + wet/dry condition.
+6. Each tick, LapRef also materializes the player **live current-lap comparison sectors** from the current CarSA cache snapshot + current active segment and publishes `LapRef.*`.
 
 PB safety note:
 - Profile PB remains telemetry-owned (validated-lap seam); Profiles UI no longer permits manual PB entry.
@@ -79,8 +86,9 @@ Comparison rows:
 - `LapRef.Compare.ProfileBest.*`
 
 Each side exposes:
-- `Valid`, `LapTimeSec`, `ActiveSegment`
-- `S1..S6State`, `S1..S6Sec`
+- `LapRef.Player.*`: `Valid`, `LapTimeSec`, `ActiveSegment`, `S1..S6State`, `S1..S6Sec`
+- `LapRef.SessionBest.*`: `Valid`, `LapTimeSec`, `S1..S6State`, `S1..S6Sec`
+- `LapRef.ProfileBest.*`: `Valid`, `LapTimeSec`, `S1..S6State`, `S1..S6Sec`
 
 Each comparison exposes:
 - `S1..S6State`, `S1..S6DeltaSec`
@@ -88,15 +96,15 @@ Each comparison exposes:
 ## Active segment contract
 - `LapRef.ActiveSegment` is always the **live player segment context** (`1..6`, else `0`).
 - `LapRef.Player.ActiveSegment` mirrors that same live segment.
-- `LapRef.SessionBest.ActiveSegment` mirrors that same live segment while `LapRef.Valid=true`, else `0`.
-- `LapRef.ProfileBest.ActiveSegment` mirrors that same live segment while `LapRef.Valid=true`, else `0`.
-- LapRef intentionally does **not** attempt historical segment replay for stored references.
+- `LapRef.SessionBest.ActiveSegment` / `LapRef.ProfileBest.ActiveSegment` are intentionally not exported; static references do not own live progression state.
 
 ## Cumulative delta contract
-- `LapRef.DeltaToSessionBestSec` and `LapRef.DeltaToProfileBestSec` are cumulative deltas versus the selected reference up to `LapRef.ActiveSegment`.
-- Cumulative rule: sum player sectors `S1..S(active)` and matching reference sectors `S1..S(active)` only when **both sides are valid** for that sector.
+- `LapRef.DeltaToSessionBestSec` and `LapRef.DeltaToProfileBestSec` are cumulative deltas versus the selected reference using **completed current-lap sectors only**.
+- Cumulative rule: include only sectors that are completed on the live current lap (`S1..S(active-1)`), and only when **both player live sector + reference sector are valid**.
 - Delta formula: `playerSum - referenceSum`.
-- If `ActiveSegment==0` or there are no valid compared sector pairs up to the active segment, cumulative delta publishes `0`.
+- Current in-progress sector is never treated as complete.
+- Future sectors are never included.
+- If there are no valid compared sector pairs, cumulative delta publishes `0`.
 - Valid guards:
   - `LapRef.DeltaToSessionBestValid`
   - `LapRef.DeltaToProfileBestValid`
@@ -113,7 +121,7 @@ LapRef session-best/player snapshot state resets when:
 Profile-best is rematerialized from profile data after reset.
 Family-level reset values:
 - `LapRef.ActiveSegment = 0`
-- side-row `*.ActiveSegment = 0`
+- `LapRef.Player.ActiveSegment = 0`
 - `LapRef.DeltaToSessionBestSec = 0`
 - `LapRef.DeltaToSessionBestValid = false`
 - `LapRef.DeltaToProfileBestSec = 0`

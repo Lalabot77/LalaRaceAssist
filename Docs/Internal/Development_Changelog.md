@@ -33,6 +33,21 @@ The public user-facing release history is maintained in the root `CHANGELOG.md`.
 
 ## Post-v1.0 development
 
+### LapRef live current-lap comparison correction + output-prune follow-up
+- Corrected LapRef comparison/delta source so live comparison now uses current-lap progress instead of replaying the last validated snapshot sector-by-sector.
+- Added a dedicated live player comparison seam in `LapReferenceEngine`:
+  - current active segment remains lap-pct driven (`1..6`, else `0`)
+  - only completed sectors behind the active segment are eligible for compare/delta
+  - current in-progress sector and future sectors remain excluded (no synthetic partial timing)
+- Kept session-best/profile-best as static reference snapshots (capture/persistence ownership unchanged).
+- Pruned redundant/misleading per-reference active-segment exports:
+  - kept `LapRef.ActiveSegment` and `LapRef.Player.ActiveSegment`
+  - removed `LapRef.SessionBest.ActiveSegment` and `LapRef.ProfileBest.ActiveSegment`
+- Kept top-level cumulative deltas because they remain dash-useful once sourced from completed current-lap sectors only:
+  - `LapRef.DeltaToSessionBestSec` / `LapRef.DeltaToSessionBestValid`
+  - `LapRef.DeltaToProfileBestSec` / `LapRef.DeltaToProfileBestValid`
+- Classification: **both** (runtime comparison behavior correction + export contract tightening).
+
 ### LapRef active-segment mirroring + cumulative delta exports
 - Extended `LapReferenceEngine` so active segment is now explicitly live-player-driven for all LapRef rows:
   - `LapRef.ActiveSegment`

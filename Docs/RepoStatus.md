@@ -9,7 +9,12 @@ Branch: work
 - No Git remote is configured in this checkout (`git remote -v` returns empty).
 
 ## Documentation sync status
-- Extended LapRef active-segment publication so `LapRef.ActiveSegment` and all side-row `*.ActiveSegment` values now mirror the live player segment context (`1..6`, else `0`).
+- Corrected LapRef live-comparison semantics: per-sector compare and top-level cumulative deltas now use player **current-lap completed sectors** from live CarSA cache context, not `_playerSnapshot` last-validated-lap sectors.
+- Kept references static: session-best and profile-best remain validated/reference snapshots with unchanged capture/persistence ownership.
+- Pruned redundant LapRef per-reference active-segment exports:
+  - kept `LapRef.ActiveSegment` and `LapRef.Player.ActiveSegment`
+  - removed `LapRef.SessionBest.ActiveSegment` and `LapRef.ProfileBest.ActiveSegment`
+- Active-segment publication is now intentionally lean: `LapRef.ActiveSegment` (family-level) and `LapRef.Player.ActiveSegment` (player row) provide the live highlight source.
 - Added additive top-level cumulative LapRef delta exports with explicit validity guards:
   - `LapRef.DeltaToSessionBestSec`, `LapRef.DeltaToSessionBestValid`
   - `LapRef.DeltaToProfileBestSec`, `LapRef.DeltaToProfileBestValid`
@@ -30,6 +35,14 @@ Branch: work
 
 ## Reviewed documentation set
 ### Changed in LapRef active-segment + cumulative delta task
+- `LapReferenceEngine.cs`
+- `LalaLaunch.cs`
+- `Docs/Subsystems/LapRef.md`
+- `Docs/Internal/SimHubParameterInventory.md`
+- `Docs/Internal/Development_Changelog.md`
+- `Docs/RepoStatus.md`
+
+### Changed in LapRef live-current comparison correction task
 - `LapReferenceEngine.cs`
 - `LalaLaunch.cs`
 - `Docs/Subsystems/LapRef.md`
@@ -66,4 +79,4 @@ Branch: work
 - Added bounded observability and short-lived user feedback exports so command success/failure is visible on dash and in SimHub logs.
 
 ## Validation note
-- Validation recorded against `HEAD` (`LapRef now mirrors live active segment across rows and publishes cumulative session/profile delta outputs with explicit validity guards`).
+- Validation recorded against `HEAD` (`LapRef comparison now uses live current-lap completed sectors, and redundant per-reference active-segment exports were pruned`).

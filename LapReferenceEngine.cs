@@ -10,6 +10,7 @@ namespace LaunchPlugin
         public const int SegmentStateValid = 2;
 
         private readonly LapReferenceSnapshot _playerSnapshot = new LapReferenceSnapshot();
+        private readonly LapReferenceSnapshot _livePlayerComparisonSnapshot = new LapReferenceSnapshot();
         private readonly LapReferenceSnapshot _sessionBestSnapshot = new LapReferenceSnapshot();
         private readonly LapReferenceSnapshot _profileBestSnapshot = new LapReferenceSnapshot();
 
@@ -35,6 +36,7 @@ namespace LaunchPlugin
             _isWet = false;
 
             _playerSnapshot.Clear();
+            _livePlayerComparisonSnapshot.Clear();
             _sessionBestSnapshot.Clear();
             _profileBestSnapshot.Clear();
             Outputs.Reset();
@@ -49,7 +51,9 @@ namespace LaunchPlugin
             int playerCarIdx,
             int playerActiveSegment,
             double profileBestLapSec,
-            int?[] profileBestSectorMs)
+            int?[] profileBestSectorMs,
+            bool hasLiveFixedSectorSnapshot,
+            CarSAEngine.FixedSectorCacheSnapshot liveFixedSectorSnapshot)
         {
             string nextSessionToken = sessionToken ?? string.Empty;
             string nextSessionType = sessionType ?? string.Empty;
@@ -72,6 +76,7 @@ namespace LaunchPlugin
                 _isWet = isWet;
 
                 _playerSnapshot.Clear();
+                _livePlayerComparisonSnapshot.Clear();
                 _sessionBestSnapshot.Clear();
             }
 
@@ -81,28 +86,17 @@ namespace LaunchPlugin
             Outputs.Mode = isWet ? "Wet" : "Dry";
             Outputs.PlayerCarIdx = playerCarIdx;
             Outputs.ActiveSegment = SanitizeSegment(playerActiveSegment);
-
-            if (_playerSnapshot.HasLapTime)
-            {
-                Outputs.Player.AssignFromSnapshot(_playerSnapshot);
-                Outputs.Player.ActiveSegment = Outputs.ActiveSegment;
-            }
-            else
-            {
-                Outputs.Player.Reset();
-                Outputs.Player.ActiveSegment = Outputs.ActiveSegment;
-            }
+            BuildLivePlayerComparisonSnapshot(_livePlayerComparisonSnapshot, Outputs.ActiveSegment, hasLiveFixedSectorSnapshot, liveFixedSectorSnapshot);
+            BuildLivePlayerOutput(Outputs.Player, _livePlayerComparisonSnapshot, Outputs.ActiveSegment, Outputs.Valid, _playerSnapshot);
 
             Outputs.SessionBest.AssignFromSnapshot(_sessionBestSnapshot);
             Outputs.ProfileBest.AssignFromSnapshot(_profileBestSnapshot);
-            Outputs.SessionBest.ActiveSegment = Outputs.Valid ? Outputs.ActiveSegment : 0;
-            Outputs.ProfileBest.ActiveSegment = Outputs.Valid ? Outputs.ActiveSegment : 0;
 
-            BuildComparison(Outputs.CompareSessionBest, _playerSnapshot, _sessionBestSnapshot);
-            BuildComparison(Outputs.CompareProfileBest, _playerSnapshot, _profileBestSnapshot);
+            BuildComparison(Outputs.CompareSessionBest, _livePlayerComparisonSnapshot, _sessionBestSnapshot);
+            BuildComparison(Outputs.CompareProfileBest, _livePlayerComparisonSnapshot, _profileBestSnapshot);
 
-            BuildCumulativeDelta(_playerSnapshot, _sessionBestSnapshot, Outputs.ActiveSegment, out var deltaToSessionBestSec, out var deltaToSessionBestValid);
-            BuildCumulativeDelta(_playerSnapshot, _profileBestSnapshot, Outputs.ActiveSegment, out var deltaToProfileBestSec, out var deltaToProfileBestValid);
+            BuildCumulativeDelta(_livePlayerComparisonSnapshot, _sessionBestSnapshot, out var deltaToSessionBestSec, out var deltaToSessionBestValid);
+            BuildCumulativeDelta(_livePlayerComparisonSnapshot, _profileBestSnapshot, out var deltaToProfileBestSec, out var deltaToProfileBestValid);
             Outputs.DeltaToSessionBestSec = deltaToSessionBestSec;
             Outputs.DeltaToSessionBestValid = deltaToSessionBestValid;
             Outputs.DeltaToProfileBestSec = deltaToProfileBestSec;
@@ -227,22 +221,15 @@ namespace LaunchPlugin
         private static void BuildCumulativeDelta(
             LapReferenceSnapshot player,
             LapReferenceSnapshot reference,
-            int activeSegment,
             out double deltaSec,
             out bool isValid)
         {
             deltaSec = 0.0;
             isValid = false;
 
-            int limit = SanitizeSegment(activeSegment);
-            if (limit <= 0)
-            {
-                return;
-            }
-
             double playerSum = 0.0;
             double referenceSum = 0.0;
-            for (int i = 0; i < limit; i++)
+            for (int i = 0; i < SegmentCount; i++)
             {
                 bool playerValid = player.GetSectorHasValue(i);
                 bool referenceValid = reference.GetSectorHasValue(i);
@@ -260,6 +247,89 @@ namespace LaunchPlugin
             {
                 deltaSec = playerSum - referenceSum;
             }
+        }
+
+        private static void BuildLivePlayerComparisonSnapshot(
+            LapReferenceSnapshot destination,
+            int activeSegment,
+            bool hasLiveFixedSectorSnapshot,
+            CarSAEngine.FixedSectorCacheSnapshot liveFixedSectorSnapshot)
+        {
+            if (destination == null)
+            {
+                return;
+            }
+
+            destination.Clear();
+            destination.ActiveSegment = activeSegment;
+
+            if (!hasLiveFixedSectorSnapshot)
+            {
+                return;
+            }
+
+            int completedSectorCount = GetCompletedSectorCount(activeSegment);
+            if (completedSectorCount <= 0)
+            {
+                return;
+            }
+
+            for (int i = 0; i < completedSectorCount; i++)
+            {
+                var sector = liveFixedSectorSnapshot.GetSector(i);
+                if (sector.HasValue && IsValidLapTime(sector.DurationSec))
+                {
+                    destination.SetSector(i, true, sector.DurationSec);
+                }
+            }
+        }
+
+        private static void BuildLivePlayerOutput(
+            LapReferenceSideOutput output,
+            LapReferenceSnapshot liveSnapshot,
+            int activeSegment,
+            bool isContextValid,
+            LapReferenceSnapshot lastValidatedSnapshot)
+        {
+            if (output == null)
+            {
+                return;
+            }
+
+            output.Reset();
+            output.Valid = isContextValid;
+            output.ActiveSegment = activeSegment;
+            output.LapTimeSec = (lastValidatedSnapshot != null && lastValidatedSnapshot.HasLapTime)
+                ? lastValidatedSnapshot.LapTimeSec
+                : 0.0;
+
+            for (int i = 0; i < SegmentCount; i++)
+            {
+                bool hasSector = liveSnapshot != null && liveSnapshot.GetSectorHasValue(i);
+                output.SetSector(i, hasSector ? SegmentStateValid : SegmentStateEmpty, hasSector ? liveSnapshot.GetSectorSec(i) : 0.0);
+            }
+        }
+
+        private static int GetCompletedSectorCount(int activeSegment)
+        {
+            int sanitized = SanitizeSegment(activeSegment);
+            if (sanitized <= 1)
+            {
+                return 0;
+            }
+
+            int completed = sanitized - 1;
+            if (completed < 0)
+            {
+                return 0;
+            }
+
+            if (completed > SegmentCount)
+            {
+                return SegmentCount;
+            }
+
+            return completed;
         }
 
         private static int SanitizeSegment(int segment)
@@ -470,6 +540,17 @@ namespace LaunchPlugin
                     _sectorState[i] = hasSector ? SegmentStateValid : SegmentStateEmpty;
                     _sectorSec[i] = hasSector ? snapshot.GetSectorSec(i) : 0.0;
                 }
+            }
+
+            internal void SetSector(int index, int state, double sectorSec)
+            {
+                if (index < 0 || index >= SegmentCount)
+                {
+                    return;
+                }
+
+                _sectorState[index] = state;
+                _sectorSec[index] = state == SegmentStateValid ? sectorSec : 0.0;
             }
         }
 
