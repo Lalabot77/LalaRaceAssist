@@ -4738,8 +4738,7 @@ namespace LaunchPlugin
             this.AddAction("ShiftAssist_ToggleLock_G6", (a, b) => ExecuteShiftAssistLockAction(6, current => !current, "ShiftAssist_ToggleLock_G6"));
             this.AddAction("ShiftAssist_ToggleLock_G7", (a, b) => ExecuteShiftAssistLockAction(7, current => !current, "ShiftAssist_ToggleLock_G7"));
             this.AddAction("ShiftAssist_ToggleLock_G8", (a, b) => ExecuteShiftAssistLockAction(8, current => !current, "ShiftAssist_ToggleLock_G8"));
-            SimHub.Logging.Current.Info("[LalaPlugin:Init] Actions registered: MsgCx, TogglePitScreen, Pit.ClearAll, Pit.ClearTires, Pit.ToggleFuel, Pit.FuelAdd1, Pit.FuelRemove1, Pit.FuelAdd10, Pit.FuelRemove10, Pit.FuelSetMax, Pit.ToggleTiresAll, Pit.ToggleFastRepair, Pit.ToggleAutoFuel, Pit.Windshield, Pit.FuelControl.SourceCycle, Pit.FuelControl.ModeCycle, CustomMessage01..CustomMessage10 (+ aliases Pit.FuelAdd/Pit.FuelRemove), PrimaryDashMode, DeclutterMode, ToggleDarkMode, SecondaryDashMode (legacy), EventMarker, LaunchMode, TrackMarkersLock, TrackMarkersUnlock, Debug_Hide_1_Toggle, Debug_Hide_2_Toggle, Debug_Hide_3_Toggle, ShiftAssist_ResetDelayStats, ShiftAssist_ToggleShiftAssist, ShiftAssist_ToggleDebugCsv, ShiftAssist_TestBeep, ShiftAssist_Learn_ResetSamples, ShiftAssist_ResetTargets_ActiveStack, ShiftAssist_ResetTargets_ActiveStack_AndSamples, ShiftAssist_ApplyLearnedToTargets_ActiveStack_OverrideLocks, ShiftAssist_Lock_G1..G8, ShiftAssist_Unlock_G1..G8, ShiftAssist_ToggleLock_G1..G8");
-
+            
             AttachCore("LalaLaunch.Friends.Count", () => _friendsCount);
 
             // --- DELEGATES FOR LIVE FUEL CALCULATOR (CORE) ---

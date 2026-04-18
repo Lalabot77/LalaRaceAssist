@@ -35,6 +35,10 @@
                                        FriendlyName="Cycle Declutter Mode"
                                        Margin="0,8,0,0"
                                        ToolTip="Assign a button to cycle declutter mode (0/1/2) for dash visibility bindings." />
+                    <ui:ControlsEditor ActionName="LalaLaunch.ToggleDarkMode"
+                                       FriendlyName="Toggle Dark Mode"
+                                       Margin="0,8,0,0"
+                                       ToolTip="Assign a button to cycle LalaLaunch Dark Mode mode (Off → Manual → Auto). Warning: don’t bind this to the same button as Lovely’s True Dark toggle. If ‘Use Lovely True Dark’ is enabled and Lovely is available, LalaLaunch toggle is ignored." />
                 </StackPanel>
             </Expander>
 
@@ -90,11 +94,7 @@
                                      IsSnapToTickEnabled="True"
                                      Value="{Binding Settings.DarkModeBrightnessPct, Mode=TwoWay}"
                                      ToolTip="Base Dark Mode brightness percent (0-100). 100 is brightest." />
-                    <ui:ControlsEditor ActionName="LalaLaunch.ToggleDarkMode"
-                                       FriendlyName="Toggle Dark Mode"
-                                       Margin="0,8,0,0"
-                                       ToolTip="Assign a button to cycle LalaLaunch Dark Mode mode (Off → Manual → Auto). Warning: don’t bind this to the same button as Lovely’s True Dark toggle. If ‘Use Lovely True Dark’ is enabled and Lovely is available, LalaLaunch toggle is ignored." />
-
+                    
                     <Separator Margin="0,12,0,12" />
 
                     <TextBlock Text="Fuel" FontWeight="Bold" Margin="0,0,0,6"/>
@@ -114,6 +114,12 @@
                                      Maximum="30"
                                      Value="{Binding Settings.StintFuelMarginPct, Mode=TwoWay}"
                                      ToolTip="Reserve fuel as a percentage of one lap (based on stable fuel burn) when calculating stint burn targets." />
+                    
+                    <styles:SHToggleCheckbox Content="Pit.Box: include optional repairs in service countdown"
+                         Margin="0,0,0,10"
+                         IsChecked="{Binding Settings.PitBoxIncludeOptionalRepairs, Mode=TwoWay}"
+                         ToolTip="When enabled, optional repair time is included in Pit.Box target/remaining countdown and shared total-stop-loss prediction. Mandatory repair time is always included when native authority is valid while boxed."/>
+
                 </StackPanel>
             </Expander>
 
