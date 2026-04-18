@@ -61,6 +61,24 @@ The public user-facing release history is maintained in the root `CHANGELOG.md`.
 - Preserved reset boundaries: full live-sector clear still happens on true LapRef reset conditions (session token/type, car, track, wet/dry, explicit engine reset).
 - Left profile-best fallback semantics unchanged (lap-time-only PB rows with missing sectors remain valid/possible).
 - Classification: **internal-only** (presentation continuity fix; no export contract expansion).
+### PR 570 follow-up cleanup: custom-message diagnostics + inventory wording tidy
+- Updated custom-message dispatch plumbing so `Pit.Command.LastAction` and `Pit.Command.LastRaw` are now refreshed on every custom-message trigger (`CustomMessage01..10` + normalized sent text), preventing stale pit-action diagnostics after custom sends.
+- Kept change bounded: no transport redesign, no UI/dash expansion, no feedback-model rewrite.
+- Cleaned `SimHubParameterInventory` wording so settings persistence fields are no longer listed as normal runtime export rows; moved to an explicit non-export settings note.
+- Classification: **internal-only** (diagnostic correctness + documentation contract clarity).
+
+### Pit command polish + Settings UI expansion (Pit Commands + Custom Messages)
+- Polished pit command user feedback wording:
+  - `Clear All` feedback now reads `Pit Clear All`.
+  - Fuel-add commands now publish `Fuel MAX` when the add reaches effective tank clamp/max (including +1/+10 edge cases), and the old `Tank Full` wording was removed.
+- Added a new Settings → `Pit Commands` expander with:
+  - driver-facing guidance text,
+  - iRacing focus reliability warning,
+  - preview-only `Auto-focus iRacing before pit/custom message send` settings surface (forward-looking; no focus-steal behavior implemented in this task),
+  - built-in binding rows for all plugin-owned pit actions.
+- Added a new Settings → `Custom Messages` expander with ten editable custom-message slots (friendly label + message text) and per-slot Controls & Events binding rows.
+- Added plugin-owned custom-message actions `LalaLaunch.CustomMessage01..10` that dispatch via the existing direct chat-injection transport seam and reuse short-lived `Pit.Command.*` feedback exports.
+- Classification: **both** (user-facing Settings UI + action surface expansion, plus bounded runtime pit/custom-message dispatch polish).
 
 ### LapRef live current-lap comparison correction + output-prune follow-up
 - Corrected LapRef comparison/delta source so live comparison now uses current-lap progress instead of replaying the last validated snapshot sector-by-sector.

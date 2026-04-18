@@ -56,11 +56,26 @@ Pit command buttons should now be bound to plugin-owned Controls & Events action
 
 These actions replace any old dashboard bindings that directly called `IRacingExtraProperties` pit-command actions.
 
+In Settings → **Pit Commands**, these are shown as fixed built-in features with normal binding rows (no raw chat command editing).
+
+### Custom message buttons (Settings → Custom Messages)
+
+Settings now also includes a **Custom Messages** expander with 10 custom slots.
+
+Each slot has:
+- a friendly label,
+- message text content,
+- its own bindable plugin action (`LalaLaunch.CustomMessage01` ... `LalaLaunch.CustomMessage10`).
+
+Use these for common race-chat messages you want on hardware buttons, keyboard keys, or dashboard virtual buttons, without exposing chat transport details in normal workflow.
+
 ### Runtime caveat
 
-LalaLaunch now injects iRacing pit chat commands directly (no dedicated user macro-hotkey setup required).
+LalaLaunch injects iRacing pit/custom chat messages directly (no dedicated user macro-hotkey setup required).
 
 If chat injection cannot run (for example iRacing is not the foreground window), LalaLaunch publishes `Pit Cmd Fail` and logs a pit-command warning so the failure is visible.
+
+Settings includes a forward-looking **Auto-focus iRacing before pit/custom message send (Preview)** toggle for future enhancement work; current behavior still expects iRacing to already be in focus.
 
 ## 3. Pit Entry Assist
 

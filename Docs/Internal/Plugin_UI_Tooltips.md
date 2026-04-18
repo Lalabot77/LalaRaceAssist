@@ -1,7 +1,7 @@
 ﻿# Plugin UI Tooltips
 
 Validated against commit: HEAD
-Last updated: 2026-04-13
+Last updated: 2026-04-18
 Branch: work
 
 ## CopyProfileDialog.xaml
@@ -216,6 +216,11 @@ Branch: work
 - `GlobalSettingsView.xaml` `Enable Debug Logging` tooltip says it enables verbose logging for troubleshooting the plugin.
 - `GlobalSettingsView.xaml` `PitExit Verbose Logging` tooltip says it adds PitExit math audit details to pit-in snapshots for troubleshooting.
 - `GlobalSettingsView.xaml` `Pit.Box: include optional repairs in service countdown` toggle tooltip says optional repair time is included in Pit.Box target/remaining and shared total-stop-loss prediction when enabled; mandatory repairs remain included by default when valid while boxed.
+- `GlobalSettingsView.xaml` now includes a collapsed `Pit Commands` expander in Settings with:
+  - built-in pit-action binding rows (`Pit Clear All`, `Clear Tyres`, `Toggle Fuel`, `Fuel +/-1`, `Fuel +/-10`, `Fuel MAX`, `Toggle Tyres`, `Toggle Fast Repair`, `Toggle Auto Fuel`, `Toggle Tear-off`),
+  - a focus reliability note (`pit commands are most reliable when iRacing is in the foreground/focus`),
+  - `Auto-focus iRacing before pit/custom message send (Preview)` tooltip stating this is a forward-looking setting surface and current runtime still expects iRacing focus.
+- `GlobalSettingsView.xaml` now includes a collapsed `Custom Messages` expander with 10 rows; each row has a `Label` textbox tooltip (friendly feedback name), `Message` textbox tooltip (message text to send), and a binding row for `LalaLaunch.CustomMessage01..10`.
 - `GlobalSettingsView.xaml` `Mute Shift Assist sound in replay` tooltip says replay sessions suppress only Shift Assist audio while lights, learning, and other Shift Assist logic continue normally.
 - `GlobalSettingsView.xaml` `Shift Assist Debug CSV` tooltip explains per-tick diagnostic CSV logging.
 - `GlobalSettingsView.xaml` `Shift Assist Debug Max Hz` textbox tooltip documents valid range (1..60 Hz).

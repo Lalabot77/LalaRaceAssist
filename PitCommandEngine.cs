@@ -56,7 +56,7 @@ namespace LaunchPlugin
 
             if (IsFuelAddAction(action) && tankSpaceLitres <= 0.05)
             {
-                PublishMessage("Tank Full");
+                PublishMessage("Fuel MAX");
                 SimHub.Logging.Current.Info($"[LalaPlugin:PitCommand] action={action} transport=chat-injection executed=false reason=tank-full tankSpaceL={tankSpaceLitres:F2}");
                 return;
             }
@@ -70,15 +70,41 @@ namespace LaunchPlugin
                 return;
             }
 
-            bool confirmed = ConfirmAndPublishFeedback(action, pluginManager, before);
+            bool confirmed = ConfirmAndPublishFeedback(action, pluginManager, before, tankSpaceLitres);
             SimHub.Logging.Current.Info($"[LalaPlugin:PitCommand] action={action} transport=chat-injection attempted=true confirmed={confirmed} before={FormatNullable(before)} raw='{raw}' normalized='{command}'");
         }
 
-        private bool ConfirmAndPublishFeedback(PitCommandAction action, PluginManager pluginManager, bool? before)
+        public bool ExecuteCustomMessage(string actionName, string messageText, string feedbackLabel)
+        {
+            LastAction = string.IsNullOrWhiteSpace(actionName) ? "CustomMessage" : actionName.Trim();
+            string normalized = NormalizeCustomMessage(messageText);
+            LastRaw = normalized;
+            if (string.IsNullOrWhiteSpace(normalized))
+            {
+                PublishMessage("Pit Cmd Fail");
+                SimHub.Logging.Current.Warn("[LalaPlugin:PitCommand] custom-message send blocked: message text is empty.");
+                return false;
+            }
+
+            bool transportAttempted = TryInjectChatCommand(normalized);
+            if (!transportAttempted)
+            {
+                PublishMessage("Pit Cmd Fail");
+                SimHub.Logging.Current.Warn($"[LalaPlugin:PitCommand] custom-message transport=chat-injection local-transport-issue text='{normalized}'");
+                return false;
+            }
+
+            PublishMessage(string.IsNullOrWhiteSpace(feedbackLabel) ? "Custom Msg" : feedbackLabel.Trim());
+            SimHub.Logging.Current.Info($"[LalaPlugin:PitCommand] custom-message transport=chat-injection attempted=true text='{normalized}'");
+            return true;
+        }
+
+        private bool ConfirmAndPublishFeedback(PitCommandAction action, PluginManager pluginManager, bool? before, double tankSpaceLitres)
         {
             if (!IsStatefulAction(action))
             {
-                PublishMessage(GetStatelessFeedback(action));
+                bool reachedFuelMax = WillFuelAddReachMax(action, tankSpaceLitres);
+                PublishMessage(GetStatelessFeedback(action, reachedFuelMax));
                 return true;
             }
 
@@ -151,15 +177,47 @@ namespace LaunchPlugin
             return raw.Trim().TrimEnd('$').Trim();
         }
 
-        private static string GetStatelessFeedback(PitCommandAction action)
+        private static string NormalizeCustomMessage(string raw)
+        {
+            if (string.IsNullOrWhiteSpace(raw))
+            {
+                return string.Empty;
+            }
+
+            string normalized = raw.Replace("\r", " ").Replace("\n", " ").Trim();
+            return normalized;
+        }
+
+        private static bool WillFuelAddReachMax(PitCommandAction action, double tankSpaceLitres)
+        {
+            if (!IsFuelAddAction(action))
+            {
+                return false;
+            }
+
+            if (action == PitCommandAction.FuelSetMax)
+            {
+                return true;
+            }
+
+            if (tankSpaceLitres <= 0.05)
+            {
+                return true;
+            }
+
+            double requestedAddLitres = action == PitCommandAction.FuelAdd10 ? 10.0 : 1.0;
+            return tankSpaceLitres <= requestedAddLitres + 0.05;
+        }
+
+        private static string GetStatelessFeedback(PitCommandAction action, bool reachedFuelMax)
         {
             switch (action)
             {
-                case PitCommandAction.ClearAll: return "Clear All";
+                case PitCommandAction.ClearAll: return "Pit Clear All";
                 case PitCommandAction.ClearTyres: return "Clear Tyres";
-                case PitCommandAction.FuelAdd1: return "Fuel +1";
+                case PitCommandAction.FuelAdd1: return reachedFuelMax ? "Fuel MAX" : "Fuel +1";
                 case PitCommandAction.FuelRemove1: return "Fuel -1";
-                case PitCommandAction.FuelAdd10: return "Fuel +10";
+                case PitCommandAction.FuelAdd10: return reachedFuelMax ? "Fuel MAX" : "Fuel +10";
                 case PitCommandAction.FuelRemove10: return "Fuel -10";
                 case PitCommandAction.FuelSetMax: return "Fuel MAX";
                 default: return "Pit Cmd Fail";

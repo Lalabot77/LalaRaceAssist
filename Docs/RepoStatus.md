@@ -46,7 +46,7 @@ Branch: work
   - before/after mismatch warnings for stateful toggles,
   - user-facing `Pit Cmd Fail` fallback text.
 - Tightened pit-command logging semantics so transport-stage warnings are explicitly best-effort; state-confirmation mismatch remains the authoritative failure signal for stateful actions.
-- Added explicit `Tank Full` user-facing case for fuel-add actions using existing pit tank-space authority.
+- Fuel-add feedback now uses explicit `Fuel MAX` wording for max/clamp cases using existing pit tank-space authority.
 - Kept pit read-side authority unchanged: pit service status/selection remains telemetry-based (`dpFuelFill`, tyre selectors, `PlayerCarPitSvStatus` and related seams).
 - Updated subsystem/user/internal docs and development changelog to match final direct-chat transport and feedback/failure contract.
 
@@ -75,6 +75,22 @@ Branch: work
 ### Changed in LapRef live rollover persistence task
 - `LapReferenceEngine.cs`
 - `Docs/Subsystems/LapRef.md`
+### Changed in pit command polish + Settings expansion task
+- `PitCommandEngine.cs`
+- `LalaLaunch.cs`
+- `GlobalSettingsView.xaml`
+- `Docs/Internal/SimHubParameterInventory.md`
+- `Docs/Internal/SimHubLogMessages.md`
+- `Docs/Internal/Plugin_UI_Tooltips.md`
+- `Docs/Internal/Development_Changelog.md`
+- `Docs/Pit_Assist.md`
+- `Docs/Subsystems/Dash_Integration.md`
+- `Docs/RepoStatus.md`
+
+### Changed in PR 570 cleanup follow-up task
+- `PitCommandEngine.cs`
+- `LalaLaunch.cs`
+- `Docs/Internal/SimHubParameterInventory.md`
 - `Docs/Internal/Development_Changelog.md`
 - `Docs/RepoStatus.md`
 
