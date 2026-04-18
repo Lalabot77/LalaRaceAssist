@@ -33,6 +33,12 @@ The public user-facing release history is maintained in the root `CHANGELOG.md`.
 
 ## Post-v1.0 development
 
+### PR 570 follow-up cleanup: custom-message diagnostics + inventory wording tidy
+- Updated custom-message dispatch plumbing so `Pit.Command.LastAction` and `Pit.Command.LastRaw` are now refreshed on every custom-message trigger (`CustomMessage01..10` + normalized sent text), preventing stale pit-action diagnostics after custom sends.
+- Kept change bounded: no transport redesign, no UI/dash expansion, no feedback-model rewrite.
+- Cleaned `SimHubParameterInventory` wording so settings persistence fields are no longer listed as normal runtime export rows; moved to an explicit non-export settings note.
+- Classification: **internal-only** (diagnostic correctness + documentation contract clarity).
+
 ### Pit command polish + Settings UI expansion (Pit Commands + Custom Messages)
 - Polished pit command user feedback wording:
   - `Clear All` feedback now reads `Pit Clear All`.

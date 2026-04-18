@@ -262,23 +262,24 @@ namespace LaunchPlugin
         public void PitWindshield() => ExecutePitCommand(PitCommandAction.Windshield);
         public void TriggerCustomMessageSlot(int slotNumber)
         {
+            string customActionName = $"CustomMessage{slotNumber:00}";
             if (Settings == null || Settings.CustomMessages == null)
             {
-                _pitCommandEngine.ExecuteCustomMessage(string.Empty, "Pit Cmd Fail");
+                _pitCommandEngine.ExecuteCustomMessage(customActionName, string.Empty, "Pit Cmd Fail");
                 return;
             }
 
             int index = slotNumber - 1;
             if (index < 0 || index >= Settings.CustomMessages.Count)
             {
-                _pitCommandEngine.ExecuteCustomMessage(string.Empty, "Pit Cmd Fail");
+                _pitCommandEngine.ExecuteCustomMessage(customActionName, string.Empty, "Pit Cmd Fail");
                 return;
             }
 
             var slot = Settings.CustomMessages[index];
             if (slot == null)
             {
-                _pitCommandEngine.ExecuteCustomMessage(string.Empty, "Pit Cmd Fail");
+                _pitCommandEngine.ExecuteCustomMessage(customActionName, string.Empty, "Pit Cmd Fail");
                 return;
             }
 
@@ -286,7 +287,7 @@ namespace LaunchPlugin
                 ? $"Custom Msg {slotNumber}"
                 : slot.Name.Trim();
 
-            _pitCommandEngine.ExecuteCustomMessage(slot.MessageText, feedbackLabel);
+            _pitCommandEngine.ExecuteCustomMessage(customActionName, slot.MessageText, feedbackLabel);
         }
 
         // Compatibility aliases retained for existing dash bindings.

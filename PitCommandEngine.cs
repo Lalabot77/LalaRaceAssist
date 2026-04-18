@@ -74,9 +74,11 @@ namespace LaunchPlugin
             SimHub.Logging.Current.Info($"[LalaPlugin:PitCommand] action={action} transport=chat-injection attempted=true confirmed={confirmed} before={FormatNullable(before)} raw='{raw}' normalized='{command}'");
         }
 
-        public bool ExecuteCustomMessage(string messageText, string feedbackLabel)
+        public bool ExecuteCustomMessage(string actionName, string messageText, string feedbackLabel)
         {
+            LastAction = string.IsNullOrWhiteSpace(actionName) ? "CustomMessage" : actionName.Trim();
             string normalized = NormalizeCustomMessage(messageText);
+            LastRaw = normalized;
             if (string.IsNullOrWhiteSpace(normalized))
             {
                 PublishMessage("Pit Cmd Fail");

@@ -9,6 +9,9 @@ Branch: work
 - No Git remote is configured in this checkout (`git remote -v` returns empty).
 
 ## Documentation sync status
+- PR 570 cleanup follow-up:
+  - custom-message triggers now refresh `Pit.Command.LastAction` and `Pit.Command.LastRaw` with truthful custom action/text diagnostics,
+  - parameter inventory now treats pit/custom settings fields as persisted UI/settings notes (not normal runtime export rows).
 - Polished pit-command user feedback text:
   - `Clear All` feedback now publishes `Pit Clear All`.
   - fuel-add paths now publish `Fuel MAX` when add actions hit effective max/clamp (including +1/+10 clamp edge cases and `FuelSetMax`).
@@ -58,6 +61,13 @@ Branch: work
 - `Docs/Internal/Development_Changelog.md`
 - `Docs/Pit_Assist.md`
 - `Docs/Subsystems/Dash_Integration.md`
+- `Docs/RepoStatus.md`
+
+### Changed in PR 570 cleanup follow-up task
+- `PitCommandEngine.cs`
+- `LalaLaunch.cs`
+- `Docs/Internal/SimHubParameterInventory.md`
+- `Docs/Internal/Development_Changelog.md`
 - `Docs/RepoStatus.md`
 
 ### Changed in LapRef live-current comparison correction task
