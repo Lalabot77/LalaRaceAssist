@@ -4329,6 +4329,10 @@ namespace LaunchPlugin
             AttachCore("LapRef.Mode", () => _lapReferenceEngine?.Outputs?.Mode ?? string.Empty);
             AttachCore("LapRef.PlayerCarIdx", () => _lapReferenceEngine?.Outputs?.PlayerCarIdx ?? -1);
             AttachCore("LapRef.ActiveSegment", () => _lapReferenceEngine?.Outputs?.ActiveSegment ?? 0);
+            AttachCore("LapRef.DeltaToSessionBestSec", () => _lapReferenceEngine?.Outputs?.DeltaToSessionBestSec ?? 0.0);
+            AttachCore("LapRef.DeltaToSessionBestValid", () => _lapReferenceEngine?.Outputs?.DeltaToSessionBestValid ?? false);
+            AttachCore("LapRef.DeltaToProfileBestSec", () => _lapReferenceEngine?.Outputs?.DeltaToProfileBestSec ?? 0.0);
+            AttachCore("LapRef.DeltaToProfileBestValid", () => _lapReferenceEngine?.Outputs?.DeltaToProfileBestValid ?? false);
 
             AttachLapRefSideExports("LapRef.Player", () => _lapReferenceEngine?.Outputs?.Player);
             AttachLapRefSideExports("LapRef.SessionBest", () => _lapReferenceEngine?.Outputs?.SessionBest);

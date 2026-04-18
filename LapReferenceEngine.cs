@@ -85,7 +85,7 @@ namespace LaunchPlugin
             if (_playerSnapshot.HasLapTime)
             {
                 Outputs.Player.AssignFromSnapshot(_playerSnapshot);
-                Outputs.Player.ActiveSegment = Outputs.ActiveSegment > 0 ? Outputs.ActiveSegment : _playerSnapshot.ActiveSegment;
+                Outputs.Player.ActiveSegment = Outputs.ActiveSegment;
             }
             else
             {
@@ -95,9 +95,18 @@ namespace LaunchPlugin
 
             Outputs.SessionBest.AssignFromSnapshot(_sessionBestSnapshot);
             Outputs.ProfileBest.AssignFromSnapshot(_profileBestSnapshot);
+            Outputs.SessionBest.ActiveSegment = Outputs.Valid ? Outputs.ActiveSegment : 0;
+            Outputs.ProfileBest.ActiveSegment = Outputs.Valid ? Outputs.ActiveSegment : 0;
 
             BuildComparison(Outputs.CompareSessionBest, _playerSnapshot, _sessionBestSnapshot);
             BuildComparison(Outputs.CompareProfileBest, _playerSnapshot, _profileBestSnapshot);
+
+            BuildCumulativeDelta(_playerSnapshot, _sessionBestSnapshot, Outputs.ActiveSegment, out var deltaToSessionBestSec, out var deltaToSessionBestValid);
+            BuildCumulativeDelta(_playerSnapshot, _profileBestSnapshot, Outputs.ActiveSegment, out var deltaToProfileBestSec, out var deltaToProfileBestValid);
+            Outputs.DeltaToSessionBestSec = deltaToSessionBestSec;
+            Outputs.DeltaToSessionBestValid = deltaToSessionBestValid;
+            Outputs.DeltaToProfileBestSec = deltaToProfileBestSec;
+            Outputs.DeltaToProfileBestValid = deltaToProfileBestValid;
         }
 
         public bool CaptureValidatedLap(
@@ -212,6 +221,44 @@ namespace LaunchPlugin
                 {
                     output.SetSegment(i, SegmentStateEmpty, 0.0);
                 }
+            }
+        }
+
+        private static void BuildCumulativeDelta(
+            LapReferenceSnapshot player,
+            LapReferenceSnapshot reference,
+            int activeSegment,
+            out double deltaSec,
+            out bool isValid)
+        {
+            deltaSec = 0.0;
+            isValid = false;
+
+            int limit = SanitizeSegment(activeSegment);
+            if (limit <= 0)
+            {
+                return;
+            }
+
+            double playerSum = 0.0;
+            double referenceSum = 0.0;
+            for (int i = 0; i < limit; i++)
+            {
+                bool playerValid = player.GetSectorHasValue(i);
+                bool referenceValid = reference.GetSectorHasValue(i);
+                if (!playerValid || !referenceValid)
+                {
+                    continue;
+                }
+
+                playerSum += player.GetSectorSec(i);
+                referenceSum += reference.GetSectorSec(i);
+                isValid = true;
+            }
+
+            if (isValid)
+            {
+                deltaSec = playerSum - referenceSum;
             }
         }
 
@@ -336,6 +383,10 @@ namespace LaunchPlugin
             public string Mode { get; set; } = string.Empty;
             public int PlayerCarIdx { get; set; } = -1;
             public int ActiveSegment { get; set; }
+            public double DeltaToSessionBestSec { get; set; }
+            public bool DeltaToSessionBestValid { get; set; }
+            public double DeltaToProfileBestSec { get; set; }
+            public bool DeltaToProfileBestValid { get; set; }
 
             public LapReferenceSideOutput Player { get; private set; }
             public LapReferenceSideOutput SessionBest { get; private set; }
@@ -349,6 +400,10 @@ namespace LaunchPlugin
                 Mode = string.Empty;
                 PlayerCarIdx = -1;
                 ActiveSegment = 0;
+                DeltaToSessionBestSec = 0.0;
+                DeltaToSessionBestValid = false;
+                DeltaToProfileBestSec = 0.0;
+                DeltaToProfileBestValid = false;
                 Player.Reset();
                 SessionBest.Reset();
                 ProfileBest.Reset();

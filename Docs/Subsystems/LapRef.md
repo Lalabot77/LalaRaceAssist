@@ -1,7 +1,7 @@
 # LapRef (Offline Reference Lap Comparison)
 
 Validated against commit: HEAD
-Last updated: 2026-04-09
+Last updated: 2026-04-18
 Branch: work
 
 ## Purpose
@@ -64,6 +64,10 @@ Family-level:
 - `LapRef.Mode`
 - `LapRef.PlayerCarIdx`
 - `LapRef.ActiveSegment`
+- `LapRef.DeltaToSessionBestSec`
+- `LapRef.DeltaToSessionBestValid`
+- `LapRef.DeltaToProfileBestSec`
+- `LapRef.DeltaToProfileBestValid`
 
 Side rows:
 - `LapRef.Player.*`
@@ -81,6 +85,23 @@ Each side exposes:
 Each comparison exposes:
 - `S1..S6State`, `S1..S6DeltaSec`
 
+## Active segment contract
+- `LapRef.ActiveSegment` is always the **live player segment context** (`1..6`, else `0`).
+- `LapRef.Player.ActiveSegment` mirrors that same live segment.
+- `LapRef.SessionBest.ActiveSegment` mirrors that same live segment while `LapRef.Valid=true`, else `0`.
+- `LapRef.ProfileBest.ActiveSegment` mirrors that same live segment while `LapRef.Valid=true`, else `0`.
+- LapRef intentionally does **not** attempt historical segment replay for stored references.
+
+## Cumulative delta contract
+- `LapRef.DeltaToSessionBestSec` and `LapRef.DeltaToProfileBestSec` are cumulative deltas versus the selected reference up to `LapRef.ActiveSegment`.
+- Cumulative rule: sum player sectors `S1..S(active)` and matching reference sectors `S1..S(active)` only when **both sides are valid** for that sector.
+- Delta formula: `playerSum - referenceSum`.
+- If `ActiveSegment==0` or there are no valid compared sector pairs up to the active segment, cumulative delta publishes `0`.
+- Valid guards:
+  - `LapRef.DeltaToSessionBestValid`
+  - `LapRef.DeltaToProfileBestValid`
+  - each is true only when at least one real compared sector pair was included.
+
 ## Reset behavior
 LapRef session-best/player snapshot state resets when:
 - session token changes
@@ -90,3 +111,10 @@ LapRef session-best/player snapshot state resets when:
 - wet/dry mode flips
 
 Profile-best is rematerialized from profile data after reset.
+Family-level reset values:
+- `LapRef.ActiveSegment = 0`
+- side-row `*.ActiveSegment = 0`
+- `LapRef.DeltaToSessionBestSec = 0`
+- `LapRef.DeltaToSessionBestValid = false`
+- `LapRef.DeltaToProfileBestSec = 0`
+- `LapRef.DeltaToProfileBestValid = false`
