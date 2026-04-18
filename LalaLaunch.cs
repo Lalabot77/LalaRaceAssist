@@ -47,6 +47,7 @@ namespace LaunchPlugin
     public class LalaLaunch : IPlugin, IDataPlugin, IWPFSettingsV2, INotifyPropertyChanged
     {
         private const bool HARD_DEBUG_ENABLED = true;
+        internal const int CustomPitMessageSlotCount = 10;
 
         // iRacing reports Warmup as a session type and we treat it as Practice-like.
         private static string NormalizeSessionTypeName(string raw)
@@ -259,6 +260,34 @@ namespace LaunchPlugin
         public void PitToggleFastRepair() => ExecutePitCommand(PitCommandAction.ToggleFastRepair);
         public void PitToggleAutoFuel() => ExecutePitCommand(PitCommandAction.ToggleAutoFuel);
         public void PitWindshield() => ExecutePitCommand(PitCommandAction.Windshield);
+        public void TriggerCustomMessageSlot(int slotNumber)
+        {
+            if (Settings == null || Settings.CustomMessages == null)
+            {
+                _pitCommandEngine.ExecuteCustomMessage(string.Empty, "Pit Cmd Fail");
+                return;
+            }
+
+            int index = slotNumber - 1;
+            if (index < 0 || index >= Settings.CustomMessages.Count)
+            {
+                _pitCommandEngine.ExecuteCustomMessage(string.Empty, "Pit Cmd Fail");
+                return;
+            }
+
+            var slot = Settings.CustomMessages[index];
+            if (slot == null)
+            {
+                _pitCommandEngine.ExecuteCustomMessage(string.Empty, "Pit Cmd Fail");
+                return;
+            }
+
+            string feedbackLabel = string.IsNullOrWhiteSpace(slot.Name)
+                ? $"Custom Msg {slotNumber}"
+                : slot.Name.Trim();
+
+            _pitCommandEngine.ExecuteCustomMessage(slot.MessageText, feedbackLabel);
+        }
 
         // Compatibility aliases retained for existing dash bindings.
         public void PitFuelAdd() => PitFuelAdd1();
@@ -4572,6 +4601,16 @@ namespace LaunchPlugin
             this.AddAction("Pit.ToggleFastRepair", (a, b) => PitToggleFastRepair());
             this.AddAction("Pit.ToggleAutoFuel", (a, b) => PitToggleAutoFuel());
             this.AddAction("Pit.Windshield", (a, b) => PitWindshield());
+            this.AddAction("CustomMessage01", (a, b) => TriggerCustomMessageSlot(1));
+            this.AddAction("CustomMessage02", (a, b) => TriggerCustomMessageSlot(2));
+            this.AddAction("CustomMessage03", (a, b) => TriggerCustomMessageSlot(3));
+            this.AddAction("CustomMessage04", (a, b) => TriggerCustomMessageSlot(4));
+            this.AddAction("CustomMessage05", (a, b) => TriggerCustomMessageSlot(5));
+            this.AddAction("CustomMessage06", (a, b) => TriggerCustomMessageSlot(6));
+            this.AddAction("CustomMessage07", (a, b) => TriggerCustomMessageSlot(7));
+            this.AddAction("CustomMessage08", (a, b) => TriggerCustomMessageSlot(8));
+            this.AddAction("CustomMessage09", (a, b) => TriggerCustomMessageSlot(9));
+            this.AddAction("CustomMessage10", (a, b) => TriggerCustomMessageSlot(10));
             // compatibility aliases from PR568
             this.AddAction("Pit.FuelAdd", (a, b) => PitFuelAdd1());
             this.AddAction("Pit.FuelRemove", (a, b) => PitFuelRemove1());
@@ -4673,7 +4712,7 @@ namespace LaunchPlugin
             this.AddAction("ShiftAssist_ToggleLock_G6", (a, b) => ExecuteShiftAssistLockAction(6, current => !current, "ShiftAssist_ToggleLock_G6"));
             this.AddAction("ShiftAssist_ToggleLock_G7", (a, b) => ExecuteShiftAssistLockAction(7, current => !current, "ShiftAssist_ToggleLock_G7"));
             this.AddAction("ShiftAssist_ToggleLock_G8", (a, b) => ExecuteShiftAssistLockAction(8, current => !current, "ShiftAssist_ToggleLock_G8"));
-            SimHub.Logging.Current.Info("[LalaPlugin:Init] Actions registered: MsgCx, TogglePitScreen, Pit.ClearAll, Pit.ClearTires, Pit.ToggleFuel, Pit.FuelAdd1, Pit.FuelRemove1, Pit.FuelAdd10, Pit.FuelRemove10, Pit.FuelSetMax, Pit.ToggleTiresAll, Pit.ToggleFastRepair, Pit.ToggleAutoFuel, Pit.Windshield (+ aliases Pit.FuelAdd/Pit.FuelRemove), PrimaryDashMode, DeclutterMode, ToggleDarkMode, SecondaryDashMode (legacy), EventMarker, LaunchMode, TrackMarkersLock, TrackMarkersUnlock, Debug_Hide_1_Toggle, Debug_Hide_2_Toggle, Debug_Hide_3_Toggle, ShiftAssist_ResetDelayStats, ShiftAssist_ToggleShiftAssist, ShiftAssist_ToggleDebugCsv, ShiftAssist_TestBeep, ShiftAssist_Learn_ResetSamples, ShiftAssist_ResetTargets_ActiveStack, ShiftAssist_ResetTargets_ActiveStack_AndSamples, ShiftAssist_ApplyLearnedToTargets_ActiveStack_OverrideLocks, ShiftAssist_Lock_G1..G8, ShiftAssist_Unlock_G1..G8, ShiftAssist_ToggleLock_G1..G8");
+            SimHub.Logging.Current.Info("[LalaPlugin:Init] Actions registered: MsgCx, TogglePitScreen, Pit.ClearAll, Pit.ClearTires, Pit.ToggleFuel, Pit.FuelAdd1, Pit.FuelRemove1, Pit.FuelAdd10, Pit.FuelRemove10, Pit.FuelSetMax, Pit.ToggleTiresAll, Pit.ToggleFastRepair, Pit.ToggleAutoFuel, Pit.Windshield, CustomMessage01..CustomMessage10 (+ aliases Pit.FuelAdd/Pit.FuelRemove), PrimaryDashMode, DeclutterMode, ToggleDarkMode, SecondaryDashMode (legacy), EventMarker, LaunchMode, TrackMarkersLock, TrackMarkersUnlock, Debug_Hide_1_Toggle, Debug_Hide_2_Toggle, Debug_Hide_3_Toggle, ShiftAssist_ResetDelayStats, ShiftAssist_ToggleShiftAssist, ShiftAssist_ToggleDebugCsv, ShiftAssist_TestBeep, ShiftAssist_Learn_ResetSamples, ShiftAssist_ResetTargets_ActiveStack, ShiftAssist_ResetTargets_ActiveStack_AndSamples, ShiftAssist_ApplyLearnedToTargets_ActiveStack_OverrideLocks, ShiftAssist_Lock_G1..G8, ShiftAssist_Unlock_G1..G8, ShiftAssist_ToggleLock_G1..G8");
 
             AttachCore("LalaLaunch.Friends.Count", () => _friendsCount);
 
@@ -5731,6 +5770,7 @@ namespace LaunchPlugin
             NormalizeCarSaStyleSettings(settings);
             NormalizeShiftAssistSettings(settings);
             NormalizeDarkModeSettings(settings);
+            NormalizePitCommandSettings(settings);
             return settings;
         }
 
@@ -5751,6 +5791,7 @@ namespace LaunchPlugin
             NormalizeCarSaStyleSettings(effectiveSettings);
             NormalizeShiftAssistSettings(effectiveSettings);
             NormalizeDarkModeSettings(effectiveSettings);
+            NormalizePitCommandSettings(effectiveSettings);
             var json = JsonConvert.SerializeObject(effectiveSettings, Formatting.Indented);
             File.WriteAllText(path, json);
         }
@@ -5841,6 +5882,41 @@ namespace LaunchPlugin
             settings.CarSAStatusEBackgroundColors = NormalizeStatusColorMap(settings.CarSAStatusEBackgroundColors);
             settings.CarSABorderColors = NormalizeBorderColorMap(settings.CarSABorderColors);
             NormalizeFriendSettings(settings);
+        }
+
+        private static void NormalizePitCommandSettings(LaunchPluginSettings settings)
+        {
+            if (settings == null)
+            {
+                return;
+            }
+
+            if (settings.CustomMessages == null)
+            {
+                settings.CustomMessages = new ObservableCollection<CustomMessageSlot>();
+            }
+
+            for (int i = settings.CustomMessages.Count - 1; i >= CustomPitMessageSlotCount; i--)
+            {
+                settings.CustomMessages.RemoveAt(i);
+            }
+
+            for (int i = 0; i < CustomPitMessageSlotCount; i++)
+            {
+                if (i >= settings.CustomMessages.Count)
+                {
+                    settings.CustomMessages.Add(new CustomMessageSlot(i + 1));
+                    continue;
+                }
+
+                if (settings.CustomMessages[i] == null)
+                {
+                    settings.CustomMessages[i] = new CustomMessageSlot(i + 1);
+                    continue;
+                }
+
+                settings.CustomMessages[i].EnsureDefaults(i + 1);
+            }
         }
 
         private static void NormalizeFriendSettings(LaunchPluginSettings settings)
@@ -15402,6 +15478,79 @@ namespace LaunchPlugin
         }
     }
 
+    public class CustomMessageSlot : INotifyPropertyChanged
+    {
+        private string _name;
+        private string _messageText;
+
+        public event PropertyChangedEventHandler PropertyChanged;
+
+        public int SlotNumber { get; set; }
+
+        public string Name
+        {
+            get { return _name; }
+            set
+            {
+                string normalized = string.IsNullOrWhiteSpace(value) ? $"Custom Msg {SlotNumber}" : value.Trim();
+                if (string.Equals(_name, normalized, StringComparison.Ordinal))
+                {
+                    return;
+                }
+
+                _name = normalized;
+                OnPropertyChanged();
+            }
+        }
+
+        public string MessageText
+        {
+            get { return _messageText; }
+            set
+            {
+                string normalized = value ?? string.Empty;
+                if (string.Equals(_messageText, normalized, StringComparison.Ordinal))
+                {
+                    return;
+                }
+
+                _messageText = normalized;
+                OnPropertyChanged();
+            }
+        }
+
+        [JsonIgnore]
+        public string ActionName => $"LalaLaunch.CustomMessage{SlotNumber:00}";
+
+        [JsonIgnore]
+        public string FriendlyActionName => $"Custom Msg {SlotNumber}";
+
+        public CustomMessageSlot()
+        {
+        }
+
+        public CustomMessageSlot(int slotNumber)
+        {
+            SlotNumber = slotNumber;
+            _name = $"Custom Msg {slotNumber}";
+            _messageText = string.Empty;
+        }
+
+        public void EnsureDefaults(int slotNumber)
+        {
+            SlotNumber = slotNumber <= 0 ? 1 : slotNumber;
+            Name = Name;
+            MessageText = MessageText;
+            OnPropertyChanged(nameof(ActionName));
+            OnPropertyChanged(nameof(FriendlyActionName));
+        }
+
+        protected virtual void OnPropertyChanged([CallerMemberName] string propertyName = null)
+        {
+            PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(propertyName));
+        }
+    }
+
     public class LaunchPluginSettings : INotifyPropertyChanged
     {
         [JsonProperty]
@@ -15426,6 +15575,7 @@ namespace LaunchPlugin
         public int OffTrackDebugProbeCarIdx { get; set; } = -1;
         public bool PitExitVerboseLogging { get; set; } = false;
         public bool PitBoxIncludeOptionalRepairs { get; set; } = false;
+        public bool PitCommandsAutoFocusPreview { get; set; } = false;
         public double ResultsDisplayTime { get; set; } = 5.0; // Corrected to 5 seconds
         public double FuelReadyConfidence { get; set; } = LalaLaunch.FuelReadyConfidenceDefault;
         public int StintFuelMarginPct { get; set; } = LalaLaunch.StintFuelMarginPctDefault;
@@ -15502,6 +15652,7 @@ namespace LaunchPlugin
             { CarSAStyleResolver.BorderModeDefault, "#F5F5F5" }
         };
         public ObservableCollection<LaunchPluginFriendEntry> Friends { get; set; } = new ObservableCollection<LaunchPluginFriendEntry>();
+        public ObservableCollection<CustomMessageSlot> CustomMessages { get; set; } = CreateDefaultCustomMessages();
 
         // --- LalaDash Toggles (Default ON) ---
         public bool LalaDashShowLaunchScreen { get; set; } = true;
@@ -15532,6 +15683,17 @@ namespace LaunchPlugin
         public bool OverlayDashShowRaceFlags { get; set; } = true;
         public bool OverlayDashShowRadioMessages { get; set; } = true;
         public bool OverlayDashShowTraffic { get; set; } = true;
+
+        private static ObservableCollection<CustomMessageSlot> CreateDefaultCustomMessages()
+        {
+            var list = new ObservableCollection<CustomMessageSlot>();
+            for (int i = 1; i <= LalaLaunch.CustomPitMessageSlotCount; i++)
+            {
+                list.Add(new CustomMessageSlot(i));
+            }
+
+            return list;
+        }
     }
     /// <summary>
     /// Helper class for continuous telemetry data logging, now specifically focused on per-launch traces.

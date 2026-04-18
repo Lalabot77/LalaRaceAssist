@@ -9,6 +9,12 @@ Branch: work
 - No Git remote is configured in this checkout (`git remote -v` returns empty).
 
 ## Documentation sync status
+- Polished pit-command user feedback text:
+  - `Clear All` feedback now publishes `Pit Clear All`.
+  - fuel-add paths now publish `Fuel MAX` when add actions hit effective max/clamp (including +1/+10 clamp edge cases and `FuelSetMax`).
+- Added Settings → `Pit Commands` expander with fixed built-in pit-action binding rows, driver-facing purpose text, focus reliability note, and preview-only `Auto-focus iRacing before pit/custom message send` setting surface.
+- Added Settings → `Custom Messages` expander with ten user-editable custom slots (friendly label + message text) and per-slot binding rows.
+- Added plugin-owned custom message actions `LalaLaunch.CustomMessage01..10` that dispatch via existing in-plugin direct chat injection and reuse short-lived `Pit.Command.*` feedback exports.
 - Corrected LapRef live-comparison semantics: per-sector compare and top-level cumulative deltas now use player **current-lap completed sectors** from live CarSA cache context, not `_playerSnapshot` last-validated-lap sectors.
 - Kept references static: session-best and profile-best remain validated/reference snapshots with unchanged capture/persistence ownership.
 - Pruned redundant LapRef per-reference active-segment exports:
@@ -29,7 +35,7 @@ Branch: work
   - before/after mismatch warnings for stateful toggles,
   - user-facing `Pit Cmd Fail` fallback text.
 - Tightened pit-command logging semantics so transport-stage warnings are explicitly best-effort; state-confirmation mismatch remains the authoritative failure signal for stateful actions.
-- Added explicit `Tank Full` user-facing case for fuel-add actions using existing pit tank-space authority.
+- Fuel-add feedback now uses explicit `Fuel MAX` wording for max/clamp cases using existing pit tank-space authority.
 - Kept pit read-side authority unchanged: pit service status/selection remains telemetry-based (`dpFuelFill`, tyre selectors, `PlayerCarPitSvStatus` and related seams).
 - Updated subsystem/user/internal docs and development changelog to match final direct-chat transport and feedback/failure contract.
 
@@ -40,6 +46,18 @@ Branch: work
 - `Docs/Subsystems/LapRef.md`
 - `Docs/Internal/SimHubParameterInventory.md`
 - `Docs/Internal/Development_Changelog.md`
+- `Docs/RepoStatus.md`
+
+### Changed in pit command polish + Settings expansion task
+- `PitCommandEngine.cs`
+- `LalaLaunch.cs`
+- `GlobalSettingsView.xaml`
+- `Docs/Internal/SimHubParameterInventory.md`
+- `Docs/Internal/SimHubLogMessages.md`
+- `Docs/Internal/Plugin_UI_Tooltips.md`
+- `Docs/Internal/Development_Changelog.md`
+- `Docs/Pit_Assist.md`
+- `Docs/Subsystems/Dash_Integration.md`
 - `Docs/RepoStatus.md`
 
 ### Changed in LapRef live-current comparison correction task

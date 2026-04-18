@@ -111,6 +111,80 @@
                 <ContentControl x:Name="LaunchSettingsHost" Margin="0,10,0,0"/>
             </Expander>
 
+            <Expander Header="Pit Commands"
+                      Margin="0,0,0,10"
+                      IsExpanded="False">
+                <StackPanel Margin="0,10,0,0">
+                    <TextBlock Foreground="LightGray"
+                               TextWrapping="Wrap"
+                               Text="Built-in pit command actions let you bind your pit service controls directly in SimHub Controls &amp; Events and trigger them from hardware, keyboard, or dashboard buttons." />
+                    <TextBlock Margin="0,6,0,0"
+                               Foreground="#FFC107"
+                               TextWrapping="Wrap"
+                               Text="Note: pit commands are most reliable when iRacing is in the foreground/focus." />
+                    <styles:SHToggleCheckbox Content="Auto-focus iRacing before pit/custom message send (Preview)"
+                                             Margin="0,8,0,0"
+                                             IsChecked="{Binding Settings.PitCommandsAutoFocusPreview, Mode=TwoWay}"
+                                             ToolTip="Forward-looking setting surface only. Current runtime still requires iRacing to be in focus for reliable send."/>
+                    <StackPanel Margin="0,10,0,0">
+                        <ui:ControlsEditor ActionName="LalaLaunch.Pit.ClearAll" FriendlyName="Pit Clear All"/>
+                        <ui:ControlsEditor ActionName="LalaLaunch.Pit.ClearTires" FriendlyName="Clear Tyres"/>
+                        <ui:ControlsEditor ActionName="LalaLaunch.Pit.ToggleFuel" FriendlyName="Toggle Fuel"/>
+                        <ui:ControlsEditor ActionName="LalaLaunch.Pit.FuelAdd1" FriendlyName="Fuel +1"/>
+                        <ui:ControlsEditor ActionName="LalaLaunch.Pit.FuelRemove1" FriendlyName="Fuel -1"/>
+                        <ui:ControlsEditor ActionName="LalaLaunch.Pit.FuelAdd10" FriendlyName="Fuel +10"/>
+                        <ui:ControlsEditor ActionName="LalaLaunch.Pit.FuelRemove10" FriendlyName="Fuel -10"/>
+                        <ui:ControlsEditor ActionName="LalaLaunch.Pit.FuelSetMax" FriendlyName="Fuel MAX"/>
+                        <ui:ControlsEditor ActionName="LalaLaunch.Pit.ToggleTiresAll" FriendlyName="Toggle Tyres"/>
+                        <ui:ControlsEditor ActionName="LalaLaunch.Pit.ToggleFastRepair" FriendlyName="Toggle Fast Repair"/>
+                        <ui:ControlsEditor ActionName="LalaLaunch.Pit.ToggleAutoFuel" FriendlyName="Toggle Auto Fuel"/>
+                        <ui:ControlsEditor ActionName="LalaLaunch.Pit.Windshield" FriendlyName="Toggle Tear-off"/>
+                    </StackPanel>
+                </StackPanel>
+            </Expander>
+
+            <Expander Header="Custom Messages"
+                      Margin="0,0,0,10"
+                      IsExpanded="False">
+                <StackPanel Margin="0,10,0,0">
+                    <TextBlock Foreground="LightGray"
+                               TextWrapping="Wrap"
+                               Text="Configure up to 10 custom message buttons. Give each slot a friendly name, enter your message text, then bind it like any other plugin action." />
+                    <ItemsControl ItemsSource="{Binding Settings.CustomMessages}">
+                        <ItemsControl.ItemTemplate>
+                            <DataTemplate>
+                                <Border Margin="0,8,0,0" Padding="8" BorderBrush="#2C2C2C" BorderThickness="1" CornerRadius="4">
+                                    <StackPanel>
+                                        <TextBlock FontWeight="SemiBold" Margin="0,0,0,6" Text="{Binding FriendlyActionName}" />
+                                        <Grid Margin="0,0,0,6">
+                                            <Grid.ColumnDefinitions>
+                                                <ColumnDefinition Width="Auto"/>
+                                                <ColumnDefinition Width="*"/>
+                                            </Grid.ColumnDefinitions>
+                                            <TextBlock Grid.Column="0" VerticalAlignment="Center" Margin="0,0,8,0" Text="Label"/>
+                                            <TextBox Grid.Column="1"
+                                                     Text="{Binding Name, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
+                                                     ToolTip="Friendly name shown in this settings list and used for feedback text when the message is sent."/>
+                                        </Grid>
+                                        <Grid Margin="0,0,0,6">
+                                            <Grid.ColumnDefinitions>
+                                                <ColumnDefinition Width="Auto"/>
+                                                <ColumnDefinition Width="*"/>
+                                            </Grid.ColumnDefinitions>
+                                            <TextBlock Grid.Column="0" VerticalAlignment="Center" Margin="0,0,8,0" Text="Message"/>
+                                            <TextBox Grid.Column="1"
+                                                     Text="{Binding MessageText, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
+                                                     ToolTip="Chat message content to send when this custom message action is triggered."/>
+                                        </Grid>
+                                        <ui:ControlsEditor ActionName="{Binding ActionName}" FriendlyName="{Binding FriendlyActionName}"/>
+                                    </StackPanel>
+                                </Border>
+                            </DataTemplate>
+                        </ItemsControl.ItemTemplate>
+                    </ItemsControl>
+                </StackPanel>
+            </Expander>
+
             <styles:SHToggleCheckbox Content="Pit.Box: include optional repairs in service countdown"
                                      Margin="0,0,0,10"
                                      IsChecked="{Binding Settings.PitBoxIncludeOptionalRepairs, Mode=TwoWay}"

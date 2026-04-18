@@ -3,8 +3,8 @@
 **CANONICAL CONTRACT**
 
 Validated against: HEAD
-Last reviewed: 2026-04-17
-Last updated: 2026-04-17
+Last reviewed: 2026-04-18
+Last updated: 2026-04-18
 Branch: work
 
 - All exports are attached in `LalaLaunch.cs` during `Init()` via `AttachCore`/`AttachVerbose`. Core values are refreshed in `DataUpdate` (500 ms poll for fuel/pace/pit via `_poll500ms`; per-tick for launch/dash/messaging). Verbose rows require `SimhubPublish.VERBOSE`.【F:LalaLaunch.cs†L2644-L3120】【F:LalaLaunch.cs†L3411-L3775】
@@ -322,10 +322,12 @@ Shift Assist runtime/settings notes:
 | LalaLaunch.Dash.DarkMode.ModeText | string | Dark Mode label derived from `Mode` (`"Off"`, `"Manual"`, `"Auto"`). Purely reflects configured mode and does not change when Lovely drives `Active`. Note: internal `AttachCore` key is `Dash.DarkMode.ModeText`; SimHub-visible parameter is `LalaLaunch.Dash.DarkMode.ModeText`. | Per tick. | `LalaLaunch.cs` `EvaluateDarkMode` + `AttachCore`. |
 | PitScreenActive | bool | Whether pit screen is currently shown. | Per tick. | `LalaLaunch.cs` — pit screen state + `AttachCore`【F:LalaLaunch.cs†L3732-L3878】【F:LalaLaunch.cs†L3158-L3162】 |
 | PitScreenMode | string | Pit screen mode (`auto` or `manual`). | Per tick. | `LalaLaunch.cs` — pit screen state + `AttachCore`【F:LalaLaunch.cs†L3837-L3878】【F:LalaLaunch.cs†L3158-L3162】 |
-| Pit.Command.DisplayText | string | Short-lived user-facing pit command feedback text (e.g. `Fuel +1`, `Tyres OFF`, `Tank Full`, `Pit Cmd Fail`). | Per tick while active message window. | `PitCommandEngine.cs` feedback publisher + `LalaLaunch.cs` `AttachCore`. |
+| Pit.Command.DisplayText | string | Short-lived user-facing pit/custom-message feedback text (e.g. `Fuel +1`, `Fuel MAX`, `Tyres OFF`, `Pit Cmd Fail`, or a custom-message label). | Per tick while active message window. | `PitCommandEngine.cs` feedback publisher + `LalaLaunch.cs` `AttachCore`. |
 | Pit.Command.Active | bool | `true` while `Pit.Command.DisplayText` is active; otherwise `false`. | Per tick. | `PitCommandEngine.cs` message timer + `LalaLaunch.cs` `AttachCore`. |
 | Pit.Command.LastAction | string | Last fired pit command action id for troubleshooting. | On action fire; surfaced each tick. | `PitCommandEngine.cs` action audit state + `LalaLaunch.cs` `AttachCore`. |
 | Pit.Command.LastRaw | string | Last raw mapped chat command string (`#...$`) for troubleshooting. | On action fire; surfaced each tick. | `PitCommandEngine.cs` command mapping + `LalaLaunch.cs` `AttachCore`. |
+| Settings.PitCommandsAutoFocusPreview | bool | Settings-only preview toggle exposed in Settings → Pit Commands for future auto-focus investigation; current runtime still requires iRacing foreground focus for reliable send. | Persisted setting (UI + load/save). | `LaunchPluginSettings` + `GlobalSettingsView.xaml` + `LalaLaunch.cs` settings normalization. |
+| Settings.CustomMessages[1..10].Name / MessageText | string/string | Ten user-configurable custom-message slots. `Name` is friendly UI/feedback text; `MessageText` is chat content sent by `LalaLaunch.CustomMessage01..10` actions. | Persisted setting (UI + load/save). | `LaunchPluginSettings.CustomMessages` + `CustomMessageSlot` + `GlobalSettingsView.xaml` + `LalaLaunch.cs` action handlers. |
 | LalaDashShowLaunchScreen / LalaDashShowPitLimiter / LalaDashShowPitScreen / LalaDashShowRejoinAssist / LalaDashShowVerboseMessaging / LalaDashShowRaceFlags / LalaDashShowRadioMessages / LalaDashShowTraffic | bool | User visibility toggles for Lala dash. | Per tick. | `LaunchPluginSettings` persisted values + `AttachCore`【F:LalaLaunch.cs†L3177-L3185】 |
 | MsgDashShowLaunchScreen / MsgDashShowPitLimiter / MsgDashShowPitScreen / MsgDashShowRejoinAssist / MsgDashShowVerboseMessaging / MsgDashShowRaceFlags / MsgDashShowRadioMessages / MsgDashShowTraffic | bool | User visibility toggles for messaging dash. | Per tick. | `LaunchPluginSettings` persisted values + `AttachCore`【F:LalaLaunch.cs†L3187-L3195】 |
 | OverlayDashShowLaunchScreen / OverlayDashShowPitLimiter / OverlayDashShowPitScreen / OverlayDashShowRejoinAssist / OverlayDashShowVerboseMessaging / OverlayDashShowRaceFlags / OverlayDashShowRadioMessages / OverlayDashShowTraffic | bool | User visibility toggles for overlay dash. | Per tick. | `LaunchPluginSettings` persisted values + `AttachCore`【F:LalaLaunch.cs†L3197-L3205】 |

@@ -33,6 +33,19 @@ The public user-facing release history is maintained in the root `CHANGELOG.md`.
 
 ## Post-v1.0 development
 
+### Pit command polish + Settings UI expansion (Pit Commands + Custom Messages)
+- Polished pit command user feedback wording:
+  - `Clear All` feedback now reads `Pit Clear All`.
+  - Fuel-add commands now publish `Fuel MAX` when the add reaches effective tank clamp/max (including +1/+10 edge cases), and the old `Tank Full` wording was removed.
+- Added a new Settings → `Pit Commands` expander with:
+  - driver-facing guidance text,
+  - iRacing focus reliability warning,
+  - preview-only `Auto-focus iRacing before pit/custom message send` settings surface (forward-looking; no focus-steal behavior implemented in this task),
+  - built-in binding rows for all plugin-owned pit actions.
+- Added a new Settings → `Custom Messages` expander with ten editable custom-message slots (friendly label + message text) and per-slot Controls & Events binding rows.
+- Added plugin-owned custom-message actions `LalaLaunch.CustomMessage01..10` that dispatch via the existing direct chat-injection transport seam and reuse short-lived `Pit.Command.*` feedback exports.
+- Classification: **both** (user-facing Settings UI + action surface expansion, plus bounded runtime pit/custom-message dispatch polish).
+
 ### LapRef live current-lap comparison correction + output-prune follow-up
 - Corrected LapRef comparison/delta source so live comparison now uses current-lap progress instead of replaying the last validated snapshot sector-by-sector.
 - Added a dedicated live player comparison seam in `LapReferenceEngine`:
