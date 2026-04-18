@@ -9,6 +9,13 @@ Branch: work
 - No Git remote is configured in this checkout (`git remote -v` returns empty).
 
 ## Documentation sync status
+- Finalized LapRef live cumulative delta rollover semantics after the earlier sector-box persistence patch:
+  - kept player sector-box visual persistence across lap rollover
+  - separated current-lap compare eligibility from display persistence
+  - `LapRef.Compare.*` and top-level cumulative deltas now use current-lap comparable state only
+  - at lap start/rollover, cumulative valid flags now re-arm false and cumulative values publish `0` until new-lap comparable sectors exist
+- Removed dead rollover state from `LapReferenceEngine` (`_isLivePlayerLapRolloverArmed`) while retaining required rollover tracking (`_lastLivePlayerActiveSegment`) and current-lap comparable snapshot state.
+- Kept profile-best fallback semantics unchanged, including legacy lap-time PB rows with missing sectors.
 - Fixed LapRef live player sector presentation across lap rollover:
   - removed per-tick hard clear behavior from the live player comparison snapshot path
   - completed sector boxes now persist through start/finish and are replaced progressively as new-lap sectors complete
@@ -43,6 +50,13 @@ Branch: work
 ### Changed in LapRef active-segment + cumulative delta task
 - `LapReferenceEngine.cs`
 - `LalaLaunch.cs`
+- `Docs/Subsystems/LapRef.md`
+- `Docs/Internal/SimHubParameterInventory.md`
+- `Docs/Internal/Development_Changelog.md`
+- `Docs/RepoStatus.md`
+
+### Changed in LapRef cumulative-delta rollover truth follow-up
+- `LapReferenceEngine.cs`
 - `Docs/Subsystems/LapRef.md`
 - `Docs/Internal/SimHubParameterInventory.md`
 - `Docs/Internal/Development_Changelog.md`
@@ -91,4 +105,4 @@ Branch: work
 - Added bounded observability and short-lived user feedback exports so command success/failure is visible on dash and in SimHub logs.
 
 ## Validation note
-- Validation recorded against `HEAD` (`LapRef comparison now uses live current-lap completed sectors, and redundant per-reference active-segment exports were pruned`).
+- Validation recorded against `HEAD` (`LapRef player sector display now persists through rollover while compare/cumulative eligibility is re-armed to current-lap-only truth at lap start`).

@@ -33,6 +33,17 @@ The public user-facing release history is maintained in the root `CHANGELOG.md`.
 
 ## Post-v1.0 development
 
+### LapRef cumulative-delta rollover truth fix (post-persistence follow-up)
+- Finalized LapRef live-current compare semantics by separating **display persistence** from **compare eligibility** in `LapReferenceEngine`.
+- Kept player-row sector-box continuity across rollover, but moved `LapRef.Compare.*` and top-level cumulative deltas to consume current-lap comparable state only.
+- On normal lap rollover, current-lap comparable state now re-arms immediately:
+  - `LapRef.DeltaToSessionBestValid = false`
+  - `LapRef.DeltaToProfileBestValid = false`
+  - both cumulative delta values publish `0` until at least one new-lap comparable sector pair exists.
+- Removed dead rollover scaffolding from the prior patch (`_isLivePlayerLapRolloverArmed`) while retaining only needed state (`_livePlayerCurrentLapSnapshot`, `_lastLivePlayerActiveSegment`).
+- Preserved boundaries and invariants: CarSA sector ownership unchanged, H2H/Opponents unchanged, profile-best persistence/fallback semantics unchanged (including sectorless legacy PB rows).
+- Classification: **both** (runtime compare correctness fix + canonical LapRef/export docs updated).
+
 ### LapRef live sector rollover persistence fix
 - Updated `LapReferenceEngine` live player comparison snapshot handling so completed sector boxes are no longer hard-cleared every update tick.
 - Added a narrow lap-rollover seam for the live player row:

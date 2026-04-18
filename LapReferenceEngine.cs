@@ -21,7 +21,6 @@ namespace LaunchPlugin
         private string _trackKey = string.Empty;
         private bool _isWet;
         private int _lastLivePlayerActiveSegment;
-        private bool _isLivePlayerLapRolloverArmed;
 
         public LapReferenceEngine()
         {
@@ -44,10 +43,6 @@ namespace LaunchPlugin
             _sessionBestSnapshot.Clear();
             _profileBestSnapshot.Clear();
             _lastLivePlayerActiveSegment = 0;
-            if (_isLivePlayerLapRolloverArmed)
-            {
-                _isLivePlayerLapRolloverArmed = false;
-            }
             Outputs.Reset();
         }
 
@@ -89,7 +84,6 @@ namespace LaunchPlugin
                 _livePlayerCurrentLapSnapshot.Clear();
                 _sessionBestSnapshot.Clear();
                 _lastLivePlayerActiveSegment = 0;
-                _isLivePlayerLapRolloverArmed = false;
             }
 
             MaterializeProfileBest(profileBestLapSec, profileBestSectorMs, isWet);
@@ -104,11 +98,11 @@ namespace LaunchPlugin
             Outputs.SessionBest.AssignFromSnapshot(_sessionBestSnapshot);
             Outputs.ProfileBest.AssignFromSnapshot(_profileBestSnapshot);
 
-            BuildComparison(Outputs.CompareSessionBest, _livePlayerComparisonSnapshot, _sessionBestSnapshot);
-            BuildComparison(Outputs.CompareProfileBest, _livePlayerComparisonSnapshot, _profileBestSnapshot);
+            BuildComparison(Outputs.CompareSessionBest, _livePlayerCurrentLapSnapshot, _sessionBestSnapshot);
+            BuildComparison(Outputs.CompareProfileBest, _livePlayerCurrentLapSnapshot, _profileBestSnapshot);
 
-            BuildCumulativeDelta(_livePlayerComparisonSnapshot, _sessionBestSnapshot, out var deltaToSessionBestSec, out var deltaToSessionBestValid);
-            BuildCumulativeDelta(_livePlayerComparisonSnapshot, _profileBestSnapshot, out var deltaToProfileBestSec, out var deltaToProfileBestValid);
+            BuildCumulativeDelta(_livePlayerCurrentLapSnapshot, _sessionBestSnapshot, out var deltaToSessionBestSec, out var deltaToSessionBestValid);
+            BuildCumulativeDelta(_livePlayerCurrentLapSnapshot, _profileBestSnapshot, out var deltaToProfileBestSec, out var deltaToProfileBestValid);
             Outputs.DeltaToSessionBestSec = deltaToSessionBestSec;
             Outputs.DeltaToSessionBestValid = deltaToSessionBestValid;
             Outputs.DeltaToProfileBestSec = deltaToProfileBestSec;
@@ -272,7 +266,6 @@ namespace LaunchPlugin
             if (IsLapRollover(previousActiveSegment, activeSegment))
             {
                 _livePlayerCurrentLapSnapshot.Clear();
-                _isLivePlayerLapRolloverArmed = true;
             }
 
             _livePlayerComparisonSnapshot.ActiveSegment = activeSegment;
@@ -288,7 +281,6 @@ namespace LaunchPlugin
                 return;
             }
 
-            _isLivePlayerLapRolloverArmed = false;
             for (int i = 0; i < completedSectorCount; i++)
             {
                 var sector = liveFixedSectorSnapshot.GetSector(i);
