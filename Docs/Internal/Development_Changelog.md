@@ -33,6 +33,18 @@ The public user-facing release history is maintained in the root `CHANGELOG.md`.
 
 ## Post-v1.0 development
 
+### Pit Fuel Control control-model follow-up (real max toggle + STBY guardrails on mode changes)
+- Corrected `Pit.FuelSetMax` to a real transport toggle in `PitCommandEngine`:
+  - press 1 sends MAX (`#fuel +150`),
+  - press 2 sends ZERO (`#fuel 0`),
+  - then alternates MAX/ZERO on every press.
+- Kept `Pit.Command.FuelSetMaxToggleState` as the plugin-owned phase export and retained the accepted behavior that phase flips on every press even if transport later fails.
+- Updated `PitFuelControlEngine.ModeCycle` guardrails:
+  - `AUTO -> MAN` now forces `Source=STBY`,
+  - `MAN -> AUTO` while `Source=PLAN` is now allowed, but forces `Source=STBY` instead of hard-blocking/skipping AUTO.
+- Kept selection feedback/identity on the existing pit-command seam (`Pit.Command.DisplayText`, `Pit.Command.LastAction`, active message timing), with `ModeCycle` publishing `FUEL SRC STBY` when a forced STBY transition occurs.
+- Classification: **both** (driver-visible control-model behavior correction + internal contract/docs alignment).
+
 ### PR follow-up: guard LapRef CarIdx authority with freshness check
 - Tightened `ResolveLapRefAuthoritativeLapTimeSec(...)` to avoid overriding the validated-gate lap with stale `CarIdxLastLapTime` during one-tick rollover lag.
 - When both values are valid and differ beyond a tight freshness tolerance, LapRef now prefers the validated gate candidate for that capture tick; otherwise it keeps CarIdx as authority.

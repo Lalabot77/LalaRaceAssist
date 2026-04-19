@@ -9,6 +9,11 @@ Branch: work
 - No Git remote is configured in this checkout (`git remote -v` returns empty).
 
 ## Documentation sync status
+- Pit Fuel Control control-model follow-up corrected action semantics:
+  - `Pit.FuelSetMax` is now a real MAX/ZERO behavioral toggle on transport (`MAX -> ZERO -> MAX -> ZERO`), while `Pit.Command.FuelSetMaxToggleState` still flips on every press.
+  - `ModeCycle` now forces `Source=STBY` on `AUTO -> MAN`.
+  - `ModeCycle` no longer hard-blocks `MAN -> AUTO` when `Source=PLAN`; it allows AUTO and immediately forces `Source=STBY` so the driver must reselect a live source.
+  - `ModeCycle` selection feedback remains plugin-owned and explicit (`FUEL SRC STBY` when forced-STBY guardrail applies).
 - PR follow-up hardened LapRef authoritative-lap freshness at rollover:
   - `ResolveLapRefAuthoritativeLapTimeSec(...)` now validates `CarIdxLastLapTime` freshness against the validated-gate lap candidate before overriding.
   - when both are valid but diverge beyond a tight tolerance, capture/PB handoff now stays on the validated-gate candidate for that tick (prevents one-tick stale previous-lap overrides).
@@ -184,6 +189,16 @@ Branch: work
 - `PitFuelControlEngine.cs`
 - `PitCommandEngine.cs`
 - `LalaLaunch.cs`
+- `Docs/Internal/SimHubParameterInventory.md`
+- `Docs/Internal/SimHubLogMessages.md`
+- `Docs/Internal/Development_Changelog.md`
+- `Docs/Subsystems/Dash_Integration.md`
+- `Docs/Pit_Assist.md`
+- `Docs/RepoStatus.md`
+
+### Changed in Pit Fuel Control control-model follow-up (real max toggle + STBY mode-guardrails)
+- `PitFuelControlEngine.cs`
+- `PitCommandEngine.cs`
 - `Docs/Internal/SimHubParameterInventory.md`
 - `Docs/Internal/SimHubLogMessages.md`
 - `Docs/Internal/Development_Changelog.md`

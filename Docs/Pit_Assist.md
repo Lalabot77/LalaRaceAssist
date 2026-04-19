@@ -62,6 +62,12 @@ Pit command buttons should now be bound to plugin-owned Controls & Events action
 
 These actions replace any old dashboard bindings that directly called `IRacingExtraProperties` pit-command actions.
 
+Pit Fuel Control behavior notes for these bindings:
+- `LalaLaunch.Pit.FuelSetMax` is now a true transport toggle: press sequence alternates **MAX**, **ZERO**, **MAX**, **ZERO** ...
+- `LalaLaunch.Pit.FuelControl.ModeCycle` now enforces source re-selection guardrails:
+  - `AUTO -> MAN` forces source to `STBY`,
+  - cycling `MAN -> AUTO` while source is `PLAN` is allowed, but source is forced to `STBY` (user must pick a real source again).
+
 In Settings → **Pit Commands**, these are shown as fixed built-in features with normal binding rows (no raw chat command editing).
 
 ### Custom message buttons (Settings → Custom Messages)
