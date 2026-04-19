@@ -133,7 +133,7 @@ namespace LaunchPlugin
             _pitFuelControlEngine = new PitFuelControlEngine(
                 BuildPitFuelControlSnapshot,
                 SendPitFuelControlCommand,
-                message => _pitCommandEngine.PublishFeedback(message));
+                (actionName, message, raw) => _pitCommandEngine.PublishActionFeedback(actionName, message, raw));
         }
 
         // --- Dashboard Manager ---
@@ -259,6 +259,7 @@ namespace LaunchPlugin
         public void PitClearAll() => ExecutePitCommand(PitCommandAction.ClearAll);
         public void PitClearTyres() => ExecutePitCommand(PitCommandAction.ClearTyres);
         public void PitToggleFuel() => ExecutePitCommand(PitCommandAction.ToggleFuel);
+        public void PitFuelSetZero() => ExecutePitCommand(PitCommandAction.FuelSetZero);
         public void PitFuelAdd1() => ExecutePitCommand(PitCommandAction.FuelAdd1);
         public void PitFuelRemove1() => ExecutePitCommand(PitCommandAction.FuelRemove1);
         public void PitFuelAdd10() => ExecutePitCommand(PitCommandAction.FuelAdd10);
@@ -270,6 +271,9 @@ namespace LaunchPlugin
         public void PitWindshield() => ExecutePitCommand(PitCommandAction.Windshield);
         public void PitFuelControlSourceCycle() => _pitFuelControlEngine.SourceCycle();
         public void PitFuelControlModeCycle() => _pitFuelControlEngine.ModeCycle();
+        public void PitFuelControlSetPush() => _pitFuelControlEngine.SetPush();
+        public void PitFuelControlSetNorm() => _pitFuelControlEngine.SetNorm();
+        public void PitFuelControlSetSave() => _pitFuelControlEngine.SetSave();
         public void TriggerCustomMessageSlot(int slotNumber)
         {
             string customActionName = $"CustomMessage{slotNumber:00}";
@@ -4628,6 +4632,7 @@ namespace LaunchPlugin
             this.AddAction("Pit.ClearAll", (a, b) => PitClearAll());
             this.AddAction("Pit.ClearTires", (a, b) => PitClearTyres());
             this.AddAction("Pit.ToggleFuel", (a, b) => PitToggleFuel());
+            this.AddAction("Pit.FuelSetZero", (a, b) => PitFuelSetZero());
             this.AddAction("Pit.FuelAdd1", (a, b) => PitFuelAdd1());
             this.AddAction("Pit.FuelRemove1", (a, b) => PitFuelRemove1());
             this.AddAction("Pit.FuelAdd10", (a, b) => PitFuelAdd10());
@@ -4639,6 +4644,9 @@ namespace LaunchPlugin
             this.AddAction("Pit.Windshield", (a, b) => PitWindshield());
             this.AddAction("Pit.FuelControl.SourceCycle", (a, b) => PitFuelControlSourceCycle());
             this.AddAction("Pit.FuelControl.ModeCycle", (a, b) => PitFuelControlModeCycle());
+            this.AddAction("Pit.FuelControl.SetPush", (a, b) => PitFuelControlSetPush());
+            this.AddAction("Pit.FuelControl.SetNorm", (a, b) => PitFuelControlSetNorm());
+            this.AddAction("Pit.FuelControl.SetSave", (a, b) => PitFuelControlSetSave());
             this.AddAction("CustomMessage01", (a, b) => TriggerCustomMessageSlot(1));
             this.AddAction("CustomMessage02", (a, b) => TriggerCustomMessageSlot(2));
             this.AddAction("CustomMessage03", (a, b) => TriggerCustomMessageSlot(3));
@@ -4950,6 +4958,7 @@ namespace LaunchPlugin
             AttachCore("Pit.Command.Active", () => _pitCommandEngine.Active);
             AttachCore("Pit.Command.LastAction", () => _pitCommandEngine.LastAction);
             AttachCore("Pit.Command.LastRaw", () => _pitCommandEngine.LastRaw);
+            AttachCore("Pit.Command.FuelSetMaxToggleState", () => _pitCommandEngine.FuelSetMaxToggleState);
             AttachCore("Pit.FuelControl.Source", () => (int)_pitFuelControlEngine.Source);
             AttachCore("Pit.FuelControl.SourceText", () => _pitFuelControlEngine.SourceText);
             AttachCore("Pit.FuelControl.Mode", () => (int)_pitFuelControlEngine.Mode);
