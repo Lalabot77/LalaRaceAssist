@@ -9,6 +9,10 @@ Branch: work
 - No Git remote is configured in this checkout (`git remote -v` returns empty).
 
 ## Documentation sync status
+- PR #577 review follow-up cleared AUTO baseline state on disable:
+  - `ModeCycle` still cycles `OFF -> MAN -> AUTO -> OFF`.
+  - `AUTO -> OFF` now sets `Mode=OFF`, `AutoArmed=false`, `LastSentFuelLitres=-1`, and `Source=STBY`, with feedback `FUEL MODE OFF` and no send.
+  - Existing MAN->AUTO forced-STBY guardrail behavior remains unchanged (`PLAN/STBY -> AUTO` keeps `AutoArmed=false` and feedback `FUEL AUTO STBY`).
 - PR #576 follow-up fixed bounded Pit Fuel Control behavior regressions:
   - `Pit.FuelSetMax` tank-full short-circuit is now phase-aware: MAX phase can short-circuit, ZERO phase always transports.
   - forced-STBY mode transitions now preserve mode context in one feedback string:
@@ -18,9 +22,9 @@ Branch: work
   - `MAN -> AUTO` from `STBY` now also leaves `AutoArmed=false` and keeps feedback explicit as `FUEL AUTO STBY` (prevents immediate self-cancel before reselection/send).
 - Pit Fuel Control control-model follow-up corrected action semantics:
   - `Pit.FuelSetMax` is now a real MAX/ZERO behavioral toggle on transport (`MAX -> ZERO -> MAX -> ZERO`), while `Pit.Command.FuelSetMaxToggleState` still flips on every press.
-  - `ModeCycle` now forces `Source=STBY` on `AUTO -> MAN`.
   - `ModeCycle` no longer hard-blocks `MAN -> AUTO` when `Source=PLAN`; it allows AUTO and immediately forces `Source=STBY` so the driver must reselect a live source.
-  - `ModeCycle` selection feedback remains plugin-owned and explicit (`FUEL SRC STBY` when forced-STBY guardrail applies).
+  - Latest follow-up keeps that MAN->AUTO forced-STBY guardrail but restores disable flow by cycling `AUTO -> OFF` (no AUTO->MAN forced-STBY branch in current behavior).
+  - `ModeCycle` selection feedback remains plugin-owned and explicit (`FUEL AUTO STBY` on forced-STBY MAN->AUTO, `FUEL MODE OFF` on AUTO->OFF).
 - PR follow-up hardened LapRef authoritative-lap freshness at rollover:
   - `ResolveLapRefAuthoritativeLapTimeSec(...)` now validates `CarIdxLastLapTime` freshness against the validated-gate lap candidate before overriding.
   - when both are valid but diverge beyond a tight tolerance, capture/PB handoff now stays on the validated-gate candidate for that tick (prevents one-tick stale previous-lap overrides).
@@ -268,6 +272,19 @@ Branch: work
 - `CHANGELOG.md`
 - `Docs/Quick_Start.md`
 - `Docs/User_Guide.md`
+
+
+### Changed in Pit Fuel Control ModeCycle AUTO->OFF follow-up
+- `PitFuelControlEngine.cs`
+- `Docs/Internal/SimHubParameterInventory.md`
+- `Docs/Internal/Development_Changelog.md`
+- `Docs/RepoStatus.md`
+
+### Changed in PR #577 review follow-up (AUTO->OFF baseline clear)
+- `PitFuelControlEngine.cs`
+- `Docs/Internal/SimHubParameterInventory.md`
+- `Docs/Internal/Development_Changelog.md`
+- `Docs/RepoStatus.md`
 
 ## Delivery status highlights
 - Kept changes bounded to existing runtime seams and exports: corrected projection behavior at the shared timed-race authority seam rather than introducing parallel dash property families.
