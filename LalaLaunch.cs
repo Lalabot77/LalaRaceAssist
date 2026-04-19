@@ -2785,9 +2785,11 @@ namespace LaunchPlugin
 
                     if (recordPaceForStats)
                     {
-                        _lastValidLapMs = (int)Math.Round(lastLapSec * 1000.0);
+                        double lapRefAuthoritativeLapSec;
+                        TryCaptureLapReferenceValidatedLap(pluginManager, lastLapSec, completedLapsNow, out _lastValidatedLapRefSectorMs, out lapRefAuthoritativeLapSec);
+                        double pbGateLapSec = IsValidCarSaLapTimeSec(lapRefAuthoritativeLapSec) ? lapRefAuthoritativeLapSec : lastLapSec;
+                        _lastValidLapMs = (int)Math.Round(pbGateLapSec * 1000.0);
                         _lastValidLapNumber = completedLapsNow;
-                        TryCaptureLapReferenceValidatedLap(pluginManager, lastLapSec, completedLapsNow, out _lastValidatedLapRefSectorMs);
                     }
 
                     if (recordPaceForStats)
@@ -4089,6 +4091,7 @@ namespace LaunchPlugin
         private bool _carSaBestLapFallbackInfoLogged;
         private const double CarSaLapTimeUpdateVisibilitySeconds = 3.0;
         private const double CarSaLapTimeEpsilonSec = 0.001;
+        private const double LapRefAuthoritativeLapFreshnessToleranceSec = 0.050;
 
         private enum LaunchState
         {
@@ -12888,9 +12891,10 @@ namespace LaunchPlugin
                 liveFixedSectorSnapshot);
         }
 
-        private bool TryCaptureLapReferenceValidatedLap(PluginManager pluginManager, double lastLapSec, int completedLapsNow, out int?[] capturedSectorMs)
+        private bool TryCaptureLapReferenceValidatedLap(PluginManager pluginManager, double candidateLapSec, int completedLapsNow, out int?[] capturedSectorMs, out double authoritativeLapSec)
         {
             capturedSectorMs = null;
+            authoritativeLapSec = 0.0;
             if (_lapReferenceEngine == null || pluginManager == null)
             {
                 return false;
@@ -12908,6 +12912,12 @@ namespace LaunchPlugin
                 return false;
             }
 
+            authoritativeLapSec = ResolveLapRefAuthoritativeLapTimeSec(pluginManager, playerCarIdx, candidateLapSec);
+            if (!IsValidCarSaLapTimeSec(authoritativeLapSec))
+            {
+                return false;
+            }
+
             CarSAEngine.FixedSectorCacheSnapshot fixedSectorSnapshot = default(CarSAEngine.FixedSectorCacheSnapshot);
 
             bool hasFixedSectorSnapshot =
@@ -12915,7 +12925,7 @@ namespace LaunchPlugin
                 _carSaEngine.TryGetFixedSectorCacheSnapshot(playerCarIdx, out fixedSectorSnapshot);
 
             bool isNewSessionBest = _lapReferenceEngine.CaptureValidatedLap(
-                lastLapSec,
+                authoritativeLapSec,
                 completedLapsNow,
                 0,
                 _isWetMode,
@@ -12940,10 +12950,31 @@ namespace LaunchPlugin
 
             if (isNewSessionBest)
             {
-                SimHub.Logging.Current.Info($"[LalaPlugin:LapRef] Session best updated ({(_isWetMode ? "wet" : "dry")}): {lastLapSec:F3}s");
+                SimHub.Logging.Current.Info($"[LalaPlugin:LapRef] Session best updated ({(_isWetMode ? "wet" : "dry")}): {authoritativeLapSec:F3}s");
             }
 
             return true;
+        }
+
+        private double ResolveLapRefAuthoritativeLapTimeSec(PluginManager pluginManager, int playerCarIdx, double fallbackLapSec)
+        {
+            bool hasValidFallbackLapSec = IsValidCarSaLapTimeSec(fallbackLapSec);
+            if (pluginManager != null && playerCarIdx >= 0)
+            {
+                float[] carIdxLastLapTimes = SafeReadFloatArray(pluginManager, "DataCorePlugin.GameRawData.Telemetry.CarIdxLastLapTime");
+                double carIdxLapSec = ReadCarIdxTime(carIdxLastLapTimes, playerCarIdx);
+                if (IsValidCarSaLapTimeSec(carIdxLapSec))
+                {
+                    if (hasValidFallbackLapSec && Math.Abs(carIdxLapSec - fallbackLapSec) > LapRefAuthoritativeLapFreshnessToleranceSec)
+                    {
+                        return fallbackLapSec;
+                    }
+
+                    return carIdxLapSec;
+                }
+            }
+
+            return hasValidFallbackLapSec ? fallbackLapSec : 0.0;
         }
 
         private static int ComputeLapRefActiveSegment(double lapPct)

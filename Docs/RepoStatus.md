@@ -9,6 +9,20 @@ Branch: work
 - No Git remote is configured in this checkout (`git remote -v` returns empty).
 
 ## Documentation sync status
+- PR follow-up hardened LapRef authoritative-lap freshness at rollover:
+  - `ResolveLapRefAuthoritativeLapTimeSec(...)` now validates `CarIdxLastLapTime` freshness against the validated-gate lap candidate before overriding.
+  - when both are valid but diverge beyond a tight tolerance, capture/PB handoff now stays on the validated-gate candidate for that tick (prevents one-tick stale previous-lap overrides).
+- LapRef timing-source and PB-trigger alignment fix landed:
+  - LapRef validated-lap capture now resolves player lap time from authoritative `CarIdxLastLapTime` seam (same trusted player lap-time seam used by H2H/core), with guarded fallback only when unavailable.
+  - `_lastValidLapMs` (PB trigger handoff) now latches from that same authoritative captured lap value, removing first-expected-beat misses caused by stale capture values.
+  - `LapRef.Player.LapTimeSec` and `LapRef.SessionBest.LapTimeSec` now inherit the corrected capture seam through LapRef snapshot/session-best ownership.
+- LapRef rollover presentation parity tightened to proven H2H feel:
+  - player-row sector box refresh now consumes live CarSA fixed-sector cache presence directly (H2H-like display continuity),
+  - compare/cumulative truth remains current-lap-only and re-arms on rollover as before.
+- PB persistence invariants preserved:
+  - PB lap-time update stays on existing `TryUpdatePBByCondition(...)` seam,
+  - sector persistence remains conditional on real sector data only,
+  - legacy lap-time-only PB rows remain valid.
 - PR #575 follow-up fixed Pit Fuel Control source-change failure feedback masking:
   - `SourceCycle` and direct source-select actions now publish `FUEL SRC ...` selection feedback only when no send is attempted (`Mode=OFF`).
   - In `Mode=MAN/AUTO`, failed send attempts now keep existing pit-command failure feedback (`Pit Cmd Fail`) visible instead of being overwritten by selection text.
@@ -90,6 +104,20 @@ Branch: work
 ## Reviewed documentation set
 ### Changed in LapRef rollover seam transient-zero follow-up
 - `LapReferenceEngine.cs`
+- `Docs/Subsystems/LapRef.md`
+- `Docs/Internal/Development_Changelog.md`
+- `Docs/RepoStatus.md`
+
+### Changed in LapRef timing-source + PB-trigger + rollover parity task
+- `LapReferenceEngine.cs`
+- `LalaLaunch.cs`
+- `Docs/Subsystems/LapRef.md`
+- `Docs/Internal/SimHubParameterInventory.md`
+- `Docs/Internal/Development_Changelog.md`
+- `Docs/RepoStatus.md`
+
+### Changed in PR follow-up: LapRef CarIdx freshness guard
+- `LalaLaunch.cs`
 - `Docs/Subsystems/LapRef.md`
 - `Docs/Internal/Development_Changelog.md`
 - `Docs/RepoStatus.md`
@@ -219,4 +247,4 @@ Branch: work
 - Kept scope bounded to pit action surface/feedback seam extensions (no dashboard JSON/UI expansion): direct source-select + zero-fuel actions, selection-only source/mode feedback publication, and max-fuel toggle-state export.
 
 ## Validation note
-- Validation recorded against `HEAD` (`Pit Fuel Control live targets now apply contingency before clamp for NORM/PUSH/SAVE, preventing contingency-only overfuel sends when already above base requirement`).
+- Validation recorded against `HEAD` (`LapRef authoritative capture now uses CarIdx last-lap seam with rollover freshness guard vs validated-gate candidate, keeping player/session-best/PB handoff on the just-finished lap when CarIdx lags by one tick`).

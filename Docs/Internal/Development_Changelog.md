@@ -33,6 +33,21 @@ The public user-facing release history is maintained in the root `CHANGELOG.md`.
 
 ## Post-v1.0 development
 
+### PR follow-up: guard LapRef CarIdx authority with freshness check
+- Tightened `ResolveLapRefAuthoritativeLapTimeSec(...)` to avoid overriding the validated-gate lap with stale `CarIdxLastLapTime` during one-tick rollover lag.
+- When both values are valid and differ beyond a tight freshness tolerance, LapRef now prefers the validated gate candidate for that capture tick; otherwise it keeps CarIdx as authority.
+- This keeps LapRef/session-best capture and `_lastValidLapMs` PB handoff aligned to the just-finished lap when rollover telemetry briefly lags.
+- Classification: **internal-only** (correctness hardening of existing LapRef authority seam).
+
+### LapRef timing-source alignment + PB trigger/rollover parity fix
+- Aligned LapRef validated lap-time capture to the same authoritative player seam trusted by H2H/core (`CarIdxLastLapTime` for player `CarIdx`), with guarded fallback to the validated-gate candidate only when that array seam is unavailable.
+- Updated the validated-lap → PB-trigger handoff so `_lastValidLapMs` now latches from that same authoritative captured lap value, eliminating first-beat misses caused by stale/non-authoritative lap-time capture at S/F.
+- Kept PB persistence invariants unchanged:
+  - PB lap-time update still occurs through existing `TryUpdatePBByCondition(...)` seam.
+  - sector fields persist only when real fixed-sector values exist.
+  - legacy lap-time-only PB rows (no sectors) remain valid and supported.
+- Tightened LapRef player-row rollover feel toward proven H2H behavior by sourcing display refresh directly from live CarSA fixed-sector cache presence (while compare/cumulative truth remains current-lap re-armed only).
+- Classification: **both** (runtime LapRef/PB correctness behavior + canonical LapRef/export docs update).
 ### PR #575 follow-up: preserve pit-command failure feedback on source changes
 - Classification: **both** (driver-visible pit command feedback correctness + internal contract alignment).
 - Updated `PitFuelControlEngine` source-change paths (`SourceCycle` and direct `SetPush/SetNorm/SetSave`) so selection feedback is only published when no send was attempted (`Mode=OFF`).

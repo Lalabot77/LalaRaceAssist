@@ -275,6 +275,15 @@ namespace LaunchPlugin
                 return;
             }
 
+            for (int i = 0; i < SegmentCount; i++)
+            {
+                var sector = liveFixedSectorSnapshot.GetSector(i);
+                if (sector.HasValue && IsValidLapTime(sector.DurationSec))
+                {
+                    _livePlayerComparisonSnapshot.SetSector(i, true, sector.DurationSec);
+                }
+            }
+
             int completedSectorCount = GetCompletedSectorCount(activeSegment);
             if (completedSectorCount <= 0)
             {
