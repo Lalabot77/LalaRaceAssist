@@ -9,6 +9,11 @@ Branch: work
 - No Git remote is configured in this checkout (`git remote -v` returns empty).
 
 ## Documentation sync status
+- PR #576 follow-up fixed two bounded Pit Fuel Control behavior regressions:
+  - `Pit.FuelSetMax` tank-full short-circuit is now phase-aware: MAX phase can short-circuit, ZERO phase always transports.
+  - forced-STBY mode transitions now preserve mode context in one feedback string:
+    - `AUTO -> MAN` => `FUEL MAN STBY`
+    - `MAN -> AUTO` from `PLAN` => `FUEL AUTO STBY`
 - Pit Fuel Control control-model follow-up corrected action semantics:
   - `Pit.FuelSetMax` is now a real MAX/ZERO behavioral toggle on transport (`MAX -> ZERO -> MAX -> ZERO`), while `Pit.Command.FuelSetMaxToggleState` still flips on every press.
   - `ModeCycle` now forces `Source=STBY` on `AUTO -> MAN`.
@@ -197,6 +202,16 @@ Branch: work
 - `Docs/RepoStatus.md`
 
 ### Changed in Pit Fuel Control control-model follow-up (real max toggle + STBY mode-guardrails)
+- `PitFuelControlEngine.cs`
+- `PitCommandEngine.cs`
+- `Docs/Internal/SimHubParameterInventory.md`
+- `Docs/Internal/SimHubLogMessages.md`
+- `Docs/Internal/Development_Changelog.md`
+- `Docs/Subsystems/Dash_Integration.md`
+- `Docs/Pit_Assist.md`
+- `Docs/RepoStatus.md`
+
+### Changed in PR #576 follow-up (FuelSetMax ZERO-phase bypass + forced-STBY feedback refinement)
 - `PitFuelControlEngine.cs`
 - `PitCommandEngine.cs`
 - `Docs/Internal/SimHubParameterInventory.md`

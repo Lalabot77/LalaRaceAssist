@@ -144,7 +144,7 @@ namespace LaunchPlugin
                     Mode = PitFuelControlMode.Auto;
                     AutoArmed = true;
                     Source = PitFuelControlSource.Stby;
-                    PublishSelectionFeedback("Pit.FuelControl.ModeCycle", "FUEL SRC STBY");
+                    PublishSelectionFeedback("Pit.FuelControl.ModeCycle", "FUEL AUTO STBY");
                 }
                 else
                 {
@@ -158,7 +158,7 @@ namespace LaunchPlugin
                 Mode = PitFuelControlMode.Man;
                 AutoArmed = false;
                 Source = PitFuelControlSource.Stby;
-                PublishSelectionFeedback("Pit.FuelControl.ModeCycle", "FUEL SRC STBY");
+                PublishSelectionFeedback("Pit.FuelControl.ModeCycle", "FUEL MAN STBY");
             }
         }
 

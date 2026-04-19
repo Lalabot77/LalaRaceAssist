@@ -64,9 +64,13 @@ These actions replace any old dashboard bindings that directly called `IRacingEx
 
 Pit Fuel Control behavior notes for these bindings:
 - `LalaLaunch.Pit.FuelSetMax` is now a true transport toggle: press sequence alternates **MAX**, **ZERO**, **MAX**, **ZERO** ...
+- Full-tank short-circuit only applies to the MAX phase; ZERO phase still sends (so a full tank does not block `#fuel 0`).
 - `LalaLaunch.Pit.FuelControl.ModeCycle` now enforces source re-selection guardrails:
   - `AUTO -> MAN` forces source to `STBY`,
-  - cycling `MAN -> AUTO` while source is `PLAN` is allowed, but source is forced to `STBY` (user must pick a real source again).
+  - cycling `MAN -> AUTO` while source is `PLAN` is allowed, but source is forced to `STBY` (user must pick a real source again),
+  - forced-STBY mode transitions now use combined feedback text:
+    - `FUEL MAN STBY` for `AUTO -> MAN`,
+    - `FUEL AUTO STBY` for `MAN -> AUTO` from `PLAN`.
 
 In Settings → **Pit Commands**, these are shown as fixed built-in features with normal binding rows (no raw chat command editing).
 

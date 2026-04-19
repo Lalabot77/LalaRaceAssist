@@ -61,7 +61,7 @@ namespace LaunchPlugin
                 return;
             }
 
-            if (IsFuelAddAction(action) && tankSpaceLitres <= 0.05)
+            if (ShouldShortCircuitForTankFull(action) && tankSpaceLitres <= 0.05)
             {
                 PublishMessage("Fuel MAX");
                 SimHub.Logging.Current.Info($"[LalaPlugin:PitCommand] action={action} transport=chat-injection executed=false reason=tank-full tankSpaceL={tankSpaceLitres:F2}");
@@ -194,6 +194,21 @@ namespace LaunchPlugin
             return action == PitCommandAction.FuelAdd1 ||
                    action == PitCommandAction.FuelAdd10 ||
                    action == PitCommandAction.FuelSetMax;
+        }
+
+        private bool ShouldShortCircuitForTankFull(PitCommandAction action)
+        {
+            if (!IsFuelAddAction(action))
+            {
+                return false;
+            }
+
+            if (action == PitCommandAction.FuelSetMax)
+            {
+                return FuelSetMaxToggleState;
+            }
+
+            return true;
         }
 
         private static string NormalizeChatCommand(string raw)
