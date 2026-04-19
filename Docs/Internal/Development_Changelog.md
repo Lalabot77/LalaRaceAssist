@@ -33,6 +33,16 @@ The public user-facing release history is maintained in the root `CHANGELOG.md`.
 
 ## Post-v1.0 development
 
+### PR #577 review follow-up: clear AUTO baseline on AUTO -> OFF
+- Updated `PitFuelControlEngine.ModeCycle` AUTO disable branch to clear stale AUTO baseline state:
+  - `AUTO -> OFF` now sets `LastSentFuelLitres=-1` and `Source=STBY` in addition to `Mode=OFF` and `AutoArmed=false`.
+- Kept existing behavior unchanged:
+  - cycle order remains `OFF -> MAN -> AUTO -> OFF`,
+  - forced-STBY MAN->AUTO guardrails remain intact,
+  - feedback remains `FUEL MODE OFF` with no extra message.
+- Intent preserved: disabling AUTO now leaves an inert baseline so re-entry cannot compare against stale prior AUTO sent liters.
+- Classification: **both** (driver-visible AUTO disable/re-entry correctness + internal contract/docs alignment).
+
 ### Pit Fuel Control ModeCycle follow-up: restore AUTO -> OFF
 - Corrected `PitFuelControlEngine.ModeCycle` cycle order so mode can be disabled again:
   - `OFF -> MAN`

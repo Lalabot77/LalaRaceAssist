@@ -9,9 +9,9 @@ Branch: work
 - No Git remote is configured in this checkout (`git remote -v` returns empty).
 
 ## Documentation sync status
-- Tiny follow-up restored Pit Fuel Control mode disable cycle:
-  - `ModeCycle` now cycles `OFF -> MAN -> AUTO -> OFF`.
-  - `AUTO -> OFF` now clears `AutoArmed` and publishes `FUEL MODE OFF` with no send.
+- PR #577 review follow-up cleared AUTO baseline state on disable:
+  - `ModeCycle` still cycles `OFF -> MAN -> AUTO -> OFF`.
+  - `AUTO -> OFF` now sets `Mode=OFF`, `AutoArmed=false`, `LastSentFuelLitres=-1`, and `Source=STBY`, with feedback `FUEL MODE OFF` and no send.
   - Existing MAN->AUTO forced-STBY guardrail behavior remains unchanged (`PLAN/STBY -> AUTO` keeps `AutoArmed=false` and feedback `FUEL AUTO STBY`).
 - PR #576 follow-up fixed bounded Pit Fuel Control behavior regressions:
   - `Pit.FuelSetMax` tank-full short-circuit is now phase-aware: MAX phase can short-circuit, ZERO phase always transports.
@@ -275,6 +275,12 @@ Branch: work
 
 
 ### Changed in Pit Fuel Control ModeCycle AUTO->OFF follow-up
+- `PitFuelControlEngine.cs`
+- `Docs/Internal/SimHubParameterInventory.md`
+- `Docs/Internal/Development_Changelog.md`
+- `Docs/RepoStatus.md`
+
+### Changed in PR #577 review follow-up (AUTO->OFF baseline clear)
 - `PitFuelControlEngine.cs`
 - `Docs/Internal/SimHubParameterInventory.md`
 - `Docs/Internal/Development_Changelog.md`

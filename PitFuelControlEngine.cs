@@ -165,6 +165,8 @@ namespace LaunchPlugin
             {
                 Mode = PitFuelControlMode.Off;
                 AutoArmed = false;
+                LastSentFuelLitres = -1;
+                Source = PitFuelControlSource.Stby;
                 PublishSelectionFeedback("Pit.FuelControl.ModeCycle", "FUEL MODE OFF");
             }
         }
