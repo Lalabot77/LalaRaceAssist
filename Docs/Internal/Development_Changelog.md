@@ -42,6 +42,24 @@ The public user-facing release history is maintained in the root `CHANGELOG.md`.
   - legacy lap-time-only PB rows (no sectors) remain valid and supported.
 - Tightened LapRef player-row rollover feel toward proven H2H behavior by sourcing display refresh directly from live CarSA fixed-sector cache presence (while compare/cumulative truth remains current-lap re-armed only).
 - Classification: **both** (runtime LapRef/PB correctness behavior + canonical LapRef/export docs update).
+### PR follow-up: apply Pit Fuel Control contingency before clamp
+- Corrected live Pit Fuel Control target composition in `LalaLaunch.BuildPitFuelControlSnapshot` so `NORM/PUSH/SAVE` now apply contingency before the non-negative clamp:
+  - `target = max(0, requirement + contingency - currentFuel)` (equivalently `max(0, shortfall + contingency)`),
+  - replaces the prior pattern that clamped shortfall first and then added contingency, which could over-command fuel when already above base requirement.
+- `NORM` now follows the same direct requirement-minus-current seam as `PUSH/SAVE` via `-Fuel_Delta_LitresCurrent*`, keeping live-source authority consistent and independent from clamp-driven add seams.
+- Classification: **both** (runtime pit-fuel target correction + internal contract/docs update).
+
+### Fuel projection phase seam fix (grid/formation) + Pit Fuel Control authority remap
+- Corrected runtime fuel projection authority for SessionState `2/3` (grid/formation) in `LalaLaunch.UpdateLiveFuelCalcs`:
+  - timed-race lookahead now uses session-definition authority `DataCorePlugin.GameRawData.CurrentSessionInfo._SessionTime` with elapsed `Telemetry.SessionTime` (`remaining = max(0, _SessionTime - SessionTime)`),
+  - SessionState `4` keeps normal race-running projection behavior.
+- Kept the existing public `Fuel.*` output families unchanged while fixing baseline behavior at the shared projection seam consumed by pit-need and litre-delta paths.
+- Remapped Pit Fuel Control live source authority away from `WillAdd` coupling:
+  - `NORM` remains non-clamped runtime need (`Fuel.Pit.NeedToAdd` equivalent),
+  - `PUSH/SAVE` now use direct non-clamped requirement-minus-current seams (`-Fuel_Delta_LitresCurrentPush/Save`) rather than `WillAdd`-derived expressions.
+- Added contingency alignment for Pit Fuel Control live modes using profile track contingency (`FuelCalcs.ContingencyValue` + `IsContingencyInLaps`) with explicit-zero respected (no hidden reserve).
+- Verified/retained PLAN contingency seam: `PlannerNextAddLitres` continues to inherit planner contingency from `CalculateSingleStrategy` total/stop planning path.
+- Classification: **both** (runtime fuel behavior correction for existing outputs + internal contract/docs updates).
 
 ### PR 572 follow-up: Pit Fuel Control correctness fixes
 - Tightened PLAN validity in `PitFuelControlEngine` so PLAN now requires all of:

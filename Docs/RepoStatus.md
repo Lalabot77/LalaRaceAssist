@@ -20,6 +20,21 @@ Branch: work
   - PB lap-time update stays on existing `TryUpdatePBByCondition(...)` seam,
   - sector persistence remains conditional on real sector data only,
   - legacy lap-time-only PB rows remain valid.
+- PR follow-up corrected Pit Fuel Control live-target contingency ordering:
+  - `NORM/PUSH/SAVE` now apply contingency before clamp (`max(0, shortfall + contingency)`)
+  - avoids contingency-only overfuel commands when current fuel is already above the base live requirement
+  - `NORM` now aligns with the same direct requirement-minus-current seam family used by `PUSH/SAVE` (`-Fuel_Delta_LitresCurrent*`)
+- Corrected baseline fuel projection authority across race phases without adding new public property families:
+  - SessionState `2/3` (grid/formation) now drives timed-race lookahead from `CurrentSessionInfo._SessionTime` with elapsed `Telemetry.SessionTime`
+  - SessionState `4` keeps normal live running projection behavior
+  - existing `Fuel.Delta.*` / `Fuel.Pit.*` outputs inherit the fix from the shared projection seam
+- Remapped Pit Fuel Control source authority to non-clamped live seams:
+  - `PLAN` stays planner-owned (`PlannerNextAddLitres`)
+  - `NORM` stays non-clamped runtime need seam
+  - `PUSH/SAVE` now use direct requirement-minus-current seams (no `WillAdd` coupling)
+- Added live-source contingency alignment for Pit Fuel Control:
+  - `PUSH/NORM/SAVE` now include profile contingency (`ContingencyValue` + `IsContingencyInLaps`)
+  - explicit contingency zero remains zero (no hidden reserve)
 - Hardened LapRef rollover seam for transient zero-segment boundary samples:
   - current-lap compare/cumulative eligibility now re-arms on normal wrap (`current > 0 && previous > 0 && current < previous`) and on boundary transition into segment `0` from late-lap state (`previous > 1 && current == 0`)
   - closes the `6 -> 0 -> 1` mapping path so stale prior-lap compare/cumulative validity does not leak into new-lap start
@@ -148,6 +163,21 @@ Branch: work
 - `Docs/Internal/Development_Changelog.md`
 - `Docs/RepoStatus.md`
 
+### Changed in fuel projection phase seam + Pit Fuel Control authority alignment task
+- `LalaLaunch.cs`
+- `Docs/Internal/SimHubParameterInventory.md`
+- `Docs/Internal/SimHubLogMessages.md`
+- `Docs/Subsystems/Fuel_Model.md`
+- `Docs/Subsystems/Pace_And_Projection.md`
+- `Docs/Internal/Development_Changelog.md`
+- `Docs/RepoStatus.md`
+
+### Changed in PR follow-up contingency-before-clamp correction
+- `LalaLaunch.cs`
+- `Docs/Internal/SimHubParameterInventory.md`
+- `Docs/Internal/Development_Changelog.md`
+- `Docs/RepoStatus.md`
+
 ### Changed in LapRef live-current comparison correction task
 - `LapReferenceEngine.cs`
 - `LalaLaunch.cs`
@@ -180,6 +210,8 @@ Branch: work
 - `Docs/User_Guide.md`
 
 ## Delivery status highlights
+- Kept changes bounded to existing runtime seams and exports: corrected projection behavior at the shared timed-race authority seam rather than introducing parallel dash property families.
+- Aligned Pit Fuel Control source targets with non-clamped requirements for live modes and retained planner-owned PLAN validity/authority.
 - Kept ownership boundaries intact: dashboards remain presentation/control surfaces while plugin-owned actions own pit command dispatch.
 - Preserved focused helper ownership (`PitCommandEngine`) for transport/mapping/feedback/failure logic instead of widening central runtime loops.
 - Added bounded observability and short-lived user feedback exports so command success/failure is visible on dash and in SimHub logs.

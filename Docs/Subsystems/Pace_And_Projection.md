@@ -1,7 +1,7 @@
 # Pace and Projection
 
 Validated against commit: HEAD
-Last updated: 2026-03-22
+Last updated: 2026-04-18
 Branch: work
 
 ## Purpose
@@ -93,6 +93,10 @@ The resulting projection lap time feeds the Fuel Model’s timed-race math toget
 - session time remaining,
 - planner after-zero allowance,
 - live after-zero estimate once timer-zero has genuinely been observed.
+
+Session phase split:
+- SessionState `2/3` (grid/formation) uses session-definition race length authority (`CurrentSessionInfo._SessionTime`) with elapsed `SessionTime` as the timed-race remaining seam.
+- SessionState `4` uses the normal live running timed-race projection seam.
 
 ## Outputs (exports + logs)
 ### Core exports
