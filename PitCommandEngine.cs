@@ -27,6 +27,7 @@ namespace LaunchPlugin
 
     internal sealed class PitCommandEngine
     {
+        private const int FuelSetMaxCommandLitres = 150;
         private const int ConfirmationDelayMs = 180;
         private const int MessageHoldMs = 1500;
         private const uint KeyEventKeyUp = 0x0002;
@@ -60,7 +61,7 @@ namespace LaunchPlugin
                 return;
             }
 
-            if (IsFuelAddAction(action) && tankSpaceLitres <= 0.05)
+            if (ShouldShortCircuitForTankFull(action) && tankSpaceLitres <= 0.05)
             {
                 PublishMessage("Fuel MAX");
                 SimHub.Logging.Current.Info($"[LalaPlugin:PitCommand] action={action} transport=chat-injection executed=false reason=tank-full tankSpaceL={tankSpaceLitres:F2}");
@@ -195,25 +196,19 @@ namespace LaunchPlugin
                    action == PitCommandAction.FuelSetMax;
         }
 
-        private static string GetRawCommand(PitCommandAction action)
+        private bool ShouldShortCircuitForTankFull(PitCommandAction action)
         {
-            switch (action)
+            if (!IsFuelAddAction(action))
             {
-                case PitCommandAction.ClearAll: return "#clear$";
-                case PitCommandAction.ClearTyres: return "#cleartires$";
-                case PitCommandAction.ToggleFuel: return "#!fuel$";
-                case PitCommandAction.FuelSetZero: return "#fuel 0$";
-                case PitCommandAction.FuelAdd1: return "#fuel +1$";
-                case PitCommandAction.FuelRemove1: return "#fuel -1$";
-                case PitCommandAction.FuelAdd10: return "#fuel +10$";
-                case PitCommandAction.FuelRemove10: return "#fuel -10$";
-                case PitCommandAction.FuelSetMax: return "#fuel +150$";
-                case PitCommandAction.ToggleTyresAll: return "#!t$";
-                case PitCommandAction.ToggleFastRepair: return "#!fr$";
-                case PitCommandAction.ToggleAutoFuel: return "#!autofuel$";
-                case PitCommandAction.Windshield: return "#!ws$";
-                default: return string.Empty;
+                return false;
             }
+
+            if (action == PitCommandAction.FuelSetMax)
+            {
+                return FuelSetMaxToggleState;
+            }
+
+            return true;
         }
 
         private static string NormalizeChatCommand(string raw)
@@ -233,7 +228,7 @@ namespace LaunchPlugin
             return normalized;
         }
 
-        private static bool WillFuelAddReachMax(PitCommandAction action, double tankSpaceLitres)
+        private bool WillFuelAddReachMax(PitCommandAction action, double tankSpaceLitres)
         {
             if (!IsFuelAddAction(action))
             {
@@ -242,7 +237,7 @@ namespace LaunchPlugin
 
             if (action == PitCommandAction.FuelSetMax)
             {
-                return true;
+                return FuelSetMaxToggleState;
             }
 
             if (tankSpaceLitres <= 0.05)
@@ -265,8 +260,38 @@ namespace LaunchPlugin
                 case PitCommandAction.FuelRemove1: return "Fuel -1";
                 case PitCommandAction.FuelAdd10: return reachedFuelMax ? "Fuel MAX" : "Fuel +10";
                 case PitCommandAction.FuelRemove10: return "Fuel -10";
-                case PitCommandAction.FuelSetMax: return "Fuel MAX";
+                case PitCommandAction.FuelSetMax: return reachedFuelMax ? "FUEL MAX" : "FUEL ZERO";
                 default: return "Pit Cmd Fail";
+            }
+        }
+
+        private string GetRawCommand(PitCommandAction action)
+        {
+            if (action == PitCommandAction.FuelSetMax)
+            {
+                return FuelSetMaxToggleState ? string.Format("#fuel +{0}$", FuelSetMaxCommandLitres) : "#fuel 0$";
+            }
+
+            return GetRawCommandStatic(action);
+        }
+
+        private static string GetRawCommandStatic(PitCommandAction action)
+        {
+            switch (action)
+            {
+                case PitCommandAction.ClearAll: return "#clear$";
+                case PitCommandAction.ClearTyres: return "#cleartires$";
+                case PitCommandAction.ToggleFuel: return "#!fuel$";
+                case PitCommandAction.FuelSetZero: return "#fuel 0$";
+                case PitCommandAction.FuelAdd1: return "#fuel +1$";
+                case PitCommandAction.FuelRemove1: return "#fuel -1$";
+                case PitCommandAction.FuelAdd10: return "#fuel +10$";
+                case PitCommandAction.FuelRemove10: return "#fuel -10$";
+                case PitCommandAction.ToggleTyresAll: return "#!t$";
+                case PitCommandAction.ToggleFastRepair: return "#!fr$";
+                case PitCommandAction.ToggleAutoFuel: return "#!autofuel$";
+                case PitCommandAction.Windshield: return "#!ws$";
+                default: return string.Empty;
             }
         }
 

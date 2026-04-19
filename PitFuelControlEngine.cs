@@ -135,27 +135,39 @@ namespace LaunchPlugin
             {
                 Mode = PitFuelControlMode.Man;
                 AutoArmed = false;
+                PublishSelectionFeedback("Pit.FuelControl.ModeCycle", string.Format("FUEL MODE {0}", ModeToText(Mode)));
             }
             else if (Mode == PitFuelControlMode.Man)
             {
                 if (Source == PitFuelControlSource.Plan)
                 {
-                    Mode = PitFuelControlMode.Off;
+                    Mode = PitFuelControlMode.Auto;
                     AutoArmed = false;
+                    Source = PitFuelControlSource.Stby;
+                    PublishSelectionFeedback("Pit.FuelControl.ModeCycle", "FUEL AUTO STBY");
                 }
                 else
                 {
                     Mode = PitFuelControlMode.Auto;
-                    AutoArmed = true;
+                    if (Source == PitFuelControlSource.Stby)
+                    {
+                        AutoArmed = false;
+                        PublishSelectionFeedback("Pit.FuelControl.ModeCycle", "FUEL AUTO STBY");
+                    }
+                    else
+                    {
+                        AutoArmed = true;
+                        PublishSelectionFeedback("Pit.FuelControl.ModeCycle", string.Format("FUEL MODE {0}", ModeToText(Mode)));
+                    }
                 }
             }
             else
             {
-                Mode = PitFuelControlMode.Off;
+                Mode = PitFuelControlMode.Man;
                 AutoArmed = false;
+                Source = PitFuelControlSource.Stby;
+                PublishSelectionFeedback("Pit.FuelControl.ModeCycle", "FUEL MAN STBY");
             }
-
-            PublishSelectionFeedback("Pit.FuelControl.ModeCycle", string.Format("FUEL MODE {0}", ModeToText(Mode)));
         }
 
         public void SetPush() => SetSource(PitFuelControlSource.Push, "Pit.FuelControl.SetPush");
