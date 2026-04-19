@@ -2391,6 +2391,15 @@ namespace LaunchPlugin
             double sessionTime = SafeReadDouble(pluginManager, "DataCorePlugin.GameRawData.Telemetry.SessionTime", 0.0);
             double sessionTimeRemain = SafeReadDouble(pluginManager, "DataCorePlugin.GameRawData.Telemetry.SessionTimeRemain", double.NaN);
             double raceSessionDurationSeconds = SafeReadDouble(pluginManager, "DataCorePlugin.GameRawData.CurrentSessionInfo._SessionTime", double.NaN);
+            int sessionStateNumeric = ReadSessionStateInt(pluginManager);
+            bool isGridOrFormation = sessionStateNumeric == 2 || sessionStateNumeric == 3;
+            bool isRaceRunning = sessionStateNumeric == 4;
+
+            double projectionSessionTimeRemain = sessionTimeRemain;
+            if (isGridOrFormation && raceSessionDurationSeconds > 0.0)
+            {
+                projectionSessionTimeRemain = Math.Max(0.0, raceSessionDurationSeconds - Math.Max(0.0, sessionTime));
+            }
 
             int trackWetness = ReadTrackWetness(pluginManager);
             TrackWetness = trackWetness;
@@ -3220,13 +3229,13 @@ namespace LaunchPlugin
 
                 double simLapsRemaining = ResolveSimLapsRemaining();
 
-                bool isTimedRace = !double.IsNaN(sessionTimeRemain);
+                bool isTimedRace = !double.IsNaN(projectionSessionTimeRemain);
                 double projectionLapSeconds = GetProjectionLapSeconds(data);
 
                 _afterZeroPlannerSeconds = FuelCalculator?.StrategyDriverExtraSecondsAfterZero ?? 0.0;
                 _afterZeroLiveEstimateSeconds = FuelProjectionMath.EstimateDriveTimeAfterZero(
                     sessionTime,
-                    sessionTimeRemain,
+                    projectionSessionTimeRemain,
                     projectionLapSeconds,
                     _afterZeroPlannerSeconds,
                     _timerZeroSeen,
@@ -3257,7 +3266,7 @@ namespace LaunchPlugin
                 _afterZeroUsedSeconds = liveAfterZeroValid ? _afterZeroLiveEstimateSeconds : _afterZeroPlannerSeconds;
 
                 LiveProjectedDriveTimeAfterZero = _afterZeroUsedSeconds;
-                double projectedLapsRemaining = ComputeProjectedLapsRemaining(simLapsRemaining, projectionLapSeconds, sessionTimeRemain, _afterZeroUsedSeconds);
+                double projectedLapsRemaining = ComputeProjectedLapsRemaining(simLapsRemaining, projectionLapSeconds, projectionSessionTimeRemain, _afterZeroUsedSeconds);
 
                 if (projectedLapsRemaining > 0.0)
                 {
@@ -3272,7 +3281,7 @@ namespace LaunchPlugin
                             projectionLapSeconds,
                             LiveProjectedDriveSecondsRemaining,
                             _afterZeroSourceUsed,
-                            sessionTimeRemain);
+                            projectionSessionTimeRemain);
                     }
                 }
                 else
@@ -3679,11 +3688,11 @@ namespace LaunchPlugin
 
                 SimHub.Logging.Current.Info(
                     $"[LalaPlugin:Drive Time Projection] " +
-                    $"tRemain={FormatSecondsOrNA(sessionTimeRemain)} " +
+                    $"tRemain={FormatSecondsOrNA(projectionSessionTimeRemain)} " +
                     $"after0Used={_afterZeroUsedSeconds:F1}s src={AfterZeroSource} " +
                     $"lapsProj={_lastProjectedLapsRemaining:F2} simLaps={_lastSimLapsRemaining:F2} " +
                     $"lapRef={_lastProjectionLapSecondsUsed:F3}s lapRefSrc={ProjectionLapTime_StableSource} " +
-                    $"after0Observed={observedAfterZero:F1}s");
+                    $"after0Observed={observedAfterZero:F1}s state={sessionStateNumeric} mode={(isGridOrFormation ? "grid-formation" : (isRaceRunning ? "race-running" : "other"))}");
             }
 
             // --- 4) Update "last" values for next tick ---
@@ -6434,15 +6443,45 @@ namespace LaunchPlugin
                 snapshot.LiveRaceLengthValue = 0.0;
             }
 
-            snapshot.TargetNormLitres = Math.Max(0.0, Pit_NeedToAdd);
-            snapshot.TargetPushLitres = Math.Max(0.0, Pit_WillAdd - Fuel_Delta_LitresWillAddPush);
-            snapshot.TargetSaveLitres = Math.Max(0.0, Pit_WillAdd - Fuel_Delta_LitresWillAddSave);
+            double contingencyNormLitres = ResolveLivePitFuelControlContingencyLitres(LiveFuelPerLap_Stable);
+            double contingencyPushLitres = ResolveLivePitFuelControlContingencyLitres(PushFuelPerLap);
+            double contingencySaveLitres = ResolveLivePitFuelControlContingencyLitres(FuelSaveFuelPerLap);
+
+            double normNeedLitres = -Fuel_Delta_LitresCurrent;
+            double pushNeedLitres = -Fuel_Delta_LitresCurrentPush;
+            double saveNeedLitres = -Fuel_Delta_LitresCurrentSave;
+
+            snapshot.TargetNormLitres = Math.Max(0.0, normNeedLitres + contingencyNormLitres);
+            snapshot.TargetPushLitres = Math.Max(0.0, pushNeedLitres + contingencyPushLitres);
+            snapshot.TargetSaveLitres = Math.Max(0.0, saveNeedLitres + contingencySaveLitres);
             snapshot.TargetPlanLitres = Math.Max(0.0, FuelCalculator?.PlannerNextAddLitres ?? 0.0);
             snapshot.StopsRequiredToEnd = Pit_StopsRequiredToEnd;
             snapshot.CurrentFuelLitres = Math.Max(0.0, _lastFuelLevel);
             snapshot.TankSpaceLitres = Math.Max(0.0, Pit_TankSpaceAvailable);
             snapshot.TelemetryRequestedFuelLitres = SafeReadDouble(PluginManager, "DataCorePlugin.GameRawData.Telemetry.PitSvFuel", 0.0);
             return snapshot;
+        }
+
+        private double ResolveLivePitFuelControlContingencyLitres(double fuelPerLapBasis)
+        {
+            double contingencyValue = Math.Max(0.0, FuelCalculator?.ContingencyValue ?? 0.0);
+            if (contingencyValue <= 0.0)
+            {
+                return 0.0;
+            }
+
+            bool contingencyInLaps = FuelCalculator?.IsContingencyInLaps ?? true;
+            if (contingencyInLaps)
+            {
+                if (fuelPerLapBasis <= 0.0)
+                {
+                    return 0.0;
+                }
+
+                return Math.Max(0.0, contingencyValue * fuelPerLapBasis);
+            }
+
+            return contingencyValue;
         }
 
         public void DataUpdate(PluginManager pluginManager, ref GameData data)
