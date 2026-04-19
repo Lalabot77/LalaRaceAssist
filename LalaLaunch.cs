@@ -4087,6 +4087,7 @@ namespace LaunchPlugin
         private bool _carSaBestLapFallbackInfoLogged;
         private const double CarSaLapTimeUpdateVisibilitySeconds = 3.0;
         private const double CarSaLapTimeEpsilonSec = 0.001;
+        private const double LapRefAuthoritativeLapFreshnessToleranceSec = 0.050;
 
         private enum LaunchState
         {
@@ -12948,17 +12949,23 @@ namespace LaunchPlugin
 
         private double ResolveLapRefAuthoritativeLapTimeSec(PluginManager pluginManager, int playerCarIdx, double fallbackLapSec)
         {
+            bool hasValidFallbackLapSec = IsValidCarSaLapTimeSec(fallbackLapSec);
             if (pluginManager != null && playerCarIdx >= 0)
             {
                 float[] carIdxLastLapTimes = SafeReadFloatArray(pluginManager, "DataCorePlugin.GameRawData.Telemetry.CarIdxLastLapTime");
                 double carIdxLapSec = ReadCarIdxTime(carIdxLastLapTimes, playerCarIdx);
                 if (IsValidCarSaLapTimeSec(carIdxLapSec))
                 {
+                    if (hasValidFallbackLapSec && Math.Abs(carIdxLapSec - fallbackLapSec) > LapRefAuthoritativeLapFreshnessToleranceSec)
+                    {
+                        return fallbackLapSec;
+                    }
+
                     return carIdxLapSec;
                 }
             }
 
-            return IsValidCarSaLapTimeSec(fallbackLapSec) ? fallbackLapSec : 0.0;
+            return hasValidFallbackLapSec ? fallbackLapSec : 0.0;
         }
 
         private static int ComputeLapRefActiveSegment(double lapPct)

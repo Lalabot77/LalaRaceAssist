@@ -1,7 +1,7 @@
 # Repository status
 
 Validated against commit: HEAD
-Last updated: 2026-04-18
+Last updated: 2026-04-19
 Branch: work
 
 ## Current repo/link status
@@ -9,6 +9,9 @@ Branch: work
 - No Git remote is configured in this checkout (`git remote -v` returns empty).
 
 ## Documentation sync status
+- PR follow-up hardened LapRef authoritative-lap freshness at rollover:
+  - `ResolveLapRefAuthoritativeLapTimeSec(...)` now validates `CarIdxLastLapTime` freshness against the validated-gate lap candidate before overriding.
+  - when both are valid but diverge beyond a tight tolerance, capture/PB handoff now stays on the validated-gate candidate for that tick (prevents one-tick stale previous-lap overrides).
 - LapRef timing-source and PB-trigger alignment fix landed:
   - LapRef validated-lap capture now resolves player lap time from authoritative `CarIdxLastLapTime` seam (same trusted player lap-time seam used by H2H/core), with guarded fallback only when unavailable.
   - `_lastValidLapMs` (PB trigger handoff) now latches from that same authoritative captured lap value, removing first-expected-beat misses caused by stale capture values.
@@ -102,6 +105,12 @@ Branch: work
 - `LalaLaunch.cs`
 - `Docs/Subsystems/LapRef.md`
 - `Docs/Internal/SimHubParameterInventory.md`
+- `Docs/Internal/Development_Changelog.md`
+- `Docs/RepoStatus.md`
+
+### Changed in PR follow-up: LapRef CarIdx freshness guard
+- `LalaLaunch.cs`
+- `Docs/Subsystems/LapRef.md`
 - `Docs/Internal/Development_Changelog.md`
 - `Docs/RepoStatus.md`
 
@@ -218,4 +227,4 @@ Branch: work
 - Extended focused-helper ownership with `PitFuelControlEngine` for pit fuel source/mode state and decision logic while keeping `LalaLaunch` as action/export wiring.
 
 ## Validation note
-- Validation recorded against `HEAD` (`LapRef capture now uses authoritative player last-lap seam for player/session-best/PB-trigger handoff, and player-row rollover sector refresh follows H2H-like CarSA cache continuity while compare/cumulative truth remains current-lap re-armed`).
+- Validation recorded against `HEAD` (`LapRef authoritative capture now uses CarIdx last-lap seam with rollover freshness guard vs validated-gate candidate, keeping player/session-best/PB handoff on the just-finished lap when CarIdx lags by one tick`).

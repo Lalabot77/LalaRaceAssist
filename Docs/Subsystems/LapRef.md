@@ -1,7 +1,7 @@
 # LapRef (Offline Reference Lap Comparison)
 
 Validated against commit: HEAD
-Last updated: 2026-04-18
+Last updated: 2026-04-19
 Branch: work
 
 ## Purpose
@@ -19,7 +19,7 @@ LapRef mirrors H2H's fixed 6-sector presentation concept but is fully separate f
 - **LapRef does not own** sector derivation. It consumes CarSA fixed-sector cache read-only via `TryGetFixedSectorCacheSnapshot`.
 - **LapRef does not own** wet/dry detection. It uses runtime `_isWetMode` routing.
 - **LapRef does not own** lap validation rules. It captures only from the existing validated-lap gate in `UpdateLiveFuelCalcs`.
-- **LapRef lap-time authority** is aligned to the same player telemetry seam used by H2H/core (`CarIdxLastLapTime` for player row/session-best capture path, with guarded fallback only when that seam is unavailable).
+- **LapRef lap-time authority** is aligned to the same player telemetry seam used by H2H/core (`CarIdxLastLapTime` for player row/session-best capture path), but uses a freshness guard against the validated-gate candidate to avoid one-tick stale rollover samples before accepting the CarIdx seam.
 - **LapRef does not modify** H2H behavior, Opponents behavior, or CarSA derivation rules.
 
 ## Snapshot model
@@ -43,7 +43,7 @@ LapRef also maintains a separate **live current-lap comparison view** for the pl
 
 ## Capture and update flow
 1. Existing validated-lap gate accepts a lap in `UpdateLiveFuelCalcs`.
-2. LapRef resolves authoritative validated lap time from player `CarIdxLastLapTime` (fallback to the gate candidate only when needed), then captures snapshot from the player's CarSA fixed-sector cache (if available).
+2. LapRef resolves authoritative validated lap time from player `CarIdxLastLapTime` when fresh/consistent with the validated-gate candidate; otherwise it keeps the gate candidate for that capture tick. It then captures snapshot from the player's CarSA fixed-sector cache (if available).
 3. Snapshot becomes player reference row and competes for in-memory session best.
 4. Existing profile PB seam persists lap-time PB; sector fields are persisted condition-wise when available.
 5. Each tick, LapRef rematerializes profile-best from active profile + track + wet/dry condition.
