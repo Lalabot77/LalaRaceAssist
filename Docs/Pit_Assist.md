@@ -68,9 +68,10 @@ Pit Fuel Control behavior notes for these bindings:
 - `LalaLaunch.Pit.FuelControl.ModeCycle` now enforces source re-selection guardrails:
   - `AUTO -> MAN` forces source to `STBY`,
   - cycling `MAN -> AUTO` while source is `PLAN` is allowed, but source is forced to `STBY` (user must pick a real source again),
+  - cycling `MAN -> AUTO` while already on `STBY` keeps `STBY` and stays disarmed (`AutoArmed=false`) until a live source is selected and sent,
   - forced-STBY mode transitions now use combined feedback text:
     - `FUEL MAN STBY` for `AUTO -> MAN`,
-    - `FUEL AUTO STBY` for `MAN -> AUTO` from `PLAN`.
+    - `FUEL AUTO STBY` for `MAN -> AUTO` from `PLAN` or `STBY`.
 
 In Settings → **Pit Commands**, these are shown as fixed built-in features with normal binding rows (no raw chat command editing).
 

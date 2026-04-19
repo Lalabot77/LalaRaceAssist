@@ -149,8 +149,16 @@ namespace LaunchPlugin
                 else
                 {
                     Mode = PitFuelControlMode.Auto;
-                    AutoArmed = true;
-                    PublishSelectionFeedback("Pit.FuelControl.ModeCycle", string.Format("FUEL MODE {0}", ModeToText(Mode)));
+                    if (Source == PitFuelControlSource.Stby)
+                    {
+                        AutoArmed = false;
+                        PublishSelectionFeedback("Pit.FuelControl.ModeCycle", "FUEL AUTO STBY");
+                    }
+                    else
+                    {
+                        AutoArmed = true;
+                        PublishSelectionFeedback("Pit.FuelControl.ModeCycle", string.Format("FUEL MODE {0}", ModeToText(Mode)));
+                    }
                 }
             }
             else

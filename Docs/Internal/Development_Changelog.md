@@ -36,6 +36,8 @@ The public user-facing release history is maintained in the root `CHANGELOG.md`.
 ### PR #576 follow-up: FuelSetMax ZERO-phase tank-full bypass + forced-STBY feedback refinement
 - Corrected `PitFuelControlEngine.ModeCycle` PLAN-forced-STBY AUTO transition arming:
   - `MAN -> AUTO` when source is `PLAN` now sets `Mode=AUTO`, `Source=STBY`, and `AutoArmed=false` (prevents immediate `AUTO CANCELLED` checks before source reselection).
+- Corrected `PitFuelControlEngine.ModeCycle` STBY-to-AUTO arming:
+  - `MAN -> AUTO` when source is already `STBY` now keeps `AutoArmed=false` and publishes `FUEL AUTO STBY` (prevents immediate self-cancel checks while waiting for a live source reselection).
 - Fixed `PitCommandEngine` tank-full short-circuit gating for `Pit.FuelSetMax` so it is phase-aware:
   - MAX phase (`#fuel +150`) still uses the existing fuel-add short-circuit,
   - ZERO phase (`#fuel 0`) now always transports even when tank space is near zero/full.
@@ -47,7 +49,7 @@ The public user-facing release history is maintained in the root `CHANGELOG.md`.
   - `MAN -> AUTO` from `PLAN` forced STBY now publishes `FUEL AUTO STBY`.
 - Normal mode-cycle feedback remains unchanged:
   - `OFF -> MAN` => `FUEL MODE MAN`
-  - `MAN -> AUTO` (non-PLAN source) => `FUEL MODE AUTO`
+  - `MAN -> AUTO` (live source: `PUSH`/`NORM`/`SAVE`) => `FUEL MODE AUTO`
 - Classification: **both** (driver-visible pit-command/feedback correction + internal contract/docs alignment).
 
 ### Pit Fuel Control control-model follow-up (real max toggle + STBY guardrails on mode changes)
