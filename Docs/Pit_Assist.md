@@ -44,6 +44,7 @@ Pit command buttons should now be bound to plugin-owned Controls & Events action
 - `LalaLaunch.Pit.ClearAll`
 - `LalaLaunch.Pit.ClearTires`
 - `LalaLaunch.Pit.ToggleFuel`
+- `LalaLaunch.Pit.FuelSetZero`
 - `LalaLaunch.Pit.FuelAdd1`
 - `LalaLaunch.Pit.FuelRemove1`
 - `LalaLaunch.Pit.FuelAdd10`
@@ -55,6 +56,9 @@ Pit command buttons should now be bound to plugin-owned Controls & Events action
 - `LalaLaunch.Pit.Windshield`
 - `LalaLaunch.Pit.FuelControl.SourceCycle`
 - `LalaLaunch.Pit.FuelControl.ModeCycle`
+- `LalaLaunch.Pit.FuelControl.SetPush`
+- `LalaLaunch.Pit.FuelControl.SetNorm`
+- `LalaLaunch.Pit.FuelControl.SetSave`
 
 These actions replace any old dashboard bindings that directly called `IRacingExtraProperties` pit-command actions.
 

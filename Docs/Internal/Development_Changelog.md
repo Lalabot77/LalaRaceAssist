@@ -33,6 +33,22 @@ The public user-facing release history is maintained in the root `CHANGELOG.md`.
 
 ## Post-v1.0 development
 
+### Pit Fuel Control action/feedback follow-up (source/mode feedback + direct-select + zero + max-toggle state)
+- Updated `PitFuelControlEngine` so source/mode actions now publish through the existing pit-command feedback seam even when no fuel send occurs:
+  - `SourceCycle` now always surfaces `FUEL SRC <PUSH|NORM|SAVE|PLAN|STBY>` feedback when selection-only,
+  - `ModeCycle` now always surfaces `FUEL MODE <OFF|MAN|AUTO>`,
+  - both paths now stamp `Pit.Command.LastAction` with the actual action id (`Pit.FuelControl.SourceCycle` / `Pit.FuelControl.ModeCycle`) on selection-only presses.
+- Added direct source-select actions:
+  - `Pit.FuelControl.SetPush`
+  - `Pit.FuelControl.SetNorm`
+  - `Pit.FuelControl.SetSave`
+  - In `MAN/AUTO`, these send immediately using the normal raw pit-command path while preserving action identity in `Pit.Command.LastAction`; in `OFF`, they update selection-only feedback.
+- Added new plugin-owned pit action `Pit.FuelSetZero` mapped through the existing built-in pit-command transport/feedback seam with short feedback text `FUEL ZERO`.
+- Added plugin-owned max-fuel toggle concept state in `PitCommandEngine`:
+  - pressing `Pit.FuelSetMax` now flips persistent state `Pit.Command.FuelSetMaxToggleState`,
+  - transport/feedback still routes through the normal pit-command seam.
+- Classification: **both** (new driver-visible pit action/feedback behavior and internal pit-command/pit-fuel control seam extension).
+
 ### PR follow-up: apply Pit Fuel Control contingency before clamp
 - Corrected live Pit Fuel Control target composition in `LalaLaunch.BuildPitFuelControlSnapshot` so `NORM/PUSH/SAVE` now apply contingency before the non-negative clamp:
   - `target = max(0, requirement + contingency - currentFuel)` (equivalently `max(0, shortfall + contingency)`),

@@ -1,7 +1,7 @@
 # Repository status
 
 Validated against commit: HEAD
-Last updated: 2026-04-18
+Last updated: 2026-04-19
 Branch: work
 
 ## Current repo/link status
@@ -78,6 +78,11 @@ Branch: work
 - PR 572 follow-up tightened PLAN validity further: car + track/layout key + race basis + race length now all must match between planner and live session before PLAN is considered valid.
 - PR 572 follow-up moved pit fuel-control sends to a dedicated raw pit-command path that intentionally reuses built-in pit-command normalization before chat injection (trailing `$` consistency fix).
 - PR 572 follow-up made MAX override command explicit with a named clamp-safe overshoot constant rather than implicit magic literals.
+- Pit Fuel Control follow-up expanded action/feedback coverage:
+  - `SourceCycle` and `ModeCycle` now update `Pit.Command.DisplayText` + `Pit.Command.LastAction` even on selection-only presses (no fuel send).
+  - Added direct source-select actions: `Pit.FuelControl.SetPush`, `Pit.FuelControl.SetNorm`, `Pit.FuelControl.SetSave`.
+  - Added plugin-owned zero-fuel action `Pit.FuelSetZero` on the normal pit-command transport/feedback seam.
+  - `Pit.FuelSetMax` now flips a plugin-owned toggle concept state exported as `Pit.Command.FuelSetMaxToggleState` for dash label logic.
 
 ## Reviewed documentation set
 ### Changed in LapRef rollover seam transient-zero follow-up
@@ -144,6 +149,17 @@ Branch: work
 - `Docs/Internal/Development_Changelog.md`
 - `Docs/RepoStatus.md`
 
+### Changed in Pit Fuel Control action/feedback follow-up
+- `PitFuelControlEngine.cs`
+- `PitCommandEngine.cs`
+- `LalaLaunch.cs`
+- `Docs/Internal/SimHubParameterInventory.md`
+- `Docs/Internal/SimHubLogMessages.md`
+- `Docs/Internal/Development_Changelog.md`
+- `Docs/Subsystems/Dash_Integration.md`
+- `Docs/Pit_Assist.md`
+- `Docs/RepoStatus.md`
+
 ### Changed in fuel projection phase seam + Pit Fuel Control authority alignment task
 - `LalaLaunch.cs`
 - `Docs/Internal/SimHubParameterInventory.md`
@@ -197,6 +213,7 @@ Branch: work
 - Preserved focused helper ownership (`PitCommandEngine`) for transport/mapping/feedback/failure logic instead of widening central runtime loops.
 - Added bounded observability and short-lived user feedback exports so command success/failure is visible on dash and in SimHub logs.
 - Extended focused-helper ownership with `PitFuelControlEngine` for pit fuel source/mode state and decision logic while keeping `LalaLaunch` as action/export wiring.
+- Kept scope bounded to pit action surface/feedback seam extensions (no dashboard JSON/UI expansion): direct source-select + zero-fuel actions, selection-only source/mode feedback publication, and max-fuel toggle-state export.
 
 ## Validation note
 - Validation recorded against `HEAD` (`Pit Fuel Control live targets now apply contingency before clamp for NORM/PUSH/SAVE, preventing contingency-only overfuel sends when already above base requirement`).

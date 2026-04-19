@@ -56,7 +56,7 @@ namespace LaunchPlugin
 
         private readonly Func<PitFuelControlSnapshot> _snapshotProvider;
         private readonly Func<string, string, string, bool> _chatCommandSender;
-        private readonly Action<string> _feedbackPublisher;
+        private readonly Action<string, string, string> _feedbackPublisher;
 
         private DateTime _suppressManualOverrideUntilUtc = DateTime.MinValue;
         private bool _maxOverrideArmed;
@@ -73,7 +73,7 @@ namespace LaunchPlugin
         public PitFuelControlEngine(
             Func<PitFuelControlSnapshot> snapshotProvider,
             Func<string, string, string, bool> chatCommandSender,
-            Action<string> feedbackPublisher)
+            Action<string, string, string> feedbackPublisher)
         {
             _snapshotProvider = snapshotProvider;
             _chatCommandSender = chatCommandSender;
@@ -114,9 +114,15 @@ namespace LaunchPlugin
                 AutoArmed = false;
             }
 
+            bool sent = false;
             if (Mode == PitFuelControlMode.Man || Mode == PitFuelControlMode.Auto)
             {
-                SendCurrentTarget(isAutoUpdate: false);
+                sent = SendCurrentTarget(isAutoUpdate: false, actionNameOverride: "Pit.FuelControl.SourceCycle");
+            }
+
+            if (!sent)
+            {
+                PublishSelectionFeedback("Pit.FuelControl.SourceCycle", string.Format("FUEL SRC {0}", SourceToText(Source)));
             }
         }
 
@@ -128,26 +134,32 @@ namespace LaunchPlugin
             {
                 Mode = PitFuelControlMode.Man;
                 AutoArmed = false;
-                return;
             }
-
-            if (Mode == PitFuelControlMode.Man)
+            else if (Mode == PitFuelControlMode.Man)
             {
                 if (Source == PitFuelControlSource.Plan)
                 {
                     Mode = PitFuelControlMode.Off;
                     AutoArmed = false;
-                    return;
                 }
-
-                Mode = PitFuelControlMode.Auto;
-                AutoArmed = true;
-                return;
+                else
+                {
+                    Mode = PitFuelControlMode.Auto;
+                    AutoArmed = true;
+                }
+            }
+            else
+            {
+                Mode = PitFuelControlMode.Off;
+                AutoArmed = false;
             }
 
-            Mode = PitFuelControlMode.Off;
-            AutoArmed = false;
+            PublishSelectionFeedback("Pit.FuelControl.ModeCycle", string.Format("FUEL MODE {0}", ModeToText(Mode)));
         }
+
+        public void SetPush() => SetSource(PitFuelControlSource.Push, "Pit.FuelControl.SetPush");
+        public void SetNorm() => SetSource(PitFuelControlSource.Norm, "Pit.FuelControl.SetNorm");
+        public void SetSave() => SetSource(PitFuelControlSource.Save, "Pit.FuelControl.SetSave");
 
         public void OnLapCross()
         {
@@ -214,26 +226,44 @@ namespace LaunchPlugin
                 AutoArmed = false;
                 OverrideActive = false;
                 _maxOverrideArmed = false;
-                _feedbackPublisher?.Invoke("AUTO CANCELLED");
+                PublishSelectionFeedback("Pit.FuelControl.AutoCancelled", "AUTO CANCELLED");
             }
         }
 
         public string SourceText => SourceToText(Source);
         public string ModeText => ModeToText(Mode);
 
-        private void SendCurrentTarget(bool isAutoUpdate)
+        private void SetSource(PitFuelControlSource requestedSource, string actionName)
+        {
+            RefreshDerivedState();
+            Source = requestedSource;
+            RefreshDerivedState();
+
+            bool sent = false;
+            if (Mode == PitFuelControlMode.Man || Mode == PitFuelControlMode.Auto)
+            {
+                sent = SendCurrentTarget(isAutoUpdate: false, actionNameOverride: actionName);
+            }
+
+            if (!sent)
+            {
+                PublishSelectionFeedback(actionName, string.Format("FUEL SRC {0}", SourceToText(Source)));
+            }
+        }
+
+        private bool SendCurrentTarget(bool isAutoUpdate, string actionNameOverride = null)
         {
             RefreshDerivedState();
 
             if (Source == PitFuelControlSource.Stby)
             {
-                return;
+                return false;
             }
 
             int roundedTarget = ComputeRoundedTargetLitres();
             if (roundedTarget < 0)
             {
-                return;
+                return false;
             }
 
             bool useMax = OverrideActive;
@@ -241,7 +271,9 @@ namespace LaunchPlugin
                 ? string.Format("#fuel +{0}$", MaxFuelOvershootLitres)
                 : string.Format("#fuel {0}$", roundedTarget);
             string feedback = BuildFeedbackText(isAutoUpdate, useMax, roundedTarget);
-            string actionName = isAutoUpdate ? "Pit.FuelControl.AutoUpdate" : "Pit.FuelControl.SourceSet";
+            string actionName = !string.IsNullOrWhiteSpace(actionNameOverride)
+                ? actionNameOverride.Trim()
+                : (isAutoUpdate ? "Pit.FuelControl.AutoUpdate" : "Pit.FuelControl.SourceSet");
 
             bool sent = _chatCommandSender != null && _chatCommandSender(actionName, commandText, feedback);
             if (sent)
@@ -253,6 +285,13 @@ namespace LaunchPlugin
                     AutoArmed = true;
                 }
             }
+
+            return sent;
+        }
+
+        private void PublishSelectionFeedback(string actionName, string message)
+        {
+            _feedbackPublisher?.Invoke(actionName, message, string.Empty);
         }
 
         private int ComputeRoundedTargetLitres()
