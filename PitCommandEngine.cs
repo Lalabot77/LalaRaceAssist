@@ -13,6 +13,7 @@ namespace LaunchPlugin
         ClearAll,
         ClearTyres,
         ToggleFuel,
+        FuelSetZero,
         FuelAdd1,
         FuelRemove1,
         FuelAdd10,
@@ -38,11 +39,16 @@ namespace LaunchPlugin
         public string DisplayText { get; private set; } = string.Empty;
         public string LastAction { get; private set; } = string.Empty;
         public string LastRaw { get; private set; } = string.Empty;
+        public bool FuelSetMaxToggleState { get; private set; }
         public bool Active => !string.IsNullOrWhiteSpace(DisplayText) && DateTime.UtcNow < _messageUntilUtc;
 
         public void Execute(PitCommandAction action, PluginManager pluginManager, double tankSpaceLitres)
         {
             LastAction = action.ToString();
+            if (action == PitCommandAction.FuelSetMax)
+            {
+                FuelSetMaxToggleState = !FuelSetMaxToggleState;
+            }
 
             string raw = GetRawCommand(action);
             LastRaw = raw;
@@ -130,6 +136,13 @@ namespace LaunchPlugin
             PublishMessage(message);
         }
 
+        public void PublishActionFeedback(string actionName, string message, string raw)
+        {
+            LastAction = string.IsNullOrWhiteSpace(actionName) ? "PitActionFeedback" : actionName.Trim();
+            LastRaw = raw ?? string.Empty;
+            PublishMessage(message);
+        }
+
         private bool ConfirmAndPublishFeedback(PitCommandAction action, PluginManager pluginManager, bool? before, double tankSpaceLitres)
         {
             if (!IsStatefulAction(action))
@@ -189,6 +202,7 @@ namespace LaunchPlugin
                 case PitCommandAction.ClearAll: return "#clear$";
                 case PitCommandAction.ClearTyres: return "#cleartires$";
                 case PitCommandAction.ToggleFuel: return "#!fuel$";
+                case PitCommandAction.FuelSetZero: return "#fuel 0$";
                 case PitCommandAction.FuelAdd1: return "#fuel +1$";
                 case PitCommandAction.FuelRemove1: return "#fuel -1$";
                 case PitCommandAction.FuelAdd10: return "#fuel +10$";
@@ -246,6 +260,7 @@ namespace LaunchPlugin
             {
                 case PitCommandAction.ClearAll: return "Pit Clear All";
                 case PitCommandAction.ClearTyres: return "Clear Tyres";
+                case PitCommandAction.FuelSetZero: return "FUEL ZERO";
                 case PitCommandAction.FuelAdd1: return reachedFuelMax ? "Fuel MAX" : "Fuel +1";
                 case PitCommandAction.FuelRemove1: return "Fuel -1";
                 case PitCommandAction.FuelAdd10: return reachedFuelMax ? "Fuel MAX" : "Fuel +10";

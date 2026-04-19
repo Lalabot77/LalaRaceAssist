@@ -3,8 +3,8 @@
 **CANONICAL CONTRACT**
 
 Validated against: HEAD
-Last reviewed: 2026-04-18
-Last updated: 2026-04-18
+Last reviewed: 2026-04-19
+Last updated: 2026-04-19
 Branch: work
 
 - All exports are attached in `LalaLaunch.cs` during `Init()` via `AttachCore`/`AttachVerbose`. Core values are refreshed in `DataUpdate` (500 ms poll for fuel/pace/pit via `_poll500ms`; per-tick for launch/dash/messaging). Verbose rows require `SimhubPublish.VERBOSE`.【F:LalaLaunch.cs†L2644-L3120】【F:LalaLaunch.cs†L3411-L3775】
@@ -326,7 +326,8 @@ Shift Assist runtime/settings notes:
 | Pit.Command.Active | bool | `true` while `Pit.Command.DisplayText` is active; otherwise `false`. | Per tick. | `PitCommandEngine.cs` message timer + `LalaLaunch.cs` `AttachCore`. |
 | Pit.Command.LastAction | string | Last fired pit command action id for troubleshooting. | On action fire; surfaced each tick. | `PitCommandEngine.cs` action audit state + `LalaLaunch.cs` `AttachCore`. |
 | Pit.Command.LastRaw | string | Last raw command/message text submitted by the caller before final transport normalization (for example `#fuel +500$` on raw pit-command path, `#...$` on built-in actions, or custom plain text). | On action fire; surfaced each tick. | `PitCommandEngine.cs` command mapping/normalization + `LalaLaunch.cs` `AttachCore`. |
-| Pit.FuelControl.Source | int | Plugin-owned pit fuel source selector (`0` PUSH, `1` NORM, `2` SAVE, `3` PLAN, `4` STBY). `STBY` is recovery-only and exits to `PUSH` on next source-cycle action. | Per tick. | `PitFuelControlEngine.cs` state machine + `LalaLaunch.cs` `AttachCore`. |
+| Pit.Command.FuelSetMaxToggleState | bool | Plugin-owned max-fuel toggle concept state. Flips on every `Pit.FuelSetMax` press so dashes can label what the next press means. Transport and feedback still use the normal pit-command seam. | On `Pit.FuelSetMax` action fire; surfaced each tick. | `PitCommandEngine.cs` toggle state + `LalaLaunch.cs` `AttachCore`. |
+| Pit.FuelControl.Source | int | Plugin-owned pit fuel source selector (`0` PUSH, `1` NORM, `2` SAVE, `3` PLAN, `4` STBY). `STBY` is recovery-only and exits to `PUSH` on next source-cycle action. `SourceCycle` + direct source-select actions (`SetPush/SetNorm/SetSave`) always publish short pit-command feedback (`FUEL SRC ...`) when no send occurs (for example mode `OFF`). | Per tick. | `PitFuelControlEngine.cs` state machine + `LalaLaunch.cs` `AttachCore`. |
 | Pit.FuelControl.SourceText | string | Short source label (`PUSH`/`NORM`/`SAVE`/`PLAN`/`STBY`). | Per tick. | `PitFuelControlEngine.cs` source text mapping + `LalaLaunch.cs` `AttachCore`. |
 | Pit.FuelControl.Mode | int | Plugin-owned fuel-control mode (`0` OFF, `1` MAN, `2` AUTO). `AUTO` is skipped while source is `PLAN`. | Per tick. | `PitFuelControlEngine.cs` mode state + `LalaLaunch.cs` `AttachCore`. |
 | Pit.FuelControl.ModeText | string | Short mode label (`OFF`/`MAN`/`AUTO`). | Per tick. | `PitFuelControlEngine.cs` mode text mapping + `LalaLaunch.cs` `AttachCore`. |
@@ -339,6 +340,8 @@ Shift Assist runtime/settings notes:
 Dark Mode binding warning: When `Use Lovely True Dark` is enabled and Lovely is available, Lovely controls `DarkMode.Active` even if Mode is `Off`, and `BrightnessPct` stays on the user slider value (no auto scaling while Lovely drives). `OpacityPct` remains the final dim value published to dashes. `ModeText` remains tied to `Mode` only (`Off`/`Manual`/`Auto`). `LalaLaunch.ToggleDarkMode` is ignored to prevent conflicting toggles. Do not bind both Lovely and LalaLaunch dark-mode toggles to the same physical input.
 
 Settings persistence note (not runtime SimHub exports): `PitCommandsAutoFocusPreview` and `CustomMessages[1..10].Name/MessageText` are persisted UI/settings fields in `LaunchPluginSettings` used by Settings-tab editors and custom-message action dispatch, and are intentionally not attached via `AttachCore/AttachVerbose`.
+
+Pit action surface note (Controls & Events): plugin-owned pit actions now include `Pit.FuelSetZero`, `Pit.FuelControl.SetPush`, `Pit.FuelControl.SetNorm`, and `Pit.FuelControl.SetSave` in addition to the existing cycle/actions set.
 
 ## Friends
 | Exported name | Type | Units / meaning | Update cadence | Defined in |
