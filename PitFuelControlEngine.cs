@@ -142,7 +142,7 @@ namespace LaunchPlugin
                 if (Source == PitFuelControlSource.Plan)
                 {
                     Mode = PitFuelControlMode.Auto;
-                    AutoArmed = true;
+                    AutoArmed = false;
                     Source = PitFuelControlSource.Stby;
                     PublishSelectionFeedback("Pit.FuelControl.ModeCycle", "FUEL AUTO STBY");
                 }

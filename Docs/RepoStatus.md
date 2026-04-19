@@ -14,6 +14,7 @@ Branch: work
   - forced-STBY mode transitions now preserve mode context in one feedback string:
     - `AUTO -> MAN` => `FUEL MAN STBY`
     - `MAN -> AUTO` from `PLAN` => `FUEL AUTO STBY`
+  - `MAN -> AUTO` from `PLAN` now leaves `AutoArmed=false` while forcing `Source=STBY` (AUTO mode selected, but not armed until explicit live-source reselection/send).
 - Pit Fuel Control control-model follow-up corrected action semantics:
   - `Pit.FuelSetMax` is now a real MAX/ZERO behavioral toggle on transport (`MAX -> ZERO -> MAX -> ZERO`), while `Pit.Command.FuelSetMaxToggleState` still flips on every press.
   - `ModeCycle` now forces `Source=STBY` on `AUTO -> MAN`.
