@@ -114,13 +114,14 @@ namespace LaunchPlugin
                 AutoArmed = false;
             }
 
-            bool sent = false;
+            bool sendAttempted = false;
             if (Mode == PitFuelControlMode.Man || Mode == PitFuelControlMode.Auto)
             {
-                sent = SendCurrentTarget(isAutoUpdate: false, actionNameOverride: "Pit.FuelControl.SourceCycle");
+                sendAttempted = true;
+                SendCurrentTarget(isAutoUpdate: false, actionNameOverride: "Pit.FuelControl.SourceCycle");
             }
 
-            if (!sent)
+            if (!sendAttempted)
             {
                 PublishSelectionFeedback("Pit.FuelControl.SourceCycle", string.Format("FUEL SRC {0}", SourceToText(Source)));
             }
@@ -239,13 +240,14 @@ namespace LaunchPlugin
             Source = requestedSource;
             RefreshDerivedState();
 
-            bool sent = false;
+            bool sendAttempted = false;
             if (Mode == PitFuelControlMode.Man || Mode == PitFuelControlMode.Auto)
             {
-                sent = SendCurrentTarget(isAutoUpdate: false, actionNameOverride: actionName);
+                sendAttempted = true;
+                SendCurrentTarget(isAutoUpdate: false, actionNameOverride: actionName);
             }
 
-            if (!sent)
+            if (!sendAttempted)
             {
                 PublishSelectionFeedback(actionName, string.Format("FUEL SRC {0}", SourceToText(Source)));
             }

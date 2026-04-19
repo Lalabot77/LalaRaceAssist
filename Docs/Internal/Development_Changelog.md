@@ -33,6 +33,11 @@ The public user-facing release history is maintained in the root `CHANGELOG.md`.
 
 ## Post-v1.0 development
 
+### PR #575 follow-up: preserve pit-command failure feedback on source changes
+- Classification: **both** (driver-visible pit command feedback correctness + internal contract alignment).
+- Updated `PitFuelControlEngine` source-change paths (`SourceCycle` and direct `SetPush/SetNorm/SetSave`) so selection feedback is only published when no send was attempted (`Mode=OFF`).
+- In `Mode=MAN/AUTO`, source-change actions now preserve transport failure feedback (`Pit Cmd Fail`) from the pit-command send path instead of overwriting it with `FUEL SRC ...`.
+
 ### Pit Fuel Control action/feedback follow-up (source/mode feedback + direct-select + zero + max-toggle state)
 - Updated `PitFuelControlEngine` so source/mode actions now publish through the existing pit-command feedback seam even when no fuel send occurs:
   - `SourceCycle` now always surfaces `FUEL SRC <PUSH|NORM|SAVE|PLAN|STBY>` feedback when selection-only,

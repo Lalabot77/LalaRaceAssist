@@ -9,6 +9,9 @@ Branch: work
 - No Git remote is configured in this checkout (`git remote -v` returns empty).
 
 ## Documentation sync status
+- PR #575 follow-up fixed Pit Fuel Control source-change failure feedback masking:
+  - `SourceCycle` and direct source-select actions now publish `FUEL SRC ...` selection feedback only when no send is attempted (`Mode=OFF`).
+  - In `Mode=MAN/AUTO`, failed send attempts now keep existing pit-command failure feedback (`Pit Cmd Fail`) visible instead of being overwritten by selection text.
 - PR follow-up corrected Pit Fuel Control live-target contingency ordering:
   - `NORM/PUSH/SAVE` now apply contingency before clamp (`max(0, shortfall + contingency)`)
   - avoids contingency-only overfuel commands when current fuel is already above the base live requirement
