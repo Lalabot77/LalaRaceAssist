@@ -33,6 +33,12 @@ The public user-facing release history is maintained in the root `CHANGELOG.md`.
 
 ## Post-v1.0 development
 
+### Custom message settings persistence follow-up
+- Fixed settings persistence for `Settings -> Custom Messages` slot edits by hooking `LaunchPluginSettings.CustomMessages` collection/item change events and saving plugin settings on `Name`/`MessageText` changes.
+- Startup path now reattaches custom-message persistence hooks immediately after settings load so existing saved slot content is preserved and editable without losing bindings.
+- Kept runtime dispatch/contracts unchanged: `LalaLaunch.CustomMessage01..10` action bindings and existing pit/custom command transport logic were not modified.
+- Classification: **both** (driver-visible persistence fix + bounded settings-layer internal wiring).
+
 ### PR #582 follow-up: class metadata fallback gating + finish multiclass authority hardening
 - Fixed `RefreshClassMetadata(...)` fallback gating so `CompetingDrivers[*]` recovery now runs when `Drivers##` rows exist but still do not provide usable class metadata; this removes unresolved class-best windows caused by late/blank `Drivers##` class fields in live non-race sessions.
 - Kept source precedence unchanged: `Drivers##` remains preferred, and fallback only fills missing class entries without overwriting already-resolved class identities.
