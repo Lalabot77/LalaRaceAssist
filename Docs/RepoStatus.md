@@ -9,6 +9,10 @@ Branch: work
 - No Git remote is configured in this checkout (`git remote -v` returns empty).
 
 ## Documentation sync status
+- PR review follow-up gated LapRef SessionBest authority sync by active context:
+  - LapRef now disarms authoritative `playerBestLapTimeSec` sync on context reset (session/type/car/track/wet-dry), preventing stale prior-session best-lap carry-over from pre-seeding new-session SessionBest lap-time state.
+  - first valid in-context `CaptureValidatedLap(...)` session-best capture re-arms authoritative sync, so trusted authority resumes driving `LapRef.SessionBest.LapTimeSec` only when context-valid.
+  - this preserves LapRef ownership of session-best sector payload (`S1..S6*`) while restoring first-lap SessionBest sector capture behavior in new sessions.
 - LapRef analysis-first follow-up fixed remaining parity gaps against trusted H2H/core seams:
   - `LapRef.SessionBest.LapTimeSec` no longer depends on LapRef-local validated-lap latch timing; it now synchronizes each tick from the same trusted player best-lap authority path used by H2H/core.
   - LapRef keeps session-best sector payload ownership (`S1..S6*`) from validated-lap capture, decoupled from session-best lap-time authority.

@@ -33,6 +33,14 @@ The public user-facing release history is maintained in the root `CHANGELOG.md`.
 
 ## Post-v1.0 development
 
+### PR review follow-up: gate LapRef SessionBest authority by active context
+- Added LapRef session-best authority re-arm gating in `LapReferenceEngine` so trusted `playerBestLapTimeSec` synchronization only applies after a current-context session-best baseline has been captured.
+- On LapRef context reset (session/token/type/car/track/wet-dry changes), session-best authority sync is now disarmed to prevent stale prior-session best-lap carry-over from suppressing first valid in-session SessionBest sector capture.
+- First valid in-context `CaptureValidatedLap(...)` session-best capture re-arms authority, preserving the intended split:
+  - trusted seam continues to drive `LapRef.SessionBest.LapTimeSec` when context-valid,
+  - LapRef retains ownership of session-best sector snapshot payload (`S1..S6*`).
+- Classification: **both** (driver-visible new-session SessionBest capture correctness + internal LapRef authority-seam hardening/docs alignment).
+
 ### LapRef follow-up: trusted SessionBest authority + rollover parity cleanup
 - Fixed remaining LapRef SessionBest timing lag by decoupling SessionBest lap-time authority from LapRef-local validated-lap latching:
   - `LapRef.SessionBest.LapTimeSec` is now synchronized each tick from the same trusted player best-lap seam used by H2H/core (best-lap authority path already resolved in `LalaLaunch`),
