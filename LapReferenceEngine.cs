@@ -259,13 +259,11 @@ namespace LaunchPlugin
             bool hasLiveFixedSectorSnapshot,
             CarSAEngine.FixedSectorCacheSnapshot liveFixedSectorSnapshot)
         {
-            int previousActiveSegment = _lastLivePlayerActiveSegment;
             _lastLivePlayerActiveSegment = activeSegment;
 
-            if (IsLapRollover(previousActiveSegment, activeSegment))
-            {
-                _livePlayerCurrentLapSnapshot.Clear();
-            }
+            // Do not clear on lap rollover.
+            // Keep prior sector values visible and let new sector completions overwrite them,
+            // matching the on-screen H2H rollover behavior.
 
             if (!hasLiveFixedSectorSnapshot)
             {
@@ -321,25 +319,7 @@ namespace LaunchPlugin
                 && snapshot.IsWet == _isWet;
         }
 
-        private static bool IsLapRollover(int previousActiveSegment, int currentActiveSegment)
-        {
-            bool isNormalWrap =
-                currentActiveSegment > 0
-                && previousActiveSegment > 0
-                && currentActiveSegment < previousActiveSegment;
-
-            if (isNormalWrap)
-            {
-                return true;
-            }
-
-            bool isBoundaryTransitionIntoZero =
-                previousActiveSegment > 1
-                && currentActiveSegment == 0;
-
-            return isBoundaryTransitionIntoZero;
-        }
-
+        
         private static void BuildLivePlayerOutput(
             LapReferenceSideOutput output,
             int activeSegment,
