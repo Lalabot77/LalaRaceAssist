@@ -33,6 +33,12 @@ The public user-facing release history is maintained in the root `CHANGELOG.md`.
 
 ## Post-v1.0 development
 
+### 2026-04-20 — PR #582 follow-up: native single-class authority precedence over cache diversity
+- Classification: **internal-only** (multiclass state authority ordering correction for existing H2H/ClassLeader seams; no new exports/UI).
+- Tightened `RefreshClassMetadata(...)` multiclass assignment ordering so explicit native single-class (`WeekendInfo.NumCarClasses == 1`) now wins outright and cannot be overridden by cache string divergence.
+- Kept explicit native multiclass authority next (`NumCarClasses > 1`, or unknown class-count with positive `HasMultipleClassOpponents`).
+- Restricted cache-proven class diversity (`>1` distinct non-blank class names) to unresolved/unknown class-count state only, so cache evidence assists authority gaps but cannot override explicit native class-count signals.
+
 ### PR #582 follow-up: class metadata fallback gating + finish multiclass authority hardening
 - Fixed `RefreshClassMetadata(...)` fallback gating so `CompetingDrivers[*]` recovery now runs when `Drivers##` rows exist but still do not provide usable class metadata; this removes unresolved class-best windows caused by late/blank `Drivers##` class fields in live non-race sessions.
 - Kept source precedence unchanged: `Drivers##` remains preferred, and fallback only fills missing class entries without overwriting already-resolved class identities.
@@ -536,6 +542,14 @@ The public user-facing release history is maintained in the root `CHANGELOG.md`.
 - Wired LapRef capture to the existing validated-lap acceptance path and existing wet/dry routing path (`_isWetMode`) to avoid duplicate validation or condition-detection logic.
 - Extended `TrackStats` with compatibility-safe optional condition-specific PB sector fields (`BestLapSector1..6Dry/WetMs`) and persisted them only when real sectors exist on a new PB.
 - Synced subsystem/docs contracts (`H2H`, `CarSA`, `Profiles_And_PB`, `SimHubParameterInventory`, `SimHubLogMessages`, `RepoStatus`) and added `Docs/Subsystems/LapRef.md`.
+
+## 2026-04-20 — PR #582 post-merge class-metadata completion + multiclass cache-proof follow-up
+- Classification: **internal-only** (class-metadata/cache decision correctness for existing H2H/ClassLeader seams; no new exports/UI).
+- Kept `DriverInfo.Drivers##` as the preferred class metadata source, then always ran `DriverInfo.CompetingDrivers[*]` as a per-car backfill pass for missing class entries only (no overwrite of already-resolved cache rows).
+- Updated multiclass session inference so `_isMultiClassSession` is now true when either:
+  - explicit native multiclass signal is present (`NumCarClasses > 1`, or unknown class-count with positive `HasMultipleClassOpponents`), or
+  - the freshly built class cache itself proves diversity (`>1` distinct non-blank class names).
+- Preserved prior startup safety behavior: unknown class-count state alone does not infer multiclass, and blank/unresolved class states are not treated as class-diversity evidence.
 
 
 ## 2026-04-10 — Opponents Pit Exit dash export follow-up
