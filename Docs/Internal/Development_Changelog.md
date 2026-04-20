@@ -33,6 +33,18 @@ The public user-facing release history is maintained in the root `CHANGELOG.md`.
 
 ## Post-v1.0 development
 
+### H2H/ClassLeader class-best seam hardening across Practice/Quali/Race + single-class blank-class fallback
+- Restored native class-best/session-best-in-class resolution in live opponent-eligible sessions (Practice, Open Qualify, Lone Qualify, Qualifying, Race) by refreshing class metadata before class-best consumers run in the tick path.
+- Broadened class metadata cache population to prefer `DriverInfo.Drivers##` with `CompetingDrivers[*]` fallback, removing race-like timing assumptions from the class map seam.
+- Added a narrow effective same-class resolver used by `ComputeH2HClassSessionBestLapSec(...)`, `TryResolveClassSessionBestLap(...)`, and `IsNewSessionBestInClass(...)`:
+  - primary single/multiclass authority: `SessionData.WeekendInfo.NumCarClasses`,
+  - secondary supporting hint: `GameData.HasMultipleClassOpponents`,
+  - blank class identity allowed only in defensibly single-class sessions,
+  - multiclass + blank class identity remains fail-safe (no class collapse).
+- Kept H2H magenta class-best coloring and `ClassLeader.*` exports on the same restored native seam (no ExtraProperties dependency introduced).
+- Added bounded H2H info logging for class-best resolution failure reasons (missing/late metadata, blank identity in multiclass, no valid best laps yet) without per-tick spam.
+- Classification: **both** (driver-visible class-best/class-leader behavior restoration + internal seam hardening/observability).
+
 ### Class leader export family: plugin-owned `ClassLeader.*` for all live sessions
 - Added a new plugin-owned `ClassLeader.*` export family in `LalaLaunch`:
   - `ClassLeader.Valid`, `ClassLeader.CarIdx`

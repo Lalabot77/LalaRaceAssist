@@ -600,6 +600,8 @@ namespace LaunchPlugin
         private int _lastClassLeaderCarIdx = -1;
         private int _lastOverallLeaderCarIdx = -1;
         private readonly Dictionary<int, string> _carIdxToClassShortName = new Dictionary<int, string>();
+        private DateTime _classBestResolveLastLogUtc = DateTime.MinValue;
+        private string _classBestResolveLastLogReason = string.Empty;
         private int _lastCompletedLapForFinish = -1;
         private bool _leaderFinishLatchedByFlag;
         private double _afterZeroPlannerSeconds;
@@ -610,6 +612,8 @@ namespace LaunchPlugin
         private double _lastSimLapsRemaining;
         private double _lastProjectionLapSecondsUsed;
         private bool _afterZeroResultLogged;
+
+        private const int UnknownNumCarClasses = -1;
 
         // New per-mode rolling windows
         private readonly List<double> _recentDryFuelLaps = new List<double>();
@@ -6787,6 +6791,10 @@ namespace LaunchPlugin
             bool verboseLogs = IsVerboseDebugLoggingOn;
             _opponentsEngine?.Update(data, pluginManager, isOpponentsEligibleSessionNow, isRaceSessionNow, completedLaps, myPaceSec, pitLossSec, pitTripActive, inLane, trackPct, sessionTimeSec, sessionTimeRemainingSec, verboseLogs);
             UpdatePitExitTimeToExitSec(pluginManager, inLane, speedKph);
+            if (isOpponentsEligibleSessionNow)
+            {
+                RefreshClassMetadata(pluginManager);
+            }
 
             int[] carIdxLap = SafeReadIntArray(pluginManager, "DataCorePlugin.GameRawData.Telemetry.CarIdxLap");
             int[] carIdxTrackSurface = SafeReadIntArray(pluginManager, "DataCorePlugin.GameRawData.Telemetry.CarIdxTrackSurface");
@@ -6894,7 +6902,7 @@ namespace LaunchPlugin
                     var trackAheadSelector = BuildH2HTrackSelector(_carSaEngine.Outputs.AheadSlots, playerTrackClassColor);
                     var trackBehindSelector = BuildH2HTrackSelector(_carSaEngine.Outputs.BehindSlots, playerTrackClassColor);
 
-                    double h2hClassSessionBestLapSec = ComputeH2HClassSessionBestLapSec(playerCarIdx);
+                    double h2hClassSessionBestLapSec = ComputeH2HClassSessionBestLapSec(pluginManager, playerCarIdx);
 
                     _h2hEngine.Update(
                         sessionTimeSec,
@@ -9837,7 +9845,7 @@ namespace LaunchPlugin
                 {
                     if (hasNewPersonalBest)
                     {
-                        bool hasNewSessionBestInClass = IsNewSessionBestInClass(i, currentBestLap, bestLapTimes, previousBestLapTimes);
+                        bool hasNewSessionBestInClass = IsNewSessionBestInClass(pluginManager, i, currentBestLap, bestLapTimes, previousBestLapTimes);
                         _carSaLapTimeUpdateByIdx[i] = hasNewSessionBestInClass ? "SB" : "PB";
                     }
                     else
@@ -12741,27 +12749,70 @@ namespace LaunchPlugin
         private void RefreshClassMetadata(PluginManager pluginManager)
         {
             _carIdxToClassShortName.Clear();
-            var classNames = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
-
-            for (int i = 0; i < 64; i++)
+            if (pluginManager == null)
             {
-                int carIdx = GetInt(pluginManager, $"DataCorePlugin.GameRawData.SessionData.DriverInfo.CompetingDrivers[{i}].CarIdx", int.MinValue);
-                if (carIdx == int.MinValue) break;
+                _isMultiClassSession = false;
+                return;
+            }
 
-                string cls = GetString(pluginManager, $"DataCorePlugin.GameRawData.SessionData.DriverInfo.CompetingDrivers[{i}].CarClassShortName");
+            bool populated = false;
+            for (int i = 1; i <= 64; i++)
+            {
+                string basePath = $"DataCorePlugin.GameRawData.SessionData.DriverInfo.Drivers{i:00}";
+                int carIdx = GetInt(pluginManager, $"{basePath}.CarIdx", int.MinValue);
+                if (carIdx == int.MinValue)
+                {
+                    continue;
+                }
+
+                populated = true;
+                if (carIdx < 0 || carIdx >= CarSAEngine.MaxCars)
+                {
+                    continue;
+                }
+
+                string cls = GetString(pluginManager, $"{basePath}.CarClassShortName");
                 if (string.IsNullOrWhiteSpace(cls))
                 {
-                    cls = GetString(pluginManager, $"DataCorePlugin.GameRawData.SessionData.DriverInfo.CompetingDrivers[{i}].CarClassName");
+                    cls = GetString(pluginManager, $"{basePath}.CarClassName");
                 }
 
                 if (!string.IsNullOrWhiteSpace(cls))
                 {
                     _carIdxToClassShortName[carIdx] = cls;
-                    classNames.Add(cls);
                 }
             }
 
-            _isMultiClassSession = classNames.Count > 1;
+            if (!populated)
+            {
+                for (int i = 0; i < 64; i++)
+                {
+                    string basePath = $"DataCorePlugin.GameRawData.SessionData.DriverInfo.CompetingDrivers[{i}]";
+                    int carIdx = GetInt(pluginManager, $"{basePath}.CarIdx", int.MinValue);
+                    if (carIdx == int.MinValue)
+                    {
+                        break;
+                    }
+
+                    if (carIdx < 0 || carIdx >= CarSAEngine.MaxCars)
+                    {
+                        continue;
+                    }
+
+                    string cls = GetString(pluginManager, $"{basePath}.CarClassShortName");
+                    if (string.IsNullOrWhiteSpace(cls))
+                    {
+                        cls = GetString(pluginManager, $"{basePath}.CarClassName");
+                    }
+
+                    if (!string.IsNullOrWhiteSpace(cls))
+                    {
+                        _carIdxToClassShortName[carIdx] = cls;
+                    }
+                }
+            }
+
+            _isMultiClassSession = !IsEffectivelySingleClassSession(pluginManager, out _, out _);
         }
 
         private string GetCachedClassShortName(int carIdx)
@@ -12770,10 +12821,74 @@ namespace LaunchPlugin
             return _carIdxToClassShortName.TryGetValue(carIdx, out var cls) ? cls : null;
         }
 
-        private double ComputeH2HClassSessionBestLapSec(int playerCarIdx)
+        private bool IsEffectivelySingleClassSession(PluginManager pluginManager, out int numCarClasses, out bool hasMultipleClassOpponents)
+        {
+            numCarClasses = SafeReadInt(pluginManager, "DataCorePlugin.GameRawData.SessionData.WeekendInfo.NumCarClasses", UnknownNumCarClasses);
+            hasMultipleClassOpponents = false;
+            try
+            {
+                hasMultipleClassOpponents = Convert.ToBoolean(pluginManager?.GetPropertyValue("DataCorePlugin.GameData.HasMultipleClassOpponents") ?? false);
+            }
+            catch
+            {
+                hasMultipleClassOpponents = false;
+            }
+
+            if (numCarClasses > 1)
+            {
+                return false;
+            }
+
+            if (numCarClasses == 1)
+            {
+                return true;
+            }
+
+            return !hasMultipleClassOpponents;
+        }
+
+        private static bool HasUsableClassIdentity(string classShortName)
+        {
+            return !string.IsNullOrWhiteSpace(classShortName);
+        }
+
+        private static bool IsSameEffectiveClass(string playerClassShort, string candidateClassShort, bool isSingleClassSession)
+        {
+            bool playerHasClass = HasUsableClassIdentity(playerClassShort);
+            bool candidateHasClass = HasUsableClassIdentity(candidateClassShort);
+            if (playerHasClass && candidateHasClass)
+            {
+                return string.Equals(playerClassShort, candidateClassShort, StringComparison.OrdinalIgnoreCase);
+            }
+
+            if (isSingleClassSession)
+            {
+                return true;
+            }
+
+            return false;
+        }
+
+        private void MaybeLogClassBestResolveFailure(string reason, int playerCarIdx, int numCarClasses, bool hasMultipleClassOpponents)
+        {
+            DateTime nowUtc = DateTime.UtcNow;
+            if (string.Equals(_classBestResolveLastLogReason, reason, StringComparison.OrdinalIgnoreCase)
+                && (nowUtc - _classBestResolveLastLogUtc).TotalSeconds < 10.0)
+            {
+                return;
+            }
+
+            _classBestResolveLastLogReason = reason ?? string.Empty;
+            _classBestResolveLastLogUtc = nowUtc;
+            SimHub.Logging.Current.Info(
+                $"[LalaPlugin:H2H] Native class-best unresolved reason={reason} playerCarIdx={playerCarIdx} " +
+                $"classMetaCount={_carIdxToClassShortName.Count} numCarClasses={numCarClasses} hasMultipleClassOpponents={hasMultipleClassOpponents}");
+        }
+
+        private double ComputeH2HClassSessionBestLapSec(PluginManager pluginManager, int playerCarIdx)
         {
             double classBestLapSec = 0.0;
-            if (TryResolveClassSessionBestLap(playerCarIdx, out _, out double resolvedClassBestLapSec))
+            if (TryResolveClassSessionBestLap(pluginManager, playerCarIdx, out _, out double resolvedClassBestLapSec, out string resolveFailureReason))
             {
                 classBestLapSec = resolvedClassBestLapSec;
             }
@@ -12783,6 +12898,10 @@ namespace LaunchPlugin
                 _h2hClassSessionBestNativeMissingWarned = false;
                 return classBestLapSec;
             }
+
+            bool isSingleClassSession = IsEffectivelySingleClassSession(pluginManager, out int numCarClasses, out bool hasMultipleClassOpponents);
+            _ = isSingleClassSession;
+            MaybeLogClassBestResolveFailure(resolveFailureReason, playerCarIdx, numCarClasses, hasMultipleClassOpponents);
 
             if (!_h2hClassSessionBestNativeMissingWarned)
             {
@@ -12795,31 +12914,43 @@ namespace LaunchPlugin
             return 0.0;
         }
 
-        private bool TryResolveClassSessionBestLap(int playerCarIdx, out int classLeaderCarIdx, out double classBestLapSec)
+        private bool TryResolveClassSessionBestLap(PluginManager pluginManager, int playerCarIdx, out int classLeaderCarIdx, out double classBestLapSec, out string failureReason)
         {
             classLeaderCarIdx = -1;
             classBestLapSec = 0.0;
+            failureReason = "no_valid_best_laps";
 
             if (playerCarIdx < 0 || playerCarIdx >= CarSAEngine.MaxCars)
             {
+                failureReason = "invalid_player_caridx";
+                return false;
+            }
+
+            bool isSingleClassSession = IsEffectivelySingleClassSession(pluginManager, out _, out _);
+            if (_carIdxToClassShortName.Count == 0)
+            {
+                failureReason = "missing_or_late_class_metadata";
                 return false;
             }
 
             string playerClassShort = GetCachedClassShortName(playerCarIdx);
-            if (string.IsNullOrWhiteSpace(playerClassShort))
+            if (!isSingleClassSession && !HasUsableClassIdentity(playerClassShort))
             {
+                failureReason = "blank_class_identity_multiclass";
                 return false;
             }
 
             double resolvedClassBestLapSec = double.NaN;
             int resolvedClassLeaderCarIdx = -1;
+            bool matchedCandidate = false;
             for (int i = 0; i < CarSAEngine.MaxCars; i++)
             {
                 string classShort = GetCachedClassShortName(i);
-                if (!string.Equals(classShort, playerClassShort, StringComparison.OrdinalIgnoreCase))
+                if (!IsSameEffectiveClass(playerClassShort, classShort, isSingleClassSession))
                 {
                     continue;
                 }
+                matchedCandidate = true;
 
                 double bestLapSec = _carSaBestLapTimeSecByIdx[i];
                 if (IsValidCarSaLapTimeSec(bestLapSec) && (!IsValidCarSaLapTimeSec(resolvedClassBestLapSec) || bestLapSec < resolvedClassBestLapSec))
@@ -12831,11 +12962,20 @@ namespace LaunchPlugin
 
             if (!IsValidCarSaLapTimeSec(resolvedClassBestLapSec) || resolvedClassLeaderCarIdx < 0)
             {
+                if (!matchedCandidate && !isSingleClassSession)
+                {
+                    failureReason = "blank_class_identity_multiclass";
+                }
+                else
+                {
+                    failureReason = "no_valid_best_laps";
+                }
                 return false;
             }
 
             classLeaderCarIdx = resolvedClassLeaderCarIdx;
             classBestLapSec = resolvedClassBestLapSec;
+            failureReason = string.Empty;
             return true;
         }
 
@@ -12868,7 +13008,7 @@ namespace LaunchPlugin
                 return;
             }
 
-            if (!TryResolveClassSessionBestLap(playerCarIdx, out int classLeaderCarIdx, out double classBestLapSec))
+            if (!TryResolveClassSessionBestLap(pluginManager, playerCarIdx, out int classLeaderCarIdx, out double classBestLapSec, out _))
             {
                 return;
             }
@@ -12962,15 +13102,16 @@ namespace LaunchPlugin
             return trackGapSec;
         }
 
-        private bool IsNewSessionBestInClass(int carIdx, double candidateBestLapSec, float[] currentBestLapTimes, double[] previousBestLapTimes)
+        private bool IsNewSessionBestInClass(PluginManager pluginManager, int carIdx, double candidateBestLapSec, float[] currentBestLapTimes, double[] previousBestLapTimes)
         {
             if (carIdx < 0 || carIdx >= CarSAEngine.MaxCars || !IsValidCarSaLapTimeSec(candidateBestLapSec))
             {
                 return false;
             }
 
+            bool isSingleClassSession = IsEffectivelySingleClassSession(pluginManager, out _, out _);
             string classShort = GetCachedClassShortName(carIdx);
-            if (string.IsNullOrWhiteSpace(classShort))
+            if (!isSingleClassSession && !HasUsableClassIdentity(classShort))
             {
                 return false;
             }
@@ -12980,7 +13121,7 @@ namespace LaunchPlugin
             for (int i = 0; i < CarSAEngine.MaxCars; i++)
             {
                 string classShortForCar = GetCachedClassShortName(i);
-                if (!string.Equals(classShortForCar, classShort, StringComparison.OrdinalIgnoreCase))
+                if (!IsSameEffectiveClass(classShort, classShortForCar, isSingleClassSession))
                 {
                     continue;
                 }

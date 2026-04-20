@@ -9,6 +9,14 @@ Branch: work
 - No Git remote is configured in this checkout (`git remote -v` returns empty).
 
 ## Documentation sync status
+- Restored native class-best resolution seam for H2H/ClassLeader in all live opponent-eligible sessions (Practice/Open Qualify/Lone Qualify/Qualifying/Race):
+  - class metadata refresh now runs before class-best consumers in tick order (cache update -> class-best calculations -> H2H/ClassLeader publication paths),
+  - metadata cache population now prefers `DriverInfo.Drivers##` with `CompetingDrivers[*]` fallback.
+- Added conservative effective same-class fallback behavior for single-class sessions with blank class identity:
+  - single-class authority uses native `WeekendInfo.NumCarClasses` (with `HasMultipleClassOpponents` as supporting hint),
+  - blank class identity is accepted only for defensibly single-class matching,
+  - multiclass sessions still fail safe when class identity is unusable (no cross-class collapse).
+- Added bounded H2H info observability for class-best resolution miss reasons (`missing_or_late_class_metadata`, `blank_class_identity_multiclass`, `no_valid_best_laps`) while keeping existing one-time fallback-removal warning behavior.
 - Added plugin-owned live-session `ClassLeader.*` export family for player-class session-best leader context:
   - new exports: validity/carIdx, identity (`Name`/`AbbrevName`/`CarNumber`), class-best lap (`BestLapTimeSec`/`BestLapTime`), and `GapToPlayerSec`.
   - class-best seam now resolves both best-lap seconds and winning car index from existing native `CarIdxBestLapTime` cache authority.
@@ -309,6 +317,13 @@ Branch: work
 ### Changed in PR #577 review follow-up (AUTO->OFF baseline clear)
 - `PitFuelControlEngine.cs`
 - `Docs/Internal/SimHubParameterInventory.md`
+- `Docs/Internal/Development_Changelog.md`
+- `Docs/RepoStatus.md`
+
+### Changed in class-best/class-leader live-session seam restore + single-class fallback task
+- `LalaLaunch.cs`
+- `Docs/Subsystems/H2H.md`
+- `Docs/Internal/SimHubLogMessages.md`
 - `Docs/Internal/Development_Changelog.md`
 - `Docs/RepoStatus.md`
 
