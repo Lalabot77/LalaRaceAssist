@@ -12755,7 +12755,7 @@ namespace LaunchPlugin
                 return;
             }
 
-            bool populated = false;
+            bool hasDriverRows = false;
             for (int i = 1; i <= 64; i++)
             {
                 string basePath = $"DataCorePlugin.GameRawData.SessionData.DriverInfo.Drivers{i:00}";
@@ -12765,7 +12765,7 @@ namespace LaunchPlugin
                     continue;
                 }
 
-                populated = true;
+                hasDriverRows = true;
                 if (carIdx < 0 || carIdx >= CarSAEngine.MaxCars)
                 {
                     continue;
@@ -12783,7 +12783,8 @@ namespace LaunchPlugin
                 }
             }
 
-            if (!populated)
+            bool shouldUseCompetingDriversFallback = !hasDriverRows || _carIdxToClassShortName.Count == 0;
+            if (shouldUseCompetingDriversFallback)
             {
                 for (int i = 0; i < 64; i++)
                 {
@@ -12795,6 +12796,11 @@ namespace LaunchPlugin
                     }
 
                     if (carIdx < 0 || carIdx >= CarSAEngine.MaxCars)
+                    {
+                        continue;
+                    }
+
+                    if (_carIdxToClassShortName.ContainsKey(carIdx))
                     {
                         continue;
                     }
@@ -12812,7 +12818,9 @@ namespace LaunchPlugin
                 }
             }
 
-            _isMultiClassSession = !IsEffectivelySingleClassSession(pluginManager, out _, out _);
+            IsEffectivelySingleClassSession(pluginManager, out int numCarClasses, out bool hasMultipleClassOpponents);
+            bool hasExplicitMultiClassSignal = numCarClasses > 1 || (numCarClasses <= 0 && hasMultipleClassOpponents);
+            _isMultiClassSession = hasExplicitMultiClassSignal;
         }
 
         private string GetCachedClassShortName(int carIdx)

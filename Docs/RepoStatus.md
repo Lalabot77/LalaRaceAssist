@@ -9,6 +9,9 @@ Branch: work
 - No Git remote is configured in this checkout (`git remote -v` returns empty).
 
 ## Documentation sync status
+- PR #582 follow-up addressed two additional review findings without widening subsystem scope:
+  - class metadata fallback now keys off actual metadata recovery (not only `Drivers##.CarIdx` row presence), so `CompetingDrivers[*]` is used when `Drivers##` exists but class names are still blank/late;
+  - `_isMultiClassSession` now requires an explicit multiclass signal (`NumCarClasses > 1`, or unknown class-count with positive `HasMultipleClassOpponents`) instead of deriving from unresolved single-class checks, preventing finish-path multiclass side effects during startup.
 - PR #582 follow-up fixed a single-class inference safety gap in class-best resolution:
   - `IsEffectivelySingleClassSession(...)` now treats unknown `WeekendInfo.NumCarClasses` state as unresolved/non-single-class instead of inferring single-class from an unset `HasMultipleClassOpponents` hint.
   - blank-class same-class fallback now requires explicit native single-class authority (`NumCarClasses == 1`), preventing transient whole-field class-best picks in multiclass metadata-startup windows.
