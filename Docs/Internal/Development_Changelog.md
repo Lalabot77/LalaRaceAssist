@@ -33,6 +33,31 @@ The public user-facing release history is maintained in the root `CHANGELOG.md`.
 
 ## Post-v1.0 development
 
+### PR #582 follow-up: class metadata fallback gating + finish multiclass authority hardening
+- Fixed `RefreshClassMetadata(...)` fallback gating so `CompetingDrivers[*]` recovery now runs when `Drivers##` rows exist but still do not provide usable class metadata; this removes unresolved class-best windows caused by late/blank `Drivers##` class fields in live non-race sessions.
+- Kept source precedence unchanged: `Drivers##` remains preferred, and fallback only fills missing class entries without overwriting already-resolved class identities.
+- Decoupled `_isMultiClassSession` from unresolved class-count state by requiring an explicit multiclass signal (`NumCarClasses > 1` or unknown class-count + positive `HasMultipleClassOpponents`) instead of inferring multiclass from `!IsEffectivelySingleClassSession(...)`.
+- This preserves fail-safe class-best matching semantics (unknown class-count is still non-single-class for blank-class matching) while avoiding finish-path multiclass side effects during metadata startup.
+- Classification: **both** (driver-visible class-best availability and finish-path correctness + internal seam hardening).
+
+### PR #582 follow-up: require explicit single-class authority before blank-class fallback
+- Tightened `IsEffectivelySingleClassSession(...)` to require an explicit native single-class signal (`WeekendInfo.NumCarClasses == 1`) before allowing blank-class same-class fallback in H2H/ClassLeader class-best resolution.
+- Unknown class-count state (`NumCarClasses <= 0`/unavailable) now stays fail-safe as unresolved/non-single-class even when `GameData.HasMultipleClassOpponents` has not populated yet, preventing transient whole-field class-best selection in multiclass sessions.
+- Kept existing multiclass fail-safe behavior unchanged (`blank_class_identity_multiclass`/unresolved paths remain authoritative).
+- Classification: **both** (driver-visible H2H/ClassLeader class-best safety correction + internal seam hardening).
+
+### H2H/ClassLeader class-best seam hardening across Practice/Quali/Race + single-class blank-class fallback
+- Restored native class-best/session-best-in-class resolution in live opponent-eligible sessions (Practice, Open Qualify, Lone Qualify, Qualifying, Race) by refreshing class metadata before class-best consumers run in the tick path.
+- Broadened class metadata cache population to prefer `DriverInfo.Drivers##` with `CompetingDrivers[*]` fallback, removing race-like timing assumptions from the class map seam.
+- Added a narrow effective same-class resolver used by `ComputeH2HClassSessionBestLapSec(...)`, `TryResolveClassSessionBestLap(...)`, and `IsNewSessionBestInClass(...)`:
+  - primary single/multiclass authority: `SessionData.WeekendInfo.NumCarClasses`,
+  - secondary supporting hint: `GameData.HasMultipleClassOpponents`,
+  - blank class identity allowed only in defensibly single-class sessions,
+  - multiclass + blank class identity remains fail-safe (no class collapse).
+- Kept H2H magenta class-best coloring and `ClassLeader.*` exports on the same restored native seam (no ExtraProperties dependency introduced).
+- Added bounded H2H info logging for class-best resolution failure reasons (missing/late metadata, blank identity in multiclass, no valid best laps yet) without per-tick spam.
+- Classification: **both** (driver-visible class-best/class-leader behavior restoration + internal seam hardening/observability).
+
 ### Class leader export family: plugin-owned `ClassLeader.*` for all live sessions
 - Added a new plugin-owned `ClassLeader.*` export family in `LalaLaunch`:
   - `ClassLeader.Valid`, `ClassLeader.CarIdx`

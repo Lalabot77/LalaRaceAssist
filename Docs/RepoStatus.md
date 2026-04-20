@@ -9,6 +9,20 @@ Branch: work
 - No Git remote is configured in this checkout (`git remote -v` returns empty).
 
 ## Documentation sync status
+- PR #582 follow-up addressed two additional review findings without widening subsystem scope:
+  - class metadata fallback now keys off actual metadata recovery (not only `Drivers##.CarIdx` row presence), so `CompetingDrivers[*]` is used when `Drivers##` exists but class names are still blank/late;
+  - `_isMultiClassSession` now requires an explicit multiclass signal (`NumCarClasses > 1`, or unknown class-count with positive `HasMultipleClassOpponents`) instead of deriving from unresolved single-class checks, preventing finish-path multiclass side effects during startup.
+- PR #582 follow-up fixed a single-class inference safety gap in class-best resolution:
+  - `IsEffectivelySingleClassSession(...)` now treats unknown `WeekendInfo.NumCarClasses` state as unresolved/non-single-class instead of inferring single-class from an unset `HasMultipleClassOpponents` hint.
+  - blank-class same-class fallback now requires explicit native single-class authority (`NumCarClasses == 1`), preventing transient whole-field class-best picks in multiclass metadata-startup windows.
+- Restored native class-best resolution seam for H2H/ClassLeader in all live opponent-eligible sessions (Practice/Open Qualify/Lone Qualify/Qualifying/Race):
+  - class metadata refresh now runs before class-best consumers in tick order (cache update -> class-best calculations -> H2H/ClassLeader publication paths),
+  - metadata cache population now prefers `DriverInfo.Drivers##` with `CompetingDrivers[*]` fallback.
+- Added conservative effective same-class fallback behavior for single-class sessions with blank class identity:
+  - single-class authority uses native `WeekendInfo.NumCarClasses` (with `HasMultipleClassOpponents` as supporting hint),
+  - blank class identity is accepted only for defensibly single-class matching,
+  - multiclass sessions still fail safe when class identity is unusable (no cross-class collapse).
+- Added bounded H2H info observability for class-best resolution miss reasons (`missing_or_late_class_metadata`, `blank_class_identity_multiclass`, `no_valid_best_laps`) while keeping existing one-time fallback-removal warning behavior.
 - Added plugin-owned live-session `ClassLeader.*` export family for player-class session-best leader context:
   - new exports: validity/carIdx, identity (`Name`/`AbbrevName`/`CarNumber`), class-best lap (`BestLapTimeSec`/`BestLapTime`), and `GapToPlayerSec`.
   - class-best seam now resolves both best-lap seconds and winning car index from existing native `CarIdxBestLapTime` cache authority.
@@ -312,6 +326,20 @@ Branch: work
 - `Docs/Internal/Development_Changelog.md`
 - `Docs/RepoStatus.md`
 
+### Changed in class-best/class-leader live-session seam restore + single-class fallback task
+- `LalaLaunch.cs`
+- `Docs/Subsystems/H2H.md`
+- `Docs/Internal/SimHubLogMessages.md`
+- `Docs/Internal/Development_Changelog.md`
+- `Docs/RepoStatus.md`
+
+### Changed in PR #582 review follow-up (explicit single-class authority requirement)
+- `LalaLaunch.cs`
+- `Docs/Subsystems/H2H.md`
+- `Docs/Internal/SimHubLogMessages.md`
+- `Docs/Internal/Development_Changelog.md`
+- `Docs/RepoStatus.md`
+
 ### Changed in LapRef player-side seam reuse refactor
 - `LapReferenceEngine.cs`
 - `LalaLaunch.cs`
@@ -338,4 +366,4 @@ Branch: work
 - Kept scope bounded to pit action surface/feedback seam extensions (no dashboard JSON/UI expansion): direct source-select + zero-fuel actions, selection-only source/mode feedback publication, and max-fuel toggle-state export.
 
 ## Validation note
-- Validation recorded against `HEAD` (`LapRef SessionBest lap-time publication now follows trusted player best-lap authority each tick while SessionBest sector payload remains capture-owned; rollover compare re-arm no longer depends on LapRef-local lap-ref advance latch`).
+- Validation recorded against `HEAD` (`Class-best blank-class fallback now requires explicit native single-class authority; unknown class-count state remains fail-safe non-single-class to prevent multiclass cross-class session-best collapse during metadata startup.`).
