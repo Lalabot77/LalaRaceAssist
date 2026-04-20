@@ -12844,7 +12844,9 @@ namespace LaunchPlugin
                 return true;
             }
 
-            return !hasMultipleClassOpponents;
+            // Unknown/missing class-count state is not a positive single-class signal.
+            // Stay fail-safe (non-single-class) until native metadata confirms single-class.
+            return false;
         }
 
         private static bool HasUsableClassIdentity(string classShortName)

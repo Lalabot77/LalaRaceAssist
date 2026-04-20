@@ -9,6 +9,9 @@ Branch: work
 - No Git remote is configured in this checkout (`git remote -v` returns empty).
 
 ## Documentation sync status
+- PR #582 follow-up fixed a single-class inference safety gap in class-best resolution:
+  - `IsEffectivelySingleClassSession(...)` now treats unknown `WeekendInfo.NumCarClasses` state as unresolved/non-single-class instead of inferring single-class from an unset `HasMultipleClassOpponents` hint.
+  - blank-class same-class fallback now requires explicit native single-class authority (`NumCarClasses == 1`), preventing transient whole-field class-best picks in multiclass metadata-startup windows.
 - Restored native class-best resolution seam for H2H/ClassLeader in all live opponent-eligible sessions (Practice/Open Qualify/Lone Qualify/Qualifying/Race):
   - class metadata refresh now runs before class-best consumers in tick order (cache update -> class-best calculations -> H2H/ClassLeader publication paths),
   - metadata cache population now prefers `DriverInfo.Drivers##` with `CompetingDrivers[*]` fallback.
@@ -327,6 +330,13 @@ Branch: work
 - `Docs/Internal/Development_Changelog.md`
 - `Docs/RepoStatus.md`
 
+### Changed in PR #582 review follow-up (explicit single-class authority requirement)
+- `LalaLaunch.cs`
+- `Docs/Subsystems/H2H.md`
+- `Docs/Internal/SimHubLogMessages.md`
+- `Docs/Internal/Development_Changelog.md`
+- `Docs/RepoStatus.md`
+
 ### Changed in LapRef player-side seam reuse refactor
 - `LapReferenceEngine.cs`
 - `LalaLaunch.cs`
@@ -353,4 +363,4 @@ Branch: work
 - Kept scope bounded to pit action surface/feedback seam extensions (no dashboard JSON/UI expansion): direct source-select + zero-fuel actions, selection-only source/mode feedback publication, and max-fuel toggle-state export.
 
 ## Validation note
-- Validation recorded against `HEAD` (`LapRef SessionBest lap-time publication now follows trusted player best-lap authority each tick while SessionBest sector payload remains capture-owned; rollover compare re-arm no longer depends on LapRef-local lap-ref advance latch`).
+- Validation recorded against `HEAD` (`Class-best blank-class fallback now requires explicit native single-class authority; unknown class-count state remains fail-safe non-single-class to prevent multiclass cross-class session-best collapse during metadata startup.`).

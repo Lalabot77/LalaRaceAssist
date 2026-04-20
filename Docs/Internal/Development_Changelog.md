@@ -33,6 +33,12 @@ The public user-facing release history is maintained in the root `CHANGELOG.md`.
 
 ## Post-v1.0 development
 
+### PR #582 follow-up: require explicit single-class authority before blank-class fallback
+- Tightened `IsEffectivelySingleClassSession(...)` to require an explicit native single-class signal (`WeekendInfo.NumCarClasses == 1`) before allowing blank-class same-class fallback in H2H/ClassLeader class-best resolution.
+- Unknown class-count state (`NumCarClasses <= 0`/unavailable) now stays fail-safe as unresolved/non-single-class even when `GameData.HasMultipleClassOpponents` has not populated yet, preventing transient whole-field class-best selection in multiclass sessions.
+- Kept existing multiclass fail-safe behavior unchanged (`blank_class_identity_multiclass`/unresolved paths remain authoritative).
+- Classification: **both** (driver-visible H2H/ClassLeader class-best safety correction + internal seam hardening).
+
 ### H2H/ClassLeader class-best seam hardening across Practice/Quali/Race + single-class blank-class fallback
 - Restored native class-best/session-best-in-class resolution in live opponent-eligible sessions (Practice, Open Qualify, Lone Qualify, Qualifying, Race) by refreshing class metadata before class-best consumers run in the tick path.
 - Broadened class metadata cache population to prefer `DriverInfo.Drivers##` with `CompetingDrivers[*]` fallback, removing race-like timing assumptions from the class map seam.

@@ -3,8 +3,8 @@
 **CANONICAL OBSERVABILITY MAP**
 
 Validated against: HEAD
-Last reviewed: 2026-04-19
-Last updated: 2026-04-19
+Last reviewed: 2026-04-20
+Last updated: 2026-04-20
 Branch: work
 
 Scope: Info/Warn logs emitted via `SimHub.Logging.Current.Info(...)` and `SimHub.Logging.Current.Warn(...)`. Use the tag prefixes to filter in SimHub’s log view. Placeholder logs are noted; no deprecated messages are currently removed in code. Legacy/alternate copies of this list do not exist.
@@ -90,7 +90,7 @@ Scope: Info/Warn logs emitted via `SimHub.Logging.Current.Info(...)` and `SimHub
 
 ## H2H and messaging fallback-removal warnings
 - **`[LalaPlugin:H2H] Native class session-best lap unavailable; legacy IRacingExtraProperties fallback is removed. H2H class-best output remains 0 until native class-best is available.`** — One-time warning emitted when H2H class-best has no native authority; output remains `0` until native class-best recovers.
-- **`[LalaPlugin:H2H] Native class-best unresolved reason=<reason> playerCarIdx=<idx> classMetaCount=<count> numCarClasses=<n> hasMultipleClassOpponents=<bool>`** — Cadence-limited info log for class-best resolution misses, distinguishing missing/late class metadata, blank class identity in multiclass, and no-valid-best-lap-yet states.
+- **`[LalaPlugin:H2H] Native class-best unresolved reason=<reason> playerCarIdx=<idx> classMetaCount=<count> numCarClasses=<n> hasMultipleClassOpponents=<bool>`** — Cadence-limited info log for class-best resolution misses, distinguishing missing/late class metadata, blank class identity when effective class context is unresolved/non-single-class, and no-valid-best-lap-yet states.
 - **`[LalaPlugin:Messaging] Legacy IRacingExtraProperties traffic fast-path disabled. MessagingSystem now uses native/session opponent context only; output may remain empty when no native context is available.`** — One-time warning emitted when the old ExtraProperties traffic fast-path is intentionally disabled.
 - **`[LalaPlugin:MSGV1] Signal '<signalId>' has no native/plugin-owned authority. Legacy IRacingExtraProperties fallback is removed; signal remains unavailable.`** — One-time-per-signal warning for MSGV1 signal ids previously sourced from ExtraProperties; warning state is runtime-static so `SignalProvider` re-creation does not spam this line each tick.
 
