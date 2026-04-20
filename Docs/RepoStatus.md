@@ -9,6 +9,10 @@ Branch: work
 - No Git remote is configured in this checkout (`git remote -v` returns empty).
 
 ## Documentation sync status
+- PR #582 merged-follow-up addressed remaining review findings with tight class-metadata/cache scope:
+  - class metadata cache still prefers `DriverInfo.Drivers##`, but `CompetingDrivers[*]` now always runs as a per-car missing-entry backfill pass (never overwriting already resolved class rows);
+  - `_isMultiClassSession` still honors explicit native multiclass signals as primary, and now also accepts already-built cache diversity (`>1` distinct non-blank class names) as valid multiclass proof;
+  - unknown class-count startup safety remains intact (no multiclass inference from unresolved/blank state alone).
 - PR #582 follow-up addressed two additional review findings without widening subsystem scope:
   - class metadata fallback now keys off actual metadata recovery (not only `Drivers##.CarIdx` row presence), so `CompetingDrivers[*]` is used when `Drivers##` exists but class names are still blank/late;
   - `_isMultiClassSession` now requires an explicit multiclass signal (`NumCarClasses > 1`, or unknown class-count with positive `HasMultipleClassOpponents`) instead of deriving from unresolved single-class checks, preventing finish-path multiclass side effects during startup.

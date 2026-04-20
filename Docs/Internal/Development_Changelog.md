@@ -537,6 +537,14 @@ The public user-facing release history is maintained in the root `CHANGELOG.md`.
 - Extended `TrackStats` with compatibility-safe optional condition-specific PB sector fields (`BestLapSector1..6Dry/WetMs`) and persisted them only when real sectors exist on a new PB.
 - Synced subsystem/docs contracts (`H2H`, `CarSA`, `Profiles_And_PB`, `SimHubParameterInventory`, `SimHubLogMessages`, `RepoStatus`) and added `Docs/Subsystems/LapRef.md`.
 
+## 2026-04-20 — PR #582 post-merge class-metadata completion + multiclass cache-proof follow-up
+- Classification: **internal-only** (class-metadata/cache decision correctness for existing H2H/ClassLeader seams; no new exports/UI).
+- Kept `DriverInfo.Drivers##` as the preferred class metadata source, then always ran `DriverInfo.CompetingDrivers[*]` as a per-car backfill pass for missing class entries only (no overwrite of already-resolved cache rows).
+- Updated multiclass session inference so `_isMultiClassSession` is now true when either:
+  - explicit native multiclass signal is present (`NumCarClasses > 1`, or unknown class-count with positive `HasMultipleClassOpponents`), or
+  - the freshly built class cache itself proves diversity (`>1` distinct non-blank class names).
+- Preserved prior startup safety behavior: unknown class-count state alone does not infer multiclass, and blank/unresolved class states are not treated as class-diversity evidence.
+
 
 ## 2026-04-10 — Opponents Pit Exit dash export follow-up
 - Classification: **both** (user-facing dash exports + internal docs/contract alignment).
