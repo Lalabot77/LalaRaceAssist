@@ -12813,44 +12813,21 @@ namespace LaunchPlugin
             }
 
             IsEffectivelySingleClassSession(pluginManager, out int numCarClasses, out bool hasMultipleClassOpponents);
-            bool hasNativeSingleClassSignal = numCarClasses == 1;
-            bool hasExplicitMultiClassSignal = numCarClasses > 1 || (numCarClasses <= 0 && hasMultipleClassOpponents);
-            bool hasCacheProvenMultiClass = false;
-            if (_carIdxToClassShortName.Count > 1)
-            {
-                var distinctClassNames = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
-                foreach (var kvp in _carIdxToClassShortName)
-                {
-                    string cls = kvp.Value;
-                    if (string.IsNullOrWhiteSpace(cls))
-                    {
-                        continue;
-                    }
-
-                    distinctClassNames.Add(cls.Trim());
-                    if (distinctClassNames.Count > 1)
-                    {
-                        hasCacheProvenMultiClass = true;
-                        break;
-                    }
-                }
-            }
-
-            // Authority order:
-            // 1) Explicit native single-class wins outright.
-            // 2) Explicit native multiclass (or explicit native unknown+multiclass hint) wins next.
-            // 3) Cache-proven diversity is only allowed to assist when native class-count authority is unresolved.
-            if (hasNativeSingleClassSignal)
+            // Authority order is native-only:
+            // 1) NumCarClasses == 1 => single-class.
+            // 2) NumCarClasses > 1 => multiclass.
+            // 3) Unknown class-count => fall back to HasMultipleClassOpponents.
+            if (numCarClasses == 1)
             {
                 _isMultiClassSession = false;
             }
-            else if (hasExplicitMultiClassSignal)
+            else if (numCarClasses > 1)
             {
                 _isMultiClassSession = true;
             }
             else
             {
-                _isMultiClassSession = numCarClasses <= 0 && hasCacheProvenMultiClass;
+                _isMultiClassSession = hasMultipleClassOpponents;
             }
         }
 
