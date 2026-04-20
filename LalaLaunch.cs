@@ -2396,7 +2396,7 @@ namespace LaunchPlugin
             double sessionTimeRemain = SafeReadDouble(pluginManager, "DataCorePlugin.GameRawData.Telemetry.SessionTimeRemain", double.NaN);
             double raceSessionDurationSeconds = SafeReadDouble(pluginManager, "DataCorePlugin.GameRawData.CurrentSessionInfo._SessionTime", double.NaN);
             int sessionStateNumeric = ReadSessionStateInt(pluginManager);
-            bool isGridOrFormation = sessionStateNumeric == 2 || sessionStateNumeric == 3;
+            bool isGridOrFormation = sessionStateNumeric >= 1 && sessionStateNumeric < 4;
             bool isRaceRunning = sessionStateNumeric == 4;
 
             double projectionSessionTimeRemain = sessionTimeRemain;
