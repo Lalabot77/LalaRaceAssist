@@ -33,6 +33,12 @@ The public user-facing release history is maintained in the root `CHANGELOG.md`.
 
 ## Post-v1.0 development
 
+### 2026-04-20 — PR #582 follow-up: native single-class authority precedence over cache diversity
+- Classification: **internal-only** (multiclass state authority ordering correction for existing H2H/ClassLeader seams; no new exports/UI).
+- Tightened `RefreshClassMetadata(...)` multiclass assignment ordering so explicit native single-class (`WeekendInfo.NumCarClasses == 1`) now wins outright and cannot be overridden by cache string divergence.
+- Kept explicit native multiclass authority next (`NumCarClasses > 1`, or unknown class-count with positive `HasMultipleClassOpponents`).
+- Restricted cache-proven class diversity (`>1` distinct non-blank class names) to unresolved/unknown class-count state only, so cache evidence assists authority gaps but cannot override explicit native class-count signals.
+
 ### PR #582 follow-up: class metadata fallback gating + finish multiclass authority hardening
 - Fixed `RefreshClassMetadata(...)` fallback gating so `CompetingDrivers[*]` recovery now runs when `Drivers##` rows exist but still do not provide usable class metadata; this removes unresolved class-best windows caused by late/blank `Drivers##` class fields in live non-race sessions.
 - Kept source precedence unchanged: `Drivers##` remains preferred, and fallback only fills missing class entries without overwriting already-resolved class identities.

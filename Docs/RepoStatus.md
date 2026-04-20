@@ -9,9 +9,12 @@ Branch: work
 - No Git remote is configured in this checkout (`git remote -v` returns empty).
 
 ## Documentation sync status
+- PR #582 follow-up addressed final multiclass authority ordering review feedback:
+  - `_isMultiClassSession` now applies native authority in strict order: explicit native single-class (`NumCarClasses == 1`) wins outright, explicit native multiclass stays next (`NumCarClasses > 1`, or unknown + `HasMultipleClassOpponents`), and cache diversity is only used when class-count authority is unresolved/unknown;
+  - this prevents cache divergence (`CarClassShortName` vs `CarClassName`) from overriding an explicit native single-class session signal.
 - PR #582 merged-follow-up addressed remaining review findings with tight class-metadata/cache scope:
   - class metadata cache still prefers `DriverInfo.Drivers##`, but `CompetingDrivers[*]` now always runs as a per-car missing-entry backfill pass (never overwriting already resolved class rows);
-  - `_isMultiClassSession` still honors explicit native multiclass signals as primary, and now also accepts already-built cache diversity (`>1` distinct non-blank class names) as valid multiclass proof;
+  - `_isMultiClassSession` still honors explicit native multiclass signals as primary, and now accepts already-built cache diversity (`>1` distinct non-blank class names) only when native class-count authority is unresolved/unknown;
   - unknown class-count startup safety remains intact (no multiclass inference from unresolved/blank state alone).
 - PR #582 follow-up addressed two additional review findings without widening subsystem scope:
   - class metadata fallback now keys off actual metadata recovery (not only `Drivers##.CarIdx` row presence), so `CompetingDrivers[*]` is used when `Drivers##` exists but class names are still blank/late;

@@ -12813,6 +12813,7 @@ namespace LaunchPlugin
             }
 
             IsEffectivelySingleClassSession(pluginManager, out int numCarClasses, out bool hasMultipleClassOpponents);
+            bool hasNativeSingleClassSignal = numCarClasses == 1;
             bool hasExplicitMultiClassSignal = numCarClasses > 1 || (numCarClasses <= 0 && hasMultipleClassOpponents);
             bool hasCacheProvenMultiClass = false;
             if (_carIdxToClassShortName.Count > 1)
@@ -12835,7 +12836,22 @@ namespace LaunchPlugin
                 }
             }
 
-            _isMultiClassSession = hasExplicitMultiClassSignal || hasCacheProvenMultiClass;
+            // Authority order:
+            // 1) Explicit native single-class wins outright.
+            // 2) Explicit native multiclass (or explicit native unknown+multiclass hint) wins next.
+            // 3) Cache-proven diversity is only allowed to assist when native class-count authority is unresolved.
+            if (hasNativeSingleClassSignal)
+            {
+                _isMultiClassSession = false;
+            }
+            else if (hasExplicitMultiClassSignal)
+            {
+                _isMultiClassSession = true;
+            }
+            else
+            {
+                _isMultiClassSession = numCarClasses <= 0 && hasCacheProvenMultiClass;
+            }
         }
 
         private string GetCachedClassShortName(int carIdx)
