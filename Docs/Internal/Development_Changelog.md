@@ -33,6 +33,23 @@ The public user-facing release history is maintained in the root `CHANGELOG.md`.
 
 ## Post-v1.0 development
 
+### Class leader export family: plugin-owned `ClassLeader.*` for all live sessions
+- Added a new plugin-owned `ClassLeader.*` export family in `LalaLaunch`:
+  - `ClassLeader.Valid`, `ClassLeader.CarIdx`
+  - `ClassLeader.Name`, `ClassLeader.AbbrevName`, `ClassLeader.CarNumber`
+  - `ClassLeader.BestLapTimeSec`, `ClassLeader.BestLapTime`
+  - `ClassLeader.GapToPlayerSec`
+- Kept class-leader authority native-only and session-best-only by reusing/extending the existing class-best seam from `_carSaBestLapTimeSecByIdx`:
+  - shared resolver now returns both class-best lap time and the winning `carIdx`,
+  - H2H class session-best lap-time path continues to consume the same class-best authority.
+- Kept identity resolution on the existing native/session-info seam already used elsewhere (`TryGetCarIdentityFromSessionInfo` + `TryGetCarDriverInfo`).
+- Mirrored existing repo live-gap semantics for `GapToPlayerSec`:
+  - prefer CarSA checkpoint gap (`TryGetCheckpointGapSec`, sane `abs <= 30s`),
+  - fallback to native progress/pace gap (`|Δlaps| * paceRef`) consistent with Opponents track-gap style.
+- Session eligibility follows existing live opponent session policy (Practice, Open Qualify, Lone Qualify, Qualifying, Race) and is explicitly not race-only.
+- Added fail-safe publication contract when unresolved/no valid class-best lap exists (`Valid=false`, `CarIdx=-1`, identity empty, best lap `0`/`"-"`, gap `0`).
+- Classification: **both** (new driver-visible export family + internal seam extension/docs alignment).
+
 ### PR review follow-up: gate LapRef SessionBest authority by active context
 - Added LapRef session-best authority re-arm gating in `LapReferenceEngine` so trusted `playerBestLapTimeSec` synchronization only applies after a current-context session-best baseline has been captured.
 - On LapRef context reset (session/token/type/car/track/wet-dry changes), session-best authority sync is now disarmed to prevent stale prior-session best-lap carry-over from suppressing first valid in-session SessionBest sector capture.

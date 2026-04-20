@@ -9,6 +9,12 @@ Branch: work
 - No Git remote is configured in this checkout (`git remote -v` returns empty).
 
 ## Documentation sync status
+- Added plugin-owned live-session `ClassLeader.*` export family for player-class session-best leader context:
+  - new exports: validity/carIdx, identity (`Name`/`AbbrevName`/`CarNumber`), class-best lap (`BestLapTimeSec`/`BestLapTime`), and `GapToPlayerSec`.
+  - class-best seam now resolves both best-lap seconds and winning car index from existing native `CarIdxBestLapTime` cache authority.
+  - identity resolution reuses existing native/session-info helpers (`Drivers##` + `CompetingDrivers[*]` fallback seams).
+  - gap semantics mirror existing live-gap behavior (prefer CarSA checkpoint gap when sane, otherwise native progress/pace fallback).
+  - eligibility is live opponent sessions (Practice/Open Qualify/Lone Qualify/Qualifying/Race), with fail-safe invalid outputs when unresolved.
 - PR review follow-up gated LapRef SessionBest authority sync by active context:
   - LapRef now disarms authoritative `playerBestLapTimeSec` sync on context reset (session/type/car/track/wet-dry), preventing stale prior-session best-lap carry-over from pre-seeding new-session SessionBest lap-time state.
   - first valid in-context `CaptureValidatedLap(...)` session-best capture re-arms authoritative sync, so trusted authority resumes driving `LapRef.SessionBest.LapTimeSec` only when context-valid.
@@ -132,6 +138,12 @@ Branch: work
   - `Pit.FuelSetMax` now flips a plugin-owned toggle concept state exported as `Pit.Command.FuelSetMaxToggleState` for dash label logic.
 
 ## Reviewed documentation set
+### Changed in ClassLeader.* live-session export task
+- `LalaLaunch.cs`
+- `Docs/Internal/SimHubParameterInventory.md`
+- `Docs/Internal/Development_Changelog.md`
+- `Docs/RepoStatus.md`
+
 ### Changed in LapRef rollover seam transient-zero follow-up
 - `LapReferenceEngine.cs`
 - `Docs/Subsystems/LapRef.md`

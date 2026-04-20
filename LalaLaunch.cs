@@ -559,6 +559,15 @@ namespace LaunchPlugin
             }
         }
 
+        public bool ClassLeaderValid { get; private set; }
+        public int ClassLeaderCarIdx { get; private set; } = -1;
+        public string ClassLeaderName { get; private set; } = string.Empty;
+        public string ClassLeaderAbbrevName { get; private set; } = string.Empty;
+        public string ClassLeaderCarNumber { get; private set; } = string.Empty;
+        public double ClassLeaderBestLapTimeSec { get; private set; }
+        public string ClassLeaderBestLapTime { get; private set; } = "-";
+        public double ClassLeaderGapToPlayerSec { get; private set; }
+
         // --- Live Fuel Calculation State ---
         private double _lastFuelLevel = -1;
         private double _lapStartFuel = -1;
@@ -5334,6 +5343,14 @@ namespace LaunchPlugin
             AttachCore("Opponents_SummaryBehind3", () => _opponentsEngine?.Outputs.SummaryBehind3 ?? string.Empty);
             AttachCore("Opponents_SummaryBehind4", () => _opponentsEngine?.Outputs.SummaryBehind4 ?? string.Empty);
             AttachCore("Opponents_SummaryBehind5", () => _opponentsEngine?.Outputs.SummaryBehind5 ?? string.Empty);
+            AttachCore("ClassLeader.Valid", () => ClassLeaderValid);
+            AttachCore("ClassLeader.CarIdx", () => ClassLeaderCarIdx);
+            AttachCore("ClassLeader.Name", () => ClassLeaderName ?? string.Empty);
+            AttachCore("ClassLeader.AbbrevName", () => ClassLeaderAbbrevName ?? string.Empty);
+            AttachCore("ClassLeader.CarNumber", () => ClassLeaderCarNumber ?? string.Empty);
+            AttachCore("ClassLeader.BestLapTimeSec", () => ClassLeaderBestLapTimeSec);
+            AttachCore("ClassLeader.BestLapTime", () => ClassLeaderBestLapTime ?? "-");
+            AttachCore("ClassLeader.GapToPlayerSec", () => ClassLeaderGapToPlayerSec);
 
             AttachCore("PitExit.Valid", () => _opponentsEngine?.Outputs.PitExit.Valid ?? false);
             AttachCore("PitExit.PredictedPositionInClass", () => _opponentsEngine?.Outputs.PitExit.PredictedPositionInClass ?? 0);
@@ -6857,6 +6874,15 @@ namespace LaunchPlugin
                 UpdateCarSaSlotTelemetry(pluginManager, _carSaEngine.Outputs.AheadSlots, carIdxLapDistPct, sessionTimeSec);
                 UpdateCarSaSlotTelemetry(pluginManager, _carSaEngine.Outputs.BehindSlots, carIdxLapDistPct, sessionTimeSec);
                 UpdateCarSaPlayerTelemetry(pluginManager, playerCarIdx, sessionTimeSec);
+                UpdateClassLeaderExports(
+                    pluginManager,
+                    sessionTypeName,
+                    playerCarIdx,
+                    carIdxLap,
+                    carIdxLapDistPct,
+                    myPaceSec,
+                    playerBestLapTimeSec,
+                    playerLastLapTimeSec);
                 if (_h2hEngine != null)
                 {
                     var previousRaceAhead = _h2hEngine.Outputs?.Race?.Ahead;
@@ -6918,6 +6944,10 @@ namespace LaunchPlugin
                 _carSaEngine.RefreshStatusE(notRelevantGapSec, _opponentsEngine?.Outputs, playerClassColor);
                 UpdateCarSaSlotStyles(_carSaEngine.Outputs.AheadSlots, playerClassColor ?? string.Empty);
                 UpdateCarSaSlotStyles(_carSaEngine.Outputs.BehindSlots, playerClassColor ?? string.Empty);
+            }
+            else
+            {
+                ResetClassLeaderExports();
             }
 
             if (pitEntryEdge)
@@ -12743,32 +12773,9 @@ namespace LaunchPlugin
         private double ComputeH2HClassSessionBestLapSec(int playerCarIdx)
         {
             double classBestLapSec = 0.0;
-            if (playerCarIdx >= 0 && playerCarIdx < CarSAEngine.MaxCars)
+            if (TryResolveClassSessionBestLap(playerCarIdx, out _, out double resolvedClassBestLapSec))
             {
-                string playerClassShort = GetCachedClassShortName(playerCarIdx);
-                if (!string.IsNullOrWhiteSpace(playerClassShort))
-                {
-                    double resolvedClassBestLapSec = double.NaN;
-                    for (int i = 0; i < CarSAEngine.MaxCars; i++)
-                    {
-                        string classShort = GetCachedClassShortName(i);
-                        if (!string.Equals(classShort, playerClassShort, StringComparison.OrdinalIgnoreCase))
-                        {
-                            continue;
-                        }
-
-                        double bestLapSec = _carSaBestLapTimeSecByIdx[i];
-                        if (IsValidCarSaLapTimeSec(bestLapSec) && (!IsValidCarSaLapTimeSec(resolvedClassBestLapSec) || bestLapSec < resolvedClassBestLapSec))
-                        {
-                            resolvedClassBestLapSec = bestLapSec;
-                        }
-                    }
-
-                    if (IsValidCarSaLapTimeSec(resolvedClassBestLapSec))
-                    {
-                        classBestLapSec = resolvedClassBestLapSec;
-                    }
-                }
+                classBestLapSec = resolvedClassBestLapSec;
             }
 
             if (classBestLapSec > 0.0)
@@ -12786,6 +12793,173 @@ namespace LaunchPlugin
             }
 
             return 0.0;
+        }
+
+        private bool TryResolveClassSessionBestLap(int playerCarIdx, out int classLeaderCarIdx, out double classBestLapSec)
+        {
+            classLeaderCarIdx = -1;
+            classBestLapSec = 0.0;
+
+            if (playerCarIdx < 0 || playerCarIdx >= CarSAEngine.MaxCars)
+            {
+                return false;
+            }
+
+            string playerClassShort = GetCachedClassShortName(playerCarIdx);
+            if (string.IsNullOrWhiteSpace(playerClassShort))
+            {
+                return false;
+            }
+
+            double resolvedClassBestLapSec = double.NaN;
+            int resolvedClassLeaderCarIdx = -1;
+            for (int i = 0; i < CarSAEngine.MaxCars; i++)
+            {
+                string classShort = GetCachedClassShortName(i);
+                if (!string.Equals(classShort, playerClassShort, StringComparison.OrdinalIgnoreCase))
+                {
+                    continue;
+                }
+
+                double bestLapSec = _carSaBestLapTimeSecByIdx[i];
+                if (IsValidCarSaLapTimeSec(bestLapSec) && (!IsValidCarSaLapTimeSec(resolvedClassBestLapSec) || bestLapSec < resolvedClassBestLapSec))
+                {
+                    resolvedClassBestLapSec = bestLapSec;
+                    resolvedClassLeaderCarIdx = i;
+                }
+            }
+
+            if (!IsValidCarSaLapTimeSec(resolvedClassBestLapSec) || resolvedClassLeaderCarIdx < 0)
+            {
+                return false;
+            }
+
+            classLeaderCarIdx = resolvedClassLeaderCarIdx;
+            classBestLapSec = resolvedClassBestLapSec;
+            return true;
+        }
+
+        private void ResetClassLeaderExports()
+        {
+            ClassLeaderValid = false;
+            ClassLeaderCarIdx = -1;
+            ClassLeaderName = string.Empty;
+            ClassLeaderAbbrevName = string.Empty;
+            ClassLeaderCarNumber = string.Empty;
+            ClassLeaderBestLapTimeSec = 0.0;
+            ClassLeaderBestLapTime = "-";
+            ClassLeaderGapToPlayerSec = 0.0;
+        }
+
+        private void UpdateClassLeaderExports(
+            PluginManager pluginManager,
+            string sessionTypeName,
+            int playerCarIdx,
+            int[] carIdxLap,
+            float[] carIdxLapDistPct,
+            double paceReferenceSec,
+            double playerBestLapSec,
+            double playerLastLapSec)
+        {
+            ResetClassLeaderExports();
+
+            if (!IsOpponentsEligibleSession(sessionTypeName))
+            {
+                return;
+            }
+
+            if (!TryResolveClassSessionBestLap(playerCarIdx, out int classLeaderCarIdx, out double classBestLapSec))
+            {
+                return;
+            }
+
+            ClassLeaderCarIdx = classLeaderCarIdx;
+            ClassLeaderBestLapTimeSec = classBestLapSec;
+            ClassLeaderBestLapTime = FormatLapTime(classBestLapSec);
+
+            if (TryGetCarIdentityFromSessionInfo(pluginManager, classLeaderCarIdx, out string name, out string carNumber, out _))
+            {
+                ClassLeaderName = name ?? string.Empty;
+                ClassLeaderCarNumber = carNumber ?? string.Empty;
+            }
+
+            if (TryGetCarDriverInfo(pluginManager, classLeaderCarIdx, out _, out _, out _, out _, out _, out _, out string abbrevName, out _, out _, out _))
+            {
+                ClassLeaderAbbrevName = abbrevName ?? string.Empty;
+            }
+
+            double resolvedPaceReferenceSec = IsValidCarSaLapTimeSec(paceReferenceSec)
+                ? paceReferenceSec
+                : (IsValidCarSaLapTimeSec(playerBestLapSec)
+                    ? playerBestLapSec
+                    : (IsValidCarSaLapTimeSec(playerLastLapSec) ? playerLastLapSec : 120.0));
+
+            ClassLeaderGapToPlayerSec = ResolveClassLeaderGapToPlayerSec(
+                playerCarIdx,
+                classLeaderCarIdx,
+                carIdxLap,
+                carIdxLapDistPct,
+                resolvedPaceReferenceSec);
+
+            ClassLeaderValid = true;
+        }
+
+        private double ResolveClassLeaderGapToPlayerSec(
+            int playerCarIdx,
+            int classLeaderCarIdx,
+            int[] carIdxLap,
+            float[] carIdxLapDistPct,
+            double paceReferenceSec)
+        {
+            if (playerCarIdx < 0 || classLeaderCarIdx < 0)
+            {
+                return 0.0;
+            }
+
+            if (_carSaEngine != null
+                && _carSaEngine.TryGetCheckpointGapSec(playerCarIdx, classLeaderCarIdx, out double signedGapSec)
+                && !double.IsNaN(signedGapSec)
+                && !double.IsInfinity(signedGapSec))
+            {
+                double absoluteGapSec = Math.Abs(signedGapSec);
+                if (absoluteGapSec > 0.0 && absoluteGapSec <= 30.0)
+                {
+                    return absoluteGapSec;
+                }
+            }
+
+            if (carIdxLap == null || carIdxLapDistPct == null)
+            {
+                return 0.0;
+            }
+
+            if (playerCarIdx >= carIdxLap.Length || classLeaderCarIdx >= carIdxLap.Length
+                || playerCarIdx >= carIdxLapDistPct.Length || classLeaderCarIdx >= carIdxLapDistPct.Length)
+            {
+                return 0.0;
+            }
+
+            double playerLapPct = carIdxLapDistPct[playerCarIdx];
+            double leaderLapPct = carIdxLapDistPct[classLeaderCarIdx];
+            if (double.IsNaN(playerLapPct) || double.IsInfinity(playerLapPct) || playerLapPct < 0.0 || playerLapPct > 1.0
+                || double.IsNaN(leaderLapPct) || double.IsInfinity(leaderLapPct) || leaderLapPct < 0.0 || leaderLapPct > 1.0)
+            {
+                return 0.0;
+            }
+
+            if (!IsValidCarSaLapTimeSec(paceReferenceSec))
+            {
+                return 0.0;
+            }
+
+            double deltaLaps = (carIdxLap[classLeaderCarIdx] + leaderLapPct) - (carIdxLap[playerCarIdx] + playerLapPct);
+            double trackGapSec = Math.Abs(deltaLaps * paceReferenceSec);
+            if (double.IsNaN(trackGapSec) || double.IsInfinity(trackGapSec))
+            {
+                return 0.0;
+            }
+
+            return trackGapSec;
         }
 
         private bool IsNewSessionBestInClass(int carIdx, double candidateBestLapSec, float[] currentBestLapTimes, double[] previousBestLapTimes)
