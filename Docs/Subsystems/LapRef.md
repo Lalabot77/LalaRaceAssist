@@ -19,7 +19,9 @@ LapRef mirrors H2H's fixed 6-sector presentation concept but is fully separate f
 - **LapRef does not own** sector derivation. It consumes CarSA fixed-sector cache read-only via `TryGetFixedSectorCacheSnapshot`.
 - **LapRef does not own** wet/dry detection. It uses runtime `_isWetMode` routing.
 - **LapRef does not own** lap validation rules. It captures only from the existing validated-lap gate in `UpdateLiveFuelCalcs`.
-- **LapRef lap-time authority** is aligned to the same player telemetry seam used by H2H/core (`CarIdxLastLapTime` for player row/session-best capture path), with a bounded freshness guard against the validated-gate candidate at capture time.
+- **LapRef lap-time authority** is split by responsibility:
+  - player-row last-lap capture uses the same trusted H2H/core seam (`CarIdxLastLapTime` with validated-gate freshness guard),
+  - session-best `LapTimeSec` is synchronized each tick to the trusted H2H/core best-lap seam (native player best-lap authority path in `LalaLaunch`), while LapRef still owns the session-best sector snapshot contract.
 - **LapRef does not modify** H2H behavior, Opponents behavior, or CarSA derivation rules.
 
 ## Snapshot model
@@ -44,11 +46,12 @@ Player-row sector display continuity is H2H-style:
 - LapRef reads CarSA cache presence directly each tick for `LapRef.Player.S1..S6*`
 - LapRef does not run a bespoke player display/rollover state machine
 - rollover/start-finish continuity therefore follows the same CarSA-cache-driven behavior pattern already proven in H2H player/target sector display
+- compare/cumulative rollover re-arm no longer depends on a LapRef-local lap-ref advance latch; it follows live active-segment wrap detection
 
 ## Capture and update flow
 1. Existing validated-lap gate accepts a lap in `UpdateLiveFuelCalcs`.
 2. LapRef resolves authoritative validated lap time from player `CarIdxLastLapTime` when fresh/consistent with the validated-gate candidate; otherwise it keeps the gate candidate for that capture tick. It then captures snapshot from the player's CarSA fixed-sector cache (if available).
-3. Snapshot becomes player reference row and competes for in-memory session best.
+3. Snapshot competes for in-memory session-best snapshot ownership (including sectors), while published session-best lap-time truth is kept aligned to trusted best-lap authority each tick.
 4. Existing profile PB seam persists lap-time PB; sector fields are persisted condition-wise when available.
 5. Each tick, LapRef rematerializes profile-best from active profile + track + wet/dry condition.
 6. Each tick, LapRef:

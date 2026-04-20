@@ -9,6 +9,11 @@ Branch: work
 - No Git remote is configured in this checkout (`git remote -v` returns empty).
 
 ## Documentation sync status
+- LapRef analysis-first follow-up fixed remaining parity gaps against trusted H2H/core seams:
+  - `LapRef.SessionBest.LapTimeSec` no longer depends on LapRef-local validated-lap latch timing; it now synchronizes each tick from the same trusted player best-lap authority path used by H2H/core.
+  - LapRef keeps session-best sector payload ownership (`S1..S6*`) from validated-lap capture, decoupled from session-best lap-time authority.
+  - removed remaining LapRef-local lap-ref advance rollover latch dependency in current-lap compare re-arm, keeping rollover behavior aligned to live active-segment wrap seam.
+  - `LapRef.Player.LapTimeSec` and player-row CarSA-cache-driven sector display behavior remain on the previously corrected trusted seams.
 - PR #577 review follow-up cleared AUTO baseline state on disable:
   - `ModeCycle` still cycles `OFF -> MAN -> AUTO -> OFF`.
   - `AUTO -> OFF` now sets `Mode=OFF`, `AutoArmed=false`, `LastSentFuelLitres=-1`, and `Source=STBY`, with feedback `FUEL MODE OFF` and no send.
@@ -299,6 +304,14 @@ Branch: work
 - `Docs/Internal/Development_Changelog.md`
 - `Docs/RepoStatus.md`
 
+### Changed in LapRef analysis-first SessionBest authority + rollover parity follow-up
+- `LapReferenceEngine.cs`
+- `LalaLaunch.cs`
+- `Docs/Subsystems/LapRef.md`
+- `Docs/Internal/SimHubParameterInventory.md`
+- `Docs/Internal/Development_Changelog.md`
+- `Docs/RepoStatus.md`
+
 ## Delivery status highlights
 - Kept changes bounded to existing runtime seams and exports: corrected projection behavior at the shared timed-race authority seam rather than introducing parallel dash property families.
 - Aligned Pit Fuel Control source targets with non-clamped requirements for live modes and retained planner-owned PLAN validity/authority.
@@ -309,4 +322,4 @@ Branch: work
 - Kept scope bounded to pit action surface/feedback seam extensions (no dashboard JSON/UI expansion): direct source-select + zero-fuel actions, selection-only source/mode feedback publication, and max-fuel toggle-state export.
 
 ## Validation note
-- Validation recorded against `HEAD` (`LapRef authoritative capture now uses CarIdx last-lap seam with rollover freshness guard vs validated-gate candidate, keeping player/session-best/PB handoff on the just-finished lap when CarIdx lags by one tick`).
+- Validation recorded against `HEAD` (`LapRef SessionBest lap-time publication now follows trusted player best-lap authority each tick while SessionBest sector payload remains capture-owned; rollover compare re-arm no longer depends on LapRef-local lap-ref advance latch`).

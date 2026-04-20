@@ -33,6 +33,18 @@ The public user-facing release history is maintained in the root `CHANGELOG.md`.
 
 ## Post-v1.0 development
 
+### LapRef follow-up: trusted SessionBest authority + rollover parity cleanup
+- Fixed remaining LapRef SessionBest timing lag by decoupling SessionBest lap-time authority from LapRef-local validated-lap latching:
+  - `LapRef.SessionBest.LapTimeSec` is now synchronized each tick from the same trusted player best-lap seam used by H2H/core (best-lap authority path already resolved in `LalaLaunch`),
+  - LapRef still owns SessionBest snapshot sectors (`S1..S6*`) from validated-lap captures.
+- Reduced LapRef-local rollover lifecycle state by removing lap-ref-advance latch dependency from current-lap compare re-arm, keeping rollover re-arm driven by live active-segment wrap behavior.
+- Preserved invariants:
+  - H2H behavior unchanged,
+  - CarSA remains sole fixed-sector owner,
+  - compare/cumulative outputs remain current-lap-only truth,
+  - PB persistence ownership and legacy lap-time-only PB compatibility unchanged.
+- Classification: **both** (dashboard-visible SessionBest timing/rollover parity correction + internal seam simplification/docs alignment).
+
 ### LapRef refactor: remove local player display lifecycle and reuse H2H/core player seams
 - Refactored `LapReferenceEngine` player-side behavior to reuse the same trusted player seams already proven in H2H/core instead of maintaining a competing LapRef-local player display lifecycle.
 - `LapRef.Player.LapTimeSec` now publishes from the same trusted player last-lap seam used by H2H/core (CarIdx last-lap authority path passed through `LalaLaunch`), removing prior dependency on LapRef-validated snapshot latching for player-row lap-time display.
