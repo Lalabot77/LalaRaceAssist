@@ -33,6 +33,26 @@ The public user-facing release history is maintained in the root `CHANGELOG.md`.
 
 ## Post-v1.0 development
 
+### PR #577 review follow-up: clear AUTO baseline on AUTO -> OFF
+- Updated `PitFuelControlEngine.ModeCycle` AUTO disable branch to clear stale AUTO baseline state:
+  - `AUTO -> OFF` now sets `LastSentFuelLitres=-1` and `Source=STBY` in addition to `Mode=OFF` and `AutoArmed=false`.
+- Kept existing behavior unchanged:
+  - cycle order remains `OFF -> MAN -> AUTO -> OFF`,
+  - forced-STBY MAN->AUTO guardrails remain intact,
+  - feedback remains `FUEL MODE OFF` with no extra message.
+- Intent preserved: disabling AUTO now leaves an inert baseline so re-entry cannot compare against stale prior AUTO sent liters.
+- Classification: **both** (driver-visible AUTO disable/re-entry correctness + internal contract/docs alignment).
+
+### Pit Fuel Control ModeCycle follow-up: restore AUTO -> OFF
+- Corrected `PitFuelControlEngine.ModeCycle` cycle order so mode can be disabled again:
+  - `OFF -> MAN`
+  - `MAN -> AUTO`
+  - `AUTO -> OFF`
+- Kept existing forced-STBY AUTO guardrail semantics unchanged:
+  - `MAN -> AUTO` when source is `PLAN` still forces `Source=STBY`, keeps `AutoArmed=false`, and publishes `FUEL AUTO STBY`.
+- `AUTO -> OFF` now clears `AutoArmed` and publishes `FUEL MODE OFF` without sending a pit command.
+- Classification: **both** (driver-visible control-cycle fix + internal contract/docs alignment).
+
 ### PR #576 follow-up: FuelSetMax ZERO-phase tank-full bypass + forced-STBY feedback refinement
 - Corrected `PitFuelControlEngine.ModeCycle` PLAN-forced-STBY AUTO transition arming:
   - `MAN -> AUTO` when source is `PLAN` now sets `Mode=AUTO`, `Source=STBY`, and `AutoArmed=false` (prevents immediate `AUTO CANCELLED` checks before source reselection).
