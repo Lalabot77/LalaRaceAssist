@@ -3,8 +3,8 @@
 **CANONICAL CONTRACT**
 
 Validated against: HEAD
-Last reviewed: 2026-04-19
-Last updated: 2026-04-19
+Last reviewed: 2026-04-20
+Last updated: 2026-04-20
 Branch: work
 
 - All exports are attached in `LalaLaunch.cs` during `Init()` via `AttachCore`/`AttachVerbose`. Core values are refreshed in `DataUpdate` (500 ms poll for fuel/pace/pit via `_poll500ms`; per-tick for launch/dash/messaging). Verbose rows require `SimhubPublish.VERBOSE`.【F:LalaLaunch.cs†L2644-L3120】【F:LalaLaunch.cs†L3411-L3775】
@@ -118,7 +118,7 @@ Branch: work
 | LapRef.PlayerCarIdx / LapRef.ActiveSegment | int/int | Player `CarIdx` and current active segment context (1..6; 0 when unknown). | Per tick. | `LalaLaunch.cs` + `LapReferenceEngine.cs` + `AttachCore`. |
 | LapRef.DeltaToSessionBestSec / LapRef.DeltaToProfileBestSec | double/double | Cumulative player delta (seconds) to session-best/profile-best across completed **current-lap comparable sectors only**. Eligibility is re-armed on normal lap rollover, so prior-lap carried display boxes do not contribute; values publish `0` until at least one current-lap valid player/reference sector pair contributes. | Per tick. | `LapReferenceEngine.cs` + `LalaLaunch.cs` + `AttachCore`. |
 | LapRef.DeltaToSessionBestValid / LapRef.DeltaToProfileBestValid | bool/bool | True only when at least one current-lap valid sector pair contributed to the corresponding cumulative delta; false at lap start/rollover until new-lap comparable sectors exist. | Per tick. | `LapReferenceEngine.cs` + `LalaLaunch.cs` + `AttachCore`. |
-| LapRef.Player.* | mixed | Player live-comparison side outputs: `Valid`, `LapTimeSec`, `ActiveSegment`, and `S1..S6State` / `S1..S6Sec`. Player row sector boxes are display-persistent across lap rollover (H2H-like continuity): prior completed sectors remain visible at new-lap start and are progressively overwritten by new completed sectors from the live CarSA fixed-sector cache snapshot. `LapTimeSec` is latched from the validated-lap capture seam using player `CarIdxLastLapTime` authority (guarded fallback to gate candidate when unavailable). | Per tick. | `LapReferenceEngine.cs` + `LalaLaunch.cs` + `AttachCore`. |
+| LapRef.Player.* | mixed | Player live-comparison side outputs: `Valid`, `LapTimeSec`, `ActiveSegment`, and `S1..S6State` / `S1..S6Sec`. Player row sectors are published directly from live CarSA fixed-sector cache presence each tick (same H2H-style cache-consumption behavior; no LapRef-local display rollover model). `LapTimeSec` is published from the same trusted player last-lap seam used by H2H/core (CarIdx last-lap authority path via `playerLastLapTimeSec`). | Per tick. | `LapReferenceEngine.cs` + `LalaLaunch.cs` + `AttachCore`. |
 | LapRef.SessionBest.* | mixed | In-memory session-best validated static reference snapshot (`Valid`, `LapTimeSec`, `S1..S6State`, `S1..S6Sec`). Lower validated lap time wins; capture lap-time authority is the same player `CarIdxLastLapTime` seam used by H2H/core player lap timing (with guarded fallback only when unavailable). Lap time can remain valid even with missing sectors. | Per tick after capture. | `LapReferenceEngine.cs` + `LalaLaunch.cs` + `AttachCore`. |
 | LapRef.ProfileBest.* | mixed | Profile all-time static reference side (`Valid`, `LapTimeSec`, `S1..S6State`, `S1..S6Sec`) rematerialized from active profile/track/condition each tick using `BestLapMsDry/Wet` and optional `BestLapSector1..6Dry/WetMs`. | Per tick. | `CarProfiles.cs` + `LapReferenceEngine.cs` + `LalaLaunch.cs` + `AttachCore`. |
 | LapRef.Compare.SessionBest.* | mixed | Per-sector comparison versus session best: `S1..S6State`, `S1..S6DeltaSec`. Comparison uses current-lap comparable eligibility (not carried display state), so prior-lap sectors are not treated as new-lap compare input after rollover. Delta publishes only when both sectors are real; otherwise state is non-valid and delta is `0`. | Per tick. | `LapReferenceEngine.cs` + `AttachCore`. |

@@ -33,6 +33,20 @@ The public user-facing release history is maintained in the root `CHANGELOG.md`.
 
 ## Post-v1.0 development
 
+### LapRef refactor: remove local player display lifecycle and reuse H2H/core player seams
+- Refactored `LapReferenceEngine` player-side behavior to reuse the same trusted player seams already proven in H2H/core instead of maintaining a competing LapRef-local player display lifecycle.
+- `LapRef.Player.LapTimeSec` now publishes from the same trusted player last-lap seam used by H2H/core (CarIdx last-lap authority path passed through `LalaLaunch`), removing prior dependency on LapRef-validated snapshot latching for player-row lap-time display.
+- Player sector row publication now consumes live CarSA fixed-sector cache directly each tick (H2H-style cache consumption) rather than a bespoke LapRef-local display/rollover snapshot model.
+- Removed redundant LapRef-local player-display machinery:
+  - removed the dedicated live player display snapshot state,
+  - removed redundant validated-player snapshot usage from player-row publication.
+- Kept only minimal LapRef-owned current-lap comparable state for truthful compare/cumulative outputs, with rollover/lap-advance re-arm preserved.
+- Kept LapRef ownership boundaries intact:
+  - SessionBest/ProfileBest remain static LapRef-owned reference rows,
+  - compare/cumulative outputs remain current-lap truthful,
+  - PB persistence seam ownership remains unchanged.
+- Classification: **both** (player-row behavior parity correction + internal architecture/docs alignment).
+
 ### PR #577 review follow-up: clear AUTO baseline on AUTO -> OFF
 - Updated `PitFuelControlEngine.ModeCycle` AUTO disable branch to clear stale AUTO baseline state:
   - `AUTO -> OFF` now sets `LastSentFuelLitres=-1` and `Source=STBY` in addition to `Mode=OFF` and `AutoArmed=false`.
