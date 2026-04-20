@@ -6889,7 +6889,7 @@ namespace LaunchPlugin
                         trackBehindSelector);
                 }
 
-                UpdateLapReferenceContext(playerCarIdx, carIdxLapDistPct, carIdxLap, sessionTypeName, playerLastLapTimeSec);
+                UpdateLapReferenceContext(playerCarIdx, carIdxLapDistPct, carIdxLap, sessionTypeName, playerLastLapTimeSec, playerBestLapTimeSec);
                 if (_friendsDirty)
                 {
                     RefreshFriendUserIds();
@@ -12835,7 +12835,7 @@ namespace LaunchPlugin
                 && Math.Abs(candidateBestLapSec - currentClassBestSec) <= CarSaLapTimeEpsilonSec;
         }
 
-        private void UpdateLapReferenceContext(int playerCarIdx, float[] carIdxLapDistPct, int[] carIdxLap, string sessionTypeName, double playerLastLapTimeSec)
+        private void UpdateLapReferenceContext(int playerCarIdx, float[] carIdxLapDistPct, int[] carIdxLap, string sessionTypeName, double playerLastLapTimeSec, double playerBestLapTimeSec)
         {
             if (_lapReferenceEngine == null)
             {
@@ -12846,14 +12846,9 @@ namespace LaunchPlugin
             string trackKey = !string.IsNullOrWhiteSpace(CurrentTrackKey) ? CurrentTrackKey : (CurrentTrackName ?? string.Empty);
             bool isWetMode = _isWetMode;
             int activeSegment = 0;
-            int playerLapRef = 0;
             if (playerCarIdx >= 0 && carIdxLapDistPct != null && playerCarIdx < carIdxLapDistPct.Length)
             {
                 activeSegment = ComputeLapRefActiveSegment(carIdxLapDistPct[playerCarIdx]);
-            }
-            if (playerCarIdx >= 0 && carIdxLap != null && playerCarIdx < carIdxLap.Length)
-            {
-                playerLapRef = carIdxLap[playerCarIdx];
             }
             CarSAEngine.FixedSectorCacheSnapshot liveFixedSectorSnapshot = default(CarSAEngine.FixedSectorCacheSnapshot);
             bool hasLiveFixedSectorSnapshot =
@@ -12890,7 +12885,7 @@ namespace LaunchPlugin
                 isWetMode,
                 playerCarIdx,
                 playerLastLapTimeSec,
-                playerLapRef,
+                playerBestLapTimeSec,
                 activeSegment,
                 profileBestLapSec,
                 profileBestSectors,

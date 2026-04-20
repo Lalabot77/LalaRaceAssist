@@ -19,7 +19,7 @@ namespace LaunchPlugin
         private string _trackKey = string.Empty;
         private bool _isWet;
         private int _lastLivePlayerActiveSegment;
-        private int _lastLivePlayerLapRef;
+        private bool _sessionBestAuthorityArmed;
 
         public LapReferenceEngine()
         {
@@ -40,7 +40,7 @@ namespace LaunchPlugin
             _sessionBestSnapshot.Clear();
             _profileBestSnapshot.Clear();
             _lastLivePlayerActiveSegment = 0;
-            _lastLivePlayerLapRef = 0;
+            _sessionBestAuthorityArmed = false;
             Outputs.Reset();
         }
 
@@ -52,7 +52,7 @@ namespace LaunchPlugin
             bool isWet,
             int playerCarIdx,
             double playerLastLapTimeSec,
-            int playerLapRef,
+            double playerBestLapTimeSec,
             int playerActiveSegment,
             double profileBestLapSec,
             int?[] profileBestSectorMs,
@@ -82,16 +82,17 @@ namespace LaunchPlugin
                 _livePlayerCurrentLapSnapshot.Clear();
                 _sessionBestSnapshot.Clear();
                 _lastLivePlayerActiveSegment = 0;
-                _lastLivePlayerLapRef = 0;
+                _sessionBestAuthorityArmed = false;
             }
 
             MaterializeProfileBest(profileBestLapSec, profileBestSectorMs, isWet);
+            ApplyAuthoritativeSessionBestLapTime(playerBestLapTimeSec);
 
             Outputs.Valid = playerCarIdx >= 0 && !string.IsNullOrWhiteSpace(nextTrackKey) && !string.IsNullOrWhiteSpace(nextCarModel);
             Outputs.Mode = isWet ? "Wet" : "Dry";
             Outputs.PlayerCarIdx = playerCarIdx;
             Outputs.ActiveSegment = SanitizeSegment(playerActiveSegment);
-            BuildLivePlayerCurrentLapSnapshot(Outputs.ActiveSegment, playerLapRef, hasLiveFixedSectorSnapshot, liveFixedSectorSnapshot);
+            BuildLivePlayerCurrentLapSnapshot(Outputs.ActiveSegment, hasLiveFixedSectorSnapshot, liveFixedSectorSnapshot);
             BuildLivePlayerOutput(Outputs.Player, Outputs.ActiveSegment, Outputs.Valid, playerLastLapTimeSec, hasLiveFixedSectorSnapshot, liveFixedSectorSnapshot);
 
             Outputs.SessionBest.AssignFromSnapshot(_sessionBestSnapshot);
@@ -156,6 +157,7 @@ namespace LaunchPlugin
             if (sessionBestImproved)
             {
                 _sessionBestSnapshot.CopyFrom(snapshot);
+                _sessionBestAuthorityArmed = IsCurrentContextSnapshot(snapshot);
             }
 
             return sessionBestImproved;
@@ -254,18 +256,13 @@ namespace LaunchPlugin
 
         private void BuildLivePlayerCurrentLapSnapshot(
             int activeSegment,
-            int playerLapRef,
             bool hasLiveFixedSectorSnapshot,
             CarSAEngine.FixedSectorCacheSnapshot liveFixedSectorSnapshot)
         {
             int previousActiveSegment = _lastLivePlayerActiveSegment;
             _lastLivePlayerActiveSegment = activeSegment;
 
-            bool hasLapRef = playerLapRef > 0;
-            bool lapRefAdvanced = hasLapRef && _lastLivePlayerLapRef > 0 && playerLapRef != _lastLivePlayerLapRef;
-            _lastLivePlayerLapRef = hasLapRef ? playerLapRef : _lastLivePlayerLapRef;
-
-            if (lapRefAdvanced || IsLapRollover(previousActiveSegment, activeSegment))
+            if (IsLapRollover(previousActiveSegment, activeSegment))
             {
                 _livePlayerCurrentLapSnapshot.Clear();
             }
@@ -289,6 +286,39 @@ namespace LaunchPlugin
                     _livePlayerCurrentLapSnapshot.SetSector(i, true, sector.DurationSec);
                 }
             }
+        }
+
+        private void ApplyAuthoritativeSessionBestLapTime(double playerBestLapTimeSec)
+        {
+            if (!_sessionBestAuthorityArmed || !_sessionBestSnapshot.HasLapTime || !IsCurrentContextSnapshot(_sessionBestSnapshot))
+            {
+                return;
+            }
+
+            if (!IsValidLapTime(playerBestLapTimeSec))
+            {
+                return;
+            }
+
+            _sessionBestSnapshot.HasLapTime = true;
+            _sessionBestSnapshot.LapTimeSec = playerBestLapTimeSec;
+            _sessionBestSnapshot.IsWet = _isWet;
+            _sessionBestSnapshot.CarModel = _carModel;
+            _sessionBestSnapshot.TrackKey = _trackKey;
+            _sessionBestSnapshot.SessionToken = _sessionToken;
+        }
+
+        private bool IsCurrentContextSnapshot(LapReferenceSnapshot snapshot)
+        {
+            if (snapshot == null)
+            {
+                return false;
+            }
+
+            return string.Equals(snapshot.SessionToken, _sessionToken, StringComparison.Ordinal)
+                && string.Equals(snapshot.CarModel, _carModel, StringComparison.Ordinal)
+                && string.Equals(snapshot.TrackKey, _trackKey, StringComparison.Ordinal)
+                && snapshot.IsWet == _isWet;
         }
 
         private static bool IsLapRollover(int previousActiveSegment, int currentActiveSegment)
