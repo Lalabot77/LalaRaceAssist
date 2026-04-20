@@ -1,7 +1,7 @@
 # LapRef (Offline Reference Lap Comparison)
 
 Validated against commit: HEAD
-Last updated: 2026-04-19
+Last updated: 2026-04-20
 Branch: work
 
 ## Purpose
@@ -15,11 +15,11 @@ It compares:
 LapRef mirrors H2H's fixed 6-sector presentation concept but is fully separate from `H2HRace.*` / `H2HTrack.*` contracts.
 
 ## Ownership and boundaries
-- **LapRef owns** validated-lap snapshot state, session-best state, profile-best materialization, and `LapRef.*` exports.
+- **LapRef owns** session-best static reference state, profile-best static reference materialization, compare/cumulative outputs, and `LapRef.*` exports.
 - **LapRef does not own** sector derivation. It consumes CarSA fixed-sector cache read-only via `TryGetFixedSectorCacheSnapshot`.
 - **LapRef does not own** wet/dry detection. It uses runtime `_isWetMode` routing.
 - **LapRef does not own** lap validation rules. It captures only from the existing validated-lap gate in `UpdateLiveFuelCalcs`.
-- **LapRef lap-time authority** is aligned to the same player telemetry seam used by H2H/core (`CarIdxLastLapTime` for player row/session-best capture path), but uses a freshness guard against the validated-gate candidate to avoid one-tick stale rollover samples before accepting the CarIdx seam.
+- **LapRef lap-time authority** is aligned to the same player telemetry seam used by H2H/core (`CarIdxLastLapTime` for player row/session-best capture path), with a bounded freshness guard against the validated-gate candidate at capture time.
 - **LapRef does not modify** H2H behavior, Opponents behavior, or CarSA derivation rules.
 
 ## Snapshot model
@@ -33,13 +33,17 @@ A captured validated lap snapshot carries:
 
 Missing sectors remain empty. Lap time can still be valid without sector data.
 
-LapRef also maintains a separate **live current-lap comparison view** for the player side:
+LapRef maintains a minimal **current-lap comparable snapshot** for compare/cumulative truth:
 - active segment comes from live player lap pct mapping
-- completed sectors for the current lap are read from CarSA fixed-sector cache
-- only completed sectors behind the current segment are treated as comparable
+- sectors are sourced from live CarSA fixed-sector cache
+- only completed current-lap sectors behind the current segment are treated as comparable
 - no partial current-sector elapsed values are synthesized
-- completed sector boxes persist across lap rollover and are overwritten progressively as new-lap sectors complete (H2H-like presentation continuity)
-- compare/cumulative truth uses current-lap re-armed sector eligibility so prior-lap carried visual boxes do not contribute after rollover
+- compare/cumulative truth uses current-lap re-armed sector eligibility
+
+Player-row sector display continuity is H2H-style:
+- LapRef reads CarSA cache presence directly each tick for `LapRef.Player.S1..S6*`
+- LapRef does not run a bespoke player display/rollover state machine
+- rollover/start-finish continuity therefore follows the same CarSA-cache-driven behavior pattern already proven in H2H player/target sector display
 
 ## Capture and update flow
 1. Existing validated-lap gate accepts a lap in `UpdateLiveFuelCalcs`.
@@ -47,10 +51,10 @@ LapRef also maintains a separate **live current-lap comparison view** for the pl
 3. Snapshot becomes player reference row and competes for in-memory session best.
 4. Existing profile PB seam persists lap-time PB; sector fields are persisted condition-wise when available.
 5. Each tick, LapRef rematerializes profile-best from active profile + track + wet/dry condition.
-6. Each tick, LapRef also materializes the player **live current-lap comparison sectors** from the current CarSA cache snapshot + current active segment and publishes `LapRef.*`.
-   - Player-row sector display continuity follows H2H-like cache behavior: any valid CarSA sector value can refresh the corresponding displayed player box immediately, while unchanged boxes naturally persist until replaced.
-   - This live row is not hard-cleared every tick; it preserves prior completed sectors at lap start and replaces each slot only when the corresponding new-lap sector is actually completed.
-   - Live compare/cumulative evaluation uses a separate current-lap comparable snapshot that clears on lap rollover while player row display continuity remains intact.
+6. Each tick, LapRef:
+   - publishes player sector boxes directly from the current CarSA fixed-sector cache snapshot (H2H-style read-only consumption),
+   - updates only the minimal current-lap comparable snapshot needed for truthful compare/cumulative outputs,
+   - re-arms current-lap comparable eligibility on rollover/lap advance while keeping static references unchanged.
 
 PB safety note:
 - Profile PB remains telemetry-owned (validated-lap seam); Profiles UI no longer permits manual PB entry.
@@ -71,9 +75,9 @@ For comparison rows (`LapRef.Compare.*`):
 - `pending` when exactly one side has real sector
 - `empty` when neither side has real sector
 
-At new-lap start, comparison validity is re-armed from empty current-lap eligibility:
-- prior-lap carried display sectors do not count for compare validity
+At new-lap start/lap advance, comparison validity is re-armed from empty current-lap eligibility:
 - compare rows reactivate only as current-lap sectors complete
+- player-row display remains CarSA-cache-driven and does not introduce extra LapRef-local rollover latches
 
 ## Export family
 Family-level:

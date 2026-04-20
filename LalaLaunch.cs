@@ -6889,7 +6889,7 @@ namespace LaunchPlugin
                         trackBehindSelector);
                 }
 
-                UpdateLapReferenceContext(playerCarIdx, carIdxLapDistPct, sessionTypeName);
+                UpdateLapReferenceContext(playerCarIdx, carIdxLapDistPct, carIdxLap, sessionTypeName, playerLastLapTimeSec);
                 if (_friendsDirty)
                 {
                     RefreshFriendUserIds();
@@ -12835,7 +12835,7 @@ namespace LaunchPlugin
                 && Math.Abs(candidateBestLapSec - currentClassBestSec) <= CarSaLapTimeEpsilonSec;
         }
 
-        private void UpdateLapReferenceContext(int playerCarIdx, float[] carIdxLapDistPct, string sessionTypeName)
+        private void UpdateLapReferenceContext(int playerCarIdx, float[] carIdxLapDistPct, int[] carIdxLap, string sessionTypeName, double playerLastLapTimeSec)
         {
             if (_lapReferenceEngine == null)
             {
@@ -12846,9 +12846,14 @@ namespace LaunchPlugin
             string trackKey = !string.IsNullOrWhiteSpace(CurrentTrackKey) ? CurrentTrackKey : (CurrentTrackName ?? string.Empty);
             bool isWetMode = _isWetMode;
             int activeSegment = 0;
+            int playerLapRef = 0;
             if (playerCarIdx >= 0 && carIdxLapDistPct != null && playerCarIdx < carIdxLapDistPct.Length)
             {
                 activeSegment = ComputeLapRefActiveSegment(carIdxLapDistPct[playerCarIdx]);
+            }
+            if (playerCarIdx >= 0 && carIdxLap != null && playerCarIdx < carIdxLap.Length)
+            {
+                playerLapRef = carIdxLap[playerCarIdx];
             }
             CarSAEngine.FixedSectorCacheSnapshot liveFixedSectorSnapshot = default(CarSAEngine.FixedSectorCacheSnapshot);
             bool hasLiveFixedSectorSnapshot =
@@ -12884,6 +12889,8 @@ namespace LaunchPlugin
                 trackKey,
                 isWetMode,
                 playerCarIdx,
+                playerLastLapTimeSec,
+                playerLapRef,
                 activeSegment,
                 profileBestLapSec,
                 profileBestSectors,

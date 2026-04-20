@@ -1,7 +1,7 @@
 # Repository status
 
 Validated against commit: HEAD
-Last updated: 2026-04-19
+Last updated: 2026-04-20
 Branch: work
 
 ## Current repo/link status
@@ -58,6 +58,11 @@ Branch: work
   - `PUSH/NORM/SAVE` now include profile contingency (`ContingencyValue` + `IsContingencyInLaps`)
   - explicit contingency zero remains zero (no hidden reserve)
 - Hardened LapRef rollover seam for transient zero-segment boundary samples:
+- LapRef player-side refactor now reuses H2H/core trusted seams directly:
+  - `LapRef.Player.LapTimeSec` now publishes from the same trusted player last-lap seam used by H2H/core.
+  - player sector row display now consumes live CarSA fixed-sector cache directly each tick (H2H-style) instead of a LapRef-local display/rollover snapshot lifecycle.
+  - removed redundant LapRef-local player display state while retaining only minimal current-lap comparable state for truthful compare/cumulative outputs.
+  - SessionBest/ProfileBest static reference ownership and PB persistence invariants remain unchanged.
   - current-lap compare/cumulative eligibility now re-arms on normal wrap (`current > 0 && previous > 0 && current < previous`) and on boundary transition into segment `0` from late-lap state (`previous > 1 && current == 0`)
   - closes the `6 -> 0 -> 1` mapping path so stale prior-lap compare/cumulative validity does not leak into new-lap start
   - kept player-row sector-box persistence behavior unchanged
@@ -282,6 +287,14 @@ Branch: work
 
 ### Changed in PR #577 review follow-up (AUTO->OFF baseline clear)
 - `PitFuelControlEngine.cs`
+- `Docs/Internal/SimHubParameterInventory.md`
+- `Docs/Internal/Development_Changelog.md`
+- `Docs/RepoStatus.md`
+
+### Changed in LapRef player-side seam reuse refactor
+- `LapReferenceEngine.cs`
+- `LalaLaunch.cs`
+- `Docs/Subsystems/LapRef.md`
 - `Docs/Internal/SimHubParameterInventory.md`
 - `Docs/Internal/Development_Changelog.md`
 - `Docs/RepoStatus.md`
