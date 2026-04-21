@@ -4268,7 +4268,7 @@ namespace LaunchPlugin
             ts = SelectedTrackStats ?? ResolveSelectedTrackStats();
         }
 
-        int? ms = ts?.GetBestLapMsForCondition(IsWet);
+        int? ms = ts?.GetConditionOnlyBestLapMs(IsWet);
         if (ms.HasValue && ms.Value > 0)
         {
             _loadedBestLapTimeSeconds = ms.Value / 1000.0;

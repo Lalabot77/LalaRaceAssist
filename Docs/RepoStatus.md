@@ -9,6 +9,10 @@ Branch: work
 - No Git remote is configured in this checkout (`git remote -v` returns empty).
 
 ## Documentation sync status
+- Wet-condition PB/session-best audit follow-up (bounded to profile/PB/planner/LapRef wet-dry behavior):
+  - planner/profile PB reads now use condition-only lookup, so wet mode no longer borrows dry PB when wet PB is absent;
+  - validated wet PB persistence remains condition-scoped on existing telemetry gate path (`_isWetMode` -> `TryUpdatePBByCondition(...)` -> wet PB fields only);
+  - LapRef session-best authority sync remains trusted-seam based but now only applies when near-equal to the captured current-context baseline, preventing dry global-best seam values from repopulating wet SessionBest after wet reset.
 - Final documentation sweep aligned user-facing + dash-facing + internal docs with the implemented combined pit command stack:
   - plugin-owned pit command actions and plugin-owned custom-message actions are now the documented default workflow;
   - built-in pit command configuration location is documented as `Settings -> Pit Commands`;

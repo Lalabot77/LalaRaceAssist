@@ -7235,7 +7235,7 @@ namespace LaunchPlugin
 
                     var activeTrackStats = ActiveProfile?.ResolveTrackByNameOrKey(CurrentTrackKey)
                         ?? ActiveProfile?.ResolveTrackByNameOrKey(CurrentTrackName);
-                    int? selectedPbMs = activeTrackStats?.GetBestLapMsForCondition(_isWetMode);
+                    int? selectedPbMs = activeTrackStats?.GetConditionOnlyBestLapMs(_isWetMode);
                     double selectedPbSeconds = selectedPbMs.HasValue ? selectedPbMs.Value / 1000.0 : 0.0;
                     FuelCalculator?.SetPersonalBestSeconds(selectedPbSeconds);
                 }
