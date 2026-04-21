@@ -1023,16 +1023,18 @@ namespace LaunchPlugin
             if (isWetEffective)
             {
                 BestLapMsWet = 0;
-                BestLapTimeWetText = MillisecondsToLapTimeString(BestLapMsWet);
                 WetBestLapUpdatedSource = null;
                 WetBestLapUpdatedUtc = null;
+                _bestLapMsWetText = string.Empty;
+                OnPropertyChanged(nameof(BestLapTimeWetText));
             }
             else
             {
                 BestLapMsDry = 0;
-                BestLapTimeDryText = MillisecondsToLapTimeString(BestLapMsDry);
                 DryBestLapUpdatedSource = null;
                 DryBestLapUpdatedUtc = null;
+                _bestLapMsDryText = string.Empty;
+                OnPropertyChanged(nameof(BestLapTimeDryText));
             }
 
             ClearBestLapSectorsForCondition(isWetEffective);

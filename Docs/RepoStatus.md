@@ -9,6 +9,11 @@ Branch: work
 - No Git remote is configured in this checkout (`git remote -v` returns empty).
 
 ## Documentation sync status
+- Profile-track PB clear polish follow-up (bounded to profile-track editor clear path + UI text styling):
+  - condition PB clear now immediately clears visible PB text in-place by mirroring relearn refresh semantics (clear PB display cache + raise property changed for condition PB text);
+  - dry/wet clear button labels are now compact and identical: `Clear PB Data`;
+  - condition `No sector data` status text now uses an orange warning-style colour for better visibility;
+  - PB cleared-state semantics remain unchanged (`0`/non-positive still unavailable, no valid zero-time PB reference path).
 - PR #584 follow-up fixed custom-message restart persistence at settings load:
   - removed eager default prepopulation of `LaunchPluginSettings.CustomMessages` before JSON deserialize;
   - `NormalizePitCommandSettings(...)` remains the default-slot authority and now supplies default rows only when collection data is missing/null/undersized;

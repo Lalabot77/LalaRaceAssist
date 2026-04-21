@@ -1,7 +1,7 @@
 # Profiles and Personal Bests
 
 Validated against commit: HEAD
-Last updated: 2026-04-09
+Last updated: 2026-04-21
 Branch: work
 
 ## Purpose
@@ -82,6 +82,7 @@ When a PB update includes real sector values, condition-specific PB sector field
 Profiles UI exposes buttons to reset and relearn track data:
 - **Relearn Pit Data**: clears pit loss values/metadata and resets track markers for that track before saving.
 - **Relearn Dry/Wet Conditions**: clears PB, avg lap time, and fuel stats for the chosen condition, unlocks the condition, and saves.
+- **Clear PB Data** (per dry/wet block): clears only that condition PB lap + PB sectors (`S1..S6`) and PB updated metadata, then immediately clears the visible PB text in-place in the editor via property-change refresh.
 
 ---
 

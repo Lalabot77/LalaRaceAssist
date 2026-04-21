@@ -33,6 +33,14 @@ The public user-facing release history is maintained in the root `CHANGELOG.md`.
 
 ## Post-v1.0 development
 
+### 2026-04-21 — Profile-track PB clear polish: immediate PB text refresh + warning colour + compact label
+- Classification: **both** (profile editor UX polish + internal property-refresh correctness in the PB clear path).
+- Updated `ClearBestLapAndSectorsForCondition(...)` to mirror relearn visual refresh behavior:
+  - clears condition PB value + PB updated metadata,
+  - clears the condition PB display-text cache,
+  - raises `BestLapTimeDryText` / `BestLapTimeWetText` property changed immediately.
+- Updated profile-track PB clear buttons to use compact label text: `Clear PB Data` in both dry and wet sections.
+- Updated condition `No sector data` status text colour to an orange warning-style tone for clearer visibility in the editor.
 ### 2026-04-21 — PR #584 follow-up: custom-message load normalization preserves saved rows
 - Classification: **internal-only** (settings JSON load/normalization correction; no action binding or runtime dispatch contract change).
 - Removed eager default slot prepopulation from `LaunchPluginSettings.CustomMessages` so Json.NET deserialization no longer appends loaded rows after an already-populated default set.

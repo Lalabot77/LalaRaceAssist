@@ -1145,14 +1145,14 @@
                                                 Margin="10,0,0,0"
                                                 ToolTip="Clear dry data and relearn from new live laps (while unlocked)."/>
                                             <styles:SHButtonPrimary
-                                                Content="Clear Dry PB + Sectors"
+                                                Content="Clear PB Data"
                                                 Command="{Binding DataContext.ClearDryBestLapAndSectorsCommand, RelativeSource={RelativeSource AncestorType=UserControl}}"
                                                 Margin="10,0,0,0"
                                                 ToolTip="Clear only dry best lap and dry sector 1..6 data."/>
                                             <TextBlock
                                                 Margin="10,0,0,0"
                                                 VerticalAlignment="Center"
-                                                Foreground="#FF9AA0A6"
+                                                Foreground="#FFFFA726"
                                                 Text="No sector data">
                                                 <TextBlock.Style>
                                                     <Style TargetType="TextBlock">
@@ -1322,14 +1322,14 @@
                                                 Margin="10,0,0,0"
                                                 ToolTip="Clear wet data and relearn from new live laps (while unlocked)."/>
                                             <styles:SHButtonPrimary
-                                                Content="Clear Wet PB + Sectors"
+                                                Content="Clear PB Data"
                                                 Command="{Binding DataContext.ClearWetBestLapAndSectorsCommand, RelativeSource={RelativeSource AncestorType=UserControl}}"
                                                 Margin="10,0,0,0"
                                                 ToolTip="Clear only wet best lap and wet sector 1..6 data."/>
                                             <TextBlock
                                                 Margin="10,0,0,0"
                                                 VerticalAlignment="Center"
-                                                Foreground="#FF9AA0A6"
+                                                Foreground="#FFFFA726"
                                                 Text="No sector data">
                                                 <TextBlock.Style>
                                                     <Style TargetType="TextBlock">
