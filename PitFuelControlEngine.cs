@@ -20,6 +20,8 @@ namespace LaunchPlugin
 
     internal sealed class PitFuelControlSnapshot
     {
+        public bool SuppressFuelControl;
+        public bool IracingAutoFuelEnabled;
         public string LiveCar = string.Empty;
         public string LiveTrack = string.Empty;
         public bool HasLiveBasis;
@@ -60,6 +62,7 @@ namespace LaunchPlugin
 
         private DateTime _suppressManualOverrideUntilUtc = DateTime.MinValue;
         private bool _maxOverrideArmed;
+        private int _lastObservedRequestedFuelLitres = -1;
 
         public PitFuelControlSource Source { get; private set; } = PitFuelControlSource.Push;
         public PitFuelControlMode Mode { get; private set; } = PitFuelControlMode.Off;
@@ -80,12 +83,13 @@ namespace LaunchPlugin
             _feedbackPublisher = feedbackPublisher;
         }
 
-        public void ResetForSession()
+        public void ResetToOffStby()
         {
-            Source = PitFuelControlSource.Push;
+            Source = PitFuelControlSource.Stby;
             Mode = PitFuelControlMode.Off;
             AutoArmed = false;
             LastSentFuelLitres = -1;
+            _lastObservedRequestedFuelLitres = -1;
             TargetLitres = 0.0;
             OverrideActive = false;
             _maxOverrideArmed = false;
@@ -95,6 +99,11 @@ namespace LaunchPlugin
 
         public void SourceCycle()
         {
+            if (TryApplySuppressedState())
+            {
+                return;
+            }
+
             RefreshDerivedState();
 
             if (Source == PitFuelControlSource.Stby)
@@ -129,6 +138,11 @@ namespace LaunchPlugin
 
         public void ModeCycle()
         {
+            if (TryApplySuppressedState())
+            {
+                return;
+            }
+
             RefreshDerivedState();
 
             if (Mode == PitFuelControlMode.Off)
@@ -163,10 +177,7 @@ namespace LaunchPlugin
             }
             else
             {
-                Mode = PitFuelControlMode.Off;
-                AutoArmed = false;
-                LastSentFuelLitres = -1;
-                Source = PitFuelControlSource.Stby;
+                SetOffStbyState();
                 PublishSelectionFeedback("Pit.FuelControl.ModeCycle", "FUEL MODE OFF");
             }
         }
@@ -177,6 +188,11 @@ namespace LaunchPlugin
 
         public void OnLapCross()
         {
+            if (TryApplySuppressedState())
+            {
+                return;
+            }
+
             RefreshDerivedState();
 
             if (Mode != PitFuelControlMode.Auto || !AutoArmed)
@@ -213,35 +229,49 @@ namespace LaunchPlugin
 
             if (Mode != PitFuelControlMode.Auto || !AutoArmed)
             {
+                _lastObservedRequestedFuelLitres = -1;
                 return;
             }
 
             if (DateTime.UtcNow < _suppressManualOverrideUntilUtc)
             {
+                UpdateObservedRequestedFuel();
                 return;
             }
 
             var snapshot = _snapshotProvider();
-            if (snapshot == null || LastSentFuelLitres < 0)
+            if (snapshot == null)
             {
+                return;
+            }
+
+            if (snapshot.SuppressFuelControl)
+            {
+                SetOffStbyState();
+                return;
+            }
+
+            if (snapshot.IracingAutoFuelEnabled)
+            {
+                CancelAutoToOffStby("Pit.FuelControl.AutoFuelOwnership", "AUTO CANCELLED");
                 return;
             }
 
             int currentRequestedLitres = RoundUpLitres(snapshot.TelemetryRequestedFuelLitres);
-            if (currentRequestedLitres < 0)
+            if (_lastObservedRequestedFuelLitres < 0)
             {
+                _lastObservedRequestedFuelLitres = currentRequestedLitres;
                 return;
             }
 
-            if (Math.Abs(currentRequestedLitres - LastSentFuelLitres) >= 1)
+            if (currentRequestedLitres != _lastObservedRequestedFuelLitres)
             {
-                Mode = PitFuelControlMode.Man;
-                Source = PitFuelControlSource.Stby;
-                AutoArmed = false;
-                OverrideActive = false;
-                _maxOverrideArmed = false;
-                PublishSelectionFeedback("Pit.FuelControl.AutoCancelled", "AUTO CANCELLED");
+                _lastObservedRequestedFuelLitres = currentRequestedLitres;
+                CancelAutoToOffStby("Pit.FuelControl.AutoCancelled", "AUTO CANCELLED");
+                return;
             }
+
+            _lastObservedRequestedFuelLitres = currentRequestedLitres;
         }
 
         public string SourceText => SourceToText(Source);
@@ -249,6 +279,11 @@ namespace LaunchPlugin
 
         private void SetSource(PitFuelControlSource requestedSource, string actionName)
         {
+            if (TryApplySuppressedState())
+            {
+                return;
+            }
+
             RefreshDerivedState();
             Source = requestedSource;
             RefreshDerivedState();
@@ -295,6 +330,7 @@ namespace LaunchPlugin
             {
                 LastSentFuelLitres = roundedTarget;
                 _suppressManualOverrideUntilUtc = DateTime.UtcNow.AddMilliseconds(PluginSendSuppressionMs);
+                _lastObservedRequestedFuelLitres = roundedTarget;
                 if (Mode == PitFuelControlMode.Auto)
                 {
                     AutoArmed = true;
@@ -375,6 +411,15 @@ namespace LaunchPlugin
                 return;
             }
 
+            if (snapshot.SuppressFuelControl)
+            {
+                SetOffStbyState();
+                PlanValid = false;
+                TargetLitres = 0.0;
+                OverrideActive = false;
+                return;
+            }
+
             PlanValid = ComputePlanValidity(snapshot);
             if (!PlanValid && Source == PitFuelControlSource.Plan)
             {
@@ -388,6 +433,56 @@ namespace LaunchPlugin
             }
 
             TargetLitres = ResolveSourceTarget(snapshot, Source);
+        }
+
+        private bool TryApplySuppressedState()
+        {
+            var snapshot = _snapshotProvider();
+            if (snapshot == null || !snapshot.SuppressFuelControl)
+            {
+                return false;
+            }
+
+            SetOffStbyState();
+            PlanValid = false;
+            TargetLitres = 0.0;
+            OverrideActive = false;
+            return true;
+        }
+
+        private void SetOffStbyState()
+        {
+            Mode = PitFuelControlMode.Off;
+            Source = PitFuelControlSource.Stby;
+            AutoArmed = false;
+            LastSentFuelLitres = -1;
+            _lastObservedRequestedFuelLitres = -1;
+            OverrideActive = false;
+            _maxOverrideArmed = false;
+            _suppressManualOverrideUntilUtc = DateTime.MinValue;
+        }
+
+        private void CancelAutoToOffStby(string actionName, string message)
+        {
+            if (Mode != PitFuelControlMode.Auto || !AutoArmed)
+            {
+                SetOffStbyState();
+                return;
+            }
+
+            SetOffStbyState();
+            PublishSelectionFeedback(actionName, message);
+        }
+
+        private void UpdateObservedRequestedFuel()
+        {
+            var snapshot = _snapshotProvider();
+            if (snapshot == null)
+            {
+                return;
+            }
+
+            _lastObservedRequestedFuelLitres = RoundUpLitres(snapshot.TelemetryRequestedFuelLitres);
         }
 
         private static bool ComputePlanValidity(PitFuelControlSnapshot snapshot)

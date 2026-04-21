@@ -64,14 +64,16 @@ These actions replace any old dashboard bindings that directly called `IRacingEx
 
 Pit Fuel Control behavior notes for these bindings:
 - `LalaLaunch.Pit.FuelSetMax` is now a true transport toggle: press sequence alternates **MAX**, **ZERO**, **MAX**, **ZERO** ...
-- Full-tank short-circuit only applies to the MAX phase; ZERO phase still sends (so a full tank does not block `#fuel 0`).
-- `LalaLaunch.Pit.FuelControl.ModeCycle` now enforces source re-selection guardrails:
-  - `AUTO -> MAN` forces source to `STBY`,
+- Full-tank short-circuit only applies to the MAX phase; ZERO phase still sends (so a full tank does not block `#fuel 0.01`).
+- `LalaLaunch.Pit.FuelControl.ModeCycle` enforces source re-selection guardrails:
   - cycling `MAN -> AUTO` while source is `PLAN` is allowed, but source is forced to `STBY` (user must pick a real source again),
   - cycling `MAN -> AUTO` while already on `STBY` keeps `STBY` and stays disarmed (`AutoArmed=false`) until a live source is selected and sent,
-  - forced-STBY mode transitions now use combined feedback text:
-    - `FUEL MAN STBY` for `AUTO -> MAN`,
-    - `FUEL AUTO STBY` for `MAN -> AUTO` from `PLAN` or `STBY`.
+  - cycling `AUTO -> OFF` forces inert `OFF + STBY`.
+- AUTO cancel/ownership rules:
+  - AUTO cancels to `OFF + STBY` when live requested pit fuel moves outside the plugin’s own command suppression window,
+  - AUTO cancels to `OFF + STBY` when iRacing AutoFuel is active,
+  - Offline Testing suppresses Pit Fuel Control to inert `OFF + STBY`,
+  - session-type changes and SessionState `1 -> 2` force reset to `OFF + STBY` (no reset on `2 -> 3`).
 
 In Settings → **Pit Commands**, these are shown as fixed built-in features with normal binding rows (no raw chat command editing).
 
