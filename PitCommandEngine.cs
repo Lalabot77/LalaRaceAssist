@@ -653,7 +653,7 @@ namespace LaunchPlugin
                 return false;
             }
 
-            return processName.IndexOf("iRacing", StringComparison.OrdinalIgnoreCase) >= 0;
+            return string.Equals(processName, "iRacingSim64DX11", StringComparison.OrdinalIgnoreCase);
         }
 
         private void PublishMessage(string message)

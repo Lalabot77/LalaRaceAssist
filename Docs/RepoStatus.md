@@ -9,6 +9,10 @@ Branch: work
 - No Git remote is configured in this checkout (`git remote -v` returns empty).
 
 ## Documentation sync status
+- PR follow-up hardened pit/custom transport iRacing process authority to simulator-only matching:
+  - `IsIracingProcessName(...)` now accepts only `iRacingSim64DX11` (case-insensitive),
+  - both `IsIracingForeground()` and `TryResolveIracingMainWindow(...)` continue to share that helper,
+  - transport/fallback seam behavior is otherwise unchanged (direct window-message first in `Auto`, bounded foreground `SendInput` fallback).
 - Pit/custom command transport upgrade (bounded seam in `PitCommandEngine`):
   - new default transport mode is `Auto`: direct iRacing window-message send first (`postmessage`) with explicit fallback to legacy foreground `sendinput`;
   - added settings-level transport selector (`Auto`, `Legacy foreground SendInput only`, `Direct message only`) in `Settings -> Pit Commands`;

@@ -33,6 +33,11 @@ The public user-facing release history is maintained in the root `CHANGELOG.md`.
 
 ## Post-v1.0 development
 
+### 2026-04-21 — PR follow-up: simulator-only iRacing process matching for pit/custom transport
+- Classification: **internal-only** (transport target-authority hardening; no new settings, actions, or user workflow changes).
+- Tightened `PitCommandEngine.IsIracingProcessName(...)` from broad `"iRacing"` substring matching to simulator-only executable matching (`iRacingSim64DX11`, case-insensitive).
+- Kept transport architecture unchanged while hardening both existing callers through the shared helper: `IsIracingForeground()` and `TryResolveIracingMainWindow(...)` now reject launcher/UI companion processes and only treat simulator process identity as authoritative.
+
 ### 2026-04-21 — Pit/custom transport upgrade: direct window-message first with bounded legacy fallback
 - Classification: **both** (driver-visible transport mode setting + bounded transport/observability behavior change).
 - Added a bounded transport-selection seam inside `PitCommandEngine` (no action-surface ownership change):
