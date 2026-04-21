@@ -9,6 +9,12 @@ Branch: work
 - No Git remote is configured in this checkout (`git remote -v` returns empty).
 
 ## Documentation sync status
+- Analysis-first class-resolution simplification landed with one trusted-property authority model and shared seams:
+  - class-state authority for runtime consumers now uses `GameData.HasMultipleClassOpponents` directly;
+  - single-class path now bypasses class matching entirely and uses overall leader / whole-field best directly;
+  - multiclass path now uses one shared player-class seam for both class leader and class-best resolution;
+  - `Race.ClassLeaderHasFinished*` now consumes the same class-leader seam used by `ClassLeader.*` (no separate finish-only resolver);
+  - removed metadata-cache authority helpers and duplicate class authority trees from active class-leader/class-best/finish paths.
 - Wet-condition PB/session-best audit follow-up (bounded to profile/PB/planner/LapRef wet-dry behavior):
   - planner/profile PB reads now use condition-only lookup, so wet mode no longer borrows dry PB when wet PB is absent;
   - validated wet PB persistence remains condition-scoped on existing telemetry gate path (`_isWetMode` -> `TryUpdatePBByCondition(...)` -> wet PB fields only);

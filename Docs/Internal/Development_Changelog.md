@@ -33,6 +33,25 @@ The public user-facing release history is maintained in the root `CHANGELOG.md`.
 
 ## Post-v1.0 development
 
+### 2026-04-21 — Class-resolution simplification: trusted-property authority + shared class leader/class-best seams
+- Classification: **both** (driver-visible class leader / class-best / finish consistency improvement + internal cleanup removing failed metadata-heavy seams).
+- Replaced overcomplicated class authority logic with one trusted runtime seam:
+  - `DataCorePlugin.GameData.HasMultipleClassOpponents` is now the single-class vs multiclass switch.
+  - Single-class path now bypasses class matching entirely and uses overall leader/field-best directly.
+- Unified class leader resolution across all consumers with one helper seam:
+  - single-class leader uses `CarIdxPosition == 1`,
+  - multiclass leader uses `CarIdxClassPosition == 1` filtered to player class.
+- Unified class-best/session-best-in-class seam:
+  - single-class scans whole field,
+  - multiclass scans only player-class cars.
+- `Race.ClassLeaderHasFinished*` now consumes the same resolved class-leader seam as `ClassLeader.*` (no separate finish-only class resolver).
+- Removed recent failed/duplicated class-resolution pieces from runtime paths:
+  - removed class metadata cache-driven authority helpers (`RefreshClassMetadata`, `GetCachedClassShortName`, `IsEffectivelySingleClassSession`, `IsSameEffectiveClass`, enum authority tree),
+  - removed class-count (`NumCarClasses`) authority dependencies from H2H/class-best/class-leader/finish flows.
+- Kept class membership fallback intentionally minimal in multiclass only:
+  - player class identity: `GameData.CarClass` (with bounded player row fallback),
+  - candidate class identity: per-car `DriverInfo` class label lookup.
+
 ### 2026-04-21 — Wet-condition PB/session-best audit follow-up (condition-only PB reads + LapRef session-best cross-condition guard)
 - Classification: **both** (driver-visible wet PB/session-best correctness + bounded LapRef authority seam hardening).
 - Fixed remaining wet PB fallback leakage in planner/profile-facing PB reads:
