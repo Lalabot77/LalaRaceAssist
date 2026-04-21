@@ -1,7 +1,7 @@
 # Repository status
 
 Validated against commit: HEAD
-Last updated: 2026-04-20
+Last updated: 2026-04-21
 Branch: work
 
 ## Current repo/link status
@@ -9,6 +9,10 @@ Branch: work
 - No Git remote is configured in this checkout (`git remote -v` returns empty).
 
 ## Documentation sync status
+- PR #584 follow-up debounced `Settings -> Custom Messages` text-edit persistence to avoid full settings writes on each keystroke:
+  - custom slot `Name` / `MessageText` edits now use a 500 ms settle window before save;
+  - pending debounced saves are flushed during normal plugin tick and plugin shutdown to keep latest settled text persisted across SimHub restarts;
+  - custom-message action names/binding surfaces and pit/custom command runtime behavior were intentionally unchanged.
 - Fixed Settings -> Custom Messages persistence regression: custom slot label/message edits now save on change via settings-layer collection/item hooks, so values persist across SimHub restarts without altering action binding names or pit/custom command execution seams.
 - PR #582 follow-up addressed final multiclass authority ordering review feedback:
   - `_isMultiClassSession` now applies native authority in strict order: explicit native single-class (`NumCarClasses == 1`) wins outright, explicit native multiclass stays next (`NumCarClasses > 1`, or unknown + `HasMultipleClassOpponents`), and cache diversity is only used when class-count authority is unresolved/unknown;
