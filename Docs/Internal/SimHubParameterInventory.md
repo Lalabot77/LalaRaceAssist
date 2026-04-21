@@ -72,6 +72,9 @@ Branch: work
 | Fuel.PitWindowState / Fuel.PitWindowLabel / Fuel.IsPitWindowOpen / Fuel.PitWindowOpeningLap / Fuel.PitWindowClosingLap | int/string/bool/int/int | Pit window state machine (open ECO/STD/PUSH, SET FUEL, NO DATA YET, N/A, TANK SPACE/ERROR). Opening/closing lap markers mirror the state machine. | 500 ms poll. | `LalaLaunch.cs` — `UpdateLiveFuelCalcs` pit window block + `AttachCore`【F:LalaLaunch.cs†L2145-L2335】【F:LalaLaunch.cs†L2682-L2687】 |
 | Fuel.LastPitLaneTravelTime | double | Last direct pit-lane travel time saved from pit cycle. | On save; surfaced each poll. | `LalaLaunch.cs` — `Pit_OnValidPitStopTimeLossCalculated` + `AttachCore`【F:LalaLaunch.cs†L2950-L3004】【F:LalaLaunch.cs†L2672-L2955】 |
 
+Implementation note (no new export):
+- Strategy live-cap validation now consumes the same runtime-authoritative live-cap seam used by fuel runtime (`raw -> live cached -> bounded last-valid fallback`) instead of maintaining a separate direct-only raw read path.
+
 ## Pace / Projection
 | Exported name | Type | Units / meaning | Update cadence | Defined in |
 | --- | --- | --- | --- | --- |

@@ -33,6 +33,29 @@ The public user-facing release history is maintained in the root `CHANGELOG.md`.
 
 ## Post-v1.0 development
 
+### 2026-04-21 — PR follow-up: bound Strategy live-cap fallback path
+- Classification: **internal-only** (runtime authority-seam correctness; no UI/workflow change).
+- Tightened `TryGetRuntimeLiveCapForStrategy(...)` so stale cached live-cap values cannot bypass fallback freshness gating:
+  - removed unbounded `LiveCarMaxFuel` return path,
+  - removed overlapping `EffectiveLiveMaxTank` return path,
+  - Strategy live-cap authority is now a single bounded seam: `raw -> bounded fallback -> unavailable`.
+
+### 2026-04-21 — Runtime health checks + planner-safe fuel recovery (session-transition stability)
+- Classification: **both** (driver-visible Strategy live-cap/session-recovery stability + internal runtime seam hardening/observability).
+- Added bounded fuel/live-snapshot runtime health checks in `LalaLaunch` with debounced trigger queueing from:
+  - session token change,
+  - session type change,
+  - combo change,
+  - car-active edges (ignition/engine start + active-driving edge).
+- Added planner-safe targeted fuel recovery path:
+  - re-reads runtime-authoritative live max tank seam,
+  - refreshes Strategy live max display + snapshot,
+  - avoids planner/manual/preset clobber on normal manual recovery.
+- Manual recovery action path now attempts planner-safe targeted fuel recovery first before broad reset logic.
+- Unified Strategy live-cap authority with runtime seam:
+  - `FuelCalcs` now consumes plugin runtime live-cap authority (`raw -> bounded fallback`) instead of direct-only raw read,
+  - added debounced strategy/runtime health logs for live-cap source/value transitions.
+- Removed automatic planner manual-override reset from the fuel-model session reset path to preserve planner intent during runtime/session re-arm.
 ### 2026-04-21 — Class-resolution simplification: trusted-property authority + shared class leader/class-best seams
 - Classification: **both** (driver-visible class leader / class-best / finish consistency improvement + internal cleanup removing failed metadata-heavy seams).
 - Replaced overcomplicated class authority logic with one trusted runtime seam:
@@ -679,6 +702,12 @@ The public user-facing release history is maintained in the root `CHANGELOG.md`.
   - the freshly built class cache itself proves diversity (`>1` distinct non-blank class names).
 - Preserved prior startup safety behavior: unknown class-count state alone does not infer multiclass, and blank/unresolved class states are not treated as class-diversity evidence.
 
+
+## 2026-04-21 — PR follow-up: runtime fuel health-check ordering + manual-reset live-session gate
+- Classification: **internal-only** (compile/order fix + runtime reset guardrail correction with unchanged user workflow).
+- Moved pit-road telemetry read earlier in `DataUpdate` so the active-driving runtime fuel-health edge check uses an in-scope `isOnPitRoad` value before evaluation.
+- Tightened `ManualRecoveryReset(...)` short-circuit semantics: planner-safe early return now requires an active live session in addition to successful planner-safe recovery.
+- Preserved planner-safe runtime behavior for active live session recovery while ensuring manual reset outside active live session still executes the broad reset path.
 
 ## 2026-04-10 — Opponents Pit Exit dash export follow-up
 - Classification: **both** (user-facing dash exports + internal docs/contract alignment).

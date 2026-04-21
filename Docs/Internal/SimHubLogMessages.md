@@ -18,6 +18,9 @@ Scope: Info/Warn logs emitted via `SimHub.Logging.Current.Info(...)` and `SimHub
 
 ## Action, dash, and launch controls
 - **`[LalaPlugin:Runtime] manual recovery reset triggered (reason: <reason>).`** — Unified transient runtime re-arm path fired (Overview reset button, `PrimaryDashMode` action, or session-transition reset path). Includes trigger reason in the log line.
+- **`[LalaPlugin:Runtime] fuel health check queued (reason: <reason>).`** — Runtime-health trigger was detected (session/combo/car-active edge) and queued for bounded fuel live-cap health evaluation.
+- **`[LalaPlugin:Runtime] fuel health check passed reason=... raw=... runtime=... src=... strategyMissing=...`** — Queued fuel health check evaluated healthy without recovery.
+- **`[LalaPlugin:Runtime] planner-safe fuel recovery start/end ...`** — Planner-safe targeted fuel/live-snapshot recovery executed; end line reports health verdict and resolved cap source.
 - **`[LalaPlugin:Dash] DeclutterMode action fired -> DeclutterMode=0/1/2.`** — Declutter control pressed; cycles the 0/1/2 export used for dash visibility bindings.【F:LalaLaunch.cs†L10-L50】
 - **`[LalaPlugin:Dash] SecondaryDashMode action fired (legacy) -> DeclutterMode=0/1/2.`** — Legacy alias for the same declutter cycle to preserve old bindings.【F:LalaLaunch.cs†L10-L50】
 - **`[LalaPlugin:Dash] Event marker action fired (pressed latched).`** — Event marker action pressed; pulses the event marker latch for CSV tracing.【F:LalaLaunch.cs†L10-L70】
@@ -53,6 +56,7 @@ Scope: Info/Warn logs emitted via `SimHub.Logging.Current.Info(...)` and `SimHub
 - **`[LalaPlugin:Fuel Burn] Seeded race model from previous session ... conf=Z%.`** — Applies saved seeds on entering Race with matching car/track.【F:LalaLaunch.cs†L934-L956】
 - **`[LalaPlugin:Fuel Burn] Car/track change detected – clearing seeds and confidence`** — Fuel model reset because car or track identity changed.【F:LalaLaunch.cs†L968-L983】
 - **`[LalaPlugin:Session] token change old=... new=... type=...`** — Session identity changed (SessionID/SubSessionID); triggers subsystem resets and pit-save finalization.【F:LalaLaunch.cs†L3308-L3365】
+- **`[LalaPlugin:Fuel Burn] live-max health source=... raw=... live=... lastValid=... effective=...`** — Debounced live-cap diagnostic snapshot for runtime-authoritative max tank seam and fallback state.
 - **`[LalaPlugin:Surface] Mode flip Dry->Wet/Wet->Dry (tyres=..., PlayerTireCompound=..., ExtraProp=..., trackWetness=...)`** — Wet mode toggled based on tyre compound telemetry; includes track wetness context for the change.【F:LalaLaunch.cs†L1402-L1426】
 
 ## Lap detection and per-lap summaries
@@ -165,6 +169,9 @@ Scope: Info/Warn logs emitted via `SimHub.Logging.Current.Info(...)` and `SimHub
 - **`[LalaPlugin:Fuel Burn] Strategy reset – defaults applied.`** — Planner reset to defaults (throttled to 1 s).【F:FuelCalcs.cs†L2038-L2057】
 - **`[LalaPlugin:Leader Lap] ResetSnapshotDisplays: cleared live snapshot including leader delta.`** — Live snapshot cleared after session end/reset (mirrors leader delta wipe).【F:FuelCalcs.cs†L2985-L3023】
 - **`[LalaPlugin:Leader Lap] CalculateStrategy: estLap=..., leaderDelta=..., leaderLap=...`** — Strategy leader lap calculation log (only when values change meaningfully).【F:FuelCalcs.cs†L3839-L3879】
+- **`[LalaPlugin:Strategy] live-cap authority available=... source=... litres=...`** — Strategy live-cap resolver state from runtime-authoritative seam.
+- **`[LalaPlugin:Strategy] UpdateLiveDisplay: live max tank refresh ...`** — Strategy live snapshot max-tank display refresh event.
+- **`[LalaPlugin:Strategy] RefreshLiveSnapshot requested.`** — Explicit strategy-side live-snapshot refresh action invoked.
 
 ## Message system v1
 - **`[LalaPlugin:MSGV1] <message>`** — General MSGV1 engine logs (e.g., stack outputs).【F:Messaging/MessageEngine.cs†L478-L560】
