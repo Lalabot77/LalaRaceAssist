@@ -9,6 +9,12 @@ Branch: work
 - No Git remote is configured in this checkout (`git remote -v` returns empty).
 
 ## Documentation sync status
+- Final documentation sweep aligned user-facing + dash-facing + internal docs with the implemented combined pit command stack:
+  - plugin-owned pit command actions and plugin-owned custom-message actions are now the documented default workflow;
+  - built-in pit command configuration location is documented as `Settings -> Pit Commands`;
+  - custom-message configuration location is documented as `Settings -> Custom Messages`;
+  - pit fuel control usage notes are aligned to the implemented plugin-owned source/mode/action/export behavior;
+  - focus caveat remains explicit and truthful (`iRacing` foreground required for reliable pit/custom sends; auto-focus not implemented).
 - Profile-track PB clear polish follow-up (bounded to profile-track editor clear path + UI text styling):
   - condition PB clear now immediately clears visible PB text in-place by mirroring relearn refresh semantics (clear PB display cache + raise property changed for condition PB text);
   - dry/wet clear button labels are now compact and identical: `Clear PB Data`;
@@ -195,6 +201,16 @@ Branch: work
   - `Pit.FuelSetMax` now flips a plugin-owned toggle concept state exported as `Pit.Command.FuelSetMaxToggleState` for dash label logic.
 
 ## Reviewed documentation set
+### Changed in final docs sweep: plugin-owned pit commands + custom messages + pit fuel control
+- `README.md`
+- `Docs/Quick_Start.md`
+- `Docs/User_Guide.md`
+- `Docs/Pit_Assist.md`
+- `Docs/Subsystems/Dash_Integration.md`
+- `Docs/Internal/SimHubParameterInventory.md`
+- `Docs/Internal/Development_Changelog.md`
+- `Docs/RepoStatus.md`
+
 ### Changed in ClassLeader.* live-session export task
 - `LalaLaunch.cs`
 - `Docs/Internal/SimHubParameterInventory.md`

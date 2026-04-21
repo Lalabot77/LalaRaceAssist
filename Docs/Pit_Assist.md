@@ -86,7 +86,7 @@ Each slot has:
 - message text content,
 - its own bindable plugin action (`LalaLaunch.CustomMessage01` ... `LalaLaunch.CustomMessage10`).
 
-Custom message slot edits are persisted in plugin settings immediately, so labels/message text survive SimHub restarts.
+Custom message slot values persist across SimHub restarts. Slot collection changes save immediately; slot text edits use a short debounce and are flushed on normal runtime/shutdown so settled edits are retained.
 
 Use these for common race-chat messages you want on hardware buttons, keyboard keys, or dashboard virtual buttons, without exposing chat transport details in normal workflow.
 

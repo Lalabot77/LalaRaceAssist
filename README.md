@@ -63,6 +63,15 @@ The dashboard docs now include a dedicated Primary Driver Dash guide covering th
 5. Open the plugin and begin with **Strategy**, then review **Profiles**, **Dash Control**, and **Settings**.
 6. For more detailed instructions and help refer to the main user guide or quick start guide in links below.
 
+## Pit commands, custom messages, and pit fuel control (current state)
+
+- Pit command actions are now **plugin-owned** (`LalaLaunch.Pit.*`) and should be bound through normal SimHub Controls & Events/plugin binding flows.
+- Custom race-chat buttons are also plugin-owned (`LalaLaunch.CustomMessage01..10`) and configured in **Settings → Custom Messages**.
+- Built-in pit command rows are configured in **Settings → Pit Commands**.
+- Pit Fuel Control is plugin-owned (`LalaLaunch.Pit.FuelControl.*`) for source/mode/target workflows used by supported pit widgets.
+- Pit/custom send transport no longer depends on `iRacingExtraProperties` action ids.
+- Current send reliability expects **iRacing to be in foreground focus**; auto-focus is not implemented yet.
+
 ## Current Constraints (v1.x)
 
 - Some dashboard behaviors depend on optional SimHub-side setup and optional dashboard exports. If those are not configured, affected indicators or overlays may be missing while core plugin systems still work.
