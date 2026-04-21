@@ -4098,12 +4098,18 @@ namespace LaunchPlugin
         private readonly HashSet<int> _badUserIds = new HashSet<int>();
         private int _friendsCount;
         private readonly HashSet<LaunchPluginFriendEntry> _friendEntrySubscriptions = new HashSet<LaunchPluginFriendEntry>();
+        private readonly HashSet<CustomMessageSlot> _customMessageEntrySubscriptions = new HashSet<CustomMessageSlot>();
         private ObservableCollection<LaunchPluginFriendEntry> _friendsCollection;
+        private ObservableCollection<CustomMessageSlot> _customMessagesCollection;
+        private bool _customMessageSavePending;
+        private DateTime _customMessageSaveDueUtc = DateTime.MinValue;
         private bool _friendsDirty = true;
+        private bool _isSavingSettings;
         private bool _carSaBestLapFallbackInfoLogged;
         private const double CarSaLapTimeUpdateVisibilitySeconds = 3.0;
         private const double CarSaLapTimeEpsilonSec = 0.001;
         private const double LapRefAuthoritativeLapFreshnessToleranceSec = 0.050;
+        private const int CustomMessageSaveDebounceMs = 500;
 
         private enum LaunchState
         {
@@ -4477,6 +4483,7 @@ namespace LaunchPlugin
             Settings = LoadSettings();
             EnforceHardDebugSettings(Settings);
             HookFriendSettings(Settings);
+            HookCustomMessageSettings(Settings);
             MarkFriendsDirty();
             _shiftAssistAudio = new ShiftAssistAudio(() => Settings);
 
@@ -5791,8 +5798,11 @@ namespace LaunchPlugin
 
             _shiftAssistAudio?.Dispose();
 
-            // Persist settings
-            SaveSettings();
+            // Persist settings (including debounced custom-message edits)
+            if (!TryFlushPendingCustomMessageSaveDebounce(true))
+            {
+                SaveSettings();
+            }
             ProfilesViewModel.SaveProfiles();
 
         }
@@ -5848,8 +5858,23 @@ namespace LaunchPlugin
 
         private void SaveSettings()
         {
+            if (_isSavingSettings)
+            {
+                return;
+            }
+
+            CancelPendingCustomMessageSaveDebounce();
+
             var path = PluginStorage.GetPluginFilePath(GlobalSettingsFileName);
-            SaveSettingsToPath(path, Settings);
+            try
+            {
+                _isSavingSettings = true;
+                SaveSettingsToPath(path, Settings);
+            }
+            finally
+            {
+                _isSavingSettings = false;
+            }
         }
 
         private void SaveSettingsToPath(string path, LaunchPluginSettings settings)
@@ -6570,6 +6595,7 @@ namespace LaunchPlugin
             // --- MASTER GUARD CLAUSES ---
             if (Settings == null || pluginManager == null) return;
             EnforceHardDebugSettings(Settings);
+            TryFlushPendingCustomMessageSaveDebounce(false);
             EvaluateDarkMode(pluginManager);
             if (!data.GameRunning || data.NewData == null) return;
 
@@ -9999,6 +10025,179 @@ namespace LaunchPlugin
             _friendsCollection.CollectionChanged += OnFriendsCollectionChanged;
             SubscribeFriendEntries(_friendsCollection);
             MarkFriendsDirty();
+        }
+
+        private void HookCustomMessageSettings(LaunchPluginSettings settings)
+        {
+            var customMessages = settings?.CustomMessages;
+            if (customMessages == null)
+            {
+                if (_customMessagesCollection != null)
+                {
+                    _customMessagesCollection.CollectionChanged -= OnCustomMessagesCollectionChanged;
+                    _customMessagesCollection = null;
+                }
+
+                UnsubscribeAllCustomMessageEntries();
+                return;
+            }
+
+            if (ReferenceEquals(_customMessagesCollection, customMessages))
+            {
+                return;
+            }
+
+            if (_customMessagesCollection != null)
+            {
+                _customMessagesCollection.CollectionChanged -= OnCustomMessagesCollectionChanged;
+            }
+
+            UnsubscribeAllCustomMessageEntries();
+            _customMessagesCollection = customMessages;
+            _customMessagesCollection.CollectionChanged += OnCustomMessagesCollectionChanged;
+            SubscribeCustomMessageEntries(_customMessagesCollection);
+        }
+
+        private void SubscribeCustomMessageEntries(IList<CustomMessageSlot> entries)
+        {
+            if (entries == null)
+            {
+                return;
+            }
+
+            for (int i = 0; i < entries.Count; i++)
+            {
+                SubscribeCustomMessageEntry(entries[i]);
+            }
+        }
+
+        private void SubscribeCustomMessageEntry(CustomMessageSlot entry)
+        {
+            if (entry == null)
+            {
+                return;
+            }
+
+            if (_customMessageEntrySubscriptions.Add(entry))
+            {
+                entry.PropertyChanged += OnCustomMessageEntryPropertyChanged;
+            }
+        }
+
+        private void UnsubscribeCustomMessageEntry(CustomMessageSlot entry)
+        {
+            if (entry == null)
+            {
+                return;
+            }
+
+            if (_customMessageEntrySubscriptions.Remove(entry))
+            {
+                entry.PropertyChanged -= OnCustomMessageEntryPropertyChanged;
+            }
+        }
+
+        private void UnsubscribeAllCustomMessageEntries()
+        {
+            if (_customMessageEntrySubscriptions.Count == 0)
+            {
+                return;
+            }
+
+            foreach (var entry in _customMessageEntrySubscriptions)
+            {
+                if (entry != null)
+                {
+                    entry.PropertyChanged -= OnCustomMessageEntryPropertyChanged;
+                }
+            }
+
+            _customMessageEntrySubscriptions.Clear();
+        }
+
+        private void OnCustomMessagesCollectionChanged(object sender, NotifyCollectionChangedEventArgs e)
+        {
+            if (e == null)
+            {
+                SaveSettings();
+                return;
+            }
+
+            if (e.Action == NotifyCollectionChangedAction.Reset)
+            {
+                UnsubscribeAllCustomMessageEntries();
+                var entries = sender as IList<CustomMessageSlot>;
+                if (entries != null)
+                {
+                    SubscribeCustomMessageEntries(entries);
+                }
+
+                SaveSettings();
+                return;
+            }
+
+            if (e.OldItems != null)
+            {
+                for (int i = 0; i < e.OldItems.Count; i++)
+                {
+                    UnsubscribeCustomMessageEntry(e.OldItems[i] as CustomMessageSlot);
+                }
+            }
+
+            if (e.NewItems != null)
+            {
+                for (int i = 0; i < e.NewItems.Count; i++)
+                {
+                    SubscribeCustomMessageEntry(e.NewItems[i] as CustomMessageSlot);
+                }
+            }
+
+            SaveSettings();
+        }
+
+        private void OnCustomMessageEntryPropertyChanged(object sender, PropertyChangedEventArgs e)
+        {
+            if (e == null || string.IsNullOrWhiteSpace(e.PropertyName))
+            {
+                SaveSettings();
+                return;
+            }
+
+            if (e.PropertyName == nameof(CustomMessageSlot.Name)
+                || e.PropertyName == nameof(CustomMessageSlot.MessageText))
+            {
+                ScheduleCustomMessageSaveDebounce();
+            }
+        }
+
+        private void ScheduleCustomMessageSaveDebounce()
+        {
+            _customMessageSavePending = true;
+            _customMessageSaveDueUtc = DateTime.UtcNow.AddMilliseconds(CustomMessageSaveDebounceMs);
+        }
+
+        private bool TryFlushPendingCustomMessageSaveDebounce(bool force)
+        {
+            if (!_customMessageSavePending)
+            {
+                return false;
+            }
+
+            if (!force && DateTime.UtcNow < _customMessageSaveDueUtc)
+            {
+                return false;
+            }
+
+            _customMessageSavePending = false;
+            _customMessageSaveDueUtc = DateTime.MinValue;
+            SaveSettings();
+            return true;
+        }
+
+        private void CancelPendingCustomMessageSaveDebounce()
+        {
+            _customMessageSavePending = false;
+            _customMessageSaveDueUtc = DateTime.MinValue;
         }
 
         private void SubscribeFriendEntries(IList<LaunchPluginFriendEntry> entries)

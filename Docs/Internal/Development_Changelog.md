@@ -57,6 +57,18 @@ The public user-facing release history is maintained in the root `CHANGELOG.md`.
   - `DriverInfo.Drivers##` remains preferred,
   - `DriverInfo.CompetingDrivers[*]` remains missing-entry-only backfill (no overwrite).
 
+### PR #584 follow-up: debounce custom-message settings saves
+- Kept the `Settings -> Custom Messages` persistence fix from PR #584 intact while changing save timing for slot text edits (`Name` / `MessageText`) to a bounded debounce window (500 ms).
+- Custom-message text edits now schedule a delayed save that is flushed after typing settles, instead of writing the full settings file on every keystroke.
+- Added explicit pending-save flush points on normal plugin tick and plugin shutdown so the latest settled text persists across SimHub restarts.
+- Kept pit/custom command runtime behavior unchanged (`LalaLaunch.CustomMessage01..10` action names, binding surface, and transport/dispatch seams unchanged).
+- Classification: **internal-only** (persistence-layer I/O timing polish; no runtime command behavior/UI contract change).
+
+### Custom message settings persistence follow-up
+- Fixed settings persistence for `Settings -> Custom Messages` slot edits by hooking `LaunchPluginSettings.CustomMessages` collection/item change events and saving plugin settings on `Name`/`MessageText` changes.
+- Startup path now reattaches custom-message persistence hooks immediately after settings load so existing saved slot content is preserved and editable without losing bindings.
+- Kept runtime dispatch/contracts unchanged: `LalaLaunch.CustomMessage01..10` action bindings and existing pit/custom command transport logic were not modified.
+- Classification: **both** (driver-visible persistence fix + bounded settings-layer internal wiring).
 ### 2026-04-20 — PR #582 follow-up: native single-class authority precedence over cache diversity
 - Classification: **internal-only** (multiclass state authority ordering correction for existing H2H/ClassLeader seams; no new exports/UI).
 - Tightened `RefreshClassMetadata(...)` multiclass assignment ordering so explicit native single-class (`WeekendInfo.NumCarClasses == 1`) now wins outright and cannot be overridden by cache string divergence.

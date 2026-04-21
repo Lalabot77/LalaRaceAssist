@@ -18,6 +18,11 @@ Branch: work
   - simplified effective same-class matching to one shared rule: explicit single-class sessions always match (blank/mismatch tolerated), multiclass sessions require usable matching class identity;
   - aligned finish-path class-leader selection to the same helper used by class-best/class-leader consumers, eliminating stricter ad hoc class-string checks in one path;
   - retained source-ordered class metadata population (`Drivers##` preferred, `CompetingDrivers[*]` bounded missing-entry backfill) and multiclass fail-safe behavior.
+- PR #584 follow-up debounced `Settings -> Custom Messages` text-edit persistence to avoid full settings writes on each keystroke:
+  - custom slot `Name` / `MessageText` edits now use a 500 ms settle window before save;
+  - pending debounced saves are flushed during normal plugin tick and plugin shutdown to keep latest settled text persisted across SimHub restarts;
+  - custom-message action names/binding surfaces and pit/custom command runtime behavior were intentionally unchanged.
+- Fixed Settings -> Custom Messages persistence regression: custom slot label/message edits now save on change via settings-layer collection/item hooks, so values persist across SimHub restarts without altering action binding names or pit/custom command execution seams.
 - PR #582 follow-up addressed final multiclass authority ordering review feedback:
   - `_isMultiClassSession` now applies native authority in strict order: explicit native single-class (`NumCarClasses == 1`) wins outright, explicit native multiclass stays next (`NumCarClasses > 1`, or unknown + `HasMultipleClassOpponents`), and cache diversity is only used when class-count authority is unresolved/unknown;
   - this prevents cache divergence (`CarClassShortName` vs `CarClassName`) from overriding an explicit native single-class session signal.
