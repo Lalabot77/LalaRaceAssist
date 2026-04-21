@@ -1,7 +1,7 @@
 # Pace and Projection
 
 Validated against commit: HEAD
-Last updated: 2026-04-18
+Last updated: 2026-04-21
 Branch: work
 
 ## Purpose
@@ -128,6 +128,8 @@ Pace and projection state resets on:
 - session identity changes,
 - combo changes,
 - broader fuel/runtime resets that must prevent stale live pace from leaking into a new session.
+
+Runtime-health handling is now expected to prefer targeted fuel/live-snapshot recovery first, with pace/projection transient re-arm only when dependency ordering requires it.
 
 ## Failure modes / safeguards
 - **Heavy traffic / compromised laps:** confidence falls and fallback pace may legitimately take over.

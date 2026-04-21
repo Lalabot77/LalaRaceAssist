@@ -1,7 +1,7 @@
 # Fuel Model
 
 Validated against commit: HEAD
-Last updated: 2026-04-18
+Last updated: 2026-04-21
 Branch: work
 
 ## Purpose
@@ -196,11 +196,19 @@ Fuel-model state resets on:
 - broader combo/identity resets,
 - any reset path that must clear stale live windows, projection state, and pit-window labels.
 
+Runtime recovery now distinguishes between:
+- **planner-safe targeted runtime recovery** for fuel/live-snapshot health issues (preferred),
+- broader transient runtime reset paths for full re-arm scenarios.
+
+Planner-safe targeted recovery is intended to rebuild live-cap/runtime truth without silently clearing Strategy manual overrides or preset intent.
+Manual recovery may short-circuit on planner-safe success only while an active live session is present; outside active live session, manual reset continues into the broad reset path.
+
 Driving → Race transitions can seed race state from the just-learned baseline instead of forcing a full cold start.
 
 ## Failure modes / edge cases
 - **Replay timing anomalies:** acceptance/projection behavior may need log verification.
 - **Missing live tank cap:** runtime keeps the last valid cap for stability, while UI can still clear user-facing displays when no current valid cap exists.
+- **Live-cap authority seam:** Strategy live-cap consumption now uses the same runtime-authoritative seam used by fuel runtime recovery (`raw -> bounded fallback` only) so stale cached caps cannot outlive the fallback freshness window when raw reads disappear.
 - **Weak early-session data:** profile-backed fallback may legitimately remain safer than live values until confidence improves.
 - **Cross-condition reuse:** dry/wet fallback works, but confidence should be interpreted as lower.
 - **Session-change starvation hardening:** refuel-learning cooldown now gates only the refuel-learning block; it no longer exits the full `DataUpdate` tick. This keeps downstream fuel/session/strategy refresh paths running while cooldown is active.
