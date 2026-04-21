@@ -23,6 +23,7 @@ This document is the canonical dash-facing contract layer. It does **not** redef
 ### Strategy / fuel / pace
 - Use stable strategy/fuel exports for labels and decision widgets.
 - Treat `LalaLaunch.PreRace.*` as a separate on-grid/pre-race info layer, not a replacement for live `Fuel.*` or Strategy planner ownership.
+- Consume `LalaLaunch.PreRace.StatusText` together with `LalaLaunch.PreRace.StatusColour` (`green`/`orange`/`red`) for simple dash styling; do not recreate planner/live mismatch or multi-stop decision logic in dash scripts.
 - If a widget is meant to represent runtime truth, prefer stable `Fuel.*` / pace outputs over UI-only text from elsewhere.
 
 ### Launch

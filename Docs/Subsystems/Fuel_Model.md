@@ -172,7 +172,7 @@ The full authoritative export list lives in `Docs/Internal/SimHubParameterInvent
 - `Fuel.Pit.*`
 - `Fuel.StintBurnTarget*`
 - `Fuel.Live.ProjectedDriveSecondsRemaining`
-- `LalaLaunch.PreRace.*` as the separate pre-race/on-grid info layer
+- `LalaLaunch.PreRace.*` as the separate pre-race/on-grid info layer (Auto uses live race-definition authority first: `_SessionTime` for timed races, `_SessionLaps` for lap-limited races)
 
 ### Logging expectations
 The subsystem logs:

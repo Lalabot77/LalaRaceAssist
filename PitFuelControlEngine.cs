@@ -53,8 +53,6 @@ namespace LaunchPlugin
         private const double OverrideDisarmStopsThreshold = 1.05;
         private const int PluginSendSuppressionMs = 900;
         private const int MaxFuelOvershootLitres = 500;
-        private const double TimeRaceLengthToleranceMinutes = 0.10;
-        private const double LapRaceLengthToleranceLaps = 0.01;
 
         private readonly Func<PitFuelControlSnapshot> _snapshotProvider;
         private readonly Func<string, string, string, bool> _chatCommandSender;
@@ -487,57 +485,23 @@ namespace LaunchPlugin
 
         private static bool ComputePlanValidity(PitFuelControlSnapshot snapshot)
         {
-            if (snapshot == null)
+            var match = PlannerLiveSessionMatchHelper.Evaluate(new PlannerLiveSessionMatchSnapshot
             {
-                return false;
-            }
+                LiveCar = snapshot?.LiveCar,
+                LiveTrack = snapshot?.LiveTrack,
+                HasLiveBasis = snapshot != null && snapshot.HasLiveBasis,
+                LiveBasisIsTimeLimited = snapshot != null && snapshot.LiveBasisIsTimeLimited,
+                HasLiveRaceLength = snapshot != null && snapshot.HasLiveRaceLength,
+                LiveRaceLengthValue = snapshot?.LiveRaceLengthValue ?? 0.0,
+                PlannerCar = snapshot?.PlannerCar,
+                PlannerTrack = snapshot?.PlannerTrack,
+                HasPlannerBasis = snapshot != null && snapshot.HasPlannerBasis,
+                PlannerBasisIsTimeLimited = snapshot != null && snapshot.PlannerBasisIsTimeLimited,
+                HasPlannerRaceLength = snapshot != null && snapshot.HasPlannerRaceLength,
+                PlannerRaceLengthValue = snapshot?.PlannerRaceLengthValue ?? 0.0
+            });
 
-            if (string.IsNullOrWhiteSpace(snapshot.LiveCar) || string.IsNullOrWhiteSpace(snapshot.PlannerCar))
-            {
-                return false;
-            }
-
-            if (string.IsNullOrWhiteSpace(snapshot.LiveTrack) || string.IsNullOrWhiteSpace(snapshot.PlannerTrack))
-            {
-                return false;
-            }
-
-            if (!string.Equals(snapshot.LiveCar.Trim(), snapshot.PlannerCar.Trim(), StringComparison.OrdinalIgnoreCase))
-            {
-                return false;
-            }
-
-            if (!string.Equals(snapshot.LiveTrack.Trim(), snapshot.PlannerTrack.Trim(), StringComparison.OrdinalIgnoreCase))
-            {
-                return false;
-            }
-
-            if (!snapshot.HasLiveBasis || !snapshot.HasPlannerBasis)
-            {
-                return false;
-            }
-
-            if (snapshot.LiveBasisIsTimeLimited != snapshot.PlannerBasisIsTimeLimited)
-            {
-                return false;
-            }
-
-            if (!snapshot.HasLiveRaceLength || !snapshot.HasPlannerRaceLength)
-            {
-                return false;
-            }
-
-            if (snapshot.LiveRaceLengthValue <= 0.0 || snapshot.PlannerRaceLengthValue <= 0.0)
-            {
-                return false;
-            }
-
-            if (snapshot.LiveBasisIsTimeLimited)
-            {
-                return Math.Abs(snapshot.LiveRaceLengthValue - snapshot.PlannerRaceLengthValue) <= TimeRaceLengthToleranceMinutes;
-            }
-
-            return Math.Abs(snapshot.LiveRaceLengthValue - snapshot.PlannerRaceLengthValue) <= LapRaceLengthToleranceLaps;
+            return match.IsMatch;
         }
 
         private static double ResolveSourceTarget(PitFuelControlSnapshot snapshot, PitFuelControlSource source)

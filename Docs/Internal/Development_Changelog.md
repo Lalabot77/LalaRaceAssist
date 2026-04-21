@@ -33,6 +33,31 @@ The public user-facing release history is maintained in the root `CHANGELOG.md`.
 
 ## Post-v1.0 development
 
+### 2026-04-21 — PreRace PR follow-up (project compile include + Auto one-stop status path)
+- Classification: **both** (compile-fix project file inclusion + dash-visible Auto status correctness).
+- Added `PlannerLiveSessionMatchHelper.cs` to explicit `<Compile Include=...>` items in `LaunchPlugin.csproj` so non-SDK project builds include the new shared helper/snapshot types.
+- Corrected PreRace Auto status branching so `> 1.0` and `<= 2.0` stints returns `SINGLE STOP OKAY` instead of falling through to `NO STOP OKAY`.
+- Kept all other PreRace decision-tree behavior unchanged (`<= 1.0` no-stop path and `> 2.0` existing multi-stop handling remain as implemented).
+
+### 2026-04-21 — PreRace PR follow-up (accessibility + mismatch comparable-input gate)
+- Classification: **both** (compile-fix API accessibility correction + dash-visible PreRace caution gating refinement).
+- Changed `FuelCalcs.GetPlannerSessionMatchSnapshot()` from `public` to `internal` so method/type accessibility is consistent with internal `PlannerLiveSessionMatchSnapshot` and `CS0050` is avoided.
+- Tightened non-Auto `STRATEGY MISMATCH` emission to comparable-input mismatches only (`plannerMatchResult.HasComparableInputs && !plannerMatchResult.IsMatch`) so transient missing planner/live values do not mask more actionable fuel status outputs.
+- Kept all other PreRace decision outputs and colour contract behavior unchanged.
+
+### 2026-04-21 — PreRace authority refresh + shared planner/live validity seam
+- Classification: **both** (runtime/dash-visible status behavior + internal seam cleanup).
+- Extracted a focused shared planner/live session match helper (`PlannerLiveSessionMatchHelper`) covering car, track, basis (time/lap), and race-length tolerance checks.
+- Switched `PitFuelControlEngine` PLAN validity to consume the shared helper (no private duplicate match logic).
+- Added `FuelCalcs.GetPlannerSessionMatchSnapshot()` to provide planner-side identity/basis/race-length inputs; includes a bounded fallback to last loaded planner track key to reduce transient false mismatch windows when planner track rows refresh.
+- Refreshed PreRace Auto authority:
+  - race length now follows live session definition seams first (`CurrentSessionInfo._SessionTime` or `_SessionLaps`);
+  - fuel/lap source now follows runtime stable seams first (`LiveFuelPerLap_Stable`, `ProjectionLapTime_Stable`) with fallback only when needed.
+- Replaced coarse PreRace status with richer decision outputs + dash color contract:
+  - `LalaLaunch.PreRace.StatusText` now emits specific decision strings (including mismatch/max-fuel/overfuel/underfuel states),
+  - added `LalaLaunch.PreRace.StatusColour` (`green`/`orange`/`red`).
+- Non-Auto PreRace now emits orange `STRATEGY MISMATCH` (never green) when planner/live combo+basis+race-length do not match, while still computing planner-intent values.
+- Added conservative overfuel warning rule: `OVERFUELLED` triggers only when excess fuel exceeds `2x` configured contingency.
 ### 2026-04-21 — Pit Fuel Control external reset simplification (`IsOnTrackCar` edge-only)
 - Classification: **both** (driver-visible pit-fuel lifecycle reset behavior change + internal reset-trigger seam simplification).
 - Removed pit-fuel-specific external reset triggers in `LalaLaunch` that were tied to:

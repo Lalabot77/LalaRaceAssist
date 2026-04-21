@@ -93,6 +93,7 @@ The resulting projection lap time feeds the Fuel Model’s timed-race math toget
 - session time remaining,
 - planner after-zero allowance,
 - live after-zero estimate once timer-zero has genuinely been observed.
+- PreRace Auto now also consumes this same runtime projection seam (`ProjectionLapTime_Stable`) instead of planner lap-time authority.
 
 Session phase split:
 - SessionState `2/3` (grid/formation) uses session-definition race length authority (`CurrentSessionInfo._SessionTime`) with elapsed `SessionTime` as the timed-race remaining seam.
