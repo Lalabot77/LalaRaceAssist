@@ -208,7 +208,7 @@ Driving → Race transitions can seed race state from the just-learned baseline 
 ## Failure modes / edge cases
 - **Replay timing anomalies:** acceptance/projection behavior may need log verification.
 - **Missing live tank cap:** runtime keeps the last valid cap for stability, while UI can still clear user-facing displays when no current valid cap exists.
-- **Live-cap authority seam:** Strategy live-cap consumption now uses the same runtime-authoritative seam used by fuel runtime recovery (with bounded fallback) so transient raw-read gaps do not immediately collapse planner/live snapshot to zero.
+- **Live-cap authority seam:** Strategy live-cap consumption now uses the same runtime-authoritative seam used by fuel runtime recovery (`raw -> bounded fallback` only) so stale cached caps cannot outlive the fallback freshness window when raw reads disappear.
 - **Weak early-session data:** profile-backed fallback may legitimately remain safer than live values until confidence improves.
 - **Cross-condition reuse:** dry/wet fallback works, but confidence should be interpreted as lower.
 - **Session-change starvation hardening:** refuel-learning cooldown now gates only the refuel-learning block; it no longer exits the full `DataUpdate` tick. This keeps downstream fuel/session/strategy refresh paths running while cooldown is active.

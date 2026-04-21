@@ -14821,24 +14821,10 @@ namespace LaunchPlugin
                 }
             }
 
-            if (LiveCarMaxFuel > 0.0)
-            {
-                capLitres = LiveCarMaxFuel;
-                source = "live";
-                return true;
-            }
-
             if (HasFreshLiveMaxFuelFallback())
             {
                 capLitres = _lastValidLiveMaxFuel;
                 source = "fallback";
-                return true;
-            }
-
-            if (EffectiveLiveMaxTank > 0.0)
-            {
-                capLitres = EffectiveLiveMaxTank;
-                source = "effective";
                 return true;
             }
 

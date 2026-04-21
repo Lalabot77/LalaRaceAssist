@@ -33,6 +33,13 @@ The public user-facing release history is maintained in the root `CHANGELOG.md`.
 
 ## Post-v1.0 development
 
+### 2026-04-21 — PR follow-up: bound Strategy live-cap fallback path
+- Classification: **internal-only** (runtime authority-seam correctness; no UI/workflow change).
+- Tightened `TryGetRuntimeLiveCapForStrategy(...)` so stale cached live-cap values cannot bypass fallback freshness gating:
+  - removed unbounded `LiveCarMaxFuel` return path,
+  - removed overlapping `EffectiveLiveMaxTank` return path,
+  - Strategy live-cap authority is now a single bounded seam: `raw -> bounded fallback -> unavailable`.
+
 ### 2026-04-21 — Runtime health checks + planner-safe fuel recovery (session-transition stability)
 - Classification: **both** (driver-visible Strategy live-cap/session-recovery stability + internal runtime seam hardening/observability).
 - Added bounded fuel/live-snapshot runtime health checks in `LalaLaunch` with debounced trigger queueing from:
@@ -46,7 +53,7 @@ The public user-facing release history is maintained in the root `CHANGELOG.md`.
   - avoids planner/manual/preset clobber on normal manual recovery.
 - Manual recovery action path now attempts planner-safe targeted fuel recovery first before broad reset logic.
 - Unified Strategy live-cap authority with runtime seam:
-  - `FuelCalcs` now consumes plugin runtime live-cap authority (`raw -> live -> bounded fallback`) instead of direct-only raw read,
+  - `FuelCalcs` now consumes plugin runtime live-cap authority (`raw -> bounded fallback`) instead of direct-only raw read,
   - added debounced strategy/runtime health logs for live-cap source/value transitions.
 - Removed automatic planner manual-override reset from the fuel-model session reset path to preserve planner intent during runtime/session re-arm.
 
