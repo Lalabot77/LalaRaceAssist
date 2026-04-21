@@ -928,6 +928,11 @@ namespace LaunchPlugin
                 return new PreRaceStatusDecision { Text = "MAX FUEL REQUIRED", Colour = "orange" };
             }
 
+            if (normalizedStrategy == 3 && normalizedStints > 1.0)
+            {
+                return new PreRaceStatusDecision { Text = "SINGLE STOP OKAY", Colour = "green" };
+            }
+
             if (contingencyLitres > 0.0 && preRaceFuelDelta > (2.0 * contingencyLitres))
             {
                 return new PreRaceStatusDecision { Text = "OVERFUELLED", Colour = "orange" };

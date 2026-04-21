@@ -33,6 +33,12 @@ The public user-facing release history is maintained in the root `CHANGELOG.md`.
 
 ## Post-v1.0 development
 
+### 2026-04-21 — PreRace PR follow-up (project compile include + Auto one-stop status path)
+- Classification: **both** (compile-fix project file inclusion + dash-visible Auto status correctness).
+- Added `PlannerLiveSessionMatchHelper.cs` to explicit `<Compile Include=...>` items in `LaunchPlugin.csproj` so non-SDK project builds include the new shared helper/snapshot types.
+- Corrected PreRace Auto status branching so `> 1.0` and `<= 2.0` stints returns `SINGLE STOP OKAY` instead of falling through to `NO STOP OKAY`.
+- Kept all other PreRace decision-tree behavior unchanged (`<= 1.0` no-stop path and `> 2.0` existing multi-stop handling remain as implemented).
+
 ### 2026-04-21 — PreRace PR follow-up (accessibility + mismatch comparable-input gate)
 - Classification: **both** (compile-fix API accessibility correction + dash-visible PreRace caution gating refinement).
 - Changed `FuelCalcs.GetPlannerSessionMatchSnapshot()` from `public` to `internal` so method/type accessibility is consistent with internal `PlannerLiveSessionMatchSnapshot` and `CS0050` is avoided.

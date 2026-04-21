@@ -11,7 +11,9 @@ Branch: work
 ## Documentation sync status
 - PreRace system refresh + shared planner/live validity seam:
   - extracted shared planner/live session match helper and moved Pit Fuel Control PLAN validity to it;
+  - added `PlannerLiveSessionMatchHelper.cs` to explicit `LaunchPlugin.csproj` compile items for non-SDK project build inclusion;
   - PreRace Auto now uses live race-definition authority first (`_SessionTime` timed / `_SessionLaps` lap-limited) plus runtime stable fuel/lap source seams;
+  - PreRace Auto status thresholds now map stints as: `<= 1.0` => `NO STOP OKAY`; `> 1.0` and `<= 2.0` => `SINGLE STOP OKAY`; `> 2.0` => existing multi-stop handling;
   - non-Auto PreRace now shows orange `STRATEGY MISMATCH` only when planner/live inputs are comparable and actually mismatch (`HasComparableInputs && !IsMatch`), so transient missing values do not raise mismatch;
   - replaced coarse PreRace status band with richer text + color output (`LalaLaunch.PreRace.StatusColour`: `green`/`orange`/`red`);
   - overfuel warning now requires excess > `2x` configured contingency.
