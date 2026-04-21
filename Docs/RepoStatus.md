@@ -9,6 +9,11 @@ Branch: work
 - No Git remote is configured in this checkout (`git remote -v` returns empty).
 
 ## Documentation sync status
+- Profile-track PB clear polish follow-up (bounded to profile-track editor clear path + UI text styling):
+  - condition PB clear now immediately clears visible PB text in-place by mirroring relearn refresh semantics (clear PB display cache + raise property changed for condition PB text);
+  - dry/wet clear button labels are now compact and identical: `Clear PB Data`;
+  - condition `No sector data` status text now uses an orange warning-style colour for better visibility;
+  - PB cleared-state semantics remain unchanged (`0`/non-positive still unavailable, no valid zero-time PB reference path).
 - Pit Fuel Control follow-up (bounded to pit fuel-control + pit-command seam):
   - `Pit.FuelSetZero` and `Pit.FuelSetMax` ZERO phase now transport `#fuel 0.01$` (MAX phase unchanged).
   - AUTO cancel now uses live requested-fuel movement ownership detection outside plugin send suppression (no stale baseline mismatch dependence); cancellation is one-shot to `OFF + STBY` with `AUTO CANCELLED`.
