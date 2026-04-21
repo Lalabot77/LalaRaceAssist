@@ -6263,6 +6263,7 @@ namespace LaunchPlugin
             string reasonLabel = string.IsNullOrWhiteSpace(reason) ? "unspecified" : reason.Trim();
             SimHub.Logging.Current.Info($"[LalaPlugin:Runtime] manual recovery reset triggered (reason: {reasonLabel}).");
             ResetProjectionFallbackState();
+            ResetH2HClassBestResolveLogLatch();
 
             _rejoinEngine?.Reset();
             _pit?.Reset();
@@ -6360,6 +6361,13 @@ namespace LaunchPlugin
             ResetCoreLaunchMetrics();
             SetLaunchState(LaunchState.Idle);
             _launchAbortLatched = false;
+        }
+
+        private void ResetH2HClassBestResolveLogLatch()
+        {
+            _h2hClassSessionBestNativeMissingWarned = false;
+            _classBestResolveLastLogReason = string.Empty;
+            _classBestResolveLastLogUtc = DateTime.MinValue;
         }
 
         private void UpdatePitScreenState(PluginManager pluginManager)
@@ -13088,15 +13096,22 @@ namespace LaunchPlugin
 
         private void MaybeLogClassBestResolveFailure(string reason, int playerCarIdx, int numCarClasses, bool hasMultipleClassOpponents)
         {
-            DateTime nowUtc = DateTime.UtcNow;
-            if (string.Equals(_classBestResolveLastLogReason, reason, StringComparison.OrdinalIgnoreCase)
-                && (nowUtc - _classBestResolveLastLogUtc).TotalSeconds < 10.0)
+            bool metadataNotReadySingleClass = string.Equals(reason, "missing_or_late_class_metadata", StringComparison.OrdinalIgnoreCase)
+                && numCarClasses == 1
+                && !hasMultipleClassOpponents;
+            if (metadataNotReadySingleClass)
             {
                 return;
             }
 
-            _classBestResolveLastLogReason = reason ?? string.Empty;
-            _classBestResolveLastLogUtc = nowUtc;
+            string normalizedReason = reason ?? string.Empty;
+            if (string.Equals(_classBestResolveLastLogReason, normalizedReason, StringComparison.OrdinalIgnoreCase))
+            {
+                return;
+            }
+
+            _classBestResolveLastLogReason = normalizedReason;
+            _classBestResolveLastLogUtc = DateTime.UtcNow;
             SimHub.Logging.Current.Info(
                 $"[LalaPlugin:H2H] Native class-best unresolved reason={reason} playerCarIdx={playerCarIdx} " +
                 $"classMetaCount={_carIdxToClassShortName.Count} numCarClasses={numCarClasses} hasMultipleClassOpponents={hasMultipleClassOpponents}");
@@ -13395,7 +13410,7 @@ namespace LaunchPlugin
                 var trackStats = ActiveProfile.ResolveTrackByNameOrKey(trackKey) ?? ActiveProfile.ResolveTrackByNameOrKey(CurrentTrackName);
                 if (trackStats != null)
                 {
-                    int? profileBestMs = trackStats.GetBestLapMsForCondition(isWetMode);
+                    int? profileBestMs = trackStats.GetConditionOnlyBestLapMs(isWetMode);
                     if (profileBestMs.HasValue && profileBestMs.Value > 0)
                     {
                         profileBestLapSec = profileBestMs.Value / 1000.0;

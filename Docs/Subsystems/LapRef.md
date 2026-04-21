@@ -54,6 +54,8 @@ Player-row sector display continuity is H2H-style:
 3. Snapshot competes for in-memory session-best snapshot ownership (including sectors), while published session-best lap-time truth is kept aligned to trusted best-lap authority each tick.
 4. Existing profile PB seam persists lap-time PB; sector fields are persisted condition-wise when available.
 5. Each tick, LapRef rematerializes profile-best from active profile + track + wet/dry condition.
+   - Profile-best lookup is **condition-specific only** (`dry -> dry`, `wet -> wet`) for `LapRef.ProfileBest.*`.
+   - LapRef does not fall back from wet PB to dry PB for profile-best reference publication.
 6. Each tick, LapRef:
    - publishes player sector boxes directly from the current CarSA fixed-sector cache snapshot (H2H-style read-only consumption),
    - updates only the minimal current-lap comparable snapshot needed for truthful compare/cumulative outputs,

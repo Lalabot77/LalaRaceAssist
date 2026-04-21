@@ -1255,6 +1255,8 @@ namespace LaunchPlugin
         public RelayCommand RelearnPitDataCommand { get; }
         public RelayCommand RelearnDryCommand { get; }
         public RelayCommand RelearnWetCommand { get; }
+        public RelayCommand ClearDryBestLapAndSectorsCommand { get; }
+        public RelayCommand ClearWetBestLapAndSectorsCommand { get; }
         public RelayCommand LearnBaseTankCommand { get; }
         public RelayCommand ShiftAddCurrentStackCommand { get; }
         public RelayCommand ShiftSaveStackAsCommand { get; }
@@ -1327,6 +1329,8 @@ namespace LaunchPlugin
             RelearnPitDataCommand = new RelayCommand(p => RelearnPitData(), p => SelectedTrack != null);
             RelearnDryCommand = new RelayCommand(p => RelearnDryConditions(), p => SelectedTrack != null);
             RelearnWetCommand = new RelayCommand(p => RelearnWetConditions(), p => SelectedTrack != null);
+            ClearDryBestLapAndSectorsCommand = new RelayCommand(p => ClearBestLapAndSectors(isWet: false), p => SelectedTrack != null);
+            ClearWetBestLapAndSectorsCommand = new RelayCommand(p => ClearBestLapAndSectors(isWet: true), p => SelectedTrack != null);
             LearnBaseTankCommand = new RelayCommand(p => LearnBaseTankFromLive(), p => IsProfileSelected);
             ShiftAddCurrentStackCommand = new RelayCommand(p => AddCurrentShiftStack(), p => IsProfileSelected);
             ShiftSaveStackAsCommand = new RelayCommand(p => SaveShiftStackAs(), p => IsProfileSelected);
@@ -2287,6 +2291,20 @@ namespace LaunchPlugin
 
             track.RelearnWetConditions();
             track.WetConditionsLocked = false;
+            SaveProfiles();
+        }
+
+        private void ClearBestLapAndSectors(bool isWet)
+        {
+            var track = SelectedTrack;
+            if (track == null) return;
+
+            string car = SelectedProfile?.ProfileName ?? "unknown";
+            string trackName = track.DisplayName ?? track.Key ?? "unknown";
+            string mode = isWet ? "Wet" : "Dry";
+            SimHub.Logging.Current.Info($"[LalaPlugin:Profiles] Clear {mode} PB + sectors for {car} @ {trackName}");
+
+            track.ClearBestLapAndSectorsForCondition(isWet);
             SaveProfiles();
         }
     }
