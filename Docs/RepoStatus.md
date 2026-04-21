@@ -9,6 +9,10 @@ Branch: work
 - No Git remote is configured in this checkout (`git remote -v` returns empty).
 
 ## Documentation sync status
+- PR #584 follow-up fixed custom-message restart persistence at settings load:
+  - removed eager default prepopulation of `LaunchPluginSettings.CustomMessages` before JSON deserialize;
+  - `NormalizePitCommandSettings(...)` remains the default-slot authority and now supplies default rows only when collection data is missing/null/undersized;
+  - saved custom-message rows now load intact across restart, while new/missing settings still normalize to the expected 10 slots.
 - Pit Fuel Control follow-up (bounded to pit fuel-control + pit-command seam):
   - `Pit.FuelSetZero` and `Pit.FuelSetMax` ZERO phase now transport `#fuel 0.01$` (MAX phase unchanged).
   - AUTO cancel now uses live requested-fuel movement ownership detection outside plugin send suppression (no stale baseline mismatch dependence); cancellation is one-shot to `OFF + STBY` with `AUTO CANCELLED`.
@@ -321,6 +325,11 @@ Branch: work
 - `LalaLaunch.cs`
 - `Docs/Subsystems/LapRef.md`
 - `Docs/Internal/SimHubParameterInventory.md`
+- `Docs/Internal/Development_Changelog.md`
+- `Docs/RepoStatus.md`
+
+### Changed in PR #584 follow-up (custom-message load normalization persistence fix)
+- `LalaLaunch.cs`
 - `Docs/Internal/Development_Changelog.md`
 - `Docs/RepoStatus.md`
 

@@ -16393,7 +16393,7 @@ namespace LaunchPlugin
             { CarSAStyleResolver.BorderModeDefault, "#F5F5F5" }
         };
         public ObservableCollection<LaunchPluginFriendEntry> Friends { get; set; } = new ObservableCollection<LaunchPluginFriendEntry>();
-        public ObservableCollection<CustomMessageSlot> CustomMessages { get; set; } = CreateDefaultCustomMessages();
+        public ObservableCollection<CustomMessageSlot> CustomMessages { get; set; }
 
         // --- LalaDash Toggles (Default ON) ---
         public bool LalaDashShowLaunchScreen { get; set; } = true;
@@ -16425,16 +16425,6 @@ namespace LaunchPlugin
         public bool OverlayDashShowRadioMessages { get; set; } = true;
         public bool OverlayDashShowTraffic { get; set; } = true;
 
-        private static ObservableCollection<CustomMessageSlot> CreateDefaultCustomMessages()
-        {
-            var list = new ObservableCollection<CustomMessageSlot>();
-            for (int i = 1; i <= LalaLaunch.CustomPitMessageSlotCount; i++)
-            {
-                list.Add(new CustomMessageSlot(i));
-            }
-
-            return list;
-        }
     }
     /// <summary>
     /// Helper class for continuous telemetry data logging, now specifically focused on per-launch traces.
