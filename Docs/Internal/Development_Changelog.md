@@ -33,6 +33,17 @@ The public user-facing release history is maintained in the root `CHANGELOG.md`.
 
 ## Post-v1.0 development
 
+### 2026-04-21 — Wet-condition PB/session-best audit follow-up (condition-only PB reads + LapRef session-best cross-condition guard)
+- Classification: **both** (driver-visible wet PB/session-best correctness + bounded LapRef authority seam hardening).
+- Fixed remaining wet PB fallback leakage in planner/profile-facing PB reads:
+  - strategy/profile PB display paths now use condition-only PB lookup (`wet -> wet only`, `dry -> dry only`) and no longer borrow dry PB when wet PB is absent.
+- Kept wet PB persistence path condition-scoped and unchanged in ownership:
+  - validated-lap PB updates continue to route `_isWetMode` into `TryUpdatePBByCondition(...)`,
+  - wet PB updates persist only wet fields (`BestLapMsWet`, `BestLapSector1..6WetMs`), dry path remains separate.
+- Hardened LapRef SessionBest authority sync against cross-condition repopulation:
+  - trusted player best-lap seam remains enabled only after current-context capture arming,
+  - tick-sync now applies only when authoritative value is near-equal to captured current-context session-best baseline (tight tolerance), preventing a dry global-best seam value from overwriting wet-mode SessionBest after wet reset/capture.
+
 ### 2026-04-21 — Final docs sweep: plugin-owned pit commands + custom messages + pit fuel control
 - Classification: **both** (user-facing guidance alignment + subsystem/internal contract sync).
 - Updated user-facing docs (`README`, `Quick Start`, `User Guide`, `Pit Assist`) to align around final plugin-owned pit/custom workflow:

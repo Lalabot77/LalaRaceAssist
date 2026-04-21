@@ -21,7 +21,7 @@ LapRef mirrors H2H's fixed 6-sector presentation concept but is fully separate f
 - **LapRef does not own** lap validation rules. It captures only from the existing validated-lap gate in `UpdateLiveFuelCalcs`.
 - **LapRef lap-time authority** is split by responsibility:
   - player-row last-lap capture uses the same trusted H2H/core seam (`CarIdxLastLapTime` with validated-gate freshness guard),
-  - session-best `LapTimeSec` is synchronized each tick to the trusted H2H/core best-lap seam (native player best-lap authority path in `LalaLaunch`) only after LapRef has captured a current-context session-best baseline; LapRef still owns the session-best sector snapshot contract.
+  - session-best `LapTimeSec` is synchronized each tick to the trusted H2H/core best-lap seam (native player best-lap authority path in `LalaLaunch`) only after LapRef has captured a current-context session-best baseline; sync is constrained to near-equal values (tight tolerance) so non-condition-scoped seam values do not overwrite the active condition baseline. LapRef still owns the session-best sector snapshot contract.
 - **LapRef does not modify** H2H behavior, Opponents behavior, or CarSA derivation rules.
 
 ## Snapshot model
@@ -146,6 +146,7 @@ Session-best lap-time authority arming behavior:
 - on context reset, authoritative session-best lap-time sync is disarmed
 - disarmed state prevents stale prior-session best-lap values from being copied into `LapRef.SessionBest.LapTimeSec`
 - sync is re-armed by the first valid current-context `CaptureValidatedLap(...)` session-best capture, after which trusted authority resumes driving `LapRef.SessionBest.LapTimeSec`
+- authoritative sync only applies when the trusted seam value is near-equal to the captured active-context session-best baseline, preventing wet-mode/dry-mode cross-condition overwrite from a non-condition-scoped trusted seam
 
 Lap rollover handling is intentionally separate from reset:
 - normal lap boundary progression does **not** clear visible completed sector boxes

@@ -8,6 +8,7 @@ namespace LaunchPlugin
         public const int SegmentStateEmpty = 0;
         public const int SegmentStatePending = 1;
         public const int SegmentStateValid = 2;
+        private const double SessionBestAuthoritySyncToleranceSec = 0.05;
 
         private readonly LapReferenceSnapshot _livePlayerCurrentLapSnapshot = new LapReferenceSnapshot();
         private readonly LapReferenceSnapshot _sessionBestSnapshot = new LapReferenceSnapshot();
@@ -294,6 +295,11 @@ namespace LaunchPlugin
             }
 
             if (!IsValidLapTime(playerBestLapTimeSec))
+            {
+                return;
+            }
+
+            if (Math.Abs(playerBestLapTimeSec - _sessionBestSnapshot.LapTimeSec) > SessionBestAuthoritySyncToleranceSec)
             {
                 return;
             }
