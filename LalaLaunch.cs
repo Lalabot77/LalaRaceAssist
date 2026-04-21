@@ -808,10 +808,33 @@ namespace LaunchPlugin
         private const double PreRaceFuelToleranceLitres = 0.05;
         private const double PreRaceMaxStartToleranceLitres = 0.50;
 
+        private enum RequiredPreRaceStrategy
+        {
+            NoStop = 0,
+            OneStop = 1,
+            MultiStop = 2
+        }
+
         private struct PreRaceStatusDecision
         {
             public string Text;
             public string Colour;
+        }
+
+        private static RequiredPreRaceStrategy ClassifyRequiredPreRaceStrategy(double preRaceStints)
+        {
+            double normalizedStints = Math.Max(0.0, preRaceStints);
+            if (normalizedStints <= 1.0)
+            {
+                return RequiredPreRaceStrategy.NoStop;
+            }
+
+            if (normalizedStints <= 2.0)
+            {
+                return RequiredPreRaceStrategy.OneStop;
+            }
+
+            return RequiredPreRaceStrategy.MultiStop;
         }
 
         private double GetPreRaceFuelPerLap(double fallbackFuelPerLap, out string source)
@@ -914,32 +937,94 @@ namespace LaunchPlugin
             bool plannerMismatch,
             double preRaceStints,
             double preRaceFuelDelta,
+            double preRaceTotalFuelNeeded,
+            double plannedSingleStopRefuel,
             double currentFuel,
             double effectiveMaxTank,
             double maxTankCapacity,
             double contingencyLitres)
         {
             int normalizedStrategy = NormalizeStrategyMode(selectedStrategy);
-            double normalizedStints = Math.Max(0.0, preRaceStints);
-            bool multiStopExpected = normalizedStints > 2.0;
+            bool selectedIsAuto = normalizedStrategy == 3;
+            RequiredPreRaceStrategy requiredStrategy = ClassifyRequiredPreRaceStrategy(preRaceStints);
             bool isAtMaxStart = IsAtEffectiveMaxStartFuel(currentFuel, effectiveMaxTank, maxTankCapacity);
+            double maxFuelAddPossible = Math.Max(0.0, (effectiveMaxTank > 0.0 ? effectiveMaxTank : maxTankCapacity) - currentFuel);
+            double fuelStillNeeded = Math.Max(0.0, preRaceTotalFuelNeeded - currentFuel);
+            bool oneStopFeasible = fuelStillNeeded <= (maxFuelAddPossible + PreRaceFuelToleranceLitres);
+            bool oneStopUnderFuel = preRaceFuelDelta < -PreRaceFuelToleranceLitres;
+            bool oneStopOverFuel = contingencyLitres > 0.0 && preRaceFuelDelta > (2.0 * contingencyLitres);
+            bool nextStintAdvisory =
+                requiredStrategy == RequiredPreRaceStrategy.OneStop &&
+                (plannedSingleStopRefuel <= PreRaceFuelToleranceLitres || plannedSingleStopRefuel + PreRaceFuelToleranceLitres < fuelStillNeeded);
 
-            if (normalizedStrategy != 3 && plannerMismatch)
+            if (!selectedIsAuto && plannerMismatch)
             {
                 return new PreRaceStatusDecision { Text = "STRATEGY MISMATCH", Colour = "orange" };
             }
 
-            if (normalizedStrategy == 0 && preRaceFuelDelta < -PreRaceFuelToleranceLitres)
+            int effectiveSelectedStrategy;
+            if (selectedIsAuto)
             {
-                return new PreRaceStatusDecision { Text = "ADD FUEL FOR NO STOP", Colour = "red" };
+                effectiveSelectedStrategy = requiredStrategy == RequiredPreRaceStrategy.NoStop
+                    ? 0
+                    : (requiredStrategy == RequiredPreRaceStrategy.OneStop ? 1 : 2);
+            }
+            else
+            {
+                effectiveSelectedStrategy = normalizedStrategy;
             }
 
-            if (normalizedStrategy == 1 && preRaceFuelDelta < -PreRaceFuelToleranceLitres)
+            if (requiredStrategy == RequiredPreRaceStrategy.NoStop)
             {
-                return new PreRaceStatusDecision { Text = "ONE STOP REQUIRES MORE FUEL", Colour = "red" };
+                if (effectiveSelectedStrategy == 0)
+                {
+                    if (preRaceFuelDelta < -PreRaceFuelToleranceLitres)
+                    {
+                        return new PreRaceStatusDecision { Text = "ADD FUEL FOR NO STOP", Colour = "red" };
+                    }
+
+                    return new PreRaceStatusDecision { Text = "NO STOP OKAY", Colour = "green" };
+                }
+
+                return new PreRaceStatusDecision { Text = "NO STOP POSSIBLE", Colour = "orange" };
             }
 
-            if ((normalizedStrategy == 2 || normalizedStrategy == 3) && multiStopExpected)
+            if (requiredStrategy == RequiredPreRaceStrategy.OneStop)
+            {
+                if (effectiveSelectedStrategy == 0)
+                {
+                    return new PreRaceStatusDecision { Text = "SINGLE STINT NOT POSSIBLE", Colour = "red" };
+                }
+
+                if (effectiveSelectedStrategy == 1)
+                {
+                    if (!oneStopFeasible)
+                    {
+                        return new PreRaceStatusDecision { Text = "ONE STOP NOT POSSIBLE", Colour = "red" };
+                    }
+
+                    if (oneStopUnderFuel)
+                    {
+                        return new PreRaceStatusDecision { Text = "ONE STOP REQUIRES MORE FUEL", Colour = "red" };
+                    }
+
+                    if (oneStopOverFuel)
+                    {
+                        return new PreRaceStatusDecision { Text = "OVERFUELLED", Colour = "orange" };
+                    }
+
+                    if (nextStintAdvisory)
+                    {
+                        return new PreRaceStatusDecision { Text = "CHECK NEXT STINT FUEL", Colour = "orange" };
+                    }
+
+                    return new PreRaceStatusDecision { Text = "SINGLE STOP OKAY", Colour = "green" };
+                }
+
+                return new PreRaceStatusDecision { Text = "SINGLE STOP POSSIBLE", Colour = "orange" };
+            }
+
+            if (effectiveSelectedStrategy == 2)
             {
                 if (isAtMaxStart)
                 {
@@ -949,22 +1034,12 @@ namespace LaunchPlugin
                 return new PreRaceStatusDecision { Text = "MAX FUEL REQUIRED", Colour = "orange" };
             }
 
-            if (normalizedStrategy == 3 && normalizedStints > 1.0)
+            if (effectiveSelectedStrategy == 1)
             {
-                return new PreRaceStatusDecision { Text = "SINGLE STOP OKAY", Colour = "green" };
+                return new PreRaceStatusDecision { Text = "SINGLE STOP NOT POSSIBLE", Colour = "red" };
             }
 
-            if (contingencyLitres > 0.0 && preRaceFuelDelta > (2.0 * contingencyLitres))
-            {
-                return new PreRaceStatusDecision { Text = "OVERFUELLED", Colour = "orange" };
-            }
-
-            if (normalizedStrategy == 1)
-            {
-                return new PreRaceStatusDecision { Text = "SINGLE STOP OKAY", Colour = "green" };
-            }
-
-            return new PreRaceStatusDecision { Text = "NO STOP OKAY", Colour = "green" };
+            return new PreRaceStatusDecision { Text = "NO STOP NOT POSSIBLE", Colour = "red" };
         }
 
         private void UpdatePreRaceOutputs(
@@ -1091,8 +1166,12 @@ namespace LaunchPlugin
                 ? Math.Round(Math.Max(0.0, PreRace_TotalFuelNeeded / usableTank), 1)
                 : 0.0;
 
-            plannedSingleStopRefuel = Math.Max(0.0, pitWindowRequestedAdd);
-            switch (selectedStrategy)
+            RequiredPreRaceStrategy requiredStrategy = ClassifyRequiredPreRaceStrategy(PreRace_Stints);
+            int deltaStrategy = selectedStrategy == 3
+                ? (requiredStrategy == RequiredPreRaceStrategy.NoStop ? 0 : (requiredStrategy == RequiredPreRaceStrategy.OneStop ? 1 : 2))
+                : selectedStrategy;
+
+            switch (deltaStrategy)
             {
                 case 1:
                     PreRace_FuelDelta = (currentFuel + plannedSingleStopRefuel) - PreRace_TotalFuelNeeded;
@@ -1110,6 +1189,8 @@ namespace LaunchPlugin
                 plannerMismatch: plannerMatchResult.HasComparableInputs && !plannerMatchResult.IsMatch,
                 preRaceStints: PreRace_Stints,
                 preRaceFuelDelta: PreRace_FuelDelta,
+                preRaceTotalFuelNeeded: PreRace_TotalFuelNeeded,
+                plannedSingleStopRefuel: plannedSingleStopRefuel,
                 currentFuel: currentFuel,
                 effectiveMaxTank: effectiveMaxTank,
                 maxTankCapacity: maxTankCapacity,
@@ -3337,6 +3418,7 @@ namespace LaunchPlugin
                 : LiveFuelPerLap;
             double fuelToRequest = Convert.ToDouble(
                 PluginManager.GetPropertyValue("DataCorePlugin.GameRawData.Telemetry.PitSvFuel") ?? 0.0);
+            double preRaceRequestedAdd = Math.Max(0.0, fuelToRequest);
             if (!_isRefuelSelected)
             {
                 fuelToRequest = 0.0;
@@ -3380,7 +3462,7 @@ namespace LaunchPlugin
                 UpdatePreRaceOutputs(
                     data,
                     currentFuel,
-                    pitWindowRequestedAdd,
+                    preRaceRequestedAdd,
                     raceSessionDurationSeconds,
                     raceSessionLaps,
                     stableLapsRemaining: 0.0,
@@ -3562,7 +3644,7 @@ namespace LaunchPlugin
                 UpdatePreRaceOutputs(
                     data,
                     currentFuel,
-                    pitWindowRequestedAdd,
+                    preRaceRequestedAdd,
                     raceSessionDurationSeconds,
                     raceSessionLaps,
                     stableLapsRemaining,

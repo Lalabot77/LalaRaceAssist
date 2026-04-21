@@ -33,6 +33,23 @@ The public user-facing release history is maintained in the root `CHANGELOG.md`.
 
 ## Post-v1.0 development
 
+### 2026-04-21 — PreRace v2 scenario-first decision rewrite + live fuel-delta/source contract fixes
+- Classification: **both** (driver-visible PreRace behavior corrections + internal match-tolerance update).
+- Reworked PreRace status to a strict scenario-first model:
+  - classify required strategy from stints (`<=1.0` no-stop, `<=2.0` one-stop, `>2.0` multi-stop),
+  - evaluate selected strategy against that required strategy with mutually exclusive outcomes (no-stop/one-stop/multi-stop paths no longer fall through to incorrect green states).
+- Corrected one-stop feasibility validation:
+  - added tank-cap constrained feasibility gate (`fuel still needed > max fuel add possible` => `ONE STOP NOT POSSIBLE` red),
+  - retained underfuel/overfuel handling with overfuel still gated at `> 2x` contingency.
+- Updated Auto semantics so it always represents required strategy behavior and never emits manual-only mismatch caution.
+- Fixed PreRace live fuel delta behavior on grid by feeding PreRace with raw telemetry pit-fuel request seam so one-stop deltas move immediately when the driver changes requested fuel.
+- Tightened Auto source-label contract:
+  - Auto source labels now remain runtime-owned (`live`/`profile`/`fallback`) and do not show planner labels,
+  - manual modes keep planner-owned labels where applicable.
+- Relaxed planner/live match tolerances used by shared session-match helper:
+  - timed races from ±0.10 min to ±1.0 min,
+  - lap races from ±0.01 lap to ±1.0 lap.
+
 ### 2026-04-21 — Direct pit/custom transport chat-state sequencing hardening
 - Classification: **both** (driver-visible pit/custom transport behavior fix + internal observability/sequencing hardening).
 - Kept transport surface and ownership unchanged (`Auto`, `Direct message only`, `Legacy foreground SendInput only`; plugin-owned actions unchanged).

@@ -9,6 +9,13 @@ Branch: work
 - No Git remote is configured in this checkout (`git remote -v` returns empty).
 
 ## Documentation sync status
+- PreRace v2 scenario-first + grid live-delta/source-contract follow-up:
+  - PreRace status logic now classifies required strategy first (`no-stop` / `one-stop` / `multi-stop`) and then evaluates selected strategy with mutually exclusive outcomes (eliminates prior no-stop/multi-stop fallthroughs),
+  - one-stop feasibility now includes a tank-capacity gate (`fuelStillNeeded > maxFuelAddPossible` => red `ONE STOP NOT POSSIBLE`),
+  - Auto now always follows required-strategy behavior and does not inherit manual-only `STRATEGY MISMATCH`,
+  - PreRace one-stop fuel delta now consumes raw telemetry requested-fuel seam on grid so delta updates while dialing pit fuel request,
+  - shared planner/live race-length matching tolerances relaxed to ±1 minute (timed) / ±1 lap (lap-limited),
+  - Auto source labels remain runtime-owned (`live`/`profile`/`fallback`) and no longer expose planner ownership labels.
 - Direct pit/custom transport chat-state sequencing follow-up:
   - direct window-message path now logs staged attempt/abort telemetry (`chat-open`, `text-send`, `submit`) per command attempt,
   - direct path now tracks uncertain chat-open carryover and can suppress repeated chat-open keying (`chat-open-suppressed=state-maybe-open`) on next attempt,
