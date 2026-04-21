@@ -6384,7 +6384,8 @@ namespace LaunchPlugin
             SimHub.Logging.Current.Info($"[LalaPlugin:Runtime] manual recovery reset triggered (reason: {reasonLabel}).");
 
             bool sessionTransitionReset = string.Equals(reasonLabel, "Session transition", StringComparison.OrdinalIgnoreCase);
-            if (!sessionTransitionReset && RunPlannerSafeFuelRuntimeRecovery(reasonLabel))
+            bool isLiveSessionActive = FuelCalculator != null && FuelCalculator.IsLiveSessionActive;
+            if (!sessionTransitionReset && isLiveSessionActive && RunPlannerSafeFuelRuntimeRecovery(reasonLabel))
             {
                 return;
             }
@@ -7540,6 +7541,7 @@ namespace LaunchPlugin
             _lastFuelRuntimeIgnitionOn = ignitionOn;
             _lastFuelRuntimeEngineStarted = engineStarted;
 
+            bool isOnPitRoad = Convert.ToBoolean(pluginManager.GetPropertyValue("DataCorePlugin.GameRawData.Telemetry.OnPitRoad") ?? false);
             bool activeDriving = speedKph > 10.0 && !isOnPitRoad;
             if (activeDriving && !_lastFuelRuntimeActiveDriving)
             {
@@ -7568,7 +7570,6 @@ namespace LaunchPlugin
                     }
                 });
             }
-            bool isOnPitRoad = Convert.ToBoolean(pluginManager.GetPropertyValue("DataCorePlugin.GameRawData.Telemetry.OnPitRoad") ?? false);
             bool pitRoadChanged = isOnPitRoad != _lastOnPitRoadForOpponents;
             _lastOnPitRoadForOpponents = isOnPitRoad;
 

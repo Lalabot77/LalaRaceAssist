@@ -9,6 +9,10 @@ Branch: work
 - No Git remote is configured in this checkout (`git remote -v` returns empty).
 
 ## Documentation sync status
+- PR follow-up fix for runtime fuel health/recovery merge blockers:
+  - moved pit-road telemetry read before active-driving runtime health edge logic so `isOnPitRoad` is defined before use;
+  - tightened `ManualRecoveryReset(...)` planner-safe short-circuit so early return is allowed only during active live session when planner-safe recovery succeeds;
+  - preserved planner-safe behavior for live runtime recovery while keeping non-live manual reset on the existing broad reset path.
 - Runtime health/recovery stabilization sweep (fuel/live snapshot seam):
   - added bounded runtime health checks for live max tank seam (session token/type, combo, and car-active edges) with debounced recovery;
   - unified Strategy live-cap authority to plugin runtime live-cap seam (`raw -> live -> bounded last-valid fallback`);

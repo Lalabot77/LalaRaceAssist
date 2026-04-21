@@ -667,6 +667,12 @@ The public user-facing release history is maintained in the root `CHANGELOG.md`.
 - Preserved prior startup safety behavior: unknown class-count state alone does not infer multiclass, and blank/unresolved class states are not treated as class-diversity evidence.
 
 
+## 2026-04-21 — PR follow-up: runtime fuel health-check ordering + manual-reset live-session gate
+- Classification: **internal-only** (compile/order fix + runtime reset guardrail correction with unchanged user workflow).
+- Moved pit-road telemetry read earlier in `DataUpdate` so the active-driving runtime fuel-health edge check uses an in-scope `isOnPitRoad` value before evaluation.
+- Tightened `ManualRecoveryReset(...)` short-circuit semantics: planner-safe early return now requires an active live session in addition to successful planner-safe recovery.
+- Preserved planner-safe runtime behavior for active live session recovery while ensuring manual reset outside active live session still executes the broad reset path.
+
 ## 2026-04-10 — Opponents Pit Exit dash export follow-up
 - Classification: **both** (user-facing dash exports + internal docs/contract alignment).
 - Exported active pit-cycle countdown as `PitExit.RemainingCountdownSec` from the existing Opponents active-cycle remaining-time predictor (`>0` while running, `0` when inactive/unavailable).

@@ -201,6 +201,7 @@ Runtime recovery now distinguishes between:
 - broader transient runtime reset paths for full re-arm scenarios.
 
 Planner-safe targeted recovery is intended to rebuild live-cap/runtime truth without silently clearing Strategy manual overrides or preset intent.
+Manual recovery may short-circuit on planner-safe success only while an active live session is present; outside active live session, manual reset continues into the broad reset path.
 
 Driving → Race transitions can seed race state from the just-learned baseline instead of forcing a full cold start.
 
