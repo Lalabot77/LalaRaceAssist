@@ -9,6 +9,25 @@ Branch: work
 - No Git remote is configured in this checkout (`git remote -v` returns empty).
 
 ## Documentation sync status
+- PR follow-up fix for Strategy live-cap freshness-window bypass:
+  - tightened `TryGetRuntimeLiveCapForStrategy(...)` to remove unbounded cached-cap return paths (`LiveCarMaxFuel` / `EffectiveLiveMaxTank`);
+  - Strategy live-cap authority now resolves through one bounded fallback seam only (`raw -> bounded fallback -> unavailable`), so stale cached caps cannot outlive fallback freshness gating.
+- PR follow-up fix for runtime fuel health/recovery merge blockers:
+  - moved pit-road telemetry read before active-driving runtime health edge logic so `isOnPitRoad` is defined before use;
+  - tightened `ManualRecoveryReset(...)` planner-safe short-circuit so early return is allowed only during active live session when planner-safe recovery succeeds;
+  - preserved planner-safe behavior for live runtime recovery while keeping non-live manual reset on the existing broad reset path.
+- Runtime health/recovery stabilization sweep (fuel/live snapshot seam):
+  - added bounded runtime health checks for live max tank seam (session token/type, combo, and car-active edges) with debounced recovery;
+  - unified Strategy live-cap authority to plugin runtime live-cap seam (`raw -> bounded last-valid fallback`);
+  - added planner-safe targeted manual recovery path for fuel/live snapshot refresh;
+  - removed automatic planner manual-override reset from fuel-model session reset path to preserve planner intent during runtime re-arm;
+  - synced Fuel Model / Pace & Projection / Fuel Planner docs and internal inventory/log/changelog notes to reflect the new bounded health/recovery behavior.
+- Analysis-first class-resolution simplification landed with one trusted-property authority model and shared seams:
+  - class-state authority for runtime consumers now uses `GameData.HasMultipleClassOpponents` directly;
+  - single-class path now bypasses class matching entirely and uses overall leader / whole-field best directly;
+  - multiclass path now uses one shared player-class seam for both class leader and class-best resolution;
+  - `Race.ClassLeaderHasFinished*` now consumes the same class-leader seam used by `ClassLeader.*` (no separate finish-only resolver);
+  - removed metadata-cache authority helpers and duplicate class authority trees from active class-leader/class-best/finish paths.
 - Wet-condition PB/session-best audit follow-up (bounded to profile/PB/planner/LapRef wet-dry behavior):
   - planner/profile PB reads now use condition-only lookup, so wet mode no longer borrows dry PB when wet PB is absent;
   - validated wet PB persistence remains condition-scoped on existing telemetry gate path (`_isWetMode` -> `TryUpdatePBByCondition(...)` -> wet PB fields only);
