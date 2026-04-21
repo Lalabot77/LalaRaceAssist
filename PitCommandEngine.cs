@@ -505,6 +505,7 @@ namespace LaunchPlugin
             else
             {
                 SimHub.Logging.Current.Info("[LalaPlugin:PitCommand] transport=postmessage chat-open-attempted=false chat-open-suppressed=state-maybe-open");
+                chatStateMutated = true;
             }
 
             textSendAttempted = true;
@@ -516,6 +517,8 @@ namespace LaunchPlugin
                     SimHub.Logging.Current.Warn($"[LalaPlugin:PitCommand] transport=postmessage abort=true reason={reason} chat-open-attempted={chatOpenAttempted} text-send-attempted={textSendAttempted} submit-attempted={submitAttempted}");
                     return false;
                 }
+
+                chatStateMutated = true;
             }
 
             Thread.Sleep(12);
