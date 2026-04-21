@@ -1,7 +1,7 @@
 # Repository status
 
 Validated against commit: HEAD
-Last updated: 2026-04-20
+Last updated: 2026-04-21
 Branch: work
 
 ## Current repo/link status
@@ -9,6 +9,11 @@ Branch: work
 - No Git remote is configured in this checkout (`git remote -v` returns empty).
 
 ## Documentation sync status
+- Analysis-first class-resolution cleanup aligned native class authority and same-class matching across H2H, ClassLeader, session-best-in-class labeling, and finish-path class leader resolution:
+  - introduced a single native authority seam (`NumCarClasses` primary, `HasMultipleClassOpponents` fallback only when class-count is unknown) and removed stored `_isMultiClassSession` state from finish-path decisions;
+  - simplified effective same-class matching to one shared rule: explicit single-class sessions always match (blank/mismatch tolerated), multiclass sessions require usable matching class identity;
+  - aligned finish-path class-leader selection to the same helper used by class-best/class-leader consumers, eliminating stricter ad hoc class-string checks in one path;
+  - retained source-ordered class metadata population (`Drivers##` preferred, `CompetingDrivers[*]` bounded missing-entry backfill) and multiclass fail-safe behavior.
 - PR #582 follow-up addressed final multiclass authority ordering review feedback:
   - `_isMultiClassSession` now applies native authority in strict order: explicit native single-class (`NumCarClasses == 1`) wins outright, explicit native multiclass stays next (`NumCarClasses > 1`, or unknown + `HasMultipleClassOpponents`), and cache diversity is only used when class-count authority is unresolved/unknown;
   - this prevents cache divergence (`CarClassShortName` vs `CarClassName`) from overriding an explicit native single-class session signal.

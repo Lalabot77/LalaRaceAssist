@@ -33,6 +33,20 @@ The public user-facing release history is maintained in the root `CHANGELOG.md`.
 
 ## Post-v1.0 development
 
+### 2026-04-21 — Analysis-first cleanup: native class-resolution seam simplification across H2H/ClassLeader/finish
+- Classification: **both** (driver-visible consistency/correctness in class-best/class-leader behavior + internal seam simplification).
+- Added a single session class-state authority seam in `LalaLaunch` (`ResolveSessionClassAuthority`):
+  - `WeekendInfo.NumCarClasses == 1` => single-class,
+  - `WeekendInfo.NumCarClasses > 1` => multiclass,
+  - unknown class-count => fallback to `GameData.HasMultipleClassOpponents`.
+- Simplified effective same-class matching to one shared rule:
+  - explicit single-class sessions always match regardless of class label blank/mismatch/source disagreement,
+  - multiclass sessions require usable matching class identity and stay fail-safe on blank/unusable class values.
+- Removed stored `_isMultiClassSession` state and aligned finish-path class leader resolution to the same effective same-class seam used by H2H/ClassLeader/session-best-in-class consumers.
+- Preserved metadata source ordering and bounded backfill behavior:
+  - `DriverInfo.Drivers##` remains preferred,
+  - `DriverInfo.CompetingDrivers[*]` remains missing-entry-only backfill (no overwrite).
+
 ### 2026-04-20 — PR #582 follow-up: native single-class authority precedence over cache diversity
 - Classification: **internal-only** (multiclass state authority ordering correction for existing H2H/ClassLeader seams; no new exports/UI).
 - Tightened `RefreshClassMetadata(...)` multiclass assignment ordering so explicit native single-class (`WeekendInfo.NumCarClasses == 1`) now wins outright and cannot be overridden by cache string divergence.
