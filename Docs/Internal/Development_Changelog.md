@@ -41,6 +41,13 @@ The public user-facing release history is maintained in the root `CHANGELOG.md`.
   - raises `BestLapTimeDryText` / `BestLapTimeWetText` property changed immediately.
 - Updated profile-track PB clear buttons to use compact label text: `Clear PB Data` in both dry and wet sections.
 - Updated condition `No sector data` status text colour to an orange warning-style tone for clearer visibility in the editor.
+### 2026-04-21 — PR #584 follow-up: custom-message load normalization preserves saved rows
+- Classification: **internal-only** (settings JSON load/normalization correction; no action binding or runtime dispatch contract change).
+- Removed eager default slot prepopulation from `LaunchPluginSettings.CustomMessages` so Json.NET deserialization no longer appends loaded rows after an already-populated default set.
+- Kept `NormalizePitCommandSettings(...)` as the single default-slot authority:
+  - if `CustomMessages` is missing/null/undersized, it now creates/fills exactly `CustomPitMessageSlotCount` slots,
+  - if loaded slots exist, they remain in-place and are normalized (slot numbering/default field fill) without being displaced by preexisting defaults.
+- Fix outcome: saved custom-message label/text rows survive restart, while fresh installs and missing settings still receive the expected 10 default slots.
 
 ### Pit Fuel Control follow-up: zero transport, AUTO ownership cancel redesign, OFF/STBY reset semantics, offline suppression
 - Updated `PitCommandEngine` zero-fuel transport payloads to `#fuel 0.01$` for both:
