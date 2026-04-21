@@ -12915,7 +12915,6 @@ namespace LaunchPlugin
                 return;
             }
 
-            bool hasDriverRows = false;
             for (int i = 1; i <= 64; i++)
             {
                 string basePath = $"DataCorePlugin.GameRawData.SessionData.DriverInfo.Drivers{i:00}";
@@ -12925,7 +12924,6 @@ namespace LaunchPlugin
                     continue;
                 }
 
-                hasDriverRows = true;
                 if (carIdx < 0 || carIdx >= CarSAEngine.MaxCars)
                 {
                     continue;
@@ -12943,44 +12941,54 @@ namespace LaunchPlugin
                 }
             }
 
-            bool shouldUseCompetingDriversFallback = !hasDriverRows || _carIdxToClassShortName.Count == 0;
-            if (shouldUseCompetingDriversFallback)
+            for (int i = 0; i < 64; i++)
             {
-                for (int i = 0; i < 64; i++)
+                string basePath = $"DataCorePlugin.GameRawData.SessionData.DriverInfo.CompetingDrivers[{i}]";
+                int carIdx = GetInt(pluginManager, $"{basePath}.CarIdx", int.MinValue);
+                if (carIdx == int.MinValue)
                 {
-                    string basePath = $"DataCorePlugin.GameRawData.SessionData.DriverInfo.CompetingDrivers[{i}]";
-                    int carIdx = GetInt(pluginManager, $"{basePath}.CarIdx", int.MinValue);
-                    if (carIdx == int.MinValue)
-                    {
-                        break;
-                    }
+                    break;
+                }
 
-                    if (carIdx < 0 || carIdx >= CarSAEngine.MaxCars)
-                    {
-                        continue;
-                    }
+                if (carIdx < 0 || carIdx >= CarSAEngine.MaxCars)
+                {
+                    continue;
+                }
 
-                    if (_carIdxToClassShortName.ContainsKey(carIdx))
-                    {
-                        continue;
-                    }
+                if (_carIdxToClassShortName.ContainsKey(carIdx))
+                {
+                    continue;
+                }
 
-                    string cls = GetString(pluginManager, $"{basePath}.CarClassShortName");
-                    if (string.IsNullOrWhiteSpace(cls))
-                    {
-                        cls = GetString(pluginManager, $"{basePath}.CarClassName");
-                    }
+                string cls = GetString(pluginManager, $"{basePath}.CarClassShortName");
+                if (string.IsNullOrWhiteSpace(cls))
+                {
+                    cls = GetString(pluginManager, $"{basePath}.CarClassName");
+                }
 
-                    if (!string.IsNullOrWhiteSpace(cls))
-                    {
-                        _carIdxToClassShortName[carIdx] = cls;
-                    }
+                if (!string.IsNullOrWhiteSpace(cls))
+                {
+                    _carIdxToClassShortName[carIdx] = cls;
                 }
             }
 
             IsEffectivelySingleClassSession(pluginManager, out int numCarClasses, out bool hasMultipleClassOpponents);
-            bool hasExplicitMultiClassSignal = numCarClasses > 1 || (numCarClasses <= 0 && hasMultipleClassOpponents);
-            _isMultiClassSession = hasExplicitMultiClassSignal;
+            // Authority order is native-only:
+            // 1) NumCarClasses == 1 => single-class.
+            // 2) NumCarClasses > 1 => multiclass.
+            // 3) Unknown class-count => fall back to HasMultipleClassOpponents.
+            if (numCarClasses == 1)
+            {
+                _isMultiClassSession = false;
+            }
+            else if (numCarClasses > 1)
+            {
+                _isMultiClassSession = true;
+            }
+            else
+            {
+                _isMultiClassSession = hasMultipleClassOpponents;
+            }
         }
 
         private string GetCachedClassShortName(int carIdx)
