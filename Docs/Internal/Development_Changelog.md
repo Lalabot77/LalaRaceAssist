@@ -33,6 +33,16 @@ The public user-facing release history is maintained in the root `CHANGELOG.md`.
 
 ## Post-v1.0 development
 
+### 2026-04-21 — Pit Fuel Control external reset simplification (`IsOnTrackCar` edge-only)
+- Classification: **both** (driver-visible pit-fuel lifecycle reset behavior change + internal reset-trigger seam simplification).
+- Removed pit-fuel-specific external reset triggers in `LalaLaunch` that were tied to:
+  - session type name change tracking,
+  - SessionState transition tracking (`1 -> 2`),
+  - associated cached previous-session-type / previous-session-state fields.
+- Replaced the above with a single external lifecycle trigger:
+  - `DataCorePlugin.GameRawData.Telemetry.IsOnTrackCar` boolean edge detection only.
+  - On either edge (`false -> true` or `true -> false`), Pit Fuel Control is reset to inert `OFF + STBY` via existing `ResetToOffStby()`.
+- Intentionally left internal guardrails unchanged (AUTO cancel behavior, OFF/STBY guardrails, suppression rules, and iRacing AutoFuel ownership behavior).
 ### 2026-04-21 — PR follow-up: bound Strategy live-cap fallback path
 - Classification: **internal-only** (runtime authority-seam correctness; no UI/workflow change).
 - Tightened `TryGetRuntimeLiveCapForStrategy(...)` so stale cached live-cap values cannot bypass fallback freshness gating:
