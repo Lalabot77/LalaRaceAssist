@@ -162,6 +162,7 @@ Lala Race Assist Plugin includes separate driver-facing pages for recovery/rejoi
   - `Legacy foreground SendInput only` keeps the old focus-required path,
   - `Direct message only` disables fallback.
 - Auto-focus is not implemented yet (preview setting only).
+- Confirmation semantics: stateful built-in pit toggles are effect-confirmed via before/after telemetry; custom messages, raw commands, and stateless built-ins are transport-attempt only (delivery unverified).
 
 ### H2H
 

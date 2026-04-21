@@ -9,6 +9,11 @@ Branch: work
 - No Git remote is configured in this checkout (`git remote -v` returns empty).
 
 ## Documentation sync status
+- Pit/custom transport follow-up truth-sync (semantics/observability only):
+  - transport order remains unchanged (`Auto`: direct `postmessage` first, bounded legacy `sendinput` fallback only on direct-path failure),
+  - no duplicate-send retry path was added after queued direct-message success,
+  - pit-command success logs now separate transport attempt vs effect confirmation (`delivery=...`, `effect-confirmed=...`),
+  - custom-message/raw-command/stateless built-ins now log transport-attempt success as unverified delivery; stateful built-ins keep before/after telemetry as authoritative confirmation.
 - PR follow-up hardened pit/custom transport iRacing process authority to simulator-only matching:
   - `IsIracingProcessName(...)` now accepts only `iRacingSim64DX11` (case-insensitive),
   - both `IsIracingForeground()` and `TryResolveIracingMainWindow(...)` continue to share that helper,
