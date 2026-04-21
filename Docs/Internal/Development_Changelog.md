@@ -33,6 +33,20 @@ The public user-facing release history is maintained in the root `CHANGELOG.md`.
 
 ## Post-v1.0 development
 
+### 2026-04-21 — PreRace authority refresh + shared planner/live validity seam
+- Classification: **both** (runtime/dash-visible status behavior + internal seam cleanup).
+- Extracted a focused shared planner/live session match helper (`PlannerLiveSessionMatchHelper`) covering car, track, basis (time/lap), and race-length tolerance checks.
+- Switched `PitFuelControlEngine` PLAN validity to consume the shared helper (no private duplicate match logic).
+- Added `FuelCalcs.GetPlannerSessionMatchSnapshot()` to provide planner-side identity/basis/race-length inputs; includes a bounded fallback to last loaded planner track key to reduce transient false mismatch windows when planner track rows refresh.
+- Refreshed PreRace Auto authority:
+  - race length now follows live session definition seams first (`CurrentSessionInfo._SessionTime` or `_SessionLaps`);
+  - fuel/lap source now follows runtime stable seams first (`LiveFuelPerLap_Stable`, `ProjectionLapTime_Stable`) with fallback only when needed.
+- Replaced coarse PreRace status with richer decision outputs + dash color contract:
+  - `LalaLaunch.PreRace.StatusText` now emits specific decision strings (including mismatch/max-fuel/overfuel/underfuel states),
+  - added `LalaLaunch.PreRace.StatusColour` (`green`/`orange`/`red`).
+- Non-Auto PreRace now emits orange `STRATEGY MISMATCH` (never green) when planner/live combo+basis+race-length do not match, while still computing planner-intent values.
+- Added conservative overfuel warning rule: `OVERFUELLED` triggers only when excess fuel exceeds `2x` configured contingency.
+
 ### 2026-04-21 — Final docs sweep: plugin-owned pit commands + custom messages + pit fuel control
 - Classification: **both** (user-facing guidance alignment + subsystem/internal contract sync).
 - Updated user-facing docs (`README`, `Quick Start`, `User Guide`, `Pit Assist`) to align around final plugin-owned pit/custom workflow:

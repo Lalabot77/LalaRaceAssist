@@ -9,6 +9,12 @@ Branch: work
 - No Git remote is configured in this checkout (`git remote -v` returns empty).
 
 ## Documentation sync status
+- PreRace system refresh + shared planner/live validity seam:
+  - extracted shared planner/live session match helper and moved Pit Fuel Control PLAN validity to it;
+  - PreRace Auto now uses live race-definition authority first (`_SessionTime` timed / `_SessionLaps` lap-limited) plus runtime stable fuel/lap source seams;
+  - non-Auto PreRace now shows orange `STRATEGY MISMATCH` when planner/live combo-basis-race-length validity fails (warning only, no hard fail);
+  - replaced coarse PreRace status band with richer text + color output (`LalaLaunch.PreRace.StatusColour`: `green`/`orange`/`red`);
+  - overfuel warning now requires excess > `2x` configured contingency.
 - Final documentation sweep aligned user-facing + dash-facing + internal docs with the implemented combined pit command stack:
   - plugin-owned pit command actions and plugin-owned custom-message actions are now the documented default workflow;
   - built-in pit command configuration location is documented as `Settings -> Pit Commands`;

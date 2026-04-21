@@ -41,6 +41,39 @@ namespace LaunchPlugin
         }
     }
 
+    public PlannerLiveSessionMatchSnapshot GetPlannerSessionMatchSnapshot()
+    {
+        string plannerCar = (SelectedCarProfile?.ProfileName ?? string.Empty).Trim();
+
+        string plannerTrack = string.Empty;
+        var selectedTrack = SelectedTrackStats;
+        if (selectedTrack != null && !string.IsNullOrWhiteSpace(selectedTrack.Key))
+        {
+            plannerTrack = selectedTrack.Key.Trim();
+        }
+        else if (!string.IsNullOrWhiteSpace(_lastLoadedTrackKey))
+        {
+            // Keep the last planner track key as a bounded fallback to avoid transient
+            // false mismatch windows while planner rows refresh after unrelated edits.
+            plannerTrack = _lastLoadedTrackKey.Trim();
+        }
+
+        bool plannerTimeLimited = IsTimeLimitedRace;
+        double plannerRaceLength = plannerTimeLimited
+            ? Math.Max(0.0, RaceMinutes)
+            : Math.Max(0.0, RaceLaps);
+
+        return new PlannerLiveSessionMatchSnapshot
+        {
+            PlannerCar = plannerCar,
+            PlannerTrack = plannerTrack,
+            HasPlannerBasis = true,
+            PlannerBasisIsTimeLimited = plannerTimeLimited,
+            HasPlannerRaceLength = plannerRaceLength > 0.0,
+            PlannerRaceLengthValue = plannerRaceLength
+        };
+    }
+
     private struct StrategyResult
     {
         public int Stops;

@@ -116,6 +116,11 @@ Its role is intentionally limited:
 - it does **not** replace Strategy calculations,
 - it does **not** change the live fuel model.
 
+PreRace status contract (dash-facing):
+- `StatusText` now reports explicit outcomes (`NO STOP OKAY`, `SINGLE STOP OKAY`, `MAX FUEL REQUIRED`, `STRATEGY MISMATCH`, etc.).
+- `StatusColour` publishes `green` / `orange` / `red` so dashboards can style the state without re-implementing logic.
+- In non-Auto modes, planner/live combo or race-definition mismatches are shown as an **orange caution** (`STRATEGY MISMATCH`), not a hard fail.
+
 ## 9. What users should trust
 
 Once the system has enough clean data, users should usually trust:
