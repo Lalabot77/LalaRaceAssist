@@ -23,6 +23,7 @@ This document is the canonical dash-facing contract layer. It does **not** redef
 ### Strategy / fuel / pace
 - Use stable strategy/fuel exports for labels and decision widgets.
 - Treat `LalaLaunch.PreRace.*` as a separate on-grid/pre-race info layer, not a replacement for live `Fuel.*` or Strategy planner ownership.
+- Consume `LalaLaunch.PreRace.StatusText` together with `LalaLaunch.PreRace.StatusColour` (`green`/`orange`/`red`) for simple dash styling; do not recreate planner/live mismatch or multi-stop decision logic in dash scripts.
 - If a widget is meant to represent runtime truth, prefer stable `Fuel.*` / pace outputs over UI-only text from elsewhere.
 
 ### Launch
@@ -47,7 +48,7 @@ This document is the canonical dash-facing contract layer. It does **not** redef
 - Dashboards can bind short-lived user feedback exports `LalaLaunch.Pit.Command.DisplayText` and `LalaLaunch.Pit.Command.Active` for command confirmations/failures.
 - Dashboards can also bind `LalaLaunch.Pit.Command.LastAction`/`LastRaw` for diagnostics, plus `LalaLaunch.Pit.Command.FuelSetMaxToggleState` for real `Pit.FuelSetMax` MAX/ZERO toggle state (`false=last press sent ZERO / next press sends MAX`, `true=last press sent MAX / next press sends ZERO`). Tank-full short-circuit applies to MAX phase only; ZERO phase is still transported as `#fuel 0.01`.
 - Dashboards can bind `LalaLaunch.Pit.FuelControl.*` exports (`Source/SourceText`, `Mode/ModeText`, `TargetLitres`, `OverrideActive`) for pit fuel control state display; dashboards do not own source/mode/plan validity logic.
-- Pit Fuel Control ownership/reset contract for dash rendering: OFF/reset/suppressed states are `OFF + STBY`; AUTO cancellation on external requested-fuel movement (outside send suppression), iRacing AutoFuel ownership, Offline Testing suppression, and explicit reset triggers (session type change and SessionState `1 -> 2`) all end in `OFF + STBY`.
+- Pit Fuel Control ownership/reset contract for dash rendering: OFF/reset/suppressed states are `OFF + STBY`; AUTO cancellation on external requested-fuel movement (outside send suppression), iRacing AutoFuel ownership, Offline Testing suppression, and any `Telemetry.IsOnTrackCar` boolean edge (`false->true` or `true->false`) all end in `OFF + STBY`.
 - The same transport seam also dispatches custom-message actions; dashboards should keep custom-message content authored in plugin Settings rather than hardcoding message text in dash scripts/buttons.
 
 ### H2H / traffic

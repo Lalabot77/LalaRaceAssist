@@ -52,6 +52,82 @@ The public user-facing release history is maintained in the root `CHANGELOG.md`.
   - send attempts now log `transport=<postmessage|sendinput>`,
   - fallback path logs `fallback_from=postmessage` with explicit `reason=...`,
   - failure lines now include transport reason context (`no-iracing-process`, `no-iracing-window`, `not-foreground`, etc.).
+### 2026-04-21 — PreRace PR follow-up (project compile include + Auto one-stop status path)
+- Classification: **both** (compile-fix project file inclusion + dash-visible Auto status correctness).
+- Added `PlannerLiveSessionMatchHelper.cs` to explicit `<Compile Include=...>` items in `LaunchPlugin.csproj` so non-SDK project builds include the new shared helper/snapshot types.
+- Corrected PreRace Auto status branching so `> 1.0` and `<= 2.0` stints returns `SINGLE STOP OKAY` instead of falling through to `NO STOP OKAY`.
+- Kept all other PreRace decision-tree behavior unchanged (`<= 1.0` no-stop path and `> 2.0` existing multi-stop handling remain as implemented).
+
+### 2026-04-21 — PreRace PR follow-up (accessibility + mismatch comparable-input gate)
+- Classification: **both** (compile-fix API accessibility correction + dash-visible PreRace caution gating refinement).
+- Changed `FuelCalcs.GetPlannerSessionMatchSnapshot()` from `public` to `internal` so method/type accessibility is consistent with internal `PlannerLiveSessionMatchSnapshot` and `CS0050` is avoided.
+- Tightened non-Auto `STRATEGY MISMATCH` emission to comparable-input mismatches only (`plannerMatchResult.HasComparableInputs && !plannerMatchResult.IsMatch`) so transient missing planner/live values do not mask more actionable fuel status outputs.
+- Kept all other PreRace decision outputs and colour contract behavior unchanged.
+
+### 2026-04-21 — PreRace authority refresh + shared planner/live validity seam
+- Classification: **both** (runtime/dash-visible status behavior + internal seam cleanup).
+- Extracted a focused shared planner/live session match helper (`PlannerLiveSessionMatchHelper`) covering car, track, basis (time/lap), and race-length tolerance checks.
+- Switched `PitFuelControlEngine` PLAN validity to consume the shared helper (no private duplicate match logic).
+- Added `FuelCalcs.GetPlannerSessionMatchSnapshot()` to provide planner-side identity/basis/race-length inputs; includes a bounded fallback to last loaded planner track key to reduce transient false mismatch windows when planner track rows refresh.
+- Refreshed PreRace Auto authority:
+  - race length now follows live session definition seams first (`CurrentSessionInfo._SessionTime` or `_SessionLaps`);
+  - fuel/lap source now follows runtime stable seams first (`LiveFuelPerLap_Stable`, `ProjectionLapTime_Stable`) with fallback only when needed.
+- Replaced coarse PreRace status with richer decision outputs + dash color contract:
+  - `LalaLaunch.PreRace.StatusText` now emits specific decision strings (including mismatch/max-fuel/overfuel/underfuel states),
+  - added `LalaLaunch.PreRace.StatusColour` (`green`/`orange`/`red`).
+- Non-Auto PreRace now emits orange `STRATEGY MISMATCH` (never green) when planner/live combo+basis+race-length do not match, while still computing planner-intent values.
+- Added conservative overfuel warning rule: `OVERFUELLED` triggers only when excess fuel exceeds `2x` configured contingency.
+### 2026-04-21 — Pit Fuel Control external reset simplification (`IsOnTrackCar` edge-only)
+- Classification: **both** (driver-visible pit-fuel lifecycle reset behavior change + internal reset-trigger seam simplification).
+- Removed pit-fuel-specific external reset triggers in `LalaLaunch` that were tied to:
+  - session type name change tracking,
+  - SessionState transition tracking (`1 -> 2`),
+  - associated cached previous-session-type / previous-session-state fields.
+- Replaced the above with a single external lifecycle trigger:
+  - `DataCorePlugin.GameRawData.Telemetry.IsOnTrackCar` boolean edge detection only.
+  - On either edge (`false -> true` or `true -> false`), Pit Fuel Control is reset to inert `OFF + STBY` via existing `ResetToOffStby()`.
+- Intentionally left internal guardrails unchanged (AUTO cancel behavior, OFF/STBY guardrails, suppression rules, and iRacing AutoFuel ownership behavior).
+### 2026-04-21 — PR follow-up: bound Strategy live-cap fallback path
+- Classification: **internal-only** (runtime authority-seam correctness; no UI/workflow change).
+- Tightened `TryGetRuntimeLiveCapForStrategy(...)` so stale cached live-cap values cannot bypass fallback freshness gating:
+  - removed unbounded `LiveCarMaxFuel` return path,
+  - removed overlapping `EffectiveLiveMaxTank` return path,
+  - Strategy live-cap authority is now a single bounded seam: `raw -> bounded fallback -> unavailable`.
+
+### 2026-04-21 — Runtime health checks + planner-safe fuel recovery (session-transition stability)
+- Classification: **both** (driver-visible Strategy live-cap/session-recovery stability + internal runtime seam hardening/observability).
+- Added bounded fuel/live-snapshot runtime health checks in `LalaLaunch` with debounced trigger queueing from:
+  - session token change,
+  - session type change,
+  - combo change,
+  - car-active edges (ignition/engine start + active-driving edge).
+- Added planner-safe targeted fuel recovery path:
+  - re-reads runtime-authoritative live max tank seam,
+  - refreshes Strategy live max display + snapshot,
+  - avoids planner/manual/preset clobber on normal manual recovery.
+- Manual recovery action path now attempts planner-safe targeted fuel recovery first before broad reset logic.
+- Unified Strategy live-cap authority with runtime seam:
+  - `FuelCalcs` now consumes plugin runtime live-cap authority (`raw -> bounded fallback`) instead of direct-only raw read,
+  - added debounced strategy/runtime health logs for live-cap source/value transitions.
+- Removed automatic planner manual-override reset from the fuel-model session reset path to preserve planner intent during runtime/session re-arm.
+### 2026-04-21 — Class-resolution simplification: trusted-property authority + shared class leader/class-best seams
+- Classification: **both** (driver-visible class leader / class-best / finish consistency improvement + internal cleanup removing failed metadata-heavy seams).
+- Replaced overcomplicated class authority logic with one trusted runtime seam:
+  - `DataCorePlugin.GameData.HasMultipleClassOpponents` is now the single-class vs multiclass switch.
+  - Single-class path now bypasses class matching entirely and uses overall leader/field-best directly.
+- Unified class leader resolution across all consumers with one helper seam:
+  - single-class leader uses `CarIdxPosition == 1`,
+  - multiclass leader uses `CarIdxClassPosition == 1` filtered to player class.
+- Unified class-best/session-best-in-class seam:
+  - single-class scans whole field,
+  - multiclass scans only player-class cars.
+- `Race.ClassLeaderHasFinished*` now consumes the same resolved class-leader seam as `ClassLeader.*` (no separate finish-only class resolver).
+- Removed recent failed/duplicated class-resolution pieces from runtime paths:
+  - removed class metadata cache-driven authority helpers (`RefreshClassMetadata`, `GetCachedClassShortName`, `IsEffectivelySingleClassSession`, `IsSameEffectiveClass`, enum authority tree),
+  - removed class-count (`NumCarClasses`) authority dependencies from H2H/class-best/class-leader/finish flows.
+- Kept class membership fallback intentionally minimal in multiclass only:
+  - player class identity: `GameData.CarClass` (with bounded player row fallback),
+  - candidate class identity: per-car `DriverInfo` class label lookup.
 
 ### 2026-04-21 — Wet-condition PB/session-best audit follow-up (condition-only PB reads + LapRef session-best cross-condition guard)
 - Classification: **both** (driver-visible wet PB/session-best correctness + bounded LapRef authority seam hardening).
@@ -680,6 +756,12 @@ The public user-facing release history is maintained in the root `CHANGELOG.md`.
   - the freshly built class cache itself proves diversity (`>1` distinct non-blank class names).
 - Preserved prior startup safety behavior: unknown class-count state alone does not infer multiclass, and blank/unresolved class states are not treated as class-diversity evidence.
 
+
+## 2026-04-21 — PR follow-up: runtime fuel health-check ordering + manual-reset live-session gate
+- Classification: **internal-only** (compile/order fix + runtime reset guardrail correction with unchanged user workflow).
+- Moved pit-road telemetry read earlier in `DataUpdate` so the active-driving runtime fuel-health edge check uses an in-scope `isOnPitRoad` value before evaluation.
+- Tightened `ManualRecoveryReset(...)` short-circuit semantics: planner-safe early return now requires an active live session in addition to successful planner-safe recovery.
+- Preserved planner-safe runtime behavior for active live session recovery while ensuring manual reset outside active live session still executes the broad reset path.
 
 ## 2026-04-10 — Opponents Pit Exit dash export follow-up
 - Classification: **both** (user-facing dash exports + internal docs/contract alignment).

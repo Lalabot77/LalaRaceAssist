@@ -73,7 +73,7 @@ Pit Fuel Control behavior notes for these bindings:
   - AUTO cancels to `OFF + STBY` when live requested pit fuel moves outside the plugin’s own command suppression window,
   - AUTO cancels to `OFF + STBY` when iRacing AutoFuel is active,
   - Offline Testing suppresses Pit Fuel Control to inert `OFF + STBY`,
-  - session-type changes and SessionState `1 -> 2` force reset to `OFF + STBY` (no reset on `2 -> 3`).
+  - any `Telemetry.IsOnTrackCar` edge (`false -> true` or `true -> false`) forces reset to `OFF + STBY`.
 
 In Settings → **Pit Commands**, these are shown as fixed built-in features with normal binding rows (no raw chat command editing).
 

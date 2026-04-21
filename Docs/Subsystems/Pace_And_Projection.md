@@ -1,7 +1,7 @@
 # Pace and Projection
 
 Validated against commit: HEAD
-Last updated: 2026-04-18
+Last updated: 2026-04-21
 Branch: work
 
 ## Purpose
@@ -93,6 +93,7 @@ The resulting projection lap time feeds the Fuel Model’s timed-race math toget
 - session time remaining,
 - planner after-zero allowance,
 - live after-zero estimate once timer-zero has genuinely been observed.
+- PreRace Auto now also consumes this same runtime projection seam (`ProjectionLapTime_Stable`) instead of planner lap-time authority.
 
 Session phase split:
 - SessionState `2/3` (grid/formation) uses session-definition race length authority (`CurrentSessionInfo._SessionTime`) with elapsed `SessionTime` as the timed-race remaining seam.
@@ -127,6 +128,8 @@ Pace and projection state resets on:
 - session identity changes,
 - combo changes,
 - broader fuel/runtime resets that must prevent stale live pace from leaking into a new session.
+
+Runtime-health handling is now expected to prefer targeted fuel/live-snapshot recovery first, with pace/projection transient re-arm only when dependency ordering requires it.
 
 ## Failure modes / safeguards
 - **Heavy traffic / compromised laps:** confidence falls and fallback pace may legitimately take over.

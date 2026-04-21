@@ -1,7 +1,7 @@
 # Fuel Planner / Strategy Tab
 
 Validated against commit: HEAD
-Last updated: 2026-03-24
+Last updated: 2026-04-21
 Branch: work
 
 ## Purpose
@@ -198,6 +198,7 @@ This ensures that the planner remains **predictable mid-race**.
 Additional Live Session rules:
 - The Live Session panel is **live-only**. When no live samples exist, summaries render `-` rather than falling back to profile values.
 - When the car/track combination changes, the live snapshot is cleared immediately to prevent stale values (including max-fuel displays).
+- Live-cap authority for Strategy now follows plugin runtime authority (same seam as fuel runtime recovery), with bounded fallback behavior to avoid single-tick raw-read dropouts collapsing the live cap display.
 
 ---
 
@@ -243,10 +244,8 @@ Planner state resets on:
 - Car or track change.
 
 On reset:
-- Planner-selected sources revert to profile defaults.
-- Manual overrides are cleared.
-- Live snapshot is rehydrated but not applied.
-- Live Snapshot UI fields clear to `-` until live samples populate.
+- Session/combo identity resets still clear live snapshot displays until live data rehydrates.
+- Planner-safe runtime recovery paths are expected to preserve planner intent (planning source, manual lap/fuel entries, and preset intent) while rebuilding runtime live-cap/fuel state.
 
 Reset semantics are shared with the Fuel Model and documented centrally in:
 `Docs/Reset_And_Session_Identity.md`.

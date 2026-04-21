@@ -609,8 +609,6 @@ namespace LaunchPlugin
         private double _lastOverallLeaderLapPct = double.NaN;
         private int _lastClassLeaderCarIdx = -1;
         private int _lastOverallLeaderCarIdx = -1;
-        private readonly Dictionary<int, string> _carIdxToClassShortName = new Dictionary<int, string>();
-        private DateTime _classBestResolveLastLogUtc = DateTime.MinValue;
         private string _classBestResolveLastLogReason = string.Empty;
         private int _lastCompletedLapForFinish = -1;
         private bool _leaderFinishLatchedByFlag;
@@ -622,8 +620,6 @@ namespace LaunchPlugin
         private double _lastSimLapsRemaining;
         private double _lastProjectionLapSecondsUsed;
         private bool _afterZeroResultLogged;
-
-        private const int UnknownNumCarClasses = -1;
 
         // New per-mode rolling windows
         private readonly List<double> _recentDryFuelLaps = new List<double>();
@@ -729,11 +725,26 @@ namespace LaunchPlugin
         public string PreRace_FuelSource { get; private set; } = "fallback";
         public string PreRace_LapTimeSource { get; private set; } = "fallback";
         public string PreRace_StatusText { get; private set; } = "STRATEGY OKAY";
+        public string PreRace_StatusColour { get; private set; } = "green";
         private bool _isRefuelSelected = true;
         private bool _isTireChangeSelected = true;
         public double LiveCarMaxFuel { get; private set; }
         public double EffectiveLiveMaxTank { get; private set; }
         private double _lastValidLiveMaxFuel = 0.0;
+        private DateTime _lastValidLiveMaxFuelUtc = DateTime.MinValue;
+        private const double LiveMaxFuelFallbackWindowSeconds = 30.0;
+        private DateTime _lastLiveMaxHealthLogUtc = DateTime.MinValue;
+        private double _lastLiveMaxHealthLoggedComputed = double.NaN;
+        private double _lastLiveMaxHealthLoggedEffective = double.NaN;
+        private string _lastLiveMaxHealthLoggedSource = string.Empty;
+        private DateTime _lastFuelRuntimeRecoveryUtc = DateTime.MinValue;
+        private DateTime _lastFuelRuntimeHealthCheckUtc = DateTime.MinValue;
+        private int _fuelRuntimeUnhealthyStreak = 0;
+        private bool _fuelRuntimeHealthCheckPending;
+        private string _fuelRuntimeHealthPendingReason = string.Empty;
+        private bool _lastFuelRuntimeEngineStarted;
+        private bool _lastFuelRuntimeIgnitionOn;
+        private bool _lastFuelRuntimeActiveDriving;
 
         public double FuelSaveFuelPerLap { get; private set; }
         public double StintBurnTarget { get; private set; }
@@ -794,26 +805,13 @@ namespace LaunchPlugin
             }
         }
 
-        private const double PreRaceStatusMarginalStintTolerance = 0.2;
+        private const double PreRaceFuelToleranceLitres = 0.05;
+        private const double PreRaceMaxStartToleranceLitres = 0.50;
 
-        private static string EvaluatePreRaceStatusText(int selectedStrategy, double stints)
+        private struct PreRaceStatusDecision
         {
-            double normalizedStints = Math.Max(0.0, stints);
-            switch (NormalizeStrategyMode(selectedStrategy))
-            {
-                case 0:
-                    if (normalizedStints <= 1.0) return "STRATEGY OKAY";
-                    if (normalizedStints <= (1.0 + PreRaceStatusMarginalStintTolerance)) return "STRATEGY MARGINAL";
-                    return "UNABLE STRATEGY";
-                case 1:
-                    if (normalizedStints <= 2.0) return "STRATEGY OKAY";
-                    if (normalizedStints <= (2.0 + PreRaceStatusMarginalStintTolerance)) return "STRATEGY MARGINAL";
-                    return "UNABLE STRATEGY";
-                case 2:
-                case 3:
-                default:
-                    return "STRATEGY OKAY";
-            }
+            public string Text;
+            public string Colour;
         }
 
         private double GetPreRaceFuelPerLap(double fallbackFuelPerLap, out string source)
@@ -865,11 +863,116 @@ namespace LaunchPlugin
             return PreRaceFallbackLapSeconds;
         }
 
+        private PlannerLiveSessionMatchSnapshot BuildLiveSessionMatchSnapshot(double raceSessionDurationSeconds, long raceSessionLaps)
+        {
+            string liveCarIdentity = !string.IsNullOrWhiteSpace(CurrentCarModel) && !CurrentCarModel.Equals("Unknown", StringComparison.OrdinalIgnoreCase)
+                ? CurrentCarModel
+                : string.Empty;
+            string liveTrackKeyIdentity = !string.IsNullOrWhiteSpace(CurrentTrackKey) && !CurrentTrackKey.Equals("unknown", StringComparison.OrdinalIgnoreCase)
+                ? CurrentTrackKey
+                : string.Empty;
+
+            var snapshot = new PlannerLiveSessionMatchSnapshot
+            {
+                LiveCar = liveCarIdentity,
+                LiveTrack = liveTrackKeyIdentity
+            };
+
+            if (raceSessionDurationSeconds > 0.0)
+            {
+                snapshot.HasLiveBasis = true;
+                snapshot.LiveBasisIsTimeLimited = true;
+                snapshot.HasLiveRaceLength = true;
+                snapshot.LiveRaceLengthValue = raceSessionDurationSeconds / 60.0;
+            }
+            else if (raceSessionLaps > 0)
+            {
+                snapshot.HasLiveBasis = true;
+                snapshot.LiveBasisIsTimeLimited = false;
+                snapshot.HasLiveRaceLength = true;
+                snapshot.LiveRaceLengthValue = raceSessionLaps;
+            }
+            else
+            {
+                snapshot.HasLiveBasis = false;
+                snapshot.LiveBasisIsTimeLimited = false;
+                snapshot.HasLiveRaceLength = false;
+                snapshot.LiveRaceLengthValue = 0.0;
+            }
+
+            return snapshot;
+        }
+
+        private static bool IsAtEffectiveMaxStartFuel(double currentFuel, double effectiveMaxTank, double maxTankCapacity)
+        {
+            double targetMax = effectiveMaxTank > 0.0 ? effectiveMaxTank : maxTankCapacity;
+            return targetMax > 0.0 && currentFuel >= (targetMax - PreRaceMaxStartToleranceLitres);
+        }
+
+        private static PreRaceStatusDecision EvaluatePreRaceStatus(
+            int selectedStrategy,
+            bool plannerMismatch,
+            double preRaceStints,
+            double preRaceFuelDelta,
+            double currentFuel,
+            double effectiveMaxTank,
+            double maxTankCapacity,
+            double contingencyLitres)
+        {
+            int normalizedStrategy = NormalizeStrategyMode(selectedStrategy);
+            double normalizedStints = Math.Max(0.0, preRaceStints);
+            bool multiStopExpected = normalizedStints > 2.0;
+            bool isAtMaxStart = IsAtEffectiveMaxStartFuel(currentFuel, effectiveMaxTank, maxTankCapacity);
+
+            if (normalizedStrategy != 3 && plannerMismatch)
+            {
+                return new PreRaceStatusDecision { Text = "STRATEGY MISMATCH", Colour = "orange" };
+            }
+
+            if (normalizedStrategy == 0 && preRaceFuelDelta < -PreRaceFuelToleranceLitres)
+            {
+                return new PreRaceStatusDecision { Text = "ADD FUEL FOR NO STOP", Colour = "red" };
+            }
+
+            if (normalizedStrategy == 1 && preRaceFuelDelta < -PreRaceFuelToleranceLitres)
+            {
+                return new PreRaceStatusDecision { Text = "ONE STOP REQUIRES MORE FUEL", Colour = "red" };
+            }
+
+            if ((normalizedStrategy == 2 || normalizedStrategy == 3) && multiStopExpected)
+            {
+                if (isAtMaxStart)
+                {
+                    return new PreRaceStatusDecision { Text = "MAX FUEL IN / MULTI STOP CONFIRMED", Colour = "green" };
+                }
+
+                return new PreRaceStatusDecision { Text = "MAX FUEL REQUIRED", Colour = "orange" };
+            }
+
+            if (normalizedStrategy == 3 && normalizedStints > 1.0)
+            {
+                return new PreRaceStatusDecision { Text = "SINGLE STOP OKAY", Colour = "green" };
+            }
+
+            if (contingencyLitres > 0.0 && preRaceFuelDelta > (2.0 * contingencyLitres))
+            {
+                return new PreRaceStatusDecision { Text = "OVERFUELLED", Colour = "orange" };
+            }
+
+            if (normalizedStrategy == 1)
+            {
+                return new PreRaceStatusDecision { Text = "SINGLE STOP OKAY", Colour = "green" };
+            }
+
+            return new PreRaceStatusDecision { Text = "NO STOP OKAY", Colour = "green" };
+        }
+
         private void UpdatePreRaceOutputs(
             GameData data,
             double currentFuel,
             double pitWindowRequestedAdd,
             double raceSessionDurationSeconds,
+            long raceSessionLaps,
             double stableLapsRemaining,
             double fallbackFuelPerLap,
             double effectiveMaxTank,
@@ -881,50 +984,96 @@ namespace LaunchPlugin
 
             double usableTank = effectiveMaxTank > 0.0 ? effectiveMaxTank : maxTankCapacity;
 
-            double plannerTotalFuelNeeded = Math.Max(0.0, FuelCalculator?.TotalFuelNeeded ?? 0.0);
-            double plannerFirstStintFuel = Math.Max(0.0, FuelCalculator?.FirstStintFuel ?? 0.0);
-            double plannerTankBasis = Math.Max(0.0, FuelCalculator?.PlannerTankBasisLitres ?? 0.0);
-            bool autoPlannerAvailable = selectedStrategy == 3 && plannerTotalFuelNeeded > 0.0;
             double plannedSingleStopRefuel = Math.Max(0.0, pitWindowRequestedAdd);
+            var liveMatchSnapshot = BuildLiveSessionMatchSnapshot(raceSessionDurationSeconds, raceSessionLaps);
+            var plannerMatchSnapshot = FuelCalculator?.GetPlannerSessionMatchSnapshot() ?? new PlannerLiveSessionMatchSnapshot();
+            plannerMatchSnapshot.LiveCar = liveMatchSnapshot.LiveCar;
+            plannerMatchSnapshot.LiveTrack = liveMatchSnapshot.LiveTrack;
+            plannerMatchSnapshot.HasLiveBasis = liveMatchSnapshot.HasLiveBasis;
+            plannerMatchSnapshot.LiveBasisIsTimeLimited = liveMatchSnapshot.LiveBasisIsTimeLimited;
+            plannerMatchSnapshot.HasLiveRaceLength = liveMatchSnapshot.HasLiveRaceLength;
+            plannerMatchSnapshot.LiveRaceLengthValue = liveMatchSnapshot.LiveRaceLengthValue;
+            var plannerMatchResult = PlannerLiveSessionMatchHelper.Evaluate(plannerMatchSnapshot);
 
-            if (autoPlannerAvailable)
+            string preRaceFuelSource = "fallback";
+            double preRaceFuelPerLap;
+            if (selectedStrategy == 3 && LiveFuelPerLap_Stable > 0.0)
             {
-                double autoTankBasis = plannerTankBasis > 0.0 ? plannerTankBasis : usableTank;
-                PreRace_TotalFuelNeeded = plannerTotalFuelNeeded;
-                PreRace_Stints = autoTankBasis > 0.0
-                    ? Math.Round(Math.Max(0.0, plannerTotalFuelNeeded / autoTankBasis), 1)
-                    : 0.0;
-
-                double plannerNextAddLitres = Math.Max(0.0, FuelCalculator?.PlannerNextAddLitres ?? 0.0);
-                
-                if (plannerNextAddLitres > 0.0)
+                preRaceFuelPerLap = LiveFuelPerLap_Stable;
+                preRaceFuelSource = string.Equals(LiveFuelPerLap_StableSource, "Live", StringComparison.OrdinalIgnoreCase)
+                    ? "live"
+                    : (string.Equals(LiveFuelPerLap_StableSource, "Profile", StringComparison.OrdinalIgnoreCase) ? "profile" : "fallback");
+            }
+            else if (selectedStrategy == 3)
+            {
+                var (profileDry, profileWet) = GetProfileFuelBaselines();
+                double profileFuel = _isWetMode ? profileWet : profileDry;
+                if (profileFuel > 0.0)
                 {
-                    double plannerDeltaReferenceFuel = currentFuel + plannerNextAddLitres;
-                    PreRace_FuelDelta = (currentFuel + plannedSingleStopRefuel) - plannerDeltaReferenceFuel;
+                    preRaceFuelPerLap = profileFuel;
+                    preRaceFuelSource = "profile";
+                }
+                else if (fallbackFuelPerLap > 0.0)
+                {
+                    preRaceFuelPerLap = fallbackFuelPerLap;
+                    preRaceFuelSource = "live";
                 }
                 else
                 {
-                    double plannerDeltaReferenceFuel = plannerFirstStintFuel > 0.0
-                        ? plannerFirstStintFuel
-                        : plannerTotalFuelNeeded;
-                    PreRace_FuelDelta = currentFuel - plannerDeltaReferenceFuel;
+                    preRaceFuelPerLap = PreRaceFallbackFuelPerLapLiters;
+                    preRaceFuelSource = "fallback";
                 }
-                PreRace_FuelSource = "planner";
-                PreRace_LapTimeSource = "planner";
-                PreRace_StatusText = EvaluatePreRaceStatusText(selectedStrategy, PreRace_Stints);
-                return;
+            }
+            else
+            {
+                preRaceFuelPerLap = GetPreRaceFuelPerLap(fallbackFuelPerLap, out preRaceFuelSource);
             }
 
-            string preRaceFuelSource;
-            double preRaceFuelPerLap = GetPreRaceFuelPerLap(fallbackFuelPerLap, out preRaceFuelSource);
-
-            string preRaceLapSource;
-            double preRaceProjectionLapSeconds = GetPreRaceLapSeconds(data, out preRaceLapSource);
+            string preRaceLapSource = "fallback";
+            double preRaceProjectionLapSeconds;
+            if (selectedStrategy == 3 && ProjectionLapTime_Stable > 0.0)
+            {
+                preRaceProjectionLapSeconds = ProjectionLapTime_Stable;
+                preRaceLapSource = ProjectionLapTime_StableSource.StartsWith("pace.", StringComparison.OrdinalIgnoreCase)
+                    ? "live"
+                    : (ProjectionLapTime_StableSource.StartsWith("profile.", StringComparison.OrdinalIgnoreCase) ? "profile" : "fallback");
+            }
+            else if (selectedStrategy == 3)
+            {
+                double profileAvgSeconds = GetProfileAvgLapSeconds();
+                if (profileAvgSeconds > 0.0)
+                {
+                    preRaceProjectionLapSeconds = profileAvgSeconds;
+                    preRaceLapSource = "profile";
+                }
+                else
+                {
+                    double lastLapSeconds = (data.NewData?.LastLapTime ?? TimeSpan.Zero).TotalSeconds;
+                    if (lastLapSeconds > 0.0)
+                    {
+                        preRaceProjectionLapSeconds = lastLapSeconds;
+                        preRaceLapSource = "live";
+                    }
+                    else
+                    {
+                        preRaceProjectionLapSeconds = PreRaceFallbackLapSeconds;
+                        preRaceLapSource = "fallback";
+                    }
+                }
+            }
+            else
+            {
+                preRaceProjectionLapSeconds = GetPreRaceLapSeconds(data, out preRaceLapSource);
+            }
 
             double forecastRaceLaps = 0.0;
             if (raceSessionDurationSeconds > 0.0 && preRaceProjectionLapSeconds > 0.0)
             {
                 forecastRaceLaps = Math.Max(0.0, (raceSessionDurationSeconds + _afterZeroUsedSeconds) / preRaceProjectionLapSeconds);
+            }
+            else if (raceSessionLaps > 0)
+            {
+                forecastRaceLaps = raceSessionLaps;
             }
             else if (stableLapsRemaining > 0.0)
             {
@@ -955,7 +1104,18 @@ namespace LaunchPlugin
 
             PreRace_FuelSource = preRaceFuelSource;
             PreRace_LapTimeSource = preRaceLapSource;
-            PreRace_StatusText = EvaluatePreRaceStatusText(selectedStrategy, PreRace_Stints);
+            double contingencyLitres = ResolveLivePitFuelControlContingencyLitres(preRaceFuelPerLap);
+            var status = EvaluatePreRaceStatus(
+                selectedStrategy,
+                plannerMismatch: plannerMatchResult.HasComparableInputs && !plannerMatchResult.IsMatch,
+                preRaceStints: PreRace_Stints,
+                preRaceFuelDelta: PreRace_FuelDelta,
+                currentFuel: currentFuel,
+                effectiveMaxTank: effectiveMaxTank,
+                maxTankCapacity: maxTankCapacity,
+                contingencyLitres: contingencyLitres);
+            PreRace_StatusText = status.Text;
+            PreRace_StatusColour = status.Colour;
         }
 
         // Stable model inputs
@@ -1921,7 +2081,16 @@ namespace LaunchPlugin
             LiveCarMaxFuel = 0.0;
             EffectiveLiveMaxTank = 0.0;
             _lastValidLiveMaxFuel = 0.0;
+            _lastValidLiveMaxFuelUtc = DateTime.MinValue;
             _lastAnnouncedMaxFuel = -1;
+        }
+
+        private bool HasFreshLiveMaxFuelFallback()
+        {
+            if (_lastValidLiveMaxFuel <= 0.0 || _lastValidLiveMaxFuelUtc == DateTime.MinValue)
+                return false;
+
+            return (DateTime.UtcNow - _lastValidLiveMaxFuelUtc).TotalSeconds <= LiveMaxFuelFallbackWindowSeconds;
         }
 
         private void ResetProjectionFallbackState()
@@ -2001,7 +2170,6 @@ namespace LaunchPlugin
             _lastPitWindowLogUtc = DateTime.MinValue;
 
             FuelCalculator?.ResetTrackConditionOverrideForSessionChange();
-            FuelCalculator?.ResetPlannerManualOverrides();
 
             // Clear pace tracking alongside fuel model resets so session transitions don't carry stale data
             _recentLapTimes.Clear();
@@ -2094,6 +2262,8 @@ namespace LaunchPlugin
                 SimHub.Logging.Current.Info("[LalaPlugin:Fuel Burn] Car/track change detected – clearing seeds and confidence");
             }
             catch { /* logging must not throw */ }
+
+            QueueFuelRuntimeHealthCheck("combo change");
         }
 
         private void HandleSessionChangeForFuelModel(string fromSession, string toSession)
@@ -2418,6 +2588,7 @@ namespace LaunchPlugin
             double sessionTime = SafeReadDouble(pluginManager, "DataCorePlugin.GameRawData.Telemetry.SessionTime", 0.0);
             double sessionTimeRemain = SafeReadDouble(pluginManager, "DataCorePlugin.GameRawData.Telemetry.SessionTimeRemain", double.NaN);
             double raceSessionDurationSeconds = SafeReadDouble(pluginManager, "DataCorePlugin.GameRawData.CurrentSessionInfo._SessionTime", double.NaN);
+            long raceSessionLaps = Convert.ToInt64(pluginManager.GetPropertyValue("DataCorePlugin.GameRawData.CurrentSessionInfo._SessionLaps") ?? 0L);
             int sessionStateNumeric = ReadSessionStateInt(pluginManager);
             bool isGridOrFormation = sessionStateNumeric >= 1 && sessionStateNumeric < 4;
             bool isRaceRunning = sessionStateNumeric == 4;
@@ -3211,6 +3382,7 @@ namespace LaunchPlugin
                     currentFuel,
                     pitWindowRequestedAdd,
                     raceSessionDurationSeconds,
+                    raceSessionLaps,
                     stableLapsRemaining: 0.0,
                     fallbackFuelPerLap,
                     effectiveMaxTank,
@@ -3392,6 +3564,7 @@ namespace LaunchPlugin
                     currentFuel,
                     pitWindowRequestedAdd,
                     raceSessionDurationSeconds,
+                    raceSessionLaps,
                     stableLapsRemaining,
                     fallbackFuelPerLap,
                     effectiveMaxTank,
@@ -4163,8 +4336,8 @@ namespace LaunchPlugin
         // --- Session State ---
         private string _lastSessionType = "";          // used by auto-dash & UI
         private string _lastFuelSessionType = "";      // used only by fuel model seeding
-        private string _pitFuelControlLastSessionType = string.Empty;
-        private int _pitFuelControlLastSessionState = -1;
+        private bool _pitFuelControlLastIsOnTrackCar;
+        private bool _pitFuelControlHasIsOnTrackCarSample;
 
         private string _lastSeenCar = "";
         private string _lastSeenTrack = "";
@@ -4867,6 +5040,7 @@ namespace LaunchPlugin
             AttachCore("LalaLaunch.PreRace.FuelSource", () => PreRace_FuelSource);
             AttachCore("LalaLaunch.PreRace.LapTimeSource", () => PreRace_LapTimeSource);
             AttachCore("LalaLaunch.PreRace.StatusText", () => PreRace_StatusText);
+            AttachCore("LalaLaunch.PreRace.StatusColour", () => PreRace_StatusColour);
             AttachCore("Fuel.ProjectionLapTime_Stable", () => ProjectionLapTime_Stable);
             AttachCore("Fuel.ProjectionLapTime_StableSource", () => ProjectionLapTime_StableSource);
             AttachCore("Fuel.Live.ProjectedDriveSecondsRemaining", () => LiveProjectedDriveSecondsRemaining);
@@ -6250,7 +6424,6 @@ namespace LaunchPlugin
             _lastOverallLeaderLapPct = double.NaN;
             _lastClassLeaderCarIdx = -1;
             _lastOverallLeaderCarIdx = -1;
-            _carIdxToClassShortName.Clear();
             _lastCompletedLapForFinish = -1;
             LeaderHasFinished = false;
             _leaderFinishLatchedByFlag = false;
@@ -6275,10 +6448,114 @@ namespace LaunchPlugin
 
         private bool _manualRecoverySkipFuelModelReset;
 
+        private void QueueFuelRuntimeHealthCheck(string reason)
+        {
+            string reasonLabel = string.IsNullOrWhiteSpace(reason) ? "unspecified" : reason.Trim();
+            _fuelRuntimeHealthCheckPending = true;
+            _fuelRuntimeHealthPendingReason = reasonLabel;
+            SimHub.Logging.Current.Info($"[LalaPlugin:Runtime] fuel health check queued (reason: {reasonLabel}).");
+        }
+
+        private bool RunPlannerSafeFuelRuntimeRecovery(string reason)
+        {
+            if (PluginManager == null)
+                return false;
+
+            var now = DateTime.UtcNow;
+            if ((now - _lastFuelRuntimeRecoveryUtc) < TimeSpan.FromSeconds(2))
+                return false;
+
+            _lastFuelRuntimeRecoveryUtc = now;
+            string reasonLabel = string.IsNullOrWhiteSpace(reason) ? "unspecified" : reason.Trim();
+            SimHub.Logging.Current.Info($"[LalaPlugin:Runtime] planner-safe fuel recovery start (reason: {reasonLabel}).");
+
+            UpdateLiveMaxFuel(PluginManager);
+
+            double capLitres;
+            string capSource;
+            bool hasCap = TryGetRuntimeLiveCapForStrategy(out capLitres, out capSource);
+            if (hasCap && capLitres > 0.0 && FuelCalculator != null)
+            {
+                FuelCalculator.UpdateLiveDisplay(capLitres);
+                FuelCalculator.RefreshLiveSnapshot();
+            }
+
+            _pendingSmoothingReset = true;
+            bool strategyDisplayMissing = FuelCalculator != null &&
+                FuelCalculator.IsLiveSessionActive &&
+                FuelCalculator.IsLiveTankDisplayUnavailable;
+            bool healthy = hasCap && capLitres > 0.0 && !strategyDisplayMissing;
+
+            SimHub.Logging.Current.Info(
+                $"[LalaPlugin:Runtime] planner-safe fuel recovery end healthy={healthy} " +
+                $"cap={(hasCap ? capLitres.ToString("F2", CultureInfo.InvariantCulture) : "0.00")} source={capSource} " +
+                $"strategyMissing={strategyDisplayMissing}");
+
+            return healthy;
+        }
+
+        private void EvaluateFuelRuntimeHealth(PluginManager pluginManager)
+        {
+            if (pluginManager == null)
+                return;
+
+            bool liveIdentityReady = !string.IsNullOrWhiteSpace(CurrentCarModel) &&
+                                     !CurrentCarModel.Equals("Unknown", StringComparison.OrdinalIgnoreCase) &&
+                                     !string.IsNullOrWhiteSpace(CurrentTrackName);
+            if (!liveIdentityReady)
+                return;
+
+            if ((DateTime.UtcNow - _lastFuelRuntimeHealthCheckUtc) < TimeSpan.FromMilliseconds(450))
+                return;
+
+            _lastFuelRuntimeHealthCheckUtc = DateTime.UtcNow;
+            bool hasCap = TryGetRuntimeLiveCapForStrategy(out var runtimeCap, out var runtimeSource);
+            double rawCap = ComputeLiveMaxFuelFromSimhub(pluginManager);
+            bool strategyDisplayMissing = FuelCalculator != null &&
+                                          FuelCalculator.IsLiveSessionActive &&
+                                          FuelCalculator.IsLiveTankDisplayUnavailable;
+            bool runtimeMissingWhileRawValid = rawCap > 0.0 && (LiveCarMaxFuel <= 0.0 || EffectiveLiveMaxTank <= 0.0);
+            bool mismatch = hasCap && runtimeCap > 0.0 && strategyDisplayMissing;
+            bool transitionGap = _fuelRuntimeHealthCheckPending && !hasCap;
+            bool unhealthy = runtimeMissingWhileRawValid || mismatch || transitionGap;
+
+            _fuelRuntimeUnhealthyStreak = unhealthy ? (_fuelRuntimeUnhealthyStreak + 1) : 0;
+            bool shouldRecover = _fuelRuntimeUnhealthyStreak >= 2;
+            if (shouldRecover)
+            {
+                string reason = _fuelRuntimeHealthCheckPending
+                    ? _fuelRuntimeHealthPendingReason
+                    : "stale live max seam";
+                bool recovered = RunPlannerSafeFuelRuntimeRecovery(reason);
+                _fuelRuntimeHealthCheckPending = false;
+                _fuelRuntimeHealthPendingReason = string.Empty;
+                _fuelRuntimeUnhealthyStreak = recovered ? 0 : 1;
+                return;
+            }
+
+            if (_fuelRuntimeHealthCheckPending && !unhealthy && hasCap && runtimeCap > 0.0)
+            {
+                SimHub.Logging.Current.Info(
+                    $"[LalaPlugin:Runtime] fuel health check passed reason={_fuelRuntimeHealthPendingReason} " +
+                    $"raw={rawCap:F2} runtime={runtimeCap:F2} src={runtimeSource} strategyMissing={strategyDisplayMissing}");
+                _fuelRuntimeHealthCheckPending = false;
+                _fuelRuntimeHealthPendingReason = string.Empty;
+                _fuelRuntimeUnhealthyStreak = 0;
+            }
+        }
+
         private void ManualRecoveryReset(string reason)
         {
             string reasonLabel = string.IsNullOrWhiteSpace(reason) ? "unspecified" : reason.Trim();
             SimHub.Logging.Current.Info($"[LalaPlugin:Runtime] manual recovery reset triggered (reason: {reasonLabel}).");
+
+            bool sessionTransitionReset = string.Equals(reasonLabel, "Session transition", StringComparison.OrdinalIgnoreCase);
+            bool isLiveSessionActive = FuelCalculator != null && FuelCalculator.IsLiveSessionActive;
+            if (!sessionTransitionReset && isLiveSessionActive && RunPlannerSafeFuelRuntimeRecovery(reasonLabel))
+            {
+                return;
+            }
+
             ResetProjectionFallbackState();
             ResetH2HClassBestResolveLogLatch();
 
@@ -6384,7 +6661,6 @@ namespace LaunchPlugin
         {
             _h2hClassSessionBestNativeMissingWarned = false;
             _classBestResolveLastLogReason = string.Empty;
-            _classBestResolveLastLogUtc = DateTime.MinValue;
         }
 
         private void UpdatePitScreenState(PluginManager pluginManager)
@@ -6488,49 +6764,24 @@ namespace LaunchPlugin
             snapshot.IracingAutoFuelEnabled = Convert.ToBoolean(
                 PluginManager?.GetPropertyValue("DataCorePlugin.GameRawData.Telemetry.dpAutoFuel") ?? false);
 
-            string liveCarIdentity = !string.IsNullOrWhiteSpace(CurrentCarModel) && !CurrentCarModel.Equals("Unknown", StringComparison.OrdinalIgnoreCase)
-                ? CurrentCarModel
-                : string.Empty;
-            string liveTrackKeyIdentity = !string.IsNullOrWhiteSpace(CurrentTrackKey) && !CurrentTrackKey.Equals("unknown", StringComparison.OrdinalIgnoreCase)
-                ? CurrentTrackKey
-                : string.Empty;
-
-            snapshot.LiveCar = liveCarIdentity;
-            snapshot.LiveTrack = liveTrackKeyIdentity;
-
-            snapshot.PlannerCar = FuelCalculator?.SelectedCarProfile?.ProfileName ?? string.Empty;
-            snapshot.PlannerTrack = FuelCalculator?.SelectedTrackStats?.Key ?? string.Empty;
-            snapshot.HasPlannerBasis = FuelCalculator != null;
-            snapshot.PlannerBasisIsTimeLimited = FuelCalculator?.IsTimeLimitedRace == true;
-            snapshot.HasPlannerRaceLength = FuelCalculator != null;
-            snapshot.PlannerRaceLengthValue = snapshot.PlannerBasisIsTimeLimited
-                ? Math.Max(0.0, FuelCalculator?.RaceMinutes ?? 0.0)
-                : Math.Max(0.0, FuelCalculator?.RaceLaps ?? 0.0);
-
             long liveSessionLaps = Convert.ToInt64(PluginManager?.GetPropertyValue("DataCorePlugin.GameRawData.CurrentSessionInfo._SessionLaps") ?? 0L);
             double liveSessionTimeSeconds = SafeReadDouble(PluginManager, "DataCorePlugin.GameRawData.CurrentSessionInfo._SessionTime", double.NaN);
+            var liveMatchSnapshot = BuildLiveSessionMatchSnapshot(liveSessionTimeSeconds, liveSessionLaps);
+            var plannerMatchSnapshot = FuelCalculator?.GetPlannerSessionMatchSnapshot() ?? new PlannerLiveSessionMatchSnapshot();
 
-            if (liveSessionTimeSeconds > 0.0)
-            {
-                snapshot.HasLiveBasis = true;
-                snapshot.LiveBasisIsTimeLimited = true;
-                snapshot.HasLiveRaceLength = true;
-                snapshot.LiveRaceLengthValue = liveSessionTimeSeconds / 60.0;
-            }
-            else if (liveSessionLaps > 0)
-            {
-                snapshot.HasLiveBasis = true;
-                snapshot.LiveBasisIsTimeLimited = false;
-                snapshot.HasLiveRaceLength = true;
-                snapshot.LiveRaceLengthValue = liveSessionLaps;
-            }
-            else
-            {
-                snapshot.HasLiveBasis = false;
-                snapshot.LiveBasisIsTimeLimited = false;
-                snapshot.HasLiveRaceLength = false;
-                snapshot.LiveRaceLengthValue = 0.0;
-            }
+            snapshot.LiveCar = liveMatchSnapshot.LiveCar;
+            snapshot.LiveTrack = liveMatchSnapshot.LiveTrack;
+            snapshot.HasLiveBasis = liveMatchSnapshot.HasLiveBasis;
+            snapshot.LiveBasisIsTimeLimited = liveMatchSnapshot.LiveBasisIsTimeLimited;
+            snapshot.HasLiveRaceLength = liveMatchSnapshot.HasLiveRaceLength;
+            snapshot.LiveRaceLengthValue = liveMatchSnapshot.LiveRaceLengthValue;
+
+            snapshot.PlannerCar = plannerMatchSnapshot.PlannerCar;
+            snapshot.PlannerTrack = plannerMatchSnapshot.PlannerTrack;
+            snapshot.HasPlannerBasis = plannerMatchSnapshot.HasPlannerBasis;
+            snapshot.PlannerBasisIsTimeLimited = plannerMatchSnapshot.PlannerBasisIsTimeLimited;
+            snapshot.HasPlannerRaceLength = plannerMatchSnapshot.HasPlannerRaceLength;
+            snapshot.PlannerRaceLengthValue = plannerMatchSnapshot.PlannerRaceLengthValue;
 
             double contingencyNormLitres = ResolveLivePitFuelControlContingencyLitres(LiveFuelPerLap_Stable);
             double contingencyPushLitres = ResolveLivePitFuelControlContingencyLitres(PushFuelPerLap);
@@ -6573,21 +6824,15 @@ namespace LaunchPlugin
             return contingencyValue;
         }
 
-        private void HandlePitFuelControlSessionResets(string sessionTypeName, int sessionState)
+        private void HandlePitFuelControlOnTrackResets(bool isOnTrackCar)
         {
-            string normalizedSessionType = NormalizeSessionTypeName(sessionTypeName);
-            bool hasPreviousType = !string.IsNullOrWhiteSpace(_pitFuelControlLastSessionType);
-            bool sessionTypeChanged = hasPreviousType &&
-                !string.Equals(normalizedSessionType, _pitFuelControlLastSessionType, StringComparison.OrdinalIgnoreCase);
-            bool sessionStateGridTransition = _pitFuelControlLastSessionState == 1 && sessionState == 2;
-
-            if (sessionTypeChanged || sessionStateGridTransition)
+            if (_pitFuelControlHasIsOnTrackCarSample && _pitFuelControlLastIsOnTrackCar != isOnTrackCar)
             {
                 _pitFuelControlEngine.ResetToOffStby();
             }
 
-            _pitFuelControlLastSessionType = normalizedSessionType;
-            _pitFuelControlLastSessionState = sessionState;
+            _pitFuelControlLastIsOnTrackCar = isOnTrackCar;
+            _pitFuelControlHasIsOnTrackCarSample = true;
         }
 
         public void DataUpdate(PluginManager pluginManager, ref GameData data)
@@ -6665,8 +6910,8 @@ namespace LaunchPlugin
             double sessionTimeRemain = SafeReadDouble(pluginManager, "DataCorePlugin.GameRawData.Telemetry.SessionTimeRemain", double.NaN);
 
             string currentSessionTypeForConfidence = data.NewData?.SessionTypeName ?? string.Empty;
-            int currentSessionState = SafeReadInt(pluginManager, "DataCorePlugin.GameRawData.Telemetry.SessionState", 0);
-            HandlePitFuelControlSessionResets(currentSessionTypeForConfidence, currentSessionState);
+            bool isOnTrackCar = SafeReadBool(pluginManager, "DataCorePlugin.GameRawData.Telemetry.IsOnTrackCar", false);
+            HandlePitFuelControlOnTrackResets(isOnTrackCar);
             string trackIdentityForConfidence =
                 (!string.IsNullOrWhiteSpace(CurrentTrackKey) && !CurrentTrackKey.Equals("unknown", StringComparison.OrdinalIgnoreCase))
                     ? CurrentTrackKey
@@ -6710,6 +6955,7 @@ namespace LaunchPlugin
                 _lastSessionToken = currentSessionToken;
                 _pitFuelControlEngine.ResetToOffStby();
                 ManualRecoveryReset("Session transition");
+                QueueFuelRuntimeHealthCheck("session token change");
 
                 SimHub.Logging.Current.Info($"[LalaPlugin:Profile] Session start snapshot: Car='{CurrentCarModel}'  Track='{CurrentTrackName}'");
             }
@@ -6867,11 +7113,6 @@ namespace LaunchPlugin
             bool verboseLogs = IsVerboseDebugLoggingOn;
             _opponentsEngine?.Update(data, pluginManager, isOpponentsEligibleSessionNow, isRaceSessionNow, completedLaps, myPaceSec, pitLossSec, pitTripActive, inLane, trackPct, sessionTimeSec, sessionTimeRemainingSec, verboseLogs);
             UpdatePitExitTimeToExitSec(pluginManager, inLane, speedKph);
-            if (isOpponentsEligibleSessionNow)
-            {
-                RefreshClassMetadata(pluginManager);
-            }
-
             int[] carIdxLap = SafeReadIntArray(pluginManager, "DataCorePlugin.GameRawData.Telemetry.CarIdxLap");
             int[] carIdxTrackSurface = SafeReadIntArray(pluginManager, "DataCorePlugin.GameRawData.Telemetry.CarIdxTrackSurface");
             int[] carIdxTrackSurfaceMaterial = SafeReadIntArray(pluginManager, "DataCorePlugin.GameRawData.Telemetry.CarIdxTrackSurfaceMaterial");
@@ -7377,6 +7618,8 @@ namespace LaunchPlugin
                     _manualRecoverySkipFuelModelReset = false;
                 }
 
+                QueueFuelRuntimeHealthCheck("session type change");
+
                 if (IsRaceSession(currentSession))
                 {
                     // NOTE: snapshot currently latched at Race session entry; will move to true green latch later
@@ -7420,6 +7663,21 @@ namespace LaunchPlugin
             }
             _dashLastIgnitionOn = ignitionOn;
 
+            if ((!_lastFuelRuntimeIgnitionOn && ignitionOn) || (!_lastFuelRuntimeEngineStarted && engineStarted))
+            {
+                QueueFuelRuntimeHealthCheck("car active edge");
+            }
+            _lastFuelRuntimeIgnitionOn = ignitionOn;
+            _lastFuelRuntimeEngineStarted = engineStarted;
+
+            bool isOnPitRoad = Convert.ToBoolean(pluginManager.GetPropertyValue("DataCorePlugin.GameRawData.Telemetry.OnPitRoad") ?? false);
+            bool activeDriving = speedKph > 10.0 && !isOnPitRoad;
+            if (activeDriving && !_lastFuelRuntimeActiveDriving)
+            {
+                QueueFuelRuntimeHealthCheck("active driving edge");
+            }
+            _lastFuelRuntimeActiveDriving = activeDriving;
+
             if (Settings.EnableAutoDashSwitch && _dashPendingSwitch && !_dashExecutedForCurrentArm && (ignitionOn || engineStarted))
             {
                 _dashExecutedForCurrentArm = true;
@@ -7441,7 +7699,6 @@ namespace LaunchPlugin
                     }
                 });
             }
-            bool isOnPitRoad = Convert.ToBoolean(pluginManager.GetPropertyValue("DataCorePlugin.GameRawData.Telemetry.OnPitRoad") ?? false);
             bool pitRoadChanged = isOnPitRoad != _lastOnPitRoadForOpponents;
             _lastOnPitRoadForOpponents = isOnPitRoad;
 
@@ -7449,6 +7706,8 @@ namespace LaunchPlugin
             {
                 UpdateOpponentsAndPitExit(data, pluginManager, completedLaps, currentSessionTypeForConfidence);
             }
+
+            EvaluateFuelRuntimeHealth(pluginManager);
 
             // --- Decel capture instrumentation (toggle = pit screen active) ---
             {
@@ -10544,12 +10803,7 @@ namespace LaunchPlugin
                 return;
             }
 
-            if (_carIdxToClassShortName.Count == 0)
-            {
-                RefreshClassMetadata(pluginManager);
-            }
-
-            UpdateTransmitClassPosLabel(transmitCarIdx);
+            UpdateTransmitClassPosLabel(pluginManager, transmitCarIdx);
 
             bool carChanged = transmitCarIdx != _lastTransmitCarIdx;
             bool radioChanged = transmitRadioIdx != _lastTransmitRadioIdx;
@@ -10722,7 +10976,7 @@ namespace LaunchPlugin
             return false;
         }
 
-        private void UpdateTransmitClassPosLabel(int transmitCarIdx)
+        private void UpdateTransmitClassPosLabel(PluginManager pluginManager, int transmitCarIdx)
         {
             if (transmitCarIdx < 0)
             {
@@ -10735,7 +10989,7 @@ namespace LaunchPlugin
 
             int positionInClass = 0;
             string classShort = string.Empty;
-            TryGetCarIdxIdentity(transmitCarIdx, out positionInClass, out classShort);
+            TryGetCarIdxIdentity(pluginManager, transmitCarIdx, out positionInClass, out classShort);
 
             bool changed = transmitCarIdx != _lastTransmitClassPosCarIdx
                 || positionInClass != _lastTransmitClassPosition
@@ -10916,7 +11170,7 @@ namespace LaunchPlugin
             return string.Empty;
         }
 
-        private bool TryGetCarIdxIdentity(int carIdx, out int positionInClass, out string classShort)
+        private bool TryGetCarIdxIdentity(PluginManager pluginManager, int carIdx, out int positionInClass, out string classShort)
         {
             positionInClass = 0;
             classShort = string.Empty;
@@ -10927,7 +11181,7 @@ namespace LaunchPlugin
             }
 
             positionInClass = _carSaClassPositionByIdx[carIdx];
-            classShort = GetCachedClassShortName(carIdx) ?? string.Empty;
+            classShort = ResolveCarClassShortName(pluginManager, carIdx);
             return positionInClass > 0 || !string.IsNullOrWhiteSpace(classShort);
         }
 
@@ -12303,6 +12557,31 @@ namespace LaunchPlugin
             }
         }
 
+        private static bool SafeReadBool(PluginManager pluginManager, string propertyName, bool fallback)
+        {
+            if (pluginManager == null || string.IsNullOrWhiteSpace(propertyName))
+            {
+                return fallback;
+            }
+
+            object raw;
+            try
+            {
+                raw = pluginManager.GetPropertyValue(propertyName);
+            }
+            catch
+            {
+                return fallback;
+            }
+
+            if (raw == null)
+            {
+                return fallback;
+            }
+
+            return TryCoerceBool(raw, out bool value) ? value : fallback;
+        }
+
         private static int ResolveShiftAssistRedlineRpm(PluginManager pluginManager, int targetRpm, out string source)
         {
             source = "NONE";
@@ -12995,122 +13274,16 @@ namespace LaunchPlugin
             _pitBoxBrakeNow = distanceM <= triggerDistanceM;
         }
 
-        private void RefreshClassMetadata(PluginManager pluginManager)
+        private bool IsMultiClassSession(PluginManager pluginManager)
         {
-            _carIdxToClassShortName.Clear();
-            if (pluginManager == null)
-            {
-                return;
-            }
-
-            for (int i = 1; i <= 64; i++)
-            {
-                string basePath = $"DataCorePlugin.GameRawData.SessionData.DriverInfo.Drivers{i:00}";
-                int carIdx = GetInt(pluginManager, $"{basePath}.CarIdx", int.MinValue);
-                if (carIdx == int.MinValue)
-                {
-                    continue;
-                }
-
-                if (carIdx < 0 || carIdx >= CarSAEngine.MaxCars)
-                {
-                    continue;
-                }
-
-                string cls = GetString(pluginManager, $"{basePath}.CarClassShortName");
-                if (string.IsNullOrWhiteSpace(cls))
-                {
-                    cls = GetString(pluginManager, $"{basePath}.CarClassName");
-                }
-
-                if (!string.IsNullOrWhiteSpace(cls))
-                {
-                    _carIdxToClassShortName[carIdx] = cls;
-                }
-            }
-
-            for (int i = 0; i < 64; i++)
-            {
-                string basePath = $"DataCorePlugin.GameRawData.SessionData.DriverInfo.CompetingDrivers[{i}]";
-                int carIdx = GetInt(pluginManager, $"{basePath}.CarIdx", int.MinValue);
-                if (carIdx == int.MinValue)
-                {
-                    break;
-                }
-
-                if (carIdx < 0 || carIdx >= CarSAEngine.MaxCars)
-                {
-                    continue;
-                }
-
-                if (_carIdxToClassShortName.ContainsKey(carIdx))
-                {
-                    continue;
-                }
-
-                string cls = GetString(pluginManager, $"{basePath}.CarClassShortName");
-                if (string.IsNullOrWhiteSpace(cls))
-                {
-                    cls = GetString(pluginManager, $"{basePath}.CarClassName");
-                }
-
-                if (!string.IsNullOrWhiteSpace(cls))
-                {
-                    _carIdxToClassShortName[carIdx] = cls;
-                }
-            }
-
-        }
-
-        private string GetCachedClassShortName(int carIdx)
-        {
-            if (carIdx < 0) return null;
-            return _carIdxToClassShortName.TryGetValue(carIdx, out var cls) ? cls : null;
-        }
-
-        private enum SessionClassAuthority
-        {
-            SingleClass = 0,
-            MultiClass = 1,
-            Unknown = 2
-        }
-
-        private SessionClassAuthority ResolveSessionClassAuthority(PluginManager pluginManager, out int numCarClasses, out bool hasMultipleClassOpponents)
-        {
-            numCarClasses = SafeReadInt(pluginManager, "DataCorePlugin.GameRawData.SessionData.WeekendInfo.NumCarClasses", UnknownNumCarClasses);
-            hasMultipleClassOpponents = false;
             try
             {
-                hasMultipleClassOpponents = Convert.ToBoolean(pluginManager?.GetPropertyValue("DataCorePlugin.GameData.HasMultipleClassOpponents") ?? false);
+                return Convert.ToBoolean(pluginManager?.GetPropertyValue("DataCorePlugin.GameData.HasMultipleClassOpponents") ?? false);
             }
             catch
             {
-                hasMultipleClassOpponents = false;
+                return false;
             }
-
-            // Native authority order:
-            // 1) NumCarClasses == 1 => single-class.
-            // 2) NumCarClasses > 1 => multiclass.
-            // 3) Unknown class-count + positive HasMultipleClassOpponents => multiclass.
-            // 4) Unknown class-count + no positive multiclass hint => unresolved/unknown (fail-safe).
-            if (numCarClasses == 1)
-            {
-                return SessionClassAuthority.SingleClass;
-            }
-
-            if (numCarClasses > 1)
-            {
-                return SessionClassAuthority.MultiClass;
-            }
-
-            return hasMultipleClassOpponents
-                ? SessionClassAuthority.MultiClass
-                : SessionClassAuthority.Unknown;
-        }
-
-        private bool IsEffectivelySingleClassSession(PluginManager pluginManager, out int numCarClasses, out bool hasMultipleClassOpponents)
-        {
-            return ResolveSessionClassAuthority(pluginManager, out numCarClasses, out hasMultipleClassOpponents) == SessionClassAuthority.SingleClass;
         }
 
         private static bool HasUsableClassIdentity(string classShortName)
@@ -13118,26 +13291,156 @@ namespace LaunchPlugin
             return !string.IsNullOrWhiteSpace(classShortName);
         }
 
-        private static bool IsSameEffectiveClass(string playerClassShort, string candidateClassShort, bool isSingleClassSession)
+        private string ResolveCarClassShortName(PluginManager pluginManager, int carIdx)
         {
-            if (isSingleClassSession)
+            if (pluginManager == null || carIdx < 0 || carIdx >= CarSAEngine.MaxCars)
+            {
+                return string.Empty;
+            }
+
+            for (int i = 1; i <= 64; i++)
+            {
+                string basePath = $"DataCorePlugin.GameRawData.SessionData.DriverInfo.Drivers{i:00}";
+                int idx = GetInt(pluginManager, $"{basePath}.CarIdx", int.MinValue);
+                if (idx == int.MinValue || idx != carIdx)
+                {
+                    continue;
+                }
+
+                string classShort = GetString(pluginManager, $"{basePath}.CarClassShortName");
+                if (!string.IsNullOrWhiteSpace(classShort))
+                {
+                    return classShort.Trim();
+                }
+
+                string className = GetString(pluginManager, $"{basePath}.CarClassName");
+                return className?.Trim() ?? string.Empty;
+            }
+
+            for (int i = 0; i < 64; i++)
+            {
+                string basePath = $"DataCorePlugin.GameRawData.SessionData.DriverInfo.CompetingDrivers[{i}]";
+                int idx = GetInt(pluginManager, $"{basePath}.CarIdx", int.MinValue);
+                if (idx == int.MinValue)
+                {
+                    break;
+                }
+
+                if (idx != carIdx)
+                {
+                    continue;
+                }
+
+                string classShort = GetString(pluginManager, $"{basePath}.CarClassShortName");
+                if (!string.IsNullOrWhiteSpace(classShort))
+                {
+                    return classShort.Trim();
+                }
+
+                string className = GetString(pluginManager, $"{basePath}.CarClassName");
+                return className?.Trim() ?? string.Empty;
+            }
+
+            return string.Empty;
+        }
+
+        private bool TryResolvePlayerClassShortName(PluginManager pluginManager, int playerCarIdx, out string playerClassShort)
+        {
+            playerClassShort = (GetString(pluginManager, "DataCorePlugin.GameData.CarClass") ?? string.Empty).Trim();
+            if (HasUsableClassIdentity(playerClassShort))
             {
                 return true;
             }
 
-            bool playerHasClass = HasUsableClassIdentity(playerClassShort);
-            bool candidateHasClass = HasUsableClassIdentity(candidateClassShort);
-            return playerHasClass
-                && candidateHasClass
-                && string.Equals(playerClassShort, candidateClassShort, StringComparison.OrdinalIgnoreCase);
+            playerClassShort = ResolveCarClassShortName(pluginManager, playerCarIdx);
+            return HasUsableClassIdentity(playerClassShort);
         }
 
-        private void MaybeLogClassBestResolveFailure(string reason, int playerCarIdx, int numCarClasses, bool hasMultipleClassOpponents)
+        private bool IsCarInPlayerClass(PluginManager pluginManager, int carIdx, bool isMultiClassSession, string playerClassShort)
         {
-            bool metadataNotReadySingleClass = string.Equals(reason, "missing_or_late_class_metadata", StringComparison.OrdinalIgnoreCase)
-                && numCarClasses == 1
-                && !hasMultipleClassOpponents;
-            if (metadataNotReadySingleClass)
+            if (!isMultiClassSession)
+            {
+                return true;
+            }
+
+            if (!HasUsableClassIdentity(playerClassShort))
+            {
+                return false;
+            }
+
+            string candidateClass = ResolveCarClassShortName(pluginManager, carIdx);
+            return HasUsableClassIdentity(candidateClass)
+                && string.Equals(candidateClass, playerClassShort, StringComparison.OrdinalIgnoreCase);
+        }
+
+        private int FindOverallLeaderCarIdx(int[] overallPositions, int[] trackSurfaces)
+        {
+            if (overallPositions == null)
+            {
+                return -1;
+            }
+
+            for (int i = 0; i < overallPositions.Length; i++)
+            {
+                if (overallPositions[i] != 1)
+                {
+                    continue;
+                }
+
+                if (!IsCarInWorld(trackSurfaces, i))
+                {
+                    continue;
+                }
+
+                return i;
+            }
+
+            return -1;
+        }
+
+        private int FindResolvedClassLeaderCarIdx(PluginManager pluginManager, int playerCarIdx, bool isMultiClassSession, int[] trackSurfaces)
+        {
+            int[] overallPositions = SafeReadIntArray(pluginManager, "DataCorePlugin.GameRawData.Telemetry.CarIdxPosition");
+            if (!isMultiClassSession)
+            {
+                return FindOverallLeaderCarIdx(overallPositions, trackSurfaces);
+            }
+
+            if (!TryResolvePlayerClassShortName(pluginManager, playerCarIdx, out string playerClassShort))
+            {
+                return -1;
+            }
+
+            int[] classPositions = SafeReadIntArray(pluginManager, "DataCorePlugin.GameRawData.Telemetry.CarIdxClassPosition");
+            if (classPositions == null)
+            {
+                return -1;
+            }
+
+            for (int i = 0; i < classPositions.Length; i++)
+            {
+                if (classPositions[i] != 1)
+                {
+                    continue;
+                }
+
+                if (!IsCarInWorld(trackSurfaces, i))
+                {
+                    continue;
+                }
+
+                if (IsCarInPlayerClass(pluginManager, i, isMultiClassSession, playerClassShort))
+                {
+                    return i;
+                }
+            }
+
+            return -1;
+        }
+
+        private void MaybeLogClassBestResolveFailure(string reason, int playerCarIdx, bool isMultiClassSession)
+        {
+            if (!isMultiClassSession && string.Equals(reason, "no_valid_best_laps", StringComparison.OrdinalIgnoreCase))
             {
                 return;
             }
@@ -13149,10 +13452,9 @@ namespace LaunchPlugin
             }
 
             _classBestResolveLastLogReason = normalizedReason;
-            _classBestResolveLastLogUtc = DateTime.UtcNow;
             SimHub.Logging.Current.Info(
                 $"[LalaPlugin:H2H] Native class-best unresolved reason={reason} playerCarIdx={playerCarIdx} " +
-                $"classMetaCount={_carIdxToClassShortName.Count} numCarClasses={numCarClasses} hasMultipleClassOpponents={hasMultipleClassOpponents}");
+                $"hasMultipleClassOpponents={isMultiClassSession}");
         }
 
         private double ComputeH2HClassSessionBestLapSec(PluginManager pluginManager, int playerCarIdx)
@@ -13169,9 +13471,8 @@ namespace LaunchPlugin
                 return classBestLapSec;
             }
 
-            bool isSingleClassSession = IsEffectivelySingleClassSession(pluginManager, out int numCarClasses, out bool hasMultipleClassOpponents);
-            _ = isSingleClassSession;
-            MaybeLogClassBestResolveFailure(resolveFailureReason, playerCarIdx, numCarClasses, hasMultipleClassOpponents);
+            bool isMultiClassSession = IsMultiClassSession(pluginManager);
+            MaybeLogClassBestResolveFailure(resolveFailureReason, playerCarIdx, isMultiClassSession);
 
             if (!_h2hClassSessionBestNativeMissingWarned)
             {
@@ -13196,15 +13497,9 @@ namespace LaunchPlugin
                 return false;
             }
 
-            bool isSingleClassSession = IsEffectivelySingleClassSession(pluginManager, out _, out _);
-            if (!isSingleClassSession && _carIdxToClassShortName.Count == 0)
-            {
-                failureReason = "missing_or_late_class_metadata";
-                return false;
-            }
-
-            string playerClassShort = GetCachedClassShortName(playerCarIdx);
-            if (!isSingleClassSession && !HasUsableClassIdentity(playerClassShort))
+            bool isMultiClassSession = IsMultiClassSession(pluginManager);
+            string playerClassShort = string.Empty;
+            if (isMultiClassSession && !TryResolvePlayerClassShortName(pluginManager, playerCarIdx, out playerClassShort))
             {
                 failureReason = "blank_class_identity_multiclass";
                 return false;
@@ -13215,8 +13510,7 @@ namespace LaunchPlugin
             bool matchedCandidate = false;
             for (int i = 0; i < CarSAEngine.MaxCars; i++)
             {
-                string classShort = GetCachedClassShortName(i);
-                if (!IsSameEffectiveClass(playerClassShort, classShort, isSingleClassSession))
+                if (!IsCarInPlayerClass(pluginManager, i, isMultiClassSession, playerClassShort))
                 {
                     continue;
                 }
@@ -13232,7 +13526,7 @@ namespace LaunchPlugin
 
             if (!IsValidCarSaLapTimeSec(resolvedClassBestLapSec) || resolvedClassLeaderCarIdx < 0)
             {
-                if (!matchedCandidate && !isSingleClassSession)
+                if (!matchedCandidate && isMultiClassSession)
                 {
                     failureReason = "blank_class_identity_multiclass";
                 }
@@ -13278,14 +13572,20 @@ namespace LaunchPlugin
                 return;
             }
 
-            if (!TryResolveClassSessionBestLap(pluginManager, playerCarIdx, out int classLeaderCarIdx, out double classBestLapSec, out _))
+            bool isMultiClassSession = IsMultiClassSession(pluginManager);
+            int[] trackSurfaces = SafeReadIntArray(pluginManager, "DataCorePlugin.GameRawData.Telemetry.CarIdxTrackSurface");
+            int classLeaderCarIdx = FindResolvedClassLeaderCarIdx(pluginManager, playerCarIdx, isMultiClassSession, trackSurfaces);
+            if (classLeaderCarIdx < 0)
             {
                 return;
             }
 
             ClassLeaderCarIdx = classLeaderCarIdx;
-            ClassLeaderBestLapTimeSec = classBestLapSec;
-            ClassLeaderBestLapTime = FormatLapTime(classBestLapSec);
+            double classLeaderBestLapSec = (classLeaderCarIdx >= 0 && classLeaderCarIdx < _carSaBestLapTimeSecByIdx.Length)
+                ? _carSaBestLapTimeSecByIdx[classLeaderCarIdx]
+                : double.NaN;
+            ClassLeaderBestLapTimeSec = IsValidCarSaLapTimeSec(classLeaderBestLapSec) ? classLeaderBestLapSec : 0.0;
+            ClassLeaderBestLapTime = IsValidCarSaLapTimeSec(classLeaderBestLapSec) ? FormatLapTime(classLeaderBestLapSec) : "-";
 
             if (TryGetCarIdentityFromSessionInfo(pluginManager, classLeaderCarIdx, out string name, out string carNumber, out _))
             {
@@ -13379,9 +13679,9 @@ namespace LaunchPlugin
                 return false;
             }
 
-            bool isSingleClassSession = IsEffectivelySingleClassSession(pluginManager, out _, out _);
-            string classShort = GetCachedClassShortName(carIdx);
-            if (!isSingleClassSession && !HasUsableClassIdentity(classShort))
+            bool isMultiClassSession = IsMultiClassSession(pluginManager);
+            string classShort = ResolveCarClassShortName(pluginManager, carIdx);
+            if (isMultiClassSession && !HasUsableClassIdentity(classShort))
             {
                 return false;
             }
@@ -13390,8 +13690,7 @@ namespace LaunchPlugin
             double currentClassBestSec = double.NaN;
             for (int i = 0; i < CarSAEngine.MaxCars; i++)
             {
-                string classShortForCar = GetCachedClassShortName(i);
-                if (!IsSameEffectiveClass(classShort, classShortForCar, isSingleClassSession))
+                if (!IsCarInPlayerClass(pluginManager, i, isMultiClassSession, classShort))
                 {
                     continue;
                 }
@@ -13575,25 +13874,6 @@ namespace LaunchPlugin
             if (segment < 1) return 1;
             if (segment > LapReferenceEngine.SegmentCount) return LapReferenceEngine.SegmentCount;
             return segment;
-        }
-
-        private int FindClassLeaderCarIdx(string playerClassShort, bool isSingleClassSession, int[] classPositions, int[] trackSurfaces)
-        {
-            if (classPositions == null) return -1;
-
-            for (int i = 0; i < classPositions.Length; i++)
-            {
-                if (classPositions[i] != 1) continue;
-                if (!IsCarInWorld(trackSurfaces, i)) continue;
-
-                var classShort = GetCachedClassShortName(i);
-                if (IsSameEffectiveClass(playerClassShort, classShort, isSingleClassSession))
-                {
-                    return i;
-                }
-            }
-
-            return -1;
         }
 
         private static bool IsCarInWorld(int[] trackSurfaces, int index)
@@ -14296,6 +14576,7 @@ namespace LaunchPlugin
             PreRace_FuelSource = "fallback";
             PreRace_LapTimeSource = "fallback";
             PreRace_StatusText = "STRATEGY OKAY";
+            PreRace_StatusColour = "green";
 
             // --- Additional dashboard-facing fuel/projection outputs that must not latch across resets ---
             // (These were listed in SessionResetIssues.docx)
@@ -14674,6 +14955,54 @@ namespace LaunchPlugin
             return detected < 0.0 ? 0.0 : detected;
         }
 
+        public bool TryGetRuntimeLiveCapForStrategy(out double capLitres, out string source)
+        {
+            capLitres = 0.0;
+            source = "none";
+
+            var pm = PluginManager;
+            if (pm != null)
+            {
+                double computed = ComputeLiveMaxFuelFromSimhub(pm);
+                if (computed > 0.0)
+                {
+                    capLitres = computed;
+                    source = "raw";
+                    return true;
+                }
+            }
+
+            if (HasFreshLiveMaxFuelFallback())
+            {
+                capLitres = _lastValidLiveMaxFuel;
+                source = "fallback";
+                return true;
+            }
+
+            return false;
+        }
+
+        private void LogLiveMaxFuelHealth(double computedMaxFuel, string source)
+        {
+            bool sourceChanged = !string.Equals(source, _lastLiveMaxHealthLoggedSource, StringComparison.Ordinal);
+            bool computedChanged = double.IsNaN(_lastLiveMaxHealthLoggedComputed) ||
+                                   Math.Abs(computedMaxFuel - _lastLiveMaxHealthLoggedComputed) > 0.1;
+            bool effectiveChanged = double.IsNaN(_lastLiveMaxHealthLoggedEffective) ||
+                                    Math.Abs(EffectiveLiveMaxTank - _lastLiveMaxHealthLoggedEffective) > 0.1;
+            bool allowTimed = (DateTime.UtcNow - _lastLiveMaxHealthLogUtc) > TimeSpan.FromSeconds(8);
+            if (!sourceChanged && !computedChanged && !effectiveChanged && !allowTimed)
+                return;
+
+            _lastLiveMaxHealthLogUtc = DateTime.UtcNow;
+            _lastLiveMaxHealthLoggedSource = source;
+            _lastLiveMaxHealthLoggedComputed = computedMaxFuel;
+            _lastLiveMaxHealthLoggedEffective = EffectiveLiveMaxTank;
+
+            SimHub.Logging.Current.Info(
+                $"[LalaPlugin:Fuel Burn] live-max health source={source} raw={computedMaxFuel:F2} " +
+                $"live={LiveCarMaxFuel:F2} lastValid={_lastValidLiveMaxFuel:F2} effective={EffectiveLiveMaxTank:F2}");
+        }
+
         private void UpdateLiveMaxFuel(PluginManager pluginManager)
         {
             double computedMaxFuel = ComputeLiveMaxFuelFromSimhub(pluginManager);
@@ -14681,6 +15010,7 @@ namespace LaunchPlugin
             if (computedMaxFuel > 0.0)
             {
                 _lastValidLiveMaxFuel = computedMaxFuel;
+                _lastValidLiveMaxFuelUtc = DateTime.UtcNow;
                 EffectiveLiveMaxTank = computedMaxFuel;
 
                 bool meaningfulChange =
@@ -14698,11 +15028,17 @@ namespace LaunchPlugin
                     FuelCalculator.UpdateLiveDisplay(LiveCarMaxFuel);
                 }
 
+                LogLiveMaxFuelHealth(computedMaxFuel, "raw");
+
                 return;
             }
 
-            // computedMaxFuel <= 0 : keep a stable non-zero effective value if we have one
-            EffectiveLiveMaxTank = (LiveCarMaxFuel > 0.0) ? LiveCarMaxFuel : _lastValidLiveMaxFuel;
+            bool fallbackFresh = HasFreshLiveMaxFuelFallback();
+            EffectiveLiveMaxTank = (LiveCarMaxFuel > 0.0)
+                ? LiveCarMaxFuel
+                : (fallbackFresh ? _lastValidLiveMaxFuel : 0.0);
+
+            LogLiveMaxFuelHealth(computedMaxFuel, fallbackFresh ? "fallback" : "none");
         }
 
         private double ResolveMaxTankCapacity()
@@ -14832,7 +15168,6 @@ namespace LaunchPlugin
                 _finishTimingSessionType = sessionType;
                 _afterZeroResultLogged = false;
                 ResetFinishTimingState();
-                RefreshClassMetadata(pluginManager);
             }
 
             if (!isRace)
@@ -14857,39 +15192,20 @@ namespace LaunchPlugin
                 _timerZeroSessionTime = sessionTime;
             }
 
-            if (_carIdxToClassShortName.Count == 0 && isRace)
-            {
-                RefreshClassMetadata(pluginManager);
-            }
-
             int sessionStateNumeric = ReadSessionStateInt(pluginManager);
             bool isTimedRace = hasRemain;
             bool sessionStateRaceOrLater = sessionStateNumeric >= 4;
 
             int playerCarIdx = GetInt(pluginManager, "DataCorePlugin.GameRawData.Telemetry.PlayerCarIdx", -1);
-            string playerClassShort = GetCachedClassShortName(playerCarIdx);
-            if (string.IsNullOrWhiteSpace(playerClassShort) && pluginManager != null)
-            {
-                RefreshClassMetadata(pluginManager);
-                playerClassShort = GetCachedClassShortName(playerCarIdx);
-            }
-            bool isSingleClassSession = IsEffectivelySingleClassSession(pluginManager, out _, out _);
-            bool isMultiClassSession = !isSingleClassSession;
-
-            var classPositions = GetIntArray(pluginManager, "DataCorePlugin.GameRawData.Telemetry.CarIdxClassPosition");
+            bool isMultiClassSession = IsMultiClassSession(pluginManager);
             var trackSurfaces = GetIntArray(pluginManager, "DataCorePlugin.GameRawData.Telemetry.CarIdxTrackSurface");
             var lapDistPct = GetDoubleArray(pluginManager, "DataCorePlugin.GameRawData.Telemetry.CarIdxLapDistPct");
+            var overallPositions = GetIntArray(pluginManager, "DataCorePlugin.GameRawData.Telemetry.CarIdxPosition");
 
-            int classLeaderIdx = FindClassLeaderCarIdx(playerClassShort, isSingleClassSession, classPositions, trackSurfaces);
+            int classLeaderIdx = FindResolvedClassLeaderCarIdx(pluginManager, playerCarIdx, isMultiClassSession, trackSurfaces);
             ClassLeaderHasFinishedValid = classLeaderIdx >= 0;
 
-            int overallLeaderIdx = -1;
-
-            // Single-class: overall leader == class leader
-            if (isSingleClassSession && classLeaderIdx >= 0)
-            {
-                overallLeaderIdx = classLeaderIdx;
-            }
+            int overallLeaderIdx = FindOverallLeaderCarIdx(overallPositions, trackSurfaces);
 
             // Validity means “we know who the leader is”, not “we are using it”
             OverallLeaderHasFinishedValid = overallLeaderIdx >= 0;

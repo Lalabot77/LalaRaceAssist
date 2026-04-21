@@ -18,6 +18,34 @@ Branch: work
   - added settings-level transport selector (`Auto`, `Legacy foreground SendInput only`, `Direct message only`) in `Settings -> Pit Commands`;
   - built-in pit actions, custom-message actions, raw pit-command seam, feedback exports, and stateful toggle confirmation ownership remain unchanged;
   - transport logs now explicitly report `transport=...`, fallback (`fallback_from=postmessage`), and bounded failure reasons (`no-iracing-process`, `no-iracing-window`, `not-foreground`, etc.).
+- PreRace system refresh + shared planner/live validity seam:
+  - extracted shared planner/live session match helper and moved Pit Fuel Control PLAN validity to it;
+  - added `PlannerLiveSessionMatchHelper.cs` to explicit `LaunchPlugin.csproj` compile items for non-SDK project build inclusion;
+  - PreRace Auto now uses live race-definition authority first (`_SessionTime` timed / `_SessionLaps` lap-limited) plus runtime stable fuel/lap source seams;
+  - PreRace Auto status thresholds now map stints as: `<= 1.0` => `NO STOP OKAY`; `> 1.0` and `<= 2.0` => `SINGLE STOP OKAY`; `> 2.0` => existing multi-stop handling;
+  - non-Auto PreRace now shows orange `STRATEGY MISMATCH` only when planner/live inputs are comparable and actually mismatch (`HasComparableInputs && !IsMatch`), so transient missing values do not raise mismatch;
+  - replaced coarse PreRace status band with richer text + color output (`LalaLaunch.PreRace.StatusColour`: `green`/`orange`/`red`);
+  - overfuel warning now requires excess > `2x` configured contingency.
+  - PR follow-up fixed planner snapshot API accessibility mismatch by making `FuelCalcs.GetPlannerSessionMatchSnapshot()` internal to match internal snapshot type visibility.
+- PR follow-up fix for Strategy live-cap freshness-window bypass:
+  - tightened `TryGetRuntimeLiveCapForStrategy(...)` to remove unbounded cached-cap return paths (`LiveCarMaxFuel` / `EffectiveLiveMaxTank`);
+  - Strategy live-cap authority now resolves through one bounded fallback seam only (`raw -> bounded fallback -> unavailable`), so stale cached caps cannot outlive fallback freshness gating.
+- PR follow-up fix for runtime fuel health/recovery merge blockers:
+  - moved pit-road telemetry read before active-driving runtime health edge logic so `isOnPitRoad` is defined before use;
+  - tightened `ManualRecoveryReset(...)` planner-safe short-circuit so early return is allowed only during active live session when planner-safe recovery succeeds;
+  - preserved planner-safe behavior for live runtime recovery while keeping non-live manual reset on the existing broad reset path.
+- Runtime health/recovery stabilization sweep (fuel/live snapshot seam):
+  - added bounded runtime health checks for live max tank seam (session token/type, combo, and car-active edges) with debounced recovery;
+  - unified Strategy live-cap authority to plugin runtime live-cap seam (`raw -> bounded last-valid fallback`);
+  - added planner-safe targeted manual recovery path for fuel/live snapshot refresh;
+  - removed automatic planner manual-override reset from fuel-model session reset path to preserve planner intent during runtime re-arm;
+  - synced Fuel Model / Pace & Projection / Fuel Planner docs and internal inventory/log/changelog notes to reflect the new bounded health/recovery behavior.
+- Analysis-first class-resolution simplification landed with one trusted-property authority model and shared seams:
+  - class-state authority for runtime consumers now uses `GameData.HasMultipleClassOpponents` directly;
+  - single-class path now bypasses class matching entirely and uses overall leader / whole-field best directly;
+  - multiclass path now uses one shared player-class seam for both class leader and class-best resolution;
+  - `Race.ClassLeaderHasFinished*` now consumes the same class-leader seam used by `ClassLeader.*` (no separate finish-only resolver);
+  - removed metadata-cache authority helpers and duplicate class authority trees from active class-leader/class-best/finish paths.
 - Wet-condition PB/session-best audit follow-up (bounded to profile/PB/planner/LapRef wet-dry behavior):
   - planner/profile PB reads now use condition-only lookup, so wet mode no longer borrows dry PB when wet PB is absent;
   - validated wet PB persistence remains condition-scoped on existing telemetry gate path (`_isWetMode` -> `TryUpdatePBByCondition(...)` -> wet PB fields only);
@@ -41,7 +69,7 @@ Branch: work
   - `Pit.FuelSetZero` and `Pit.FuelSetMax` ZERO phase now transport `#fuel 0.01$` (MAX phase unchanged).
   - AUTO cancel now uses live requested-fuel movement ownership detection outside plugin send suppression (no stale baseline mismatch dependence); cancellation is one-shot to `OFF + STBY` with `AUTO CANCELLED`.
   - Plugin AUTO now disengages when iRacing AutoFuel is enabled (no AUTO co-ownership).
-  - Reset triggers now force `OFF + STBY` on session type change and SessionState `1 -> 2`; `2 -> 3` intentionally does not reset.
+  - External lifecycle reset now uses only `Telemetry.IsOnTrackCar` edge detection (`false -> true` and `true -> false`) and forces `OFF + STBY` on each edge.
   - Offline Testing now suppresses Pit Fuel Control to inert `OFF + STBY`.
 - LapRef/H2H/profile-track follow-up (bounded scope):
   - profile-track editor now has condition-specific PB cleanup actions:
