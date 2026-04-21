@@ -33,6 +33,20 @@ The public user-facing release history is maintained in the root `CHANGELOG.md`.
 
 ## Post-v1.0 development
 
+### 2026-04-21 — LapRef profile-track PB sector UI + H2H unresolved log spam follow-up
+- Classification: **both** (profile-track editor UX visibility/control update + LapRef/H2H runtime behavior hardening).
+- Added profile-track editor controls for condition-specific PB cleanup:
+  - new dry action clears only dry PB lap + dry PB sectors (`S1..S6`),
+  - new wet action clears only wet PB lap + wet PB sectors (`S1..S6`),
+  - both actions are independent from existing `Zero and Relearn` condition resets.
+- Added profile-track condition status indicator (`No sector data`) for legacy lap-time-only PB rows:
+  - shown only when a condition PB lap exists but complete sector payload is missing.
+- Stopped recurring H2H unresolved class-best info spam:
+  - unresolved info log is now reason-transition latched (not cadence-repeated),
+  - startup single-class metadata-not-ready path is suppressed to avoid noisy no-op diagnostics while keeping fail-safe output behavior.
+- LapRef profile-best rematerialization is now condition-only for `LapRef.ProfileBest.*`:
+  - wet mode no longer falls back to dry PB reference lookup.
+  - session-best capture and reset ownership seams remain unchanged.
 ### 2026-04-21 — PR #585 review follow-up: unknown class authority no longer defaults to single-class
 - Classification: **both** (driver-visible class-best/class-leader correctness during startup metadata windows + internal authority seam hardening).
 - Tightened `ResolveSessionClassAuthority(...)` so unknown class-count no longer collapses to `SingleClass` when `HasMultipleClassOpponents` is unavailable/false.

@@ -765,6 +765,7 @@ namespace LaunchPlugin
                     }
 
                     _bestLapMsDryText = MillisecondsToLapTimeString(_bestLapMsDry);
+                    RaiseBestLapSectorStatusChanged();
                 }
             }
         }
@@ -812,6 +813,7 @@ namespace LaunchPlugin
                     }
 
                     _bestLapMsWetText = MillisecondsToLapTimeString(_bestLapMsWet);
+                    RaiseBestLapSectorStatusChanged();
                 }
             }
         }
@@ -841,6 +843,12 @@ namespace LaunchPlugin
 
             if (BestLapMsDry.HasValue && BestLapMsDry.Value > 0) return BestLapMsDry;
             return null;
+        }
+
+        public int? GetConditionOnlyBestLapMs(bool isWetEffective)
+        {
+            int? lapMs = isWetEffective ? BestLapMsWet : BestLapMsDry;
+            return (lapMs.HasValue && lapMs.Value > 0) ? lapMs : (int?)null;
         }
 
         [JsonProperty(NullValueHandling = NullValueHandling.Ignore)]
@@ -947,6 +955,10 @@ namespace LaunchPlugin
                 }
             }
 
+            if (changed)
+            {
+                RaiseBestLapSectorStatusChanged();
+            }
             return changed;
         }
 
@@ -970,6 +982,69 @@ namespace LaunchPlugin
                 BestLapSector5DryMs = null;
                 BestLapSector6DryMs = null;
             }
+
+            RaiseBestLapSectorStatusChanged();
+        }
+
+        public bool HasCompleteBestLapSectorDataForCondition(bool isWetEffective)
+        {
+            for (int i = 0; i < 6; i++)
+            {
+                int? value = GetBestLapSectorMsForCondition(isWetEffective, i);
+                if (!value.HasValue || value.Value <= 0)
+                {
+                    return false;
+                }
+            }
+
+            return true;
+        }
+
+        public bool ShouldShowMissingBestLapSectorStatusForCondition(bool isWetEffective)
+        {
+            return GetConditionOnlyBestLapMs(isWetEffective).HasValue
+                && !HasCompleteBestLapSectorDataForCondition(isWetEffective);
+        }
+
+        [JsonIgnore]
+        public bool HasDryBestLapSectorData => HasCompleteBestLapSectorDataForCondition(false);
+
+        [JsonIgnore]
+        public bool HasWetBestLapSectorData => HasCompleteBestLapSectorDataForCondition(true);
+
+        [JsonIgnore]
+        public bool ShowNoSectorDataDry => ShouldShowMissingBestLapSectorStatusForCondition(false);
+
+        [JsonIgnore]
+        public bool ShowNoSectorDataWet => ShouldShowMissingBestLapSectorStatusForCondition(true);
+
+        public void ClearBestLapAndSectorsForCondition(bool isWetEffective)
+        {
+            if (isWetEffective)
+            {
+                BestLapMsWet = 0;
+                BestLapTimeWetText = MillisecondsToLapTimeString(BestLapMsWet);
+                WetBestLapUpdatedSource = null;
+                WetBestLapUpdatedUtc = null;
+            }
+            else
+            {
+                BestLapMsDry = 0;
+                BestLapTimeDryText = MillisecondsToLapTimeString(BestLapMsDry);
+                DryBestLapUpdatedSource = null;
+                DryBestLapUpdatedUtc = null;
+            }
+
+            ClearBestLapSectorsForCondition(isWetEffective);
+            RaiseBestLapSectorStatusChanged();
+        }
+
+        private void RaiseBestLapSectorStatusChanged()
+        {
+            OnPropertyChanged(nameof(HasDryBestLapSectorData));
+            OnPropertyChanged(nameof(HasWetBestLapSectorData));
+            OnPropertyChanged(nameof(ShowNoSectorDataDry));
+            OnPropertyChanged(nameof(ShowNoSectorDataWet));
         }
         private double? _pitLaneLossSeconds;
         [JsonProperty] public double? PitLaneLossSeconds { get => _pitLaneLossSeconds; set { if (_pitLaneLossSeconds != value) { _pitLaneLossSeconds = value; OnPropertyChanged(); OnPropertyChanged(nameof(PitLaneLossSecondsText)); } } }

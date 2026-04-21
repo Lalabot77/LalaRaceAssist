@@ -1144,6 +1144,27 @@
                                                 Command="{Binding DataContext.RelearnDryCommand, RelativeSource={RelativeSource AncestorType=UserControl}}"
                                                 Margin="10,0,0,0"
                                                 ToolTip="Clear dry data and relearn from new live laps (while unlocked)."/>
+                                            <styles:SHButtonPrimary
+                                                Content="Clear Dry PB + Sectors"
+                                                Command="{Binding DataContext.ClearDryBestLapAndSectorsCommand, RelativeSource={RelativeSource AncestorType=UserControl}}"
+                                                Margin="10,0,0,0"
+                                                ToolTip="Clear only dry best lap and dry sector 1..6 data."/>
+                                            <TextBlock
+                                                Margin="10,0,0,0"
+                                                VerticalAlignment="Center"
+                                                Foreground="#FF9AA0A6"
+                                                Text="No sector data">
+                                                <TextBlock.Style>
+                                                    <Style TargetType="TextBlock">
+                                                        <Setter Property="Visibility" Value="Collapsed"/>
+                                                        <Style.Triggers>
+                                                            <DataTrigger Binding="{Binding ShowNoSectorDataDry}" Value="True">
+                                                                <Setter Property="Visibility" Value="Visible"/>
+                                                            </DataTrigger>
+                                                        </Style.Triggers>
+                                                    </Style>
+                                                </TextBlock.Style>
+                                            </TextBlock>
                                         </StackPanel>
                                     </Grid>
                                 </GroupBox>
@@ -1300,6 +1321,27 @@
                                                 Command="{Binding DataContext.RelearnWetCommand, RelativeSource={RelativeSource AncestorType=UserControl}}"
                                                 Margin="10,0,0,0"
                                                 ToolTip="Clear wet data and relearn from new live laps (while unlocked)."/>
+                                            <styles:SHButtonPrimary
+                                                Content="Clear Wet PB + Sectors"
+                                                Command="{Binding DataContext.ClearWetBestLapAndSectorsCommand, RelativeSource={RelativeSource AncestorType=UserControl}}"
+                                                Margin="10,0,0,0"
+                                                ToolTip="Clear only wet best lap and wet sector 1..6 data."/>
+                                            <TextBlock
+                                                Margin="10,0,0,0"
+                                                VerticalAlignment="Center"
+                                                Foreground="#FF9AA0A6"
+                                                Text="No sector data">
+                                                <TextBlock.Style>
+                                                    <Style TargetType="TextBlock">
+                                                        <Setter Property="Visibility" Value="Collapsed"/>
+                                                        <Style.Triggers>
+                                                            <DataTrigger Binding="{Binding ShowNoSectorDataWet}" Value="True">
+                                                                <Setter Property="Visibility" Value="Visible"/>
+                                                            </DataTrigger>
+                                                        </Style.Triggers>
+                                                    </Style>
+                                                </TextBlock.Style>
+                                            </TextBlock>
                                         </StackPanel>
                                     </Grid>
                                 </GroupBox>

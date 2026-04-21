@@ -9,6 +9,13 @@ Branch: work
 - No Git remote is configured in this checkout (`git remote -v` returns empty).
 
 ## Documentation sync status
+- LapRef/H2H/profile-track follow-up (bounded scope):
+  - profile-track editor now has condition-specific PB cleanup actions:
+    - `Clear Dry PB + Sectors` (dry PB lap + dry S1..S6 only),
+    - `Clear Wet PB + Sectors` (wet PB lap + wet S1..S6 only);
+  - each condition block now shows `No sector data` only when that condition has a PB lap but incomplete/missing PB sector payload;
+  - H2H unresolved class-best info log is now reason-transition latched (no cadence spam), with startup suppression for single-class metadata-not-ready state;
+  - LapRef profile-best rematerialization is now condition-only for `LapRef.ProfileBest.*` (wet profile-best no longer falls back to dry PB).
 - PR #585 follow-up fixed a high-priority startup authority regression in native class-state resolution:
   - unknown `WeekendInfo.NumCarClasses` no longer defaults to single-class when `HasMultipleClassOpponents` is unavailable/false;
   - authority now remains unresolved/fail-safe unless native single-class is explicit (`NumCarClasses == 1`) or a positive multiclass signal exists (`NumCarClasses > 1`, or unknown class-count with `HasMultipleClassOpponents == true`);
@@ -357,6 +364,16 @@ Branch: work
 ### Changed in PR #582 review follow-up (explicit single-class authority requirement)
 - `LalaLaunch.cs`
 - `Docs/Subsystems/H2H.md`
+- `Docs/Internal/SimHubLogMessages.md`
+- `Docs/Internal/Development_Changelog.md`
+- `Docs/RepoStatus.md`
+
+### Changed in LapRef profile-track UI integration + H2H unresolved log spam + wet/dry profile-best routing fix
+- `ProfilesManagerView.xaml`
+- `ProfilesManagerViewModel.cs`
+- `CarProfiles.cs`
+- `LalaLaunch.cs`
+- `Docs/Subsystems/LapRef.md`
 - `Docs/Internal/SimHubLogMessages.md`
 - `Docs/Internal/Development_Changelog.md`
 - `Docs/RepoStatus.md`
