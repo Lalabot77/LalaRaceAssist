@@ -9,6 +9,11 @@ Branch: work
 - No Git remote is configured in this checkout (`git remote -v` returns empty).
 
 ## Documentation sync status
+- Pit/custom command transport upgrade (bounded seam in `PitCommandEngine`):
+  - new default transport mode is `Auto`: direct iRacing window-message send first (`postmessage`) with explicit fallback to legacy foreground `sendinput`;
+  - added settings-level transport selector (`Auto`, `Legacy foreground SendInput only`, `Direct message only`) in `Settings -> Pit Commands`;
+  - built-in pit actions, custom-message actions, raw pit-command seam, feedback exports, and stateful toggle confirmation ownership remain unchanged;
+  - transport logs now explicitly report `transport=...`, fallback (`fallback_from=postmessage`), and bounded failure reasons (`no-iracing-process`, `no-iracing-window`, `not-foreground`, etc.).
 - Wet-condition PB/session-best audit follow-up (bounded to profile/PB/planner/LapRef wet-dry behavior):
   - planner/profile PB reads now use condition-only lookup, so wet mode no longer borrows dry PB when wet PB is absent;
   - validated wet PB persistence remains condition-scoped on existing telemetry gate path (`_isWetMode` -> `TryUpdatePBByCondition(...)` -> wet PB fields only);
@@ -212,6 +217,21 @@ Branch: work
 - `Docs/Pit_Assist.md`
 - `Docs/Subsystems/Dash_Integration.md`
 - `Docs/Internal/SimHubParameterInventory.md`
+- `Docs/Internal/Development_Changelog.md`
+- `Docs/RepoStatus.md`
+
+### Changed in pit/custom command transport upgrade (direct window-message + bounded fallback)
+- `PitCommandEngine.cs`
+- `LalaLaunch.cs`
+- `GlobalSettingsView.xaml`
+- `README.md`
+- `Docs/Quick_Start.md`
+- `Docs/User_Guide.md`
+- `Docs/Pit_Assist.md`
+- `Docs/Subsystems/Dash_Integration.md`
+- `Docs/Internal/SimHubLogMessages.md`
+- `Docs/Internal/SimHubParameterInventory.md`
+- `Docs/Internal/Plugin_UI_Tooltips.md`
 - `Docs/Internal/Development_Changelog.md`
 - `Docs/RepoStatus.md`
 

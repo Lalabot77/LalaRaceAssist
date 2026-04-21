@@ -70,7 +70,11 @@ The dashboard docs now include a dedicated Primary Driver Dash guide covering th
 - Built-in pit command rows are configured in **Settings → Pit Commands**.
 - Pit Fuel Control is plugin-owned (`LalaLaunch.Pit.FuelControl.*`) for source/mode/target workflows used by supported pit widgets.
 - Pit/custom send transport no longer depends on `iRacingExtraProperties` action ids.
-- Current send reliability expects **iRacing to be in foreground focus**; auto-focus is not implemented yet.
+- Pit command transport mode is configurable in **Settings → Pit Commands**:
+  - default `Auto` tries direct iRacing window-message send first, then falls back to foreground `SendInput`,
+  - `Legacy foreground SendInput only` preserves old behavior,
+  - `Direct message only` disables fallback.
+- Auto-focus is still not implemented (preview setting only).
 
 ## Current Constraints (v1.x)
 

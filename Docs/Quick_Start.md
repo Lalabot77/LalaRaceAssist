@@ -109,7 +109,8 @@ For a new car/track combination:
 - Built-in pit command bindings are managed in **Settings → Pit Commands**.
 - Custom chat button slots are managed in **Settings → Custom Messages** and bound as `LalaLaunch.CustomMessage01..10`.
 - For supported pit widgets/buttons, bind plugin-owned actions (`LalaLaunch.Pit.*`, `LalaLaunch.Pit.FuelControl.*`) rather than old `IRacingExtraProperties` pit action ids.
-- Current reliability note: pit/custom sends work best when **iRacing is already in focus** (auto-focus is not implemented yet).
+- Transport mode is configurable in **Settings → Pit Commands** (`Auto` direct-message then fallback, `Legacy foreground SendInput only`, `Direct message only`).
+- Auto-focus is not implemented yet (preview setting only).
 
 ### Dash navigation quick setup
 

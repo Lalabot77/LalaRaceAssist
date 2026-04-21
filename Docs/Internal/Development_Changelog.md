@@ -33,6 +33,21 @@ The public user-facing release history is maintained in the root `CHANGELOG.md`.
 
 ## Post-v1.0 development
 
+### 2026-04-21 — Pit/custom transport upgrade: direct window-message first with bounded legacy fallback
+- Classification: **both** (driver-visible transport mode setting + bounded transport/observability behavior change).
+- Added a bounded transport-selection seam inside `PitCommandEngine` (no action-surface ownership change):
+  - new default mode `Auto` tries direct iRacing window-message transport first (`WM_KEYDOWN/UP T` -> `WM_CHAR` text -> `WM_KEYDOWN/UP Enter`),
+  - on direct-path failure, `Auto` falls back once to legacy foreground `SendInput`,
+  - added explicit mode controls: `Legacy foreground SendInput only` and `Direct message only`.
+- Kept command ownership and behavior seams unchanged:
+  - built-in pit actions, custom messages, and raw pit-command sends still route through existing plugin-owned entry points,
+  - stateful toggle confirmation remains telemetry before/after authoritative,
+  - short-lived `Pit.Command.*` feedback exports remain unchanged.
+- Added transport observability without per-tick spam:
+  - send attempts now log `transport=<postmessage|sendinput>`,
+  - fallback path logs `fallback_from=postmessage` with explicit `reason=...`,
+  - failure lines now include transport reason context (`no-iracing-process`, `no-iracing-window`, `not-foreground`, etc.).
+
 ### 2026-04-21 — Wet-condition PB/session-best audit follow-up (condition-only PB reads + LapRef session-best cross-condition guard)
 - Classification: **both** (driver-visible wet PB/session-best correctness + bounded LapRef authority seam hardening).
 - Fixed remaining wet PB fallback leakage in planner/profile-facing PB reads:

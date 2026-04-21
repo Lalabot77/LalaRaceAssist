@@ -157,7 +157,11 @@ Lala Race Assist Plugin includes separate driver-facing pages for recovery/rejoi
 - Dash buttons should call plugin-owned actions (`LalaLaunch.Pit.*`, `LalaLaunch.Pit.FuelControl.*`, `LalaLaunch.CustomMessage01..10`) through normal SimHub binding flow, not raw chat command syntax.
 - Pit Fuel Control is part of the same plugin-owned pit surface and can be driven from action bindings plus `Pit.FuelControl.*` exports.
 - `RSC.iRacingExtraProperties.dll` is not required for this pit/custom command path.
-- Current runtime caveat: iRacing generally needs to be in foreground focus for reliable pit/custom send transport; auto-focus is not implemented yet.
+- Transport mode is configurable in **Settings → Pit Commands**:
+  - default `Auto` tries direct window-message send first, then falls back to legacy foreground `SendInput`,
+  - `Legacy foreground SendInput only` keeps the old focus-required path,
+  - `Direct message only` disables fallback.
+- Auto-focus is not implemented yet (preview setting only).
 
 ### H2H
 
