@@ -1081,7 +1081,7 @@ namespace LaunchPlugin
             double contingencyLitres = ResolveLivePitFuelControlContingencyLitres(preRaceFuelPerLap);
             var status = EvaluatePreRaceStatus(
                 selectedStrategy,
-                plannerMismatch: !plannerMatchResult.IsMatch,
+                plannerMismatch: plannerMatchResult.HasComparableInputs && !plannerMatchResult.IsMatch,
                 preRaceStints: PreRace_Stints,
                 preRaceFuelDelta: PreRace_FuelDelta,
                 currentFuel: currentFuel,

@@ -33,6 +33,12 @@ The public user-facing release history is maintained in the root `CHANGELOG.md`.
 
 ## Post-v1.0 development
 
+### 2026-04-21 — PreRace PR follow-up (accessibility + mismatch comparable-input gate)
+- Classification: **both** (compile-fix API accessibility correction + dash-visible PreRace caution gating refinement).
+- Changed `FuelCalcs.GetPlannerSessionMatchSnapshot()` from `public` to `internal` so method/type accessibility is consistent with internal `PlannerLiveSessionMatchSnapshot` and `CS0050` is avoided.
+- Tightened non-Auto `STRATEGY MISMATCH` emission to comparable-input mismatches only (`plannerMatchResult.HasComparableInputs && !plannerMatchResult.IsMatch`) so transient missing planner/live values do not mask more actionable fuel status outputs.
+- Kept all other PreRace decision outputs and colour contract behavior unchanged.
+
 ### 2026-04-21 — PreRace authority refresh + shared planner/live validity seam
 - Classification: **both** (runtime/dash-visible status behavior + internal seam cleanup).
 - Extracted a focused shared planner/live session match helper (`PlannerLiveSessionMatchHelper`) covering car, track, basis (time/lap), and race-length tolerance checks.

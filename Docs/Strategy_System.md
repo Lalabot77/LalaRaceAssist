@@ -119,7 +119,7 @@ Its role is intentionally limited:
 PreRace status contract (dash-facing):
 - `StatusText` now reports explicit outcomes (`NO STOP OKAY`, `SINGLE STOP OKAY`, `MAX FUEL REQUIRED`, `STRATEGY MISMATCH`, etc.).
 - `StatusColour` publishes `green` / `orange` / `red` so dashboards can style the state without re-implementing logic.
-- In non-Auto modes, planner/live combo or race-definition mismatches are shown as an **orange caution** (`STRATEGY MISMATCH`), not a hard fail.
+- In non-Auto modes, planner/live combo or race-definition mismatches are shown as an **orange caution** (`STRATEGY MISMATCH`) only when planner/live inputs are comparable; transient unknown values do not trigger mismatch.
 
 ## 9. What users should trust
 

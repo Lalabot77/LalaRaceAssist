@@ -41,7 +41,7 @@ namespace LaunchPlugin
         }
     }
 
-    public PlannerLiveSessionMatchSnapshot GetPlannerSessionMatchSnapshot()
+    internal PlannerLiveSessionMatchSnapshot GetPlannerSessionMatchSnapshot()
     {
         string plannerCar = (SelectedCarProfile?.ProfileName ?? string.Empty).Trim();
 

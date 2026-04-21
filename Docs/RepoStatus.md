@@ -12,9 +12,10 @@ Branch: work
 - PreRace system refresh + shared planner/live validity seam:
   - extracted shared planner/live session match helper and moved Pit Fuel Control PLAN validity to it;
   - PreRace Auto now uses live race-definition authority first (`_SessionTime` timed / `_SessionLaps` lap-limited) plus runtime stable fuel/lap source seams;
-  - non-Auto PreRace now shows orange `STRATEGY MISMATCH` when planner/live combo-basis-race-length validity fails (warning only, no hard fail);
+  - non-Auto PreRace now shows orange `STRATEGY MISMATCH` only when planner/live inputs are comparable and actually mismatch (`HasComparableInputs && !IsMatch`), so transient missing values do not raise mismatch;
   - replaced coarse PreRace status band with richer text + color output (`LalaLaunch.PreRace.StatusColour`: `green`/`orange`/`red`);
   - overfuel warning now requires excess > `2x` configured contingency.
+  - PR follow-up fixed planner snapshot API accessibility mismatch by making `FuelCalcs.GetPlannerSessionMatchSnapshot()` internal to match internal snapshot type visibility.
 - Final documentation sweep aligned user-facing + dash-facing + internal docs with the implemented combined pit command stack:
   - plugin-owned pit command actions and plugin-owned custom-message actions are now the documented default workflow;
   - built-in pit command configuration location is documented as `Settings -> Pit Commands`;
