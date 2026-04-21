@@ -33,6 +33,30 @@ The public user-facing release history is maintained in the root `CHANGELOG.md`.
 
 ## Post-v1.0 development
 
+### 2026-04-21 — PR #585 review follow-up: unknown class authority no longer defaults to single-class
+- Classification: **both** (driver-visible class-best/class-leader correctness during startup metadata windows + internal authority seam hardening).
+- Tightened `ResolveSessionClassAuthority(...)` so unknown class-count no longer collapses to `SingleClass` when `HasMultipleClassOpponents` is unavailable/false.
+- Updated authority contract:
+  - `NumCarClasses == 1` => single-class,
+  - `NumCarClasses > 1` => multiclass,
+  - unknown class-count + positive `HasMultipleClassOpponents` => multiclass,
+  - unknown class-count without positive multiclass hint => unresolved (`Unknown`) fail-safe.
+- This prevents transient multiclass startup windows from being misclassified as single-class, so class-best and class-leader consumers avoid cross-class selection until authority is explicit.
+
+### 2026-04-21 — Analysis-first cleanup: native class-resolution seam simplification across H2H/ClassLeader/finish
+- Classification: **both** (driver-visible consistency/correctness in class-best/class-leader behavior + internal seam simplification).
+- Added a single session class-state authority seam in `LalaLaunch` (`ResolveSessionClassAuthority`):
+  - `WeekendInfo.NumCarClasses == 1` => single-class,
+  - `WeekendInfo.NumCarClasses > 1` => multiclass,
+  - unknown class-count => fallback to `GameData.HasMultipleClassOpponents`.
+- Simplified effective same-class matching to one shared rule:
+  - explicit single-class sessions always match regardless of class label blank/mismatch/source disagreement,
+  - multiclass sessions require usable matching class identity and stay fail-safe on blank/unusable class values.
+- Removed stored `_isMultiClassSession` state and aligned finish-path class leader resolution to the same effective same-class seam used by H2H/ClassLeader/session-best-in-class consumers.
+- Preserved metadata source ordering and bounded backfill behavior:
+  - `DriverInfo.Drivers##` remains preferred,
+  - `DriverInfo.CompetingDrivers[*]` remains missing-entry-only backfill (no overwrite).
+
 ### PR #584 follow-up: debounce custom-message settings saves
 - Kept the `Settings -> Custom Messages` persistence fix from PR #584 intact while changing save timing for slot text edits (`Name` / `MessageText`) to a bounded debounce window (500 ms).
 - Custom-message text edits now schedule a delayed save that is flushed after typing settles, instead of writing the full settings file on every keystroke.

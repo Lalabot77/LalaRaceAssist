@@ -1,7 +1,7 @@
 # Head-to-Head (H2H)
 
 Validated against commit: HEAD
-Last updated: 2026-04-20
+Last updated: 2026-04-21
 Branch: work
 
 ## Purpose
@@ -58,7 +58,7 @@ H2H sector publication is intentionally simple:
 - `LiveDeltaToBestSec = 0` when insufficient data exists.
 - Sector delta values reset to `0` whenever their sector state is not `valid`.
 - Sector publication is **not bind-aware** after the cache switchover. H2H does not rebuild rows from target-bound stopwatch completions and does not carry a special lap-wrap sector-6 timing path; sector 6 simply publishes whenever CarSA records the `50→0` completion into cache.
-- `LastLapColor` uses direct dash-ready `#RRGGBB` outputs: white `#FFFFFF` for a normal last lap, lime `#00FF00` when the corresponding published last lap is also that participant's valid PB, and magenta `#FF00FF` when that valid PB also matches the same-class session-best; session-best overrides PB, and invalid faster raw last laps do not trigger PB/session-best coloring. Class session-best resolution is native-only; class metadata population prefers `DriverInfo.Drivers##` and then backfills missing per-car class entries from `DriverInfo.CompetingDrivers[*]` without overwriting already-resolved entries. Blank class identity fallback still requires explicit native single-class authority (`WeekendInfo.NumCarClasses == 1`). Native class-count authority order for multiclass state is explicit single-class first (`NumCarClasses == 1`), explicit multiclass next (`NumCarClasses > 1`, or unknown count with positive `HasMultipleClassOpponents`), and cache-proven diversity (`>1` distinct non-blank classes) is only used when class-count authority remains unresolved/unknown.
+- `LastLapColor` uses direct dash-ready `#RRGGBB` outputs: white `#FFFFFF` for a normal last lap, lime `#00FF00` when the corresponding published last lap is also that participant's valid PB, and magenta `#FF00FF` when that valid PB also matches the same-class session-best; session-best overrides PB, and invalid faster raw last laps do not trigger PB/session-best coloring. Class session-best resolution is native-only; class metadata population prefers `DriverInfo.Drivers##` and then backfills missing per-car class entries from `DriverInfo.CompetingDrivers[*]` without overwriting already-resolved entries. Session class-state authority is native-first and explicit: `WeekendInfo.NumCarClasses == 1` means single-class, `NumCarClasses > 1` means multiclass, and unknown class-count only upgrades to multiclass when `HasMultipleClassOpponents` is explicitly true; otherwise authority remains unresolved/fail-safe (not single-class). Effective same-class matching is shared across consumers: explicit single-class sessions accept all class-label combinations (blank/non-blank/mismatch), while non-single-class/unresolved states require usable matching class identity and remain fail-safe on blanks.
 - `Valid` is true only when a side has a resolved live target and usable H2H timing context.
 
 ## Export contract summary
