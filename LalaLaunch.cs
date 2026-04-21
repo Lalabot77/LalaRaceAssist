@@ -723,6 +723,20 @@ namespace LaunchPlugin
         public double LiveCarMaxFuel { get; private set; }
         public double EffectiveLiveMaxTank { get; private set; }
         private double _lastValidLiveMaxFuel = 0.0;
+        private DateTime _lastValidLiveMaxFuelUtc = DateTime.MinValue;
+        private const double LiveMaxFuelFallbackWindowSeconds = 30.0;
+        private DateTime _lastLiveMaxHealthLogUtc = DateTime.MinValue;
+        private double _lastLiveMaxHealthLoggedComputed = double.NaN;
+        private double _lastLiveMaxHealthLoggedEffective = double.NaN;
+        private string _lastLiveMaxHealthLoggedSource = string.Empty;
+        private DateTime _lastFuelRuntimeRecoveryUtc = DateTime.MinValue;
+        private DateTime _lastFuelRuntimeHealthCheckUtc = DateTime.MinValue;
+        private int _fuelRuntimeUnhealthyStreak = 0;
+        private bool _fuelRuntimeHealthCheckPending;
+        private string _fuelRuntimeHealthPendingReason = string.Empty;
+        private bool _lastFuelRuntimeEngineStarted;
+        private bool _lastFuelRuntimeIgnitionOn;
+        private bool _lastFuelRuntimeActiveDriving;
 
         public double FuelSaveFuelPerLap { get; private set; }
         public double StintBurnTarget { get; private set; }
@@ -1910,7 +1924,16 @@ namespace LaunchPlugin
             LiveCarMaxFuel = 0.0;
             EffectiveLiveMaxTank = 0.0;
             _lastValidLiveMaxFuel = 0.0;
+            _lastValidLiveMaxFuelUtc = DateTime.MinValue;
             _lastAnnouncedMaxFuel = -1;
+        }
+
+        private bool HasFreshLiveMaxFuelFallback()
+        {
+            if (_lastValidLiveMaxFuel <= 0.0 || _lastValidLiveMaxFuelUtc == DateTime.MinValue)
+                return false;
+
+            return (DateTime.UtcNow - _lastValidLiveMaxFuelUtc).TotalSeconds <= LiveMaxFuelFallbackWindowSeconds;
         }
 
         private void ResetProjectionFallbackState()
@@ -1990,7 +2013,6 @@ namespace LaunchPlugin
             _lastPitWindowLogUtc = DateTime.MinValue;
 
             FuelCalculator?.ResetTrackConditionOverrideForSessionChange();
-            FuelCalculator?.ResetPlannerManualOverrides();
 
             // Clear pace tracking alongside fuel model resets so session transitions don't carry stale data
             _recentLapTimes.Clear();
@@ -2083,6 +2105,8 @@ namespace LaunchPlugin
                 SimHub.Logging.Current.Info("[LalaPlugin:Fuel Burn] Car/track change detected – clearing seeds and confidence");
             }
             catch { /* logging must not throw */ }
+
+            QueueFuelRuntimeHealthCheck("combo change");
         }
 
         private void HandleSessionChangeForFuelModel(string fromSession, string toSession)
@@ -6258,10 +6282,113 @@ namespace LaunchPlugin
 
         private bool _manualRecoverySkipFuelModelReset;
 
+        private void QueueFuelRuntimeHealthCheck(string reason)
+        {
+            string reasonLabel = string.IsNullOrWhiteSpace(reason) ? "unspecified" : reason.Trim();
+            _fuelRuntimeHealthCheckPending = true;
+            _fuelRuntimeHealthPendingReason = reasonLabel;
+            SimHub.Logging.Current.Info($"[LalaPlugin:Runtime] fuel health check queued (reason: {reasonLabel}).");
+        }
+
+        private bool RunPlannerSafeFuelRuntimeRecovery(string reason)
+        {
+            if (PluginManager == null)
+                return false;
+
+            var now = DateTime.UtcNow;
+            if ((now - _lastFuelRuntimeRecoveryUtc) < TimeSpan.FromSeconds(2))
+                return false;
+
+            _lastFuelRuntimeRecoveryUtc = now;
+            string reasonLabel = string.IsNullOrWhiteSpace(reason) ? "unspecified" : reason.Trim();
+            SimHub.Logging.Current.Info($"[LalaPlugin:Runtime] planner-safe fuel recovery start (reason: {reasonLabel}).");
+
+            UpdateLiveMaxFuel(PluginManager);
+
+            double capLitres;
+            string capSource;
+            bool hasCap = TryGetRuntimeLiveCapForStrategy(out capLitres, out capSource);
+            if (hasCap && capLitres > 0.0 && FuelCalculator != null)
+            {
+                FuelCalculator.UpdateLiveDisplay(capLitres);
+                FuelCalculator.RefreshLiveSnapshot();
+            }
+
+            _pendingSmoothingReset = true;
+            bool strategyDisplayMissing = FuelCalculator != null &&
+                FuelCalculator.IsLiveSessionActive &&
+                FuelCalculator.IsLiveTankDisplayUnavailable;
+            bool healthy = hasCap && capLitres > 0.0 && !strategyDisplayMissing;
+
+            SimHub.Logging.Current.Info(
+                $"[LalaPlugin:Runtime] planner-safe fuel recovery end healthy={healthy} " +
+                $"cap={(hasCap ? capLitres.ToString("F2", CultureInfo.InvariantCulture) : "0.00")} source={capSource} " +
+                $"strategyMissing={strategyDisplayMissing}");
+
+            return healthy;
+        }
+
+        private void EvaluateFuelRuntimeHealth(PluginManager pluginManager)
+        {
+            if (pluginManager == null)
+                return;
+
+            bool liveIdentityReady = !string.IsNullOrWhiteSpace(CurrentCarModel) &&
+                                     !CurrentCarModel.Equals("Unknown", StringComparison.OrdinalIgnoreCase) &&
+                                     !string.IsNullOrWhiteSpace(CurrentTrackName);
+            if (!liveIdentityReady)
+                return;
+
+            if ((DateTime.UtcNow - _lastFuelRuntimeHealthCheckUtc) < TimeSpan.FromMilliseconds(450))
+                return;
+
+            _lastFuelRuntimeHealthCheckUtc = DateTime.UtcNow;
+            bool hasCap = TryGetRuntimeLiveCapForStrategy(out var runtimeCap, out var runtimeSource);
+            double rawCap = ComputeLiveMaxFuelFromSimhub(pluginManager);
+            bool strategyDisplayMissing = FuelCalculator != null &&
+                                          FuelCalculator.IsLiveSessionActive &&
+                                          FuelCalculator.IsLiveTankDisplayUnavailable;
+            bool runtimeMissingWhileRawValid = rawCap > 0.0 && (LiveCarMaxFuel <= 0.0 || EffectiveLiveMaxTank <= 0.0);
+            bool mismatch = hasCap && runtimeCap > 0.0 && strategyDisplayMissing;
+            bool transitionGap = _fuelRuntimeHealthCheckPending && !hasCap;
+            bool unhealthy = runtimeMissingWhileRawValid || mismatch || transitionGap;
+
+            _fuelRuntimeUnhealthyStreak = unhealthy ? (_fuelRuntimeUnhealthyStreak + 1) : 0;
+            bool shouldRecover = _fuelRuntimeUnhealthyStreak >= 2;
+            if (shouldRecover)
+            {
+                string reason = _fuelRuntimeHealthCheckPending
+                    ? _fuelRuntimeHealthPendingReason
+                    : "stale live max seam";
+                bool recovered = RunPlannerSafeFuelRuntimeRecovery(reason);
+                _fuelRuntimeHealthCheckPending = false;
+                _fuelRuntimeHealthPendingReason = string.Empty;
+                _fuelRuntimeUnhealthyStreak = recovered ? 0 : 1;
+                return;
+            }
+
+            if (_fuelRuntimeHealthCheckPending && !unhealthy && hasCap && runtimeCap > 0.0)
+            {
+                SimHub.Logging.Current.Info(
+                    $"[LalaPlugin:Runtime] fuel health check passed reason={_fuelRuntimeHealthPendingReason} " +
+                    $"raw={rawCap:F2} runtime={runtimeCap:F2} src={runtimeSource} strategyMissing={strategyDisplayMissing}");
+                _fuelRuntimeHealthCheckPending = false;
+                _fuelRuntimeHealthPendingReason = string.Empty;
+                _fuelRuntimeUnhealthyStreak = 0;
+            }
+        }
+
         private void ManualRecoveryReset(string reason)
         {
             string reasonLabel = string.IsNullOrWhiteSpace(reason) ? "unspecified" : reason.Trim();
             SimHub.Logging.Current.Info($"[LalaPlugin:Runtime] manual recovery reset triggered (reason: {reasonLabel}).");
+
+            bool sessionTransitionReset = string.Equals(reasonLabel, "Session transition", StringComparison.OrdinalIgnoreCase);
+            if (!sessionTransitionReset && RunPlannerSafeFuelRuntimeRecovery(reasonLabel))
+            {
+                return;
+            }
+
             ResetProjectionFallbackState();
             ResetH2HClassBestResolveLogLatch();
 
@@ -6693,6 +6820,7 @@ namespace LaunchPlugin
                 _lastSessionToken = currentSessionToken;
                 _pitFuelControlEngine.ResetToOffStby();
                 ManualRecoveryReset("Session transition");
+                QueueFuelRuntimeHealthCheck("session token change");
 
                 SimHub.Logging.Current.Info($"[LalaPlugin:Profile] Session start snapshot: Car='{CurrentCarModel}'  Track='{CurrentTrackName}'");
             }
@@ -7360,6 +7488,8 @@ namespace LaunchPlugin
                     _manualRecoverySkipFuelModelReset = false;
                 }
 
+                QueueFuelRuntimeHealthCheck("session type change");
+
                 if (IsRaceSession(currentSession))
                 {
                     // NOTE: snapshot currently latched at Race session entry; will move to true green latch later
@@ -7403,6 +7533,20 @@ namespace LaunchPlugin
             }
             _dashLastIgnitionOn = ignitionOn;
 
+            if ((!_lastFuelRuntimeIgnitionOn && ignitionOn) || (!_lastFuelRuntimeEngineStarted && engineStarted))
+            {
+                QueueFuelRuntimeHealthCheck("car active edge");
+            }
+            _lastFuelRuntimeIgnitionOn = ignitionOn;
+            _lastFuelRuntimeEngineStarted = engineStarted;
+
+            bool activeDriving = speedKph > 10.0 && !isOnPitRoad;
+            if (activeDriving && !_lastFuelRuntimeActiveDriving)
+            {
+                QueueFuelRuntimeHealthCheck("active driving edge");
+            }
+            _lastFuelRuntimeActiveDriving = activeDriving;
+
             if (Settings.EnableAutoDashSwitch && _dashPendingSwitch && !_dashExecutedForCurrentArm && (ignitionOn || engineStarted))
             {
                 _dashExecutedForCurrentArm = true;
@@ -7432,6 +7576,8 @@ namespace LaunchPlugin
             {
                 UpdateOpponentsAndPitExit(data, pluginManager, completedLaps, currentSessionTypeForConfidence);
             }
+
+            EvaluateFuelRuntimeHealth(pluginManager);
 
             // --- Decel capture instrumentation (toggle = pit screen active) ---
             {
@@ -14657,6 +14803,68 @@ namespace LaunchPlugin
             return detected < 0.0 ? 0.0 : detected;
         }
 
+        public bool TryGetRuntimeLiveCapForStrategy(out double capLitres, out string source)
+        {
+            capLitres = 0.0;
+            source = "none";
+
+            var pm = PluginManager;
+            if (pm != null)
+            {
+                double computed = ComputeLiveMaxFuelFromSimhub(pm);
+                if (computed > 0.0)
+                {
+                    capLitres = computed;
+                    source = "raw";
+                    return true;
+                }
+            }
+
+            if (LiveCarMaxFuel > 0.0)
+            {
+                capLitres = LiveCarMaxFuel;
+                source = "live";
+                return true;
+            }
+
+            if (HasFreshLiveMaxFuelFallback())
+            {
+                capLitres = _lastValidLiveMaxFuel;
+                source = "fallback";
+                return true;
+            }
+
+            if (EffectiveLiveMaxTank > 0.0)
+            {
+                capLitres = EffectiveLiveMaxTank;
+                source = "effective";
+                return true;
+            }
+
+            return false;
+        }
+
+        private void LogLiveMaxFuelHealth(double computedMaxFuel, string source)
+        {
+            bool sourceChanged = !string.Equals(source, _lastLiveMaxHealthLoggedSource, StringComparison.Ordinal);
+            bool computedChanged = double.IsNaN(_lastLiveMaxHealthLoggedComputed) ||
+                                   Math.Abs(computedMaxFuel - _lastLiveMaxHealthLoggedComputed) > 0.1;
+            bool effectiveChanged = double.IsNaN(_lastLiveMaxHealthLoggedEffective) ||
+                                    Math.Abs(EffectiveLiveMaxTank - _lastLiveMaxHealthLoggedEffective) > 0.1;
+            bool allowTimed = (DateTime.UtcNow - _lastLiveMaxHealthLogUtc) > TimeSpan.FromSeconds(8);
+            if (!sourceChanged && !computedChanged && !effectiveChanged && !allowTimed)
+                return;
+
+            _lastLiveMaxHealthLogUtc = DateTime.UtcNow;
+            _lastLiveMaxHealthLoggedSource = source;
+            _lastLiveMaxHealthLoggedComputed = computedMaxFuel;
+            _lastLiveMaxHealthLoggedEffective = EffectiveLiveMaxTank;
+
+            SimHub.Logging.Current.Info(
+                $"[LalaPlugin:Fuel Burn] live-max health source={source} raw={computedMaxFuel:F2} " +
+                $"live={LiveCarMaxFuel:F2} lastValid={_lastValidLiveMaxFuel:F2} effective={EffectiveLiveMaxTank:F2}");
+        }
+
         private void UpdateLiveMaxFuel(PluginManager pluginManager)
         {
             double computedMaxFuel = ComputeLiveMaxFuelFromSimhub(pluginManager);
@@ -14664,6 +14872,7 @@ namespace LaunchPlugin
             if (computedMaxFuel > 0.0)
             {
                 _lastValidLiveMaxFuel = computedMaxFuel;
+                _lastValidLiveMaxFuelUtc = DateTime.UtcNow;
                 EffectiveLiveMaxTank = computedMaxFuel;
 
                 bool meaningfulChange =
@@ -14681,11 +14890,17 @@ namespace LaunchPlugin
                     FuelCalculator.UpdateLiveDisplay(LiveCarMaxFuel);
                 }
 
+                LogLiveMaxFuelHealth(computedMaxFuel, "raw");
+
                 return;
             }
 
-            // computedMaxFuel <= 0 : keep a stable non-zero effective value if we have one
-            EffectiveLiveMaxTank = (LiveCarMaxFuel > 0.0) ? LiveCarMaxFuel : _lastValidLiveMaxFuel;
+            bool fallbackFresh = HasFreshLiveMaxFuelFallback();
+            EffectiveLiveMaxTank = (LiveCarMaxFuel > 0.0)
+                ? LiveCarMaxFuel
+                : (fallbackFresh ? _lastValidLiveMaxFuel : 0.0);
+
+            LogLiveMaxFuelHealth(computedMaxFuel, fallbackFresh ? "fallback" : "none");
         }
 
         private double ResolveMaxTankCapacity()

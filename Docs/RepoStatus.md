@@ -9,6 +9,12 @@ Branch: work
 - No Git remote is configured in this checkout (`git remote -v` returns empty).
 
 ## Documentation sync status
+- Runtime health/recovery stabilization sweep (fuel/live snapshot seam):
+  - added bounded runtime health checks for live max tank seam (session token/type, combo, and car-active edges) with debounced recovery;
+  - unified Strategy live-cap authority to plugin runtime live-cap seam (`raw -> live -> bounded last-valid fallback`);
+  - added planner-safe targeted manual recovery path for fuel/live snapshot refresh;
+  - removed automatic planner manual-override reset from fuel-model session reset path to preserve planner intent during runtime re-arm;
+  - synced Fuel Model / Pace & Projection / Fuel Planner docs and internal inventory/log/changelog notes to reflect the new bounded health/recovery behavior.
 - Final documentation sweep aligned user-facing + dash-facing + internal docs with the implemented combined pit command stack:
   - plugin-owned pit command actions and plugin-owned custom-message actions are now the documented default workflow;
   - built-in pit command configuration location is documented as `Settings -> Pit Commands`;

@@ -108,6 +108,9 @@ namespace LaunchPlugin
 
     private DateTime _lastStrategyResetLogUtc = DateTime.MinValue;
     private DateTime _lastSnapshotResetLogUtc = DateTime.MinValue;
+    private DateTime _lastLiveCapLogUtc = DateTime.MinValue;
+    private bool? _lastLiveCapAvailableState;
+    private string _lastLiveCapSource = string.Empty;
     private bool _isFuelPerLapManual;
 
     private bool _isApplyingPlanningSourceUpdates;
@@ -490,6 +493,7 @@ namespace LaunchPlugin
         get => _liveFuelTankSizeDisplay;
         private set { _liveFuelTankSizeDisplay = value; OnPropertyChanged(); }
     }
+    public bool IsLiveTankDisplayUnavailable => string.IsNullOrWhiteSpace(_liveFuelTankSizeDisplay) || _liveFuelTankSizeDisplay == "—";
     public string LiveBestLapDisplay
     {
         get => _liveBestLapDisplay;
@@ -1803,26 +1807,29 @@ namespace LaunchPlugin
 
     private double? GetLiveSessionCapLitresOrNull()
     {
-        var pluginManager = _plugin?.PluginManager;
-        if (pluginManager == null)
+        if (_plugin == null)
         {
             return null;
         }
 
-        double baseMaxFuel = SafeReadDouble(pluginManager, "DataCorePlugin.GameData.MaxFuel", 0.0);
-        if (double.IsNaN(baseMaxFuel) || double.IsInfinity(baseMaxFuel) || baseMaxFuel <= 0.0)
+        double liveCap;
+        string source;
+        bool hasLiveCap = _plugin.TryGetRuntimeLiveCapForStrategy(out liveCap, out source);
+        bool available = hasLiveCap && liveCap > 0.0;
+
+        bool sourceChanged = !string.Equals(source, _lastLiveCapSource, StringComparison.Ordinal);
+        bool stateChanged = !_lastLiveCapAvailableState.HasValue || _lastLiveCapAvailableState.Value != available;
+        bool timed = (DateTime.UtcNow - _lastLiveCapLogUtc) > TimeSpan.FromSeconds(8);
+        if (sourceChanged || stateChanged || timed)
         {
-            return null;
+            _lastLiveCapLogUtc = DateTime.UtcNow;
+            _lastLiveCapAvailableState = available;
+            _lastLiveCapSource = source ?? string.Empty;
+            SimHub.Logging.Current.Info(
+                $"[LalaPlugin:Strategy] live-cap authority available={available} source={source} litres={liveCap:F2}");
         }
 
-        double bopPercent = SafeReadDouble(pluginManager, "DataCorePlugin.GameRawData.SessionData.DriverInfo.DriverCarMaxFuelPct", double.NaN);
-        if (double.IsNaN(bopPercent) || double.IsInfinity(bopPercent) || bopPercent <= 0.0)
-        {
-            bopPercent = 1.0;
-        }
-
-        bopPercent = Math.Min(1.0, Math.Max(0.01, bopPercent));
-        return baseMaxFuel * bopPercent;
+        return available ? (double?)liveCap : null;
     }
 
     private static double SafeReadDouble(PluginManager pluginManager, string propertyName, double fallback)
@@ -2984,10 +2991,11 @@ namespace LaunchPlugin
         _isRefreshingConditionParameters = false;
     }
 
-    private void RefreshLiveSnapshot()
+    public void RefreshLiveSnapshot()
     {
-        // Behaviour will be implemented in a later task.
+        SimHub.Logging.Current.Info("[LalaPlugin:Strategy] RefreshLiveSnapshot requested.");
         ApplyPlanningSourceToAutoFields(applyLapTime: false, applyFuel: true);
+        CalculateStrategy();
     }
 
     private void ResetEstimatedLapTimeToSource()
@@ -4439,11 +4447,13 @@ namespace LaunchPlugin
         bool? isConnected = GetGameConnectedOrNull();
         if (isConnected.HasValue && !isConnected.Value)
         {
+            SimHub.Logging.Current.Info("[LalaPlugin:Strategy] UpdateLiveDisplay: disconnected -> reset snapshot displays.");
             ResetSnapshotDisplays();
             return;
         }
 
         RefreshLiveMaxFuelDisplays(liveMaxFuel);
+        SimHub.Logging.Current.Info($"[LalaPlugin:Strategy] UpdateLiveDisplay: live max tank refresh {liveMaxFuel:F2}L.");
 
         if (SelectedPlanningSourceMode == PlanningSourceMode.LiveSnapshot
             && IsLiveSessionActive
