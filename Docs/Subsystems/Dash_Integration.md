@@ -33,6 +33,7 @@ This document is the canonical dash-facing contract layer. It does **not** redef
 - Rejoin widgets should respect the explicit rejoin exports rather than infer active state from message text alone.
 - Pit-screen / pit-entry widgets should combine pit visibility toggles with pit-specific active flags.
 - Pit command buttons in strategy/pit widgets must bind to plugin-owned actions (`LalaLaunch.Pit.ClearAll`, `LalaLaunch.Pit.ClearTires`, `LalaLaunch.Pit.ToggleFuel`, `LalaLaunch.Pit.FuelSetZero`, `LalaLaunch.Pit.FuelAdd1`, `LalaLaunch.Pit.FuelRemove1`, `LalaLaunch.Pit.FuelAdd10`, `LalaLaunch.Pit.FuelRemove10`, `LalaLaunch.Pit.FuelSetMax`, `LalaLaunch.Pit.ToggleTiresAll`, `LalaLaunch.Pit.ToggleFastRepair`, `LalaLaunch.Pit.ToggleAutoFuel`, `LalaLaunch.Pit.Windshield`, `LalaLaunch.Pit.FuelControl.SourceCycle`, `LalaLaunch.Pit.FuelControl.ModeCycle`, `LalaLaunch.Pit.FuelControl.SetPush`, `LalaLaunch.Pit.FuelControl.SetNorm`, `LalaLaunch.Pit.FuelControl.SetSave`) rather than `IRacingExtraProperties` action ids.
+- Built-in pit command rows are user-configured in plugin **Settings → Pit Commands**; dashboards should bind those action ids directly and not carry raw transport syntax.
 - Custom chat buttons should bind to plugin-owned actions `LalaLaunch.CustomMessage01..LalaLaunch.CustomMessage10` (configured in Settings → Custom Messages) rather than embedding transport/raw chat syntax in dash logic.
 - Message-dash widgets should consume the message engine outputs directly rather than rebuilding message priority logic in SimHub expressions.
 

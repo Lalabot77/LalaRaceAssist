@@ -150,6 +150,15 @@ Lala Race Assist Plugin includes separate driver-facing pages for recovery/rejoi
 - [Rejoin Assist](Rejoin_Assist.md)
 - [Pit Assist](Pit_Assist.md)
 
+#### Pit command + custom message workflow (current)
+
+- Built-in pit commands are plugin-owned and configured in **Settings → Pit Commands**.
+- Custom message slots are configured in **Settings → Custom Messages** and bound through `LalaLaunch.CustomMessage01..10`.
+- Dash buttons should call plugin-owned actions (`LalaLaunch.Pit.*`, `LalaLaunch.Pit.FuelControl.*`, `LalaLaunch.CustomMessage01..10`) through normal SimHub binding flow, not raw chat command syntax.
+- Pit Fuel Control is part of the same plugin-owned pit surface and can be driven from action bindings plus `Pit.FuelControl.*` exports.
+- `RSC.iRacingExtraProperties.dll` is not required for this pit/custom command path.
+- Current runtime caveat: iRacing generally needs to be in foreground focus for reliable pit/custom send transport; auto-focus is not implemented yet.
+
 ### H2H
 
 H2H is a read-only race-context aid that helps the driver compare race-order and local-track threats without becoming a separate planning workflow. See [H2H System](H2H_System.md).

@@ -345,7 +345,7 @@ Dark Mode binding warning: When `Use Lovely True Dark` is enabled and Lovely is 
 
 Settings persistence note (not runtime SimHub exports): `PitCommandsAutoFocusPreview` and `CustomMessages[1..10].Name/MessageText` are persisted UI/settings fields in `LaunchPluginSettings` used by Settings-tab editors and custom-message action dispatch. Custom-message slot collection changes still save immediately, while slot `Name`/`MessageText` typing is debounced (500 ms settle window) before writing settings; pending debounced saves are flushed during normal tick/shutdown so latest settled text persists across restarts. These settings fields are intentionally not attached via `AttachCore/AttachVerbose`.
 
-Pit action surface note (Controls & Events): plugin-owned pit actions now include `Pit.FuelSetZero`, `Pit.FuelControl.SetPush`, `Pit.FuelControl.SetNorm`, and `Pit.FuelControl.SetSave` in addition to the existing cycle/actions set.
+Pit action surface note (Controls & Events): plugin-owned pit actions include `Pit.ClearAll`, `Pit.ClearTires`, `Pit.ToggleFuel`, `Pit.FuelSetZero`, `Pit.FuelAdd1`, `Pit.FuelRemove1`, `Pit.FuelAdd10`, `Pit.FuelRemove10`, `Pit.FuelSetMax`, `Pit.ToggleTiresAll`, `Pit.ToggleFastRepair`, `Pit.ToggleAutoFuel`, `Pit.Windshield`, `Pit.FuelControl.SourceCycle`, `Pit.FuelControl.ModeCycle`, `Pit.FuelControl.SetPush`, `Pit.FuelControl.SetNorm`, and `Pit.FuelControl.SetSave`. Custom-message actions are also plugin-owned (`CustomMessage01..CustomMessage10`), with text/labels authored in Settings → Custom Messages (not as dash-side raw chat literals).
 
 ## Friends
 | Exported name | Type | Units / meaning | Update cadence | Defined in |

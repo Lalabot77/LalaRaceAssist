@@ -33,6 +33,18 @@ The public user-facing release history is maintained in the root `CHANGELOG.md`.
 
 ## Post-v1.0 development
 
+### 2026-04-21 — Final docs sweep: plugin-owned pit commands + custom messages + pit fuel control
+- Classification: **both** (user-facing guidance alignment + subsystem/internal contract sync).
+- Updated user-facing docs (`README`, `Quick Start`, `User Guide`, `Pit Assist`) to align around final plugin-owned pit/custom workflow:
+  - built-in pit commands configured in **Settings → Pit Commands**,
+  - custom chat actions configured in **Settings → Custom Messages**,
+  - dash/button binding guidance points to plugin-owned action surfaces rather than raw chat strings or legacy `IRacingExtraProperties` pit actions,
+  - explicit runtime caveat retained: iRacing focus is currently required for reliable send; auto-focus remains preview/not implemented.
+- Updated dash/internal contract docs to keep action/export surfaces and persistence wording aligned with final state:
+  - `Docs/Subsystems/Dash_Integration.md` pit/custom action guidance and settings ownership,
+  - `Docs/Internal/SimHubParameterInventory.md` pit/custom action-surface note.
+- No runtime behavior redesign was introduced; task was bounded to docs-truth sync.
+
 ### 2026-04-21 — Profile-track PB clear polish: immediate PB text refresh + warning colour + compact label
 - Classification: **both** (profile editor UX polish + internal property-refresh correctness in the PB clear path).
 - Updated `ClearBestLapAndSectorsForCondition(...)` to mirror relearn visual refresh behavior:

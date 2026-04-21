@@ -104,6 +104,13 @@ For a new car/track combination:
    - **Previous Dash**
    - **Declutter Mode**
 
+### Pit command setup (quick)
+
+- Built-in pit command bindings are managed in **Settings → Pit Commands**.
+- Custom chat button slots are managed in **Settings → Custom Messages** and bound as `LalaLaunch.CustomMessage01..10`.
+- For supported pit widgets/buttons, bind plugin-owned actions (`LalaLaunch.Pit.*`, `LalaLaunch.Pit.FuelControl.*`) rather than old `IRacingExtraProperties` pit action ids.
+- Current reliability note: pit/custom sends work best when **iRacing is already in focus** (auto-focus is not implemented yet).
+
 ### Dash navigation quick setup
 
 The dashboards can be used by touch, but binding controls is strongly recommended. For a first usable setup:
