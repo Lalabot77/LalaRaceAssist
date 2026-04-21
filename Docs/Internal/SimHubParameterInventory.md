@@ -343,7 +343,7 @@ Shift Assist runtime/settings notes:
 
 Dark Mode binding warning: When `Use Lovely True Dark` is enabled and Lovely is available, Lovely controls `DarkMode.Active` even if Mode is `Off`, and `BrightnessPct` stays on the user slider value (no auto scaling while Lovely drives). `OpacityPct` remains the final dim value published to dashes. `ModeText` remains tied to `Mode` only (`Off`/`Manual`/`Auto`). `LalaLaunch.ToggleDarkMode` is ignored to prevent conflicting toggles. Do not bind both Lovely and LalaLaunch dark-mode toggles to the same physical input.
 
-Settings persistence note (not runtime SimHub exports): `PitCommandsAutoFocusPreview` and `CustomMessages[1..10].Name/MessageText` are persisted UI/settings fields in `LaunchPluginSettings` used by Settings-tab editors and custom-message action dispatch, and are intentionally not attached via `AttachCore/AttachVerbose`.
+Settings persistence note (not runtime SimHub exports): `PitCommandsAutoFocusPreview` and `CustomMessages[1..10].Name/MessageText` are persisted UI/settings fields in `LaunchPluginSettings` used by Settings-tab editors and custom-message action dispatch. Custom-message slot edits are saved on change (collection/item property hooks) and are intentionally not attached via `AttachCore/AttachVerbose`.
 
 Pit action surface note (Controls & Events): plugin-owned pit actions now include `Pit.FuelSetZero`, `Pit.FuelControl.SetPush`, `Pit.FuelControl.SetNorm`, and `Pit.FuelControl.SetSave` in addition to the existing cycle/actions set.
 
