@@ -9,6 +9,10 @@ Branch: work
 - No Git remote is configured in this checkout (`git remote -v` returns empty).
 
 ## Documentation sync status
+- PR follow-up corrected PreRace one-stop feasibility physical gate:
+  - one-stop feasibility no longer uses race-start free space (`tank - currentFuel`) as the stop-fill cap,
+  - one-stop feasibility now uses pit-stop refill capacity (effective tank capacity at stop) before normal underfuel/overfuel checks,
+  - scenario-first status ordering and all other status behavior remain unchanged.
 - PreRace v2 scenario-first + grid live-delta/source-contract follow-up:
   - PreRace status logic now classifies required strategy first (`no-stop` / `one-stop` / `multi-stop`) and then evaluates selected strategy with mutually exclusive outcomes (eliminates prior no-stop/multi-stop fallthroughs),
   - one-stop feasibility now includes a tank-capacity gate (`fuelStillNeeded > maxFuelAddPossible` => red `ONE STOP NOT POSSIBLE`),

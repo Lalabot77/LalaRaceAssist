@@ -32,7 +32,7 @@ This document is the canonical dash-facing contract layer. It does **not** redef
   - manual PreRace selections (`No Stop`/`Single Stop`/`Multi Stop`) keep planner-owned labeling where applicable.
 - PreRace status is scenario-first (`required strategy` vs `selected strategy`) and fully partitioned:
   - required `No Stop` => `NO STOP OKAY` or `ADD FUEL FOR NO STOP`; selecting stop strategies shows `NO STOP POSSIBLE`,
-  - required `One Stop` => no-stop `SINGLE STINT NOT POSSIBLE`, one-stop feasibility (`ONE STOP NOT POSSIBLE` / `ONE STOP REQUIRES MORE FUEL` / `OVERFUELLED` / `SINGLE STOP OKAY`), multi-stop `SINGLE STOP POSSIBLE`,
+  - required `One Stop` => no-stop `SINGLE STINT NOT POSSIBLE`, one-stop feasibility (pit-stop refill-capacity gate, then `ONE STOP REQUIRES MORE FUEL` / `OVERFUELLED` / `SINGLE STOP OKAY`), multi-stop `SINGLE STOP POSSIBLE`,
   - required `Multi Stop` => no-stop `NO STOP NOT POSSIBLE`, single-stop `SINGLE STOP NOT POSSIBLE`, multi-stop `MAX FUEL IN / MULTI STOP CONFIRMED` or `MAX FUEL REQUIRED`.
 - If a widget is meant to represent runtime truth, prefer stable `Fuel.*` / pace outputs over UI-only text from elsewhere.
 

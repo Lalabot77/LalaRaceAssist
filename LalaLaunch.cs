@@ -948,7 +948,7 @@ namespace LaunchPlugin
             bool selectedIsAuto = normalizedStrategy == 3;
             RequiredPreRaceStrategy requiredStrategy = ClassifyRequiredPreRaceStrategy(preRaceStints);
             bool isAtMaxStart = IsAtEffectiveMaxStartFuel(currentFuel, effectiveMaxTank, maxTankCapacity);
-            double maxFuelAddPossible = Math.Max(0.0, (effectiveMaxTank > 0.0 ? effectiveMaxTank : maxTankCapacity) - currentFuel);
+            double maxFuelAddPossible = Math.Max(0.0, effectiveMaxTank > 0.0 ? effectiveMaxTank : maxTankCapacity);
             double fuelStillNeeded = Math.Max(0.0, preRaceTotalFuelNeeded - currentFuel);
             bool oneStopFeasible = fuelStillNeeded <= (maxFuelAddPossible + PreRaceFuelToleranceLitres);
             bool oneStopUnderFuel = preRaceFuelDelta < -PreRaceFuelToleranceLitres;

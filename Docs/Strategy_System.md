@@ -124,7 +124,7 @@ PreRace status contract (dash-facing):
 - `FuelDelta` is now live for grid workflow:
   - required one-stop path uses `(current fuel + requested add) - total fuel needed`,
   - no-stop/multi-stop paths use `current fuel - total fuel needed`.
-- One-stop feasibility now includes tank-space reality (`fuel still needed > max add possible` => red `ONE STOP NOT POSSIBLE`) before normal underfuel/overfuel checks.
+- One-stop feasibility now uses pit-stop refill capacity (`fuel still needed > effective stop-fill capacity` => red `ONE STOP NOT POSSIBLE`) before normal underfuel/overfuel checks.
 
 ## 9. What users should trust
 

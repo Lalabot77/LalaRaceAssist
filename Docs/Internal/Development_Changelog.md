@@ -33,6 +33,13 @@ The public user-facing release history is maintained in the root `CHANGELOG.md`.
 
 ## Post-v1.0 development
 
+### 2026-04-21 — PR follow-up: one-stop feasibility now uses pit-stop refill capacity
+- Classification: **both** (driver-visible PreRace status correction + docs truth sync).
+- Corrected the one-stop feasibility gate in `LalaLaunch.PreRace.StatusText` evaluation:
+  - feasibility no longer uses race-start free tank space (`tank - currentFuel`) as the stop-fill limit,
+  - feasibility now uses effective stop refill capacity (effective tank capacity at the stop) before underfuel/overfuel checks.
+- Kept the existing scenario-first status structure and all other PreRace status behavior unchanged.
+
 ### 2026-04-21 — PreRace v2 scenario-first decision rewrite + live fuel-delta/source contract fixes
 - Classification: **both** (driver-visible PreRace behavior corrections + internal match-tolerance update).
 - Reworked PreRace status to a strict scenario-first model:
