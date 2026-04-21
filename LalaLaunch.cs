@@ -279,21 +279,21 @@ namespace LaunchPlugin
             string customActionName = $"CustomMessage{slotNumber:00}";
             if (Settings == null || Settings.CustomMessages == null)
             {
-                _pitCommandEngine.ExecuteCustomMessage(customActionName, string.Empty, "Pit Cmd Fail");
+                _pitCommandEngine.ExecuteCustomMessage(customActionName, string.Empty, "Pit Cmd Fail", ResolvePitCommandTransportMode());
                 return;
             }
 
             int index = slotNumber - 1;
             if (index < 0 || index >= Settings.CustomMessages.Count)
             {
-                _pitCommandEngine.ExecuteCustomMessage(customActionName, string.Empty, "Pit Cmd Fail");
+                _pitCommandEngine.ExecuteCustomMessage(customActionName, string.Empty, "Pit Cmd Fail", ResolvePitCommandTransportMode());
                 return;
             }
 
             var slot = Settings.CustomMessages[index];
             if (slot == null)
             {
-                _pitCommandEngine.ExecuteCustomMessage(customActionName, string.Empty, "Pit Cmd Fail");
+                _pitCommandEngine.ExecuteCustomMessage(customActionName, string.Empty, "Pit Cmd Fail", ResolvePitCommandTransportMode());
                 return;
             }
 
@@ -301,7 +301,7 @@ namespace LaunchPlugin
                 ? $"Custom Msg {slotNumber}"
                 : slot.Name.Trim();
 
-            _pitCommandEngine.ExecuteCustomMessage(customActionName, slot.MessageText, feedbackLabel);
+            _pitCommandEngine.ExecuteCustomMessage(customActionName, slot.MessageText, feedbackLabel, ResolvePitCommandTransportMode());
         }
 
         // Compatibility aliases retained for existing dash bindings.
@@ -311,12 +311,23 @@ namespace LaunchPlugin
 
         private void ExecutePitCommand(PitCommandAction action)
         {
-            _pitCommandEngine.Execute(action, PluginManager, Pit_TankSpaceAvailable);
+            _pitCommandEngine.Execute(action, PluginManager, Pit_TankSpaceAvailable, ResolvePitCommandTransportMode());
         }
 
         private bool SendPitFuelControlCommand(string actionName, string messageText, string feedbackLabel)
         {
-            return _pitCommandEngine.ExecuteRawPitCommand(actionName, messageText, feedbackLabel);
+            return _pitCommandEngine.ExecuteRawPitCommand(actionName, messageText, feedbackLabel, ResolvePitCommandTransportMode());
+        }
+
+        private PitCommandTransportMode ResolvePitCommandTransportMode()
+        {
+            int configuredMode = Settings != null ? Settings.PitCommandTransportMode : (int)PitCommandTransportMode.Auto;
+            if (configuredMode < (int)PitCommandTransportMode.Auto || configuredMode > (int)PitCommandTransportMode.DirectMessageOnly)
+            {
+                return PitCommandTransportMode.Auto;
+            }
+
+            return (PitCommandTransportMode)configuredMode;
         }
 
         public void SetTrackMarkersLocked(bool locked)
@@ -6162,6 +6173,12 @@ namespace LaunchPlugin
             if (settings == null)
             {
                 return;
+            }
+
+            if (settings.PitCommandTransportMode < (int)PitCommandTransportMode.Auto ||
+                settings.PitCommandTransportMode > (int)PitCommandTransportMode.DirectMessageOnly)
+            {
+                settings.PitCommandTransportMode = (int)PitCommandTransportMode.Auto;
             }
 
             if (settings.CustomMessages == null)
@@ -16633,6 +16650,7 @@ namespace LaunchPlugin
         public bool PitExitVerboseLogging { get; set; } = false;
         public bool PitBoxIncludeOptionalRepairs { get; set; } = false;
         public bool PitCommandsAutoFocusPreview { get; set; } = false;
+        public int PitCommandTransportMode { get; set; } = (int)LaunchPlugin.PitCommandTransportMode.Auto;
         public double ResultsDisplayTime { get; set; } = 5.0; // Corrected to 5 seconds
         public double FuelReadyConfidence { get; set; } = LalaLaunch.FuelReadyConfidenceDefault;
         public int StintFuelMarginPct { get; set; } = LalaLaunch.StintFuelMarginPctDefault;

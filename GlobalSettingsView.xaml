@@ -122,6 +122,17 @@
                                Foreground="#FFC107"
                                TextWrapping="Wrap"
                                Text="Note: pit commands are most reliable when iRacing is in the foreground/focus." />
+                    <StackPanel Orientation="Horizontal" Margin="0,8,0,0">
+                        <TextBlock VerticalAlignment="Center" Margin="0,0,8,0" Text="Pit command transport"/>
+                        <ComboBox Width="330"
+                                  SelectedValue="{Binding Settings.PitCommandTransportMode, Mode=TwoWay}"
+                                  SelectedValuePath="Tag"
+                                  ToolTip="Select how pit/custom command text is sent: Auto tries direct iRacing window messages first then falls back to foreground SendInput, Legacy uses foreground SendInput only, Direct only uses window messages with no fallback.">
+                            <ComboBoxItem Content="Auto (Direct message then fallback)" Tag="0" />
+                            <ComboBoxItem Content="Legacy foreground SendInput only" Tag="1" />
+                            <ComboBoxItem Content="Direct message only" Tag="2" />
+                        </ComboBox>
+                    </StackPanel>
                     <styles:SHToggleCheckbox Content="Auto-focus iRacing before pit/custom message send (Preview)"
                                              Margin="0,8,0,0"
                                              IsChecked="{Binding Settings.PitCommandsAutoFocusPreview, Mode=TwoWay}"

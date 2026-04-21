@@ -94,9 +94,14 @@ Use these for common race-chat messages you want on hardware buttons, keyboard k
 
 LalaLaunch injects iRacing pit/custom chat messages directly (no dedicated user macro-hotkey setup required).
 
-If chat injection cannot run (for example iRacing is not the foreground window), LalaLaunch publishes `Pit Cmd Fail` and logs a pit-command warning so the failure is visible.
+Transport mode is configurable in **Settings → Pit Commands**:
+- `Auto (Direct message then fallback)` (default) tries direct window-message send first, then falls back to legacy foreground `SendInput`.
+- `Legacy foreground SendInput only` uses only the focus-required `SendInput` path.
+- `Direct message only` uses only the window-message path and does not fallback.
 
-Settings includes a forward-looking **Auto-focus iRacing before pit/custom message send (Preview)** toggle for future enhancement work; current behavior still expects iRacing to already be in focus.
+If both available transport options fail for the selected mode (for example no iRacing window is available for direct send, or legacy fallback is blocked because iRacing is not foreground), LalaLaunch publishes `Pit Cmd Fail` and logs a pit-command warning so the failure is visible.
+
+Settings still includes **Auto-focus iRacing before pit/custom message send (Preview)** as forward-looking UI only; autofocus behavior is not implemented.
 
 ## 3. Pit Entry Assist
 

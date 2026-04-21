@@ -25,6 +25,13 @@ namespace LaunchPlugin
         Windshield
     }
 
+    internal enum PitCommandTransportMode
+    {
+        Auto = 0,
+        LegacyForegroundSendInput = 1,
+        DirectMessageOnly = 2
+    }
+
     internal sealed class PitCommandEngine
     {
         private const int FuelSetMaxCommandLitres = 150;
@@ -34,6 +41,9 @@ namespace LaunchPlugin
         private const uint KeyEventKeyUp = 0x0002;
         private const uint InputKeyboard = 1;
         private const uint KeyeventfUnicode = 0x0004;
+        private const uint WmKeyDown = 0x0100;
+        private const uint WmKeyUp = 0x0101;
+        private const uint WmChar = 0x0102;
 
         private readonly HashSet<string> _onceWarnings = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
         private DateTime _messageUntilUtc = DateTime.MinValue;
@@ -44,7 +54,7 @@ namespace LaunchPlugin
         public bool FuelSetMaxToggleState { get; private set; }
         public bool Active => !string.IsNullOrWhiteSpace(DisplayText) && DateTime.UtcNow < _messageUntilUtc;
 
-        public void Execute(PitCommandAction action, PluginManager pluginManager, double tankSpaceLitres)
+        public void Execute(PitCommandAction action, PluginManager pluginManager, double tankSpaceLitres, PitCommandTransportMode transportMode)
         {
             LastAction = action.ToString();
             if (action == PitCommandAction.FuelSetMax)
@@ -70,19 +80,22 @@ namespace LaunchPlugin
             }
 
             bool? before = ReadToggleState(action, pluginManager);
-            bool transportAttempted = TryInjectChatCommand(command);
+            string transportUsed;
+            string reason;
+            string fallbackFrom;
+            bool transportAttempted = TryInjectChatCommand(command, transportMode, out transportUsed, out reason, out fallbackFrom);
             if (!transportAttempted)
             {
                 PublishMessage("Pit Cmd Fail");
-                SimHub.Logging.Current.Warn($"[LalaPlugin:PitCommand] action={action} transport=chat-injection local-transport-issue raw='{raw}' normalized='{command}'");
+                SimHub.Logging.Current.Warn($"[LalaPlugin:PitCommand] action={action} transport={transportUsed} local-transport-issue reason={reason}{FormatFallbackSuffix(fallbackFrom)} raw='{raw}' normalized='{command}'");
                 return;
             }
 
-            bool confirmed = ConfirmAndPublishFeedback(action, pluginManager, before, tankSpaceLitres);
-            SimHub.Logging.Current.Info($"[LalaPlugin:PitCommand] action={action} transport=chat-injection attempted=true confirmed={confirmed} before={FormatNullable(before)} raw='{raw}' normalized='{command}'");
+            bool confirmed = ConfirmAndPublishFeedback(action, pluginManager, before, tankSpaceLitres, transportUsed);
+            SimHub.Logging.Current.Info($"[LalaPlugin:PitCommand] action={action} transport={transportUsed} attempted=true confirmed={confirmed} before={FormatNullable(before)} raw='{raw}' normalized='{command}'");
         }
 
-        public bool ExecuteCustomMessage(string actionName, string messageText, string feedbackLabel)
+        public bool ExecuteCustomMessage(string actionName, string messageText, string feedbackLabel, PitCommandTransportMode transportMode)
         {
             LastAction = string.IsNullOrWhiteSpace(actionName) ? "CustomMessage" : actionName.Trim();
             string normalized = NormalizeCustomMessage(messageText);
@@ -94,20 +107,23 @@ namespace LaunchPlugin
                 return false;
             }
 
-            bool transportAttempted = TryInjectChatCommand(normalized);
+            string transportUsed;
+            string reason;
+            string fallbackFrom;
+            bool transportAttempted = TryInjectChatCommand(normalized, transportMode, out transportUsed, out reason, out fallbackFrom);
             if (!transportAttempted)
             {
                 PublishMessage("Pit Cmd Fail");
-                SimHub.Logging.Current.Warn($"[LalaPlugin:PitCommand] custom-message transport=chat-injection local-transport-issue text='{normalized}'");
+                SimHub.Logging.Current.Warn($"[LalaPlugin:PitCommand] custom-message transport={transportUsed} local-transport-issue reason={reason}{FormatFallbackSuffix(fallbackFrom)} text='{normalized}'");
                 return false;
             }
 
             PublishMessage(string.IsNullOrWhiteSpace(feedbackLabel) ? "Custom Msg" : feedbackLabel.Trim());
-            SimHub.Logging.Current.Info($"[LalaPlugin:PitCommand] custom-message transport=chat-injection attempted=true text='{normalized}'");
+            SimHub.Logging.Current.Info($"[LalaPlugin:PitCommand] custom-message transport={transportUsed} attempted=true text='{normalized}'");
             return true;
         }
 
-        public bool ExecuteRawPitCommand(string actionName, string rawCommandText, string feedbackLabel)
+        public bool ExecuteRawPitCommand(string actionName, string rawCommandText, string feedbackLabel, PitCommandTransportMode transportMode)
         {
             LastAction = string.IsNullOrWhiteSpace(actionName) ? "PitRawCommand" : actionName.Trim();
             LastRaw = rawCommandText ?? string.Empty;
@@ -120,16 +136,19 @@ namespace LaunchPlugin
                 return false;
             }
 
-            bool transportAttempted = TryInjectChatCommand(normalized);
+            string transportUsed;
+            string reason;
+            string fallbackFrom;
+            bool transportAttempted = TryInjectChatCommand(normalized, transportMode, out transportUsed, out reason, out fallbackFrom);
             if (!transportAttempted)
             {
                 PublishMessage("Pit Cmd Fail");
-                SimHub.Logging.Current.Warn($"[LalaPlugin:PitCommand] raw-command transport=chat-injection local-transport-issue raw='{rawCommandText ?? string.Empty}' normalized='{normalized}'");
+                SimHub.Logging.Current.Warn($"[LalaPlugin:PitCommand] raw-command transport={transportUsed} local-transport-issue reason={reason}{FormatFallbackSuffix(fallbackFrom)} raw='{rawCommandText ?? string.Empty}' normalized='{normalized}'");
                 return false;
             }
 
             PublishMessage(string.IsNullOrWhiteSpace(feedbackLabel) ? "Fuel Set" : feedbackLabel.Trim());
-            SimHub.Logging.Current.Info($"[LalaPlugin:PitCommand] raw-command transport=chat-injection attempted=true raw='{rawCommandText ?? string.Empty}' normalized='{normalized}'");
+            SimHub.Logging.Current.Info($"[LalaPlugin:PitCommand] raw-command transport={transportUsed} attempted=true raw='{rawCommandText ?? string.Empty}' normalized='{normalized}'");
             return true;
         }
 
@@ -145,7 +164,7 @@ namespace LaunchPlugin
             PublishMessage(message);
         }
 
-        private bool ConfirmAndPublishFeedback(PitCommandAction action, PluginManager pluginManager, bool? before, double tankSpaceLitres)
+        private bool ConfirmAndPublishFeedback(PitCommandAction action, PluginManager pluginManager, bool? before, double tankSpaceLitres, string transportUsed)
         {
             if (!IsStatefulAction(action))
             {
@@ -167,7 +186,7 @@ namespace LaunchPlugin
             if (!after.HasValue || after.Value != expected)
             {
                 PublishMessage("Pit Cmd Fail");
-                SimHub.Logging.Current.Warn($"[LalaPlugin:PitCommand] action={action} expected-state-mismatch expected={expected} before={FormatNullable(before)} after={FormatNullable(after)} transport=chat-injection");
+                SimHub.Logging.Current.Warn($"[LalaPlugin:PitCommand] action={action} expected-state-mismatch expected={expected} before={FormatNullable(before)} after={FormatNullable(after)} transport={transportUsed}");
                 return false;
             }
 
@@ -399,27 +418,113 @@ namespace LaunchPlugin
             }
         }
 
-        private bool TryInjectChatCommand(string command)
+        private bool TryInjectChatCommand(string command, PitCommandTransportMode transportMode, out string transportUsed, out string reason, out string fallbackFrom)
+        {
+            transportUsed = "none";
+            reason = "unknown";
+            fallbackFrom = string.Empty;
+
+            if (string.IsNullOrWhiteSpace(command))
+            {
+                reason = "empty-command";
+                return false;
+            }
+
+            if (transportMode == PitCommandTransportMode.LegacyForegroundSendInput)
+            {
+                transportUsed = "sendinput";
+                return TryForegroundSendInputChatCommand(command, out reason);
+            }
+
+            if (transportMode == PitCommandTransportMode.DirectMessageOnly)
+            {
+                transportUsed = "postmessage";
+                return TryPostMessageChatCommand(command, out reason);
+            }
+
+            transportUsed = "postmessage";
+            if (TryPostMessageChatCommand(command, out reason))
+            {
+                return true;
+            }
+
+            fallbackFrom = "postmessage";
+            SimHub.Logging.Current.Info($"[LalaPlugin:PitCommand] transport=sendinput fallback_from=postmessage reason={reason}");
+            transportUsed = "sendinput";
+            return TryForegroundSendInputChatCommand(command, out reason);
+        }
+
+        private bool TryPostMessageChatCommand(string command, out string reason)
+        {
+            IntPtr iracingWindow;
+            if (!TryResolveIracingMainWindow(out iracingWindow, out reason))
+            {
+                return false;
+            }
+
+            if (!PostVirtualKey(iracingWindow, Keys.T))
+            {
+                reason = "postmessage-open-chat-failed";
+                return false;
+            }
+
+            Thread.Sleep(12);
+
+            foreach (char c in command)
+            {
+                if (!PostMessage(iracingWindow, WmChar, (IntPtr)c, IntPtr.Zero))
+                {
+                    reason = "postmessage-char-failed";
+                    return false;
+                }
+            }
+
+            Thread.Sleep(8);
+            if (!PostVirtualKey(iracingWindow, Keys.Enter))
+            {
+                reason = "postmessage-submit-failed";
+                return false;
+            }
+
+            reason = "none";
+            return true;
+        }
+
+        private bool TryForegroundSendInputChatCommand(string command, out string reason)
         {
             if (!IsIracingForeground())
             {
-                WarnOnce("not_foreground", "[LalaPlugin:PitCommand] chat injection unavailable: iRacing is not the foreground window.");
+                reason = "not-foreground";
+                WarnOnce("not_foreground", "[LalaPlugin:PitCommand] transport=sendinput unavailable reason=not-foreground.");
                 return false;
             }
 
             TapVirtualKey(Keys.T);
-
             Thread.Sleep(40);
 
             if (!SendUnicodeText(command))
             {
-                WarnOnce("type_failed", "[LalaPlugin:PitCommand] chat injection local submission issue while sending command text (transport attempt unconfirmed).");
+                reason = "unicode-send-failed";
+                WarnOnce("type_failed", "[LalaPlugin:PitCommand] transport=sendinput local submission issue while sending command text (transport attempt unconfirmed).");
                 return false;
             }
 
             Thread.Sleep(20);
             TapVirtualKey(Keys.Enter);
+            reason = "none";
             return true;
+        }
+
+        private static bool PostVirtualKey(IntPtr hwnd, Keys key)
+        {
+            if (hwnd == IntPtr.Zero)
+            {
+                return false;
+            }
+
+            int vk = (int)key;
+            return PostMessage(hwnd, WmKeyDown, (IntPtr)vk, IntPtr.Zero) &&
+                   PostMessage(hwnd, WmKeyUp, (IntPtr)vk, IntPtr.Zero);
         }
 
         private static void TapVirtualKey(Keys key)
@@ -488,14 +593,67 @@ namespace LaunchPlugin
 
                 using (Process p = Process.GetProcessById((int)pid))
                 {
-                    string name = p.ProcessName ?? string.Empty;
-                    return name.IndexOf("iRacingSim", StringComparison.OrdinalIgnoreCase) >= 0;
+                    return IsIracingProcessName(p.ProcessName);
                 }
             }
             catch
             {
                 return false;
             }
+        }
+
+        private static bool TryResolveIracingMainWindow(out IntPtr windowHandle, out string reason)
+        {
+            windowHandle = IntPtr.Zero;
+            reason = "unknown";
+
+            Process[] processes;
+            try
+            {
+                processes = Process.GetProcesses();
+            }
+            catch
+            {
+                reason = "process-enumeration-failed";
+                return false;
+            }
+
+            bool sawIracingProcess = false;
+            foreach (Process process in processes)
+            {
+                try
+                {
+                    if (!IsIracingProcessName(process.ProcessName))
+                    {
+                        continue;
+                    }
+
+                    sawIracingProcess = true;
+                    if (process.MainWindowHandle != IntPtr.Zero)
+                    {
+                        windowHandle = process.MainWindowHandle;
+                        reason = "none";
+                        return true;
+                    }
+                }
+                catch
+                {
+                    // keep searching
+                }
+            }
+
+            reason = sawIracingProcess ? "no-iracing-window" : "no-iracing-process";
+            return false;
+        }
+
+        private static bool IsIracingProcessName(string processName)
+        {
+            if (string.IsNullOrWhiteSpace(processName))
+            {
+                return false;
+            }
+
+            return string.Equals(processName, "iRacingSim64DX11", StringComparison.OrdinalIgnoreCase);
         }
 
         private void PublishMessage(string message)
@@ -520,6 +678,11 @@ namespace LaunchPlugin
             return value.HasValue ? value.Value.ToString() : "n/a";
         }
 
+        private static string FormatFallbackSuffix(string fallbackFrom)
+        {
+            return string.IsNullOrWhiteSpace(fallbackFrom) ? string.Empty : $" fallback_from={fallbackFrom}";
+        }
+
         [DllImport("user32.dll", CharSet = CharSet.Auto, ExactSpelling = true)]
         private static extern void keybd_event(byte bVk, byte bScan, uint dwFlags, UIntPtr dwExtraInfo);
 
@@ -531,6 +694,10 @@ namespace LaunchPlugin
 
         [DllImport("user32.dll")]
         private static extern uint GetWindowThreadProcessId(IntPtr hWnd, out uint processId);
+
+        [DllImport("user32.dll")]
+        [return: MarshalAs(UnmanagedType.Bool)]
+        private static extern bool PostMessage(IntPtr hWnd, uint msg, IntPtr wParam, IntPtr lParam);
 
         [StructLayout(LayoutKind.Sequential)]
         private struct INPUT

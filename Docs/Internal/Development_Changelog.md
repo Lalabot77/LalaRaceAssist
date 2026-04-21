@@ -33,6 +33,25 @@ The public user-facing release history is maintained in the root `CHANGELOG.md`.
 
 ## Post-v1.0 development
 
+### 2026-04-21 — PR follow-up: simulator-only iRacing process matching for pit/custom transport
+- Classification: **internal-only** (transport target-authority hardening; no new settings, actions, or user workflow changes).
+- Tightened `PitCommandEngine.IsIracingProcessName(...)` from broad `"iRacing"` substring matching to simulator-only executable matching (`iRacingSim64DX11`, case-insensitive).
+- Kept transport architecture unchanged while hardening both existing callers through the shared helper: `IsIracingForeground()` and `TryResolveIracingMainWindow(...)` now reject launcher/UI companion processes and only treat simulator process identity as authoritative.
+
+### 2026-04-21 — Pit/custom transport upgrade: direct window-message first with bounded legacy fallback
+- Classification: **both** (driver-visible transport mode setting + bounded transport/observability behavior change).
+- Added a bounded transport-selection seam inside `PitCommandEngine` (no action-surface ownership change):
+  - new default mode `Auto` tries direct iRacing window-message transport first (`WM_KEYDOWN/UP T` -> `WM_CHAR` text -> `WM_KEYDOWN/UP Enter`),
+  - on direct-path failure, `Auto` falls back once to legacy foreground `SendInput`,
+  - added explicit mode controls: `Legacy foreground SendInput only` and `Direct message only`.
+- Kept command ownership and behavior seams unchanged:
+  - built-in pit actions, custom messages, and raw pit-command sends still route through existing plugin-owned entry points,
+  - stateful toggle confirmation remains telemetry before/after authoritative,
+  - short-lived `Pit.Command.*` feedback exports remain unchanged.
+- Added transport observability without per-tick spam:
+  - send attempts now log `transport=<postmessage|sendinput>`,
+  - fallback path logs `fallback_from=postmessage` with explicit `reason=...`,
+  - failure lines now include transport reason context (`no-iracing-process`, `no-iracing-window`, `not-foreground`, etc.).
 ### 2026-04-21 — PreRace PR follow-up (project compile include + Auto one-stop status path)
 - Classification: **both** (compile-fix project file inclusion + dash-visible Auto status correctness).
 - Added `PlannerLiveSessionMatchHelper.cs` to explicit `<Compile Include=...>` items in `LaunchPlugin.csproj` so non-SDK project builds include the new shared helper/snapshot types.

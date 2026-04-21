@@ -1,7 +1,7 @@
 ﻿# Plugin UI Tooltips
 
 Validated against commit: HEAD
-Last updated: 2026-04-18
+Last updated: 2026-04-21
 Branch: work
 
 ## CopyProfileDialog.xaml
@@ -219,6 +219,7 @@ Branch: work
 - `GlobalSettingsView.xaml` now includes a collapsed `Pit Commands` expander in Settings with:
   - built-in pit-action binding rows (`Pit Clear All`, `Clear Tyres`, `Toggle Fuel`, `Fuel +/-1`, `Fuel +/-10`, `Fuel MAX`, `Toggle Tyres`, `Toggle Fast Repair`, `Toggle Auto Fuel`, `Toggle Tear-off`),
   - a focus reliability note (`pit commands are most reliable when iRacing is in the foreground/focus`),
+  - `Pit command transport` combo tooltip describing mode behavior (`Auto` direct window-message then fallback, `Legacy foreground SendInput only`, `Direct message only`),
   - `Auto-focus iRacing before pit/custom message send (Preview)` tooltip stating this is a forward-looking setting surface and current runtime still expects iRacing focus.
 - `GlobalSettingsView.xaml` now includes a collapsed `Custom Messages` expander with 10 rows; each row has a `Label` textbox tooltip (friendly feedback name), `Message` textbox tooltip (message text to send), and a binding row for `LalaLaunch.CustomMessage01..10`.
 - `GlobalSettingsView.xaml` `Mute Shift Assist sound in replay` tooltip says replay sessions suppress only Shift Assist audio while lights, learning, and other Shift Assist logic continue normally.
