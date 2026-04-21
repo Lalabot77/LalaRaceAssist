@@ -9,6 +9,10 @@ Branch: work
 - No Git remote is configured in this checkout (`git remote -v` returns empty).
 
 ## Documentation sync status
+- PR #585 follow-up fixed a high-priority startup authority regression in native class-state resolution:
+  - unknown `WeekendInfo.NumCarClasses` no longer defaults to single-class when `HasMultipleClassOpponents` is unavailable/false;
+  - authority now remains unresolved/fail-safe unless native single-class is explicit (`NumCarClasses == 1`) or a positive multiclass signal exists (`NumCarClasses > 1`, or unknown class-count with `HasMultipleClassOpponents == true`);
+  - this preserves multiclass safety for class-best and class-leader consumers during metadata-lag windows and avoids transient cross-class leaders/best laps.
 - Analysis-first class-resolution cleanup aligned native class authority and same-class matching across H2H, ClassLeader, session-best-in-class labeling, and finish-path class leader resolution:
   - introduced a single native authority seam (`NumCarClasses` primary, `HasMultipleClassOpponents` fallback only when class-count is unknown) and removed stored `_isMultiClassSession` state from finish-path decisions;
   - simplified effective same-class matching to one shared rule: explicit single-class sessions always match (blank/mismatch tolerated), multiclass sessions require usable matching class identity;

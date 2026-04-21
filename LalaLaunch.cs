@@ -12820,7 +12820,8 @@ namespace LaunchPlugin
         private enum SessionClassAuthority
         {
             SingleClass = 0,
-            MultiClass = 1
+            MultiClass = 1,
+            Unknown = 2
         }
 
         private SessionClassAuthority ResolveSessionClassAuthority(PluginManager pluginManager, out int numCarClasses, out bool hasMultipleClassOpponents)
@@ -12839,7 +12840,8 @@ namespace LaunchPlugin
             // Native authority order:
             // 1) NumCarClasses == 1 => single-class.
             // 2) NumCarClasses > 1 => multiclass.
-            // 3) Unknown class-count => fallback hint from HasMultipleClassOpponents.
+            // 3) Unknown class-count + positive HasMultipleClassOpponents => multiclass.
+            // 4) Unknown class-count + no positive multiclass hint => unresolved/unknown (fail-safe).
             if (numCarClasses == 1)
             {
                 return SessionClassAuthority.SingleClass;
@@ -12852,7 +12854,7 @@ namespace LaunchPlugin
 
             return hasMultipleClassOpponents
                 ? SessionClassAuthority.MultiClass
-                : SessionClassAuthority.SingleClass;
+                : SessionClassAuthority.Unknown;
         }
 
         private bool IsEffectivelySingleClassSession(PluginManager pluginManager, out int numCarClasses, out bool hasMultipleClassOpponents)

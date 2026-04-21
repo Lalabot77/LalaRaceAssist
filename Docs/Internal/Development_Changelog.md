@@ -33,6 +33,16 @@ The public user-facing release history is maintained in the root `CHANGELOG.md`.
 
 ## Post-v1.0 development
 
+### 2026-04-21 — PR #585 review follow-up: unknown class authority no longer defaults to single-class
+- Classification: **both** (driver-visible class-best/class-leader correctness during startup metadata windows + internal authority seam hardening).
+- Tightened `ResolveSessionClassAuthority(...)` so unknown class-count no longer collapses to `SingleClass` when `HasMultipleClassOpponents` is unavailable/false.
+- Updated authority contract:
+  - `NumCarClasses == 1` => single-class,
+  - `NumCarClasses > 1` => multiclass,
+  - unknown class-count + positive `HasMultipleClassOpponents` => multiclass,
+  - unknown class-count without positive multiclass hint => unresolved (`Unknown`) fail-safe.
+- This prevents transient multiclass startup windows from being misclassified as single-class, so class-best and class-leader consumers avoid cross-class selection until authority is explicit.
+
 ### 2026-04-21 — Analysis-first cleanup: native class-resolution seam simplification across H2H/ClassLeader/finish
 - Classification: **both** (driver-visible consistency/correctness in class-best/class-leader behavior + internal seam simplification).
 - Added a single session class-state authority seam in `LalaLaunch` (`ResolveSessionClassAuthority`):
