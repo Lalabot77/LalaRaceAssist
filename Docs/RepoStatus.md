@@ -9,6 +9,11 @@ Branch: work
 - No Git remote is configured in this checkout (`git remote -v` returns empty).
 
 ## Documentation sync status
+- Direct pit/custom transport chat-state sequencing follow-up:
+  - direct window-message path now logs staged attempt/abort telemetry (`chat-open`, `text-send`, `submit`) per command attempt,
+  - direct path now tracks uncertain chat-open carryover and can suppress repeated chat-open keying (`chat-open-suppressed=state-maybe-open`) on next attempt,
+  - `Auto` fallback is now intentionally suppressed after partial direct chat-state mutation (`fallback_suppressed=true reason=postmessage-partial-state-unsafe`) to prevent second-path chat corruption,
+  - no autofocus/focus-steal work and no duplicate-send retry path were introduced; transport mode/action surfaces remain unchanged.
 - Pit/custom transport follow-up truth-sync (semantics/observability only):
   - transport order remains unchanged (`Auto`: direct `postmessage` first, bounded legacy `sendinput` fallback only on direct-path failure),
   - no duplicate-send retry path was added after queued direct-message success,
