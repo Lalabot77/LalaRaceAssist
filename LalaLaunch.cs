@@ -4102,12 +4102,15 @@ namespace LaunchPlugin
         private readonly HashSet<CustomMessageSlot> _customMessageEntrySubscriptions = new HashSet<CustomMessageSlot>();
         private ObservableCollection<LaunchPluginFriendEntry> _friendsCollection;
         private ObservableCollection<CustomMessageSlot> _customMessagesCollection;
+        private bool _customMessageSavePending;
+        private DateTime _customMessageSaveDueUtc = DateTime.MinValue;
         private bool _friendsDirty = true;
         private bool _isSavingSettings;
         private bool _carSaBestLapFallbackInfoLogged;
         private const double CarSaLapTimeUpdateVisibilitySeconds = 3.0;
         private const double CarSaLapTimeEpsilonSec = 0.001;
         private const double LapRefAuthoritativeLapFreshnessToleranceSec = 0.050;
+        private const int CustomMessageSaveDebounceMs = 500;
 
         private enum LaunchState
         {
@@ -5796,8 +5799,11 @@ namespace LaunchPlugin
 
             _shiftAssistAudio?.Dispose();
 
-            // Persist settings
-            SaveSettings();
+            // Persist settings (including debounced custom-message edits)
+            if (!TryFlushPendingCustomMessageSaveDebounce(true))
+            {
+                SaveSettings();
+            }
             ProfilesViewModel.SaveProfiles();
 
         }
@@ -5857,6 +5863,8 @@ namespace LaunchPlugin
             {
                 return;
             }
+
+            CancelPendingCustomMessageSaveDebounce();
 
             var path = PluginStorage.GetPluginFilePath(GlobalSettingsFileName);
             try
@@ -6589,6 +6597,7 @@ namespace LaunchPlugin
             // --- MASTER GUARD CLAUSES ---
             if (Settings == null || pluginManager == null) return;
             EnforceHardDebugSettings(Settings);
+            TryFlushPendingCustomMessageSaveDebounce(false);
             EvaluateDarkMode(pluginManager);
             if (!data.GameRunning || data.NewData == null) return;
 
@@ -10159,8 +10168,38 @@ namespace LaunchPlugin
             if (e.PropertyName == nameof(CustomMessageSlot.Name)
                 || e.PropertyName == nameof(CustomMessageSlot.MessageText))
             {
-                SaveSettings();
+                ScheduleCustomMessageSaveDebounce();
             }
+        }
+
+        private void ScheduleCustomMessageSaveDebounce()
+        {
+            _customMessageSavePending = true;
+            _customMessageSaveDueUtc = DateTime.UtcNow.AddMilliseconds(CustomMessageSaveDebounceMs);
+        }
+
+        private bool TryFlushPendingCustomMessageSaveDebounce(bool force)
+        {
+            if (!_customMessageSavePending)
+            {
+                return false;
+            }
+
+            if (!force && DateTime.UtcNow < _customMessageSaveDueUtc)
+            {
+                return false;
+            }
+
+            _customMessageSavePending = false;
+            _customMessageSaveDueUtc = DateTime.MinValue;
+            SaveSettings();
+            return true;
+        }
+
+        private void CancelPendingCustomMessageSaveDebounce()
+        {
+            _customMessageSavePending = false;
+            _customMessageSaveDueUtc = DateTime.MinValue;
         }
 
         private void SubscribeFriendEntries(IList<LaunchPluginFriendEntry> entries)
