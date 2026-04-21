@@ -12280,6 +12280,31 @@ namespace LaunchPlugin
             }
         }
 
+        private static bool SafeReadBool(PluginManager pluginManager, string propertyName, bool fallback)
+        {
+            if (pluginManager == null || string.IsNullOrWhiteSpace(propertyName))
+            {
+                return fallback;
+            }
+
+            object raw;
+            try
+            {
+                raw = pluginManager.GetPropertyValue(propertyName);
+            }
+            catch
+            {
+                return fallback;
+            }
+
+            if (raw == null)
+            {
+                return fallback;
+            }
+
+            return TryCoerceBool(raw, out bool value) ? value : fallback;
+        }
+
         private static int ResolveShiftAssistRedlineRpm(PluginManager pluginManager, int targetRpm, out string source)
         {
             source = "NONE";
