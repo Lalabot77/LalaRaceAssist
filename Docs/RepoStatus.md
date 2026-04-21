@@ -9,6 +9,11 @@ Branch: work
 - No Git remote is configured in this checkout (`git remote -v` returns empty).
 
 ## Documentation sync status
+- Pit Fuel Control polish — clamped outgoing fuel-set transport values:
+  - plugin-owned pit fuel sends now clamp outgoing litres before transport and feedback publication,
+  - clamp prefers live tank-cap-aware limits when `CurrentFuel + TankSpace` is trustworthy,
+  - no trustworthy live cap now falls back to defensive `100L` hard ceiling,
+  - command ownership, transport mode behavior, and AUTO cancel behavior remain unchanged.
 - Direct pit/custom transport chat-state sequencing follow-up:
   - direct window-message path now logs staged attempt/abort telemetry (`chat-open`, `text-send`, `submit`) per command attempt,
   - direct path now tracks uncertain chat-open carryover and can suppress repeated chat-open keying (`chat-open-suppressed=state-maybe-open`) on next attempt,
@@ -465,6 +470,11 @@ Branch: work
 - `Docs/Internal/Development_Changelog.md`
 - `Docs/Subsystems/Dash_Integration.md`
 - `Docs/Pit_Assist.md`
+- `Docs/RepoStatus.md`
+
+### Changed in Pit Fuel Control polish (outgoing fuel-set clamp before transport)
+- `PitFuelControlEngine.cs`
+- `Docs/Internal/Development_Changelog.md`
 - `Docs/RepoStatus.md`
 
 ### Changed in class-best/class-leader live-session seam restore + single-class fallback task
