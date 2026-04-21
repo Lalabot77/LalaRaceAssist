@@ -33,6 +33,20 @@ The public user-facing release history is maintained in the root `CHANGELOG.md`.
 
 ## Post-v1.0 development
 
+### 2026-04-21 — Direct pit/custom transport chat-state sequencing hardening
+- Classification: **both** (driver-visible pit/custom transport behavior fix + internal observability/sequencing hardening).
+- Kept transport surface and ownership unchanged (`Auto`, `Direct message only`, `Legacy foreground SendInput only`; plugin-owned actions unchanged).
+- Hardened direct `postmessage` sequencing in `PitCommandEngine` for chat state uncertainty:
+  - added explicit staged direct-path logs for open/type/submit attempts and abort reason context,
+  - introduced bounded `state-maybe-open` guard that suppresses re-sending `T` when previous direct attempt may have already opened chat,
+  - increased open->type delay to reduce first-press “chat-open only” sequencing races.
+- Added partial-state safety guard in `Auto` mode:
+  - when direct path has already mutated chat state and then fails, legacy `sendinput` fallback is suppressed (`fallback_suppressed=true reason=postmessage-partial-state-unsafe`) to prevent second-path chat corruption/duplicate-open behavior.
+- Preserved existing non-goals:
+  - no autofocus/focus-steal work added,
+  - no generic duplicate-send retry path added,
+  - stateful before/after telemetry confirmation ownership unchanged.
+
 ### 2026-04-21 — Pit/custom transport follow-up: truthful direct-message confirmation semantics
 - Classification: **both** (observability/log wording and docs-truth sync; no transport-order or action-surface redesign).
 - Kept transport order unchanged in `PitCommandEngine`:

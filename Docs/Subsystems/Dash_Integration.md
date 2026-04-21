@@ -44,6 +44,7 @@ This document is the canonical dash-facing contract layer. It does **not** redef
   - `Auto (Direct message then fallback)` (default): tries direct iRacing window-message send first (`WM_KEYDOWN/UP T` → `WM_CHAR` text → `WM_KEYDOWN/UP Enter`), then falls back to legacy foreground `SendInput` if direct transport is unavailable.
   - `Legacy foreground SendInput only`: preserves previous foreground-only `SendInput` behavior.
   - `Direct message only`: direct window-message transport without legacy fallback.
+- Auto fallback safety guard: if a direct attempt already mutated chat state but then aborts (partial open/type sequence risk), legacy fallback is intentionally suppressed for that press to avoid second-path corruption/duplicate-open behavior.
 - Legacy fallback still requires iRacing foreground; direct-window path may still fail when no usable iRacing main window is available.
 - Transport truth model: successful direct-message queueing is only `attempted=true` / `delivery=unverified` for custom messages, raw commands, and stateless built-ins (no post-send effect confirmation seam).
 - Stateful built-ins keep authoritative before/after telemetry confirmation ownership (`effect-confirmed=true|false`).

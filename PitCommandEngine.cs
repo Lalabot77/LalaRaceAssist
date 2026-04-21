@@ -47,6 +47,7 @@ namespace LaunchPlugin
 
         private readonly HashSet<string> _onceWarnings = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
         private DateTime _messageUntilUtc = DateTime.MinValue;
+        private bool _postMessageChatStateMayBeOpen;
 
         public string DisplayText { get; private set; } = string.Empty;
         public string LastAction { get; private set; } = string.Empty;
@@ -447,13 +448,22 @@ namespace LaunchPlugin
             if (transportMode == PitCommandTransportMode.DirectMessageOnly)
             {
                 transportUsed = "postmessage";
-                return TryPostMessageChatCommand(command, out reason);
+                bool chatStateMutated;
+                return TryPostMessageChatCommand(command, out reason, out chatStateMutated);
             }
 
             transportUsed = "postmessage";
-            if (TryPostMessageChatCommand(command, out reason))
+            bool postMessageMutatedChatState;
+            if (TryPostMessageChatCommand(command, out reason, out postMessageMutatedChatState))
             {
                 return true;
+            }
+
+            if (postMessageMutatedChatState)
+            {
+                reason = "postmessage-partial-state-unsafe";
+                SimHub.Logging.Current.Warn("[LalaPlugin:PitCommand] transport=sendinput fallback_suppressed=true reason=postmessage-partial-state-unsafe");
+                return false;
             }
 
             fallbackFrom = "postmessage";
@@ -462,39 +472,64 @@ namespace LaunchPlugin
             return TryForegroundSendInputChatCommand(command, out reason);
         }
 
-        private bool TryPostMessageChatCommand(string command, out string reason)
+        private bool TryPostMessageChatCommand(string command, out string reason, out bool chatStateMutated)
         {
+            chatStateMutated = false;
             IntPtr iracingWindow;
             if (!TryResolveIracingMainWindow(out iracingWindow, out reason))
             {
+                SimHub.Logging.Current.Warn($"[LalaPlugin:PitCommand] transport=postmessage abort=true reason={reason} chat-open-attempted=false text-send-attempted=false submit-attempted=false");
                 return false;
             }
 
-            if (!PostVirtualKey(iracingWindow, Keys.T))
+            bool chatOpenAttempted = false;
+            bool textSendAttempted = false;
+            bool submitAttempted = false;
+            bool chatOpenSucceeded = false;
+
+            if (!_postMessageChatStateMayBeOpen)
             {
-                reason = "postmessage-open-chat-failed";
-                return false;
+                chatOpenAttempted = true;
+                if (!PostVirtualKey(iracingWindow, Keys.T))
+                {
+                    reason = "postmessage-open-chat-failed";
+                    SimHub.Logging.Current.Warn($"[LalaPlugin:PitCommand] transport=postmessage abort=true reason={reason} chat-open-attempted={chatOpenAttempted} text-send-attempted={textSendAttempted} submit-attempted={submitAttempted}");
+                    return false;
+                }
+
+                chatOpenSucceeded = true;
+                chatStateMutated = true;
+                _postMessageChatStateMayBeOpen = true;
+                Thread.Sleep(40);
+            }
+            else
+            {
+                SimHub.Logging.Current.Info("[LalaPlugin:PitCommand] transport=postmessage chat-open-attempted=false chat-open-suppressed=state-maybe-open");
             }
 
-            Thread.Sleep(12);
-
+            textSendAttempted = true;
             foreach (char c in command)
             {
                 if (!PostMessage(iracingWindow, WmChar, (IntPtr)c, IntPtr.Zero))
                 {
                     reason = "postmessage-char-failed";
+                    SimHub.Logging.Current.Warn($"[LalaPlugin:PitCommand] transport=postmessage abort=true reason={reason} chat-open-attempted={chatOpenAttempted} text-send-attempted={textSendAttempted} submit-attempted={submitAttempted}");
                     return false;
                 }
             }
 
-            Thread.Sleep(8);
+            Thread.Sleep(12);
+            submitAttempted = true;
             if (!PostVirtualKey(iracingWindow, Keys.Enter))
             {
                 reason = "postmessage-submit-failed";
+                SimHub.Logging.Current.Warn($"[LalaPlugin:PitCommand] transport=postmessage abort=true reason={reason} chat-open-attempted={chatOpenAttempted} text-send-attempted={textSendAttempted} submit-attempted={submitAttempted}");
                 return false;
             }
 
+            _postMessageChatStateMayBeOpen = false;
             reason = "none";
+            SimHub.Logging.Current.Info($"[LalaPlugin:PitCommand] transport=postmessage direct-sequence chat-open-attempted={chatOpenAttempted} text-send-attempted={textSendAttempted} submit-attempted={submitAttempted} chat-open-succeeded={chatOpenSucceeded}");
             return true;
         }
 
