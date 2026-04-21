@@ -32,7 +32,7 @@ Branch: work
   - `Pit.FuelSetZero` and `Pit.FuelSetMax` ZERO phase now transport `#fuel 0.01$` (MAX phase unchanged).
   - AUTO cancel now uses live requested-fuel movement ownership detection outside plugin send suppression (no stale baseline mismatch dependence); cancellation is one-shot to `OFF + STBY` with `AUTO CANCELLED`.
   - Plugin AUTO now disengages when iRacing AutoFuel is enabled (no AUTO co-ownership).
-  - Reset triggers now force `OFF + STBY` on session type change and SessionState `1 -> 2`; `2 -> 3` intentionally does not reset.
+  - External lifecycle reset now uses only `Telemetry.IsOnTrackCar` edge detection (`false -> true` and `true -> false`) and forces `OFF + STBY` on each edge.
   - Offline Testing now suppresses Pit Fuel Control to inert `OFF + STBY`.
 - LapRef/H2H/profile-track follow-up (bounded scope):
   - profile-track editor now has condition-specific PB cleanup actions:

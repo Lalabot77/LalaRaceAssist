@@ -4152,8 +4152,8 @@ namespace LaunchPlugin
         // --- Session State ---
         private string _lastSessionType = "";          // used by auto-dash & UI
         private string _lastFuelSessionType = "";      // used only by fuel model seeding
-        private string _pitFuelControlLastSessionType = string.Empty;
-        private int _pitFuelControlLastSessionState = -1;
+        private bool _pitFuelControlLastIsOnTrackCar;
+        private bool _pitFuelControlHasIsOnTrackCarSample;
 
         private string _lastSeenCar = "";
         private string _lastSeenTrack = "";
@@ -6556,21 +6556,15 @@ namespace LaunchPlugin
             return contingencyValue;
         }
 
-        private void HandlePitFuelControlSessionResets(string sessionTypeName, int sessionState)
+        private void HandlePitFuelControlOnTrackResets(bool isOnTrackCar)
         {
-            string normalizedSessionType = NormalizeSessionTypeName(sessionTypeName);
-            bool hasPreviousType = !string.IsNullOrWhiteSpace(_pitFuelControlLastSessionType);
-            bool sessionTypeChanged = hasPreviousType &&
-                !string.Equals(normalizedSessionType, _pitFuelControlLastSessionType, StringComparison.OrdinalIgnoreCase);
-            bool sessionStateGridTransition = _pitFuelControlLastSessionState == 1 && sessionState == 2;
-
-            if (sessionTypeChanged || sessionStateGridTransition)
+            if (_pitFuelControlHasIsOnTrackCarSample && _pitFuelControlLastIsOnTrackCar != isOnTrackCar)
             {
                 _pitFuelControlEngine.ResetToOffStby();
             }
 
-            _pitFuelControlLastSessionType = normalizedSessionType;
-            _pitFuelControlLastSessionState = sessionState;
+            _pitFuelControlLastIsOnTrackCar = isOnTrackCar;
+            _pitFuelControlHasIsOnTrackCarSample = true;
         }
 
         public void DataUpdate(PluginManager pluginManager, ref GameData data)
@@ -6648,8 +6642,8 @@ namespace LaunchPlugin
             double sessionTimeRemain = SafeReadDouble(pluginManager, "DataCorePlugin.GameRawData.Telemetry.SessionTimeRemain", double.NaN);
 
             string currentSessionTypeForConfidence = data.NewData?.SessionTypeName ?? string.Empty;
-            int currentSessionState = SafeReadInt(pluginManager, "DataCorePlugin.GameRawData.Telemetry.SessionState", 0);
-            HandlePitFuelControlSessionResets(currentSessionTypeForConfidence, currentSessionState);
+            bool isOnTrackCar = SafeReadBool(pluginManager, "DataCorePlugin.GameRawData.Telemetry.IsOnTrackCar", false);
+            HandlePitFuelControlOnTrackResets(isOnTrackCar);
             string trackIdentityForConfidence =
                 (!string.IsNullOrWhiteSpace(CurrentTrackKey) && !CurrentTrackKey.Equals("unknown", StringComparison.OrdinalIgnoreCase))
                     ? CurrentTrackKey
