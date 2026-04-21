@@ -9,6 +9,12 @@ Branch: work
 - No Git remote is configured in this checkout (`git remote -v` returns empty).
 
 ## Documentation sync status
+- Pit Fuel Control follow-up (bounded to pit fuel-control + pit-command seam):
+  - `Pit.FuelSetZero` and `Pit.FuelSetMax` ZERO phase now transport `#fuel 0.01$` (MAX phase unchanged).
+  - AUTO cancel now uses live requested-fuel movement ownership detection outside plugin send suppression (no stale baseline mismatch dependence); cancellation is one-shot to `OFF + STBY` with `AUTO CANCELLED`.
+  - Plugin AUTO now disengages when iRacing AutoFuel is enabled (no AUTO co-ownership).
+  - Reset triggers now force `OFF + STBY` on session type change and SessionState `1 -> 2`; `2 -> 3` intentionally does not reset.
+  - Offline Testing now suppresses Pit Fuel Control to inert `OFF + STBY`.
 - LapRef/H2H/profile-track follow-up (bounded scope):
   - profile-track editor now has condition-specific PB cleanup actions:
     - `Clear Dry PB + Sectors` (dry PB lap + dry S1..S6 only),
@@ -352,6 +358,17 @@ Branch: work
 - `PitFuelControlEngine.cs`
 - `Docs/Internal/SimHubParameterInventory.md`
 - `Docs/Internal/Development_Changelog.md`
+- `Docs/RepoStatus.md`
+
+### Changed in Pit Fuel Control follow-up (zero transport + AUTO ownership cancel + OFF/STBY reset + offline suppression)
+- `PitCommandEngine.cs`
+- `PitFuelControlEngine.cs`
+- `LalaLaunch.cs`
+- `Docs/Internal/SimHubParameterInventory.md`
+- `Docs/Internal/SimHubLogMessages.md`
+- `Docs/Internal/Development_Changelog.md`
+- `Docs/Subsystems/Dash_Integration.md`
+- `Docs/Pit_Assist.md`
 - `Docs/RepoStatus.md`
 
 ### Changed in class-best/class-leader live-session seam restore + single-class fallback task

@@ -28,6 +28,7 @@ namespace LaunchPlugin
     internal sealed class PitCommandEngine
     {
         private const int FuelSetMaxCommandLitres = 150;
+        private const string FuelSetZeroCommand = "#fuel 0.01$";
         private const int ConfirmationDelayMs = 180;
         private const int MessageHoldMs = 1500;
         private const uint KeyEventKeyUp = 0x0002;
@@ -269,7 +270,7 @@ namespace LaunchPlugin
         {
             if (action == PitCommandAction.FuelSetMax)
             {
-                return FuelSetMaxToggleState ? string.Format("#fuel +{0}$", FuelSetMaxCommandLitres) : "#fuel 0$";
+                return FuelSetMaxToggleState ? string.Format("#fuel +{0}$", FuelSetMaxCommandLitres) : FuelSetZeroCommand;
             }
 
             return GetRawCommandStatic(action);
@@ -282,7 +283,7 @@ namespace LaunchPlugin
                 case PitCommandAction.ClearAll: return "#clear$";
                 case PitCommandAction.ClearTyres: return "#cleartires$";
                 case PitCommandAction.ToggleFuel: return "#!fuel$";
-                case PitCommandAction.FuelSetZero: return "#fuel 0$";
+                case PitCommandAction.FuelSetZero: return FuelSetZeroCommand;
                 case PitCommandAction.FuelAdd1: return "#fuel +1$";
                 case PitCommandAction.FuelRemove1: return "#fuel -1$";
                 case PitCommandAction.FuelAdd10: return "#fuel +10$";

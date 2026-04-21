@@ -33,6 +33,26 @@ The public user-facing release history is maintained in the root `CHANGELOG.md`.
 
 ## Post-v1.0 development
 
+### Pit Fuel Control follow-up: zero transport, AUTO ownership cancel redesign, OFF/STBY reset semantics, offline suppression
+- Updated `PitCommandEngine` zero-fuel transport payloads to `#fuel 0.01$` for both:
+  - dedicated `Pit.FuelSetZero`,
+  - ZERO phase of `Pit.FuelSetMax` toggle.
+- Reworked `PitFuelControlEngine` AUTO cancel trigger to movement-based ownership:
+  - while AUTO is active/armed, requested-fuel movement is tracked from live telemetry (`PitSvFuel`),
+  - movement outside the plugin send-suppression window is treated as external ownership and cancels AUTO once.
+- Removed stale-baseline dependency for AUTO cancel:
+  - cancellation no longer requires mismatch against prior `LastSentFuelLitres`.
+- Updated AUTO cancel post-state to truthful inert ownership:
+  - cancel/disengage now forces `OFF + STBY` with `AutoArmed=false`.
+- Added iRacing AutoFuel ownership guard:
+  - plugin AUTO does not coexist with native AutoFuel; active AUTO is cleanly cancelled to `OFF + STBY`.
+- Added bounded reset triggers in `LalaLaunch` for pit fuel control state:
+  - session type name change => `OFF + STBY`,
+  - SessionState transition `1 -> 2` => `OFF + STBY`,
+  - explicit non-trigger: `2 -> 3` does not reset.
+- Added Offline Testing suppression:
+  - pit fuel control is suppressed/inert and forced to `OFF + STBY` (no active control behavior).
+- Classification: **both** (driver-visible pit-fuel command/cancel/reset behavior changes + internal ownership-contract hardening/docs alignment).
 ### 2026-04-21 — LapRef profile-track PB sector UI + H2H unresolved log spam follow-up
 - Classification: **both** (profile-track editor UX visibility/control update + LapRef/H2H runtime behavior hardening).
 - Added profile-track editor controls for condition-specific PB cleanup:

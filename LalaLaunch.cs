@@ -4152,6 +4152,8 @@ namespace LaunchPlugin
         // --- Session State ---
         private string _lastSessionType = "";          // used by auto-dash & UI
         private string _lastFuelSessionType = "";      // used only by fuel model seeding
+        private string _pitFuelControlLastSessionType = string.Empty;
+        private int _pitFuelControlLastSessionState = -1;
 
         private string _lastSeenCar = "";
         private string _lastSeenTrack = "";
@@ -6147,7 +6149,7 @@ namespace LaunchPlugin
             _lastPitWindowState = -1;
             _lastPitWindowLabel = string.Empty;
             _lastPitWindowLogUtc = DateTime.MinValue;
-            _pitFuelControlEngine?.ResetForSession();
+            _pitFuelControlEngine?.ResetToOffStby();
             _opponentsEngine?.Reset();
             _h2hEngine?.Reset();
         }
@@ -6462,6 +6464,12 @@ namespace LaunchPlugin
         private PitFuelControlSnapshot BuildPitFuelControlSnapshot()
         {
             var snapshot = new PitFuelControlSnapshot();
+            string currentSessionTypeName = NormalizeSessionTypeName(Convert.ToString(
+                PluginManager?.GetPropertyValue("DataCorePlugin.GameData.SessionTypeName") ?? string.Empty));
+
+            snapshot.SuppressFuelControl = IsOfflineTestingSession(currentSessionTypeName);
+            snapshot.IracingAutoFuelEnabled = Convert.ToBoolean(
+                PluginManager?.GetPropertyValue("DataCorePlugin.GameRawData.Telemetry.dpAutoFuel") ?? false);
 
             string liveCarIdentity = !string.IsNullOrWhiteSpace(CurrentCarModel) && !CurrentCarModel.Equals("Unknown", StringComparison.OrdinalIgnoreCase)
                 ? CurrentCarModel
@@ -6548,6 +6556,23 @@ namespace LaunchPlugin
             return contingencyValue;
         }
 
+        private void HandlePitFuelControlSessionResets(string sessionTypeName, int sessionState)
+        {
+            string normalizedSessionType = NormalizeSessionTypeName(sessionTypeName);
+            bool hasPreviousType = !string.IsNullOrWhiteSpace(_pitFuelControlLastSessionType);
+            bool sessionTypeChanged = hasPreviousType &&
+                !string.Equals(normalizedSessionType, _pitFuelControlLastSessionType, StringComparison.OrdinalIgnoreCase);
+            bool sessionStateGridTransition = _pitFuelControlLastSessionState == 1 && sessionState == 2;
+
+            if (sessionTypeChanged || sessionStateGridTransition)
+            {
+                _pitFuelControlEngine.ResetToOffStby();
+            }
+
+            _pitFuelControlLastSessionType = normalizedSessionType;
+            _pitFuelControlLastSessionState = sessionState;
+        }
+
         public void DataUpdate(PluginManager pluginManager, ref GameData data)
         {
             // ==== New, Simplified Car & Track Detection ====
@@ -6623,6 +6648,8 @@ namespace LaunchPlugin
             double sessionTimeRemain = SafeReadDouble(pluginManager, "DataCorePlugin.GameRawData.Telemetry.SessionTimeRemain", double.NaN);
 
             string currentSessionTypeForConfidence = data.NewData?.SessionTypeName ?? string.Empty;
+            int currentSessionState = SafeReadInt(pluginManager, "DataCorePlugin.GameRawData.Telemetry.SessionState", 0);
+            HandlePitFuelControlSessionResets(currentSessionTypeForConfidence, currentSessionState);
             string trackIdentityForConfidence =
                 (!string.IsNullOrWhiteSpace(CurrentTrackKey) && !CurrentTrackKey.Equals("unknown", StringComparison.OrdinalIgnoreCase))
                     ? CurrentTrackKey
@@ -6664,7 +6691,7 @@ namespace LaunchPlugin
                 _lastSessionId = currentSessionId;
                 _lastSubSessionId = currentSubSessionId;
                 _lastSessionToken = currentSessionToken;
-                _pitFuelControlEngine.ResetForSession();
+                _pitFuelControlEngine.ResetToOffStby();
                 ManualRecoveryReset("Session transition");
 
                 SimHub.Logging.Current.Info($"[LalaPlugin:Profile] Session start snapshot: Car='{CurrentCarModel}'  Track='{CurrentTrackName}'");
