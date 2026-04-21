@@ -594,7 +594,6 @@ namespace LaunchPlugin
         private bool _classLeaderHasFinished;
         private bool _overallLeaderHasFinishedValid;
         private bool _classLeaderHasFinishedValid;
-        private bool _isMultiClassSession;
         private double _lastClassLeaderLapPct = double.NaN;
         private double _lastOverallLeaderLapPct = double.NaN;
         private int _lastClassLeaderCarIdx = -1;
@@ -6230,7 +6229,6 @@ namespace LaunchPlugin
             _classLeaderHasFinished = false;
             _overallLeaderHasFinishedValid = false;
             _classLeaderHasFinishedValid = false;
-            _isMultiClassSession = false;
             _lastClassLeaderLapPct = double.NaN;
             _lastOverallLeaderLapPct = double.NaN;
             _lastClassLeaderCarIdx = -1;
@@ -6265,6 +6263,7 @@ namespace LaunchPlugin
             string reasonLabel = string.IsNullOrWhiteSpace(reason) ? "unspecified" : reason.Trim();
             SimHub.Logging.Current.Info($"[LalaPlugin:Runtime] manual recovery reset triggered (reason: {reasonLabel}).");
             ResetProjectionFallbackState();
+            ResetH2HClassBestResolveLogLatch();
 
             _rejoinEngine?.Reset();
             _pit?.Reset();
@@ -6362,6 +6361,13 @@ namespace LaunchPlugin
             ResetCoreLaunchMetrics();
             SetLaunchState(LaunchState.Idle);
             _launchAbortLatched = false;
+        }
+
+        private void ResetH2HClassBestResolveLogLatch()
+        {
+            _h2hClassSessionBestNativeMissingWarned = false;
+            _classBestResolveLastLogReason = string.Empty;
+            _classBestResolveLastLogUtc = DateTime.MinValue;
         }
 
         private void UpdatePitScreenState(PluginManager pluginManager)
@@ -12977,7 +12983,6 @@ namespace LaunchPlugin
             _carIdxToClassShortName.Clear();
             if (pluginManager == null)
             {
-                _isMultiClassSession = false;
                 return;
             }
 
@@ -13038,23 +13043,6 @@ namespace LaunchPlugin
                 }
             }
 
-            IsEffectivelySingleClassSession(pluginManager, out int numCarClasses, out bool hasMultipleClassOpponents);
-            // Authority order is native-only:
-            // 1) NumCarClasses == 1 => single-class.
-            // 2) NumCarClasses > 1 => multiclass.
-            // 3) Unknown class-count => fall back to HasMultipleClassOpponents.
-            if (numCarClasses == 1)
-            {
-                _isMultiClassSession = false;
-            }
-            else if (numCarClasses > 1)
-            {
-                _isMultiClassSession = true;
-            }
-            else
-            {
-                _isMultiClassSession = hasMultipleClassOpponents;
-            }
         }
 
         private string GetCachedClassShortName(int carIdx)
@@ -13063,7 +13051,14 @@ namespace LaunchPlugin
             return _carIdxToClassShortName.TryGetValue(carIdx, out var cls) ? cls : null;
         }
 
-        private bool IsEffectivelySingleClassSession(PluginManager pluginManager, out int numCarClasses, out bool hasMultipleClassOpponents)
+        private enum SessionClassAuthority
+        {
+            SingleClass = 0,
+            MultiClass = 1,
+            Unknown = 2
+        }
+
+        private SessionClassAuthority ResolveSessionClassAuthority(PluginManager pluginManager, out int numCarClasses, out bool hasMultipleClassOpponents)
         {
             numCarClasses = SafeReadInt(pluginManager, "DataCorePlugin.GameRawData.SessionData.WeekendInfo.NumCarClasses", UnknownNumCarClasses);
             hasMultipleClassOpponents = false;
@@ -13076,19 +13071,29 @@ namespace LaunchPlugin
                 hasMultipleClassOpponents = false;
             }
 
-            if (numCarClasses > 1)
-            {
-                return false;
-            }
-
+            // Native authority order:
+            // 1) NumCarClasses == 1 => single-class.
+            // 2) NumCarClasses > 1 => multiclass.
+            // 3) Unknown class-count + positive HasMultipleClassOpponents => multiclass.
+            // 4) Unknown class-count + no positive multiclass hint => unresolved/unknown (fail-safe).
             if (numCarClasses == 1)
             {
-                return true;
+                return SessionClassAuthority.SingleClass;
             }
 
-            // Unknown/missing class-count state is not a positive single-class signal.
-            // Stay fail-safe (non-single-class) until native metadata confirms single-class.
-            return false;
+            if (numCarClasses > 1)
+            {
+                return SessionClassAuthority.MultiClass;
+            }
+
+            return hasMultipleClassOpponents
+                ? SessionClassAuthority.MultiClass
+                : SessionClassAuthority.Unknown;
+        }
+
+        private bool IsEffectivelySingleClassSession(PluginManager pluginManager, out int numCarClasses, out bool hasMultipleClassOpponents)
+        {
+            return ResolveSessionClassAuthority(pluginManager, out numCarClasses, out hasMultipleClassOpponents) == SessionClassAuthority.SingleClass;
         }
 
         private static bool HasUsableClassIdentity(string classShortName)
@@ -13098,32 +13103,36 @@ namespace LaunchPlugin
 
         private static bool IsSameEffectiveClass(string playerClassShort, string candidateClassShort, bool isSingleClassSession)
         {
-            bool playerHasClass = HasUsableClassIdentity(playerClassShort);
-            bool candidateHasClass = HasUsableClassIdentity(candidateClassShort);
-            if (playerHasClass && candidateHasClass)
-            {
-                return string.Equals(playerClassShort, candidateClassShort, StringComparison.OrdinalIgnoreCase);
-            }
-
             if (isSingleClassSession)
             {
                 return true;
             }
 
-            return false;
+            bool playerHasClass = HasUsableClassIdentity(playerClassShort);
+            bool candidateHasClass = HasUsableClassIdentity(candidateClassShort);
+            return playerHasClass
+                && candidateHasClass
+                && string.Equals(playerClassShort, candidateClassShort, StringComparison.OrdinalIgnoreCase);
         }
 
         private void MaybeLogClassBestResolveFailure(string reason, int playerCarIdx, int numCarClasses, bool hasMultipleClassOpponents)
         {
-            DateTime nowUtc = DateTime.UtcNow;
-            if (string.Equals(_classBestResolveLastLogReason, reason, StringComparison.OrdinalIgnoreCase)
-                && (nowUtc - _classBestResolveLastLogUtc).TotalSeconds < 10.0)
+            bool metadataNotReadySingleClass = string.Equals(reason, "missing_or_late_class_metadata", StringComparison.OrdinalIgnoreCase)
+                && numCarClasses == 1
+                && !hasMultipleClassOpponents;
+            if (metadataNotReadySingleClass)
             {
                 return;
             }
 
-            _classBestResolveLastLogReason = reason ?? string.Empty;
-            _classBestResolveLastLogUtc = nowUtc;
+            string normalizedReason = reason ?? string.Empty;
+            if (string.Equals(_classBestResolveLastLogReason, normalizedReason, StringComparison.OrdinalIgnoreCase))
+            {
+                return;
+            }
+
+            _classBestResolveLastLogReason = normalizedReason;
+            _classBestResolveLastLogUtc = DateTime.UtcNow;
             SimHub.Logging.Current.Info(
                 $"[LalaPlugin:H2H] Native class-best unresolved reason={reason} playerCarIdx={playerCarIdx} " +
                 $"classMetaCount={_carIdxToClassShortName.Count} numCarClasses={numCarClasses} hasMultipleClassOpponents={hasMultipleClassOpponents}");
@@ -13171,7 +13180,7 @@ namespace LaunchPlugin
             }
 
             bool isSingleClassSession = IsEffectivelySingleClassSession(pluginManager, out _, out _);
-            if (_carIdxToClassShortName.Count == 0)
+            if (!isSingleClassSession && _carIdxToClassShortName.Count == 0)
             {
                 failureReason = "missing_or_late_class_metadata";
                 return false;
@@ -13422,7 +13431,7 @@ namespace LaunchPlugin
                 var trackStats = ActiveProfile.ResolveTrackByNameOrKey(trackKey) ?? ActiveProfile.ResolveTrackByNameOrKey(CurrentTrackName);
                 if (trackStats != null)
                 {
-                    int? profileBestMs = trackStats.GetBestLapMsForCondition(isWetMode);
+                    int? profileBestMs = trackStats.GetConditionOnlyBestLapMs(isWetMode);
                     if (profileBestMs.HasValue && profileBestMs.Value > 0)
                     {
                         profileBestLapSec = profileBestMs.Value / 1000.0;
@@ -13551,9 +13560,9 @@ namespace LaunchPlugin
             return segment;
         }
 
-        private int FindClassLeaderCarIdx(string playerClassShort, int[] classPositions, int[] trackSurfaces)
+        private int FindClassLeaderCarIdx(string playerClassShort, bool isSingleClassSession, int[] classPositions, int[] trackSurfaces)
         {
-            if (string.IsNullOrWhiteSpace(playerClassShort) || classPositions == null) return -1;
+            if (classPositions == null) return -1;
 
             for (int i = 0; i < classPositions.Length; i++)
             {
@@ -13561,9 +13570,7 @@ namespace LaunchPlugin
                 if (!IsCarInWorld(trackSurfaces, i)) continue;
 
                 var classShort = GetCachedClassShortName(i);
-                if (string.IsNullOrWhiteSpace(classShort)) continue;
-
-                if (string.Equals(classShort, playerClassShort, StringComparison.OrdinalIgnoreCase))
+                if (IsSameEffectiveClass(playerClassShort, classShort, isSingleClassSession))
                 {
                     return i;
                 }
@@ -14849,18 +14856,20 @@ namespace LaunchPlugin
                 RefreshClassMetadata(pluginManager);
                 playerClassShort = GetCachedClassShortName(playerCarIdx);
             }
+            bool isSingleClassSession = IsEffectivelySingleClassSession(pluginManager, out _, out _);
+            bool isMultiClassSession = !isSingleClassSession;
 
             var classPositions = GetIntArray(pluginManager, "DataCorePlugin.GameRawData.Telemetry.CarIdxClassPosition");
             var trackSurfaces = GetIntArray(pluginManager, "DataCorePlugin.GameRawData.Telemetry.CarIdxTrackSurface");
             var lapDistPct = GetDoubleArray(pluginManager, "DataCorePlugin.GameRawData.Telemetry.CarIdxLapDistPct");
 
-            int classLeaderIdx = FindClassLeaderCarIdx(playerClassShort, classPositions, trackSurfaces);
+            int classLeaderIdx = FindClassLeaderCarIdx(playerClassShort, isSingleClassSession, classPositions, trackSurfaces);
             ClassLeaderHasFinishedValid = classLeaderIdx >= 0;
 
             int overallLeaderIdx = -1;
 
             // Single-class: overall leader == class leader
-            if (!_isMultiClassSession && classLeaderIdx >= 0)
+            if (isSingleClassSession && classLeaderIdx >= 0)
             {
                 overallLeaderIdx = classLeaderIdx;
             }
@@ -14879,7 +14888,7 @@ namespace LaunchPlugin
                 OverallLeaderHasFinished = true;
                 OverallLeaderHasFinishedValid = true;
 
-                if (_isMultiClassSession)
+                if (isMultiClassSession)
                 {
                     ClassLeaderHasFinished = true;
                     ClassLeaderHasFinishedValid = classLeaderIdx >= 0;
@@ -14895,7 +14904,7 @@ namespace LaunchPlugin
                     $"[LalaPlugin:Finish] checkered_flag trigger=flag leader_finished={LeaderHasFinished} " +
                     $"class_finished={ClassLeaderHasFinished} class_valid={ClassLeaderHasFinishedValid} " +
                     $"overall_finished={OverallLeaderHasFinished} overall_valid={OverallLeaderHasFinishedValid} " +
-                    $"multiclass={_isMultiClassSession}"
+                    $"multiclass={isMultiClassSession}"
                 );
             }
 
@@ -14952,7 +14961,7 @@ namespace LaunchPlugin
             }
 
             bool derivedLeaderBefore = LeaderHasFinished;
-            bool derivedLeaderAfter = _isMultiClassSession
+            bool derivedLeaderAfter = isMultiClassSession
                 ? (ClassLeaderHasFinishedValid && ClassLeaderHasFinished)
                 : (OverallLeaderHasFinishedValid && OverallLeaderHasFinished);
             LeaderHasFinished = derivedLeaderAfter;
@@ -14962,7 +14971,7 @@ namespace LaunchPlugin
                 _leaderFinishedSeen = true;
                 _leaderCheckeredSessionTime = sessionTime;
                 SimHub.Logging.Current.Info(
-                    $"[LalaPlugin:Finish] leader_finish trigger=derived source={(_isMultiClassSession ? "class" : "overall")} " +
+                    $"[LalaPlugin:Finish] leader_finish trigger=derived source={(isMultiClassSession ? "class" : "overall")} " +
                     $"session_state={sessionStateNumeric} timer0_seen={_timerZeroSeen}");
             }
 
