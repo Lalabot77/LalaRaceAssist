@@ -75,6 +75,7 @@ The dashboard docs now include a dedicated Primary Driver Dash guide covering th
   - `Legacy foreground SendInput only` preserves old behavior,
   - `Direct message only` disables fallback.
 - Auto-focus is still not implemented (preview setting only).
+- Confirmation truth model: stateful built-in pit toggles are effect-confirmed by before/after telemetry; custom messages, raw commands, and stateless built-ins are transport-attempt only (`delivery=unverified`).
 
 ## Current Constraints (v1.x)
 

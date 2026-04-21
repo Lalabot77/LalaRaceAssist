@@ -45,6 +45,8 @@ This document is the canonical dash-facing contract layer. It does **not** redef
   - `Legacy foreground SendInput only`: preserves previous foreground-only `SendInput` behavior.
   - `Direct message only`: direct window-message transport without legacy fallback.
 - Legacy fallback still requires iRacing foreground; direct-window path may still fail when no usable iRacing main window is available.
+- Transport truth model: successful direct-message queueing is only `attempted=true` / `delivery=unverified` for custom messages, raw commands, and stateless built-ins (no post-send effect confirmation seam).
+- Stateful built-ins keep authoritative before/after telemetry confirmation ownership (`effect-confirmed=true|false`).
 - Dashboards can bind short-lived user feedback exports `LalaLaunch.Pit.Command.DisplayText` and `LalaLaunch.Pit.Command.Active` for command confirmations/failures.
 - Dashboards can also bind `LalaLaunch.Pit.Command.LastAction`/`LastRaw` for diagnostics, plus `LalaLaunch.Pit.Command.FuelSetMaxToggleState` for real `Pit.FuelSetMax` MAX/ZERO toggle state (`false=last press sent ZERO / next press sends MAX`, `true=last press sent MAX / next press sends ZERO`). Tank-full short-circuit applies to MAX phase only; ZERO phase is still transported as `#fuel 0.01`.
 - Dashboards can bind `LalaLaunch.Pit.FuelControl.*` exports (`Source/SourceText`, `Mode/ModeText`, `TargetLitres`, `OverrideActive`) for pit fuel control state display; dashboards do not own source/mode/plan validity logic.

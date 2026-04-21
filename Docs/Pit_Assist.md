@@ -100,6 +100,8 @@ Transport mode is configurable in **Settings → Pit Commands**:
 - `Direct message only` uses only the window-message path and does not fallback.
 
 If both available transport options fail for the selected mode (for example no iRacing window is available for direct send, or legacy fallback is blocked because iRacing is not foreground), LalaLaunch publishes `Pit Cmd Fail` and logs a pit-command warning so the failure is visible.
+For custom messages, raw commands, and stateless built-in pit actions, a successful direct send is transport-attempt only (queued/unverified), not authoritative proof that iRacing applied the command.
+Stateful toggle actions (`ToggleFuel`, tyre/fix toggles, etc.) remain the only pit actions with authoritative before/after telemetry confirmation.
 
 Settings still includes **Auto-focus iRacing before pit/custom message send (Preview)** as forward-looking UI only; autofocus behavior is not implemented.
 

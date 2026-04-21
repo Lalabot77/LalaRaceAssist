@@ -111,6 +111,7 @@ For a new car/track combination:
 - For supported pit widgets/buttons, bind plugin-owned actions (`LalaLaunch.Pit.*`, `LalaLaunch.Pit.FuelControl.*`) rather than old `IRacingExtraProperties` pit action ids.
 - Transport mode is configurable in **Settings → Pit Commands** (`Auto` direct-message then fallback, `Legacy foreground SendInput only`, `Direct message only`).
 - Auto-focus is not implemented yet (preview setting only).
+- Transport truth: stateful built-in toggles use telemetry before/after confirmation; custom/raw/stateless sends are logged as attempted with unverified delivery (no duplicate-send retry after queued direct-message success).
 
 ### Dash navigation quick setup
 

@@ -33,6 +33,17 @@ The public user-facing release history is maintained in the root `CHANGELOG.md`.
 
 ## Post-v1.0 development
 
+### 2026-04-21 — Pit/custom transport follow-up: truthful direct-message confirmation semantics
+- Classification: **both** (observability/log wording and docs-truth sync; no transport-order or action-surface redesign).
+- Kept transport order unchanged in `PitCommandEngine`:
+  - `Auto` still tries direct `PostMessage` first,
+  - legacy foreground `SendInput` fallback still runs only on bounded direct-path failure reasons,
+  - no new retry/double-send path after queued direct-message success was added.
+- Tightened pit-command audit semantics so logs distinguish transport attempt from confirmed effect:
+  - stateful built-ins now log `delivery=<verified|unverified>` + `effect-confirmed=<true|false>` using existing before/after telemetry confirmation authority,
+  - custom-message, raw-command, and stateless built-in success logs now explicitly report `delivery=unverified effect-confirmed=false` instead of implying proven in-sim execution.
+- Updated pit/custom transport docs (`SimHubLogMessages`, `Dash_Integration`, `Pit_Assist`, `User_Guide`, `Quick_Start`, `README`, `RepoStatus`) to document the same truth model and explicitly note why no generic postmessage-success -> sendinput retry was added (duplicate-send risk).
+
 ### 2026-04-21 — PR follow-up: simulator-only iRacing process matching for pit/custom transport
 - Classification: **internal-only** (transport target-authority hardening; no new settings, actions, or user workflow changes).
 - Tightened `PitCommandEngine.IsIracingProcessName(...)` from broad `"iRacing"` substring matching to simulator-only executable matching (`iRacingSim64DX11`, case-insensitive).

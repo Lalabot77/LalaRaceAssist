@@ -91,8 +91,16 @@ namespace LaunchPlugin
                 return;
             }
 
-            bool confirmed = ConfirmAndPublishFeedback(action, pluginManager, before, tankSpaceLitres, transportUsed);
-            SimHub.Logging.Current.Info($"[LalaPlugin:PitCommand] action={action} transport={transportUsed} attempted=true confirmed={confirmed} before={FormatNullable(before)} raw='{raw}' normalized='{command}'");
+            bool effectConfirmed = ConfirmAndPublishFeedback(action, pluginManager, before, tankSpaceLitres, transportUsed);
+            if (IsStatefulAction(action))
+            {
+                string delivery = effectConfirmed ? "verified" : "unverified";
+                SimHub.Logging.Current.Info($"[LalaPlugin:PitCommand] action={action} transport={transportUsed} attempted=true delivery={delivery} effect-confirmed={effectConfirmed} before={FormatNullable(before)} raw='{raw}' normalized='{command}'");
+            }
+            else
+            {
+                SimHub.Logging.Current.Info($"[LalaPlugin:PitCommand] action={action} transport={transportUsed} attempted=true delivery=unverified effect-confirmed=false before={FormatNullable(before)} raw='{raw}' normalized='{command}'");
+            }
         }
 
         public bool ExecuteCustomMessage(string actionName, string messageText, string feedbackLabel, PitCommandTransportMode transportMode)
@@ -119,7 +127,7 @@ namespace LaunchPlugin
             }
 
             PublishMessage(string.IsNullOrWhiteSpace(feedbackLabel) ? "Custom Msg" : feedbackLabel.Trim());
-            SimHub.Logging.Current.Info($"[LalaPlugin:PitCommand] custom-message transport={transportUsed} attempted=true text='{normalized}'");
+            SimHub.Logging.Current.Info($"[LalaPlugin:PitCommand] custom-message transport={transportUsed} attempted=true delivery=unverified effect-confirmed=false text='{normalized}'");
             return true;
         }
 
@@ -148,7 +156,7 @@ namespace LaunchPlugin
             }
 
             PublishMessage(string.IsNullOrWhiteSpace(feedbackLabel) ? "Fuel Set" : feedbackLabel.Trim());
-            SimHub.Logging.Current.Info($"[LalaPlugin:PitCommand] raw-command transport={transportUsed} attempted=true raw='{rawCommandText ?? string.Empty}' normalized='{normalized}'");
+            SimHub.Logging.Current.Info($"[LalaPlugin:PitCommand] raw-command transport={transportUsed} attempted=true delivery=unverified effect-confirmed=false raw='{rawCommandText ?? string.Empty}' normalized='{normalized}'");
             return true;
         }
 
@@ -170,7 +178,7 @@ namespace LaunchPlugin
             {
                 bool reachedFuelMax = WillFuelAddReachMax(action, tankSpaceLitres);
                 PublishMessage(GetStatelessFeedback(action, reachedFuelMax));
-                return true;
+                return false;
             }
 
             if (!before.HasValue)
