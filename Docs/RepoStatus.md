@@ -9,6 +9,14 @@ Branch: work
 - No Git remote is configured in this checkout (`git remote -v` returns empty).
 
 ## Documentation sync status
+- PR follow-up fixed PB condition-only readback fallback in 500ms best-lap refresh path:
+  - when a best-lap event cannot be validated against the current accepted-lap handoff, condition-only PB readback now uses live `_isWetMode` instead of stale `_lastValidLapWasWet`;
+  - validated events continue to use accepted-lap wet latch, preserving write/read consistency on accepted laps.
+- Wet lap-time / wet PB persistence write-path audit follow-up:
+  - accepted-lap wet/dry routing is now latched through downstream PB write/readback gating, preventing condition drift between lap validation and PB persistence;
+  - wet tyre routing now treats positive native `PlayerTireCompound` values as wet (`>0`) to avoid false-dry routing on non-zero wet compound variants;
+  - profile avg-lap persistence (`AvgLapTimeDry/Wet`) now follows pace-accepted laps directly (no longer blocked by fuel-accepted gate), restoring wet lap-time feed for Strategy/Profile consumers;
+  - PB write gating now treats cleared non-positive baseline values as unavailable, allowing first valid wet PB relearn lap to persist after clear.
 - Pit Fuel Control polish — feedback-only max-fill wording:
   - plugin-owned pit fuel sends keep original transport payload behavior (no outgoing litres clamp; max-override continues using additive overshoot payload),
   - max-fill style requests now use short user-facing feedback (`FUEL MAX`) when requested/sent litres exceed current tank space (or max-override path is active), using raw tank-space comparison so sub-1L overshoot still resolves as max-fill feedback,
@@ -535,6 +543,12 @@ Branch: work
 - `LalaLaunch.cs`
 - `Docs/Subsystems/LapRef.md`
 - `Docs/Internal/SimHubParameterInventory.md`
+- `Docs/Internal/Development_Changelog.md`
+- `Docs/RepoStatus.md`
+
+### Changed in PR follow-up: PB readback wet/dry fallback on unvalidated best-lap events
+- `LalaLaunch.cs`
+- `Docs/Subsystems/Profiles_And_PB.md`
 - `Docs/Internal/Development_Changelog.md`
 - `Docs/RepoStatus.md`
 
