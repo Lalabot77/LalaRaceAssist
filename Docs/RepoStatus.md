@@ -1,7 +1,7 @@
 # Repository status
 
 Validated against commit: HEAD
-Last updated: 2026-04-21
+Last updated: 2026-04-22
 Branch: work
 
 ## Current repo/link status
@@ -9,6 +9,21 @@ Branch: work
 - No Git remote is configured in this checkout (`git remote -v` returns empty).
 
 ## Documentation sync status
+- PreRace follow-up clarified one-stop feasibility ownership in code:
+  - introduced explicit helper `IsOneStopFeasibleForPreRace(...)` for one-stop gate evaluation,
+  - helper evaluates one-stop against pit-stop refill capacity plus second-stint fuel demand (`total needed - start fuel`),
+  - scenario-first decision ordering and all status outcomes remain unchanged.
+- PR follow-up corrected PreRace one-stop feasibility physical gate:
+  - one-stop feasibility no longer uses race-start free space (`tank - currentFuel`) as the stop-fill cap,
+  - one-stop feasibility now uses pit-stop refill capacity (effective tank capacity at stop) before normal underfuel/overfuel checks,
+  - scenario-first status ordering and all other status behavior remain unchanged.
+- PreRace v2 scenario-first + grid live-delta/source-contract follow-up:
+  - PreRace status logic now classifies required strategy first (`no-stop` / `one-stop` / `multi-stop`) and then evaluates selected strategy with mutually exclusive outcomes (eliminates prior no-stop/multi-stop fallthroughs),
+  - one-stop feasibility now includes a tank-capacity gate (`fuelStillNeeded > maxFuelAddPossible` => red `ONE STOP NOT POSSIBLE`),
+  - Auto now always follows required-strategy behavior and does not inherit manual-only `STRATEGY MISMATCH`,
+  - PreRace one-stop fuel delta now consumes raw telemetry requested-fuel seam on grid so delta updates while dialing pit fuel request,
+  - shared planner/live race-length matching tolerances relaxed to ±1 minute (timed) / ±1 lap (lap-limited),
+  - Auto source labels remain runtime-owned (`live`/`profile`/`fallback`) and no longer expose planner ownership labels.
 - Added plugin-owned `ClassBest.*` export family for the current player-class session-best lap holder:
   - new exports: `ClassBest.Valid`, `ClassBest.CarIdx`, `ClassBest.Name`, `ClassBest.AbbrevName`, `ClassBest.CarNumber`, `ClassBest.BestLapTimeSec`, `ClassBest.BestLapTime`, `ClassBest.GapToPlayerSec`.
   - holder resolution reuses the existing simplified trusted class-best seam (`TryResolveClassSessionBestLap`) already used by `H2H*.ClassSessionBestLapSec` / magenta session-best-in-class coloring.

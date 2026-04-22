@@ -119,8 +119,12 @@ Its role is intentionally limited:
 PreRace status contract (dash-facing):
 - `StatusText` now reports explicit outcomes (`NO STOP OKAY`, `SINGLE STOP OKAY`, `MAX FUEL REQUIRED`, `STRATEGY MISMATCH`, etc.).
 - `StatusColour` publishes `green` / `orange` / `red` so dashboards can style the state without re-implementing logic.
-- In `Auto`, stint thresholds are explicit: `<= 1.0` stints => `NO STOP OKAY`; `> 1.0` and `<= 2.0` => `SINGLE STOP OKAY`; `> 2.0` uses the existing multi-stop status path.
+- In `Auto`, PreRace first classifies the required strategy from stints (`<=1.0 no-stop`, `<=2.0 one-stop`, `>2.0 multi-stop`) and then evaluates status as that required strategy; Auto does not inherit manual mismatch warnings.
 - In non-Auto modes, planner/live combo or race-definition mismatches are shown as an **orange caution** (`STRATEGY MISMATCH`) only when planner/live inputs are comparable; transient unknown values do not trigger mismatch.
+- `FuelDelta` is now live for grid workflow:
+  - required one-stop path uses `(current fuel + requested add) - total fuel needed`,
+  - no-stop/multi-stop paths use `current fuel - total fuel needed`.
+- One-stop feasibility now uses pit-stop refill capacity (`fuel still needed > effective stop-fill capacity` => red `ONE STOP NOT POSSIBLE`) before normal underfuel/overfuel checks.
 
 ## 9. What users should trust
 
