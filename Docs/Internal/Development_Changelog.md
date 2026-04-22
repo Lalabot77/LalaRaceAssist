@@ -61,6 +61,21 @@ The public user-facing release history is maintained in the root `CHANGELOG.md`.
 - Relaxed planner/live match tolerances used by shared session-match helper:
   - timed races from ±0.10 min to ±1.0 min,
   - lap races from ±0.01 lap to ±1.0 lap.
+### 2026-04-21 — Plugin-owned `ClassBest.*` export family (player-class session-best holder)
+- Classification: **both** (new driver-visible export family + internal seam reuse/contract sync).
+- Added plugin-owned class session-best holder exports in `LalaLaunch.cs`:
+  - `ClassBest.Valid`, `ClassBest.CarIdx`,
+  - `ClassBest.Name`, `ClassBest.AbbrevName`, `ClassBest.CarNumber`,
+  - `ClassBest.BestLapTimeSec`, `ClassBest.BestLapTime`,
+  - `ClassBest.GapToPlayerSec`.
+- Kept class-best holder resolution on the existing simplified trusted seam:
+  - reused `TryResolveClassSessionBestLap(...)` (same seam feeding `H2H*.ClassSessionBestLapSec` and session-best-in-class color logic),
+  - no new class-resolution system or metadata-heavy authority logic was introduced.
+- Reused existing seams for identity and gap semantics:
+  - identity uses existing session-info/native helpers (`TryGetCarIdentityFromSessionInfo`, `TryGetCarDriverInfo`),
+  - gap uses the same preferred live-gap semantics as `ClassLeader.GapToPlayerSec` via shared `ResolveClassGapToPlayerSec(...)` (`TryGetCheckpointGapSec` sane window first, then progress/pace fallback).
+- Added explicit fail-safe unresolved output contract and reset behavior:
+  - `Valid=false`, `CarIdx=-1`, empty strings, `BestLapTimeSec=0`, `BestLapTime="-"`, `GapToPlayerSec=0`.
 
 ### 2026-04-21 — Direct pit/custom transport chat-state sequencing hardening
 - Classification: **both** (driver-visible pit/custom transport behavior fix + internal observability/sequencing hardening).

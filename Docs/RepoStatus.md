@@ -24,6 +24,12 @@ Branch: work
   - PreRace one-stop fuel delta now consumes raw telemetry requested-fuel seam on grid so delta updates while dialing pit fuel request,
   - shared planner/live race-length matching tolerances relaxed to ±1 minute (timed) / ±1 lap (lap-limited),
   - Auto source labels remain runtime-owned (`live`/`profile`/`fallback`) and no longer expose planner ownership labels.
+- Added plugin-owned `ClassBest.*` export family for the current player-class session-best lap holder:
+  - new exports: `ClassBest.Valid`, `ClassBest.CarIdx`, `ClassBest.Name`, `ClassBest.AbbrevName`, `ClassBest.CarNumber`, `ClassBest.BestLapTimeSec`, `ClassBest.BestLapTime`, `ClassBest.GapToPlayerSec`.
+  - holder resolution reuses the existing simplified trusted class-best seam (`TryResolveClassSessionBestLap`) already used by `H2H*.ClassSessionBestLapSec` / magenta session-best-in-class coloring.
+  - identity resolution reuses existing session-info/native helper seams (`TryGetCarIdentityFromSessionInfo`, `TryGetCarDriverInfo`).
+  - gap semantics reuse the existing class-leader live-gap seam (`TryGetCheckpointGapSec` when sane, otherwise progress/pace fallback via shared `ResolveClassGapToPlayerSec`).
+  - fail-safe unresolved contract is explicit (`Valid=false`, `CarIdx=-1`, empty strings, `BestLapTimeSec=0`, `BestLapTime="-"`, `GapToPlayerSec=0`) and now clears alongside existing class-leader resets on non-eligible sessions.
 - Direct pit/custom transport chat-state sequencing follow-up:
   - direct window-message path now logs staged attempt/abort telemetry (`chat-open`, `text-send`, `submit`) per command attempt,
   - direct path now tracks uncertain chat-open carryover and can suppress repeated chat-open keying (`chat-open-suppressed=state-maybe-open`) on next attempt,
