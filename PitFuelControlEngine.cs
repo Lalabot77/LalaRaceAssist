@@ -423,8 +423,7 @@ namespace LaunchPlugin
             }
 
             int requestedSafe = Math.Max(0, requestedLitres);
-            int availableSpaceRoundedUp = RoundUpLitres(snapshot.TankSpaceLitres);
-            return requestedSafe > availableSpaceRoundedUp;
+            return requestedSafe > snapshot.TankSpaceLitres;
         }
 
         private void RefreshDerivedState()
