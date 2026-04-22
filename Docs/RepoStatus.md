@@ -14,6 +14,27 @@ Branch: work
   - max-fill style requests now use short user-facing feedback (`FUEL MAX`) when requested/sent litres exceed current tank space (or max-override path is active), using raw tank-space comparison so sub-1L overshoot still resolves as max-fill feedback,
   - normal non-max requests keep litres-based feedback text,
   - command ownership, transport mode behavior, and AUTO cancel behavior remain unchanged.
+- PreRace follow-up clarified one-stop feasibility ownership in code:
+  - introduced explicit helper `IsOneStopFeasibleForPreRace(...)` for one-stop gate evaluation,
+  - helper evaluates one-stop against pit-stop refill capacity plus second-stint fuel demand (`total needed - start fuel`),
+  - scenario-first decision ordering and all status outcomes remain unchanged.
+- PR follow-up corrected PreRace one-stop feasibility physical gate:
+  - one-stop feasibility no longer uses race-start free space (`tank - currentFuel`) as the stop-fill cap,
+  - one-stop feasibility now uses pit-stop refill capacity (effective tank capacity at stop) before normal underfuel/overfuel checks,
+  - scenario-first status ordering and all other status behavior remain unchanged.
+- PreRace v2 scenario-first + grid live-delta/source-contract follow-up:
+  - PreRace status logic now classifies required strategy first (`no-stop` / `one-stop` / `multi-stop`) and then evaluates selected strategy with mutually exclusive outcomes (eliminates prior no-stop/multi-stop fallthroughs),
+  - one-stop feasibility now includes a tank-capacity gate (`fuelStillNeeded > maxFuelAddPossible` => red `ONE STOP NOT POSSIBLE`),
+  - Auto now always follows required-strategy behavior and does not inherit manual-only `STRATEGY MISMATCH`,
+  - PreRace one-stop fuel delta now consumes raw telemetry requested-fuel seam on grid so delta updates while dialing pit fuel request,
+  - shared planner/live race-length matching tolerances relaxed to ±1 minute (timed) / ±1 lap (lap-limited),
+  - Auto source labels remain runtime-owned (`live`/`profile`/`fallback`) and no longer expose planner ownership labels.
+- Added plugin-owned `ClassBest.*` export family for the current player-class session-best lap holder:
+  - new exports: `ClassBest.Valid`, `ClassBest.CarIdx`, `ClassBest.Name`, `ClassBest.AbbrevName`, `ClassBest.CarNumber`, `ClassBest.BestLapTimeSec`, `ClassBest.BestLapTime`, `ClassBest.GapToPlayerSec`.
+  - holder resolution reuses the existing simplified trusted class-best seam (`TryResolveClassSessionBestLap`) already used by `H2H*.ClassSessionBestLapSec` / magenta session-best-in-class coloring.
+  - identity resolution reuses existing session-info/native helper seams (`TryGetCarIdentityFromSessionInfo`, `TryGetCarDriverInfo`).
+  - gap semantics reuse the existing class-leader live-gap seam (`TryGetCheckpointGapSec` when sane, otherwise progress/pace fallback via shared `ResolveClassGapToPlayerSec`).
+  - fail-safe unresolved contract is explicit (`Valid=false`, `CarIdx=-1`, empty strings, `BestLapTimeSec=0`, `BestLapTime="-"`, `GapToPlayerSec=0`) and now clears alongside existing class-leader resets on non-eligible sessions.
 - Direct pit/custom transport chat-state sequencing follow-up:
   - direct window-message path now logs staged attempt/abort telemetry (`chat-open`, `text-send`, `submit`) per command attempt,
   - direct path now tracks uncertain chat-open carryover and can suppress repeated chat-open keying (`chat-open-suppressed=state-maybe-open`) on next attempt,

@@ -24,6 +24,16 @@ This document is the canonical dash-facing contract layer. It does **not** redef
 - Use stable strategy/fuel exports for labels and decision widgets.
 - Treat `LalaLaunch.PreRace.*` as a separate on-grid/pre-race info layer, not a replacement for live `Fuel.*` or Strategy planner ownership.
 - Consume `LalaLaunch.PreRace.StatusText` together with `LalaLaunch.PreRace.StatusColour` (`green`/`orange`/`red`) for simple dash styling; do not recreate planner/live mismatch or multi-stop decision logic in dash scripts.
+- `LalaLaunch.PreRace.FuelDelta` is a live on-grid seam and should be expected to move immediately with fuel changes:
+  - required one-stop path uses `(current fuel + pit fuel request) - total fuel needed`,
+  - required no-stop/multi-stop paths use `current fuel - total fuel needed`.
+- `LalaLaunch.PreRace.FuelSource` / `LapTimeSource` contract:
+  - Auto uses runtime ownership labels (`live`/`profile`/`fallback`) and does not publish `planner`,
+  - manual PreRace selections (`No Stop`/`Single Stop`/`Multi Stop`) keep planner-owned labeling where applicable.
+- PreRace status is scenario-first (`required strategy` vs `selected strategy`) and fully partitioned:
+  - required `No Stop` => `NO STOP OKAY` or `ADD FUEL FOR NO STOP`; selecting stop strategies shows `NO STOP POSSIBLE`,
+  - required `One Stop` => no-stop `SINGLE STINT NOT POSSIBLE`, one-stop feasibility (pit-stop refill-capacity gate, then `ONE STOP REQUIRES MORE FUEL` / `OVERFUELLED` / `SINGLE STOP OKAY`), multi-stop `SINGLE STOP POSSIBLE`,
+  - required `Multi Stop` => no-stop `NO STOP NOT POSSIBLE`, single-stop `SINGLE STOP NOT POSSIBLE`, multi-stop `MAX FUEL IN / MULTI STOP CONFIRMED` or `MAX FUEL REQUIRED`.
 - If a widget is meant to represent runtime truth, prefer stable `Fuel.*` / pace outputs over UI-only text from elsewhere.
 
 ### Launch

@@ -31,8 +31,8 @@ namespace LaunchPlugin
 
     internal static class PlannerLiveSessionMatchHelper
     {
-        public const double TimeRaceLengthToleranceMinutes = 0.10;
-        public const double LapRaceLengthToleranceLaps = 0.01;
+        public const double TimeRaceLengthToleranceMinutes = 1.0;
+        public const double LapRaceLengthToleranceLaps = 1.0;
 
         public static PlannerLiveSessionMatchResult Evaluate(PlannerLiveSessionMatchSnapshot snapshot)
         {

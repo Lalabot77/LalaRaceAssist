@@ -42,6 +42,49 @@ The public user-facing release history is maintained in the root `CHANGELOG.md`.
   - otherwise Pit Fuel Control keeps normal litres-based feedback strings.
 - Refined feedback-only max-fill detection to compare requested litres against raw tank-space telemetry (not rounded-up space), so sub-1L overshoot cases still report `FUEL MAX` consistently.
 - Preserved AUTO/manual send cadence, source/mode semantics, and existing command ownership contracts.
+### 2026-04-22 — PreRace follow-up: explicit one-stop pit-refill feasibility helper
+- Classification: **internal-only** (code-path clarity/refactor; one-stop status behavior unchanged).
+- Added `IsOneStopFeasibleForPreRace(...)` in `LalaLaunch.cs` so one-stop feasibility is explicitly evaluated against pit-stop refill capacity (effective tank at stop) and second-stint fuel demand (`total needed - start fuel`).
+- Kept scenario-first PreRace decision flow and all status text/colour outcomes unchanged.
+
+### 2026-04-21 — PR follow-up: one-stop feasibility now uses pit-stop refill capacity
+- Classification: **both** (driver-visible PreRace status correction + docs truth sync).
+- Corrected the one-stop feasibility gate in `LalaLaunch.PreRace.StatusText` evaluation:
+  - feasibility no longer uses race-start free tank space (`tank - currentFuel`) as the stop-fill limit,
+  - feasibility now uses effective stop refill capacity (effective tank capacity at the stop) before underfuel/overfuel checks.
+- Kept the existing scenario-first status structure and all other PreRace status behavior unchanged.
+
+### 2026-04-21 — PreRace v2 scenario-first decision rewrite + live fuel-delta/source contract fixes
+- Classification: **both** (driver-visible PreRace behavior corrections + internal match-tolerance update).
+- Reworked PreRace status to a strict scenario-first model:
+  - classify required strategy from stints (`<=1.0` no-stop, `<=2.0` one-stop, `>2.0` multi-stop),
+  - evaluate selected strategy against that required strategy with mutually exclusive outcomes (no-stop/one-stop/multi-stop paths no longer fall through to incorrect green states).
+- Corrected one-stop feasibility validation:
+  - added tank-cap constrained feasibility gate (`fuel still needed > max fuel add possible` => `ONE STOP NOT POSSIBLE` red),
+  - retained underfuel/overfuel handling with overfuel still gated at `> 2x` contingency.
+- Updated Auto semantics so it always represents required strategy behavior and never emits manual-only mismatch caution.
+- Fixed PreRace live fuel delta behavior on grid by feeding PreRace with raw telemetry pit-fuel request seam so one-stop deltas move immediately when the driver changes requested fuel.
+- Tightened Auto source-label contract:
+  - Auto source labels now remain runtime-owned (`live`/`profile`/`fallback`) and do not show planner labels,
+  - manual modes keep planner-owned labels where applicable.
+- Relaxed planner/live match tolerances used by shared session-match helper:
+  - timed races from ±0.10 min to ±1.0 min,
+  - lap races from ±0.01 lap to ±1.0 lap.
+### 2026-04-21 — Plugin-owned `ClassBest.*` export family (player-class session-best holder)
+- Classification: **both** (new driver-visible export family + internal seam reuse/contract sync).
+- Added plugin-owned class session-best holder exports in `LalaLaunch.cs`:
+  - `ClassBest.Valid`, `ClassBest.CarIdx`,
+  - `ClassBest.Name`, `ClassBest.AbbrevName`, `ClassBest.CarNumber`,
+  - `ClassBest.BestLapTimeSec`, `ClassBest.BestLapTime`,
+  - `ClassBest.GapToPlayerSec`.
+- Kept class-best holder resolution on the existing simplified trusted seam:
+  - reused `TryResolveClassSessionBestLap(...)` (same seam feeding `H2H*.ClassSessionBestLapSec` and session-best-in-class color logic),
+  - no new class-resolution system or metadata-heavy authority logic was introduced.
+- Reused existing seams for identity and gap semantics:
+  - identity uses existing session-info/native helpers (`TryGetCarIdentityFromSessionInfo`, `TryGetCarDriverInfo`),
+  - gap uses the same preferred live-gap semantics as `ClassLeader.GapToPlayerSec` via shared `ResolveClassGapToPlayerSec(...)` (`TryGetCheckpointGapSec` sane window first, then progress/pace fallback).
+- Added explicit fail-safe unresolved output contract and reset behavior:
+  - `Valid=false`, `CarIdx=-1`, empty strings, `BestLapTimeSec=0`, `BestLapTime="-"`, `GapToPlayerSec=0`.
 
 ### 2026-04-21 — Direct pit/custom transport chat-state sequencing hardening
 - Classification: **both** (driver-visible pit/custom transport behavior fix + internal observability/sequencing hardening).

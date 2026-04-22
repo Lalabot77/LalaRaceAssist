@@ -578,6 +578,14 @@ namespace LaunchPlugin
         public double ClassLeaderBestLapTimeSec { get; private set; }
         public string ClassLeaderBestLapTime { get; private set; } = "-";
         public double ClassLeaderGapToPlayerSec { get; private set; }
+        public bool ClassBestValid { get; private set; }
+        public int ClassBestCarIdx { get; private set; } = -1;
+        public string ClassBestName { get; private set; } = string.Empty;
+        public string ClassBestAbbrevName { get; private set; } = string.Empty;
+        public string ClassBestCarNumber { get; private set; } = string.Empty;
+        public double ClassBestBestLapTimeSec { get; private set; }
+        public string ClassBestBestLapTime { get; private set; } = "-";
+        public double ClassBestGapToPlayerSec { get; private set; }
 
         // --- Live Fuel Calculation State ---
         private double _lastFuelLevel = -1;
@@ -808,10 +816,33 @@ namespace LaunchPlugin
         private const double PreRaceFuelToleranceLitres = 0.05;
         private const double PreRaceMaxStartToleranceLitres = 0.50;
 
+        private enum RequiredPreRaceStrategy
+        {
+            NoStop = 0,
+            OneStop = 1,
+            MultiStop = 2
+        }
+
         private struct PreRaceStatusDecision
         {
             public string Text;
             public string Colour;
+        }
+
+        private static RequiredPreRaceStrategy ClassifyRequiredPreRaceStrategy(double preRaceStints)
+        {
+            double normalizedStints = Math.Max(0.0, preRaceStints);
+            if (normalizedStints <= 1.0)
+            {
+                return RequiredPreRaceStrategy.NoStop;
+            }
+
+            if (normalizedStints <= 2.0)
+            {
+                return RequiredPreRaceStrategy.OneStop;
+            }
+
+            return RequiredPreRaceStrategy.MultiStop;
         }
 
         private double GetPreRaceFuelPerLap(double fallbackFuelPerLap, out string source)
@@ -909,37 +940,111 @@ namespace LaunchPlugin
             return targetMax > 0.0 && currentFuel >= (targetMax - PreRaceMaxStartToleranceLitres);
         }
 
+        private static bool IsOneStopFeasibleForPreRace(
+            double preRaceTotalFuelNeeded,
+            double currentFuel,
+            double effectiveMaxTank,
+            double maxTankCapacity)
+        {
+            // One-stop feasibility is constrained by how much fuel can be added at the stop
+            // (effective tank refill capacity), not by race-start free tank space.
+            double pitStopRefillCapacity = Math.Max(0.0, effectiveMaxTank > 0.0 ? effectiveMaxTank : maxTankCapacity);
+            double secondStintFuelNeeded = Math.Max(0.0, preRaceTotalFuelNeeded - currentFuel);
+            return secondStintFuelNeeded <= (pitStopRefillCapacity + PreRaceFuelToleranceLitres);
+        }
+
         private static PreRaceStatusDecision EvaluatePreRaceStatus(
             int selectedStrategy,
             bool plannerMismatch,
             double preRaceStints,
             double preRaceFuelDelta,
+            double preRaceTotalFuelNeeded,
+            double plannedSingleStopRefuel,
             double currentFuel,
             double effectiveMaxTank,
             double maxTankCapacity,
             double contingencyLitres)
         {
             int normalizedStrategy = NormalizeStrategyMode(selectedStrategy);
-            double normalizedStints = Math.Max(0.0, preRaceStints);
-            bool multiStopExpected = normalizedStints > 2.0;
+            bool selectedIsAuto = normalizedStrategy == 3;
+            RequiredPreRaceStrategy requiredStrategy = ClassifyRequiredPreRaceStrategy(preRaceStints);
             bool isAtMaxStart = IsAtEffectiveMaxStartFuel(currentFuel, effectiveMaxTank, maxTankCapacity);
+            double secondStintFuelNeeded = Math.Max(0.0, preRaceTotalFuelNeeded - currentFuel);
+            bool oneStopFeasible = IsOneStopFeasibleForPreRace(preRaceTotalFuelNeeded, currentFuel, effectiveMaxTank, maxTankCapacity);
+            bool oneStopUnderFuel = preRaceFuelDelta < -PreRaceFuelToleranceLitres;
+            bool oneStopOverFuel = contingencyLitres > 0.0 && preRaceFuelDelta > (2.0 * contingencyLitres);
+            bool nextStintAdvisory =
+                requiredStrategy == RequiredPreRaceStrategy.OneStop &&
+                (plannedSingleStopRefuel <= PreRaceFuelToleranceLitres || plannedSingleStopRefuel + PreRaceFuelToleranceLitres < secondStintFuelNeeded);
 
-            if (normalizedStrategy != 3 && plannerMismatch)
+            if (!selectedIsAuto && plannerMismatch)
             {
                 return new PreRaceStatusDecision { Text = "STRATEGY MISMATCH", Colour = "orange" };
             }
 
-            if (normalizedStrategy == 0 && preRaceFuelDelta < -PreRaceFuelToleranceLitres)
+            int effectiveSelectedStrategy;
+            if (selectedIsAuto)
             {
-                return new PreRaceStatusDecision { Text = "ADD FUEL FOR NO STOP", Colour = "red" };
+                effectiveSelectedStrategy = requiredStrategy == RequiredPreRaceStrategy.NoStop
+                    ? 0
+                    : (requiredStrategy == RequiredPreRaceStrategy.OneStop ? 1 : 2);
+            }
+            else
+            {
+                effectiveSelectedStrategy = normalizedStrategy;
             }
 
-            if (normalizedStrategy == 1 && preRaceFuelDelta < -PreRaceFuelToleranceLitres)
+            if (requiredStrategy == RequiredPreRaceStrategy.NoStop)
             {
-                return new PreRaceStatusDecision { Text = "ONE STOP REQUIRES MORE FUEL", Colour = "red" };
+                if (effectiveSelectedStrategy == 0)
+                {
+                    if (preRaceFuelDelta < -PreRaceFuelToleranceLitres)
+                    {
+                        return new PreRaceStatusDecision { Text = "ADD FUEL FOR NO STOP", Colour = "red" };
+                    }
+
+                    return new PreRaceStatusDecision { Text = "NO STOP OKAY", Colour = "green" };
+                }
+
+                return new PreRaceStatusDecision { Text = "NO STOP POSSIBLE", Colour = "orange" };
             }
 
-            if ((normalizedStrategy == 2 || normalizedStrategy == 3) && multiStopExpected)
+            if (requiredStrategy == RequiredPreRaceStrategy.OneStop)
+            {
+                if (effectiveSelectedStrategy == 0)
+                {
+                    return new PreRaceStatusDecision { Text = "SINGLE STINT NOT POSSIBLE", Colour = "red" };
+                }
+
+                if (effectiveSelectedStrategy == 1)
+                {
+                    if (!oneStopFeasible)
+                    {
+                        return new PreRaceStatusDecision { Text = "ONE STOP NOT POSSIBLE", Colour = "red" };
+                    }
+
+                    if (oneStopUnderFuel)
+                    {
+                        return new PreRaceStatusDecision { Text = "ONE STOP REQUIRES MORE FUEL", Colour = "red" };
+                    }
+
+                    if (oneStopOverFuel)
+                    {
+                        return new PreRaceStatusDecision { Text = "OVERFUELLED", Colour = "orange" };
+                    }
+
+                    if (nextStintAdvisory)
+                    {
+                        return new PreRaceStatusDecision { Text = "CHECK NEXT STINT FUEL", Colour = "orange" };
+                    }
+
+                    return new PreRaceStatusDecision { Text = "SINGLE STOP OKAY", Colour = "green" };
+                }
+
+                return new PreRaceStatusDecision { Text = "SINGLE STOP POSSIBLE", Colour = "orange" };
+            }
+
+            if (effectiveSelectedStrategy == 2)
             {
                 if (isAtMaxStart)
                 {
@@ -949,22 +1054,12 @@ namespace LaunchPlugin
                 return new PreRaceStatusDecision { Text = "MAX FUEL REQUIRED", Colour = "orange" };
             }
 
-            if (normalizedStrategy == 3 && normalizedStints > 1.0)
+            if (effectiveSelectedStrategy == 1)
             {
-                return new PreRaceStatusDecision { Text = "SINGLE STOP OKAY", Colour = "green" };
+                return new PreRaceStatusDecision { Text = "SINGLE STOP NOT POSSIBLE", Colour = "red" };
             }
 
-            if (contingencyLitres > 0.0 && preRaceFuelDelta > (2.0 * contingencyLitres))
-            {
-                return new PreRaceStatusDecision { Text = "OVERFUELLED", Colour = "orange" };
-            }
-
-            if (normalizedStrategy == 1)
-            {
-                return new PreRaceStatusDecision { Text = "SINGLE STOP OKAY", Colour = "green" };
-            }
-
-            return new PreRaceStatusDecision { Text = "NO STOP OKAY", Colour = "green" };
+            return new PreRaceStatusDecision { Text = "NO STOP NOT POSSIBLE", Colour = "red" };
         }
 
         private void UpdatePreRaceOutputs(
@@ -1091,8 +1186,12 @@ namespace LaunchPlugin
                 ? Math.Round(Math.Max(0.0, PreRace_TotalFuelNeeded / usableTank), 1)
                 : 0.0;
 
-            plannedSingleStopRefuel = Math.Max(0.0, pitWindowRequestedAdd);
-            switch (selectedStrategy)
+            RequiredPreRaceStrategy requiredStrategy = ClassifyRequiredPreRaceStrategy(PreRace_Stints);
+            int deltaStrategy = selectedStrategy == 3
+                ? (requiredStrategy == RequiredPreRaceStrategy.NoStop ? 0 : (requiredStrategy == RequiredPreRaceStrategy.OneStop ? 1 : 2))
+                : selectedStrategy;
+
+            switch (deltaStrategy)
             {
                 case 1:
                     PreRace_FuelDelta = (currentFuel + plannedSingleStopRefuel) - PreRace_TotalFuelNeeded;
@@ -1110,6 +1209,8 @@ namespace LaunchPlugin
                 plannerMismatch: plannerMatchResult.HasComparableInputs && !plannerMatchResult.IsMatch,
                 preRaceStints: PreRace_Stints,
                 preRaceFuelDelta: PreRace_FuelDelta,
+                preRaceTotalFuelNeeded: PreRace_TotalFuelNeeded,
+                plannedSingleStopRefuel: plannedSingleStopRefuel,
                 currentFuel: currentFuel,
                 effectiveMaxTank: effectiveMaxTank,
                 maxTankCapacity: maxTankCapacity,
@@ -3337,6 +3438,7 @@ namespace LaunchPlugin
                 : LiveFuelPerLap;
             double fuelToRequest = Convert.ToDouble(
                 PluginManager.GetPropertyValue("DataCorePlugin.GameRawData.Telemetry.PitSvFuel") ?? 0.0);
+            double preRaceRequestedAdd = Math.Max(0.0, fuelToRequest);
             if (!_isRefuelSelected)
             {
                 fuelToRequest = 0.0;
@@ -3380,7 +3482,7 @@ namespace LaunchPlugin
                 UpdatePreRaceOutputs(
                     data,
                     currentFuel,
-                    pitWindowRequestedAdd,
+                    preRaceRequestedAdd,
                     raceSessionDurationSeconds,
                     raceSessionLaps,
                     stableLapsRemaining: 0.0,
@@ -3562,7 +3664,7 @@ namespace LaunchPlugin
                 UpdatePreRaceOutputs(
                     data,
                     currentFuel,
-                    pitWindowRequestedAdd,
+                    preRaceRequestedAdd,
                     raceSessionDurationSeconds,
                     raceSessionLaps,
                     stableLapsRemaining,
@@ -5548,6 +5650,14 @@ namespace LaunchPlugin
             AttachCore("ClassLeader.BestLapTimeSec", () => ClassLeaderBestLapTimeSec);
             AttachCore("ClassLeader.BestLapTime", () => ClassLeaderBestLapTime ?? "-");
             AttachCore("ClassLeader.GapToPlayerSec", () => ClassLeaderGapToPlayerSec);
+            AttachCore("ClassBest.Valid", () => ClassBestValid);
+            AttachCore("ClassBest.CarIdx", () => ClassBestCarIdx);
+            AttachCore("ClassBest.Name", () => ClassBestName ?? string.Empty);
+            AttachCore("ClassBest.AbbrevName", () => ClassBestAbbrevName ?? string.Empty);
+            AttachCore("ClassBest.CarNumber", () => ClassBestCarNumber ?? string.Empty);
+            AttachCore("ClassBest.BestLapTimeSec", () => ClassBestBestLapTimeSec);
+            AttachCore("ClassBest.BestLapTime", () => ClassBestBestLapTime ?? "-");
+            AttachCore("ClassBest.GapToPlayerSec", () => ClassBestGapToPlayerSec);
 
             AttachCore("PitExit.Valid", () => _opponentsEngine?.Outputs.PitExit.Valid ?? false);
             AttachCore("PitExit.PredictedPositionInClass", () => _opponentsEngine?.Outputs.PitExit.PredictedPositionInClass ?? 0);
@@ -7208,6 +7318,15 @@ namespace LaunchPlugin
                     myPaceSec,
                     playerBestLapTimeSec,
                     playerLastLapTimeSec);
+                UpdateClassBestExports(
+                    pluginManager,
+                    sessionTypeName,
+                    playerCarIdx,
+                    carIdxLap,
+                    carIdxLapDistPct,
+                    myPaceSec,
+                    playerBestLapTimeSec,
+                    playerLastLapTimeSec);
                 if (_h2hEngine != null)
                 {
                     var previousRaceAhead = _h2hEngine.Outputs?.Race?.Ahead;
@@ -7273,6 +7392,7 @@ namespace LaunchPlugin
             else
             {
                 ResetClassLeaderExports();
+                ResetClassBestExports();
             }
 
             if (pitEntryEdge)
@@ -13555,6 +13675,18 @@ namespace LaunchPlugin
             ClassLeaderGapToPlayerSec = 0.0;
         }
 
+        private void ResetClassBestExports()
+        {
+            ClassBestValid = false;
+            ClassBestCarIdx = -1;
+            ClassBestName = string.Empty;
+            ClassBestAbbrevName = string.Empty;
+            ClassBestCarNumber = string.Empty;
+            ClassBestBestLapTimeSec = 0.0;
+            ClassBestBestLapTime = "-";
+            ClassBestGapToPlayerSec = 0.0;
+        }
+
         private void UpdateClassLeaderExports(
             PluginManager pluginManager,
             string sessionTypeName,
@@ -13604,7 +13736,7 @@ namespace LaunchPlugin
                     ? playerBestLapSec
                     : (IsValidCarSaLapTimeSec(playerLastLapSec) ? playerLastLapSec : 120.0));
 
-            ClassLeaderGapToPlayerSec = ResolveClassLeaderGapToPlayerSec(
+            ClassLeaderGapToPlayerSec = ResolveClassGapToPlayerSec(
                 playerCarIdx,
                 classLeaderCarIdx,
                 carIdxLap,
@@ -13614,7 +13746,71 @@ namespace LaunchPlugin
             ClassLeaderValid = true;
         }
 
-        private double ResolveClassLeaderGapToPlayerSec(
+        private int FindResolvedClassBestCarIdx(PluginManager pluginManager, int playerCarIdx)
+        {
+            return TryResolveClassSessionBestLap(pluginManager, playerCarIdx, out int classBestCarIdx, out _, out _)
+                ? classBestCarIdx
+                : -1;
+        }
+
+        private void UpdateClassBestExports(
+            PluginManager pluginManager,
+            string sessionTypeName,
+            int playerCarIdx,
+            int[] carIdxLap,
+            float[] carIdxLapDistPct,
+            double paceReferenceSec,
+            double playerBestLapSec,
+            double playerLastLapSec)
+        {
+            ResetClassBestExports();
+
+            if (!IsOpponentsEligibleSession(sessionTypeName))
+            {
+                return;
+            }
+
+            int classBestCarIdx = FindResolvedClassBestCarIdx(pluginManager, playerCarIdx);
+            if (classBestCarIdx < 0)
+            {
+                return;
+            }
+
+            ClassBestCarIdx = classBestCarIdx;
+            double classBestLapSec = (classBestCarIdx >= 0 && classBestCarIdx < _carSaBestLapTimeSecByIdx.Length)
+                ? _carSaBestLapTimeSecByIdx[classBestCarIdx]
+                : double.NaN;
+            ClassBestBestLapTimeSec = IsValidCarSaLapTimeSec(classBestLapSec) ? classBestLapSec : 0.0;
+            ClassBestBestLapTime = IsValidCarSaLapTimeSec(classBestLapSec) ? FormatLapTime(classBestLapSec) : "-";
+
+            if (TryGetCarIdentityFromSessionInfo(pluginManager, classBestCarIdx, out string name, out string carNumber, out _))
+            {
+                ClassBestName = name ?? string.Empty;
+                ClassBestCarNumber = carNumber ?? string.Empty;
+            }
+
+            if (TryGetCarDriverInfo(pluginManager, classBestCarIdx, out _, out _, out _, out _, out _, out _, out string abbrevName, out _, out _, out _))
+            {
+                ClassBestAbbrevName = abbrevName ?? string.Empty;
+            }
+
+            double resolvedPaceReferenceSec = IsValidCarSaLapTimeSec(paceReferenceSec)
+                ? paceReferenceSec
+                : (IsValidCarSaLapTimeSec(playerBestLapSec)
+                    ? playerBestLapSec
+                    : (IsValidCarSaLapTimeSec(playerLastLapSec) ? playerLastLapSec : 120.0));
+
+            ClassBestGapToPlayerSec = ResolveClassGapToPlayerSec(
+                playerCarIdx,
+                classBestCarIdx,
+                carIdxLap,
+                carIdxLapDistPct,
+                resolvedPaceReferenceSec);
+
+            ClassBestValid = true;
+        }
+
+        private double ResolveClassGapToPlayerSec(
             int playerCarIdx,
             int classLeaderCarIdx,
             int[] carIdxLap,
