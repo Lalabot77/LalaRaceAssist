@@ -150,6 +150,13 @@
                         <ui:ControlsEditor ActionName="LalaLaunch.Pit.ToggleFastRepair" FriendlyName="Toggle Fast Repair"/>
                         <ui:ControlsEditor ActionName="LalaLaunch.Pit.ToggleAutoFuel" FriendlyName="Toggle Auto Fuel"/>
                         <ui:ControlsEditor ActionName="LalaLaunch.Pit.Windshield" FriendlyName="Toggle Tear-off"/>
+                        <TextBlock Margin="0,12,0,4" FontWeight="SemiBold" Text="Tyre Control"/>
+                        <TextBlock Foreground="LightGray" TextWrapping="Wrap" Text="Plugin-owned tyre mode control (OFF / DRY / WET / AUTO)."/>
+                        <ui:ControlsEditor ActionName="LalaLaunch.Pit.TyreControl.ModeCycle" FriendlyName="Tyre Mode Cycle"/>
+                        <ui:ControlsEditor ActionName="LalaLaunch.Pit.TyreControl.SetOff" FriendlyName="Tyre Mode OFF"/>
+                        <ui:ControlsEditor ActionName="LalaLaunch.Pit.TyreControl.SetDry" FriendlyName="Tyre Mode DRY"/>
+                        <ui:ControlsEditor ActionName="LalaLaunch.Pit.TyreControl.SetWet" FriendlyName="Tyre Mode WET"/>
+                        <ui:ControlsEditor ActionName="LalaLaunch.Pit.TyreControl.SetAuto" FriendlyName="Tyre Mode AUTO"/>
                     </StackPanel>
                 </StackPanel>
             </Expander>

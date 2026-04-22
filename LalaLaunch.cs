@@ -134,6 +134,12 @@ namespace LaunchPlugin
                 BuildPitFuelControlSnapshot,
                 SendPitFuelControlCommand,
                 (actionName, message, raw) => _pitCommandEngine.PublishActionFeedback(actionName, message, raw));
+            _pitTyreControlEngine = new PitTyreControlEngine(
+                BuildPitTyreControlSnapshot,
+                SendPitTyreControlCommand,
+                ExecutePitCommand,
+                (actionName, message, raw) => _pitCommandEngine.PublishActionFeedback(actionName, message, raw),
+                message => SimHub.Logging.Current.Info(message));
         }
 
         // --- Dashboard Manager ---
@@ -274,6 +280,11 @@ namespace LaunchPlugin
         public void PitFuelControlSetPush() => _pitFuelControlEngine.SetPush();
         public void PitFuelControlSetNorm() => _pitFuelControlEngine.SetNorm();
         public void PitFuelControlSetSave() => _pitFuelControlEngine.SetSave();
+        public void PitTyreControlModeCycle() => _pitTyreControlEngine.ModeCycle();
+        public void PitTyreControlSetOff() => _pitTyreControlEngine.SetOff();
+        public void PitTyreControlSetDry() => _pitTyreControlEngine.SetDry();
+        public void PitTyreControlSetWet() => _pitTyreControlEngine.SetWet();
+        public void PitTyreControlSetAuto() => _pitTyreControlEngine.SetAuto();
         public void TriggerCustomMessageSlot(int slotNumber)
         {
             string customActionName = $"CustomMessage{slotNumber:00}";
@@ -315,6 +326,11 @@ namespace LaunchPlugin
         }
 
         private bool SendPitFuelControlCommand(string actionName, string messageText, string feedbackLabel)
+        {
+            return _pitCommandEngine.ExecuteRawPitCommand(actionName, messageText, feedbackLabel, ResolvePitCommandTransportMode());
+        }
+
+        private bool SendPitTyreControlCommand(string actionName, string messageText, string feedbackLabel)
         {
             return _pitCommandEngine.ExecuteRawPitCommand(actionName, messageText, feedbackLabel, ResolvePitCommandTransportMode());
         }
@@ -3978,6 +3994,7 @@ namespace LaunchPlugin
             UpdateSmoothedFuelOutputs(requestedAddLitresForSmooth);
 
             _pitFuelControlEngine.OnTelemetryTick();
+            _pitTyreControlEngine.OnTelemetryTick();
 
             if (lapCrossed)
             {
@@ -4440,6 +4457,8 @@ namespace LaunchPlugin
         private string _lastFuelSessionType = "";      // used only by fuel model seeding
         private bool _pitFuelControlLastIsOnTrackCar;
         private bool _pitFuelControlHasIsOnTrackCarSample;
+        private bool _pitTyreControlLastIsOnTrackCar;
+        private bool _pitTyreControlHasIsOnTrackCarSample;
 
         private string _lastSeenCar = "";
         private string _lastSeenTrack = "";
@@ -4548,6 +4567,7 @@ namespace LaunchPlugin
         private readonly ShiftAssistLearningEngine _shiftAssistLearningEngine = new ShiftAssistLearningEngine();
         private readonly PitCommandEngine _pitCommandEngine = new PitCommandEngine();
         private readonly PitFuelControlEngine _pitFuelControlEngine;
+        private readonly PitTyreControlEngine _pitTyreControlEngine;
         private ShiftAssistAudio _shiftAssistAudio;
         private string _shiftAssistActiveGearStackId = "Default";
         private int _shiftAssistTargetCurrentGear;
@@ -4954,6 +4974,11 @@ namespace LaunchPlugin
             this.AddAction("Pit.FuelControl.SetPush", (a, b) => PitFuelControlSetPush());
             this.AddAction("Pit.FuelControl.SetNorm", (a, b) => PitFuelControlSetNorm());
             this.AddAction("Pit.FuelControl.SetSave", (a, b) => PitFuelControlSetSave());
+            this.AddAction("Pit.TyreControl.ModeCycle", (a, b) => PitTyreControlModeCycle());
+            this.AddAction("Pit.TyreControl.SetOff", (a, b) => PitTyreControlSetOff());
+            this.AddAction("Pit.TyreControl.SetDry", (a, b) => PitTyreControlSetDry());
+            this.AddAction("Pit.TyreControl.SetWet", (a, b) => PitTyreControlSetWet());
+            this.AddAction("Pit.TyreControl.SetAuto", (a, b) => PitTyreControlSetAuto());
             this.AddAction("CustomMessage01", (a, b) => TriggerCustomMessageSlot(1));
             this.AddAction("CustomMessage02", (a, b) => TriggerCustomMessageSlot(2));
             this.AddAction("CustomMessage03", (a, b) => TriggerCustomMessageSlot(3));
@@ -5273,6 +5298,8 @@ namespace LaunchPlugin
             AttachCore("Pit.FuelControl.ModeText", () => _pitFuelControlEngine.ModeText);
             AttachCore("Pit.FuelControl.TargetLitres", () => _pitFuelControlEngine.TargetLitres);
             AttachCore("Pit.FuelControl.OverrideActive", () => _pitFuelControlEngine.OverrideActive);
+            AttachCore("Pit.TyreControl.Mode", () => (int)_pitTyreControlEngine.Mode);
+            AttachCore("Pit.TyreControl.ModeText", () => _pitTyreControlEngine.ModeText);
             AttachCore("Pit.EntryLineDebrief", () => _pit.PitEntryLineDebrief);
             AttachCore("Pit.EntryLineDebriefText", () => _pit.PitEntryLineDebriefText);
             AttachCore("Pit.EntryLineTimeLoss_s", () => _pit.PitEntryLineTimeLoss_s);
@@ -6291,6 +6318,7 @@ namespace LaunchPlugin
                 settings.PitCommandTransportMode = (int)PitCommandTransportMode.Auto;
             }
 
+
             if (settings.CustomMessages == null)
             {
                 settings.CustomMessages = new ObservableCollection<CustomMessageSlot>();
@@ -6451,6 +6479,7 @@ namespace LaunchPlugin
             _lastPitWindowLabel = string.Empty;
             _lastPitWindowLogUtc = DateTime.MinValue;
             _pitFuelControlEngine?.ResetToOffStby();
+            _pitTyreControlEngine?.ResetToOff();
             _opponentsEngine?.Reset();
             _h2hEngine?.Reset();
         }
@@ -6912,6 +6941,26 @@ namespace LaunchPlugin
             return snapshot;
         }
 
+
+        private PitTyreControlSnapshot BuildPitTyreControlSnapshot()
+        {
+            var snapshot = new PitTyreControlSnapshot();
+            snapshot.IsTireServiceSelected = IsAnyTireChangeSelected(PluginManager);
+
+            int? requestedCompound = TryReadNullableInt(PluginManager.GetPropertyValue("DataCorePlugin.GameRawData.Telemetry.PitSvTireCompound"));
+            snapshot.HasRequestedCompound = requestedCompound.HasValue;
+            snapshot.RequestedCompound = requestedCompound ?? -1;
+
+            int? playerCompound = TryReadNullableInt(PluginManager.GetPropertyValue("DataCorePlugin.GameRawData.Telemetry.PlayerTireCompound"));
+            snapshot.HasPlayerCompound = playerCompound.HasValue;
+            snapshot.PlayerCompound = playerCompound ?? -1;
+
+            snapshot.WeatherDeclaredWet = SafeReadBool(PluginManager, "DataCorePlugin.GameRawData.Telemetry.WeatherDeclaredWet", false);
+            snapshot.AvailableCompound01 = Convert.ToString(PluginManager.GetPropertyValue("DataCorePlugin.GameRawData.SessionData.DriverInfo.DriverTires01.TireCompoundType")) ?? string.Empty;
+            snapshot.AvailableCompound02 = Convert.ToString(PluginManager.GetPropertyValue("DataCorePlugin.GameRawData.SessionData.DriverInfo.DriverTires02.TireCompoundType")) ?? string.Empty;
+            return snapshot;
+        }
+
         private double ResolveLivePitFuelControlContingencyLitres(double fuelPerLapBasis)
         {
             double contingencyValue = Math.Max(0.0, FuelCalculator?.ContingencyValue ?? 0.0);
@@ -6939,10 +6988,22 @@ namespace LaunchPlugin
             if (_pitFuelControlHasIsOnTrackCarSample && _pitFuelControlLastIsOnTrackCar != isOnTrackCar)
             {
                 _pitFuelControlEngine.ResetToOffStby();
+                _pitTyreControlEngine.ResetToOff();
             }
 
             _pitFuelControlLastIsOnTrackCar = isOnTrackCar;
             _pitFuelControlHasIsOnTrackCarSample = true;
+        }
+
+        private void HandlePitTyreControlOnTrackResets(bool isOnTrackCar)
+        {
+            if (_pitTyreControlHasIsOnTrackCarSample && _pitTyreControlLastIsOnTrackCar != isOnTrackCar)
+            {
+                _pitTyreControlEngine.ResetToOff();
+            }
+
+            _pitTyreControlLastIsOnTrackCar = isOnTrackCar;
+            _pitTyreControlHasIsOnTrackCarSample = true;
         }
 
         public void DataUpdate(PluginManager pluginManager, ref GameData data)
@@ -7022,6 +7083,7 @@ namespace LaunchPlugin
             string currentSessionTypeForConfidence = data.NewData?.SessionTypeName ?? string.Empty;
             bool isOnTrackCar = SafeReadBool(pluginManager, "DataCorePlugin.GameRawData.Telemetry.IsOnTrackCar", false);
             HandlePitFuelControlOnTrackResets(isOnTrackCar);
+            HandlePitTyreControlOnTrackResets(isOnTrackCar);
             string trackIdentityForConfidence =
                 (!string.IsNullOrWhiteSpace(CurrentTrackKey) && !CurrentTrackKey.Equals("unknown", StringComparison.OrdinalIgnoreCase))
                     ? CurrentTrackKey
