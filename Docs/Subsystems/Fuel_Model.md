@@ -1,7 +1,7 @@
 # Fuel Model
 
 Validated against commit: HEAD
-Last updated: 2026-04-21
+Last updated: 2026-04-22
 Branch: work
 
 ## Purpose
@@ -97,6 +97,7 @@ Common reject cases include:
 - deltas that fall too far outside the saved profile baseline when a baseline exists.
 
 Wet/dry mode does **not** change the validity rules; it only decides which condition window receives an accepted sample.
+For persistence routing, lap condition is latched at accepted-lap time so downstream profile/PB writes use the same wet/dry value even if live tyre signal changes later in the tick.
 
 ### 2) Rolling window maintenance
 Accepted samples are inserted into the active condition window.
@@ -105,6 +106,7 @@ The subsystem then:
 - updates min/max guidance values,
 - refreshes session max-burn state inside guarded bounds,
 - protects newly seeded values until enough fresh live data exists.
+- pace/avg-lap persistence is driven by **pace-accepted laps** (not gated behind fuel-sample acceptance), so valid wet pace can continue feeding Strategy/Profile lap-time data even when a lap's fuel delta is rejected.
 
 ### 3) Stable burn selection
 The runtime chooses a stable burn candidate from:

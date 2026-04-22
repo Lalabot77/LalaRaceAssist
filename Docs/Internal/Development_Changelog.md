@@ -42,6 +42,32 @@ The public user-facing release history is maintained in the root `CHANGELOG.md`.
 - Added minimal dash-facing exports `Pit.TyreControl.Mode` and `Pit.TyreControl.ModeText`, plus new plugin actions (`ModeCycle`, `SetOff`, `SetDry`, `SetWet`, `SetAuto`) and Settings → Pit Commands control surface rows.
 - Added bounded observability log for compound-change attempts including `PitSvTireCompound`, `PlayerTireCompound`, `WeatherDeclaredWet`, and `DriverTires01/02.TireCompoundType` context.
 
+### 2026-04-22 — PR follow-up: PB readback wet/dry fallback on unvalidated best-lap events
+- Classification: **both** (driver-visible PB condition routing correction + internal gate hardening).
+- In `LalaLaunch.cs` 500ms PB refresh path:
+  - condition-only PB readback now uses current `_isWetMode` whenever the best-lap event does not validate against the current accepted lap handoff (`lapValidForPb == false`),
+  - validated best-lap events continue using accepted-lap wet latch for write/read consistency.
+- Prevents stale-latch dry/wet routing from publishing PB seconds from the wrong surface condition around tight timing gates and restore windows.
+
+### 2026-04-22 — Wet lap-time / wet PB persistence write-path audit follow-up
+- Classification: **both** (driver-visible wet persistence correction + internal routing gate hardening).
+- Hardened accepted-lap wet/dry routing consistency in `LalaLaunch.cs`:
+  - latched accepted-lap wet mode and reused it for downstream PB write-path gating (`TryUpdatePBByCondition(...)`) and condition-only PB readback.
+  - broadened wet tyre detection to treat positive `PlayerTireCompound` values as wet (`>0`) so wet-mode routing does not silently stay dry when telemetry uses non-zero wet compound variants.
+- Fixed pace persistence coupling:
+  - moved profile avg-lap (`AvgLapTimeDry/Wet`) persistence to the pace-accepted path instead of the fuel-accepted path, restoring wet lap-time persistence/feed when fuel delta validation rejects a lap.
+- Fixed wet PB relearn-after-clear acceptance:
+  - `TryUpdatePBByCondition(...)` now treats cleared/non-positive baseline PB values as unavailable so first valid wet PB candidate can persist after a clear.
+
+### 2026-04-22 — Pit Fuel Control polish: feedback-only max-fill wording
+- Classification: **both** (driver-visible pit-fuel feedback wording polish + internal transport-behavior safety correction).
+- Kept command ownership, transport mode behavior, and AUTO cancel semantics unchanged.
+- Reverted Pit Fuel Control transport clamping in `PitFuelControlEngine` so plugin-owned outgoing `#fuel` sends continue using original transport behavior (override path remains additive max-overshoot; non-override path sends requested target litres).
+- Replaced transport clamping with feedback-only max-fill polish:
+  - when the requested/sent litres exceed current tank space (or the existing max-override path is active), feedback now uses short `FUEL MAX`,
+  - otherwise Pit Fuel Control keeps normal litres-based feedback strings.
+- Refined feedback-only max-fill detection to compare requested litres against raw tank-space telemetry (not rounded-up space), so sub-1L overshoot cases still report `FUEL MAX` consistently.
+- Preserved AUTO/manual send cadence, source/mode semantics, and existing command ownership contracts.
 ### 2026-04-22 — PreRace follow-up: explicit one-stop pit-refill feasibility helper
 - Classification: **internal-only** (code-path clarity/refactor; one-stop status behavior unchanged).
 - Added `IsOneStopFeasibleForPreRace(...)` in `LalaLaunch.cs` so one-stop feasibility is explicitly evaluated against pit-stop refill capacity (effective tank at stop) and second-stint fuel demand (`total needed - start fuel`).

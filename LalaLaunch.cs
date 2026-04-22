@@ -664,6 +664,7 @@ namespace LaunchPlugin
         private bool _msgV1InfoLogged = false;
         private int _lastValidLapMs = 0;
         private int _lastValidLapNumber = -1;
+        private bool _lastValidLapWasWet = false;
         private int?[] _lastValidatedLapRefSectorMs;
         private bool? _lastIsWetTyres = null;
 
@@ -2235,6 +2236,7 @@ namespace LaunchPlugin
             _minWetFuelPerLap = 0.0;
             _lastValidLapMs = 0;
             _lastValidLapNumber = -1;
+            _lastValidLapWasWet = false;
             _wetFuelPersistLogged = false;
             _dryFuelPersistLogged = false;
             _msgV1InfoLogged = false;
@@ -2965,6 +2967,8 @@ namespace LaunchPlugin
                         paceDeltaForLog = lastLapSec - paceBaselineForLog;
                     }
 
+                    bool lapConditionWet = _isWetMode;
+
                     double fuelUsed = (_lapStartFuel > 0 && currentFuel >= 0)
                         ? (_lapStartFuel - currentFuel)
                         : 0.0;
@@ -3071,7 +3075,7 @@ namespace LaunchPlugin
                         if (!fuelRejected)
                         {
                             var (baselineDry, baselineWet) = GetProfileFuelBaselines();
-                            double baseline = _isWetMode ? baselineWet : baselineDry;
+                            double baseline = lapConditionWet ? baselineWet : baselineDry;
 
                             if (baseline > 0.0)
                             {
@@ -3090,7 +3094,7 @@ namespace LaunchPlugin
                             : (string.IsNullOrEmpty(fuelRejectReason) ? "rejected" : fuelRejectReason);
                     }
 
-                    bool recordWetFuel = fuelAccepted && _isWetMode;
+                    bool recordWetFuel = fuelAccepted && lapConditionWet;
                     bool recordPaceForStats = paceAccepted;
                     bool recordFuelForStats = fuelAccepted;
 
@@ -3101,6 +3105,7 @@ namespace LaunchPlugin
                         double pbGateLapSec = IsValidCarSaLapTimeSec(lapRefAuthoritativeLapSec) ? lapRefAuthoritativeLapSec : lastLapSec;
                         _lastValidLapMs = (int)Math.Round(pbGateLapSec * 1000.0);
                         _lastValidLapNumber = completedLapsNow;
+                        _lastValidLapWasWet = lapConditionWet;
                     }
 
                     if (recordPaceForStats)
@@ -3251,7 +3256,7 @@ namespace LaunchPlugin
                                 ?? ActiveProfile.ResolveTrackByNameOrKey(CurrentTrackName);
                             if (trackRecord != null)
                             {
-                                if (_isWetMode)
+                                if (lapConditionWet)
                                 {
                                     trackRecord.WetFuelSampleCount = _validWetLaps;
 
@@ -3292,60 +3297,69 @@ namespace LaunchPlugin
                                     }
                                 }
 
-                                int paceSamples = _recentLapTimes.Count;
-                                if (_isWetMode)
-                                {
-                                    trackRecord.WetLapTimeSampleCount = paceSamples;
-                                }
-                                else
-                                {
-                                    trackRecord.DryLapTimeSampleCount = paceSamples;
-                                }
+                            }
+                        }
+                    }
 
-                                bool persistedAvgLap = false;
-                                int persistedMs = 0;
-                                if (paceSamples >= FuelPersistMinLaps && Pace_StintAvgLapTimeSec > 0)
+                    if (recordPaceForStats && ActiveProfile != null)
+                    {
+                        var trackRecord = ActiveProfile.FindTrack(CurrentTrackKey)
+                            ?? ActiveProfile.ResolveTrackByNameOrKey(CurrentTrackName);
+                        if (trackRecord != null)
+                        {
+                            int paceSamples = _recentLapTimes.Count;
+                            if (lapConditionWet)
+                            {
+                                trackRecord.WetLapTimeSampleCount = paceSamples;
+                            }
+                            else
+                            {
+                                trackRecord.DryLapTimeSampleCount = paceSamples;
+                            }
+
+                            bool persistedAvgLap = false;
+                            int persistedMs = 0;
+                            if (paceSamples >= FuelPersistMinLaps && Pace_StintAvgLapTimeSec > 0)
+                            {
+                                int ms = (int)Math.Round(Pace_StintAvgLapTimeSec * 1000.0);
+                                if (ms > 0)
                                 {
-                                    int ms = (int)Math.Round(Pace_StintAvgLapTimeSec * 1000.0);
-                                    if (ms > 0)
+                                    if (lapConditionWet)
                                     {
-                                        if (_isWetMode)
+                                        if (!trackRecord.WetConditionsLocked)
                                         {
-                                            if (!trackRecord.WetConditionsLocked)
-                                            {
-                                                trackRecord.AvgLapTimeWet = ms;
-                                                trackRecord.MarkAvgLapUpdatedWet("Telemetry");
-                                                persistedAvgLap = true;
-                                                persistedMs = ms;
-                                            }
+                                            trackRecord.AvgLapTimeWet = ms;
+                                            trackRecord.MarkAvgLapUpdatedWet("Telemetry");
+                                            persistedAvgLap = true;
+                                            persistedMs = ms;
                                         }
-                                        else
+                                    }
+                                    else
+                                    {
+                                        if (!trackRecord.DryConditionsLocked)
                                         {
-                                            if (!trackRecord.DryConditionsLocked)
-                                            {
-                                                trackRecord.AvgLapTimeDry = ms;
-                                                trackRecord.MarkAvgLapUpdatedDry("Telemetry");
-                                                persistedAvgLap = true;
-                                                persistedMs = ms;
-                                            }
+                                            trackRecord.AvgLapTimeDry = ms;
+                                            trackRecord.MarkAvgLapUpdatedDry("Telemetry");
+                                            persistedAvgLap = true;
+                                            persistedMs = ms;
                                         }
                                     }
                                 }
+                            }
 
-                                if (persistedAvgLap)
-                                {
-                                    ProfilesViewModel?.SaveProfiles();
-                                    string trackLabel = !string.IsNullOrWhiteSpace(trackRecord.DisplayName)
-                                        ? trackRecord.DisplayName
-                                        : (!string.IsNullOrWhiteSpace(CurrentTrackName) ? CurrentTrackName : trackRecord.Key ?? "(unknown track)");
-                                    string carLabel = ActiveProfile?.ProfileName ?? "(unknown car)";
-                                    string modeLabel = _isWetMode ? "Wet" : "Dry";
-                                    bool locked = _isWetMode ? trackRecord.WetConditionsLocked : trackRecord.DryConditionsLocked;
-                                    string lapText = trackRecord.MillisecondsToLapTimeString(persistedMs);
-                                    SimHub.Logging.Current.Info(
-                                        $"[LalaPlugin:Profile/Pace] Persisted AvgLapTime{modeLabel} for {carLabel} @ {trackLabel}: " +
-                                        $"{lapText} ({persistedMs} ms), samples={paceSamples}, locked={locked}");
-                                }
+                            if (persistedAvgLap)
+                            {
+                                ProfilesViewModel?.SaveProfiles();
+                                string trackLabel = !string.IsNullOrWhiteSpace(trackRecord.DisplayName)
+                                    ? trackRecord.DisplayName
+                                    : (!string.IsNullOrWhiteSpace(CurrentTrackName) ? CurrentTrackName : trackRecord.Key ?? "(unknown track)");
+                                string carLabel = ActiveProfile?.ProfileName ?? "(unknown car)";
+                                string modeLabel = lapConditionWet ? "Wet" : "Dry";
+                                bool locked = lapConditionWet ? trackRecord.WetConditionsLocked : trackRecord.DryConditionsLocked;
+                                string lapText = trackRecord.MillisecondsToLapTimeString(persistedMs);
+                                SimHub.Logging.Current.Info(
+                                    $"[LalaPlugin:Profile/Pace] Persisted AvgLapTime{modeLabel} for {carLabel} @ {trackLabel}: " +
+                                    $"{lapText} ({persistedMs} ms), samples={paceSamples}, locked={locked}");
                             }
                         }
                     }
@@ -3373,7 +3387,7 @@ namespace LaunchPlugin
                         fuelUsed,
                         recordFuelForStats,
                         fuelReason,
-                        _isWetMode,
+                        lapConditionWet,
                         LiveFuelPerLap,
                         _validDryLaps,
                         _validWetLaps,
@@ -6721,6 +6735,7 @@ namespace LaunchPlugin
             _lastAnnouncedMaxFuel = -1;
             _lastValidLapMs = 0;
             _lastValidLapNumber = -1;
+            _lastValidLapWasWet = false;
             _lastValidatedLapRefSectorMs = null;
             _wetFuelPersistLogged = false;
             _dryFuelPersistLogged = false;
@@ -7658,11 +7673,12 @@ namespace LaunchPlugin
                     int lapMs = (int)Math.Round(currentBestLap.TotalMilliseconds);
                     int completedLapsNow = Convert.ToInt32(data.NewData?.CompletedLaps ?? 0);
                     bool lapValidForPb = _lastValidLapNumber == completedLapsNow && Math.Abs(_lastValidLapMs - lapMs) <= 2;
+                    bool lapWasWetForPb = _lastValidLapWasWet;
 
                     bool accepted = false;
                     if (lapValidForPb)
                     {
-                        accepted = ProfilesViewModel.TryUpdatePBByCondition(CurrentCarModel, CurrentTrackKey, lapMs, _isWetMode, _lastValidatedLapRefSectorMs);
+                        accepted = ProfilesViewModel.TryUpdatePBByCondition(CurrentCarModel, CurrentTrackKey, lapMs, lapWasWetForPb, _lastValidatedLapRefSectorMs);
                         string pbLog = $"[LalaPlugin:Pace] candidate={lapMs}ms car='{CurrentCarModel}' trackKey='{CurrentTrackKey}' -> {(accepted ? "accepted" : "rejected")}";
                         if (accepted)
                             SimHub.Logging.Current.Info(pbLog);
@@ -7675,7 +7691,8 @@ namespace LaunchPlugin
 
                     var activeTrackStats = ActiveProfile?.ResolveTrackByNameOrKey(CurrentTrackKey)
                         ?? ActiveProfile?.ResolveTrackByNameOrKey(CurrentTrackName);
-                    int? selectedPbMs = activeTrackStats?.GetConditionOnlyBestLapMs(_isWetMode);
+                    bool pbReadWetMode = lapValidForPb ? lapWasWetForPb : _isWetMode;
+                    int? selectedPbMs = activeTrackStats?.GetConditionOnlyBestLapMs(pbReadWetMode);
                     double selectedPbSeconds = selectedPbMs.HasValue ? selectedPbMs.Value / 1000.0 : 0.0;
                     FuelCalculator?.SetPersonalBestSeconds(selectedPbSeconds);
                 }
@@ -15873,7 +15890,7 @@ namespace LaunchPlugin
             {
                 playerTireCompoundRaw = playerCompound.Value;
                 source = "PlayerTireCompound";
-                return playerCompound.Value == 1;
+                return playerCompound.Value > 0;
             }
 
             // No fallback path; legacy iRacingExtraProperties tyre-compound source is removed.

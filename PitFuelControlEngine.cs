@@ -314,11 +314,13 @@ namespace LaunchPlugin
                 return false;
             }
 
+            var snapshot = _snapshotProvider();
             bool useMax = OverrideActive;
+            bool showMaxFeedback = IsMaxStyleFeedbackRequest(roundedTarget, snapshot, useMax);
             string commandText = useMax
                 ? string.Format("#fuel +{0}$", MaxFuelOvershootLitres)
                 : string.Format("#fuel {0}$", roundedTarget);
-            string feedback = BuildFeedbackText(isAutoUpdate, useMax, roundedTarget);
+            string feedback = BuildFeedbackText(isAutoUpdate, showMaxFeedback, roundedTarget);
             string actionName = !string.IsNullOrWhiteSpace(actionNameOverride)
                 ? actionNameOverride.Trim()
                 : (isAutoUpdate ? "Pit.FuelControl.AutoUpdate" : "Pit.FuelControl.SourceSet");
@@ -396,6 +398,32 @@ namespace LaunchPlugin
             }
 
             return (int)Math.Ceiling(litres);
+        }
+
+        private static bool IsMaxStyleFeedbackRequest(int requestedLitres, PitFuelControlSnapshot snapshot, bool useMaxOverride)
+        {
+            if (useMaxOverride)
+            {
+                return true;
+            }
+
+            if (snapshot == null)
+            {
+                return false;
+            }
+
+            if (double.IsNaN(snapshot.TankSpaceLitres) || double.IsInfinity(snapshot.TankSpaceLitres))
+            {
+                return false;
+            }
+
+            if (snapshot.TankSpaceLitres < 0.0)
+            {
+                return false;
+            }
+
+            int requestedSafe = Math.Max(0, requestedLitres);
+            return requestedSafe > snapshot.TankSpaceLitres;
         }
 
         private void RefreshDerivedState()
@@ -521,22 +549,17 @@ namespace LaunchPlugin
             }
         }
 
-        private string BuildFeedbackText(bool isAutoUpdate, bool useMax, int roundedTarget)
+        private string BuildFeedbackText(bool isAutoUpdate, bool showMaxFeedback, int roundedTarget)
         {
             string sourceText = SourceToText(Source);
-            if (isAutoUpdate)
+            if (showMaxFeedback)
             {
-                if (useMax)
-                {
-                    return string.Format("AUTO FUEL MAX {0}L", roundedTarget);
-                }
-
-                return string.Format("AUTO FUEL UPDATE {0}L", roundedTarget);
+                return "FUEL MAX";
             }
 
-            if (useMax)
+            if (isAutoUpdate)
             {
-                return string.Format("FUEL SET {0} MAX {1}L", sourceText, roundedTarget);
+                return string.Format("AUTO FUEL UPDATE {0}L", roundedTarget);
             }
 
             return string.Format("FUEL SET {0} {1}L", sourceText, roundedTarget);
