@@ -1,7 +1,7 @@
 # Dash Integration
 
 Validated against commit: HEAD
-Last updated: 2026-04-21
+Last updated: 2026-04-22
 Branch: work
 
 ## Purpose
@@ -62,6 +62,8 @@ This document is the canonical dash-facing contract layer. It does **not** redef
 - Dashboards can also bind `LalaLaunch.Pit.Command.LastAction`/`LastRaw` for diagnostics, plus `LalaLaunch.Pit.Command.FuelSetMaxToggleState` for real `Pit.FuelSetMax` MAX/ZERO toggle state (`false=last press sent ZERO / next press sends MAX`, `true=last press sent MAX / next press sends ZERO`). Tank-full short-circuit applies to MAX phase only; ZERO phase is still transported as `#fuel 0.01`.
 - Dashboards can bind `LalaLaunch.Pit.FuelControl.*` exports (`Source/SourceText`, `Mode/ModeText`, `TargetLitres`, `OverrideActive`) for pit fuel control state display; dashboards do not own source/mode/plan validity logic.
 - Dashboards can bind `LalaLaunch.Pit.TyreControl.Mode` / `ModeText` for plugin-owned tyre control display (`OFF`/`DRY`/`WET`/`AUTO`); dashboards must not implement tyre decision logic.
+- Tyre control ON/OFF service truth is all-four based (aligned with `Pit.ToggleTyresAll`): ON only when all four tyre flags are selected; partial/manual subsets are treated as OFF for enforcement.
+- In plugin Settings → Pit Commands, tyre-control binding UI intentionally exposes only `Tyre Mode Cycle`; direct `SetOff/SetDry/SetWet/SetAuto` actions remain available for direct binding in SimHub Controls & Events / Dash Studio.
 - Pit Fuel Control ownership/reset contract for dash rendering: OFF/reset/suppressed states are `OFF + STBY`; AUTO cancellation on external requested-fuel movement (outside send suppression), iRacing AutoFuel ownership, Offline Testing suppression, and any `Telemetry.IsOnTrackCar` boolean edge (`false->true` or `true->false`) all end in `OFF + STBY`.
 - The same transport seam also dispatches custom-message actions; dashboards should keep custom-message content authored in plugin Settings rather than hardcoding message text in dash scripts/buttons.
 

@@ -176,12 +176,9 @@ namespace LaunchPlugin
             string actionName = desiredWet ? "Pit.TyreControl.SetWetCompound" : "Pit.TyreControl.SetDryCompound";
             string feedback = desiredWet ? "TYRE WET" : "TYRE DRY";
             LogCompoundAttempt(snapshot, desiredWet, command);
-            bool sent = _rawCommandSender != null && _rawCommandSender(actionName, command, feedback);
-            if (sent)
-            {
-                _compoundTargetAttempts++;
-                _compoundNextAttemptUtc = DateTime.UtcNow.AddMilliseconds(SendCooldownMs);
-            }
+            _rawCommandSender?.Invoke(actionName, command, feedback);
+            _compoundTargetAttempts++;
+            _compoundNextAttemptUtc = DateTime.UtcNow.AddMilliseconds(SendCooldownMs);
         }
 
         private void LogCompoundAttempt(PitTyreControlSnapshot snapshot, bool desiredWet, string command)

@@ -86,9 +86,11 @@ Tyre Control behavior notes for these bindings:
 - `DRY` actively keeps tyre service ON and requests dry next tyres.
 - `WET` actively keeps tyre service ON and requests wet next tyres.
 - `AUTO` actively keeps tyre service ON and follows declared-wet authority (`Telemetry.WeatherDeclaredWet`) to keep requested next tyres DRY/WET.
+- Tyre-service enforcement truth matches `Pit.ToggleTyresAll`: service ON is only when all four tyre-change flags are selected; any partial/manual subset is treated as service OFF for control enforcement.
 - Tyre control mode resets to `OFF` on `Telemetry.IsOnTrackCar` edge transitions (`false->true` or `true->false`) via the existing pit-control reset seam.
+- Compound command retries are bounded by cooldown + attempt limits even when a local send attempt fails, preventing per-tick resend hammering.
 
-In Settings → **Pit Commands**, these are shown as fixed built-in features with normal binding rows (no raw chat command editing).
+In Settings → **Pit Commands**, tyre control shows a single built-in binding row (`Tyre Mode Cycle`) for normal use (no raw chat command editing). Direct tyre mode actions (`SetOff` / `SetDry` / `SetWet` / `SetAuto`) remain registered for SimHub Controls & Events / Dash Studio binding.
 
 ### Custom message buttons (Settings → Custom Messages)
 
@@ -115,8 +117,6 @@ Transport mode is configurable in **Settings → Pit Commands**:
 If both available transport options fail for the selected mode (for example no iRacing window is available for direct send, or legacy fallback is blocked because iRacing is not foreground), LalaLaunch publishes `Pit Cmd Fail` and logs a pit-command warning so the failure is visible.
 For custom messages, raw commands, and stateless built-in pit actions, a successful direct send is transport-attempt only (queued/unverified), not authoritative proof that iRacing applied the command.
 Stateful toggle actions (`ToggleFuel`, tyre/fix toggles, etc.) remain the only pit actions with authoritative before/after telemetry confirmation.
-
-Settings still includes **Auto-focus iRacing before pit/custom message send (Preview)** as forward-looking UI only; autofocus behavior is not implemented.
 
 ## 3. Pit Entry Assist
 

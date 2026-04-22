@@ -33,6 +33,16 @@ The public user-facing release history is maintained in the root `CHANGELOG.md`.
 
 ## Post-v1.0 development
 
+### 2026-04-22 — Tyre Control v1 follow-up (service-state truth + bounded retry + Pit Commands UI tidy-up)
+- Classification: **both** (driver-visible pit-control contract correction + internal retry hardening + settings UI cleanup).
+- Tyre service truth for `PitTyreControlEngine` now reuses the same all-four tyre-selection seam used by `Pit.ToggleTyresAll` confirmation (`PitCommandEngine.ReadTyresAllState(...)`) instead of `IsAnyTireChangeSelected(...)`.
+- Tyre control ON/OFF contract is now explicit and aligned to `Pit.ToggleTyresAll`: ON means all four tyre-change flags are selected; OFF means not all four are selected.
+- Compound retry/send suppression is now bounded even when local raw send fails: each attempt still consumes retry budget and starts cooldown, preventing per-tick hammering on failed local send paths.
+- Settings → Pit Commands UI tidy-up:
+  - removed preview-only `Auto-focus iRacing before pit/custom message send` toggle row,
+  - tyre control section now exposes only `LalaLaunch.Pit.TyreControl.ModeCycle` in plugin settings.
+- Direct tyre actions (`SetOff`/`SetDry`/`SetWet`/`SetAuto`) remain registered and usable via SimHub Controls & Events / Dash Studio; this follow-up is UI cleanup, not action removal.
+
 ### 2026-04-22 — Plugin-owned tyre control v1 (OFF / DRY / WET / AUTO)
 - Classification: **both** (new user-facing pit-control feature with internal control/verification seams).
 - Added focused `PitTyreControlEngine` ownership for persistent tyre mode state (`OFF`, `DRY`, `WET`, `AUTO`) with mode-cycle contract `OFF -> DRY -> WET -> AUTO -> OFF`.
