@@ -52,6 +52,7 @@ namespace LaunchPlugin
         private const double OverrideArmStopsThreshold = 1.10;
         private const double OverrideDisarmStopsThreshold = 1.05;
         private const int PluginSendSuppressionMs = 900;
+        private const int MaxFuelOvershootLitres = 500;
 
         private readonly Func<PitFuelControlSnapshot> _snapshotProvider;
         private readonly Func<string, string, string, bool> _chatCommandSender;
@@ -316,7 +317,9 @@ namespace LaunchPlugin
             var snapshot = _snapshotProvider();
             bool useMax = OverrideActive;
             bool showMaxFeedback = IsMaxStyleFeedbackRequest(roundedTarget, snapshot, useMax);
-            string commandText = string.Format("#fuel {0}$", roundedTarget);
+            string commandText = useMax
+                ? string.Format("#fuel +{0}$", MaxFuelOvershootLitres)
+                : string.Format("#fuel {0}$", roundedTarget);
             string feedback = BuildFeedbackText(isAutoUpdate, showMaxFeedback, roundedTarget);
             string actionName = !string.IsNullOrWhiteSpace(actionNameOverride)
                 ? actionNameOverride.Trim()

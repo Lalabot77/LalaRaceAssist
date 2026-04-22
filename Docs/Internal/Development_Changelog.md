@@ -36,7 +36,7 @@ The public user-facing release history is maintained in the root `CHANGELOG.md`.
 ### 2026-04-22 — Pit Fuel Control polish: feedback-only max-fill wording
 - Classification: **both** (driver-visible pit-fuel feedback wording polish + internal transport-behavior safety correction).
 - Kept command ownership, transport mode behavior, and AUTO cancel semantics unchanged.
-- Reverted Pit Fuel Control transport clamping in `PitFuelControlEngine` so plugin-owned outgoing `#fuel` sends continue using the original requested target litres.
+- Reverted Pit Fuel Control transport clamping in `PitFuelControlEngine` so plugin-owned outgoing `#fuel` sends continue using original transport behavior (override path remains additive max-overshoot; non-override path sends requested target litres).
 - Replaced transport clamping with feedback-only max-fill polish:
   - when the requested/sent litres exceed current tank space (or the existing max-override path is active), feedback now uses short `FUEL MAX`,
   - otherwise Pit Fuel Control keeps normal litres-based feedback strings.
