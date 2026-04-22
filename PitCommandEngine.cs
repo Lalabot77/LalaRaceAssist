@@ -55,7 +55,7 @@ namespace LaunchPlugin
         public bool FuelSetMaxToggleState { get; private set; }
         public bool Active => !string.IsNullOrWhiteSpace(DisplayText) && DateTime.UtcNow < _messageUntilUtc;
 
-        public void Execute(PitCommandAction action, PluginManager pluginManager, double tankSpaceLitres, PitCommandTransportMode transportMode)
+        public bool Execute(PitCommandAction action, PluginManager pluginManager, double tankSpaceLitres, PitCommandTransportMode transportMode)
         {
             LastAction = action.ToString();
             if (action == PitCommandAction.FuelSetMax)
@@ -70,14 +70,14 @@ namespace LaunchPlugin
             {
                 PublishMessage("Pit Cmd Fail");
                 WarnOnce("invalid_command_" + action, $"[LalaPlugin:PitCommand] action={action} failed: chat command mapping is empty.");
-                return;
+                return false;
             }
 
             if (ShouldShortCircuitForTankFull(action) && tankSpaceLitres <= 0.05)
             {
                 PublishMessage("Fuel MAX");
                 SimHub.Logging.Current.Info($"[LalaPlugin:PitCommand] action={action} transport=chat-injection executed=false reason=tank-full tankSpaceL={tankSpaceLitres:F2}");
-                return;
+                return false;
             }
 
             bool? before = ReadToggleState(action, pluginManager);
@@ -89,7 +89,7 @@ namespace LaunchPlugin
             {
                 PublishMessage("Pit Cmd Fail");
                 SimHub.Logging.Current.Warn($"[LalaPlugin:PitCommand] action={action} transport={transportUsed} local-transport-issue reason={reason}{FormatFallbackSuffix(fallbackFrom)} raw='{raw}' normalized='{command}'");
-                return;
+                return false;
             }
 
             bool effectConfirmed = ConfirmAndPublishFeedback(action, pluginManager, before, tankSpaceLitres, transportUsed);
@@ -102,6 +102,8 @@ namespace LaunchPlugin
             {
                 SimHub.Logging.Current.Info($"[LalaPlugin:PitCommand] action={action} transport={transportUsed} attempted=true delivery=unverified effect-confirmed=false before={FormatNullable(before)} raw='{raw}' normalized='{command}'");
             }
+
+            return true;
         }
 
         public bool ExecuteCustomMessage(string actionName, string messageText, string feedbackLabel, PitCommandTransportMode transportMode)

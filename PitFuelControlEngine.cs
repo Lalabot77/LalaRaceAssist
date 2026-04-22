@@ -22,6 +22,7 @@ namespace LaunchPlugin
     {
         public bool SuppressFuelControl;
         public bool IracingAutoFuelEnabled;
+        public bool TelemetryFuelFillEnabled;
         public string LiveCar = string.Empty;
         public string LiveTrack = string.Empty;
         public bool HasLiveBasis;
@@ -60,10 +61,14 @@ namespace LaunchPlugin
 
         private DateTime _suppressManualOverrideUntilUtc = DateTime.MinValue;
         private bool _maxOverrideArmed;
+        private bool _hasObservedRequestedFuelLitres;
         private int _lastObservedRequestedFuelLitres = -1;
+        private bool _hasObservedFuelFillEnabled;
+        private bool _lastObservedFuelFillEnabled;
 
         public PitFuelControlSource Source { get; private set; } = PitFuelControlSource.Push;
-        public PitFuelControlMode Mode { get; private set; } = PitFuelControlMode.Off;
+        private bool IsAutoModeActive { get; set; }
+        public PitFuelControlMode Mode => ResolveEffectiveMode();
         public bool AutoArmed { get; private set; }
         public int LastSentFuelLitres { get; private set; } = -1;
         public double TargetLitres { get; private set; }
@@ -84,10 +89,10 @@ namespace LaunchPlugin
         public void ResetToOffStby()
         {
             Source = PitFuelControlSource.Stby;
-            Mode = PitFuelControlMode.Off;
+            IsAutoModeActive = false;
             AutoArmed = false;
             LastSentFuelLitres = -1;
-            _lastObservedRequestedFuelLitres = -1;
+            ClearObservedExternalState();
             TargetLitres = 0.0;
             OverrideActive = false;
             _maxOverrideArmed = false;
@@ -117,12 +122,12 @@ namespace LaunchPlugin
 
             if (Source == PitFuelControlSource.Plan && Mode == PitFuelControlMode.Auto)
             {
-                Mode = PitFuelControlMode.Man;
+                IsAutoModeActive = false;
                 AutoArmed = false;
             }
 
             bool sendAttempted = false;
-            if (Mode == PitFuelControlMode.Man || Mode == PitFuelControlMode.Auto)
+            if (ShouldSendOnManualOrAuto())
             {
                 sendAttempted = true;
                 SendCurrentTarget(isAutoUpdate: false, actionNameOverride: "Pit.FuelControl.SourceCycle");
@@ -143,24 +148,18 @@ namespace LaunchPlugin
 
             RefreshDerivedState();
 
-            if (Mode == PitFuelControlMode.Off)
-            {
-                Mode = PitFuelControlMode.Man;
-                AutoArmed = false;
-                PublishSelectionFeedback("Pit.FuelControl.ModeCycle", string.Format("FUEL MODE {0}", ModeToText(Mode)));
-            }
-            else if (Mode == PitFuelControlMode.Man)
+            if (!IsAutoModeActive)
             {
                 if (Source == PitFuelControlSource.Plan)
                 {
-                    Mode = PitFuelControlMode.Auto;
+                    IsAutoModeActive = true;
                     AutoArmed = false;
                     Source = PitFuelControlSource.Stby;
                     PublishSelectionFeedback("Pit.FuelControl.ModeCycle", "FUEL AUTO STBY");
                 }
                 else
                 {
-                    Mode = PitFuelControlMode.Auto;
+                    IsAutoModeActive = true;
                     if (Source == PitFuelControlSource.Stby)
                     {
                         AutoArmed = false;
@@ -169,14 +168,19 @@ namespace LaunchPlugin
                     else
                     {
                         AutoArmed = true;
-                        PublishSelectionFeedback("Pit.FuelControl.ModeCycle", string.Format("FUEL MODE {0}", ModeToText(Mode)));
+                        PublishSelectionFeedback("Pit.FuelControl.ModeCycle", "FUEL MODE AUTO");
                     }
                 }
             }
             else
             {
-                SetOffStbyState();
-                PublishSelectionFeedback("Pit.FuelControl.ModeCycle", "FUEL MODE OFF");
+                IsAutoModeActive = false;
+                AutoArmed = false;
+                Source = PitFuelControlSource.Stby;
+                LastSentFuelLitres = -1;
+                _suppressManualOverrideUntilUtc = DateTime.MinValue;
+                ClearObservedExternalState();
+                PublishSelectionFeedback("Pit.FuelControl.ModeCycle", string.Format("FUEL MODE {0}", ModeToText(ResolveEffectiveMode())));
             }
         }
 
@@ -193,7 +197,7 @@ namespace LaunchPlugin
 
             RefreshDerivedState();
 
-            if (Mode != PitFuelControlMode.Auto || !AutoArmed)
+            if (!IsAutoModeActive || !AutoArmed)
             {
                 return;
             }
@@ -224,20 +228,20 @@ namespace LaunchPlugin
         public void OnTelemetryTick()
         {
             RefreshDerivedState();
+            var snapshot = _snapshotProvider();
 
-            if (Mode != PitFuelControlMode.Auto || !AutoArmed)
+            if (!IsAutoModeActive || !AutoArmed)
             {
-                _lastObservedRequestedFuelLitres = -1;
+                ClearObservedExternalState();
                 return;
             }
 
             if (DateTime.UtcNow < _suppressManualOverrideUntilUtc)
             {
-                UpdateObservedRequestedFuel();
+                UpdateObservedExternalState(snapshot);
                 return;
             }
 
-            var snapshot = _snapshotProvider();
             if (snapshot == null)
             {
                 return;
@@ -245,31 +249,37 @@ namespace LaunchPlugin
 
             if (snapshot.SuppressFuelControl)
             {
-                SetOffStbyState();
+                DisarmAutoAndForceStby(clearSuppressWindow: true);
                 return;
             }
 
             if (snapshot.IracingAutoFuelEnabled)
             {
-                CancelAutoToOffStby("Pit.FuelControl.AutoFuelOwnership", "AUTO CANCELLED");
+                CancelAutoToStby("Pit.FuelControl.AutoFuelOwnership", "AUTO CANCELLED");
                 return;
             }
 
             int currentRequestedLitres = RoundUpLitres(snapshot.TelemetryRequestedFuelLitres);
-            if (_lastObservedRequestedFuelLitres < 0)
+            bool currentFuelFillEnabled = snapshot.TelemetryFuelFillEnabled;
+            if (!_hasObservedRequestedFuelLitres || !_hasObservedFuelFillEnabled)
             {
+                _hasObservedRequestedFuelLitres = true;
                 _lastObservedRequestedFuelLitres = currentRequestedLitres;
+                _hasObservedFuelFillEnabled = true;
+                _lastObservedFuelFillEnabled = currentFuelFillEnabled;
                 return;
             }
 
-            if (currentRequestedLitres != _lastObservedRequestedFuelLitres)
-            {
-                _lastObservedRequestedFuelLitres = currentRequestedLitres;
-                CancelAutoToOffStby("Pit.FuelControl.AutoCancelled", "AUTO CANCELLED");
-                return;
-            }
-
+            bool requestedFuelChanged = currentRequestedLitres != _lastObservedRequestedFuelLitres;
+            bool fuelFillChanged = currentFuelFillEnabled != _lastObservedFuelFillEnabled;
             _lastObservedRequestedFuelLitres = currentRequestedLitres;
+            _lastObservedFuelFillEnabled = currentFuelFillEnabled;
+
+            if (requestedFuelChanged || fuelFillChanged)
+            {
+                CancelAutoToStby("Pit.FuelControl.AutoCancelled", "AUTO CANCELLED");
+                return;
+            }
         }
 
         public string SourceText => SourceToText(Source);
@@ -287,7 +297,7 @@ namespace LaunchPlugin
             RefreshDerivedState();
 
             bool sendAttempted = false;
-            if (Mode == PitFuelControlMode.Man || Mode == PitFuelControlMode.Auto)
+            if (ShouldSendOnManualOrAuto())
             {
                 sendAttempted = true;
                 SendCurrentTarget(isAutoUpdate: false, actionNameOverride: actionName);
@@ -330,8 +340,8 @@ namespace LaunchPlugin
             {
                 LastSentFuelLitres = roundedTarget;
                 _suppressManualOverrideUntilUtc = DateTime.UtcNow.AddMilliseconds(PluginSendSuppressionMs);
-                _lastObservedRequestedFuelLitres = roundedTarget;
-                if (Mode == PitFuelControlMode.Auto)
+                UpdateObservedExternalState(snapshot);
+                if (IsAutoModeActive)
                 {
                     AutoArmed = true;
                 }
@@ -439,7 +449,7 @@ namespace LaunchPlugin
 
             if (snapshot.SuppressFuelControl)
             {
-                SetOffStbyState();
+                DisarmAutoAndForceStby(clearSuppressWindow: true);
                 PlanValid = false;
                 TargetLitres = 0.0;
                 OverrideActive = false;
@@ -469,38 +479,41 @@ namespace LaunchPlugin
                 return false;
             }
 
-            SetOffStbyState();
+            DisarmAutoAndForceStby(clearSuppressWindow: true);
             PlanValid = false;
             TargetLitres = 0.0;
             OverrideActive = false;
             return true;
         }
 
-        private void SetOffStbyState()
+        private void DisarmAutoAndForceStby(bool clearSuppressWindow)
         {
-            Mode = PitFuelControlMode.Off;
+            IsAutoModeActive = false;
             Source = PitFuelControlSource.Stby;
             AutoArmed = false;
             LastSentFuelLitres = -1;
-            _lastObservedRequestedFuelLitres = -1;
             OverrideActive = false;
             _maxOverrideArmed = false;
-            _suppressManualOverrideUntilUtc = DateTime.MinValue;
+            ClearObservedExternalState();
+            if (clearSuppressWindow)
+            {
+                _suppressManualOverrideUntilUtc = DateTime.MinValue;
+            }
         }
 
-        private void CancelAutoToOffStby(string actionName, string message)
+        private void CancelAutoToStby(string actionName, string message)
         {
-            if (Mode != PitFuelControlMode.Auto || !AutoArmed)
+            if (!IsAutoModeActive || !AutoArmed)
             {
-                SetOffStbyState();
+                DisarmAutoAndForceStby(clearSuppressWindow: true);
                 return;
             }
 
-            SetOffStbyState();
+            DisarmAutoAndForceStby(clearSuppressWindow: true);
             PublishSelectionFeedback(actionName, message);
         }
 
-        private void UpdateObservedRequestedFuel()
+        public void NotifyPluginFuelToggleAction()
         {
             var snapshot = _snapshotProvider();
             if (snapshot == null)
@@ -508,7 +521,47 @@ namespace LaunchPlugin
                 return;
             }
 
+            _suppressManualOverrideUntilUtc = DateTime.UtcNow.AddMilliseconds(PluginSendSuppressionMs);
+            UpdateObservedExternalState(snapshot);
+        }
+
+        private void UpdateObservedExternalState(PitFuelControlSnapshot snapshot)
+        {
+            if (snapshot == null)
+            {
+                return;
+            }
+
+            _hasObservedRequestedFuelLitres = true;
             _lastObservedRequestedFuelLitres = RoundUpLitres(snapshot.TelemetryRequestedFuelLitres);
+            _hasObservedFuelFillEnabled = true;
+            _lastObservedFuelFillEnabled = snapshot.TelemetryFuelFillEnabled;
+        }
+
+        private void ClearObservedExternalState()
+        {
+            _hasObservedRequestedFuelLitres = false;
+            _lastObservedRequestedFuelLitres = -1;
+            _hasObservedFuelFillEnabled = false;
+            _lastObservedFuelFillEnabled = false;
+        }
+
+        private PitFuelControlMode ResolveEffectiveMode()
+        {
+            if (IsAutoModeActive)
+            {
+                return PitFuelControlMode.Auto;
+            }
+
+            var snapshot = _snapshotProvider();
+            bool fuelEnabled = snapshot != null && snapshot.TelemetryFuelFillEnabled;
+            return fuelEnabled ? PitFuelControlMode.Man : PitFuelControlMode.Off;
+        }
+
+        private bool ShouldSendOnManualOrAuto()
+        {
+            PitFuelControlMode effectiveMode = ResolveEffectiveMode();
+            return IsAutoModeActive || effectiveMode == PitFuelControlMode.Man;
         }
 
         private static bool ComputePlanValidity(PitFuelControlSnapshot snapshot)

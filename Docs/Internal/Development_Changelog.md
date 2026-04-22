@@ -33,6 +33,27 @@ The public user-facing release history is maintained in the root `CHANGELOG.md`.
 
 ## Post-v1.0 development
 
+### 2026-04-22 — Pit Fuel Control v2 redesign (AUTO-owned + MFD-derived OFF/MAN + edge-trigger external cancel)
+- Classification: **both** (driver-visible pit-fuel workflow contract change + internal ownership/cancel seam redesign).
+- Reworked `PitFuelControlEngine` mode ownership contract:
+  - AUTO remains plugin-owned.
+  - OFF/MAN are no longer plugin-owned states and now derive from iRacing MFD fuel-enable telemetry (`dpFuelFill`) whenever AUTO is not active.
+- Replaced prior mismatch/baseline-driven AUTO cancel with edge-trigger external-change detection:
+  - monitors both requested fuel (`PitSvFuel`) and MFD fuel-enable (`dpFuelFill`) edges while AUTO is active/armed,
+  - treats changes as plugin-owned only inside plugin suppression windows caused by plugin raw `#fuel` sends or explicit plugin `Pit.ToggleFuel` action sends,
+  - all other edges are external and trigger one-shot AUTO cancel (`AUTO CANCELLED`) with `Source=STBY` + `AutoArmed=false`.
+- Preserved existing source selection and AUTO send invariants:
+  - lap-triggered AUTO send cadence unchanged,
+  - `PLAN` remains blocked from active AUTO operation (AUTO + PLAN forces STBY/disarmed),
+  - explicit `PUSH/NORM/SAVE` source selection in `AUTO + STBY` immediately re-arms AUTO and runs normal send path.
+- Kept `Telemetry.IsOnTrackCar` edge reset seam and updated reset semantics:
+  - reset still forces `Source=STBY` + `AutoArmed=false`,
+  - reset now clears plugin-owned suppression/ignore windows and observed-edge baselines,
+  - reset no longer forces synthetic plugin-owned OFF/MAN mode state.
+- Updated pit toggle ownership seam:
+  - `PitCommandEngine.Execute(...)` now returns send-attempt success so `LalaLaunch.PitToggleFuel()` can notify Pit Fuel Control of explicit plugin-owned toggle sends.
+- Documentation sync updated for dash/user/internal contracts (`Pit_Assist`, Dash Integration subsystem notes, SimHub parameter inventory, repo status).
+
 ### 2026-04-22 — Tyre Control v1 follow-up (service-state truth + bounded retry + Pit Commands UI tidy-up)
 - Classification: **both** (driver-visible pit-control contract correction + internal retry hardening + settings UI cleanup).
 - Tyre service truth for `PitTyreControlEngine` now reuses the same all-four tyre-selection seam used by `Pit.ToggleTyresAll` confirmation (`PitCommandEngine.ReadTyresAllState(...)`) instead of `IsAnyTireChangeSelected(...)`.
