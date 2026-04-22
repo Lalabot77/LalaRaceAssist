@@ -17,6 +17,11 @@ Branch: work
   - wet tyre routing now treats positive native `PlayerTireCompound` values as wet (`>0`) to avoid false-dry routing on non-zero wet compound variants;
   - profile avg-lap persistence (`AvgLapTimeDry/Wet`) now follows pace-accepted laps directly (no longer blocked by fuel-accepted gate), restoring wet lap-time feed for Strategy/Profile consumers;
   - PB write gating now treats cleared non-positive baseline values as unavailable, allowing first valid wet PB relearn lap to persist after clear.
+- Pit Fuel Control polish — feedback-only max-fill wording:
+  - plugin-owned pit fuel sends keep original transport payload behavior (no outgoing litres clamp; max-override continues using additive overshoot payload),
+  - max-fill style requests now use short user-facing feedback (`FUEL MAX`) when requested/sent litres exceed current tank space (or max-override path is active), using raw tank-space comparison so sub-1L overshoot still resolves as max-fill feedback,
+  - normal non-max requests keep litres-based feedback text,
+  - command ownership, transport mode behavior, and AUTO cancel behavior remain unchanged.
 - PreRace follow-up clarified one-stop feasibility ownership in code:
   - introduced explicit helper `IsOneStopFeasibleForPreRace(...)` for one-stop gate evaluation,
   - helper evaluates one-stop against pit-stop refill capacity plus second-stint fuel demand (`total needed - start fuel`),
@@ -494,6 +499,11 @@ Branch: work
 - `Docs/Internal/Development_Changelog.md`
 - `Docs/Subsystems/Dash_Integration.md`
 - `Docs/Pit_Assist.md`
+- `Docs/RepoStatus.md`
+
+### Changed in Pit Fuel Control polish (feedback-only max-fill wording)
+- `PitFuelControlEngine.cs`
+- `Docs/Internal/Development_Changelog.md`
 - `Docs/RepoStatus.md`
 
 ### Changed in class-best/class-leader live-session seam restore + single-class fallback task
