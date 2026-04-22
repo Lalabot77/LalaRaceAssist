@@ -40,6 +40,7 @@ The public user-facing release history is maintained in the root `CHANGELOG.md`.
 - Replaced transport clamping with feedback-only max-fill polish:
   - when the requested/sent litres exceed current tank space (or the existing max-override path is active), feedback now uses short `FUEL MAX`,
   - otherwise Pit Fuel Control keeps normal litres-based feedback strings.
+- Refined feedback-only max-fill detection to compare requested litres against raw tank-space telemetry (not rounded-up space), so sub-1L overshoot cases still report `FUEL MAX` consistently.
 - Preserved AUTO/manual send cadence, source/mode semantics, and existing command ownership contracts.
 
 ### 2026-04-21 — Direct pit/custom transport chat-state sequencing hardening

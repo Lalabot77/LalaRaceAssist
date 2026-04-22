@@ -11,7 +11,7 @@ Branch: work
 ## Documentation sync status
 - Pit Fuel Control polish — feedback-only max-fill wording:
   - plugin-owned pit fuel sends keep original transport payload behavior (no outgoing litres clamp; max-override continues using additive overshoot payload),
-  - max-fill style requests now use short user-facing feedback (`FUEL MAX`) when requested/sent litres exceed current tank space (or max-override path is active),
+  - max-fill style requests now use short user-facing feedback (`FUEL MAX`) when requested/sent litres exceed current tank space (or max-override path is active), using raw tank-space comparison so sub-1L overshoot still resolves as max-fill feedback,
   - normal non-max requests keep litres-based feedback text,
   - command ownership, transport mode behavior, and AUTO cancel behavior remain unchanged.
 - Direct pit/custom transport chat-state sequencing follow-up:
