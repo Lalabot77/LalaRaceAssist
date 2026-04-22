@@ -33,6 +33,42 @@ The public user-facing release history is maintained in the root `CHANGELOG.md`.
 
 ## Post-v1.0 development
 
+### 2026-04-22 — Tyre Control PR follow-up: explicit raw-command model + AUTO external ownership cancel/remap
+- Classification: **both** (driver-visible tyre-control command/ownership behavior correction + bounded internal ownership detection).
+- Updated `PitTyreControlEngine` to remove internal toggle-based tyre-service control (`Pit.ToggleTyresAll` no longer used by tyre control engine); engine now uses explicit raw commands only:
+  - `OFF` enforcement => `#cleartires$`
+  - `DRY` / `WET` / `AUTO` enforcement => `#t$` then compound `#tc ...$`.
+- Kept tyre service truth authoritative from all four individual tyre-change flags and preserved tri-state fail-safe manual truth mapping behavior (`UNKNOWN`/ambiguous truth does not remap).
+- Added bounded plugin-owned suppression windowing after plugin tyre sends; in AUTO, MFD truth changes outside that window are treated as external ownership takeover and now cancel AUTO with remap to manual truth (`OFF`/`DRY`/`WET`) plus visible feedback (`TYRE AUTO CANCELLED`).
+- Kept scope tight: no pit-command transport redesign, no mode-cycle changes, and no unrelated subsystem behavior changes.
+
+### 2026-04-22 — Tyre Control PR follow-up: tri-state manual truth mapping for tyre-service gaps
+- Classification: **internal-only** (bug fix to align runtime with already-documented fail-safe hold semantics).
+- Updated `PitTyreControlEngine` manual truth mapping to treat tyre-service telemetry as tri-state (`ON` / `OFF` / `UNKNOWN`) instead of collapsing missing service truth to confirmed OFF.
+- `TryMapManualTruthMode(...)` now returns no truth when tyre-service state is unknown, so manual mode does not remap during telemetry gaps.
+- Confirmed OFF mapping remains unchanged when service OFF is explicitly known; ON mapping still requires valid requested-compound family truth (`DRY`/`WET`), otherwise no remap.
+- Kept scope tight: no AUTO behavior changes, no control-loop redesign, and no user-facing contract changes beyond fixing incorrect OFF remaps during missing-data windows.
+
+### 2026-04-22 — Tyre Control PR follow-up: outside-AUTO pre-enforcement sync + OFF reset latch fix
+- Classification: **both** (driver-visible tyre-control ownership behavior + narrow engine ordering/reset fix).
+- Updated `PitTyreControlEngine.OnTelemetryTick()` manual-mode ordering so outside AUTO (`OFF`/`DRY`/`WET`) truth reconciliation runs before manual enforcement, preventing stale manual intent from being re-applied ahead of external MFD truth.
+- Addressed PR review reset regression: `ResetToOff()` OFF safety resets no longer remap back to `DRY/WET` on the next telemetry tick via manual truth-sync.
+- Kept scope tight: AUTO ownership and AUTO unconfirmed feedback behavior remain unchanged.
+- Synced docs for pit behavior and dash/inventory contracts (`Docs/Pit_Assist.md`, `Docs/Subsystems/Dash_Integration.md`, `Docs/Internal/SimHubParameterInventory.md`, `Docs/RepoStatus.md`).
+
+### 2026-04-22 — Tyre Control follow-up: manual 2-way truth sync + AUTO info-only unconfirmed policy
+- Classification: **both** (driver-visible tyre-control behavior contract change + bounded internal reconciliation/feedback logic).
+- Updated `PitTyreControlEngine` outside-AUTO behavior (`OFF`/`DRY`/`WET`) to use bounded manual truth sync against actual MFD truth:
+  - manual selections are treated as requests with a short confirmation window,
+  - unconfirmed manual requests now remap mode to actual truth (`service OFF => OFF`, `service ON + dry-family requested compound => DRY`, `service ON + wet-family requested compound => WET`),
+  - external non-plugin MFD changes outside AUTO now flow back into plugin mode via bounded reconciliation (no per-tick twitching/spam).
+- Preserved AUTO as ownership mode:
+  - failed bounded AUTO enforcement attempts no longer imply mode collapse,
+  - AUTO now publishes info-only unconfirmed feedback/logging (`TYRE AUTO UNCONFIRMED` + info logs) while retaining AUTO mode.
+- Kept existing guardrails intact:
+  - mode cycle unchanged (`OFF -> DRY -> WET -> AUTO -> OFF`),
+  - all-four tyre service truth remains aligned with `Pit.ToggleTyresAll`,
+  - command transport ownership remains inside existing `PitCommandEngine` seam.
 ### 2026-04-22 — v1.1 documentation sweep (release-prep, no code changes)
 - Classification: **both** (public release-note/doc refresh + internal canonical-doc map alignment).
 - Refreshed root `CHANGELOG.md` unreleased `v1.1` section so staged release notes are complete, concise, and quickly scannable for users.
