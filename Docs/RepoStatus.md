@@ -9,6 +9,13 @@ Branch: work
 - No Git remote is configured in this checkout (`git remote -v` returns empty).
 
 ## Documentation sync status
+- Plugin-owned tyre control v1 landed with focused helper ownership (`PitTyreControlEngine`) and existing pit transport seam reuse:
+  - added persistent tyre mode contract (`OFF` / `DRY` / `WET` / `AUTO`) with mode-cycle order `OFF -> DRY -> WET -> AUTO -> OFF`;
+  - mode reset now reuses existing `Telemetry.IsOnTrackCar` edge reset seam + session reset seam and forces `OFF` on each edge;
+  - runtime target behavior now enforces: `OFF` -> tyre service OFF; `DRY` -> service ON + dry compound target; `WET` -> service ON + wet compound target; `AUTO` -> service ON + declared-wet authority targeting;
+  - immediate requested-state verification seam uses `Telemetry.PitSvTireCompound` family checks (dry `{0,1}` / wet `{2,3}`), bounded by cooldown + attempt limits (no per-tick spam/infinite resend);
+  - compound-change attempts now emit explicit observability with requested/fitted/weather seams and available GT3-first compound context (`DriverTires01/02.TireCompoundType`);
+  - added plugin actions `Pit.TyreControl.ModeCycle/SetOff/SetDry/SetWet/SetAuto`, settings control rows, and dash exports `Pit.TyreControl.Mode` + `Pit.TyreControl.ModeText`.
 - PR follow-up fixed PB condition-only readback fallback in 500ms best-lap refresh path:
   - when a best-lap event cannot be validated against the current accepted-lap handoff, condition-only PB readback now uses live `_isWetMode` instead of stale `_lastValidLapWasWet`;
   - validated events continue to use accepted-lap wet latch, preserving write/read consistency on accepted laps.
@@ -563,3 +570,15 @@ Branch: work
 
 ## Validation note
 - Validation recorded against `HEAD` (`Class-best blank-class fallback now requires explicit native single-class authority; unknown class-count state remains fail-safe non-single-class to prevent multiclass cross-class session-best collapse during metadata startup.`).
+
+### Changed in plugin-owned tyre control v1 task
+- `PitTyreControlEngine.cs`
+- `LalaLaunch.cs`
+- `LaunchPlugin.csproj`
+- `GlobalSettingsView.xaml`
+- `Docs/Pit_Assist.md`
+- `Docs/Subsystems/Dash_Integration.md`
+- `Docs/Internal/SimHubParameterInventory.md`
+- `Docs/Internal/SimHubLogMessages.md`
+- `Docs/Internal/Development_Changelog.md`
+- `Docs/RepoStatus.md`

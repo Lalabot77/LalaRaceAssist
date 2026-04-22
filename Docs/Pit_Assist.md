@@ -59,6 +59,11 @@ Pit command buttons should now be bound to plugin-owned Controls & Events action
 - `LalaLaunch.Pit.FuelControl.SetPush`
 - `LalaLaunch.Pit.FuelControl.SetNorm`
 - `LalaLaunch.Pit.FuelControl.SetSave`
+- `LalaLaunch.Pit.TyreControl.ModeCycle`
+- `LalaLaunch.Pit.TyreControl.SetOff`
+- `LalaLaunch.Pit.TyreControl.SetDry`
+- `LalaLaunch.Pit.TyreControl.SetWet`
+- `LalaLaunch.Pit.TyreControl.SetAuto`
 
 These actions replace any old dashboard bindings that directly called `IRacingExtraProperties` pit-command actions.
 
@@ -74,6 +79,14 @@ Pit Fuel Control behavior notes for these bindings:
   - AUTO cancels to `OFF + STBY` when iRacing AutoFuel is active,
   - Offline Testing suppresses Pit Fuel Control to inert `OFF + STBY`,
   - any `Telemetry.IsOnTrackCar` edge (`false -> true` or `true -> false`) forces reset to `OFF + STBY`.
+
+Tyre Control behavior notes for these bindings:
+- Mode cycle order is fixed: `OFF -> DRY -> WET -> AUTO -> OFF`.
+- `OFF` actively keeps tyre service OFF.
+- `DRY` actively keeps tyre service ON and requests dry next tyres.
+- `WET` actively keeps tyre service ON and requests wet next tyres.
+- `AUTO` actively keeps tyre service ON and follows declared-wet authority (`Telemetry.WeatherDeclaredWet`) to keep requested next tyres DRY/WET.
+- Tyre control mode resets to `OFF` on `Telemetry.IsOnTrackCar` edge transitions (`false->true` or `true->false`) via the existing pit-control reset seam.
 
 In Settings → **Pit Commands**, these are shown as fixed built-in features with normal binding rows (no raw chat command editing).
 

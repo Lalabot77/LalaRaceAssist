@@ -33,6 +33,15 @@ The public user-facing release history is maintained in the root `CHANGELOG.md`.
 
 ## Post-v1.0 development
 
+### 2026-04-22 — Plugin-owned tyre control v1 (OFF / DRY / WET / AUTO)
+- Classification: **both** (new user-facing pit-control feature with internal control/verification seams).
+- Added focused `PitTyreControlEngine` ownership for persistent tyre mode state (`OFF`, `DRY`, `WET`, `AUTO`) with mode-cycle contract `OFF -> DRY -> WET -> AUTO -> OFF`.
+- Tyre mode now reuses the existing `Telemetry.IsOnTrackCar` edge reset seam and session reset seams to force mode back to `OFF` on re-entry/transition.
+- Runtime behavior contract: `OFF` enforces tyre service OFF; `DRY`/`WET` enforce service ON + GT3-first compound request targeting; `AUTO` enforces service ON and follows `Telemetry.WeatherDeclaredWet` for requested DRY/WET targeting.
+- Command dispatch stays on the upgraded plugin-owned pit transport seam (`PitCommandEngine` raw/built-in paths only); no local/raw chat injection path was added in tyre control.
+- Added minimal dash-facing exports `Pit.TyreControl.Mode` and `Pit.TyreControl.ModeText`, plus new plugin actions (`ModeCycle`, `SetOff`, `SetDry`, `SetWet`, `SetAuto`) and Settings → Pit Commands control surface rows.
+- Added bounded observability log for compound-change attempts including `PitSvTireCompound`, `PlayerTireCompound`, `WeatherDeclaredWet`, and `DriverTires01/02.TireCompoundType` context.
+
 ### 2026-04-22 — PR follow-up: PB readback wet/dry fallback on unvalidated best-lap events
 - Classification: **both** (driver-visible PB condition routing correction + internal gate hardening).
 - In `LalaLaunch.cs` 500ms PB refresh path:
