@@ -9,6 +9,12 @@ Branch: work
 - No Git remote is configured in this checkout (`git remote -v` returns empty).
 
 ## Documentation sync status
+- Pit Fuel Control v2 redesign landed (AUTO plugin-owned, OFF/MAN MFD-derived truth):
+  - effective `Pit.FuelControl.Mode` now derives from iRacing MFD fuel-enable truth (`dpFuelFill`) whenever plugin AUTO is not active (`OFF` when unchecked, `MAN` when checked);
+  - AUTO cancel no longer uses mismatch/baseline comparison and is now edge-triggered on external changes to either requested fuel (`PitSvFuel`) or fuel-enable (`dpFuelFill`);
+  - external (non-plugin-owned) changes still cancel AUTO once and force safety recovery state (`Source=STBY`, `AutoArmed=false`) with short feedback `AUTO CANCELLED`;
+  - plugin-owned changes are ignored by cancel detection only when they come from plugin raw `#fuel` sends or explicit plugin `Pit.ToggleFuel` actions;
+  - `Telemetry.IsOnTrackCar` reset seam remains authoritative and now resets AUTO/STBY ownership state without forcing plugin-owned OFF/MAN mode values.
 - Tyre Control v1 follow-up landed (service-state contract fix + retry hardening + Pit Commands UI tidy-up):
   - `PitTyreControlEngine` service-state truth now reuses the same all-four tyre-selection seam used by `Pit.ToggleTyresAll` confirmation (`PitCommandEngine.ReadTyresAllState`), replacing prior any-tyre truth for control enforcement;
   - tyre-control enforcement contract is now explicit: service ON only when all four tyre-change flags are selected; partial selections are treated as OFF;
@@ -516,6 +522,16 @@ Branch: work
 
 ### Changed in Pit Fuel Control polish (feedback-only max-fill wording)
 - `PitFuelControlEngine.cs`
+- `Docs/Internal/Development_Changelog.md`
+- `Docs/RepoStatus.md`
+
+### Changed in Pit Fuel Control v2 redesign (AUTO-owned + MFD-derived OFF/MAN + edge-trigger cancel)
+- `PitFuelControlEngine.cs`
+- `LalaLaunch.cs`
+- `PitCommandEngine.cs`
+- `Docs/Pit_Assist.md`
+- `Docs/Subsystems/Dash_Integration.md`
+- `Docs/Internal/SimHubParameterInventory.md`
 - `Docs/Internal/Development_Changelog.md`
 - `Docs/RepoStatus.md`
 

@@ -264,7 +264,14 @@ namespace LaunchPlugin
 
         public void PitClearAll() => ExecutePitCommand(PitCommandAction.ClearAll);
         public void PitClearTyres() => ExecutePitCommand(PitCommandAction.ClearTyres);
-        public void PitToggleFuel() => ExecutePitCommand(PitCommandAction.ToggleFuel);
+        public void PitToggleFuel()
+        {
+            bool sent = ExecutePitCommand(PitCommandAction.ToggleFuel);
+            if (sent)
+            {
+                _pitFuelControlEngine.NotifyPluginFuelToggleAction();
+            }
+        }
         public void PitFuelSetZero() => ExecutePitCommand(PitCommandAction.FuelSetZero);
         public void PitFuelAdd1() => ExecutePitCommand(PitCommandAction.FuelAdd1);
         public void PitFuelRemove1() => ExecutePitCommand(PitCommandAction.FuelRemove1);
@@ -320,9 +327,9 @@ namespace LaunchPlugin
         public void PitFuelRemove() => PitFuelRemove1();
         public void PitToggleTiresAll() => PitToggleTyresAll();
 
-        private void ExecutePitCommand(PitCommandAction action)
+        private bool ExecutePitCommand(PitCommandAction action)
         {
-            _pitCommandEngine.Execute(action, PluginManager, Pit_TankSpaceAvailable, ResolvePitCommandTransportMode());
+            return _pitCommandEngine.Execute(action, PluginManager, Pit_TankSpaceAvailable, ResolvePitCommandTransportMode());
         }
 
         private bool SendPitFuelControlCommand(string actionName, string messageText, string feedbackLabel)
@@ -6917,6 +6924,7 @@ namespace LaunchPlugin
             snapshot.SuppressFuelControl = IsOfflineTestingSession(currentSessionTypeName);
             snapshot.IracingAutoFuelEnabled = Convert.ToBoolean(
                 PluginManager?.GetPropertyValue("DataCorePlugin.GameRawData.Telemetry.dpAutoFuel") ?? false);
+            snapshot.TelemetryFuelFillEnabled = SafeReadBool(PluginManager, "DataCorePlugin.GameRawData.Telemetry.dpFuelFill", false);
 
             long liveSessionLaps = Convert.ToInt64(PluginManager?.GetPropertyValue("DataCorePlugin.GameRawData.CurrentSessionInfo._SessionLaps") ?? 0L);
             double liveSessionTimeSeconds = SafeReadDouble(PluginManager, "DataCorePlugin.GameRawData.CurrentSessionInfo._SessionTime", double.NaN);
