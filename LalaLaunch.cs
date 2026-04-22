@@ -932,6 +932,19 @@ namespace LaunchPlugin
             return targetMax > 0.0 && currentFuel >= (targetMax - PreRaceMaxStartToleranceLitres);
         }
 
+        private static bool IsOneStopFeasibleForPreRace(
+            double preRaceTotalFuelNeeded,
+            double currentFuel,
+            double effectiveMaxTank,
+            double maxTankCapacity)
+        {
+            // One-stop feasibility is constrained by how much fuel can be added at the stop
+            // (effective tank refill capacity), not by race-start free tank space.
+            double pitStopRefillCapacity = Math.Max(0.0, effectiveMaxTank > 0.0 ? effectiveMaxTank : maxTankCapacity);
+            double secondStintFuelNeeded = Math.Max(0.0, preRaceTotalFuelNeeded - currentFuel);
+            return secondStintFuelNeeded <= (pitStopRefillCapacity + PreRaceFuelToleranceLitres);
+        }
+
         private static PreRaceStatusDecision EvaluatePreRaceStatus(
             int selectedStrategy,
             bool plannerMismatch,
@@ -948,14 +961,13 @@ namespace LaunchPlugin
             bool selectedIsAuto = normalizedStrategy == 3;
             RequiredPreRaceStrategy requiredStrategy = ClassifyRequiredPreRaceStrategy(preRaceStints);
             bool isAtMaxStart = IsAtEffectiveMaxStartFuel(currentFuel, effectiveMaxTank, maxTankCapacity);
-            double maxFuelAddPossible = Math.Max(0.0, effectiveMaxTank > 0.0 ? effectiveMaxTank : maxTankCapacity);
-            double fuelStillNeeded = Math.Max(0.0, preRaceTotalFuelNeeded - currentFuel);
-            bool oneStopFeasible = fuelStillNeeded <= (maxFuelAddPossible + PreRaceFuelToleranceLitres);
+            double secondStintFuelNeeded = Math.Max(0.0, preRaceTotalFuelNeeded - currentFuel);
+            bool oneStopFeasible = IsOneStopFeasibleForPreRace(preRaceTotalFuelNeeded, currentFuel, effectiveMaxTank, maxTankCapacity);
             bool oneStopUnderFuel = preRaceFuelDelta < -PreRaceFuelToleranceLitres;
             bool oneStopOverFuel = contingencyLitres > 0.0 && preRaceFuelDelta > (2.0 * contingencyLitres);
             bool nextStintAdvisory =
                 requiredStrategy == RequiredPreRaceStrategy.OneStop &&
-                (plannedSingleStopRefuel <= PreRaceFuelToleranceLitres || plannedSingleStopRefuel + PreRaceFuelToleranceLitres < fuelStillNeeded);
+                (plannedSingleStopRefuel <= PreRaceFuelToleranceLitres || plannedSingleStopRefuel + PreRaceFuelToleranceLitres < secondStintFuelNeeded);
 
             if (!selectedIsAuto && plannerMismatch)
             {

@@ -1,7 +1,7 @@
 # Repository status
 
 Validated against commit: HEAD
-Last updated: 2026-04-21
+Last updated: 2026-04-22
 Branch: work
 
 ## Current repo/link status
@@ -9,6 +9,10 @@ Branch: work
 - No Git remote is configured in this checkout (`git remote -v` returns empty).
 
 ## Documentation sync status
+- PreRace follow-up clarified one-stop feasibility ownership in code:
+  - introduced explicit helper `IsOneStopFeasibleForPreRace(...)` for one-stop gate evaluation,
+  - helper evaluates one-stop against pit-stop refill capacity plus second-stint fuel demand (`total needed - start fuel`),
+  - scenario-first decision ordering and all status outcomes remain unchanged.
 - PR follow-up corrected PreRace one-stop feasibility physical gate:
   - one-stop feasibility no longer uses race-start free space (`tank - currentFuel`) as the stop-fill cap,
   - one-stop feasibility now uses pit-stop refill capacity (effective tank capacity at stop) before normal underfuel/overfuel checks,
