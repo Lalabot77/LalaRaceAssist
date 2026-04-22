@@ -177,6 +177,7 @@ namespace LaunchPlugin
                 IsAutoModeActive = false;
                 AutoArmed = false;
                 Source = PitFuelControlSource.Stby;
+                LastSentFuelLitres = -1;
                 _suppressManualOverrideUntilUtc = DateTime.MinValue;
                 ClearObservedExternalState();
                 PublishSelectionFeedback("Pit.FuelControl.ModeCycle", string.Format("FUEL MODE {0}", ModeToText(ResolveEffectiveMode())));
