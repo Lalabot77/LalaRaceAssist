@@ -1,7 +1,7 @@
 # Profiles and Personal Bests
 
 Validated against commit: HEAD
-Last updated: 2026-04-21
+Last updated: 2026-04-22
 Branch: work
 
 ## Purpose
@@ -67,6 +67,7 @@ PB laps are captured when:
 - PB values are telemetry-owned in Profiles; the PB display is read-only in the Profiles workflow (no manual PB editing path).
 
 PB metadata (source + timestamp) is stored separately for dry and wet laps. The **active condition** (dry vs wet) is driven by live wet-mode detection (tyre compound), so PB capture always aligns to the current surface mode.
+PB write gating treats `0`/non-positive cleared PB values as unavailable (same as `null`) so first valid relearn lap after a clear can persist.
 When a PB update includes real sector values, condition-specific PB sector fields are persisted alongside the lap time. Missing sectors remain null and are never synthesized.
 
 ---

@@ -124,6 +124,10 @@ namespace LaunchPlugin
             int? baselineMs = isWetEffective
                 ? ts.BestLapMsWet
                 : ts.BestLapMsDry;
+            if (baselineMs.HasValue && baselineMs.Value <= 0)
+            {
+                baselineMs = null;
+            }
 
             bool improved = !baselineMs.HasValue || lapMs <= baselineMs.Value - PB_IMPROVE_MS;
             if (!improved)

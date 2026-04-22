@@ -33,6 +33,16 @@ The public user-facing release history is maintained in the root `CHANGELOG.md`.
 
 ## Post-v1.0 development
 
+### 2026-04-22 — Wet lap-time / wet PB persistence write-path audit follow-up
+- Classification: **both** (driver-visible wet persistence correction + internal routing gate hardening).
+- Hardened accepted-lap wet/dry routing consistency in `LalaLaunch.cs`:
+  - latched accepted-lap wet mode and reused it for downstream PB write-path gating (`TryUpdatePBByCondition(...)`) and condition-only PB readback.
+  - broadened wet tyre detection to treat positive `PlayerTireCompound` values as wet (`>0`) so wet-mode routing does not silently stay dry when telemetry uses non-zero wet compound variants.
+- Fixed pace persistence coupling:
+  - moved profile avg-lap (`AvgLapTimeDry/Wet`) persistence to the pace-accepted path instead of the fuel-accepted path, restoring wet lap-time persistence/feed when fuel delta validation rejects a lap.
+- Fixed wet PB relearn-after-clear acceptance:
+  - `TryUpdatePBByCondition(...)` now treats cleared/non-positive baseline PB values as unavailable so first valid wet PB candidate can persist after a clear.
+
 ### 2026-04-22 — PreRace follow-up: explicit one-stop pit-refill feasibility helper
 - Classification: **internal-only** (code-path clarity/refactor; one-stop status behavior unchanged).
 - Added `IsOneStopFeasibleForPreRace(...)` in `LalaLaunch.cs` so one-stop feasibility is explicitly evaluated against pit-stop refill capacity (effective tank at stop) and second-stint fuel demand (`total needed - start fuel`).

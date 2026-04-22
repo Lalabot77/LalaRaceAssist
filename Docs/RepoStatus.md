@@ -9,6 +9,11 @@ Branch: work
 - No Git remote is configured in this checkout (`git remote -v` returns empty).
 
 ## Documentation sync status
+- Wet lap-time / wet PB persistence write-path audit follow-up:
+  - accepted-lap wet/dry routing is now latched through downstream PB write/readback gating, preventing condition drift between lap validation and PB persistence;
+  - wet tyre routing now treats positive native `PlayerTireCompound` values as wet (`>0`) to avoid false-dry routing on non-zero wet compound variants;
+  - profile avg-lap persistence (`AvgLapTimeDry/Wet`) now follows pace-accepted laps directly (no longer blocked by fuel-accepted gate), restoring wet lap-time feed for Strategy/Profile consumers;
+  - PB write gating now treats cleared non-positive baseline values as unavailable, allowing first valid wet PB relearn lap to persist after clear.
 - PreRace follow-up clarified one-stop feasibility ownership in code:
   - introduced explicit helper `IsOneStopFeasibleForPreRace(...)` for one-stop gate evaluation,
   - helper evaluates one-stop against pit-stop refill capacity plus second-stint fuel demand (`total needed - start fuel`),
