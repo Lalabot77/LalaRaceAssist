@@ -9,6 +9,12 @@ Branch: work
 - No Git remote is configured in this checkout (`git remote -v` returns empty).
 
 ## Documentation sync status
+- Tyre Control follow-up landed (manual 2-way MFD truth sync outside AUTO + AUTO info-only unconfirmed policy):
+  - outside AUTO (`OFF`/`DRY`/`WET`), plugin mode now runs a bounded 2-way truth-sync contract against all-four tyre service truth + requested compound truth (`PitSvTireCompound`), including post-request confirmation fallback to actual MFD truth and bounded external-change remap;
+  - manual truth mapping remains constrained to existing families (`service OFF => OFF`, `service ON + dry-family => DRY`, `service ON + wet-family => WET`) with fail-safe hold when truth is ambiguous;
+  - AUTO remains authoritative ownership mode even when bounded enforcement attempts are unconfirmed;
+  - unconfirmed AUTO enforcement now publishes visible info-level feedback/logging (`TYRE AUTO UNCONFIRMED`) without collapsing mode out of AUTO;
+  - existing bounded retry/cooldown and transport ownership seams remain unchanged (no second transport path).
 - Pit Fuel Control v2 redesign landed (AUTO plugin-owned, OFF/MAN MFD-derived truth):
   - effective `Pit.FuelControl.Mode` now derives from iRacing MFD fuel-enable truth (`dpFuelFill`) whenever plugin AUTO is not active (`OFF` when unchecked, `MAN` when checked);
   - AUTO cancel no longer uses mismatch/baseline comparison and is now edge-triggered on external changes to either requested fuel (`PitSvFuel`) or fuel-enable (`dpFuelFill`);

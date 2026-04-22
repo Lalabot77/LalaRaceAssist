@@ -33,6 +33,20 @@ The public user-facing release history is maintained in the root `CHANGELOG.md`.
 
 ## Post-v1.0 development
 
+### 2026-04-22 — Tyre Control follow-up: manual 2-way truth sync + AUTO info-only unconfirmed policy
+- Classification: **both** (driver-visible tyre-control behavior contract change + bounded internal reconciliation/feedback logic).
+- Updated `PitTyreControlEngine` outside-AUTO behavior (`OFF`/`DRY`/`WET`) to use bounded manual truth sync against actual MFD truth:
+  - manual selections are treated as requests with a short confirmation window,
+  - unconfirmed manual requests now remap mode to actual truth (`service OFF => OFF`, `service ON + dry-family requested compound => DRY`, `service ON + wet-family requested compound => WET`),
+  - external non-plugin MFD changes outside AUTO now flow back into plugin mode via bounded reconciliation (no per-tick twitching/spam).
+- Preserved AUTO as ownership mode:
+  - failed bounded AUTO enforcement attempts no longer imply mode collapse,
+  - AUTO now publishes info-only unconfirmed feedback/logging (`TYRE AUTO UNCONFIRMED` + info logs) while retaining AUTO mode.
+- Kept existing guardrails intact:
+  - mode cycle unchanged (`OFF -> DRY -> WET -> AUTO -> OFF`),
+  - all-four tyre service truth remains aligned with `Pit.ToggleTyresAll`,
+  - command transport ownership remains inside existing `PitCommandEngine` seam.
+
 ### 2026-04-22 — Pit Fuel Control v2 redesign (AUTO-owned + MFD-derived OFF/MAN + edge-trigger external cancel)
 - Classification: **both** (driver-visible pit-fuel workflow contract change + internal ownership/cancel seam redesign).
 - Reworked `PitFuelControlEngine` mode ownership contract:
