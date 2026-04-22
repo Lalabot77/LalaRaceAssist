@@ -29,6 +29,11 @@ Branch: work
   - AUTO remains authoritative ownership mode even when bounded enforcement attempts are unconfirmed;
   - unconfirmed AUTO enforcement now publishes visible info-level feedback/logging (`TYRE AUTO UNCONFIRMED`) without collapsing mode out of AUTO;
   - existing bounded retry/cooldown and transport ownership seams remain unchanged (no second transport path).
+- 2026-04-22 docs sweep for v1.1 release prep completed:
+  - refreshed root `CHANGELOG.md` unreleased `v1.1` notes to be concise and user-facing,
+  - reviewed and refreshed `Docs/User_Guide.md` and `Docs/Quick_Start.md` pit/custom command guidance links,
+  - added canonical subsystem contract doc `Docs/Subsystems/Pit_Commands_And_Fuel_Control.md` to capture combined pit command + fuel/tyre control ownership,
+  - updated `Docs/Project_Index.md` subsystem map to include the new pit command subsystem doc.
 - Pit Fuel Control v2 redesign landed (AUTO plugin-owned, OFF/MAN MFD-derived truth):
   - effective `Pit.FuelControl.Mode` now derives from iRacing MFD fuel-enable truth (`dpFuelFill`) whenever plugin AUTO is not active (`OFF` when unchecked, `MAN` when checked);
   - AUTO cancel no longer uses mismatch/baseline comparison and is now edge-triggered on external changes to either requested fuel (`PitSvFuel`) or fuel-enable (`dpFuelFill`);

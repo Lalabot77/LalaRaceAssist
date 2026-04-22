@@ -150,9 +150,7 @@ namespace LaunchPlugin
         {
             Mode = mode;
             ResetAttemptState();
-            ResetAutoFailureNoticeState();
-            BeginOrClearManualConfirmation(mode);
-            PublishSelectionFeedback(actionName, string.Format("TYRE MODE {0}", ModeToText(mode)));
+            PublishSelectionFeedback(actionName, string.Format("TYRE CHANGE {0}", ModeToText(mode)));
         }
 
         private void BeginOrClearManualConfirmation(PitTyreControlMode mode)
@@ -300,9 +298,8 @@ namespace LaunchPlugin
 
         private void EnsureTyreService(PitTyreControlSnapshot snapshot, bool desiredSelected)
         {
-            string targetKey = desiredSelected ? "on" : "off";
-            bool isConfirmed = snapshot.HasTireServiceSelection && snapshot.IsTireServiceSelected == desiredSelected;
-            if (isConfirmed)
+            string targetKey = desiredSelected ? "ON" : "OFF";
+            if (snapshot.IsTireServiceSelected == desiredSelected)
             {
                 _lastServiceTargetKey = targetKey;
                 _serviceTargetAttempts = 0;
@@ -358,7 +355,7 @@ namespace LaunchPlugin
 
             string command = desiredWet ? "#tc 2$" : "#tc 0$";
             string actionName = desiredWet ? "Pit.TyreControl.SetWetCompound" : "Pit.TyreControl.SetDryCompound";
-            string feedback = desiredWet ? "TYRE WET" : "TYRE DRY";
+            string feedback = desiredWet ? "TYRE CHANGE WET" : "TYRE CHANGE DRY";
             LogCompoundAttempt(snapshot, desiredWet, command);
             MarkPluginOwnedSuppressionWindow();
             _rawCommandSender?.Invoke(actionName, command, feedback);

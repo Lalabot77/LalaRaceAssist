@@ -1,7 +1,7 @@
 # Project Index
 
 Validated against commit: HEAD
-Last updated: 2026-04-09
+Last updated: 2026-04-22
 Branch: work
 
 ## What this repo is
@@ -44,6 +44,7 @@ These pages are the technical/canonical subsystem layer. They explain internal o
 - [Subsystems/Launch_Mode.md](Subsystems/Launch_Mode.md)
 - [Subsystems/Shift_Assist.md](Subsystems/Shift_Assist.md)
 - [Subsystems/Pit_Timing_And_PitLoss.md](Subsystems/Pit_Timing_And_PitLoss.md)
+- [Subsystems/Pit_Commands_And_Fuel_Control.md](Subsystems/Pit_Commands_And_Fuel_Control.md)
 - [Subsystems/Pit_Entry_Assist.md](Subsystems/Pit_Entry_Assist.md)
 - [Subsystems/Rejoin_Assist.md](Subsystems/Rejoin_Assist.md)
 - [Subsystems/Opponents.md](Subsystems/Opponents.md)

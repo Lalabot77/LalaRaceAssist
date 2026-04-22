@@ -69,6 +69,17 @@ The public user-facing release history is maintained in the root `CHANGELOG.md`.
   - mode cycle unchanged (`OFF -> DRY -> WET -> AUTO -> OFF`),
   - all-four tyre service truth remains aligned with `Pit.ToggleTyresAll`,
   - command transport ownership remains inside existing `PitCommandEngine` seam.
+### 2026-04-22 — v1.1 documentation sweep (release-prep, no code changes)
+- Classification: **both** (public release-note/doc refresh + internal canonical-doc map alignment).
+- Refreshed root `CHANGELOG.md` unreleased `v1.1` section so staged release notes are complete, concise, and quickly scannable for users.
+- Reviewed and updated core user docs:
+  - `Docs/User_Guide.md` pit/custom command section now points explicitly to the user-facing and subsystem-owning pit command docs.
+  - `Docs/Quick_Start.md` pit setup section now includes direct links for full usage + technical ownership references.
+- Added canonical subsystem documentation for the combined pit command stack:
+  - new `Docs/Subsystems/Pit_Commands_And_Fuel_Control.md` covering built-in pit actions, custom messages, transport semantics, Pit Fuel Control ownership, and Tyre Control ownership.
+- Updated index/status alignment:
+  - added the new subsystem doc to `Docs/Project_Index.md`,
+  - recorded the sweep in `Docs/RepoStatus.md`.
 
 ### 2026-04-22 — Pit Fuel Control v2 redesign (AUTO-owned + MFD-derived OFF/MAN + edge-trigger external cancel)
 - Classification: **both** (driver-visible pit-fuel workflow contract change + internal ownership/cancel seam redesign).
