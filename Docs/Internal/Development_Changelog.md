@@ -33,6 +33,13 @@ The public user-facing release history is maintained in the root `CHANGELOG.md`.
 
 ## Post-v1.0 development
 
+### 2026-04-22 — Tyre Control PR follow-up: tri-state manual truth mapping for tyre-service gaps
+- Classification: **internal-only** (bug fix to align runtime with already-documented fail-safe hold semantics).
+- Updated `PitTyreControlEngine` manual truth mapping to treat tyre-service telemetry as tri-state (`ON` / `OFF` / `UNKNOWN`) instead of collapsing missing service truth to confirmed OFF.
+- `TryMapManualTruthMode(...)` now returns no truth when tyre-service state is unknown, so manual mode does not remap during telemetry gaps.
+- Confirmed OFF mapping remains unchanged when service OFF is explicitly known; ON mapping still requires valid requested-compound family truth (`DRY`/`WET`), otherwise no remap.
+- Kept scope tight: no AUTO behavior changes, no control-loop redesign, and no user-facing contract changes beyond fixing incorrect OFF remaps during missing-data windows.
+
 ### 2026-04-22 — Tyre Control PR follow-up: outside-AUTO pre-enforcement sync + OFF reset latch fix
 - Classification: **both** (driver-visible tyre-control ownership behavior + narrow engine ordering/reset fix).
 - Updated `PitTyreControlEngine.OnTelemetryTick()` manual-mode ordering so outside AUTO (`OFF`/`DRY`/`WET`) truth reconciliation runs before manual enforcement, preventing stale manual intent from being re-applied ahead of external MFD truth.

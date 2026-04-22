@@ -9,6 +9,10 @@ Branch: work
 - No Git remote is configured in this checkout (`git remote -v` returns empty).
 
 ## Documentation sync status
+- Tyre Control PR follow-up landed (tri-state manual truth mapping for tyre-service telemetry gaps):
+  - outside AUTO manual truth mapping now treats tyre-service state as tri-state (`ON` / `OFF` / `UNKNOWN`) instead of collapsing unavailable service telemetry to OFF;
+  - unknown tyre-service truth now returns ambiguous/no-truth for manual reconciliation (no forced OFF remap during telemetry gaps; fail-safe hold behavior preserved);
+  - confirmed OFF still maps to `OFF`, and service ON still maps to `DRY/WET` only when requested-compound family truth is valid.
 - Tyre Control PR follow-up landed (outside-AUTO ownership ordering + OFF reset latch fix):
   - outside AUTO (`OFF`/`DRY`/`WET`), manual truth reconciliation now runs before manual enforcement so stale manual mode intent is not re-applied ahead of external MFD truth;
   - `ResetToOff()` safety resets now stay latched at `OFF` on the next telemetry tick (no immediate `OFF -> DRY/WET` truth-remap regression);

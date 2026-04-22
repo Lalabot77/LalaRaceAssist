@@ -12,6 +12,7 @@ namespace LaunchPlugin
 
     internal sealed class PitTyreControlSnapshot
     {
+        public bool HasTireServiceSelection;
         public bool IsTireServiceSelected;
         public bool HasRequestedCompound;
         public int RequestedCompound;
@@ -215,6 +216,11 @@ namespace LaunchPlugin
         private static bool TryMapManualTruthMode(PitTyreControlSnapshot snapshot, out PitTyreControlMode truthMode)
         {
             truthMode = PitTyreControlMode.Off;
+
+            if (!snapshot.HasTireServiceSelection)
+            {
+                return false;
+            }
 
             if (!snapshot.IsTireServiceSelected)
             {
