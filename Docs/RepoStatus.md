@@ -9,6 +9,13 @@ Branch: work
 - No Git remote is configured in this checkout (`git remote -v` returns empty).
 
 ## Documentation sync status
+- 2026-04-22 Pit Fuel Control V2 follow-up polish landed:
+  - `ModeCycle` now explicitly drives effective mode loop `OFF -> MAN -> AUTO -> OFF` and actively toggles MFD fuel-fill truth on OFF/MAN transitions (`Pit.ToggleFuel` ON/OFF with bounded `dpFuelFill` validation),
+  - toggle validation mismatches now publish `Pit Cmd Fail` and fall back to actual MFD truth without correction looping,
+  - OFF is now a hard safety guard: source actions (`SourceCycle`, `SetPush`, `SetNorm`, `SetSave`) cannot send fuel commands while effective mode is OFF,
+  - AUTO entry now sends immediately for `PUSH/NORM/SAVE` and arms only on successful send; PLAN entry is one-shot immediate send and then forced back to `Source=STBY` disarmed,
+  - AUTO source cycle is now PLAN-isolated (`PUSH -> NORM -> SAVE -> PUSH` only); PLAN remains available in MAN cycle only,
+  - AUTO cancel edge-trigger and lap-cross AUTO update cadence remain unchanged.
 - 2026-04-22 docs sweep for v1.1 release prep completed:
   - refreshed root `CHANGELOG.md` unreleased `v1.1` notes to be concise and user-facing,
   - reviewed and refreshed `Docs/User_Guide.md` and `Docs/Quick_Start.md` pit/custom command guidance links,

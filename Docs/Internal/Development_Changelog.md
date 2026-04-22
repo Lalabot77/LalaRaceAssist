@@ -33,6 +33,23 @@ The public user-facing release history is maintained in the root `CHANGELOG.md`.
 
 ## Post-v1.0 development
 
+### 2026-04-22 — Pit Fuel Control V2 follow-up polish (Mode/MFD alignment + OFF guard + AUTO entry send + PLAN isolation)
+- Classification: **both** (driver-visible pit-fuel control behavior corrections + internal ownership/safety hardening).
+- Updated `PitFuelControlEngine` mode-cycle contract to explicit effective-mode loop `OFF -> MAN -> AUTO -> OFF`:
+  - `OFF -> MAN` now sends plugin `Pit.ToggleFuel` ON and validates `dpFuelFill`,
+  - `AUTO -> OFF` now sends plugin `Pit.ToggleFuel` OFF, exits AUTO, and forces `Source=STBY` + `AutoArmed=false`,
+  - toggle validation uses bounded short-delay checks; mismatches publish `Pit Cmd Fail` and fall back to MFD truth (no correction loop).
+- Hardened OFF safety contract:
+  - while effective mode is OFF, all fuel source actions (`SourceCycle`, `SetPush`, `SetNorm`, `SetSave`) are blocked from sending `#fuel`.
+- AUTO behavior polish:
+  - entering AUTO from `PUSH/NORM/SAVE` now attempts immediate send and arms AUTO only on success,
+  - entering AUTO from `PLAN` performs one immediate send then always returns to `STBY` disarmed,
+  - AUTO source-cycle is now `PUSH -> NORM -> SAVE -> PUSH` (PLAN removed from AUTO cycle; PLAN remains MAN-only cycle option).
+- Kept existing invariants intact:
+  - AUTO cancel remains edge-triggered,
+  - lap-cross AUTO send cadence unchanged,
+  - OFF/MAN remain MFD-derived truth and no parallel plugin OFF/MAN state was introduced.
+
 ### 2026-04-22 — v1.1 documentation sweep (release-prep, no code changes)
 - Classification: **both** (public release-note/doc refresh + internal canonical-doc map alignment).
 - Refreshed root `CHANGELOG.md` unreleased `v1.1` section so staged release notes are complete, concise, and quickly scannable for users.
