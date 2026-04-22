@@ -68,6 +68,7 @@ PB laps are captured when:
 
 PB metadata (source + timestamp) is stored separately for dry and wet laps. The **active condition** (dry vs wet) is driven by live wet-mode detection (tyre compound), so PB capture always aligns to the current surface mode.
 PB write gating treats `0`/non-positive cleared PB values as unavailable (same as `null`) so first valid relearn lap after a clear can persist.
+When periodic best-lap polling cannot validate the event against the current accepted lap, condition-only PB readback falls back to current live wet mode (instead of stale accepted-lap wet latch) so downstream PB seconds stay aligned with actual active surface mode.
 When a PB update includes real sector values, condition-specific PB sector fields are persisted alongside the lap time. Missing sectors remain null and are never synthesized.
 
 ---

@@ -33,6 +33,13 @@ The public user-facing release history is maintained in the root `CHANGELOG.md`.
 
 ## Post-v1.0 development
 
+### 2026-04-22 — PR follow-up: PB readback wet/dry fallback on unvalidated best-lap events
+- Classification: **both** (driver-visible PB condition routing correction + internal gate hardening).
+- In `LalaLaunch.cs` 500ms PB refresh path:
+  - condition-only PB readback now uses current `_isWetMode` whenever the best-lap event does not validate against the current accepted lap handoff (`lapValidForPb == false`),
+  - validated best-lap events continue using accepted-lap wet latch for write/read consistency.
+- Prevents stale-latch dry/wet routing from publishing PB seconds from the wrong surface condition around tight timing gates and restore windows.
+
 ### 2026-04-22 — Wet lap-time / wet PB persistence write-path audit follow-up
 - Classification: **both** (driver-visible wet persistence correction + internal routing gate hardening).
 - Hardened accepted-lap wet/dry routing consistency in `LalaLaunch.cs`:
