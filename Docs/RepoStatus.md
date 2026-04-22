@@ -9,13 +9,19 @@ Branch: work
 - No Git remote is configured in this checkout (`git remote -v` returns empty).
 
 ## Documentation sync status
+- Tyre Control v1 follow-up landed (service-state contract fix + retry hardening + Pit Commands UI tidy-up):
+  - `PitTyreControlEngine` service-state truth now reuses the same all-four tyre-selection seam used by `Pit.ToggleTyresAll` confirmation (`PitCommandEngine.ReadTyresAllState`), replacing prior any-tyre truth for control enforcement;
+  - tyre-control enforcement contract is now explicit: service ON only when all four tyre-change flags are selected; partial selections are treated as OFF;
+  - compound send attempts now always consume retry/cooldown budget even on local raw-send failure, keeping retries bounded and non-spammy on failure paths;
+  - Settings → Pit Commands removed preview auto-focus toggle and now shows only `Tyre Mode Cycle` for tyre control binding UI;
+  - direct `Pit.TyreControl.SetOff/SetDry/SetWet/SetAuto` actions remain registered for SimHub Controls & Events / Dash Studio use.
 - Plugin-owned tyre control v1 landed with focused helper ownership (`PitTyreControlEngine`) and existing pit transport seam reuse:
   - added persistent tyre mode contract (`OFF` / `DRY` / `WET` / `AUTO`) with mode-cycle order `OFF -> DRY -> WET -> AUTO -> OFF`;
   - mode reset now reuses existing `Telemetry.IsOnTrackCar` edge reset seam + session reset seam and forces `OFF` on each edge;
   - runtime target behavior now enforces: `OFF` -> tyre service OFF; `DRY` -> service ON + dry compound target; `WET` -> service ON + wet compound target; `AUTO` -> service ON + declared-wet authority targeting;
   - immediate requested-state verification seam uses `Telemetry.PitSvTireCompound` family checks (dry `{0,1}` / wet `{2,3}`), bounded by cooldown + attempt limits (no per-tick spam/infinite resend);
   - compound-change attempts now emit explicit observability with requested/fitted/weather seams and available GT3-first compound context (`DriverTires01/02.TireCompoundType`);
-  - added plugin actions `Pit.TyreControl.ModeCycle/SetOff/SetDry/SetWet/SetAuto`, settings control rows, and dash exports `Pit.TyreControl.Mode` + `Pit.TyreControl.ModeText`.
+  - added plugin actions `Pit.TyreControl.ModeCycle/SetOff/SetDry/SetWet/SetAuto` and dash exports `Pit.TyreControl.Mode` + `Pit.TyreControl.ModeText` (settings UI now intentionally exposes only `Tyre Mode Cycle` row for tyre control).
 - PR follow-up fixed PB condition-only readback fallback in 500ms best-lap refresh path:
   - when a best-lap event cannot be validated against the current accepted-lap handoff, condition-only PB readback now uses live `_isWetMode` instead of stale `_lastValidLapWasWet`;
   - validated events continue to use accepted-lap wet latch, preserving write/read consistency on accepted laps.

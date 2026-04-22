@@ -370,7 +370,7 @@ namespace LaunchPlugin
             }
         }
 
-        private bool? ReadTyresAllState(PluginManager pluginManager)
+        internal static bool? ReadTyresAllState(PluginManager pluginManager)
         {
             bool? lf = ReadBool(pluginManager, "DataCorePlugin.GameRawData.Telemetry.dpLFTireChange", null);
             bool? rf = ReadBool(pluginManager, "DataCorePlugin.GameRawData.Telemetry.dpRFTireChange", null);

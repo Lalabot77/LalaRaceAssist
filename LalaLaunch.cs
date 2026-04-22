@@ -6960,7 +6960,8 @@ namespace LaunchPlugin
         private PitTyreControlSnapshot BuildPitTyreControlSnapshot()
         {
             var snapshot = new PitTyreControlSnapshot();
-            snapshot.IsTireServiceSelected = IsAnyTireChangeSelected(PluginManager);
+            bool? tyresAllSelected = PitCommandEngine.ReadTyresAllState(PluginManager);
+            snapshot.IsTireServiceSelected = tyresAllSelected.HasValue && tyresAllSelected.Value;
 
             int? requestedCompound = TryReadNullableInt(PluginManager.GetPropertyValue("DataCorePlugin.GameRawData.Telemetry.PitSvTireCompound"));
             snapshot.HasRequestedCompound = requestedCompound.HasValue;
