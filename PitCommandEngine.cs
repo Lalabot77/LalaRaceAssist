@@ -68,14 +68,14 @@ namespace LaunchPlugin
             string command = NormalizeChatCommand(raw);
             if (string.IsNullOrWhiteSpace(command))
             {
-                PublishMessage("Pit Cmd Fail");
+                PublishMessage("PIT CMD FAIL");
                 WarnOnce("invalid_command_" + action, $"[LalaPlugin:PitCommand] action={action} failed: chat command mapping is empty.");
                 return false;
             }
 
             if (ShouldShortCircuitForTankFull(action) && tankSpaceLitres <= 0.05)
             {
-                PublishMessage("Fuel MAX");
+                PublishMessage("FUEL MAX");
                 SimHub.Logging.Current.Info($"[LalaPlugin:PitCommand] action={action} transport=chat-injection executed=false reason=tank-full tankSpaceL={tankSpaceLitres:F2}");
                 return false;
             }
@@ -87,7 +87,7 @@ namespace LaunchPlugin
             bool transportAttempted = TryInjectChatCommand(command, transportMode, out transportUsed, out reason, out fallbackFrom);
             if (!transportAttempted)
             {
-                PublishMessage("Pit Cmd Fail");
+                PublishMessage("PIT CMD FAIL");
                 SimHub.Logging.Current.Warn($"[LalaPlugin:PitCommand] action={action} transport={transportUsed} local-transport-issue reason={reason}{FormatFallbackSuffix(fallbackFrom)} raw='{raw}' normalized='{command}'");
                 return false;
             }
@@ -113,7 +113,7 @@ namespace LaunchPlugin
             LastRaw = normalized;
             if (string.IsNullOrWhiteSpace(normalized))
             {
-                PublishMessage("Pit Cmd Fail");
+                PublishMessage("PIT CMD FAIL");
                 SimHub.Logging.Current.Warn("[LalaPlugin:PitCommand] custom-message send blocked: message text is empty.");
                 return false;
             }
@@ -124,12 +124,12 @@ namespace LaunchPlugin
             bool transportAttempted = TryInjectChatCommand(normalized, transportMode, out transportUsed, out reason, out fallbackFrom);
             if (!transportAttempted)
             {
-                PublishMessage("Pit Cmd Fail");
+                PublishMessage("PIT CMD FAIL");
                 SimHub.Logging.Current.Warn($"[LalaPlugin:PitCommand] custom-message transport={transportUsed} local-transport-issue reason={reason}{FormatFallbackSuffix(fallbackFrom)} text='{normalized}'");
                 return false;
             }
 
-            PublishMessage(string.IsNullOrWhiteSpace(feedbackLabel) ? "Custom Msg" : feedbackLabel.Trim());
+            PublishMessage(string.IsNullOrWhiteSpace(feedbackLabel) ? "CUSTOM MSG" : feedbackLabel.Trim());
             SimHub.Logging.Current.Info($"[LalaPlugin:PitCommand] custom-message transport={transportUsed} attempted=true delivery=unverified effect-confirmed=false text='{normalized}'");
             return true;
         }
@@ -142,7 +142,7 @@ namespace LaunchPlugin
             string normalized = NormalizeChatCommand(rawCommandText);
             if (string.IsNullOrWhiteSpace(normalized))
             {
-                PublishMessage("Pit Cmd Fail");
+                PublishMessage("PIT CMD FAIL");
                 SimHub.Logging.Current.Warn("[LalaPlugin:PitCommand] raw-command send blocked: command text is empty after normalization.");
                 return false;
             }
@@ -153,12 +153,12 @@ namespace LaunchPlugin
             bool transportAttempted = TryInjectChatCommand(normalized, transportMode, out transportUsed, out reason, out fallbackFrom);
             if (!transportAttempted)
             {
-                PublishMessage("Pit Cmd Fail");
+                PublishMessage("PIT CMD FAIL");
                 SimHub.Logging.Current.Warn($"[LalaPlugin:PitCommand] raw-command transport={transportUsed} local-transport-issue reason={reason}{FormatFallbackSuffix(fallbackFrom)} raw='{rawCommandText ?? string.Empty}' normalized='{normalized}'");
                 return false;
             }
 
-            PublishMessage(string.IsNullOrWhiteSpace(feedbackLabel) ? "Fuel Set" : feedbackLabel.Trim());
+            PublishMessage(string.IsNullOrWhiteSpace(feedbackLabel) ? "FUEL SET" : feedbackLabel.Trim());
             SimHub.Logging.Current.Info($"[LalaPlugin:PitCommand] raw-command transport={transportUsed} attempted=true delivery=unverified effect-confirmed=false raw='{rawCommandText ?? string.Empty}' normalized='{normalized}'");
             return true;
         }
@@ -186,7 +186,7 @@ namespace LaunchPlugin
 
             if (!before.HasValue)
             {
-                PublishMessage("Pit Cmd Fail");
+                PublishMessage("PIT CMD FAIL");
                 SimHub.Logging.Current.Warn($"[LalaPlugin:PitCommand] action={action} expected-state-check skipped: before state unavailable.");
                 return false;
             }
@@ -196,7 +196,7 @@ namespace LaunchPlugin
             bool expected = !before.Value;
             if (!after.HasValue || after.Value != expected)
             {
-                PublishMessage("Pit Cmd Fail");
+                PublishMessage("PIT CMD FAIL");
                 SimHub.Logging.Current.Warn($"[LalaPlugin:PitCommand] action={action} expected-state-mismatch expected={expected} before={FormatNullable(before)} after={FormatNullable(after)} transport={transportUsed}");
                 return false;
             }
@@ -284,15 +284,15 @@ namespace LaunchPlugin
         {
             switch (action)
             {
-                case PitCommandAction.ClearAll: return "Pit Clear All";
-                case PitCommandAction.ClearTyres: return "Clear Tyres";
-                case PitCommandAction.FuelSetZero: return "FUEL ZERO";
-                case PitCommandAction.FuelAdd1: return reachedFuelMax ? "Fuel MAX" : "Fuel +1";
-                case PitCommandAction.FuelRemove1: return "Fuel -1";
-                case PitCommandAction.FuelAdd10: return reachedFuelMax ? "Fuel MAX" : "Fuel +10";
-                case PitCommandAction.FuelRemove10: return "Fuel -10";
-                case PitCommandAction.FuelSetMax: return reachedFuelMax ? "FUEL MAX" : "FUEL ZERO";
-                default: return "Pit Cmd Fail";
+                case PitCommandAction.ClearAll: return "PIT CLEAR ALL";
+                case PitCommandAction.ClearTyres: return "TYRE CHANGE OFF";
+                case PitCommandAction.FuelSetZero: return "REFUEL SET ZERO";
+                case PitCommandAction.FuelAdd1: return reachedFuelMax ? "REFUEL SET MAX" : "REFUEL ADD 1L";
+                case PitCommandAction.FuelRemove1: return "REFUEL REMOVE   1L";
+                case PitCommandAction.FuelAdd10: return reachedFuelMax ? "REFUEL SET MAX" : "REFUEL ADD 10L";
+                case PitCommandAction.FuelRemove10: return "REFUEL REMOVE  10L";
+                case PitCommandAction.FuelSetMax: return reachedFuelMax ? "REFUEL SET MAX" : "REFUEL SET ZERO";
+                default: return "PIT CMD FAIL";
             }
         }
 
@@ -331,17 +331,17 @@ namespace LaunchPlugin
             switch (action)
             {
                 case PitCommandAction.ToggleFuel:
-                    return state ? "Fuel ON" : "Fuel OFF";
+                    return state ? "REFUEL SET ON" : "REFUEL SET OFF";
                 case PitCommandAction.ToggleTyresAll:
-                    return state ? "Tyres ON" : "Tyres OFF";
+                    return state ? "TYRE CHANGE ON" : "TYRE CHANGE OFF";
                 case PitCommandAction.ToggleFastRepair:
-                    return state ? "Fast Repair ON" : "Fast Repair OFF";
+                    return state ? "FAST REPAIR ON" : "FAST REPAIR OFF";
                 case PitCommandAction.ToggleAutoFuel:
-                    return state ? "Auto Fuel ON" : "Auto Fuel OFF";
+                    return state ? "MFD A/F ON" : "MFD A/F OFF";
                 case PitCommandAction.Windshield:
-                    return state ? "Tear-off ON" : "Tear-off OFF";
+                    return state ? "TEAR-OFF ON" : "TEAR-OFF OFF";
                 default:
-                    return "Pit Cmd Fail";
+                    return "PIT CMD FAIL";
             }
         }
 
