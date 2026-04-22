@@ -33,6 +33,13 @@ The public user-facing release history is maintained in the root `CHANGELOG.md`.
 
 ## Post-v1.0 development
 
+### 2026-04-22 — Tyre Control PR follow-up: outside-AUTO pre-enforcement sync + OFF reset latch fix
+- Classification: **both** (driver-visible tyre-control ownership behavior + narrow engine ordering/reset fix).
+- Updated `PitTyreControlEngine.OnTelemetryTick()` manual-mode ordering so outside AUTO (`OFF`/`DRY`/`WET`) truth reconciliation runs before manual enforcement, preventing stale manual intent from being re-applied ahead of external MFD truth.
+- Addressed PR review reset regression: `ResetToOff()` OFF safety resets no longer remap back to `DRY/WET` on the next telemetry tick via manual truth-sync.
+- Kept scope tight: AUTO ownership and AUTO unconfirmed feedback behavior remain unchanged.
+- Synced docs for pit behavior and dash/inventory contracts (`Docs/Pit_Assist.md`, `Docs/Subsystems/Dash_Integration.md`, `Docs/Internal/SimHubParameterInventory.md`, `Docs/RepoStatus.md`).
+
 ### 2026-04-22 — Tyre Control follow-up: manual 2-way truth sync + AUTO info-only unconfirmed policy
 - Classification: **both** (driver-visible tyre-control behavior contract change + bounded internal reconciliation/feedback logic).
 - Updated `PitTyreControlEngine` outside-AUTO behavior (`OFF`/`DRY`/`WET`) to use bounded manual truth sync against actual MFD truth:

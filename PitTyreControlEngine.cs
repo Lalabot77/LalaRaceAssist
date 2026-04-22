@@ -108,28 +108,28 @@ namespace LaunchPlugin
                 return;
             }
 
-            bool desiredService = Mode != PitTyreControlMode.Off;
-            EnsureTyreService(snapshot, desiredService);
-
-            if (Mode == PitTyreControlMode.Off)
-            {
-                ResetCompoundAttempts();
-                TryReconcileManualModeToTruth(snapshot);
-                return;
-            }
-
-            bool desiredWet = Mode == PitTyreControlMode.Wet ||
-                              (Mode == PitTyreControlMode.Auto && snapshot.WeatherDeclaredWet);
-
-            EnsureCompound(snapshot, desiredWet);
-
             if (Mode == PitTyreControlMode.Auto)
             {
+                bool desiredService = true;
+                bool desiredWet = snapshot.WeatherDeclaredWet;
+                EnsureTyreService(snapshot, desiredService);
+                EnsureCompound(snapshot, desiredWet);
                 HandleAutoFailureFeedback(snapshot, desiredService, desiredWet);
                 return;
             }
 
             TryReconcileManualModeToTruth(snapshot);
+
+            if (Mode == PitTyreControlMode.Off)
+            {
+                EnsureTyreService(snapshot, false);
+                ResetCompoundAttempts();
+                return;
+            }
+
+            EnsureTyreService(snapshot, true);
+            bool desiredWet = Mode == PitTyreControlMode.Wet;
+            EnsureCompound(snapshot, desiredWet);
         }
 
         private void SetMode(PitTyreControlMode mode, string actionName)
@@ -187,6 +187,10 @@ namespace LaunchPlugin
 
             if (now < _manualNextReconcileUtc)
             {
+                if (hasTruth && truthMode != Mode)
+                {
+                    ApplyManualTruthMode(truthMode, "manual-external-truth-sync");
+                }
                 return;
             }
 

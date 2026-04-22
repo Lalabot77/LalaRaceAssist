@@ -9,6 +9,10 @@ Branch: work
 - No Git remote is configured in this checkout (`git remote -v` returns empty).
 
 ## Documentation sync status
+- Tyre Control PR follow-up landed (outside-AUTO ownership ordering + OFF reset latch fix):
+  - outside AUTO (`OFF`/`DRY`/`WET`), manual truth reconciliation now runs before manual enforcement so stale manual mode intent is not re-applied ahead of external MFD truth;
+  - `ResetToOff()` safety resets now stay latched at `OFF` on the next telemetry tick (no immediate `OFF -> DRY/WET` truth-remap regression);
+  - AUTO ownership behavior and AUTO unconfirmed info-feedback behavior remain unchanged.
 - Tyre Control follow-up landed (manual 2-way MFD truth sync outside AUTO + AUTO info-only unconfirmed policy):
   - outside AUTO (`OFF`/`DRY`/`WET`), plugin mode now runs a bounded 2-way truth-sync contract against all-four tyre service truth + requested compound truth (`PitSvTireCompound`), including post-request confirmation fallback to actual MFD truth and bounded external-change remap;
   - manual truth mapping remains constrained to existing families (`service OFF => OFF`, `service ON + dry-family => DRY`, `service ON + wet-family => WET`) with fail-safe hold when truth is ambiguous;

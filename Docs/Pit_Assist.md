@@ -92,7 +92,8 @@ Tyre Control behavior notes for these bindings:
   - manual mode selections are treated as requests,
   - if MFD truth confirms within the short confirmation window, mode stays selected,
   - if not confirmed, mode falls back to actual MFD truth (`service OFF -> OFF`, `service ON + dry-family requested compound -> DRY`, `service ON + wet-family requested compound -> WET`),
-  - external MFD changes outside AUTO are followed on a bounded reconciliation cadence so mode does not stay stale.
+  - manual truth reconciliation runs before manual enforcement, so when external MFD truth has drifted the plugin follows truth first instead of re-applying stale `OFF`/`DRY`/`WET` intent,
+  - `ResetToOff()` safety resets keep mode latched at `OFF` (no immediate `OFF -> DRY/WET` remap on the next telemetry tick).
   - ambiguous/unavailable truth is held fail-safe (no twitchy flip-flopping).
 - In AUTO, tyre control remains plugin-owned authoritative mode. If bounded enforcement is not confirmed, AUTO stays AUTO and publishes info-only `TYRE AUTO UNCONFIRMED` feedback/logging (no AUTO collapse into manual modes).
 - Tyre control mode resets to `OFF` on `Telemetry.IsOnTrackCar` edge transitions (`false->true` or `true->false`) via the existing pit-control reset seam.
