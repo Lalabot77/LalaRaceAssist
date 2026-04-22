@@ -112,6 +112,7 @@ For a new car/track combination:
 - Transport mode is configurable in **Settings → Pit Commands** (`Auto` direct-message then fallback, `Legacy foreground SendInput only`, `Direct message only`).
 - Auto-focus is not implemented yet (preview setting only).
 - Transport truth: stateful built-in toggles use telemetry before/after confirmation; custom/raw/stateless sends are logged as attempted with unverified delivery (no duplicate-send retry after queued direct-message success).
+- For complete pit/custom command usage guidance, see [Pit Assist](Pit_Assist.md). For technical export/action ownership, see [Subsystems/Pit_Commands_And_Fuel_Control.md](Subsystems/Pit_Commands_And_Fuel_Control.md).
 
 ### Dash navigation quick setup
 
