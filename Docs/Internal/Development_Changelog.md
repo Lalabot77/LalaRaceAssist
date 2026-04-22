@@ -33,6 +33,15 @@ The public user-facing release history is maintained in the root `CHANGELOG.md`.
 
 ## Post-v1.0 development
 
+### 2026-04-22 — Pit Fuel Control polish: feedback-only max-fill wording
+- Classification: **both** (driver-visible pit-fuel feedback wording polish + internal transport-behavior safety correction).
+- Kept command ownership, transport mode behavior, and AUTO cancel semantics unchanged.
+- Reverted Pit Fuel Control transport clamping in `PitFuelControlEngine` so plugin-owned outgoing `#fuel` sends continue using original transport behavior (override path remains additive max-overshoot; non-override path sends requested target litres).
+- Replaced transport clamping with feedback-only max-fill polish:
+  - when the requested/sent litres exceed current tank space (or the existing max-override path is active), feedback now uses short `FUEL MAX`,
+  - otherwise Pit Fuel Control keeps normal litres-based feedback strings.
+- Refined feedback-only max-fill detection to compare requested litres against raw tank-space telemetry (not rounded-up space), so sub-1L overshoot cases still report `FUEL MAX` consistently.
+- Preserved AUTO/manual send cadence, source/mode semantics, and existing command ownership contracts.
 ### 2026-04-22 — PreRace follow-up: explicit one-stop pit-refill feasibility helper
 - Classification: **internal-only** (code-path clarity/refactor; one-stop status behavior unchanged).
 - Added `IsOneStopFeasibleForPreRace(...)` in `LalaLaunch.cs` so one-stop feasibility is explicitly evaluated against pit-stop refill capacity (effective tank at stop) and second-stint fuel demand (`total needed - start fuel`).

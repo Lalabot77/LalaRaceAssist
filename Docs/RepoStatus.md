@@ -9,6 +9,11 @@ Branch: work
 - No Git remote is configured in this checkout (`git remote -v` returns empty).
 
 ## Documentation sync status
+- Pit Fuel Control polish — feedback-only max-fill wording:
+  - plugin-owned pit fuel sends keep original transport payload behavior (no outgoing litres clamp; max-override continues using additive overshoot payload),
+  - max-fill style requests now use short user-facing feedback (`FUEL MAX`) when requested/sent litres exceed current tank space (or max-override path is active), using raw tank-space comparison so sub-1L overshoot still resolves as max-fill feedback,
+  - normal non-max requests keep litres-based feedback text,
+  - command ownership, transport mode behavior, and AUTO cancel behavior remain unchanged.
 - PreRace follow-up clarified one-stop feasibility ownership in code:
   - introduced explicit helper `IsOneStopFeasibleForPreRace(...)` for one-stop gate evaluation,
   - helper evaluates one-stop against pit-stop refill capacity plus second-stint fuel demand (`total needed - start fuel`),
@@ -486,6 +491,11 @@ Branch: work
 - `Docs/Internal/Development_Changelog.md`
 - `Docs/Subsystems/Dash_Integration.md`
 - `Docs/Pit_Assist.md`
+- `Docs/RepoStatus.md`
+
+### Changed in Pit Fuel Control polish (feedback-only max-fill wording)
+- `PitFuelControlEngine.cs`
+- `Docs/Internal/Development_Changelog.md`
 - `Docs/RepoStatus.md`
 
 ### Changed in class-best/class-leader live-session seam restore + single-class fallback task
