@@ -33,14 +33,14 @@ The public user-facing release history is maintained in the root `CHANGELOG.md`.
 
 ## Post-v1.0 development
 
-### 2026-04-21 — Pit Fuel Control polish: clamp outgoing fuel-set transport values
-- Classification: **both** (driver-visible pit-fuel send/display sanity + internal transport hardening).
+### 2026-04-22 — Pit Fuel Control polish: feedback-only max-fill wording
+- Classification: **both** (driver-visible pit-fuel feedback wording polish + internal transport-behavior safety correction).
 - Kept command ownership, transport mode behavior, and AUTO cancel semantics unchanged.
-- Hardened plugin-owned Pit Fuel Control outgoing `#fuel` sends in `PitFuelControlEngine`:
-  - outgoing litres are now clamped before transport and feedback publication,
-  - clamp prefers a live tank-cap-aware ceiling when cap inputs are trustworthy (`CurrentFuel + TankSpace` finite/non-negative and within defensive plausibility bound),
-  - when no trustworthy live cap is available, sends now degrade to a defensive hard ceiling of `100L`.
-- Feedback text alignment is now explicit: user-facing `FUEL SET ...` / `AUTO FUEL ...` litres reflect the clamped value actually sent (no oversized request text drift in offline/practice edge states).
+- Reverted Pit Fuel Control transport clamping in `PitFuelControlEngine` so plugin-owned outgoing `#fuel` sends continue using the original requested target litres.
+- Replaced transport clamping with feedback-only max-fill polish:
+  - when the requested/sent litres exceed current tank space (or the existing max-override path is active), feedback now uses short `FUEL MAX`,
+  - otherwise Pit Fuel Control keeps normal litres-based feedback strings.
+- Preserved AUTO/manual send cadence, source/mode semantics, and existing command ownership contracts.
 
 ### 2026-04-21 — Direct pit/custom transport chat-state sequencing hardening
 - Classification: **both** (driver-visible pit/custom transport behavior fix + internal observability/sequencing hardening).

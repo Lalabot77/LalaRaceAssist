@@ -52,8 +52,6 @@ namespace LaunchPlugin
         private const double OverrideArmStopsThreshold = 1.10;
         private const double OverrideDisarmStopsThreshold = 1.05;
         private const int PluginSendSuppressionMs = 900;
-        private const int DefensiveFuelSetClampLitres = 100;
-        private const double MaxTrustworthyTankCapacityLitres = 200.0;
 
         private readonly Func<PitFuelControlSnapshot> _snapshotProvider;
         private readonly Func<string, string, string, bool> _chatCommandSender;
@@ -316,10 +314,10 @@ namespace LaunchPlugin
             }
 
             var snapshot = _snapshotProvider();
-            int clampedTransportTarget = ClampTransportTargetLitres(roundedTarget, snapshot);
             bool useMax = OverrideActive;
-            string commandText = string.Format("#fuel {0}$", clampedTransportTarget);
-            string feedback = BuildFeedbackText(isAutoUpdate, useMax, clampedTransportTarget);
+            bool showMaxFeedback = IsMaxStyleFeedbackRequest(roundedTarget, snapshot, useMax);
+            string commandText = string.Format("#fuel {0}$", roundedTarget);
+            string feedback = BuildFeedbackText(isAutoUpdate, showMaxFeedback, roundedTarget);
             string actionName = !string.IsNullOrWhiteSpace(actionNameOverride)
                 ? actionNameOverride.Trim()
                 : (isAutoUpdate ? "Pit.FuelControl.AutoUpdate" : "Pit.FuelControl.SourceSet");
@@ -327,9 +325,9 @@ namespace LaunchPlugin
             bool sent = _chatCommandSender != null && _chatCommandSender(actionName, commandText, feedback);
             if (sent)
             {
-                LastSentFuelLitres = clampedTransportTarget;
+                LastSentFuelLitres = roundedTarget;
                 _suppressManualOverrideUntilUtc = DateTime.UtcNow.AddMilliseconds(PluginSendSuppressionMs);
-                _lastObservedRequestedFuelLitres = clampedTransportTarget;
+                _lastObservedRequestedFuelLitres = roundedTarget;
                 if (Mode == PitFuelControlMode.Auto)
                 {
                     AutoArmed = true;
@@ -399,47 +397,31 @@ namespace LaunchPlugin
             return (int)Math.Ceiling(litres);
         }
 
-        private static int ClampTransportTargetLitres(int requestedLitres, PitFuelControlSnapshot snapshot)
+        private static bool IsMaxStyleFeedbackRequest(int requestedLitres, PitFuelControlSnapshot snapshot, bool useMaxOverride)
         {
-            int requestedSafe = Math.Max(0, requestedLitres);
-            int clampCeiling = DefensiveFuelSetClampLitres;
-
-            int trustworthyTankCapacityLitres;
-            if (TryGetTrustworthyTankCapacityLitres(snapshot, out trustworthyTankCapacityLitres))
+            if (useMaxOverride)
             {
-                clampCeiling = trustworthyTankCapacityLitres;
+                return true;
             }
 
-            return Math.Min(requestedSafe, Math.Max(0, clampCeiling));
-        }
-
-        private static bool TryGetTrustworthyTankCapacityLitres(PitFuelControlSnapshot snapshot, out int capacityLitres)
-        {
-            capacityLitres = 0;
             if (snapshot == null)
             {
                 return false;
             }
 
-            if (double.IsNaN(snapshot.CurrentFuelLitres) || double.IsInfinity(snapshot.CurrentFuelLitres) ||
-                double.IsNaN(snapshot.TankSpaceLitres) || double.IsInfinity(snapshot.TankSpaceLitres))
+            if (double.IsNaN(snapshot.TankSpaceLitres) || double.IsInfinity(snapshot.TankSpaceLitres))
             {
                 return false;
             }
 
-            if (snapshot.CurrentFuelLitres < 0.0 || snapshot.TankSpaceLitres < 0.0)
+            if (snapshot.TankSpaceLitres < 0.0)
             {
                 return false;
             }
 
-            double tankCapacity = snapshot.CurrentFuelLitres + snapshot.TankSpaceLitres;
-            if (double.IsNaN(tankCapacity) || double.IsInfinity(tankCapacity) || tankCapacity <= 0.0 || tankCapacity > MaxTrustworthyTankCapacityLitres)
-            {
-                return false;
-            }
-
-            capacityLitres = RoundUpLitres(tankCapacity);
-            return capacityLitres > 0;
+            int requestedSafe = Math.Max(0, requestedLitres);
+            int availableSpaceRoundedUp = RoundUpLitres(snapshot.TankSpaceLitres);
+            return requestedSafe > availableSpaceRoundedUp;
         }
 
         private void RefreshDerivedState()
@@ -565,22 +547,17 @@ namespace LaunchPlugin
             }
         }
 
-        private string BuildFeedbackText(bool isAutoUpdate, bool useMax, int roundedTarget)
+        private string BuildFeedbackText(bool isAutoUpdate, bool showMaxFeedback, int roundedTarget)
         {
             string sourceText = SourceToText(Source);
-            if (isAutoUpdate)
+            if (showMaxFeedback)
             {
-                if (useMax)
-                {
-                    return string.Format("AUTO FUEL MAX {0}L", roundedTarget);
-                }
-
-                return string.Format("AUTO FUEL UPDATE {0}L", roundedTarget);
+                return "FUEL MAX";
             }
 
-            if (useMax)
+            if (isAutoUpdate)
             {
-                return string.Format("FUEL SET {0} MAX {1}L", sourceText, roundedTarget);
+                return string.Format("AUTO FUEL UPDATE {0}L", roundedTarget);
             }
 
             return string.Format("FUEL SET {0} {1}L", sourceText, roundedTarget);

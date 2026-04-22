@@ -1,7 +1,7 @@
 # Repository status
 
 Validated against commit: HEAD
-Last updated: 2026-04-21
+Last updated: 2026-04-22
 Branch: work
 
 ## Current repo/link status
@@ -9,10 +9,10 @@ Branch: work
 - No Git remote is configured in this checkout (`git remote -v` returns empty).
 
 ## Documentation sync status
-- Pit Fuel Control polish — clamped outgoing fuel-set transport values:
-  - plugin-owned pit fuel sends now clamp outgoing litres before transport and feedback publication,
-  - clamp prefers live tank-cap-aware limits when `CurrentFuel + TankSpace` is trustworthy,
-  - no trustworthy live cap now falls back to defensive `100L` hard ceiling,
+- Pit Fuel Control polish — feedback-only max-fill wording:
+  - plugin-owned pit fuel sends keep original transport payload behavior (no outgoing litres clamp),
+  - max-fill style requests now use short user-facing feedback (`FUEL MAX`) when requested/sent litres exceed current tank space (or max-override path is active),
+  - normal non-max requests keep litres-based feedback text,
   - command ownership, transport mode behavior, and AUTO cancel behavior remain unchanged.
 - Direct pit/custom transport chat-state sequencing follow-up:
   - direct window-message path now logs staged attempt/abort telemetry (`chat-open`, `text-send`, `submit`) per command attempt,
@@ -472,7 +472,7 @@ Branch: work
 - `Docs/Pit_Assist.md`
 - `Docs/RepoStatus.md`
 
-### Changed in Pit Fuel Control polish (outgoing fuel-set clamp before transport)
+### Changed in Pit Fuel Control polish (feedback-only max-fill wording)
 - `PitFuelControlEngine.cs`
 - `Docs/Internal/Development_Changelog.md`
 - `Docs/RepoStatus.md`
