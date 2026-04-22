@@ -41,6 +41,8 @@ Trust pit popups most when your pit data is good. That usually means:
 
 Pit command buttons should now be bound to plugin-owned Controls & Events actions:
 
+Technical contract note: this page is driver-facing usage guidance. The canonical subsystem ownership/exports/log contract for pit/custom commands + fuel/tyre control lives in [Docs/Subsystems/Pit_Commands_And_Fuel_Control.md](Subsystems/Pit_Commands_And_Fuel_Control.md).
+
 - `LalaLaunch.Pit.ClearAll`
 - `LalaLaunch.Pit.ClearTires`
 - `LalaLaunch.Pit.ToggleFuel`

@@ -7,13 +7,21 @@ For internal between-release development history, see `Docs/Internal/Development
 ## v1.1 (Unreleased)
 
 ### Added
-- Added a new **Overview** top-level plugin tab as a landing/front-door page with quick links, lightweight status, release-check awareness, and dashboard preview placeholders.
+- **Overview tab** as the plugin front door for quick links, release-check visibility, and at-a-glance status.
+- **Plugin-owned pit/custom command workflow** with built-in pit actions, custom-message slots, and in-plugin transport selection.
+- **Pit Fuel Control + Tyre Control** command surfaces for dashboard/hardware bindings (`LalaLaunch.Pit.FuelControl.*`, `LalaLaunch.Pit.TyreControl.*`).
+- **ClassBest export family** for class session-best holder visibility on dashboards.
 
 ### Changed
-- _No public release notes staged yet._
+- **Strategy/PreRace status logic** refreshed with scenario-first outcomes and clearer status colors/text for no-stop, one-stop, and multi-stop contexts.
+- **Pit command transport behavior** now defaults to direct window-message delivery with bounded legacy fallback options.
+- **Pit Fuel Control behavior** refined so AUTO ownership/cancel behavior is clearer and non-AUTO OFF/MAN follows iRacing MFD fuel-enable truth.
+- **Dashboard/navigation documentation** and Overview-first workflow guidance were aligned across user docs.
 
 ### Fixed
-- _No public release notes staged yet._
+- Corrected one-stop feasibility checks to use pit-stop refill capacity rather than start-of-race free tank space.
+- Fixed wet/dry PB and pace persistence routing edge cases around lap-validation timing and wet-compound detection.
+- Hardened pit/custom command observability and confirmation wording so attempted transport is not shown as guaranteed in-sim effect.
 
 ## v1.0 – Initial Public Release
 
