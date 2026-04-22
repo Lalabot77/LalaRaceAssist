@@ -33,6 +33,15 @@ The public user-facing release history is maintained in the root `CHANGELOG.md`.
 
 ## Post-v1.0 development
 
+### 2026-04-22 — Tyre Control PR follow-up: explicit raw-command model + AUTO external ownership cancel/remap
+- Classification: **both** (driver-visible tyre-control command/ownership behavior correction + bounded internal ownership detection).
+- Updated `PitTyreControlEngine` to remove internal toggle-based tyre-service control (`Pit.ToggleTyresAll` no longer used by tyre control engine); engine now uses explicit raw commands only:
+  - `OFF` enforcement => `#cleartires$`
+  - `DRY` / `WET` / `AUTO` enforcement => `#t$` then compound `#tc ...$`.
+- Kept tyre service truth authoritative from all four individual tyre-change flags and preserved tri-state fail-safe manual truth mapping behavior (`UNKNOWN`/ambiguous truth does not remap).
+- Added bounded plugin-owned suppression windowing after plugin tyre sends; in AUTO, MFD truth changes outside that window are treated as external ownership takeover and now cancel AUTO with remap to manual truth (`OFF`/`DRY`/`WET`) plus visible feedback (`TYRE AUTO CANCELLED`).
+- Kept scope tight: no pit-command transport redesign, no mode-cycle changes, and no unrelated subsystem behavior changes.
+
 ### 2026-04-22 — Tyre Control PR follow-up: tri-state manual truth mapping for tyre-service gaps
 - Classification: **internal-only** (bug fix to align runtime with already-documented fail-safe hold semantics).
 - Updated `PitTyreControlEngine` manual truth mapping to treat tyre-service telemetry as tri-state (`ON` / `OFF` / `UNKNOWN`) instead of collapsing missing service truth to confirmed OFF.

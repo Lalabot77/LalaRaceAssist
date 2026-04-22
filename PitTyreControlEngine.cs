@@ -29,10 +29,10 @@ namespace LaunchPlugin
         private const int MaxAttemptsPerTarget = 2;
         private const int ManualConfirmationWindowMs = 1400;
         private const int ManualReconcileCooldownMs = 700;
+        private const int PluginOwnedSuppressionWindowMs = 1200;
 
         private readonly Func<PitTyreControlSnapshot> _snapshotProvider;
         private readonly Func<string, string, string, bool> _rawCommandSender;
-        private readonly Action<PitCommandAction> _builtInActionSender;
         private readonly Action<string, string, string> _feedbackPublisher;
         private readonly Action<string> _logger;
 
@@ -50,19 +50,23 @@ namespace LaunchPlugin
 
         private string _autoServiceFailureNoticeKey = string.Empty;
         private string _autoCompoundFailureNoticeKey = string.Empty;
+        private DateTime _pluginOwnedSuppressionUntilUtc = DateTime.MinValue;
+        private bool _hasObservedTruthSample;
+        private bool _observedHasServiceSelection;
+        private bool _observedServiceSelected;
+        private bool _observedHasRequestedCompound;
+        private int _observedRequestedCompound = -1;
 
         public PitTyreControlMode Mode { get; private set; } = PitTyreControlMode.Off;
 
         public PitTyreControlEngine(
             Func<PitTyreControlSnapshot> snapshotProvider,
             Func<string, string, string, bool> rawCommandSender,
-            Action<PitCommandAction> builtInActionSender,
             Action<string, string, string> feedbackPublisher,
             Action<string> logger)
         {
             _snapshotProvider = snapshotProvider;
             _rawCommandSender = rawCommandSender;
-            _builtInActionSender = builtInActionSender;
             _feedbackPublisher = feedbackPublisher;
             _logger = logger;
         }
@@ -111,11 +115,18 @@ namespace LaunchPlugin
 
             if (Mode == PitTyreControlMode.Auto)
             {
+                if (TryCancelAutoForExternalOwnership(snapshot))
+                {
+                    UpdateObservedTruthSample(snapshot);
+                    return;
+                }
+
                 bool desiredService = true;
                 bool desiredWet = snapshot.WeatherDeclaredWet;
                 EnsureTyreService(snapshot, desiredService);
                 EnsureCompound(snapshot, desiredWet);
                 HandleAutoFailureFeedback(snapshot, desiredService, desiredWet);
+                UpdateObservedTruthSample(snapshot);
                 return;
             }
 
@@ -125,12 +136,14 @@ namespace LaunchPlugin
             {
                 EnsureTyreService(snapshot, false);
                 ResetCompoundAttempts();
+                UpdateObservedTruthSample(snapshot);
                 return;
             }
 
             EnsureTyreService(snapshot, true);
             bool desiredWet = Mode == PitTyreControlMode.Wet;
             EnsureCompound(snapshot, desiredWet);
+            UpdateObservedTruthSample(snapshot);
         }
 
         private void SetMode(PitTyreControlMode mode, string actionName)
@@ -250,13 +263,14 @@ namespace LaunchPlugin
 
         private void HandleAutoFailureFeedback(PitTyreControlSnapshot snapshot, bool desiredService, bool desiredWet)
         {
-            if (desiredService && snapshot.IsTireServiceSelected)
+            if (desiredService && snapshot.HasTireServiceSelection && snapshot.IsTireServiceSelected)
             {
                 _autoServiceFailureNoticeKey = string.Empty;
             }
 
             string serviceTargetKey = desiredService ? "on" : "off";
             if (desiredService &&
+                snapshot.HasTireServiceSelection &&
                 !snapshot.IsTireServiceSelected &&
                 _serviceTargetAttempts >= MaxAttemptsPerTarget &&
                 !string.Equals(_autoServiceFailureNoticeKey, serviceTargetKey, StringComparison.Ordinal))
@@ -287,7 +301,8 @@ namespace LaunchPlugin
         private void EnsureTyreService(PitTyreControlSnapshot snapshot, bool desiredSelected)
         {
             string targetKey = desiredSelected ? "on" : "off";
-            if (snapshot.IsTireServiceSelected == desiredSelected)
+            bool isConfirmed = snapshot.HasTireServiceSelection && snapshot.IsTireServiceSelected == desiredSelected;
+            if (isConfirmed)
             {
                 _lastServiceTargetKey = targetKey;
                 _serviceTargetAttempts = 0;
@@ -307,7 +322,11 @@ namespace LaunchPlugin
                 return;
             }
 
-            _builtInActionSender?.Invoke(PitCommandAction.ToggleTyresAll);
+            string command = desiredSelected ? "#t$" : "#cleartires$";
+            string actionName = desiredSelected ? "Pit.TyreControl.ServiceOn" : "Pit.TyreControl.ServiceOff";
+            string feedback = desiredSelected ? "TYRE ON" : "TYRE OFF";
+            MarkPluginOwnedSuppressionWindow();
+            _rawCommandSender?.Invoke(actionName, command, feedback);
             _serviceTargetAttempts++;
             _serviceNextAttemptUtc = DateTime.UtcNow.AddMilliseconds(SendCooldownMs);
         }
@@ -341,9 +360,79 @@ namespace LaunchPlugin
             string actionName = desiredWet ? "Pit.TyreControl.SetWetCompound" : "Pit.TyreControl.SetDryCompound";
             string feedback = desiredWet ? "TYRE WET" : "TYRE DRY";
             LogCompoundAttempt(snapshot, desiredWet, command);
+            MarkPluginOwnedSuppressionWindow();
             _rawCommandSender?.Invoke(actionName, command, feedback);
             _compoundTargetAttempts++;
             _compoundNextAttemptUtc = DateTime.UtcNow.AddMilliseconds(SendCooldownMs);
+        }
+
+        private bool TryCancelAutoForExternalOwnership(PitTyreControlSnapshot snapshot)
+        {
+            if (!_hasObservedTruthSample)
+            {
+                return false;
+            }
+
+            if (!HasObservedTruthChanged(snapshot))
+            {
+                return false;
+            }
+
+            if (DateTime.UtcNow <= _pluginOwnedSuppressionUntilUtc)
+            {
+                return false;
+            }
+
+            PitTyreControlMode truthMode;
+            if (!TryMapManualTruthMode(snapshot, out truthMode))
+            {
+                truthMode = PitTyreControlMode.Off;
+            }
+
+            ApplyManualTruthMode(truthMode, "auto-cancel-external-ownership");
+            PublishSelectionFeedback("Pit.TyreControl.Auto.CancelledExternal", "TYRE AUTO CANCELLED");
+            _logger?.Invoke($"[LalaPlugin:PitTyreControl] AUTO cancelled: external tyre ownership detected, remapped={ModeToText(truthMode)}.");
+            ResetAutoFailureNoticeState();
+            return true;
+        }
+
+        private bool HasObservedTruthChanged(PitTyreControlSnapshot snapshot)
+        {
+            if (_observedHasServiceSelection != snapshot.HasTireServiceSelection)
+            {
+                return true;
+            }
+
+            if (_observedHasServiceSelection && _observedServiceSelected != snapshot.IsTireServiceSelected)
+            {
+                return true;
+            }
+
+            if (_observedHasRequestedCompound != snapshot.HasRequestedCompound)
+            {
+                return true;
+            }
+
+            if (_observedHasRequestedCompound && _observedRequestedCompound != snapshot.RequestedCompound)
+            {
+                return true;
+            }
+
+            return false;
+        }
+
+        private void UpdateObservedTruthSample(PitTyreControlSnapshot snapshot)
+        {
+            _observedHasServiceSelection = snapshot.HasTireServiceSelection;
+            _observedServiceSelected = snapshot.IsTireServiceSelected;
+            _observedHasRequestedCompound = snapshot.HasRequestedCompound;
+            _observedRequestedCompound = snapshot.RequestedCompound;
+            _hasObservedTruthSample = true;
+        }
+
+        private void MarkPluginOwnedSuppressionWindow()
+        {
+            _pluginOwnedSuppressionUntilUtc = DateTime.UtcNow.AddMilliseconds(PluginOwnedSuppressionWindowMs);
         }
 
         private void LogCompoundAttempt(PitTyreControlSnapshot snapshot, bool desiredWet, string command)

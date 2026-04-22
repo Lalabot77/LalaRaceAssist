@@ -9,6 +9,12 @@ Branch: work
 - No Git remote is configured in this checkout (`git remote -v` returns empty).
 
 ## Documentation sync status
+- Tyre Control PR follow-up landed (explicit raw-command model + AUTO external ownership cancel/remap):
+  - tyre control engine no longer uses internal toggle semantics for service enforcement (`Pit.ToggleTyresAll` remains a direct user action only);
+  - explicit tyre commands are now authoritative in-engine (`OFF => #cleartires$`; `DRY/WET/AUTO => #t$` then dry/wet `#tc ...$`);
+  - AUTO ownership now includes bounded plugin-owned suppression windows for post-send MFD changes;
+  - MFD tyre changes outside suppression are treated as external takeover, publish `TYRE AUTO CANCELLED`, and remap mode out of AUTO to current manual truth (`OFF`/`DRY`/`WET`);
+  - four-tyre service truth + tri-state ambiguous hold behavior remain intact (no collapse of unknown truth to OFF).
 - Tyre Control PR follow-up landed (tri-state manual truth mapping for tyre-service telemetry gaps):
   - outside AUTO manual truth mapping now treats tyre-service state as tri-state (`ON` / `OFF` / `UNKNOWN`) instead of collapsing unavailable service telemetry to OFF;
   - unknown tyre-service truth now returns ambiguous/no-truth for manual reconciliation (no forced OFF remap during telemetry gaps; fail-safe hold behavior preserved);
