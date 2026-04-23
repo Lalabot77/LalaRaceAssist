@@ -6968,9 +6968,13 @@ namespace LaunchPlugin
         private PitTyreControlSnapshot BuildPitTyreControlSnapshot()
         {
             var snapshot = new PitTyreControlSnapshot();
-            bool? tyresAllSelected = PitCommandEngine.ReadTyresAllState(PluginManager);
-            snapshot.HasTireServiceSelection = tyresAllSelected.HasValue;
-            snapshot.IsTireServiceSelected = tyresAllSelected.HasValue && tyresAllSelected.Value;
+            bool? lf = TryReadNullableBool(PluginManager.GetPropertyValue("DataCorePlugin.GameRawData.Telemetry.dpLFTireChange"));
+            bool? rf = TryReadNullableBool(PluginManager.GetPropertyValue("DataCorePlugin.GameRawData.Telemetry.dpRFTireChange"));
+            bool? lr = TryReadNullableBool(PluginManager.GetPropertyValue("DataCorePlugin.GameRawData.Telemetry.dpLRTireChange"));
+            bool? rr = TryReadNullableBool(PluginManager.GetPropertyValue("DataCorePlugin.GameRawData.Telemetry.dpRRTireChange"));
+            bool allTyreFlagsAvailable = lf.HasValue && rf.HasValue && lr.HasValue && rr.HasValue;
+            snapshot.HasTireServiceSelection = allTyreFlagsAvailable;
+            snapshot.IsTireServiceSelected = allTyreFlagsAvailable && lf.Value && rf.Value && lr.Value && rr.Value;
 
             int? requestedCompound = TryReadNullableInt(PluginManager.GetPropertyValue("DataCorePlugin.GameRawData.Telemetry.PitSvTireCompound"));
             snapshot.HasRequestedCompound = requestedCompound.HasValue;

@@ -1,7 +1,7 @@
 # Dash Integration
 
 Validated against commit: HEAD
-Last updated: 2026-04-22
+Last updated: 2026-04-23
 Branch: work
 
 ## Purpose
@@ -65,7 +65,7 @@ This document is the canonical dash-facing contract layer. It does **not** redef
 - Tyre control display contract: outside AUTO (`OFF`/`DRY`/`WET`) those exports are bounded truth-synced with MFD state (all-four tyre-change flags + `PitSvTireCompound` dry/wet family mapping) **before** manual enforcement (so stale manual intent does not fight external MFD truth); `ResetToOff()` safety resets remain latched at `OFF` and do not immediately remap back to `DRY/WET` on the next tick.
 - Tyre control ON/OFF service truth is four-flag authoritative: ON only when all four tyre flags are selected; partial/manual subsets are treated as OFF for enforcement truth.
 - Tyre control command model is explicit raw command ownership in-plugin (no internal toggle semantics): `OFF => #cleartires$`; `DRY/WET/AUTO => #t$` then compound `#tc ...$`.
-- AUTO ownership contract includes plugin-owned suppression windowing: MFD tyre changes immediately after plugin sends are ignored as plugin-owned; changes outside that window are treated as external takeover, publish `TYRE AUTO CANCELLED`, and remap mode out of AUTO to manual truth (`OFF`/`DRY`/`WET`).
+- AUTO ownership contract includes plugin-owned send-observation protection: MFD tyre changes immediately after plugin sends are ignored as plugin-owned; delayed convergence to the plugin’s own recent intended service/compound targets is also treated as plugin-owned. Only concrete external/manual truth outside plugin-owned protection cancels AUTO (publish `TYRE AUTO CANCELLED` and remap mode out of AUTO to `OFF`/`DRY`/`WET`). Ambiguous/unavailable truth does not cancel AUTO and does not force `OFF`.
 - In plugin Settings → Pit Commands, tyre-control binding UI intentionally exposes only `Tyre Mode Cycle`; direct `SetOff/SetDry/SetWet/SetAuto` actions remain available for direct binding in SimHub Controls & Events / Dash Studio.
 - Pit Fuel Control ownership/reset contract for dash rendering: only AUTO is plugin-owned; outside AUTO, mode must be treated as iRacing-MFD-derived truth from `dpFuelFill` (`OFF` when unchecked, `MAN` when checked). External-change AUTO cancel is edge-triggered on `PitSvFuel` and `dpFuelFill` (outside plugin-owned send/toggle suppression) and publishes `AUTO CANCELLED` while forcing `Source=STBY` + `AutoArmed=false`. iRacing AutoFuel ownership, Offline Testing suppression, and any `Telemetry.IsOnTrackCar` boolean edge (`false->true` or `true->false`) also force `Source=STBY` + `AutoArmed=false` without plugin-owned OFF/MAN forcing.
 - The same transport seam also dispatches custom-message actions; dashboards should keep custom-message content authored in plugin Settings rather than hardcoding message text in dash scripts/buttons.

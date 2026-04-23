@@ -3,8 +3,8 @@
 **CANONICAL OBSERVABILITY MAP**
 
 Validated against: HEAD
-Last reviewed: 2026-04-22
-Last updated: 2026-04-22
+Last reviewed: 2026-04-23
+Last updated: 2026-04-23
 Branch: work
 
 Scope: Info/Warn logs emitted via `SimHub.Logging.Current.Info(...)` and `SimHub.Logging.Current.Warn(...)`. Use the tag prefixes to filter in SimHub’s log view. Placeholder logs are noted; no deprecated messages are currently removed in code. Legacy/alternate copies of this list do not exist.
@@ -50,7 +50,7 @@ Scope: Info/Warn logs emitted via `SimHub.Logging.Current.Info(...)` and `SimHub
 - **`[LalaPlugin:PitTyreControl] Compound change attempt target=<DRY|WET> cmd='<#tc ...>' requested=<...> player=<...> weatherDeclaredWet=<true|false> available01='<...>' available02='<...>'`** — Tyre control v1 observability line emitted when the plugin attempts a compound change; includes requested/fitted seams and GT3-first available-compound context from `DriverTires01/02.TireCompoundType`.
 - **`[LalaPlugin:PitTyreControl] Manual truth sync remap reason=<manual-confirmation-fallback|manual-external-truth-sync|auto-cancel-external-ownership> mode=<OFF|DRY|WET>`** — Tyre-control mode remap to actual MFD truth after bounded manual confirmation/reconciliation, or AUTO external-ownership cancel/remap.
 - **`[LalaPlugin:PitTyreControl] AUTO enforcement unconfirmed: ...`** — Info-only AUTO ownership observability when bounded service/compound enforcement attempts are not confirmed; AUTO mode is retained and does not collapse to OFF/DRY/WET.
-- **`[LalaPlugin:PitTyreControl] AUTO cancelled: external tyre ownership detected, remapped=<OFF|DRY|WET>.`** — AUTO ownership cancellation when tyre MFD truth changes outside the plugin-owned suppression window; plugin exits AUTO and follows manual truth.
+- **`[LalaPlugin:PitTyreControl] AUTO cancelled: external tyre ownership detected, remapped=<OFF|DRY|WET>.`** — AUTO ownership cancellation when tyre MFD truth changes outside plugin-owned protection and a concrete manual-truth remap exists; plugin exits AUTO and follows manual truth. Ambiguous/unavailable truth does not cancel AUTO.
 - **`[LalaPlugin:MsgCx] MsgCx action fired (pressed latched + engines notified).`** — MsgCx action invoked; message engines receive cancel signal.【F:LalaLaunch.cs†L87-L118】
 - **`[LalaPlugin:Launch] State change: <old> -> <new>.`** — Launch state machine transition (e.g., primed → logging).【F:LalaLaunch.cs†L2470-L2494】
 - **`[LalaPlugin:Launch Trace] <reason> – cancelling to Idle.`** — Launch trace aborted to idle with the provided reason (debounced).【F:LalaLaunch.cs†L3048-L3074】

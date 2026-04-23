@@ -33,6 +33,20 @@ The public user-facing release history is maintained in the root `CHANGELOG.md`.
 
 ## Post-v1.0 development
 
+### 2026-04-23 — Tyre Control follow-up bundle: build fix + authoritative four-flag truth + AUTO ambiguity/external hardening
+- Classification: **both** (driver-visible AUTO ownership safety correction + internal compile/truth-seam hardening).
+- Fixed `PitTyreControlEngine.OnTelemetryTick()` compile break by removing duplicate local-name collision (`desiredWet`).
+- Tightened tyre-service truth availability seam in `LalaLaunch.BuildPitTyreControlSnapshot()`:
+  - service truth is now authoritative only when all four tyre-change flags are available,
+  - partial/missing flag telemetry now yields unknown service truth (no LF-only/partial fallback authority for manual reconciliation or AUTO ownership detection).
+- Hardened AUTO cancel semantics in `PitTyreControlEngine`:
+  - AUTO cancel no longer forces `OFF` when manual truth mapping is ambiguous/unavailable,
+  - AUTO now stays active until concrete `OFF`/`DRY`/`WET` remap truth exists.
+- Added delayed plugin-result hardening for AUTO external-ownership detection:
+  - plugin-owned protection now includes short-lived intent tracking for recent plugin-issued service/compound targets,
+  - delayed truth convergence that matches recent plugin intent is treated as plugin-owned (no false external-takeover cancel),
+  - genuine external/manual MFD takeover still cancels AUTO with `TYRE AUTO CANCELLED` and concrete remap.
+
 ### 2026-04-22 — Tyre Control PR follow-up: explicit raw-command model + AUTO external ownership cancel/remap
 - Classification: **both** (driver-visible tyre-control command/ownership behavior correction + bounded internal ownership detection).
 - Updated `PitTyreControlEngine` to remove internal toggle-based tyre-service control (`Pit.ToggleTyresAll` no longer used by tyre control engine); engine now uses explicit raw commands only:

@@ -1,7 +1,7 @@
 # Repository status
 
 Validated against commit: HEAD
-Last updated: 2026-04-22
+Last updated: 2026-04-23
 Branch: work
 
 ## Current repo/link status
@@ -9,6 +9,13 @@ Branch: work
 - No Git remote is configured in this checkout (`git remote -v` returns empty).
 
 ## Documentation sync status
+- Tyre Control follow-up bundle landed (build fix + authoritative service truth + AUTO cancel hardening):
+  - fixed `PitTyreControlEngine.OnTelemetryTick()` local-variable collision build break (`desiredWet`);
+  - tyre-service truth availability is now authoritative only when all four tyre-change flags are available (partial/missing flag telemetry is unknown/non-authoritative);
+  - outside AUTO manual truth mapping now only consumes authoritative four-flag service truth (no partial/LF fallback authority);
+  - AUTO external-ownership cancel no longer forces `OFF` on ambiguous/unavailable truth;
+  - AUTO now includes delayed plugin-intent convergence protection so staged plugin-originated truth updates arriving after immediate suppression are not misclassified as external takeover;
+  - genuine external/manual MFD takeover still cancels AUTO (`TYRE AUTO CANCELLED`) and remaps to concrete manual truth.
 - Tyre Control PR follow-up landed (explicit raw-command model + AUTO external ownership cancel/remap):
   - tyre control engine no longer uses internal toggle semantics for service enforcement (`Pit.ToggleTyresAll` remains a direct user action only);
   - explicit tyre commands are now authoritative in-engine (`OFF => #cleartires$`; `DRY/WET/AUTO => #t$` then dry/wet `#tc ...$`);

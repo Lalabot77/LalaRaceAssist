@@ -103,7 +103,8 @@ Tyre Control behavior notes for these bindings:
 - In AUTO, tyre control remains plugin-owned authoritative mode only while MFD ownership is still plugin-owned:
   - bounded unconfirmed enforcement still publishes info-only `TYRE AUTO UNCONFIRMED` feedback/logging,
   - a bounded plugin-owned suppression window follows plugin tyre sends so immediate resulting MFD changes are treated as plugin-owned,
-  - MFD tyre truth changes observed outside that suppression window are treated as external/manual ownership takeover: plugin publishes `TYRE AUTO CANCELLED`, exits AUTO, and remaps to current manual truth (`OFF`/`DRY`/`WET`).
+  - delayed truth convergence that matches the plugin’s own recent intended service/compound targets is still treated as plugin-owned (no false external takeover),
+  - MFD tyre truth changes outside plugin-owned protection cancel AUTO only when a concrete manual truth remap exists (`OFF`/`DRY`/`WET`); ambiguous/unavailable truth does not cancel AUTO and does not force `OFF`.
 - Tyre control mode resets to `OFF` on `Telemetry.IsOnTrackCar` edge transitions (`false->true` or `true->false`) via the existing pit-control reset seam.
 - Compound command retries are bounded by cooldown + attempt limits even when a local send attempt fails, preventing per-tick resend hammering.
 
