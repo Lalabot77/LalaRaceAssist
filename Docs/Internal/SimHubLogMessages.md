@@ -123,6 +123,7 @@ Scope: Info/Warn logs emitted via `SimHub.Logging.Current.Info(...)` and `SimHub
 - **`[LalaPlugin:Profile] Session start snapshot: Car='...'  Track='...'`** — Live snapshot cleared and session identity pushed to Fuel tab on session change.【F:LalaLaunch.cs†L3308-L3365】
 - **`[LalaPlugin:Profile] New live combo detected. Auto-selecting profile for Car='...' Track='...'`** — Auto-selection fired once per new car/track combo in DataUpdate.【F:LalaLaunch.cs†L3598-L3625】
 - **`[LalaPlugin:Pace] PB Updated: car @ track -> lap`** — PB update accepted via ProfilesManagerViewModel.【F:ProfilesManagerViewModel.cs†L66-L88】
+- **`[LalaPlugin:Pace] validated-lap PB gate candidate=... wet=... car='...' trackKey='...' -> accepted|rejected`** — Accepted-lap PB write gate decision from `UpdateLiveFuelCalcs`; emitted on every validated-lap PB evaluation (Info on acceptance, verbose-debug on rejection).
 - **`[LalaPlugin:LapRef] Session best updated (dry|wet): <seconds>s`** — LapRef captured a new in-session validated best snapshot for the active condition.
 - **`[LalaPlugin:LapRef] Profile PB sectors persisted (dry|wet) for <car> @ '<track>'.`** — Profile PB update included real fixed-sector data and wrote condition-specific PB sector fields.
 - **`[LalaPlugin:Profiles] Track resolved: key='...'`** — Track resolution during profile operations.【F:ProfilesManagerViewModel.cs†L160-L182】

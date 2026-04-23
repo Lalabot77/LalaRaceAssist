@@ -70,6 +70,39 @@ The public user-facing release history is maintained in the root `CHANGELOG.md`.
   - mode cycle remains `OFF -> DRY -> WET -> AUTO -> OFF`,
   - AUTO external/manual ownership-cancel behaviour remains in place,
   - no internal toggle-semantics reintroduction.
+### 2026-04-23 — LapRef/PB seam reliability follow-up (validated-lap PB writes + immediate LapRef refresh)
+- Classification: **both** (driver-visible SessionBest/PB timing reliability improvement + internal seam hardening).
+- Moved PB write ownership to the accepted validated-lap seam in `UpdateLiveFuelCalcs`:
+  - PB compare/write now uses the same authoritative lap-time candidate used by LapRef validated capture (freshness-guarded `CarIdxLastLapTime` handoff).
+  - This removes fragile dependency on delayed native best-lap event timing for PB persistence.
+- Added a bounded second `UpdateLapReferenceContext(...)` pass in the existing 500ms group immediately after accepted-lap processing so SessionBest/ProfileBest handoff visibility no longer waits an extra update cycle.
+- Kept scope/invariants intact:
+  - condition-specific wet/dry PB ownership remains unchanged,
+  - cleared/non-positive PB values still behave as unavailable baseline,
+  - sector persistence remains optional and only writes when real sectors exist,
+  - no H2H delta semantics or dashboard JSON contracts changed.
+
+### 2026-04-23 — PR follow-up: restore OFF->MAN progression for ModeCycle-only Fuel Control bindings
+- Classification: **both** (driver-visible mode-cycle progression restore + narrow explicit-command ownership correction).
+- Updated `PitFuelControlEngine.ModeCycle()` OFF branch so it no longer exits on selection-only state mutation.
+  - `OFF -> MAN` now issues a real explicit fuel-amount send attempt via existing raw command ownership (`#fuel ...$`) using current selected source target.
+  - This keeps toggle semantics out of Fuel Control while allowing MFD `dpFuelFill` truth to move to MAN for users who only bind `Pit.FuelControl.ModeCycle`.
+- Preserved invariants:
+  - non-AUTO mode truth remains telemetry-derived from `dpFuelFill`,
+  - no `Pit.ToggleFuel` / `#!fuel` path was reintroduced into Fuel Control,
+  - AUTO entry/exit behavior and existing OFF hard guard semantics outside this transition remain unchanged.
+
+### 2026-04-23 — Pit Fuel Control mode ownership refactor: remove internal fuel-toggle semantics
+- Classification: **both** (driver-visible Fuel Control mode behavior update + internal ownership simplification).
+- Refactored `PitFuelControlEngine` so Fuel Control no longer depends on `_fuelToggleSender`, `TryToggleFuelFillEnabled(...)`, or `NotifyPluginFuelToggleAction()`; Fuel Control mode/source paths now rely only on explicit raw fuel command sends.
+- Updated mode-cycle behavior to explicit-command model:
+  - `OFF -> MAN` is now selection-only intent (`FUEL MODE MAN`) and sends no command,
+  - `MAN -> AUTO` keeps existing immediate amount-send ownership semantics (`PUSH/NORM/SAVE` arm on successful send; `PLAN` remains one-shot then forced `STBY` disarmed; `STBY` stays disarmed),
+  - `AUTO -> OFF` now uses explicit raw command `#-fuel$` with single-attempt transport semantics (`Pit Cmd Fail` on local transport failure; no retries/poll loops).
+- Kept invariants unchanged:
+  - OFF hard guard remains (source actions do not send while effective mode is OFF),
+  - AUTO cancel edge detection, on-track reset behavior, and lap-cross AUTO cadence remain unchanged,
+  - direct plugin action `Pit.ToggleFuel` remains available as a separate pit action outside Fuel Control ownership.
 
 ### 2026-04-23 — Pit Fuel Control regression follow-up: remove blocking OFF->MAN toggle re-poll loop
 - Classification: **both** (driver-visible ModeCycle responsiveness fix + internal control-loop safety hardening).

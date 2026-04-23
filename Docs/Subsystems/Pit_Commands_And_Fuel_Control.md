@@ -96,13 +96,15 @@ Canonical log wording and meaning live in `Docs/Internal/SimHubLogMessages.md`; 
 - Transport success for custom/raw/stateless commands is attempt-only; in-sim effect is unverified by design.
 - Tyre control has no resend loop: each target change sends once, then either confirms in-window or fails once (`PIT CMD FAIL`) and falls back to current MFD truth.
 - External pit-menu edits can cancel AUTO once and force safety recovery state in fuel control.
-- AUTO exit (`AUTO -> OFF`) is guarded by live MFD truth (`dpFuelFill`): if fuel fill is already OFF, the engine must not send a fuel toggle and should only publish OFF state recovery (`Source=STBY`, AUTO cleared).
-- Fuel `OFF -> MAN` toggle flow must stay non-blocking in `PitFuelControlEngine.TryToggleFuelFillEnabled(...)`: no wait/re-poll loops, but a single immediate post-send snapshot read must still verify `dpFuelFill` matches expected ON/OFF before reporting success.
+- Fuel Control mode ownership is explicit-command only (no internal `Pit.ToggleFuel` use):
+  - `OFF -> MAN` issues an explicit fuel-amount command attempt using the selected source target (`#fuel ...$`) so MFD truth (`dpFuelFill`) can transition to MAN via telemetry;
+  - `AUTO -> OFF` uses explicit raw OFF command `#-fuel$` and only exits AUTO to `Source=STBY` + disarmed on successful transport attempt;
+  - MAN remains MFD-derived truth (`dpFuelFill=true`) when AUTO is inactive.
 
 ## Test checklist
 - Bind and press representative built-in pit actions from SimHub Controls & Events.
 - Validate transport mode behavior in each mode (`Auto`, `Legacy`, `Direct only`) with logs.
-- Confirm stateful toggle actions show effect-confirmed semantics and custom/raw actions stay unverified semantics.
+- Confirm Fuel Control mode/source actions stay on explicit raw-command attempt semantics (single attempt, no retries/poll loops).
 - Confirm Pit Fuel Control AUTO cancel triggers on external fuel request and MFD enable changes.
 - Confirm Tyre Control mode cycle order and AUTO wet/dry switching follow declared-wet authority.
 - Confirm `IsOnTrackCar` edges reset fuel/tyre control states to safe defaults.

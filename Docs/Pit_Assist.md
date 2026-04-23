@@ -72,10 +72,10 @@ These actions replace any old dashboard bindings that directly called `IRacingEx
 Pit Fuel Control behavior notes for these bindings:
 - `LalaLaunch.Pit.FuelSetMax` is now a true transport toggle: press sequence alternates **MAX**, **ZERO**, **MAX**, **ZERO** ...
 - Full-tank short-circuit only applies to the MAX phase; ZERO phase still sends (so a full tank does not block `#fuel 0.01`).
-- `LalaLaunch.Pit.FuelControl.ModeCycle` now follows effective mode and actively drives MFD truth:
-  - `OFF -> MAN` by sending a fuel toggle ON (validated against `dpFuelFill`),
+- `LalaLaunch.Pit.FuelControl.ModeCycle` now uses explicit raw fuel command ownership (no internal fuel-toggle semantics):
+  - `OFF -> MAN` is selection/intent only (`FUEL MODE MAN`) and sends no command,
   - `MAN -> AUTO` enters plugin AUTO ownership,
-  - `AUTO -> OFF` sends a fuel toggle OFF, exits AUTO, and forces `Source=STBY` + `AutoArmed=false`.
+  - `AUTO -> OFF` sends explicit `#-fuel$`, then exits AUTO and forces `Source=STBY` + `AutoArmed=false` on successful send.
 - AUTO entry send behavior:
   - entering AUTO from `PUSH`/`NORM`/`SAVE` sends immediately and arms AUTO only on successful send,
   - entering AUTO from `PLAN` sends once immediately, then always returns to `Source=STBY` with `AutoArmed=false`,
@@ -86,7 +86,7 @@ Pit Fuel Control behavior notes for these bindings:
   - in `AUTO`, `SourceCycle` is limited to `PUSH -> NORM -> SAVE -> PUSH` (PLAN excluded),
   - in `MAN`, full cycle remains available including `PLAN`.
 - AUTO cancel/ownership rules:
-  - AUTO cancels once (`AUTO CANCELLED`) when either live requested pit fuel (`PitSvFuel`) or MFD fuel-enable (`dpFuelFill`) changes outside plugin-owned send/toggle suppression,
+  - AUTO cancels once (`AUTO CANCELLED`) when either live requested pit fuel (`PitSvFuel`) or MFD fuel-enable (`dpFuelFill`) changes outside plugin-owned send suppression,
   - AUTO cancels to `STBY` (with `AutoArmed=false`) when iRacing AutoFuel is active,
   - Offline Testing suppresses Pit Fuel Control to inert `STBY` with mode still derived from MFD truth,
   - any `Telemetry.IsOnTrackCar` edge (`false -> true` or `true -> false`) resets to `Source=STBY` + `AutoArmed=false` without forcing plugin-owned `OFF`/`MAN`.
