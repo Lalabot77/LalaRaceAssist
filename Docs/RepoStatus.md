@@ -9,6 +9,9 @@ Branch: work
 - No Git remote is configured in this checkout (`git remote -v` returns empty).
 
 ## Documentation sync status
+- 2026-04-23 PR follow-up landed for Fuel Control owned-mirror expectation expiry:
+  - pending owned requested-fuel / fuel-fill expectations are now cleared whenever currently observed telemetry already equals the queued expected values, even without a same-tick change event;
+  - closes stale-pending ownership attribution after suppression-window or baseline-init convergence, preventing later manual MFD same-value edits from being masked as plugin-owned.
 - 2026-04-23 PR follow-up bundle landed for Fuel Control review findings (reviewed commit `91cc94a494`):
   - `SetPlan` blocked in AUTO now cleanly no-ops without disarming AUTO (`Source`/`AutoArmed` unchanged on blocked AUTO press);
   - Fuel Control now sends explicit OFF/MAN MFD state commands (OFF->MAN sends `#+fuel$`; AUTO->OFF sends `#-fuel$` and preserves AUTO state on send failure);

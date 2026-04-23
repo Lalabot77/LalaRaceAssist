@@ -105,6 +105,7 @@ Canonical log wording and meaning live in `Docs/Internal/SimHubLogMessages.md`; 
     - while in AUTO, plugin sends nothing and publishes `AUTO REFUEL CANCELLED BY MFD`, then mirrors to `OFF STBY`/`MAN STBY` based on MFD truth;
     - while in MAN/OFF, plugin sends nothing and mirrors with `REFUEL SET OFF BY MFD`, `REFUEL SET ON BY MFD`, or `FUEL CHANGED BY MFD`;
     - MAN-owned plugin sends are tracked so delayed telemetry echoes are consumed as owned mirror updates (not reclassified as external MFD takeover).
+    - Pending owned-mirror expectations are expired as soon as current observed telemetry already matches the expected value, even without a same-tick change event.
 
 ## Test checklist
 - Bind and press representative built-in pit actions from SimHub Controls & Events.

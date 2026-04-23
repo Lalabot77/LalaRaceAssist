@@ -33,6 +33,14 @@ The public user-facing release history is maintained in the root `CHANGELOG.md`.
 
 ## Post-v1.0 development
 
+### 2026-04-23 — PR follow-up: expire satisfied Fuel Control owned-mirror expectations without requiring a change tick
+- Classification: **internal-only** (ownership guard hardening; no new action/export surface).
+- Updated `PitFuelControlEngine` owned-mirror tracking to immediately clear pending requested-fuel / fuel-fill expectations whenever current observed telemetry is already at the queued expected value, even when no same-tick telemetry delta occurs.
+- This closes the stale-pending path where convergence during suppression-window or baseline-init could leave expectations armed and later manual MFD edits to the same value incorrectly attributed as plugin-owned.
+- Preserved scope/invariants:
+  - no redesign, retries, polling loops, or hidden recovery logic;
+  - no new transport behavior and no `Pit.ToggleFuel`/toggle-semantics reintroduction.
+
 ### 2026-04-23 — PR follow-up: tighten Fuel Control MAN/AUTO mirror ownership and explicit OFF/MAN commands
 - Classification: **both** (driver-visible Fuel Control command/mirror behavior correction + internal ownership hardening).
 - Updated `PitFuelControlEngine` to address review follow-up requirements in one focused change:
