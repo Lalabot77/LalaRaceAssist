@@ -9,6 +9,16 @@ Branch: work
 - No Git remote is configured in this checkout (`git remote -v` returns empty).
 
 ## Documentation sync status
+- 2026-04-23 PR follow-up restored `OFF -> MAN` progression for ModeCycle-only Fuel Control bindings:
+  - `PitFuelControlEngine.ModeCycle()` OFF branch now issues an explicit fuel-amount command attempt (`#fuel ...$`) using the selected source target instead of selection-only state mutation;
+  - keeps Fuel Control ownership explicit-command based (no `Pit.ToggleFuel` / `#!fuel` reintroduction) while allowing non-AUTO MAN truth to advance via MFD telemetry `dpFuelFill`;
+  - transport/send failure remains visible via existing `Pit Cmd Fail` feedback semantics.
+- 2026-04-23 Pit Fuel Control mode ownership refactor landed (explicit-command model, no internal toggle dependency):
+  - `PitFuelControlEngine` no longer depends on `_fuelToggleSender`, `TryToggleFuelFillEnabled(...)`, or `NotifyPluginFuelToggleAction()` for Fuel Control mode ownership;
+  - Fuel Control mode cycle now uses explicit command semantics only: `OFF -> MAN` is selection-only intent with no send, `MAN -> AUTO` keeps existing immediate amount-send ownership behavior, and `AUTO -> OFF` sends explicit raw OFF command `#-fuel$` (single attempt, no retry/poll loop);
+  - successful AUTO->OFF explicit send exits AUTO to `Source=STBY` + `AutoArmed=false`; local transport failure remains visible as `Pit Cmd Fail`;
+  - OFF hard guard, AUTO cancel edge-trigger behavior, on-track reset seam, and lap-cross AUTO cadence remain unchanged;
+  - direct plugin action `Pit.ToggleFuel` remains available as a separate built-in pit action outside Fuel Control ownership.
 - 2026-04-23 PR review follow-up restored non-blocking post-toggle verification in `TryToggleFuelFillEnabled(...)`:
   - `_fuelToggleSender()` transport-attempt success is no longer treated as confirmed toggle by itself;
   - after successful send attempt, the engine now performs one immediate snapshot read and requires `dpFuelFill` to match expected ON/OFF before returning success;
