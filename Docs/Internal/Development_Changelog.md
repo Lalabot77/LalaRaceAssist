@@ -33,6 +33,14 @@ The public user-facing release history is maintained in the root `CHANGELOG.md`.
 
 ## Post-v1.0 development
 
+### 2026-04-23 — Tyre Control PR review follow-up: always issue `#tc` on DRY/WET/AUTO intent (no already-correct send suppression)
+- Classification: **both** (driver-visible DRY/WET/AUTO reliability fix + narrow internal enforcement correction).
+- Updated `PitTyreControlEngine.EnsureCompound(...)` to remove the requested-compound-family short-circuit that previously treated "already correct" as a no-op.
+  - DRY/WET/AUTO now always perform a single `#tc ...$` send when a mode transition or AUTO enforcement event requires compound intent handling.
+  - This preserves the single-send + bounded confirmation window model (no retry loops, no `#t$` reintroduction).
+- Fixes the service-off recovery hole where compound family matched but no command was emitted:
+  - when tyre service is OFF and requested compound already matches DRY/WET family, the engine now still issues `#tc`, allowing iRacing to turn tyre service ON as part of compound request handling.
+
 ### 2026-04-23 — Tyre Control simplification follow-up: remove `#t$` sequencing + remove resend loops
 - Classification: **both** (driver-visible tyre command behavior simplification + internal control-path reduction).
 - Simplified `PitTyreControlEngine` to single-send, single-confirmation behaviour:

@@ -323,16 +323,6 @@ namespace LaunchPlugin
         private void EnsureCompound(PitTyreControlSnapshot snapshot, bool desiredWet)
         {
             string targetKey = desiredWet ? "wet" : "dry";
-            bool alreadyCorrect = snapshot.HasRequestedCompound &&
-                                  IsRequestedCompoundInDesiredFamily(snapshot.RequestedCompound, desiredWet);
-            if (alreadyCorrect)
-            {
-                _lastCompoundTargetKey = targetKey;
-                _compoundConfirmationPending = false;
-                _compoundConfirmationDeadlineUtc = DateTime.MinValue;
-                ClearPendingCompoundIntentIfMatched(snapshot);
-                return;
-            }
 
             bool targetChanged = !string.Equals(_lastCompoundTargetKey, targetKey, StringComparison.Ordinal);
             if (targetChanged)
@@ -521,17 +511,6 @@ namespace LaunchPlugin
             {
                 _hasPendingServiceIntent = false;
                 _pendingServiceIntentUntilUtc = DateTime.MinValue;
-            }
-        }
-
-        private void ClearPendingCompoundIntentIfMatched(PitTyreControlSnapshot snapshot)
-        {
-            if (_hasPendingCompoundIntent &&
-                snapshot.HasRequestedCompound &&
-                IsRequestedCompoundInDesiredFamily(snapshot.RequestedCompound, _pendingCompoundWet))
-            {
-                _hasPendingCompoundIntent = false;
-                _pendingCompoundIntentUntilUtc = DateTime.MinValue;
             }
         }
 

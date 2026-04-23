@@ -9,6 +9,11 @@ Branch: work
 - No Git remote is configured in this checkout (`git remote -v` returns empty).
 
 ## Documentation sync status
+- 2026-04-23 Tyre Control PR review follow-up landed (always-send compound intent for DRY/WET/AUTO):
+  - removed `PitTyreControlEngine.EnsureCompound(...)` "already correct compound family => no send" short-circuit;
+  - DRY/WET/AUTO now always issue a single `#tc ...$` command on mode-intent transitions/AUTO enforcement events, regardless of current requested-compound family truth;
+  - preserves single-send + short confirmation-window semantics with no retry loops and no `#t$` service-on path reintroduction;
+  - closes the service-OFF recovery gap where family-match no-op suppressed command emission and could let manual/AUTO fall back to OFF.
 - 2026-04-23 Tyre Control simplification follow-up landed (single-send confirmation, no `#t$`, no retries):
   - tyre control command model now uses `OFF => #cleartires$` and `DRY/WET/AUTO => #tc ...$` only (internal `#t$` sequencing removed);
   - tyre service/compound resend loops and retry/cooldown attempt budgets were removed for tyre control;
