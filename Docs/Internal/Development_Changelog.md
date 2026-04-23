@@ -33,6 +33,18 @@ The public user-facing release history is maintained in the root `CHANGELOG.md`.
 
 ## Post-v1.0 development
 
+### 2026-04-23 — PR follow-up: tighten Fuel Control MAN/AUTO mirror ownership and explicit OFF/MAN commands
+- Classification: **both** (driver-visible Fuel Control command/mirror behavior correction + internal ownership hardening).
+- Updated `PitFuelControlEngine` to address review follow-up requirements in one focused change:
+  - `SetPlan` remains MAN-only and now cleanly no-ops in AUTO (no AUTO disarm/state mutation on blocked press).
+  - `OFF -> MAN` now sends explicit MFD ON command (`#+fuel$`), and `AUTO -> OFF` send failure now leaves AUTO unchanged.
+  - PLAN sends are now validity-gated at send time, so planner/live mismatch cannot fall through into unintended zero-litre sends.
+  - Added owned-mirror expectation tracking for Fuel Control sends, so delayed MAN-owned telemetry echoes are consumed as owned updates instead of misclassified external takeovers (`FUEL CHANGED BY MFD` path).
+- Preserved invariants:
+  - no transport redesign/retries/poll loops or hidden recovery logic,
+  - no `Pit.ToggleFuel` reintroduction inside Fuel Control,
+  - subsystem scope remains limited to `PitFuelControlEngine` behavior corrections plus aligned docs.
+
 ### 2026-04-23 — Pit Fuel Control authoritative behavior-table alignment (OFF isolation, PLAN MAN-only, external mirror messaging)
 - Classification: **both** (driver-visible Fuel Control behavior contract corrections + internal state-machine ownership cleanup).
 - Aligned `PitFuelControlEngine` to the authoritative table contract:

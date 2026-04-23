@@ -96,14 +96,15 @@ Canonical log wording and meaning live in `Docs/Internal/SimHubLogMessages.md`; 
 - Tyre compound send failure paths are bounded by retry/cooldown budget to avoid per-tick resend spam.
 - External pit-menu edits can cancel AUTO once and force safety recovery state in fuel control.
 - Fuel Control mode ownership is explicit-command only (no internal `Pit.ToggleFuel` use):
-  - `OFF -> MAN` is selection-only and forces `Source=STBY` (`FUEL MAN STBY`) with no command send;
+  - `OFF -> MAN` explicitly sends MFD refuel ON (`#+fuel$`) and then mirrors MAN truth (`Source=STBY`, AUTO disarmed);
   - OFF is a hard guard: `SourceCycle`/`SetPush`/`SetNorm`/`SetSave`/`SetPlan` send nothing and hold `OFF STBY`;
   - `MAN -> AUTO`: `PUSH`/`NORM`/`SAVE` send immediately and arm AUTO on success; `STBY` and `PLAN` both enter `AUTO STBY` with no send (PLAN is inhibited in AUTO switching);
-  - `AUTO -> OFF` always attempts explicit raw OFF command `#-fuel$`; on send failure fallback stays `AUTO STBY`, on success exits AUTO and mirrors OFF truth;
-  - `SetPlan` is MAN-only direct send (`REFUEL SET PLAN X L` semantics). PLAN is blocked in OFF and AUTO.
+  - `AUTO -> OFF` always attempts explicit raw OFF command `#-fuel$`; on send failure AUTO remains unchanged, on success exits AUTO and mirrors OFF truth;
+  - `SetPlan` is MAN-only direct send (`REFUEL SET PLAN X L` semantics). PLAN is blocked in OFF/AUTO and blocked when PLAN validity/session match is false.
   - External MFD/fuel-request changes are mirror-only:
     - while in AUTO, plugin sends nothing and publishes `AUTO REFUEL CANCELLED BY MFD`, then mirrors to `OFF STBY`/`MAN STBY` based on MFD truth;
-    - while in MAN/OFF, plugin sends nothing and mirrors with `REFUEL SET OFF BY MFD`, `REFUEL SET ON BY MFD`, or `FUEL CHANGED BY MFD`.
+    - while in MAN/OFF, plugin sends nothing and mirrors with `REFUEL SET OFF BY MFD`, `REFUEL SET ON BY MFD`, or `FUEL CHANGED BY MFD`;
+    - MAN-owned plugin sends are tracked so delayed telemetry echoes are consumed as owned mirror updates (not reclassified as external MFD takeover).
 
 ## Test checklist
 - Bind and press representative built-in pit actions from SimHub Controls & Events.
