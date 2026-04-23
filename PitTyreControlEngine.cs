@@ -333,6 +333,15 @@ namespace LaunchPlugin
 
             if (_compoundConfirmationPending)
             {
+                if (snapshot.HasRequestedCompound &&
+                    IsRequestedCompoundInDesiredFamily(snapshot.RequestedCompound, desiredWet))
+                {
+                    _compoundConfirmationPending = false;
+                    _compoundConfirmationDeadlineUtc = DateTime.MinValue;
+                    ClearPendingCompoundIntentIfMatched(snapshot);
+                    return;
+                }
+
                 if (DateTime.UtcNow < _compoundConfirmationDeadlineUtc)
                 {
                     return;
@@ -511,6 +520,17 @@ namespace LaunchPlugin
             {
                 _hasPendingServiceIntent = false;
                 _pendingServiceIntentUntilUtc = DateTime.MinValue;
+            }
+        }
+
+        private void ClearPendingCompoundIntentIfMatched(PitTyreControlSnapshot snapshot)
+        {
+            if (_hasPendingCompoundIntent &&
+                snapshot.HasRequestedCompound &&
+                IsRequestedCompoundInDesiredFamily(snapshot.RequestedCompound, _pendingCompoundWet))
+            {
+                _hasPendingCompoundIntent = false;
+                _pendingCompoundIntentUntilUtc = DateTime.MinValue;
             }
         }
 

@@ -9,6 +9,11 @@ Branch: work
 - No Git remote is configured in this checkout (`git remote -v` returns empty).
 
 ## Documentation sync status
+- 2026-04-23 Tyre Control PR review follow-up landed (compound confirmation success-path restore):
+  - while `_compoundConfirmationPending` is active, `PitTyreControlEngine.EnsureCompound(...)` now first checks whether `PitSvTireCompound` has converged into the requested DRY/WET family before considering timeout failure;
+  - successful family convergence now clears pending compound confirmation state and pending compound-intent tracking immediately;
+  - timeout unconfirmed fallback (`PIT CMD FAIL` + manual-truth remap) now occurs only when the confirmation window actually expires without requested-family convergence;
+  - keeps the always-send single-command `#tc ...$` model and no-retry-loop behavior unchanged.
 - 2026-04-23 Tyre Control PR review follow-up landed (always-send compound intent for DRY/WET/AUTO):
   - removed `PitTyreControlEngine.EnsureCompound(...)` "already correct compound family => no send" short-circuit;
   - DRY/WET/AUTO now always issue a single `#tc ...$` command on mode-intent transitions/AUTO enforcement events, regardless of current requested-compound family truth;

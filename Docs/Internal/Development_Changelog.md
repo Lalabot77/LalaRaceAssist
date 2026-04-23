@@ -33,6 +33,14 @@ The public user-facing release history is maintained in the root `CHANGELOG.md`.
 
 ## Post-v1.0 development
 
+### 2026-04-23 — Tyre Control PR review follow-up: restore compound confirmation success path before timeout failure
+- Classification: **both** (driver-visible false-failure/false-AUTO-collapse fix + narrow internal confirmation-path correction).
+- Updated `PitTyreControlEngine.EnsureCompound(...)` pending-confirmation path to check for successful requested-compound family convergence before timeout handling.
+  - while `_compoundConfirmationPending` is active, the engine now first confirms success when `snapshot.HasRequestedCompound` and requested compound family matches current dry/wet target;
+  - on match, confirmation state is cleared immediately (pending flag + deadline) and pending compound-intent tracking is also cleared;
+  - timeout fallback to `HandleUnconfirmedCommand(...)` now runs only when the confirmation window expires without a family match.
+- Prevents false `PIT CMD FAIL` emissions (and unintended AUTO collapse to manual truth) after a successful single-send `#tc ...$` compound change.
+
 ### 2026-04-23 — Tyre Control PR review follow-up: always issue `#tc` on DRY/WET/AUTO intent (no already-correct send suppression)
 - Classification: **both** (driver-visible DRY/WET/AUTO reliability fix + narrow internal enforcement correction).
 - Updated `PitTyreControlEngine.EnsureCompound(...)` to remove the requested-compound-family short-circuit that previously treated "already correct" as a no-op.
