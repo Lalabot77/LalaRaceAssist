@@ -9,6 +9,10 @@ Branch: work
 - No Git remote is configured in this checkout (`git remote -v` returns empty).
 
 ## Documentation sync status
+- 2026-04-23 LapRef/PB reliability follow-up landed (bounded seam fix):
+  - PB writes now execute on the accepted validated-lap seam in `UpdateLiveFuelCalcs` using the same authoritative lap-time handoff as LapRef validated capture (instead of waiting for native best-lap event timing);
+  - added a bounded second `UpdateLapReferenceContext(...)` pass in the 500ms cadence immediately after accepted-lap processing so SessionBest/ProfileBest handoff visibility does not lag an extra update cycle;
+  - periodic native best-lap seam remains for readback refresh only; condition-specific wet/dry PB routing and optional sector persistence semantics remain unchanged.
 - 2026-04-23 PR follow-up restored `OFF -> MAN` progression for ModeCycle-only Fuel Control bindings:
   - `PitFuelControlEngine.ModeCycle()` OFF branch now issues an explicit fuel-amount command attempt (`#fuel ...$`) using the selected source target instead of selection-only state mutation;
   - keeps Fuel Control ownership explicit-command based (no `Pit.ToggleFuel` / `#!fuel` reintroduction) while allowing non-AUTO MAN truth to advance via MFD telemetry `dpFuelFill`;

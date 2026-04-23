@@ -33,6 +33,18 @@ The public user-facing release history is maintained in the root `CHANGELOG.md`.
 
 ## Post-v1.0 development
 
+### 2026-04-23 — LapRef/PB seam reliability follow-up (validated-lap PB writes + immediate LapRef refresh)
+- Classification: **both** (driver-visible SessionBest/PB timing reliability improvement + internal seam hardening).
+- Moved PB write ownership to the accepted validated-lap seam in `UpdateLiveFuelCalcs`:
+  - PB compare/write now uses the same authoritative lap-time candidate used by LapRef validated capture (freshness-guarded `CarIdxLastLapTime` handoff).
+  - This removes fragile dependency on delayed native best-lap event timing for PB persistence.
+- Added a bounded second `UpdateLapReferenceContext(...)` pass in the existing 500ms group immediately after accepted-lap processing so SessionBest/ProfileBest handoff visibility no longer waits an extra update cycle.
+- Kept scope/invariants intact:
+  - condition-specific wet/dry PB ownership remains unchanged,
+  - cleared/non-positive PB values still behave as unavailable baseline,
+  - sector persistence remains optional and only writes when real sectors exist,
+  - no H2H delta semantics or dashboard JSON contracts changed.
+
 ### 2026-04-23 — PR follow-up: restore OFF->MAN progression for ModeCycle-only Fuel Control bindings
 - Classification: **both** (driver-visible mode-cycle progression restore + narrow explicit-command ownership correction).
 - Updated `PitFuelControlEngine.ModeCycle()` OFF branch so it no longer exits on selection-only state mutation.
