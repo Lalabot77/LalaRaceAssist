@@ -180,7 +180,7 @@ namespace LaunchPlugin
             {
                 Source = PitFuelControlSource.Stby;
                 bool sentOn = _chatCommandSender != null &&
-                              _chatCommandSender("Pit.FuelControl.ModeCycle", "#+fuel$", "FUEL MAN STBY");
+                              _chatCommandSender("Pit.FuelControl.ModeCycle", "#fuel$", "FUEL MAN STBY");
                 if (!sentOn)
                 {
                     PublishSelectionFeedback("Pit.FuelControl.ModeCycle", "Pit Cmd Fail");

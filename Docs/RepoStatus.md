@@ -10,7 +10,7 @@ Branch: work
 
 ## Documentation sync status
 - 2026-04-23 Pit Fuel Control testing/polish pass landed (command payload fix + observability + table alignment):
-  - `PitFuelControlEngine.ModeCycle()` OFF->MAN now sends explicit ON payload `#+fuel$` (replacing malformed `#fuel$`) and uses `FUEL MAN STBY` feedback.
+  - `PitFuelControlEngine.ModeCycle()` OFF->MAN sends `#fuel$` (no `#+fuel$` additive form) and uses `FUEL MAN STBY` feedback.
   - `PitCommandEngine.ExecuteRawPitCommand(...)` empty-after-normalization blocked path now logs both raw and normalized payload text for diagnosis.
   - `Docs/Subsystems/FuelModesLogicCSV.csv` updated to reflect OFF->MAN payload fix and explicit MAN/AUTO over-tank-space max-feedback rows (`FUEL MAX`, `AUTO FUEL <requested>L >MAX`) with no outgoing-payload clamp redesign.
 - 2026-04-23 Tyre Control follow-up landed (compound confirmation timeout no longer reverts successful DRY/WET MFD changes):
