@@ -99,7 +99,7 @@ Canonical log wording and meaning live in `Docs/Internal/SimHubLogMessages.md`; 
 - Tyre control has no resend loop: each target change sends once, then either confirms in-window or fails once (`PIT CMD FAIL`) and falls back to current MFD truth.
 - External pit-menu edits can cancel AUTO once and force safety recovery state in fuel control.
 - Fuel Control mode ownership is explicit-command only (no internal `Pit.ToggleFuel` use):
-  - `OFF -> MAN` explicitly sends MFD refuel ON (`#+fuel$`) and then mirrors MAN truth (`Source=STBY`, AUTO disarmed);
+  - `OFF -> MAN` explicitly sends MFD refuel ON (`#fuel$`) and then mirrors MAN truth (`Source=STBY`, AUTO disarmed);
   - OFF is a hard guard: `SourceCycle`/`SetPush`/`SetNorm`/`SetSave`/`SetPlan` send nothing and hold `OFF STBY`;
   - `MAN -> AUTO`: `PUSH`/`NORM`/`SAVE` send immediately and arm AUTO on success; `STBY` and `PLAN` both enter `AUTO STBY` with no send (PLAN is inhibited in AUTO switching);
   - `AUTO -> OFF` always attempts explicit raw OFF command `#-fuel$`; on send failure AUTO remains unchanged, on success exits AUTO and mirrors OFF truth;

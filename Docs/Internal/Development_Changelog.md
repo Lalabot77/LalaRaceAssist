@@ -33,6 +33,21 @@ The public user-facing release history is maintained in the root `CHANGELOG.md`.
 
 ## Post-v1.0 development
 
+### 2026-04-23 — Pit Fuel Control testing/polish pass: OFF->MAN feedback alignment + raw-command observability + max-feedback table alignment
+- Classification: **both** (driver-visible OFF->MAN send/feedback correction + internal observability/docs alignment).
+- Updated Fuel Control OFF->MAN behavior in `PitFuelControlEngine.ModeCycle()`:
+  - OFF->MAN uses `#fuel$` payload (no plus-sign additive form),
+  - OFF->MAN selection feedback aligns to table contract (`FUEL MAN STBY`).
+- Expanded raw-command failure observability in `PitCommandEngine.ExecuteRawPitCommand(...)`:
+  - empty-after-normalization blocked sends now log both `raw` and `normalized` payload fields.
+- Updated authoritative behavior table `Docs/Subsystems/FuelModesLogicCSV.csv`:
+  - corrected OFF->MAN chat payload row to `#fuel$`,
+  - added explicit MAN/AUTO over-tank-space/max-feedback contract rows (`FUEL MAX`, `AUTO FUEL <requested>L >MAX`) without changing outgoing command payload/clamp behavior.
+- Preserved invariants:
+  - no fuel math redesign,
+  - no transport strategy redesign,
+  - no retry loops or dashboard JSON changes.
+
 ### 2026-04-23 — Tyre Control follow-up: compound confirmation timeout no longer reverts successful DRY/WET MFD changes
 - Classification: **both** (driver-visible false timeout failure/remap fix + narrow confirmation-path correction).
 - Updated `PitTyreControlEngine.EnsureCompound(...)` pending-confirmation behavior:

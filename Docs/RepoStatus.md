@@ -9,6 +9,10 @@ Branch: work
 - No Git remote is configured in this checkout (`git remote -v` returns empty).
 
 ## Documentation sync status
+- 2026-04-23 Pit Fuel Control testing/polish pass landed (command payload fix + observability + table alignment):
+  - `PitFuelControlEngine.ModeCycle()` OFF->MAN sends `#fuel$` (no `#+fuel$` additive form) and uses `FUEL MAN STBY` feedback.
+  - `PitCommandEngine.ExecuteRawPitCommand(...)` empty-after-normalization blocked path now logs both raw and normalized payload text for diagnosis.
+  - `Docs/Subsystems/FuelModesLogicCSV.csv` updated to reflect OFF->MAN payload fix and explicit MAN/AUTO over-tank-space max-feedback rows (`FUEL MAX`, `AUTO FUEL <requested>L >MAX`) with no outgoing-payload clamp redesign.
 - 2026-04-23 Tyre Control follow-up landed (compound confirmation timeout no longer reverts successful DRY/WET MFD changes):
   - `PitTyreControlEngine.EnsureCompound(...)` pending confirmation now succeeds immediately when requested compound truth exists and matches desired DRY/WET family (`HasRequestedCompound` + family match), without waiting for tyre-service ON confirmation;
   - successful family convergence now clears pending compound confirmation state before timeout evaluation, preventing false timeout failure from undoing already-successful MFD compound changes;
@@ -719,3 +723,12 @@ Branch: work
 - `Docs/Internal/SimHubLogMessages.md`
 - `Docs/Internal/Development_Changelog.md`
 - `Docs/RepoStatus.md`
+
+### Changed in Pit Fuel Control testing/polish pass (payload/observability/table alignment)
+- `PitFuelControlEngine.cs`
+- `PitCommandEngine.cs`
+- `Docs/Subsystems/FuelModesLogicCSV.csv`
+- `Docs/Internal/SimHubLogMessages.md`
+- `Docs/Internal/Development_Changelog.md`
+- `Docs/RepoStatus.md`
+- `CHANGELOG.md`
