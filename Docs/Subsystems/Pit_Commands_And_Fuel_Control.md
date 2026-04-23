@@ -66,6 +66,7 @@ This is the canonical technical document for the pit/custom command stack and re
    - DRY/WET/AUTO drive compound request semantics with a single raw `#tc ...$` send (no `#t$` pre-send),
    - each DRY/WET/AUTO `#tc ...$` send records both pending compound intent and pending service-ON intent so delayed OFF->ON service convergence is preserved as plugin-owned intent,
    - AUTO follows declared wetness,
+   - pending compound confirmation succeeds as soon as requested compound family truth (`PitSvTireCompound`) matches the desired DRY/WET family (service-flag ON confirmation is not required for this compound-success seam),
    - each action/AUTO enforcement event performs at most one send attempt per target and then waits for a short confirmation window; on unconfirmed timeout, publish `PIT CMD FAIL`, remap mode to MFD truth, and do not retry.
 
 ## Outputs (exports + logs)

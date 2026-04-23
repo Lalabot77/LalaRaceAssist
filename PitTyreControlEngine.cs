@@ -339,9 +339,7 @@ namespace LaunchPlugin
                 ClearPendingServiceIntentIfMatched(snapshot);
 
                 if (snapshot.HasRequestedCompound &&
-                    IsRequestedCompoundInDesiredFamily(snapshot.RequestedCompound, desiredWet) &&
-                    snapshot.HasTireServiceSelection &&
-                    snapshot.IsTireServiceSelected)
+                    IsRequestedCompoundInDesiredFamily(snapshot.RequestedCompound, desiredWet))
                 {
                     _compoundConfirmationPending = false;
                     _compoundConfirmationDeadlineUtc = DateTime.MinValue;
@@ -356,7 +354,7 @@ namespace LaunchPlugin
 
                 _compoundConfirmationPending = false;
                 _compoundConfirmationDeadlineUtc = DateTime.MinValue;
-                //HandleUnconfirmedCommand(snapshot, "compound-confirmation-timeout");
+                HandleUnconfirmedCommand(snapshot, "compound-confirmation-timeout");
                 return;
             }
 

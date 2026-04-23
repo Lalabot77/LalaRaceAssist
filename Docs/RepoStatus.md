@@ -9,6 +9,10 @@ Branch: work
 - No Git remote is configured in this checkout (`git remote -v` returns empty).
 
 ## Documentation sync status
+- 2026-04-23 Tyre Control follow-up landed (compound confirmation timeout no longer reverts successful DRY/WET MFD changes):
+  - `PitTyreControlEngine.EnsureCompound(...)` pending confirmation now succeeds immediately when requested compound truth exists and matches desired DRY/WET family (`HasRequestedCompound` + family match), without waiting for tyre-service ON confirmation;
+  - successful family convergence now clears pending compound confirmation state before timeout evaluation, preventing false timeout failure from undoing already-successful MFD compound changes;
+  - bounded timeout failure handling remains active only for truly unconfirmed windows (`PIT CMD FAIL` + manual truth remap when no requested-family convergence occurred).
 - 2026-04-23 Pit command transport regression fix landed (chat-open `T` leak guard):
   - `PitCommandEngine` now force-closes chat (`Esc`) before opener (`T`) in both direct-postmessage and legacy-sendinput chat-injection paths;
   - prevents stale-open chat from absorbing the opener key into outgoing typed payloads (`t#...` / `tt#...`) for raw/custom pit commands such as `#tc 0`;
