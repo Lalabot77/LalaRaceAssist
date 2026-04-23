@@ -220,10 +220,20 @@ namespace LaunchPlugin
             _suppressManualOverrideUntilUtc = DateTime.MinValue;
             ClearObservedExternalState();
 
+            var exitSnapshot = _snapshotProvider();
+            if (exitSnapshot == null || !exitSnapshot.TelemetryFuelFillEnabled)
+            {
+                PublishSelectionFeedback("Pit.FuelControl.ModeCycle", "FUEL MODE OFF");
+                return;
+            }
+
             if (!TryToggleFuelFillEnabled(expectedEnabled: false))
             {
                 PublishSelectionFeedback("Pit.FuelControl.ModeCycle", "Pit Cmd Fail");
+                return;
             }
+
+            PublishSelectionFeedback("Pit.FuelControl.ModeCycle", "FUEL MODE OFF");
         }
 
         public void SetPush() => SetSource(PitFuelControlSource.Push, "Pit.FuelControl.SetPush");

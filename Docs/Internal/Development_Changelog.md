@@ -33,6 +33,14 @@ The public user-facing release history is maintained in the root `CHANGELOG.md`.
 
 ## Post-v1.0 development
 
+### 2026-04-23 — PR follow-up: guard AUTO exit toggle on live fuel-fill truth
+- Classification: **both** (driver-visible OFF transition correctness fix + internal state-machine safety hardening).
+- Updated `PitFuelControlEngine.ModeCycle()` AUTO-exit branch so it no longer blindly sends `Pit.ToggleFuel` OFF.
+  - AUTO exit now first checks live `dpFuelFill` truth from snapshot telemetry.
+  - If fuel fill is already OFF, AUTO exits without sending a toggle and publishes OFF outcome (`Source=STBY`, `AutoArmed=false`, AUTO cleared).
+  - OFF toggle send path remains active only when fill is currently ON; bounded verification/mismatch feedback semantics stay unchanged (`Pit Cmd Fail` on mismatch).
+- Prevents the prior edge case where AUTO could exit while disarmed with fill already OFF and accidentally flip fill back ON via blind toggle.
+
 ### 2026-04-22 — Pit Fuel Control V2 follow-up polish (Mode/MFD alignment + OFF guard + AUTO entry send + PLAN isolation)
 - Classification: **both** (driver-visible pit-fuel control behavior corrections + internal ownership/safety hardening).
 - Updated `PitFuelControlEngine` mode-cycle contract to explicit effective-mode loop `OFF -> MAN -> AUTO -> OFF`:
