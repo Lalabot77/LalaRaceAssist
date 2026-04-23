@@ -133,7 +133,6 @@ namespace LaunchPlugin
             _pitFuelControlEngine = new PitFuelControlEngine(
                 BuildPitFuelControlSnapshot,
                 SendPitFuelControlCommand,
-                SendPitFuelToggleCommand,
                 (actionName, message, raw) => _pitCommandEngine.PublishActionFeedback(actionName, message, raw));
             _pitTyreControlEngine = new PitTyreControlEngine(
                 BuildPitTyreControlSnapshot,
@@ -335,13 +334,7 @@ namespace LaunchPlugin
 
         private bool SendPitFuelToggleCommand()
         {
-            bool sent = ExecutePitCommand(PitCommandAction.ToggleFuel);
-            if (sent)
-            {
-                _pitFuelControlEngine.NotifyPluginFuelToggleAction();
-            }
-
-            return sent;
+            return ExecutePitCommand(PitCommandAction.ToggleFuel);
         }
 
         private bool SendPitTyreControlCommand(string actionName, string messageText, string feedbackLabel)

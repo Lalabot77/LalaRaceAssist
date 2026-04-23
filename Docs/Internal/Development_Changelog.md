@@ -33,6 +33,18 @@ The public user-facing release history is maintained in the root `CHANGELOG.md`.
 
 ## Post-v1.0 development
 
+### 2026-04-23 — Pit Fuel Control mode ownership refactor: remove internal fuel-toggle semantics
+- Classification: **both** (driver-visible Fuel Control mode behavior update + internal ownership simplification).
+- Refactored `PitFuelControlEngine` so Fuel Control no longer depends on `_fuelToggleSender`, `TryToggleFuelFillEnabled(...)`, or `NotifyPluginFuelToggleAction()`; Fuel Control mode/source paths now rely only on explicit raw fuel command sends.
+- Updated mode-cycle behavior to explicit-command model:
+  - `OFF -> MAN` is now selection-only intent (`FUEL MODE MAN`) and sends no command,
+  - `MAN -> AUTO` keeps existing immediate amount-send ownership semantics (`PUSH/NORM/SAVE` arm on successful send; `PLAN` remains one-shot then forced `STBY` disarmed; `STBY` stays disarmed),
+  - `AUTO -> OFF` now uses explicit raw command `#-fuel$` with single-attempt transport semantics (`Pit Cmd Fail` on local transport failure; no retries/poll loops).
+- Kept invariants unchanged:
+  - OFF hard guard remains (source actions do not send while effective mode is OFF),
+  - AUTO cancel edge detection, on-track reset behavior, and lap-cross AUTO cadence remain unchanged,
+  - direct plugin action `Pit.ToggleFuel` remains available as a separate pit action outside Fuel Control ownership.
+
 ### 2026-04-23 — Pit Fuel Control regression follow-up: remove blocking OFF->MAN toggle re-poll loop
 - Classification: **both** (driver-visible ModeCycle responsiveness fix + internal control-loop safety hardening).
 - Updated `PitFuelControlEngine.TryToggleFuelFillEnabled(...)` to stop running a second blocking telemetry poll loop after `Pit.ToggleFuel`.
