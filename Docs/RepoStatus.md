@@ -9,6 +9,26 @@ Branch: work
 - No Git remote is configured in this checkout (`git remote -v` returns empty).
 
 ## Documentation sync status
+- 2026-04-23 Tyre Control PR review follow-up landed (restore service-ON intent tracking for `#tc` sends):
+  - `PitTyreControlEngine.EnsureCompound(...)` now marks pending service intent (`desiredSelected=true`) alongside pending compound intent whenever DRY/WET/AUTO issues `#tc ...$`;
+  - delayed OFF->ON tyre-service truth convergence caused by successful `#tc` remains protected as plugin-owned intent even after compound family confirmation is already complete;
+  - keeps the simplified command model unchanged (`OFF => #cleartires$`; `DRY/WET/AUTO => #tc ...$` only), with no `#t$` reintroduction and no retry-loop changes.
+- 2026-04-23 Tyre Control PR review follow-up landed (compound confirmation success-path restore):
+  - while `_compoundConfirmationPending` is active, `PitTyreControlEngine.EnsureCompound(...)` now first checks whether `PitSvTireCompound` has converged into the requested DRY/WET family before considering timeout failure;
+  - successful family convergence now clears pending compound confirmation state and pending compound-intent tracking immediately;
+  - timeout unconfirmed fallback (`PIT CMD FAIL` + manual-truth remap) now occurs only when the confirmation window actually expires without requested-family convergence;
+  - keeps the always-send single-command `#tc ...$` model and no-retry-loop behavior unchanged.
+- 2026-04-23 Tyre Control PR review follow-up landed (always-send compound intent for DRY/WET/AUTO):
+  - removed `PitTyreControlEngine.EnsureCompound(...)` "already correct compound family => no send" short-circuit;
+  - DRY/WET/AUTO now always issue a single `#tc ...$` command on mode-intent transitions/AUTO enforcement events, regardless of current requested-compound family truth;
+  - preserves single-send + short confirmation-window semantics with no retry loops and no `#t$` service-on path reintroduction;
+  - closes the service-OFF recovery gap where family-match no-op suppressed command emission and could let manual/AUTO fall back to OFF.
+- 2026-04-23 Tyre Control simplification follow-up landed (single-send confirmation, no `#t$`, no retries):
+  - tyre control command model now uses `OFF => #cleartires$` and `DRY/WET/AUTO => #tc ...$` only (internal `#t$` sequencing removed);
+  - tyre service/compound resend loops and retry/cooldown attempt budgets were removed for tyre control;
+  - each manual action/AUTO target change now performs one send attempt and waits a short bounded confirmation window (~900 ms);
+  - unconfirmed timeout (or immediate send failure) now publishes `PIT CMD FAIL`, then remaps mode to current authoritative MFD truth with no retry loop;
+  - preserves existing mode cycle and AUTO external/manual takeover-cancel behaviour.
 - 2026-04-23 LapRef/PB reliability follow-up landed (bounded seam fix):
   - PB writes now execute on the accepted validated-lap seam in `UpdateLiveFuelCalcs` using the same authoritative lap-time handoff as LapRef validated capture (instead of waiting for native best-lap event timing);
   - added a bounded second `UpdateLapReferenceContext(...)` pass in the 500ms cadence immediately after accepted-lap processing so SessionBest/ProfileBest handoff visibility does not lag an extra update cycle;

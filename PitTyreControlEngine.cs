@@ -25,8 +25,7 @@ namespace LaunchPlugin
 
     internal sealed class PitTyreControlEngine
     {
-        private const int SendCooldownMs = 900;
-        private const int MaxAttemptsPerTarget = 2;
+        private const int CommandConfirmationWindowMs = 900;
         private const int ManualConfirmationWindowMs = 1400;
         private const int ManualReconcileCooldownMs = 700;
         private const int PluginOwnedSuppressionWindowMs = 1200;
@@ -38,19 +37,17 @@ namespace LaunchPlugin
         private readonly Action<string> _logger;
 
         private string _lastServiceTargetKey = string.Empty;
-        private int _serviceTargetAttempts;
-        private DateTime _serviceNextAttemptUtc = DateTime.MinValue;
+        private bool _serviceConfirmationPending;
+        private DateTime _serviceConfirmationDeadlineUtc = DateTime.MinValue;
 
         private string _lastCompoundTargetKey = string.Empty;
-        private int _compoundTargetAttempts;
-        private DateTime _compoundNextAttemptUtc = DateTime.MinValue;
+        private bool _compoundConfirmationPending;
+        private DateTime _compoundConfirmationDeadlineUtc = DateTime.MinValue;
 
         private bool _manualConfirmationPending;
         private DateTime _manualConfirmationDeadlineUtc = DateTime.MinValue;
         private DateTime _manualNextReconcileUtc = DateTime.MinValue;
 
-        private string _autoServiceFailureNoticeKey = string.Empty;
-        private string _autoCompoundFailureNoticeKey = string.Empty;
         private DateTime _pluginOwnedSuppressionUntilUtc = DateTime.MinValue;
         private bool _hasObservedTruthSample;
         private bool _observedHasServiceSelection;
@@ -85,7 +82,6 @@ namespace LaunchPlugin
             Mode = PitTyreControlMode.Off;
             ResetAttemptState();
             ResetManualSyncState();
-            ResetAutoFailureNoticeState();
             ResetPendingPluginIntentState();
         }
 
@@ -129,11 +125,8 @@ namespace LaunchPlugin
                     return;
                 }
 
-                bool desiredService = true;
                 bool desiredWetAuto = snapshot.WeatherDeclaredWet;
-                EnsureTyreService(snapshot, desiredService);
                 EnsureCompound(snapshot, desiredWetAuto);
-                HandleAutoFailureFeedback(snapshot, desiredService, desiredWetAuto);
                 UpdateObservedTruthSample(snapshot);
                 return;
             }
@@ -148,7 +141,6 @@ namespace LaunchPlugin
                 return;
             }
 
-            EnsureTyreService(snapshot, true);
             bool desiredWetMan = Mode == PitTyreControlMode.Wet;
             EnsureCompound(snapshot, desiredWetMan);
             UpdateObservedTruthSample(snapshot);
@@ -199,9 +191,9 @@ namespace LaunchPlugin
                 _manualConfirmationPending = false;
                 _manualNextReconcileUtc = now.AddMilliseconds(ManualReconcileCooldownMs);
 
-                if (hasTruth && truthMode != Mode)
+                if (_serviceConfirmationPending || _compoundConfirmationPending)
                 {
-                    ApplyManualTruthMode(truthMode, "manual-confirmation-fallback");
+                    HandleUnconfirmedCommand(snapshot, "manual-confirmation-fallback");
                 }
 
                 return;
@@ -269,43 +261,6 @@ namespace LaunchPlugin
             return false;
         }
 
-        private void HandleAutoFailureFeedback(PitTyreControlSnapshot snapshot, bool desiredService, bool desiredWet)
-        {
-            if (desiredService && snapshot.HasTireServiceSelection && snapshot.IsTireServiceSelected)
-            {
-                _autoServiceFailureNoticeKey = string.Empty;
-            }
-
-            string serviceTargetKey = desiredService ? "on" : "off";
-            if (desiredService &&
-                snapshot.HasTireServiceSelection &&
-                !snapshot.IsTireServiceSelected &&
-                _serviceTargetAttempts >= MaxAttemptsPerTarget &&
-                !string.Equals(_autoServiceFailureNoticeKey, serviceTargetKey, StringComparison.Ordinal))
-            {
-                _autoServiceFailureNoticeKey = serviceTargetKey;
-                PublishSelectionFeedback("Pit.TyreControl.Auto.ServiceUnconfirmed", "TYRE AUTO UNCONFIRMED");
-                _logger?.Invoke("[LalaPlugin:PitTyreControl] AUTO enforcement unconfirmed: tyre service stayed OFF after bounded attempts.");
-            }
-
-            bool compoundConfirmed = snapshot.HasRequestedCompound &&
-                                     IsRequestedCompoundInDesiredFamily(snapshot.RequestedCompound, desiredWet);
-            string compoundTargetKey = desiredWet ? "wet" : "dry";
-            if (compoundConfirmed)
-            {
-                _autoCompoundFailureNoticeKey = string.Empty;
-                return;
-            }
-
-            if (_compoundTargetAttempts >= MaxAttemptsPerTarget &&
-                !string.Equals(_autoCompoundFailureNoticeKey, compoundTargetKey, StringComparison.Ordinal))
-            {
-                _autoCompoundFailureNoticeKey = compoundTargetKey;
-                PublishSelectionFeedback("Pit.TyreControl.Auto.CompoundUnconfirmed", "TYRE AUTO UNCONFIRMED");
-                _logger?.Invoke($"[LalaPlugin:PitTyreControl] AUTO enforcement unconfirmed: compound target={(desiredWet ? "WET" : "DRY")} not confirmed after bounded attempts.");
-            }
-        }
-
         private void EnsureTyreService(PitTyreControlSnapshot snapshot, bool desiredSelected)
         {
             if (!snapshot.HasTireServiceSelection)
@@ -317,59 +272,95 @@ namespace LaunchPlugin
             if (snapshot.IsTireServiceSelected == desiredSelected)
             {
                 _lastServiceTargetKey = targetKey;
-                _serviceTargetAttempts = 0;
-                _serviceNextAttemptUtc = DateTime.MinValue;
+                _serviceConfirmationPending = false;
+                _serviceConfirmationDeadlineUtc = DateTime.MinValue;
                 ClearPendingServiceIntentIfMatched(snapshot);
                 return;
             }
 
-            if (!string.Equals(_lastServiceTargetKey, targetKey, StringComparison.Ordinal))
+            bool targetChanged = !string.Equals(_lastServiceTargetKey, targetKey, StringComparison.Ordinal);
+            if (targetChanged)
             {
-                _lastServiceTargetKey = targetKey;
-                _serviceTargetAttempts = 0;
-                _serviceNextAttemptUtc = DateTime.MinValue;
+                _serviceConfirmationPending = false;
+                _serviceConfirmationDeadlineUtc = DateTime.MinValue;
             }
 
-            if (!CanAttempt(_serviceTargetAttempts, _serviceNextAttemptUtc))
+            if (desiredSelected)
             {
                 return;
             }
 
-            string command = desiredSelected ? "#t$" : "#cleartires$";
-            string actionName = desiredSelected ? "Pit.TyreControl.ServiceOn" : "Pit.TyreControl.ServiceOff";
-            string feedback = desiredSelected ? "TYRE ON" : "TYRE OFF";
-            bool sendAttempted = _rawCommandSender?.Invoke(actionName, command, feedback) ?? false;
+            if (_serviceConfirmationPending)
+            {
+                if (DateTime.UtcNow < _serviceConfirmationDeadlineUtc)
+                {
+                    return;
+                }
+
+                _serviceConfirmationPending = false;
+                _serviceConfirmationDeadlineUtc = DateTime.MinValue;
+                HandleUnconfirmedCommand(snapshot, "service-confirmation-timeout");
+                return;
+            }
+
+            if (!targetChanged && string.Equals(_lastServiceTargetKey, targetKey, StringComparison.Ordinal))
+            {
+                return;
+            }
+
+            bool sendAttempted = _rawCommandSender?.Invoke("Pit.TyreControl.ServiceOff", "#cleartires$", "TYRE OFF") ?? false;
             if (sendAttempted)
             {
                 MarkPendingServiceIntent(desiredSelected);
                 MarkPluginOwnedSuppressionWindow();
+                _serviceConfirmationPending = true;
+                _serviceConfirmationDeadlineUtc = DateTime.UtcNow.AddMilliseconds(CommandConfirmationWindowMs);
+                _lastServiceTargetKey = targetKey;
+                return;
             }
-            _serviceTargetAttempts++;
-            _serviceNextAttemptUtc = DateTime.UtcNow.AddMilliseconds(SendCooldownMs);
+
+            _lastServiceTargetKey = targetKey;
+            HandleUnconfirmedCommand(snapshot, "service-send-failed");
         }
 
         private void EnsureCompound(PitTyreControlSnapshot snapshot, bool desiredWet)
         {
             string targetKey = desiredWet ? "wet" : "dry";
-            bool alreadyCorrect = snapshot.HasRequestedCompound &&
-                                  IsRequestedCompoundInDesiredFamily(snapshot.RequestedCompound, desiredWet);
-            if (alreadyCorrect)
+
+            bool targetChanged = !string.Equals(_lastCompoundTargetKey, targetKey, StringComparison.Ordinal);
+            if (targetChanged)
             {
-                _lastCompoundTargetKey = targetKey;
-                _compoundTargetAttempts = 0;
-                _compoundNextAttemptUtc = DateTime.MinValue;
-                ClearPendingCompoundIntentIfMatched(snapshot);
+                _compoundConfirmationPending = false;
+                _compoundConfirmationDeadlineUtc = DateTime.MinValue;
+            }
+
+            if (_compoundConfirmationPending)
+            {
+                ClearPendingServiceIntentIfMatched(snapshot);
+
+                if (snapshot.HasRequestedCompound &&
+                    IsRequestedCompoundInDesiredFamily(snapshot.RequestedCompound, desiredWet) &&
+                    snapshot.HasTireServiceSelection &&
+                    snapshot.IsTireServiceSelected)
+                {
+                    _compoundConfirmationPending = false;
+                    _compoundConfirmationDeadlineUtc = DateTime.MinValue;
+                    ClearPendingCompoundIntentIfMatched(snapshot);
+                    return;
+                }
+
+                if (DateTime.UtcNow < _compoundConfirmationDeadlineUtc)
+                {
+                    return;
+                }
+
+                _compoundConfirmationPending = false;
+                _compoundConfirmationDeadlineUtc = DateTime.MinValue;
+                HandleUnconfirmedCommand(snapshot, "compound-confirmation-timeout");
                 return;
             }
 
-            if (!string.Equals(_lastCompoundTargetKey, targetKey, StringComparison.Ordinal))
-            {
-                _lastCompoundTargetKey = targetKey;
-                _compoundTargetAttempts = 0;
-                _compoundNextAttemptUtc = DateTime.MinValue;
-            }
-
-            if (!CanAttempt(_compoundTargetAttempts, _compoundNextAttemptUtc))
+            if (!targetChanged && string.Equals(_lastCompoundTargetKey, targetKey, StringComparison.Ordinal))
             {
                 return;
             }
@@ -381,11 +372,17 @@ namespace LaunchPlugin
             bool sendAttempted = _rawCommandSender?.Invoke(actionName, command, feedback) ?? false;
             if (sendAttempted)
             {
+                MarkPendingServiceIntent(true);
                 MarkPendingCompoundIntent(desiredWet);
                 MarkPluginOwnedSuppressionWindow();
+                _compoundConfirmationPending = true;
+                _compoundConfirmationDeadlineUtc = DateTime.UtcNow.AddMilliseconds(CommandConfirmationWindowMs);
+                _lastCompoundTargetKey = targetKey;
+                return;
             }
-            _compoundTargetAttempts++;
-            _compoundNextAttemptUtc = DateTime.UtcNow.AddMilliseconds(SendCooldownMs);
+
+            _lastCompoundTargetKey = targetKey;
+            HandleUnconfirmedCommand(snapshot, "compound-send-failed");
         }
 
         private bool TryCancelAutoForExternalOwnership(PitTyreControlSnapshot snapshot)
@@ -419,7 +416,6 @@ namespace LaunchPlugin
             ApplyManualTruthMode(truthMode, "auto-cancel-external-ownership");
             PublishSelectionFeedback("Pit.TyreControl.Auto.CancelledExternal", "TYRE AUTO CANCELLED");
             _logger?.Invoke($"[LalaPlugin:PitTyreControl] AUTO cancelled: external tyre ownership detected, remapped={ModeToText(truthMode)}.");
-            ResetAutoFailureNoticeState();
             return true;
         }
 
@@ -571,21 +567,33 @@ namespace LaunchPlugin
             return requestedCompound == 0 || requestedCompound == 1;
         }
 
-        private static bool CanAttempt(int attemptCount, DateTime nextAttemptUtc)
+        private void HandleUnconfirmedCommand(PitTyreControlSnapshot snapshot, string reason)
         {
-            if (attemptCount >= MaxAttemptsPerTarget)
+            PublishSelectionFeedback("Pit.TyreControl.Unconfirmed", "PIT CMD FAIL");
+
+            PitTyreControlMode truthMode;
+            if (TryMapManualTruthMode(snapshot, out truthMode))
             {
-                return false;
+                if (truthMode != Mode)
+                {
+                    ApplyManualTruthMode(truthMode, reason);
+                }
+                else
+                {
+                    _logger?.Invoke($"[LalaPlugin:PitTyreControl] Unconfirmed command reason={reason}; mode already aligned with MFD truth={ModeToText(truthMode)}.");
+                }
+
+                return;
             }
 
-            return DateTime.UtcNow >= nextAttemptUtc;
+            _logger?.Invoke($"[LalaPlugin:PitTyreControl] Unconfirmed command reason={reason}; unable to remap (MFD truth unavailable).");
         }
 
         private void ResetAttemptState()
         {
             _lastServiceTargetKey = string.Empty;
-            _serviceTargetAttempts = 0;
-            _serviceNextAttemptUtc = DateTime.MinValue;
+            _serviceConfirmationPending = false;
+            _serviceConfirmationDeadlineUtc = DateTime.MinValue;
             ResetCompoundAttempts();
         }
 
@@ -594,12 +602,6 @@ namespace LaunchPlugin
             _manualConfirmationPending = false;
             _manualConfirmationDeadlineUtc = DateTime.MinValue;
             _manualNextReconcileUtc = DateTime.MinValue;
-        }
-
-        private void ResetAutoFailureNoticeState()
-        {
-            _autoServiceFailureNoticeKey = string.Empty;
-            _autoCompoundFailureNoticeKey = string.Empty;
         }
 
         private void ResetPendingPluginIntentState()
@@ -615,8 +617,8 @@ namespace LaunchPlugin
         private void ResetCompoundAttempts()
         {
             _lastCompoundTargetKey = string.Empty;
-            _compoundTargetAttempts = 0;
-            _compoundNextAttemptUtc = DateTime.MinValue;
+            _compoundConfirmationPending = false;
+            _compoundConfirmationDeadlineUtc = DateTime.MinValue;
         }
 
         private static string ModeToText(PitTyreControlMode mode)

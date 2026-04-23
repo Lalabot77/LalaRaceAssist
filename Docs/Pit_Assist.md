@@ -98,10 +98,10 @@ Tyre Control behavior notes for these bindings:
 - `DRY` actively keeps tyre service ON and requests dry next tyres.
 - `WET` actively keeps tyre service ON and requests wet next tyres.
 - `AUTO` actively keeps tyre service ON and follows declared-wet authority (`Telemetry.WeatherDeclaredWet`) to keep requested next tyres DRY/WET.
-- Tyre-service enforcement truth is authoritative from the four individual tyre-change flags: service ON/OFF is authoritative only when all four tyre-change flags are available; partial/missing tyre flags are treated as unknown, so service enforcement is held (no retry-attempt budget spend while truth is unavailable).
+- Tyre-service enforcement truth is authoritative from the four individual tyre-change flags: service ON/OFF is authoritative only when all four tyre-change flags are available; partial/missing tyre flags are treated as unknown, so service enforcement is held (no additional resend attempts while truth is unavailable).
 - Tyre Control no longer uses toggle semantics internally (`Pit.ToggleTyresAll` remains available only as a direct user action). Engine command model is explicit raw commands only:
   - `OFF` enforcement sends `#cleartires$`
-  - `DRY`/`WET`/`AUTO` enforcement sends `#t$` before compound targeting, then `#tc ...$` (`dry=0`, `wet=2`)
+  - `DRY`/`WET`/`AUTO` enforcement sends only `#tc ...$` (`dry=0`, `wet=2`) with no `#t$` pre-send
 - Outside AUTO (`OFF`/`DRY`/`WET`), tyre mode is a bounded 2-way truth-sync contract with actual MFD truth:
   - manual mode selections are treated as requests,
   - if MFD truth confirms within the short confirmation window, mode stays selected,
@@ -110,12 +110,12 @@ Tyre Control behavior notes for these bindings:
   - `ResetToOff()` safety resets keep mode latched at `OFF` (no immediate `OFF -> DRY/WET` remap on the next telemetry tick).
   - ambiguous/unavailable truth is held fail-safe (no twitchy flip-flopping).
 - In AUTO, tyre control remains plugin-owned authoritative mode only while MFD ownership is still plugin-owned:
-  - bounded unconfirmed enforcement still publishes info-only `TYRE AUTO UNCONFIRMED` feedback/logging,
   - a bounded plugin-owned suppression window follows plugin tyre sends so immediate resulting MFD changes are treated as plugin-owned,
+  - DRY/WET/AUTO `#tc ...$` sends record both pending compound intent and pending service-ON intent (no separate `#t$` path),
   - delayed truth convergence is treated as plugin-owned only when observed truth matches the full relevant pending plugin service/compound intent (if both are pending, both must match),
   - MFD tyre truth changes outside plugin-owned protection cancel AUTO only when a concrete manual truth remap exists (`OFF`/`DRY`/`WET`); ambiguous/unavailable truth does not cancel AUTO and does not force `OFF`.
 - Tyre control mode resets to `OFF` on `Telemetry.IsOnTrackCar` edge transitions (`false->true` or `true->false`) via the existing pit-control reset seam.
-- Compound command retries are bounded by cooldown + attempt limits even when a local send attempt fails, preventing per-tick resend hammering.
+- Tyre command confirmation is single-send/single-window: each manual action or AUTO target change attempts one send, waits a short confirmation window, and on unconfirmed result publishes `PIT CMD FAIL` then remaps mode to actual MFD truth (no retry resend loop).
 
 In Settings → **Pit Commands**, tyre control shows a single built-in binding row (`Tyre Mode Cycle`) for normal use (no raw chat command editing). Direct tyre mode actions (`SetOff` / `SetDry` / `SetWet` / `SetAuto`) remain registered for SimHub Controls & Events / Dash Studio binding.
 
