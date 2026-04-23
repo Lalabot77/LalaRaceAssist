@@ -1,7 +1,7 @@
 # Profiles and Personal Bests
 
 Validated against commit: HEAD
-Last updated: 2026-04-22
+Last updated: 2026-04-23
 Branch: work
 
 ## Purpose
@@ -65,6 +65,10 @@ PB laps are captured when:
 - Lap improves the stored PB for the active condition.
 - Session context allows PB capture.
 - PB values are telemetry-owned in Profiles; the PB display is read-only in the Profiles workflow (no manual PB editing path).
+
+Authoritative write seam:
+- PB persistence now runs directly on the accepted validated-lap gate in `UpdateLiveFuelCalcs`, using the same authoritative lap-time handoff used for LapRef validated capture (`CarIdxLastLapTime` freshness-guarded against the accepted-lap candidate).
+- The periodic native best-lap event remains a readback refresh seam for downstream consumers, but no longer owns PB write timing.
 
 PB metadata (source + timestamp) is stored separately for dry and wet laps. The **active condition** (dry vs wet) is driven by live wet-mode detection (tyre compound), so PB capture always aligns to the current surface mode.
 PB write gating treats `0`/non-positive cleared PB values as unavailable (same as `null`) so first valid relearn lap after a clear can persist.
