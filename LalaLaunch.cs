@@ -138,10 +138,9 @@ namespace LaunchPlugin
             _pitTyreControlEngine = new PitTyreControlEngine(
                 BuildPitTyreControlSnapshot,
                 SendPitTyreControlCommand,
-                action => ExecutePitCommand(action),
                 (actionName, message, raw) => _pitCommandEngine.PublishActionFeedback(actionName, message, raw),
                 message => SimHub.Logging.Current.Info(message));
-                    }
+        }
 
         // --- Dashboard Manager ---
         public ScreenManager Screens = new ScreenManager();
