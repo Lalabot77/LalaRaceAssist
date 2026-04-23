@@ -356,7 +356,7 @@ namespace LaunchPlugin
 
                 _compoundConfirmationPending = false;
                 _compoundConfirmationDeadlineUtc = DateTime.MinValue;
-                HandleUnconfirmedCommand(snapshot, "compound-confirmation-timeout");
+                //HandleUnconfirmedCommand(snapshot, "compound-confirmation-timeout");
                 return;
             }
 
