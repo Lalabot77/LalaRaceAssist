@@ -21,6 +21,26 @@ Branch: work
   - AUTO source cycle is now PLAN-isolated (`PUSH -> NORM -> SAVE -> PUSH` only); PLAN remains available in MAN cycle only,
   - AUTO cancel edge-trigger and lap-cross AUTO update cadence remain unchanged.
   - same-day follow-up: MAN->AUTO immediate-send failures now explicitly publish `Pit Cmd Fail` for both `PLAN` and `PUSH/NORM/SAVE` entry branches while preserving fallback-to-`STBY` + disarmed behavior.
+- Tyre Control PR follow-up landed (explicit raw-command model + AUTO external ownership cancel/remap):
+  - tyre control engine no longer uses internal toggle semantics for service enforcement (`Pit.ToggleTyresAll` remains a direct user action only);
+  - explicit tyre commands are now authoritative in-engine (`OFF => #cleartires$`; `DRY/WET/AUTO => #t$` then dry/wet `#tc ...$`);
+  - AUTO ownership now includes bounded plugin-owned suppression windows for post-send MFD changes;
+  - MFD tyre changes outside suppression are treated as external takeover, publish `TYRE AUTO CANCELLED`, and remap mode out of AUTO to current manual truth (`OFF`/`DRY`/`WET`);
+  - four-tyre service truth + tri-state ambiguous hold behavior remain intact (no collapse of unknown truth to OFF).
+- Tyre Control PR follow-up landed (tri-state manual truth mapping for tyre-service telemetry gaps):
+  - outside AUTO manual truth mapping now treats tyre-service state as tri-state (`ON` / `OFF` / `UNKNOWN`) instead of collapsing unavailable service telemetry to OFF;
+  - unknown tyre-service truth now returns ambiguous/no-truth for manual reconciliation (no forced OFF remap during telemetry gaps; fail-safe hold behavior preserved);
+  - confirmed OFF still maps to `OFF`, and service ON still maps to `DRY/WET` only when requested-compound family truth is valid.
+- Tyre Control PR follow-up landed (outside-AUTO ownership ordering + OFF reset latch fix):
+  - outside AUTO (`OFF`/`DRY`/`WET`), manual truth reconciliation now runs before manual enforcement so stale manual mode intent is not re-applied ahead of external MFD truth;
+  - `ResetToOff()` safety resets now stay latched at `OFF` on the next telemetry tick (no immediate `OFF -> DRY/WET` truth-remap regression);
+  - AUTO ownership behavior and AUTO unconfirmed info-feedback behavior remain unchanged.
+- Tyre Control follow-up landed (manual 2-way MFD truth sync outside AUTO + AUTO info-only unconfirmed policy):
+  - outside AUTO (`OFF`/`DRY`/`WET`), plugin mode now runs a bounded 2-way truth-sync contract against all-four tyre service truth + requested compound truth (`PitSvTireCompound`), including post-request confirmation fallback to actual MFD truth and bounded external-change remap;
+  - manual truth mapping remains constrained to existing families (`service OFF => OFF`, `service ON + dry-family => DRY`, `service ON + wet-family => WET`) with fail-safe hold when truth is ambiguous;
+  - AUTO remains authoritative ownership mode even when bounded enforcement attempts are unconfirmed;
+  - unconfirmed AUTO enforcement now publishes visible info-level feedback/logging (`TYRE AUTO UNCONFIRMED`) without collapsing mode out of AUTO;
+  - existing bounded retry/cooldown and transport ownership seams remain unchanged (no second transport path).
 - 2026-04-22 docs sweep for v1.1 release prep completed:
   - refreshed root `CHANGELOG.md` unreleased `v1.1` notes to be concise and user-facing,
   - reviewed and refreshed `Docs/User_Guide.md` and `Docs/Quick_Start.md` pit/custom command guidance links,
