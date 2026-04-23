@@ -191,7 +191,10 @@ namespace LaunchPlugin
                 _manualConfirmationPending = false;
                 _manualNextReconcileUtc = now.AddMilliseconds(ManualReconcileCooldownMs);
 
-                HandleUnconfirmedCommand(snapshot, "manual-confirmation-fallback");
+                if (_serviceConfirmationPending || _compoundConfirmationPending)
+                {
+                    HandleUnconfirmedCommand(snapshot, "manual-confirmation-fallback");
+                }
 
                 return;
             }
@@ -336,7 +339,9 @@ namespace LaunchPlugin
                 ClearPendingServiceIntentIfMatched(snapshot);
 
                 if (snapshot.HasRequestedCompound &&
-                    IsRequestedCompoundInDesiredFamily(snapshot.RequestedCompound, desiredWet))
+                    IsRequestedCompoundInDesiredFamily(snapshot.RequestedCompound, desiredWet) &&
+                    snapshot.HasTireServiceSelection &&
+                    snapshot.IsTireServiceSelected)
                 {
                     _compoundConfirmationPending = false;
                     _compoundConfirmationDeadlineUtc = DateTime.MinValue;
