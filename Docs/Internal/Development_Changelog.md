@@ -33,6 +33,18 @@ The public user-facing release history is maintained in the root `CHANGELOG.md`.
 
 ## Post-v1.0 development
 
+### 2026-04-23 — Tyre Control follow-up: compound confirmation timeout no longer reverts successful DRY/WET MFD changes
+- Classification: **both** (driver-visible false timeout failure/remap fix + narrow confirmation-path correction).
+- Updated `PitTyreControlEngine.EnsureCompound(...)` pending-confirmation behavior:
+  - confirmation success now triggers as soon as requested compound truth exists and matches the desired DRY/WET family (`snapshot.HasRequestedCompound` + family match),
+  - confirmation state is cleared immediately on that family convergence so timeout failure cannot run after convergence.
+- Restored bounded timeout failure handling for truly unconfirmed sends:
+  - timeout now again publishes `PIT CMD FAIL` + manual-truth remap only when requested-family convergence did not occur inside the confirmation window.
+- Preserved invariants:
+  - no retry-loop reintroduction,
+  - no `#t$` service command reintroduction,
+  - no transport or broad tyre-control redesign.
+
 ### 2026-04-23 — Pit command transport regression fix: block chat-open `T` leakage into typed raw/custom commands
 - Classification: **both** (driver-visible pit raw/custom command text integrity fix + transport-path hardening).
 - Updated `PitCommandEngine` chat-injection transport sequencing only (no tyre/fuel control state-machine changes):
