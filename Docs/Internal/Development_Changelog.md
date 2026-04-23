@@ -33,6 +33,13 @@ The public user-facing release history is maintained in the root `CHANGELOG.md`.
 
 ## Post-v1.0 development
 
+### 2026-04-23 — Tyre Control PR review follow-up: keep service-ON intent tracking for AUTO/DRY/WET `#tc` sends
+- Classification: **both** (driver-visible AUTO ownership/cancel stability fix + narrow internal intent-tracking correction).
+- Updated `PitTyreControlEngine.EnsureCompound(...)` send path so successful DRY/WET/AUTO `#tc ...$` sends now record pending service-ON intent (`desiredSelected=true`) in addition to pending compound intent.
+  - preserves the simplified single-command model (`OFF => #cleartires$`; `DRY/WET/AUTO => #tc ...$`) and does **not** reintroduce `#t$`;
+  - keeps delayed OFF->ON service convergence from successful `#tc` sends attributable to plugin-owned intent even when compound-family confirmation already succeeded.
+- While compound confirmation is pending, service pending intent is also opportunistically cleared as soon as authoritative service truth reports ON.
+
 ### 2026-04-23 — Tyre Control PR review follow-up: restore compound confirmation success path before timeout failure
 - Classification: **both** (driver-visible false-failure/false-AUTO-collapse fix + narrow internal confirmation-path correction).
 - Updated `PitTyreControlEngine.EnsureCompound(...)` pending-confirmation path to check for successful requested-compound family convergence before timeout handling.

@@ -333,6 +333,8 @@ namespace LaunchPlugin
 
             if (_compoundConfirmationPending)
             {
+                ClearPendingServiceIntentIfMatched(snapshot);
+
                 if (snapshot.HasRequestedCompound &&
                     IsRequestedCompoundInDesiredFamily(snapshot.RequestedCompound, desiredWet))
                 {
@@ -365,6 +367,7 @@ namespace LaunchPlugin
             bool sendAttempted = _rawCommandSender?.Invoke(actionName, command, feedback) ?? false;
             if (sendAttempted)
             {
+                MarkPendingServiceIntent(true);
                 MarkPendingCompoundIntent(desiredWet);
                 MarkPluginOwnedSuppressionWindow();
                 _compoundConfirmationPending = true;

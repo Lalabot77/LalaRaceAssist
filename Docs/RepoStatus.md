@@ -9,6 +9,10 @@ Branch: work
 - No Git remote is configured in this checkout (`git remote -v` returns empty).
 
 ## Documentation sync status
+- 2026-04-23 Tyre Control PR review follow-up landed (restore service-ON intent tracking for `#tc` sends):
+  - `PitTyreControlEngine.EnsureCompound(...)` now marks pending service intent (`desiredSelected=true`) alongside pending compound intent whenever DRY/WET/AUTO issues `#tc ...$`;
+  - delayed OFF->ON tyre-service truth convergence caused by successful `#tc` remains protected as plugin-owned intent even after compound family confirmation is already complete;
+  - keeps the simplified command model unchanged (`OFF => #cleartires$`; `DRY/WET/AUTO => #tc ...$` only), with no `#t$` reintroduction and no retry-loop changes.
 - 2026-04-23 Tyre Control PR review follow-up landed (compound confirmation success-path restore):
   - while `_compoundConfirmationPending` is active, `PitTyreControlEngine.EnsureCompound(...)` now first checks whether `PitSvTireCompound` has converged into the requested DRY/WET family before considering timeout failure;
   - successful family convergence now clears pending compound confirmation state and pending compound-intent tracking immediately;

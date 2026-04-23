@@ -111,6 +111,7 @@ Tyre Control behavior notes for these bindings:
   - ambiguous/unavailable truth is held fail-safe (no twitchy flip-flopping).
 - In AUTO, tyre control remains plugin-owned authoritative mode only while MFD ownership is still plugin-owned:
   - a bounded plugin-owned suppression window follows plugin tyre sends so immediate resulting MFD changes are treated as plugin-owned,
+  - DRY/WET/AUTO `#tc ...$` sends record both pending compound intent and pending service-ON intent (no separate `#t$` path),
   - delayed truth convergence is treated as plugin-owned only when observed truth matches the full relevant pending plugin service/compound intent (if both are pending, both must match),
   - MFD tyre truth changes outside plugin-owned protection cancel AUTO only when a concrete manual truth remap exists (`OFF`/`DRY`/`WET`); ambiguous/unavailable truth does not cancel AUTO and does not force `OFF`.
 - Tyre control mode resets to `OFF` on `Telemetry.IsOnTrackCar` edge transitions (`false->true` or `true->false`) via the existing pit-control reset seam.

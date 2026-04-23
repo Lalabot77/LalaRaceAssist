@@ -64,6 +64,7 @@ This is the canonical technical document for the pit/custom command stack and re
 6. Maintain Tyre Control enforcement:
    - OFF forces service off (`#cleartires$`),
    - DRY/WET/AUTO drive compound request semantics with a single raw `#tc ...$` send (no `#t$` pre-send),
+   - each DRY/WET/AUTO `#tc ...$` send records both pending compound intent and pending service-ON intent so delayed OFF->ON service convergence is preserved as plugin-owned intent,
    - AUTO follows declared wetness,
    - each action/AUTO enforcement event performs at most one send attempt per target and then waits for a short confirmation window; on unconfirmed timeout, publish `PIT CMD FAIL`, remap mode to MFD truth, and do not retry.
 
