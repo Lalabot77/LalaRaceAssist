@@ -65,6 +65,10 @@ namespace LaunchPlugin
         private int _lastObservedRequestedFuelLitres = -1;
         private bool _hasObservedFuelFillEnabled;
         private bool _lastObservedFuelFillEnabled;
+        private bool _hasPendingOwnedRequestedFuelLitres;
+        private int _pendingOwnedRequestedFuelLitres = -1;
+        private bool _hasPendingOwnedFuelFillEnabled;
+        private bool _pendingOwnedFuelFillEnabled;
 
         public PitFuelControlSource Source { get; private set; } = PitFuelControlSource.Push;
         private bool IsAutoModeActive { get; set; }
@@ -111,6 +115,9 @@ namespace LaunchPlugin
             PitFuelControlMode effectiveMode = ResolveEffectiveMode();
             if (effectiveMode == PitFuelControlMode.Off)
             {
+                Source = PitFuelControlSource.Stby;
+                AutoArmed = false;
+                IsAutoModeActive = false;
                 return;
             }
 
@@ -126,7 +133,7 @@ namespace LaunchPlugin
                 }
                 else
                 {
-                    Source = NextSource(Source, PlanValid);
+                    Source = NextSource(Source);
                 }
             }
 
@@ -137,9 +144,20 @@ namespace LaunchPlugin
             {
                 sendAttempted = true;
                 bool sent = SendCurrentTarget(isAutoUpdate: false, actionNameOverride: "Pit.FuelControl.SourceCycle");
+                if (!sent)
+                {
+                    Source = PitFuelControlSource.Stby;
+                    if (effectiveMode == PitFuelControlMode.Auto)
+                    {
+                        AutoArmed = false;
+                    }
+                    PublishSelectionFeedback("Pit.FuelControl.SourceCycle", "Pit Cmd Fail");
+                    return;
+                }
+
                 if (effectiveMode == PitFuelControlMode.Auto)
                 {
-                    AutoArmed = sent;
+                    AutoArmed = true;
                 }
             }
 
@@ -160,17 +178,18 @@ namespace LaunchPlugin
             PitFuelControlMode effectiveMode = ResolveEffectiveMode();
             if (effectiveMode == PitFuelControlMode.Off)
             {
-                if (Source == PitFuelControlSource.Stby)
-                {
-                    Source = PitFuelControlSource.Push;
-                    RefreshDerivedState();
-                }
-
-                bool sent = SendCurrentTarget(isAutoUpdate: false, actionNameOverride: "Pit.FuelControl.ModeCycle", allowOffMode: true);
-                if (!sent)
+                Source = PitFuelControlSource.Stby;
+                bool sentOn = _chatCommandSender != null &&
+                              _chatCommandSender("Pit.FuelControl.ModeCycle", "#+fuel$", "FUEL MODE MAN");
+                if (!sentOn)
                 {
                     PublishSelectionFeedback("Pit.FuelControl.ModeCycle", "Pit Cmd Fail");
+                    return;
                 }
+
+                IsAutoModeActive = false;
+                AutoArmed = false;
+                QueueOwnedMirrorExpectation(null, true);
                 return;
             }
 
@@ -186,17 +205,9 @@ namespace LaunchPlugin
 
                 if (Source == PitFuelControlSource.Plan)
                 {
-                    bool sentPlan = SendCurrentTarget(isAutoUpdate: false, actionNameOverride: "Pit.FuelControl.ModeCycle");
                     Source = PitFuelControlSource.Stby;
                     AutoArmed = false;
-                    if (sentPlan)
-                    {
-                        PublishSelectionFeedback("Pit.FuelControl.ModeCycle", "FUEL AUTO STBY");
-                    }
-                    else
-                    {
-                        PublishSelectionFeedback("Pit.FuelControl.ModeCycle", "Pit Cmd Fail");
-                    }
+                    PublishSelectionFeedback("Pit.FuelControl.ModeCycle", "FUEL AUTO STBY");
                     return;
                 }
 
@@ -216,23 +227,11 @@ namespace LaunchPlugin
                 return;
             }
 
-            var exitSnapshot = _snapshotProvider();
-            if (exitSnapshot == null || !exitSnapshot.TelemetryFuelFillEnabled)
-            {
-                IsAutoModeActive = false;
-                AutoArmed = false;
-                Source = PitFuelControlSource.Stby;
-                LastSentFuelLitres = -1;
-                _suppressManualOverrideUntilUtc = DateTime.MinValue;
-                ClearObservedExternalState();
-                PublishSelectionFeedback("Pit.FuelControl.ModeCycle", "FUEL MODE OFF");
-                return;
-            }
-
             bool sentOff = _chatCommandSender != null &&
                            _chatCommandSender("Pit.FuelControl.ModeCycle", "#-fuel$", "FUEL MODE OFF");
             if (!sentOff)
             {
+                PublishSelectionFeedback("Pit.FuelControl.ModeCycle", "Pit Cmd Fail");
                 return;
             }
 
@@ -242,11 +241,13 @@ namespace LaunchPlugin
             LastSentFuelLitres = -1;
             _suppressManualOverrideUntilUtc = DateTime.MinValue;
             ClearObservedExternalState();
+            QueueOwnedMirrorExpectation(null, false);
         }
 
         public void SetPush() => SetSource(PitFuelControlSource.Push, "Pit.FuelControl.SetPush");
         public void SetNorm() => SetSource(PitFuelControlSource.Norm, "Pit.FuelControl.SetNorm");
         public void SetSave() => SetSource(PitFuelControlSource.Save, "Pit.FuelControl.SetSave");
+        public void SetPlan() => SetPlanSource("Pit.FuelControl.SetPlan");
 
         public void OnLapCross()
         {
@@ -290,9 +291,8 @@ namespace LaunchPlugin
             RefreshDerivedState();
             var snapshot = _snapshotProvider();
 
-            if (!IsAutoModeActive || !AutoArmed)
+            if (snapshot == null)
             {
-                ClearObservedExternalState();
                 return;
             }
 
@@ -302,25 +302,15 @@ namespace LaunchPlugin
                 return;
             }
 
-            if (snapshot == null)
-            {
-                return;
-            }
-
             if (snapshot.SuppressFuelControl)
             {
                 DisarmAutoAndForceStby(clearSuppressWindow: true);
                 return;
             }
 
-            if (snapshot.IracingAutoFuelEnabled)
-            {
-                CancelAutoToStby("Pit.FuelControl.AutoFuelOwnership", "AUTO CANCELLED");
-                return;
-            }
-
             int currentRequestedLitres = RoundUpLitres(snapshot.TelemetryRequestedFuelLitres);
             bool currentFuelFillEnabled = snapshot.TelemetryFuelFillEnabled;
+            ExpireSatisfiedOwnedMirrorExpectations(currentRequestedLitres, currentFuelFillEnabled);
             if (!_hasObservedRequestedFuelLitres || !_hasObservedFuelFillEnabled)
             {
                 _hasObservedRequestedFuelLitres = true;
@@ -335,9 +325,20 @@ namespace LaunchPlugin
             _lastObservedRequestedFuelLitres = currentRequestedLitres;
             _lastObservedFuelFillEnabled = currentFuelFillEnabled;
 
+            if (snapshot.IracingAutoFuelEnabled)
+            {
+                CancelAutoToStby("Pit.FuelControl.AutoFuelOwnership", "AUTO CANCELLED");
+                return;
+            }
+
             if (requestedFuelChanged || fuelFillChanged)
             {
-                CancelAutoToStby("Pit.FuelControl.AutoCancelled", "AUTO CANCELLED");
+                if (TryConsumeOwnedMirrorChange(currentRequestedLitres, currentFuelFillEnabled, requestedFuelChanged, fuelFillChanged))
+                {
+                    return;
+                }
+
+                HandleExternalMirrorChange(currentFuelFillEnabled, requestedFuelChanged);
                 return;
             }
         }
@@ -353,10 +354,20 @@ namespace LaunchPlugin
             }
 
             RefreshDerivedState();
-            if (ResolveEffectiveMode() == PitFuelControlMode.Off)
+            PitFuelControlMode effectiveMode = ResolveEffectiveMode();
+            if (effectiveMode == PitFuelControlMode.Off)
+            {
+                Source = PitFuelControlSource.Stby;
+                AutoArmed = false;
+                IsAutoModeActive = false;
+                return;
+            }
+
+            if (requestedSource == PitFuelControlSource.Plan)
             {
                 return;
             }
+
             Source = requestedSource;
             RefreshDerivedState();
 
@@ -364,12 +375,55 @@ namespace LaunchPlugin
             if (ShouldSendOnManualOrAuto())
             {
                 sendAttempted = true;
-                SendCurrentTarget(isAutoUpdate: false, actionNameOverride: actionName);
+                bool sent = SendCurrentTarget(isAutoUpdate: false, actionNameOverride: actionName);
+                if (!sent && effectiveMode == PitFuelControlMode.Man)
+                {
+                    Source = PitFuelControlSource.Stby;
+                    PublishSelectionFeedback(actionName, "Pit Cmd Fail");
+                    return;
+                }
             }
 
             if (!sendAttempted)
             {
                 PublishSelectionFeedback(actionName, string.Format("FUEL SRC {0}", SourceToText(Source)));
+            }
+        }
+
+        private void SetPlanSource(string actionName)
+        {
+            if (TryApplySuppressedState())
+            {
+                return;
+            }
+
+            RefreshDerivedState();
+            PitFuelControlMode effectiveMode = ResolveEffectiveMode();
+            if (effectiveMode == PitFuelControlMode.Off)
+            {
+                Source = PitFuelControlSource.Stby;
+                AutoArmed = false;
+                IsAutoModeActive = false;
+                return;
+            }
+
+            if (effectiveMode == PitFuelControlMode.Auto)
+            {
+                return;
+            }
+
+            if (!PlanValid)
+            {
+                return;
+            }
+
+            Source = PitFuelControlSource.Plan;
+            RefreshDerivedState();
+            bool sent = SendCurrentTarget(isAutoUpdate: false, actionNameOverride: actionName);
+            if (!sent)
+            {
+                Source = PitFuelControlSource.Stby;
+                PublishSelectionFeedback(actionName, "Pit Cmd Fail");
             }
         }
 
@@ -392,6 +446,11 @@ namespace LaunchPlugin
                 return false;
             }
 
+            if (Source == PitFuelControlSource.Plan && !PlanValid)
+            {
+                return false;
+            }
+
             var snapshot = _snapshotProvider();
             bool useMax = OverrideActive;
             bool showMaxFeedback = IsMaxStyleFeedbackRequest(roundedTarget, snapshot, useMax);
@@ -409,6 +468,7 @@ namespace LaunchPlugin
                 LastSentFuelLitres = roundedTarget;
                 _suppressManualOverrideUntilUtc = DateTime.UtcNow.AddMilliseconds(PluginSendSuppressionMs);
                 UpdateObservedExternalState(snapshot);
+                QueueOwnedMirrorExpectation(roundedTarget, null);
                 if (IsAutoModeActive)
                 {
                     AutoArmed = true;
@@ -525,10 +585,6 @@ namespace LaunchPlugin
             }
 
             PlanValid = ComputePlanValidity(snapshot);
-            if (!PlanValid && Source == PitFuelControlSource.Plan)
-            {
-                Source = PitFuelControlSource.Push;
-            }
 
             if (Source == PitFuelControlSource.Plan)
             {
@@ -581,6 +637,33 @@ namespace LaunchPlugin
             PublishSelectionFeedback(actionName, message);
         }
 
+        private void HandleExternalMirrorChange(bool currentFuelFillEnabled, bool requestedFuelChanged)
+        {
+            if (IsAutoModeActive)
+            {
+                DisarmAutoAndForceStby(clearSuppressWindow: true);
+                PublishSelectionFeedback("Pit.FuelControl.ExternalMirror", "AUTO REFUEL CANCELLED BY MFD");
+                return;
+            }
+
+            IsAutoModeActive = false;
+            AutoArmed = false;
+            Source = PitFuelControlSource.Stby;
+            if (!currentFuelFillEnabled)
+            {
+                PublishSelectionFeedback("Pit.FuelControl.ExternalMirror", "REFUEL SET OFF BY MFD");
+                return;
+            }
+
+            if (requestedFuelChanged)
+            {
+                PublishSelectionFeedback("Pit.FuelControl.ExternalMirror", "FUEL CHANGED BY MFD");
+                return;
+            }
+
+            PublishSelectionFeedback("Pit.FuelControl.ExternalMirror", "REFUEL SET ON BY MFD");
+        }
+
         private void UpdateObservedExternalState(PitFuelControlSnapshot snapshot)
         {
             if (snapshot == null)
@@ -592,6 +675,7 @@ namespace LaunchPlugin
             _lastObservedRequestedFuelLitres = RoundUpLitres(snapshot.TelemetryRequestedFuelLitres);
             _hasObservedFuelFillEnabled = true;
             _lastObservedFuelFillEnabled = snapshot.TelemetryFuelFillEnabled;
+            ExpireSatisfiedOwnedMirrorExpectations(_lastObservedRequestedFuelLitres, _lastObservedFuelFillEnabled);
         }
 
         private void ClearObservedExternalState()
@@ -600,6 +684,62 @@ namespace LaunchPlugin
             _lastObservedRequestedFuelLitres = -1;
             _hasObservedFuelFillEnabled = false;
             _lastObservedFuelFillEnabled = false;
+            _hasPendingOwnedRequestedFuelLitres = false;
+            _pendingOwnedRequestedFuelLitres = -1;
+            _hasPendingOwnedFuelFillEnabled = false;
+            _pendingOwnedFuelFillEnabled = false;
+        }
+
+        private void QueueOwnedMirrorExpectation(int? requestedFuelLitres, bool? fuelFillEnabled)
+        {
+            if (requestedFuelLitres.HasValue)
+            {
+                _hasPendingOwnedRequestedFuelLitres = true;
+                _pendingOwnedRequestedFuelLitres = Math.Max(0, requestedFuelLitres.Value);
+            }
+
+            if (fuelFillEnabled.HasValue)
+            {
+                _hasPendingOwnedFuelFillEnabled = true;
+                _pendingOwnedFuelFillEnabled = fuelFillEnabled.Value;
+            }
+        }
+
+        private void ExpireSatisfiedOwnedMirrorExpectations(int currentRequestedLitres, bool currentFuelFillEnabled)
+        {
+            if (_hasPendingOwnedRequestedFuelLitres && currentRequestedLitres == _pendingOwnedRequestedFuelLitres)
+            {
+                _hasPendingOwnedRequestedFuelLitres = false;
+                _pendingOwnedRequestedFuelLitres = -1;
+            }
+
+            if (_hasPendingOwnedFuelFillEnabled && currentFuelFillEnabled == _pendingOwnedFuelFillEnabled)
+            {
+                _hasPendingOwnedFuelFillEnabled = false;
+                _pendingOwnedFuelFillEnabled = false;
+            }
+        }
+
+        private bool TryConsumeOwnedMirrorChange(int currentRequestedLitres, bool currentFuelFillEnabled, bool requestedFuelChanged, bool fuelFillChanged)
+        {
+            bool requestedOwned = !requestedFuelChanged;
+            bool fuelFillOwned = !fuelFillChanged;
+
+            if (requestedFuelChanged && _hasPendingOwnedRequestedFuelLitres && currentRequestedLitres == _pendingOwnedRequestedFuelLitres)
+            {
+                requestedOwned = true;
+                _hasPendingOwnedRequestedFuelLitres = false;
+                _pendingOwnedRequestedFuelLitres = -1;
+            }
+
+            if (fuelFillChanged && _hasPendingOwnedFuelFillEnabled && currentFuelFillEnabled == _pendingOwnedFuelFillEnabled)
+            {
+                fuelFillOwned = true;
+                _hasPendingOwnedFuelFillEnabled = false;
+                _pendingOwnedFuelFillEnabled = false;
+            }
+
+            return requestedOwned && fuelFillOwned;
         }
 
         private PitFuelControlMode ResolveEffectiveMode()
@@ -677,7 +817,7 @@ namespace LaunchPlugin
             return string.Format("FUEL SET {0} {1}L", sourceText, roundedTarget);
         }
 
-        private static PitFuelControlSource NextSource(PitFuelControlSource current, bool planValid)
+        private static PitFuelControlSource NextSource(PitFuelControlSource current)
         {
             switch (current)
             {
@@ -686,7 +826,7 @@ namespace LaunchPlugin
                 case PitFuelControlSource.Norm:
                     return PitFuelControlSource.Save;
                 case PitFuelControlSource.Save:
-                    return planValid ? PitFuelControlSource.Plan : PitFuelControlSource.Push;
+                    return PitFuelControlSource.Plan;
                 case PitFuelControlSource.Plan:
                     return PitFuelControlSource.Push;
                 case PitFuelControlSource.Stby:

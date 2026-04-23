@@ -61,6 +61,7 @@ Technical contract note: this page is driver-facing usage guidance. The canonica
 - `LalaLaunch.Pit.FuelControl.SetPush`
 - `LalaLaunch.Pit.FuelControl.SetNorm`
 - `LalaLaunch.Pit.FuelControl.SetSave`
+- `LalaLaunch.Pit.FuelControl.SetPlan`
 - `LalaLaunch.Pit.TyreControl.ModeCycle`
 - `LalaLaunch.Pit.TyreControl.SetOff`
 - `LalaLaunch.Pit.TyreControl.SetDry`
@@ -73,21 +74,24 @@ Pit Fuel Control behavior notes for these bindings:
 - `LalaLaunch.Pit.FuelSetMax` is now a true transport toggle: press sequence alternates **MAX**, **ZERO**, **MAX**, **ZERO** ...
 - Full-tank short-circuit only applies to the MAX phase; ZERO phase still sends (so a full tank does not block `#fuel 0.01`).
 - `LalaLaunch.Pit.FuelControl.ModeCycle` now uses explicit raw fuel command ownership (no internal fuel-toggle semantics):
-  - `OFF -> MAN` is selection/intent only (`FUEL MODE MAN`) and sends no command,
+  - `OFF -> MAN` explicitly sends refuel ON (`#+fuel$`) and then mirrors `MAN STBY`,
   - `MAN -> AUTO` enters plugin AUTO ownership,
-  - `AUTO -> OFF` sends explicit `#-fuel$`, then exits AUTO and forces `Source=STBY` + `AutoArmed=false` on successful send.
+  - `AUTO -> OFF` attempts explicit `#-fuel$`; successful send exits AUTO, failed send leaves AUTO unchanged.
 - AUTO entry send behavior:
   - entering AUTO from `PUSH`/`NORM`/`SAVE` sends immediately and arms AUTO only on successful send,
-  - entering AUTO from `PLAN` sends once immediately, then always returns to `Source=STBY` with `AutoArmed=false`,
+  - entering AUTO from `PLAN` does not send and enters `AUTO STBY` (PLAN inhibited in AUTO),
   - entering AUTO from `STBY` remains disarmed (`FUEL AUTO STBY`) until a live source is selected.
 - OFF hard guard:
-  - while effective mode is `OFF`, source actions (`SourceCycle`, `SetPush`, `SetNorm`, `SetSave`) do not send `#fuel` commands.
+  - while effective mode is `OFF`, source actions (`SourceCycle`, `SetPush`, `SetNorm`, `SetSave`, `SetPlan`) do not send `#fuel` commands and remain `OFF STBY`.
 - Source cycle contract:
   - in `AUTO`, `SourceCycle` is limited to `PUSH -> NORM -> SAVE -> PUSH` (PLAN excluded),
   - in `MAN`, full cycle remains available including `PLAN`.
+- `SetPlan` is MAN-only direct PLAN send; PLAN is blocked in OFF/AUTO and blocked when planner/live validity mismatches.
 - AUTO cancel/ownership rules:
-  - AUTO cancels once (`AUTO CANCELLED`) when either live requested pit fuel (`PitSvFuel`) or MFD fuel-enable (`dpFuelFill`) changes outside plugin-owned send suppression,
+  - AUTO external MFD/off/on/fuel-change handling is mirror-only (no plugin send) and publishes `AUTO REFUEL CANCELLED BY MFD`,
   - AUTO cancels to `STBY` (with `AutoArmed=false`) when iRacing AutoFuel is active,
+  - outside AUTO, external mirror events publish `REFUEL SET OFF BY MFD`, `REFUEL SET ON BY MFD`, or `FUEL CHANGED BY MFD` and mirror to OFF/MAN STBY,
+  - MAN-owned Fuel Control sends are tracked and consumed as owned mirror echoes so delayed telemetry does not trigger false external-takeover resets,
   - Offline Testing suppresses Pit Fuel Control to inert `STBY` with mode still derived from MFD truth,
   - any `Telemetry.IsOnTrackCar` edge (`false -> true` or `true -> false`) resets to `Source=STBY` + `AutoArmed=false` without forcing plugin-owned `OFF`/`MAN`.
 - In `AUTO`, explicitly selecting `PUSH`, `NORM`, or `SAVE` immediately sends and keeps AUTO armed on successful send.

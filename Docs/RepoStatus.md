@@ -9,6 +9,19 @@ Branch: work
 - No Git remote is configured in this checkout (`git remote -v` returns empty).
 
 ## Documentation sync status
+- 2026-04-23 PR follow-up landed for Fuel Control owned-mirror expectation expiry:
+  - pending owned requested-fuel / fuel-fill expectations are now cleared whenever currently observed telemetry already equals the queued expected values, even without a same-tick change event;
+  - closes stale-pending ownership attribution after suppression-window or baseline-init convergence, preventing later manual MFD same-value edits from being masked as plugin-owned.
+- 2026-04-23 PR follow-up bundle landed for Fuel Control review findings (reviewed commit `91cc94a494`):
+  - `SetPlan` blocked in AUTO now cleanly no-ops without disarming AUTO (`Source`/`AutoArmed` unchanged on blocked AUTO press);
+  - Fuel Control now sends explicit OFF/MAN MFD state commands (OFF->MAN sends `#+fuel$`; AUTO->OFF sends `#-fuel$` and preserves AUTO state on send failure);
+  - MAN-owned plugin sends are tracked so delayed telemetry echoes are consumed as owned mirror updates (not reclassified as external `FUEL CHANGED BY MFD`);
+  - PLAN send path restored hard validity gating so planner/live mismatch or invalid PLAN cannot fall through to unintended sends.
+- 2026-04-23 authoritative Fuel Control behavior-table alignment landed:
+  - `PitFuelControlEngine` now enforces OFF isolation (`OFF STBY` no-send source/set actions), MAN-only PLAN action semantics (`Pit.FuelControl.SetPlan`), and AUTO PLAN inhibition in switching logic;
+  - `ModeCycle` now mirrors table contract: `OFF -> MAN STBY` no send, `MAN -> AUTO` send only for `PUSH/NORM/SAVE`, `AUTO -> OFF` always attempts raw `#-fuel$` and falls back to `AUTO STBY` on send failure;
+  - external MFD/fuel-request changes are now explicit mirror-only messaging (`AUTO REFUEL CANCELLED BY MFD`, `REFUEL SET OFF BY MFD`, `REFUEL SET ON BY MFD`, `FUEL CHANGED BY MFD`) with OFF/MAN STBY mirror state;
+  - no retries/poll loops were added and no toggle semantics were reintroduced into Fuel Control.
 - 2026-04-23 Tyre Control PR review follow-up landed (restore service-ON intent tracking for `#tc` sends):
   - `PitTyreControlEngine.EnsureCompound(...)` now marks pending service intent (`desiredSelected=true`) alongside pending compound intent whenever DRY/WET/AUTO issues `#tc ...$`;
   - delayed OFF->ON tyre-service truth convergence caused by successful `#tc` remains protected as plugin-owned intent even after compound family confirmation is already complete;

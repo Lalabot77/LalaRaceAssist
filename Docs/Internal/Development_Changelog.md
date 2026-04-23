@@ -33,6 +33,40 @@ The public user-facing release history is maintained in the root `CHANGELOG.md`.
 
 ## Post-v1.0 development
 
+### 2026-04-23 — PR follow-up: expire satisfied Fuel Control owned-mirror expectations without requiring a change tick
+- Classification: **internal-only** (ownership guard hardening; no new action/export surface).
+- Updated `PitFuelControlEngine` owned-mirror tracking to immediately clear pending requested-fuel / fuel-fill expectations whenever current observed telemetry is already at the queued expected value, even when no same-tick telemetry delta occurs.
+- This closes the stale-pending path where convergence during suppression-window or baseline-init could leave expectations armed and later manual MFD edits to the same value incorrectly attributed as plugin-owned.
+- Preserved scope/invariants:
+  - no redesign, retries, polling loops, or hidden recovery logic;
+  - no new transport behavior and no `Pit.ToggleFuel`/toggle-semantics reintroduction.
+
+### 2026-04-23 — PR follow-up: tighten Fuel Control MAN/AUTO mirror ownership and explicit OFF/MAN commands
+- Classification: **both** (driver-visible Fuel Control command/mirror behavior correction + internal ownership hardening).
+- Updated `PitFuelControlEngine` to address review follow-up requirements in one focused change:
+  - `SetPlan` remains MAN-only and now cleanly no-ops in AUTO (no AUTO disarm/state mutation on blocked press).
+  - `OFF -> MAN` now sends explicit MFD ON command (`#+fuel$`), and `AUTO -> OFF` send failure now leaves AUTO unchanged.
+  - PLAN sends are now validity-gated at send time, so planner/live mismatch cannot fall through into unintended zero-litre sends.
+  - Added owned-mirror expectation tracking for Fuel Control sends, so delayed MAN-owned telemetry echoes are consumed as owned updates instead of misclassified external takeovers (`FUEL CHANGED BY MFD` path).
+- Preserved invariants:
+  - no transport redesign/retries/poll loops or hidden recovery logic,
+  - no `Pit.ToggleFuel` reintroduction inside Fuel Control,
+  - subsystem scope remains limited to `PitFuelControlEngine` behavior corrections plus aligned docs.
+
+### 2026-04-23 — Pit Fuel Control authoritative behavior-table alignment (OFF isolation, PLAN MAN-only, external mirror messaging)
+- Classification: **both** (driver-visible Fuel Control behavior contract corrections + internal state-machine ownership cleanup).
+- Aligned `PitFuelControlEngine` to the authoritative table contract:
+  - `OFF -> MAN` is now selection-only `FUEL MAN STBY` with no send; OFF source/set actions are isolated to `OFF STBY` (no sends).
+  - `MAN -> AUTO` now sends only for `PUSH/NORM/SAVE`; `STBY` and `PLAN` both enter `AUTO STBY` with no send.
+  - `AUTO -> OFF` now always attempts explicit raw OFF command `#-fuel$`; failed send reverts to `AUTO STBY`, successful send exits AUTO.
+  - Added MAN-only direct action `Pit.FuelControl.SetPlan`; PLAN is blocked in OFF/AUTO paths.
+- Expanded external mirror behavior to explicit table text:
+  - in AUTO, external MFD/fuel-request changes now publish `AUTO REFUEL CANCELLED BY MFD` and mirror to OFF/MAN STBY based on MFD truth;
+  - in MAN/OFF, external MFD/fuel-request changes now publish `REFUEL SET OFF BY MFD`, `REFUEL SET ON BY MFD`, or `FUEL CHANGED BY MFD` (no plugin send).
+- Kept invariants unchanged:
+  - no `Pit.ToggleFuel`/toggle semantics added to Fuel Control,
+  - no retries/poll loops/hidden recovery logic added,
+  - AUTO remains the only plugin-owned mode.
 ### 2026-04-23 — Tyre Control PR review follow-up: keep service-ON intent tracking for AUTO/DRY/WET `#tc` sends
 - Classification: **both** (driver-visible AUTO ownership/cancel stability fix + narrow internal intent-tracking correction).
 - Updated `PitTyreControlEngine.EnsureCompound(...)` send path so successful DRY/WET/AUTO `#tc ...$` sends now record pending service-ON intent (`desiredSelected=true`) in addition to pending compound intent.
