@@ -1,5 +1,4 @@
 using System;
-using System.Threading;
 
 namespace LaunchPlugin
 {
@@ -727,23 +726,20 @@ namespace LaunchPlugin
                 return false;
             }
 
-            _suppressManualOverrideUntilUtc = DateTime.UtcNow.AddMilliseconds(PluginSendSuppressionMs);
             var startSnapshot = _snapshotProvider();
-            UpdateObservedExternalState(startSnapshot);
-
-            DateTime deadlineUtc = DateTime.UtcNow.AddMilliseconds(PluginSendSuppressionMs);
-            while (DateTime.UtcNow <= deadlineUtc)
+            if (startSnapshot == null)
             {
-                var snapshot = _snapshotProvider();
-                if (snapshot != null && snapshot.TelemetryFuelFillEnabled == expectedEnabled)
-                {
-                    return true;
-                }
-
-                Thread.Sleep(60);
+                return false;
             }
 
-            return false;
+            UpdateObservedExternalState(startSnapshot);
+            if (startSnapshot.TelemetryFuelFillEnabled != expectedEnabled)
+            {
+                return false;
+            }
+
+            _suppressManualOverrideUntilUtc = DateTime.UtcNow.AddMilliseconds(PluginSendSuppressionMs);
+            return true;
         }
 
         private static string SourceToText(PitFuelControlSource source)
