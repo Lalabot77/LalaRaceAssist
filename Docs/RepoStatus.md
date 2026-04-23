@@ -9,10 +9,11 @@ Branch: work
 - No Git remote is configured in this checkout (`git remote -v` returns empty).
 
 ## Documentation sync status
-- 2026-04-23 PR follow-up restored `OFF -> MAN` progression for ModeCycle-only Fuel Control bindings:
-  - `PitFuelControlEngine.ModeCycle()` OFF branch now issues an explicit fuel-amount command attempt (`#fuel ...$`) using the selected source target instead of selection-only state mutation;
-  - keeps Fuel Control ownership explicit-command based (no `Pit.ToggleFuel` / `#!fuel` reintroduction) while allowing non-AUTO MAN truth to advance via MFD telemetry `dpFuelFill`;
-  - transport/send failure remains visible via existing `Pit Cmd Fail` feedback semantics.
+- 2026-04-23 authoritative Fuel Control behavior-table alignment landed:
+  - `PitFuelControlEngine` now enforces OFF isolation (`OFF STBY` no-send source/set actions), MAN-only PLAN action semantics (`Pit.FuelControl.SetPlan`), and AUTO PLAN inhibition in switching logic;
+  - `ModeCycle` now mirrors table contract: `OFF -> MAN STBY` no send, `MAN -> AUTO` send only for `PUSH/NORM/SAVE`, `AUTO -> OFF` always attempts raw `#-fuel$` and falls back to `AUTO STBY` on send failure;
+  - external MFD/fuel-request changes are now explicit mirror-only messaging (`AUTO REFUEL CANCELLED BY MFD`, `REFUEL SET OFF BY MFD`, `REFUEL SET ON BY MFD`, `FUEL CHANGED BY MFD`) with OFF/MAN STBY mirror state;
+  - no retries/poll loops were added and no toggle semantics were reintroduced into Fuel Control.
 - 2026-04-23 Pit Fuel Control mode ownership refactor landed (explicit-command model, no internal toggle dependency):
   - `PitFuelControlEngine` no longer depends on `_fuelToggleSender`, `TryToggleFuelFillEnabled(...)`, or `NotifyPluginFuelToggleAction()` for Fuel Control mode ownership;
   - Fuel Control mode cycle now uses explicit command semantics only: `OFF -> MAN` is selection-only intent with no send, `MAN -> AUTO` keeps existing immediate amount-send ownership behavior, and `AUTO -> OFF` sends explicit raw OFF command `#-fuel$` (single attempt, no retry/poll loop);

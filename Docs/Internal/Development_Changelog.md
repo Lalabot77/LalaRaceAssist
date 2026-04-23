@@ -33,6 +33,21 @@ The public user-facing release history is maintained in the root `CHANGELOG.md`.
 
 ## Post-v1.0 development
 
+### 2026-04-23 — Pit Fuel Control authoritative behavior-table alignment (OFF isolation, PLAN MAN-only, external mirror messaging)
+- Classification: **both** (driver-visible Fuel Control behavior contract corrections + internal state-machine ownership cleanup).
+- Aligned `PitFuelControlEngine` to the authoritative table contract:
+  - `OFF -> MAN` is now selection-only `FUEL MAN STBY` with no send; OFF source/set actions are isolated to `OFF STBY` (no sends).
+  - `MAN -> AUTO` now sends only for `PUSH/NORM/SAVE`; `STBY` and `PLAN` both enter `AUTO STBY` with no send.
+  - `AUTO -> OFF` now always attempts explicit raw OFF command `#-fuel$`; failed send reverts to `AUTO STBY`, successful send exits AUTO.
+  - Added MAN-only direct action `Pit.FuelControl.SetPlan`; PLAN is blocked in OFF/AUTO paths.
+- Expanded external mirror behavior to explicit table text:
+  - in AUTO, external MFD/fuel-request changes now publish `AUTO REFUEL CANCELLED BY MFD` and mirror to OFF/MAN STBY based on MFD truth;
+  - in MAN/OFF, external MFD/fuel-request changes now publish `REFUEL SET OFF BY MFD`, `REFUEL SET ON BY MFD`, or `FUEL CHANGED BY MFD` (no plugin send).
+- Kept invariants unchanged:
+  - no `Pit.ToggleFuel`/toggle semantics added to Fuel Control,
+  - no retries/poll loops/hidden recovery logic added,
+  - AUTO remains the only plugin-owned mode.
+
 ### 2026-04-23 — PR follow-up: restore OFF->MAN progression for ModeCycle-only Fuel Control bindings
 - Classification: **both** (driver-visible mode-cycle progression restore + narrow explicit-command ownership correction).
 - Updated `PitFuelControlEngine.ModeCycle()` OFF branch so it no longer exits on selection-only state mutation.

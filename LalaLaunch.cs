@@ -282,6 +282,7 @@ namespace LaunchPlugin
         public void PitFuelControlSetPush() => _pitFuelControlEngine.SetPush();
         public void PitFuelControlSetNorm() => _pitFuelControlEngine.SetNorm();
         public void PitFuelControlSetSave() => _pitFuelControlEngine.SetSave();
+        public void PitFuelControlSetPlan() => _pitFuelControlEngine.SetPlan();
         public void PitTyreControlModeCycle() => _pitTyreControlEngine.ModeCycle();
         public void PitTyreControlSetOff() => _pitTyreControlEngine.SetOff();
         public void PitTyreControlSetDry() => _pitTyreControlEngine.SetDry();
@@ -4995,6 +4996,7 @@ namespace LaunchPlugin
             this.AddAction("Pit.FuelControl.SetPush", (a, b) => PitFuelControlSetPush());
             this.AddAction("Pit.FuelControl.SetNorm", (a, b) => PitFuelControlSetNorm());
             this.AddAction("Pit.FuelControl.SetSave", (a, b) => PitFuelControlSetSave());
+            this.AddAction("Pit.FuelControl.SetPlan", (a, b) => PitFuelControlSetPlan());
             this.AddAction("Pit.TyreControl.ModeCycle", (a, b) => PitTyreControlModeCycle());
             this.AddAction("Pit.TyreControl.SetOff", (a, b) => PitTyreControlSetOff());
             this.AddAction("Pit.TyreControl.SetDry", (a, b) => PitTyreControlSetDry());

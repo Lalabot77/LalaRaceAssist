@@ -96,9 +96,14 @@ Canonical log wording and meaning live in `Docs/Internal/SimHubLogMessages.md`; 
 - Tyre compound send failure paths are bounded by retry/cooldown budget to avoid per-tick resend spam.
 - External pit-menu edits can cancel AUTO once and force safety recovery state in fuel control.
 - Fuel Control mode ownership is explicit-command only (no internal `Pit.ToggleFuel` use):
-  - `OFF -> MAN` issues an explicit fuel-amount command attempt using the selected source target (`#fuel ...$`) so MFD truth (`dpFuelFill`) can transition to MAN via telemetry;
-  - `AUTO -> OFF` uses explicit raw OFF command `#-fuel$` and only exits AUTO to `Source=STBY` + disarmed on successful transport attempt;
-  - MAN remains MFD-derived truth (`dpFuelFill=true`) when AUTO is inactive.
+  - `OFF -> MAN` is selection-only and forces `Source=STBY` (`FUEL MAN STBY`) with no command send;
+  - OFF is a hard guard: `SourceCycle`/`SetPush`/`SetNorm`/`SetSave`/`SetPlan` send nothing and hold `OFF STBY`;
+  - `MAN -> AUTO`: `PUSH`/`NORM`/`SAVE` send immediately and arm AUTO on success; `STBY` and `PLAN` both enter `AUTO STBY` with no send (PLAN is inhibited in AUTO switching);
+  - `AUTO -> OFF` always attempts explicit raw OFF command `#-fuel$`; on send failure fallback stays `AUTO STBY`, on success exits AUTO and mirrors OFF truth;
+  - `SetPlan` is MAN-only direct send (`REFUEL SET PLAN X L` semantics). PLAN is blocked in OFF and AUTO.
+  - External MFD/fuel-request changes are mirror-only:
+    - while in AUTO, plugin sends nothing and publishes `AUTO REFUEL CANCELLED BY MFD`, then mirrors to `OFF STBY`/`MAN STBY` based on MFD truth;
+    - while in MAN/OFF, plugin sends nothing and mirrors with `REFUEL SET OFF BY MFD`, `REFUEL SET ON BY MFD`, or `FUEL CHANGED BY MFD`.
 
 ## Test checklist
 - Bind and press representative built-in pit actions from SimHub Controls & Events.
