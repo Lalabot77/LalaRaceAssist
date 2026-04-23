@@ -665,14 +665,17 @@ namespace LaunchPlugin
         private string BuildFeedbackText(bool isAutoUpdate, bool showMaxFeedback, int roundedTarget)
         {
             string sourceText = SourceToText(Source);
-            if (showMaxFeedback)
-            {
-                return "FUEL MAX";
-            }
 
             if (isAutoUpdate)
             {
-                return string.Format("AUTO FUEL UPDATE {0}L", roundedTarget);
+                return showMaxFeedback
+                    ? string.Format("AUTO FUEL {0}L >MAX", roundedTarget)
+                    : string.Format("AUTO FUEL {0}L", roundedTarget);
+            }
+
+            if (showMaxFeedback)
+            {
+                return "FUEL MAX";
             }
 
             return string.Format("FUEL SET {0} {1}L", sourceText, roundedTarget);

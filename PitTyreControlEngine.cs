@@ -141,8 +141,8 @@ namespace LaunchPlugin
             }
 
             EnsureTyreService(snapshot, true);
-            bool desiredWet = Mode == PitTyreControlMode.Wet;
-            EnsureCompound(snapshot, desiredWet);
+            bool desiredWetMan = Mode == PitTyreControlMode.Wet;
+            EnsureCompound(snapshot, desiredWetMan);
             UpdateObservedTruthSample(snapshot);
         }
 
