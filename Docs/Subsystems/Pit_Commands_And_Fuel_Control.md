@@ -93,6 +93,7 @@ Canonical log wording and meaning live in `Docs/Internal/SimHubLogMessages.md`; 
 ## Failure modes / edge cases
 - No usable iRacing process/window: command send attempt fails and feedback/log surfaces should make this visible.
 - Direct transport partial-state uncertainty: Auto mode suppresses unsafe fallback on that press to avoid duplicate corruption.
+- Chat-open leak prevention is explicit in both transport paths: command transport force-sends `Esc` before `T` so stale-open chat does not absorb the opener key into outgoing raw/custom command payload (`t#...` / `tt#...` corruption).
 - Transport success for custom/raw/stateless commands is attempt-only; in-sim effect is unverified by design.
 - Tyre control has no resend loop: each target change sends once, then either confirms in-window or fails once (`PIT CMD FAIL`) and falls back to current MFD truth.
 - External pit-menu edits can cancel AUTO once and force safety recovery state in fuel control.

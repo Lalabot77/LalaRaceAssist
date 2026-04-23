@@ -9,6 +9,10 @@ Branch: work
 - No Git remote is configured in this checkout (`git remote -v` returns empty).
 
 ## Documentation sync status
+- 2026-04-23 Pit command transport regression fix landed (chat-open `T` leak guard):
+  - `PitCommandEngine` now force-closes chat (`Esc`) before opener (`T`) in both direct-postmessage and legacy-sendinput chat-injection paths;
+  - prevents stale-open chat from absorbing the opener key into outgoing typed payloads (`t#...` / `tt#...`) for raw/custom pit commands such as `#tc 0`;
+  - scope remained transport-only (no tyre/fuel control logic redesign).
 - 2026-04-23 PR follow-up landed for Fuel Control owned-mirror expectation expiry:
   - pending owned requested-fuel / fuel-fill expectations are now cleared whenever currently observed telemetry already equals the queued expected values, even without a same-tick change event;
   - closes stale-pending ownership attribution after suppression-window or baseline-init convergence, preventing later manual MFD same-value edits from being masked as plugin-owned.
