@@ -159,6 +159,7 @@ namespace LaunchPlugin
             Mode = mode;
             ResetAttemptState();
             ResetPendingPluginIntentState();
+            BeginOrClearManualConfirmation(mode);
             PublishSelectionFeedback(actionName, string.Format("TYRE CHANGE {0}", ModeToText(mode)));
         }
 

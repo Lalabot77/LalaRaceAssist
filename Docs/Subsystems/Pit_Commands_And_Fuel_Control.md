@@ -46,6 +46,7 @@ This is the canonical technical document for the pit/custom command stack and re
 - Mode state machine: `OFF -> DRY -> WET -> AUTO -> OFF`.
 - Retry/cooldown bookkeeping for compound sends.
 - Service-state enforcement seam aligned to all-four tyre selection truth.
+- Manual mode-change confirmation window (`OFF`/`DRY`/`WET`) delays immediate external-truth remap long enough for first bounded enforcement send/confirmation pass.
 
 ## Calculation blocks (high level)
 1. Receive an action from plugin-owned binding surface.
@@ -95,6 +96,7 @@ Canonical log wording and meaning live in `Docs/Internal/SimHubLogMessages.md`; 
 - Tyre compound send failure paths are bounded by retry/cooldown budget to avoid per-tick resend spam.
 - External pit-menu edits can cancel AUTO once and force safety recovery state in fuel control.
 - AUTO exit (`AUTO -> OFF`) is guarded by live MFD truth (`dpFuelFill`): if fuel fill is already OFF, the engine must not send a fuel toggle and should only publish OFF state recovery (`Source=STBY`, AUTO cleared).
+- Fuel `OFF -> MAN` uses the existing `Pit.ToggleFuel` stateful confirmation seam and must not add a second blocking snapshot wait loop in the fuel-control engine.
 
 ## Test checklist
 - Bind and press representative built-in pit actions from SimHub Controls & Events.

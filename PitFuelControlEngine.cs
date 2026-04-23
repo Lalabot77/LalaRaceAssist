@@ -1,5 +1,4 @@
 using System;
-using System.Threading;
 
 namespace LaunchPlugin
 {
@@ -722,6 +721,9 @@ namespace LaunchPlugin
                 return false;
             }
 
+            // ToggleFuel already uses PitCommandEngine state confirmation (before/after dpFuelFill).
+            // Re-polling snapshot telemetry here can stall ModeCycle and falsely fail when cache refresh
+            // cadence lags behind the validated toggle action result.
             if (!_fuelToggleSender())
             {
                 return false;
@@ -730,20 +732,7 @@ namespace LaunchPlugin
             _suppressManualOverrideUntilUtc = DateTime.UtcNow.AddMilliseconds(PluginSendSuppressionMs);
             var startSnapshot = _snapshotProvider();
             UpdateObservedExternalState(startSnapshot);
-
-            DateTime deadlineUtc = DateTime.UtcNow.AddMilliseconds(PluginSendSuppressionMs);
-            while (DateTime.UtcNow <= deadlineUtc)
-            {
-                var snapshot = _snapshotProvider();
-                if (snapshot != null && snapshot.TelemetryFuelFillEnabled == expectedEnabled)
-                {
-                    return true;
-                }
-
-                Thread.Sleep(60);
-            }
-
-            return false;
+            return true;
         }
 
         private static string SourceToText(PitFuelControlSource source)

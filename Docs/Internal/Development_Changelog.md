@@ -33,6 +33,22 @@ The public user-facing release history is maintained in the root `CHANGELOG.md`.
 
 ## Post-v1.0 development
 
+### 2026-04-23 — Pit Fuel Control regression follow-up: remove blocking OFF->MAN toggle re-poll loop
+- Classification: **both** (driver-visible ModeCycle responsiveness fix + internal control-loop safety hardening).
+- Updated `PitFuelControlEngine.TryToggleFuelFillEnabled(...)` to stop running a second blocking telemetry poll loop after `Pit.ToggleFuel`.
+  - `Pit.ToggleFuel` already runs through `PitCommandEngine` stateful before/after confirmation for `dpFuelFill`.
+  - The extra poll loop could falsely fail against stale snapshot cadence and made `ModeCycle` appear frozen on `OFF -> MAN`.
+- New behavior is now non-blocking at this seam:
+  - if `Pit.ToggleFuel` confirms success, fuel-mode transition accepts it immediately and preserves existing suppression/observed-state update behavior;
+  - if `Pit.ToggleFuel` fails confirmation, existing `Pit Cmd Fail` behavior remains unchanged.
+
+### 2026-04-23 — Tyre Control regression follow-up: restore manual confirmation window on mode changes
+- Classification: **both** (driver-visible tyre command-send restoration + internal manual-truth ordering fix).
+- Restored missing `BeginOrClearManualConfirmation(mode)` call in `PitTyreControlEngine.SetMode(...)`.
+  - Without this arming call, manual truth reconciliation could run immediately on the next telemetry tick and remap fresh manual mode selections (`DRY`/`WET`) back to stale current MFD truth before enforcement sends ran.
+  - Result was apparent control-engine no-op behavior: mode looked selected briefly but no tyre-service/compound send attempts landed.
+- With confirmation-window arming restored, mode-change sends now get their intended bounded confirmation window before external-truth fallback/remap logic is allowed to reclaim ownership.
+
 ### 2026-04-23 — Tyre Control PR review follow-up: complete AUTO intent match + unknown service-enforcement hold
 - Classification: **both** (driver-visible AUTO ownership correctness + internal enforcement gating hardening).
 - Hardened `PitTyreControlEngine.IsObservedTruthConvergingToPluginIntent(...)` so plugin-owned convergence requires a complete match across the full relevant pending intent set:

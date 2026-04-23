@@ -9,6 +9,14 @@ Branch: work
 - No Git remote is configured in this checkout (`git remote -v` returns empty).
 
 ## Documentation sync status
+- Pit Fuel Control regression follow-up landed (`OFF -> MAN` ModeCycle freeze fix):
+  - removed redundant blocking telemetry re-poll loop from `PitFuelControlEngine.TryToggleFuelFillEnabled(...)` after `Pit.ToggleFuel`;
+  - `Pit.ToggleFuel` remains the authoritative state-confirmed toggle seam (before/after `dpFuelFill` check in `PitCommandEngine`);
+  - preserves existing suppression/baseline update behavior while preventing false `Pit Cmd Fail` caused by stale snapshot timing during `OFF -> MAN`.
+- Tyre Control regression follow-up landed (manual mode-change confirmation window restore):
+  - restored `BeginOrClearManualConfirmation(mode)` arming in `PitTyreControlEngine.SetMode(...)`;
+  - prevents immediate manual-truth reconciliation from remapping fresh manual mode selections to stale MFD truth before first enforcement send attempts;
+  - restores expected tyre control-engine send attempts after `ModeCycle`/`SetDry`/`SetWet` manual actions while keeping existing bounded reconcile fallback behavior.
 - Tyre Control PR review follow-up landed (complete AUTO intent match + unknown service-enforcement hold):
   - AUTO plugin-owned delayed convergence now requires full relevant pending-intent agreement (`service` and `compound` when both are pending/relevant), preventing single-dimension matches from masking external/manual takeover;
   - tyre-service enforcement retries are now held while service truth is unknown/unavailable (`HasTireServiceSelection=false`), so telemetry gaps do not burn bounded retry budget;
