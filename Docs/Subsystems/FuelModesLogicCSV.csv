@@ -1,0 +1,42 @@
+Current state (shown on button),Internal source state (before press),Push action,Expected Mode / Source Action,Cmd Message,Result on Chat Window,Result on MFD,Expected next shown state,Guards and error checks,Fallback or reversion,Andy Comment
+OFF,any,ModeCycle,switch to MAN / STBY,FUEL MAN STBY,Sends #fuel$,Refuel ON,MAN STBY,None required for MFD or chat interaction. Just check internal mode now MAN,Match MFD and STBY,
+OFF,any,SourceCycle,do nothing,None,No command sent,No change,OFF STBY,OFF hard guard blocks all source sends but MODE change still works,Match MFD and STBY,
+OFF,any,SetPush/Norm/Save,do nothing,None,No command sent,No change,OFF STBY,OFF hard guard blocks all source sends but MODE change still works,Match MFD and STBY,
+OFF,any,SetPlan,do nothing,None,No command sent,No change,OFF STBY,OFF hard guard blocks all source sends but MODE change still works,Match MFD and STBY,
+MAN,PUSH/NORM/SAVE,ModeCycle,select AUTO with same SRC(column B) as previous MAN,"AUTO REFUEL SET PUSH X L
+AUTO REFUEL SET NORM X L
+AUTO REFUEL SET SAVE X L",Sends fuel amount (#fuel X$) immediately,Refuel ON X L set,AUTO with same SRC(column B) as previous MAN,If send fails -> Pit Cmd Fail,AUTO STBY,
+MAN,STBY,ModeCycle,select AUTO and STBY,AUTO REFUEL STBY,No send,No change,AUTO (disarmed),STBY blocks send,AUTO STBY,
+MAN,PLAN,ModeCycle,"select AUTO and STBY
+inhibit PLAN",AUTO REFUEL STBY,No send - PLAN does not send with AUTO because it is a fixed amount,No change,AUTO (disarmed),PLAN blocked in AUTO,AUTO STBY,
+MAN,any,SourceCycle,select next SRC in order which fires command,REFUEL SET <SRC> X L,Sends new fuel amount,Refuel ON X L set,MAN with SRC that was just sent,Invalid target -> Pit Cmd Fail,MAN STBY,plugin-owned MAN sends must not be mirrored back as external MFD changes
+MAN,any,SetPush/Norm/Save,direct SRC send plugin action,REFUEL SET <SRC> X L,Sends fuel amount,Refuel ON X L set,MAN with SRC that was just sent,Invalid target -> Pit Cmd Fail,MAN STBY,plugin-owned MAN sends must not be mirrored back as external MFD changes
+MAN,PLAN,SetPlan,direct PLAN send plugin action,REFUEL SET PLAN X L,Sends Planner fuel amount,Refuel ON X L set,MAN,"Invalid target -> Pit Cmd Fail
+invalid PLAN -> Pit Cmd Fail",MAN STBY,PLAN send only when planner/live match is valid
+AUTO,PUSH/NORM/SAVE,ModeCycle,select OFF and STBY,REFUEL OFF,Sends #-fuel$,Refuel OFF,OFF,If send fails -> Pit Cmd Fail,AUTO STBY,
+AUTO,STBY,ModeCycle,select OFF and STBY,REFUEL OFF,Sends #-fuel$,Refuel OFF,OFF,If send fails -> Pit Cmd Fail,AUTO STBY,
+AUTO,PLAN,ModeCycle,,FUEL MODE OFF,Sends #-fuel$,Refuel OFF,OFF,PLAN blocked in AUTO,AUTO STBY,PLAN in AUTO Should never be possible
+AUTO,PUSH/NORM/SAVE,SourceCycle,select next SRC in order which fires command,AUTO REFUEL SET <SRC> X L,Sends new fuel amount,Refuel ON X L set,AUTOwith SRC that was just sent,Immediate send,AUTO STBY,
+AUTO,STBY,SourceCycle,select next SRC in order which fires command,AUTO REFUEL SET <SRC> X L,Sends new fuel amount,Refuel ON X L set,AUTOwith SRC that was just sent,STBY cleared on send,AUTO STBY,
+AUTO,PLAN,none,none,none,none,no change,AUTO STBY,PLAN blocked in AUTO,AUTO STBY,PLAN in AUTO Should never be possible
+Outside actions,,,,,,,,,,
+AUTO,any,External MFD OFF action,none(monitor and mirror only),AUTO REFUEL CANCELLED BY MFD,No plugin send,Refuel OFF,OFF STBY,"Mirror MFD State, OFF or MAN and STBY",OFF  to match MFD,
+AUTO,any,External MFD ON action,none(monitor and mirror only),AUTO REFUEL CANCELLED BY MFD,No plugin send,Refuel ON,MAN STBY,"Mirror MFD State, OFF or MAN and STBY",MAN to match MFD,
+AUTO,any,External fuel change,none(monitor and mirror only),AUTO REFUEL CANCELLED BY MFD,No plugin send,Refuel ON X L set,MAN STBY,"Mirror MFD State, OFF or MAN and STBY",MAN to match MFD,
+MAN,any,External MFD OFF action,none(monitor and mirror only),REFUEL SET OFF BY MFD,No plugin send,Refuel OFF,OFF STBY,"Mirror MFD State, OFF or MAN and STBY",OFF  to match MFD,
+MAN,any,External MFD ON action,none(monitor and mirror only),REFUEL SET ON BY MFD,No plugin send,Refuel ON,MAN STBY,"Mirror MFD State, OFF or MAN and STBY",MAN to match MFD,
+MAN,any,External fuel change,none(monitor and mirror only),FUEL CHANGED BY MFD,No plugin send,Refuel ON X L set,MAN STBY,"Mirror MFD State, OFF or MAN and STBY",MAN to match MFD,
+OFF,any,External MFD OFF action,none(monitor and mirror only),REFUEL SET OFF BY MFD,No plugin send,Refuel OFF,OFF STBY,"Mirror MFD State, OFF or MAN and STBY",OFF  to match MFD,
+OFF,any,External MFD ON action,none(monitor and mirror only),REFUEL SET ON BY MFD,No plugin send,Refuel ON,MAN STBY,"Mirror MFD State, OFF or MAN and STBY",MAN to match MFD,
+OFF,any,External fuel change,none(monitor and mirror only),FUEL CHANGED BY MFD,No plugin send,Refuel ON X L set,MAN STBY,"Mirror MFD State, OFF or MAN and STBY",MAN to match MFD,
+,,,,,,,,,,
+,,,,,,,,,,
+,,,,,,,,,,
+,,,,,,,,,,
+,,,,,,,,,,
+,,,,,,,,,,
+,,,,,,,,,,
+,,,,,,,,,,
+,,,,,,,,,,
+,,,,,,,,,,
+,,,,,,,,,,
