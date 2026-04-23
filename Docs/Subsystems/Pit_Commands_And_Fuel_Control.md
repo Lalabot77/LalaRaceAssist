@@ -1,7 +1,7 @@
 # Pit Commands and Fuel/Tyre Control
 
 Validated against commit: HEAD
-Last updated: 2026-04-22
+Last updated: 2026-04-23
 Branch: work
 
 ## Purpose
@@ -93,6 +93,7 @@ Canonical log wording and meaning live in `Docs/Internal/SimHubLogMessages.md`; 
 - Transport success for custom/raw/stateless commands is attempt-only; in-sim effect is unverified by design.
 - Tyre compound send failure paths are bounded by retry/cooldown budget to avoid per-tick resend spam.
 - External pit-menu edits can cancel AUTO once and force safety recovery state in fuel control.
+- AUTO exit (`AUTO -> OFF`) is guarded by live MFD truth (`dpFuelFill`): if fuel fill is already OFF, the engine must not send a fuel toggle and should only publish OFF state recovery (`Source=STBY`, AUTO cleared).
 
 ## Test checklist
 - Bind and press representative built-in pit actions from SimHub Controls & Events.

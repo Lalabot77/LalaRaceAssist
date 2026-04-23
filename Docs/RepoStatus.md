@@ -1,7 +1,7 @@
 # Repository status
 
 Validated against commit: HEAD
-Last updated: 2026-04-22
+Last updated: 2026-04-23
 Branch: work
 
 ## Current repo/link status
@@ -9,6 +9,18 @@ Branch: work
 - No Git remote is configured in this checkout (`git remote -v` returns empty).
 
 ## Documentation sync status
+- 2026-04-23 PR follow-up fixed AUTO-exit OFF toggle guard:
+  - `PitFuelControlEngine.ModeCycle()` AUTO-exit now checks live `dpFuelFill` truth before sending `Pit.ToggleFuel` OFF,
+  - if fill is already OFF, AUTO exits to OFF state without sending a toggle (`Source=STBY`, AUTO cleared/disarmed),
+  - OFF toggle send still runs only when fill is currently ON; bounded verification + `Pit Cmd Fail` mismatch feedback behavior remains unchanged.
+- 2026-04-22 Pit Fuel Control V2 follow-up polish landed:
+  - `ModeCycle` now explicitly drives effective mode loop `OFF -> MAN -> AUTO -> OFF` and actively toggles MFD fuel-fill truth on OFF/MAN transitions (`Pit.ToggleFuel` ON/OFF with bounded `dpFuelFill` validation),
+  - toggle validation mismatches now publish `Pit Cmd Fail` and fall back to actual MFD truth without correction looping,
+  - OFF is now a hard safety guard: source actions (`SourceCycle`, `SetPush`, `SetNorm`, `SetSave`) cannot send fuel commands while effective mode is OFF,
+  - AUTO entry now sends immediately for `PUSH/NORM/SAVE` and arms only on successful send; PLAN entry is one-shot immediate send and then forced back to `Source=STBY` disarmed,
+  - AUTO source cycle is now PLAN-isolated (`PUSH -> NORM -> SAVE -> PUSH` only); PLAN remains available in MAN cycle only,
+  - AUTO cancel edge-trigger and lap-cross AUTO update cadence remain unchanged.
+  - same-day follow-up: MAN->AUTO immediate-send failures now explicitly publish `Pit Cmd Fail` for both `PLAN` and `PUSH/NORM/SAVE` entry branches while preserving fallback-to-`STBY` + disarmed behavior.
 - Tyre Control PR follow-up landed (explicit raw-command model + AUTO external ownership cancel/remap):
   - tyre control engine no longer uses internal toggle semantics for service enforcement (`Pit.ToggleTyresAll` remains a direct user action only);
   - explicit tyre commands are now authoritative in-engine (`OFF => #cleartires$`; `DRY/WET/AUTO => #t$` then dry/wet `#tc ...$`);

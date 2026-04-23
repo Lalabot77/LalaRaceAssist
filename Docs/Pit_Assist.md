@@ -72,16 +72,25 @@ These actions replace any old dashboard bindings that directly called `IRacingEx
 Pit Fuel Control behavior notes for these bindings:
 - `LalaLaunch.Pit.FuelSetMax` is now a true transport toggle: press sequence alternates **MAX**, **ZERO**, **MAX**, **ZERO** ...
 - Full-tank short-circuit only applies to the MAX phase; ZERO phase still sends (so a full tank does not block `#fuel 0.01`).
-- `LalaLaunch.Pit.FuelControl.ModeCycle` now only owns AUTO state:
-  - outside AUTO, displayed mode mirrors real iRacing MFD fuel-enable truth (`OFF` when fuel unchecked, `MAN` when fuel checked),
-  - entering AUTO while source is `PLAN` or already `STBY` still forces `STBY` and stays disarmed (`AutoArmed=false`) until a live source is selected and sent,
-  - exiting AUTO drops back to MFD-derived `OFF`/`MAN` and forces `Source=STBY`.
+- `LalaLaunch.Pit.FuelControl.ModeCycle` now follows effective mode and actively drives MFD truth:
+  - `OFF -> MAN` by sending a fuel toggle ON (validated against `dpFuelFill`),
+  - `MAN -> AUTO` enters plugin AUTO ownership,
+  - `AUTO -> OFF` sends a fuel toggle OFF, exits AUTO, and forces `Source=STBY` + `AutoArmed=false`.
+- AUTO entry send behavior:
+  - entering AUTO from `PUSH`/`NORM`/`SAVE` sends immediately and arms AUTO only on successful send,
+  - entering AUTO from `PLAN` sends once immediately, then always returns to `Source=STBY` with `AutoArmed=false`,
+  - entering AUTO from `STBY` remains disarmed (`FUEL AUTO STBY`) until a live source is selected.
+- OFF hard guard:
+  - while effective mode is `OFF`, source actions (`SourceCycle`, `SetPush`, `SetNorm`, `SetSave`) do not send `#fuel` commands.
+- Source cycle contract:
+  - in `AUTO`, `SourceCycle` is limited to `PUSH -> NORM -> SAVE -> PUSH` (PLAN excluded),
+  - in `MAN`, full cycle remains available including `PLAN`.
 - AUTO cancel/ownership rules:
   - AUTO cancels once (`AUTO CANCELLED`) when either live requested pit fuel (`PitSvFuel`) or MFD fuel-enable (`dpFuelFill`) changes outside plugin-owned send/toggle suppression,
   - AUTO cancels to `STBY` (with `AutoArmed=false`) when iRacing AutoFuel is active,
   - Offline Testing suppresses Pit Fuel Control to inert `STBY` with mode still derived from MFD truth,
   - any `Telemetry.IsOnTrackCar` edge (`false -> true` or `true -> false`) resets to `Source=STBY` + `AutoArmed=false` without forcing plugin-owned `OFF`/`MAN`.
-- In `AUTO + STBY`, explicitly selecting `PUSH`, `NORM`, or `SAVE` immediately re-arms AUTO and sends the normal plugin-owned fuel update.
+- In `AUTO`, explicitly selecting `PUSH`, `NORM`, or `SAVE` immediately sends and keeps AUTO armed on successful send.
 
 Tyre Control behavior notes for these bindings:
 - Mode cycle order is fixed: `OFF -> DRY -> WET -> AUTO -> OFF`.
