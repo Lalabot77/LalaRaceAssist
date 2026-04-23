@@ -56,6 +56,31 @@ The public user-facing release history is maintained in the root `CHANGELOG.md`.
   - plugin-owned protection now includes short-lived intent tracking for recent plugin-issued service/compound targets,
   - delayed truth convergence that matches recent plugin intent is treated as plugin-owned (no false external-takeover cancel),
   - genuine external/manual MFD takeover still cancels AUTO with `TYRE AUTO CANCELLED` and concrete remap.
+### 2026-04-23 — PR follow-up: guard AUTO exit toggle on live fuel-fill truth
+- Classification: **both** (driver-visible OFF transition correctness fix + internal state-machine safety hardening).
+- Updated `PitFuelControlEngine.ModeCycle()` AUTO-exit branch so it no longer blindly sends `Pit.ToggleFuel` OFF.
+  - AUTO exit now first checks live `dpFuelFill` truth from snapshot telemetry.
+  - If fuel fill is already OFF, AUTO exits without sending a toggle and publishes OFF outcome (`Source=STBY`, `AutoArmed=false`, AUTO cleared).
+  - OFF toggle send path remains active only when fill is currently ON; bounded verification/mismatch feedback semantics stay unchanged (`Pit Cmd Fail` on mismatch).
+- Prevents the prior edge case where AUTO could exit while disarmed with fill already OFF and accidentally flip fill back ON via blind toggle.
+
+### 2026-04-22 — Pit Fuel Control V2 follow-up polish (Mode/MFD alignment + OFF guard + AUTO entry send + PLAN isolation)
+- Classification: **both** (driver-visible pit-fuel control behavior corrections + internal ownership/safety hardening).
+- Updated `PitFuelControlEngine` mode-cycle contract to explicit effective-mode loop `OFF -> MAN -> AUTO -> OFF`:
+  - `OFF -> MAN` now sends plugin `Pit.ToggleFuel` ON and validates `dpFuelFill`,
+  - `AUTO -> OFF` now sends plugin `Pit.ToggleFuel` OFF, exits AUTO, and forces `Source=STBY` + `AutoArmed=false`,
+  - toggle validation uses bounded short-delay checks; mismatches publish `Pit Cmd Fail` and fall back to MFD truth (no correction loop).
+- Hardened OFF safety contract:
+  - while effective mode is OFF, all fuel source actions (`SourceCycle`, `SetPush`, `SetNorm`, `SetSave`) are blocked from sending `#fuel`.
+- AUTO behavior polish:
+  - entering AUTO from `PUSH/NORM/SAVE` now attempts immediate send and arms AUTO only on success,
+  - entering AUTO from `PLAN` performs one immediate send then always returns to `STBY` disarmed,
+  - AUTO source-cycle is now `PUSH -> NORM -> SAVE -> PUSH` (PLAN removed from AUTO cycle; PLAN remains MAN-only cycle option).
+- Kept existing invariants intact:
+  - AUTO cancel remains edge-triggered,
+  - lap-cross AUTO send cadence unchanged,
+  - OFF/MAN remain MFD-derived truth and no parallel plugin OFF/MAN state was introduced.
+- Follow-up fix (same day): AUTO-entry immediate-send failure now explicitly publishes `Pit Cmd Fail` in both MAN->AUTO send branches (`PLAN` one-shot branch and `PUSH/NORM/SAVE` branch) while preserving existing fallback behavior (`Source=STBY`, `AutoArmed=false`).
 
 ### 2026-04-22 — Tyre Control PR follow-up: explicit raw-command model + AUTO external ownership cancel/remap
 - Classification: **both** (driver-visible tyre-control command/ownership behavior correction + bounded internal ownership detection).
