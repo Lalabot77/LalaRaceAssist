@@ -33,6 +33,21 @@ The public user-facing release history is maintained in the root `CHANGELOG.md`.
 
 ## Post-v1.0 development
 
+### 2026-04-23 — Tyre Control simplification follow-up: remove `#t$` sequencing + remove resend loops
+- Classification: **both** (driver-visible tyre command behavior simplification + internal control-path reduction).
+- Simplified `PitTyreControlEngine` to single-send, single-confirmation behaviour:
+  - removed internal tyre service-on command sequencing (`#t$`) from DRY/WET/AUTO flows;
+  - DRY/WET/AUTO now send only one `#tc ...$` attempt per target change, while OFF keeps `#cleartires$`;
+  - removed retry/cooldown resend loops for tyre service/compound sends.
+- Added short bounded command confirmation windows (~900 ms) with single-failure fallback:
+  - on unconfirmed timeout (or immediate send failure), tyre control now publishes standard pit feedback `PIT CMD FAIL`;
+  - mode then remaps to current MFD truth when authoritative truth is available (no stale intended mode hold);
+  - no secondary retry mechanism or duplicate send loop is used.
+- Preserved existing high-level contracts:
+  - mode cycle remains `OFF -> DRY -> WET -> AUTO -> OFF`,
+  - AUTO external/manual ownership-cancel behaviour remains in place,
+  - no internal toggle-semantics reintroduction.
+
 ### 2026-04-23 — Pit Fuel Control regression follow-up: remove blocking OFF->MAN toggle re-poll loop
 - Classification: **both** (driver-visible ModeCycle responsiveness fix + internal control-loop safety hardening).
 - Updated `PitFuelControlEngine.TryToggleFuelFillEnabled(...)` to stop running a second blocking telemetry poll loop after `Pit.ToggleFuel`.

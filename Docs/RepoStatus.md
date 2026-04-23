@@ -9,6 +9,12 @@ Branch: work
 - No Git remote is configured in this checkout (`git remote -v` returns empty).
 
 ## Documentation sync status
+- 2026-04-23 Tyre Control simplification follow-up landed (single-send confirmation, no `#t$`, no retries):
+  - tyre control command model now uses `OFF => #cleartires$` and `DRY/WET/AUTO => #tc ...$` only (internal `#t$` sequencing removed);
+  - tyre service/compound resend loops and retry/cooldown attempt budgets were removed for tyre control;
+  - each manual action/AUTO target change now performs one send attempt and waits a short bounded confirmation window (~900 ms);
+  - unconfirmed timeout (or immediate send failure) now publishes `PIT CMD FAIL`, then remaps mode to current authoritative MFD truth with no retry loop;
+  - preserves existing mode cycle and AUTO external/manual takeover-cancel behaviour.
 - 2026-04-23 PR review follow-up restored non-blocking post-toggle verification in `TryToggleFuelFillEnabled(...)`:
   - `_fuelToggleSender()` transport-attempt success is no longer treated as confirmed toggle by itself;
   - after successful send attempt, the engine now performs one immediate snapshot read and requires `dpFuelFill` to match expected ON/OFF before returning success;
