@@ -16,6 +16,7 @@ Branch: work
   - AUTO entry now sends immediately for `PUSH/NORM/SAVE` and arms only on successful send; PLAN entry is one-shot immediate send and then forced back to `Source=STBY` disarmed,
   - AUTO source cycle is now PLAN-isolated (`PUSH -> NORM -> SAVE -> PUSH` only); PLAN remains available in MAN cycle only,
   - AUTO cancel edge-trigger and lap-cross AUTO update cadence remain unchanged.
+  - same-day follow-up: MAN->AUTO immediate-send failures now explicitly publish `Pit Cmd Fail` for both `PLAN` and `PUSH/NORM/SAVE` entry branches while preserving fallback-to-`STBY` + disarmed behavior.
 - 2026-04-22 docs sweep for v1.1 release prep completed:
   - refreshed root `CHANGELOG.md` unreleased `v1.1` notes to be concise and user-facing,
   - reviewed and refreshed `Docs/User_Guide.md` and `Docs/Quick_Start.md` pit/custom command guidance links,

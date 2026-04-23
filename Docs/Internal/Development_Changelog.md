@@ -49,6 +49,7 @@ The public user-facing release history is maintained in the root `CHANGELOG.md`.
   - AUTO cancel remains edge-triggered,
   - lap-cross AUTO send cadence unchanged,
   - OFF/MAN remain MFD-derived truth and no parallel plugin OFF/MAN state was introduced.
+- Follow-up fix (same day): AUTO-entry immediate-send failure now explicitly publishes `Pit Cmd Fail` in both MAN->AUTO send branches (`PLAN` one-shot branch and `PUSH/NORM/SAVE` branch) while preserving existing fallback behavior (`Source=STBY`, `AutoArmed=false`).
 
 ### 2026-04-22 — v1.1 documentation sweep (release-prep, no code changes)
 - Classification: **both** (public release-note/doc refresh + internal canonical-doc map alignment).

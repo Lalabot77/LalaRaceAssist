@@ -190,6 +190,10 @@ namespace LaunchPlugin
                     {
                         PublishSelectionFeedback("Pit.FuelControl.ModeCycle", "FUEL AUTO STBY");
                     }
+                    else
+                    {
+                        PublishSelectionFeedback("Pit.FuelControl.ModeCycle", "Pit Cmd Fail");
+                    }
                     return;
                 }
 
@@ -203,6 +207,7 @@ namespace LaunchPlugin
                 {
                     Source = PitFuelControlSource.Stby;
                     AutoArmed = false;
+                    PublishSelectionFeedback("Pit.FuelControl.ModeCycle", "Pit Cmd Fail");
                 }
 
                 return;
