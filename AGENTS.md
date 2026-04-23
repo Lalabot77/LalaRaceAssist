@@ -1,16 +1,55 @@
 # Agent Entry Point
 
-Start with [Docs/Project_Index.md](Docs/Project_Index.md). It is the canonical documentation map and entry point for this repo.
+Start with Docs/Project_Index.md
 
-Required operating order:
-- Obey [Docs/Internal/CODEX_CONTRACT.txt](Docs/Internal/CODEX_CONTRACT.txt) as mandatory policy.
-- Use [Docs/Internal/Architecture_Guardrails.md](Docs/Internal/Architecture_Guardrails.md) for subsystem boundaries and ownership.
-- When working from an explicit task, use [Docs/Internal/CODEX_TASK_TEMPLATE.txt](Docs/Internal/CODEX_TASK_TEMPLATE.txt).
-- Read the relevant `Docs/Subsystems/*.md` files before editing subsystem code or subsystem docs.
-- Treat [Docs/Internal/Code_Snapshot.md](Docs/Internal/Code_Snapshot.md) as orientation only; it is non-canonical.
+---
 
-Working rules:
-- Prefer subsystem-local edits over widening central file responsibilities.
-- Do not widen ownership boundaries unless the task explicitly requires it.
-- Keep documentation aligned with the final repo state, including [Docs/RepoStatus.md](Docs/RepoStatus.md) when docs or behavior change.
-- Maintain changelog split discipline: `CHANGELOG.md` is user-facing release history; `Docs/Internal/Development_Changelog.md` is the ongoing internal development log.
+## Mandatory Working Order
+
+1. Read CODEX_CONTRACT.txt
+2. Read Project_Index.md
+3. Read relevant Subsystem docs
+4. Check RepoStatus.md
+5. Review Development_Changelog.md for recent changes
+
+---
+
+## Core Rules
+
+* Subsystems own logic
+* Do not move logic across subsystem boundaries
+* Prefer local edits over central expansion
+* Do not introduce new ownership paths without explicit requirement
+
+---
+
+## Documentation Rules
+
+* Documentation must match final behavior
+* GitHub docs are part of the product
+* Update docs in the same task as code
+
+---
+
+## Stability Rules
+
+* Do not introduce unintended behaviour changes
+* Respect system invariants
+* Avoid timing or telemetry side effects
+
+---
+
+## Task Approach
+
+* Always perform analysis before editing
+* Always identify risks
+* Always declare behaviour changes
+
+---
+
+## Repo Truth Hierarchy
+
+1. Subsystem docs (source of truth)
+2. RepoStatus.md (current validated state)
+3. Code (implementation)
+4. Code_Snapshot.md (orientation only)

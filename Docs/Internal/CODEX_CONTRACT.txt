@@ -8,16 +8,17 @@ Codex must treat this as mandatory engineering policy.
 
 ## 1. Scope Discipline (No Feature Creep)
 
-- Modify ONLY the files explicitly listed in the task, plus mandatory documentation files required to keep repo truth aligned.
-- Do NOT expand scope.
-- Do NOT introduce new subsystems.
-- Do NOT add new UI controls unless explicitly requested.
-- Do NOT change learning, shift logic, fuel math, CarSA logic, or telemetry gating unless explicitly requested.
+* Modify ONLY the files explicitly listed in the task, plus mandatory documentation files required to keep repo truth aligned.
+* Do NOT expand scope.
+* Do NOT introduce new subsystems.
+* Do NOT add new UI controls unless explicitly requested.
+* Do NOT change learning, shift logic, fuel math, CarSA logic, or telemetry gating unless explicitly requested.
 
 If something appears wrong but is outside scope:
-- Do not fix it.
-- Do not refactor it.
-- Leave it untouched.
+
+* Do not fix it.
+* Do not refactor it.
+* Leave it untouched.
 
 ---
 
@@ -25,41 +26,43 @@ If something appears wrong but is outside scope:
 
 Every code change must update relevant documentation.
 
-Always evaluate and update as needed:
+### Technical / repo docs:
 
-Technical / repo docs:
-- `Docs/Internal/SimHubParameterInventory.md` (exports / settings / properties)
-- `Docs/Internal/SimHubLogMessages.md` (new or modified log lines)
-- `Docs/Subsystems/<affected_subsystem>.md`
-- `Docs/Internal/Plugin_UI_Tooltips.md` (if UI text changes)
-- `Docs/Project_Index.md` (if subsystem description, navigation, or canonical doc map changes)
-- `Docs/RepoStatus.md` (update validation commit + summary)
+* Docs/Internal/SimHubParameterInventory.md
+* Docs/Internal/SimHubLogMessages.md
+* Docs/Subsystems/<affected_subsystem>.md
+* Docs/Internal/Plugin_UI_Tooltips.md
+* Docs/Project_Index.md
+* Docs/RepoStatus.md
 
-GitHub-facing user docs:
-- `README.md`
-- `CHANGELOG.md`
-- `Docs/Quick_Start.md`
-- `Docs/User_Guide.md`
-- any relevant user-facing feature page such as:
-  - `Docs/Dashboards.md`
-  - `Docs/Strategy_System.md`
-  - `Docs/H2H_System.md`
-  - `Docs/Rejoin_Assist.md`
-  - or other equivalent user docs that own the changed feature
+### GitHub-facing user docs (product surface):
+
+* README.md
+* CHANGELOG.md
+* Docs/Quick_Start.md
+* Docs/User_Guide.md
+* Relevant feature pages (Dashboards, Strategy_System, H2H_System, etc.)
+
+GitHub-facing documentation is part of the product.
+
+If a change affects:
+
+* user workflow
+* UI behaviour
+* feature meaning
+* dashboard usage
+
+Then user docs MUST be reviewed and updated.
+
+Failure to update these when required = incomplete task.
 
 Rules:
-- If a task changes user-facing behaviour, workflow, UI labels, tab names, settings location, dash behaviour, install steps, or practical usage guidance, GitHub-facing user docs must be reviewed and updated in the same task.
-- If a task changes only internal implementation with no user-visible effect, user docs may remain unchanged, but Codex must explicitly state that no user-facing documentation changes were required.
-- For any non-trivial task, Codex must classify changelog impact as **user-facing**, **internal-only**, or **both**.
-- For any non-trivial task that meaningfully changes repo behaviour, packaging, docs, UX, or workflows, Codex must add a concise entry to `Docs/Internal/Development_Changelog.md`.
-- Update root `CHANGELOG.md` only when the task explicitly requests public changelog staging, or when the task is clearly preparing user-facing unreleased/release notes.
-- Avoid adding internal-only refactors, housekeeping, or process-only notes to root `CHANGELOG.md` unless explicitly requested.
-- Task closeout must include a short changelog classification note in the final summary.
-- Documentation must reflect final behavior.
-- When modifying a documentation file, refresh that file's own header metadata (for example `Last updated` / validation stamp fields where present) to match the task outcome.
-- Remove outdated statements.
-- Do not mention deprecated settings unless marked `legacy (unused)`.
-- Do not document inactive systems as active features.
+
+* Always classify changelog impact: user-facing / internal-only / both
+* Update Development_Changelog.md for all non-trivial work
+* Update root CHANGELOG.md only when preparing user-facing release notes
+* Remove outdated documentation
+* Do not document inactive systems as active
 
 No task is complete without documentation alignment.
 
@@ -67,102 +70,121 @@ No task is complete without documentation alignment.
 
 ## 3. Codex Execution Method (Mandatory Working Order)
 
-For every non-trivial task:
+Before ANY non-trivial task:
 
-- Read `Docs/Project_Index.md` first.
-- Use `Docs/Project_Index.md` to locate the canonical docs for the affected area.
-- Read the relevant `Docs/Subsystems/*.md` files before editing code or subsystem docs.
-- Check `Docs/RepoStatus.md` before implementation when current validated state matters.
-- Treat `Docs/Internal/Code_Snapshot.md` as orientation only. If it conflicts with canonical docs, the canonical docs win.
+* Read Docs/Project_Index.md
+* Read Docs/Internal/CODEX_CONTRACT.txt
+* Read relevant Docs/Subsystems/*.md
+* Check Docs/RepoStatus.md when current state matters
+* Read relevant entries in Docs/Internal/Development_Changelog.md
 
-Before editing on any non-trivial task:
-
-- Do a no-edit analysis pass first.
-- State the relevant code paths and documentation paths being touched.
-- State the system invariants that must remain true.
-- State the edit boundaries and keep them tight.
-- Explicitly state whether GitHub-facing user docs are expected to change.
-
-While implementing:
-
-- Prefer subsystem-local documentation updates over growing central/global docs.
-- Keep edits inside the owning subsystem where practical.
-- Do not widen file responsibilities without a clear need.
-- Keep architecture guardrails in mind; extend existing subsystem seams before creating new cross-cutting behaviour.
-- If canonical docs are missing or unclear, update the canonical doc rather than relying on ad hoc task wording.
-- If user-facing behaviour changes, update the owning GitHub-facing docs in the same task instead of leaving it for later.
-
-At task close:
-
-- Re-check the edited docs/files against the final repo state.
-- Update `Docs/RepoStatus.md` with the validation commit and summary when documentation or behaviour changed.
-- Confirm whether `README.md`, `CHANGELOG.md`, and user guides were reviewed and whether they changed.
+Treat Code_Snapshot.md as orientation only.
 
 ---
 
-## 4. Stability First
+## 4. Required Analysis Before Editing
 
-This project is actively under test.
+Codex MUST explicitly state:
 
-Therefore:
+* Owning subsystem
+* Upstream dependencies
+* Downstream consumers
+* Relevant recent changes (from Development_Changelog.md)
+* System invariants
+* Edit boundaries
 
-- Do NOT alter runtime behavior outside task scope.
-- Do NOT modify `ShiftAssistEngine` logic unless explicitly requested.
-- Do NOT change learning behavior unless explicitly requested.
-- Do NOT introduce timing side effects in telemetry loop.
-- Do NOT block main thread.
-- Do NOT introduce race conditions.
+Codex MUST also declare:
 
----
-
-## 5. C# and Dependency Rules
-
-- Target C# 7.3 compatibility.
-- No new NuGet packages unless explicitly requested.
-- No new external DLLs.
-- No unsafe code.
-- No async/await changes unless explicitly requested.
-- No WASAPI exclusive mode unless explicitly requested.
+* Does this change behaviour? (yes/no)
+* If yes: exact impact
 
 ---
 
-## 6. Audio System Rules (Shift Assist)
+## 5. Stability First
 
-Unless explicitly overridden:
-
-- Primary beep behavior must remain unchanged.
-- Urgent beep must not modify learning, exports, or shift target logic.
-- Volume overrides must use existing scaling/cache logic.
-- No duplication of audio backend state.
+* Do NOT alter runtime behavior outside scope
+* Do NOT introduce timing side effects
+* Do NOT block main thread
+* Do NOT introduce race conditions
 
 ---
 
-## 7. Logging Discipline
+## 6. Regression Prevention (CRITICAL)
 
-- No log spam.
-- Warnings must be one-time where possible.
-- Keep existing log format conventions.
-- Do not introduce new verbose logging without toggle.
+Codex MUST evaluate:
 
----
+* What could this change break?
+* Why is it safe?
 
-## 8. JSON / Profile Compatibility
+If Codex cannot answer this clearly:
 
-If removing a setting:
-- Ensure existing JSON profiles do not break.
-- Prefer leaving legacy property unused rather than deleting unless explicitly approved.
+* Do not proceed
 
 ---
 
-## 9. Definition of Done
+## 7. No Silent Contract Drift
 
-A task is only complete when:
+Do NOT change any of the following without updating docs:
 
-- Code compiles.
-- Scope respected.
-- No unintended behavior changes.
-- Documentation updated.
-- `Docs/RepoStatus.md` updated with new validation commit.
-- Relevant GitHub-facing docs reviewed and updated when the task changes anything user-facing.
-- `Docs/Internal/Development_Changelog.md` updated for substantive non-trivial work per changelog classification.
-- `CHANGELOG.md` updated only when public staging/release-note intent is explicit.
+* exports
+* log messages
+* UI wording
+* workflow semantics
+* settings meaning
+
+All changes must be reflected in canonical docs in the same task.
+
+---
+
+## 8. C# and Dependency Rules
+
+* Target C# 7.3
+* No new NuGet packages
+* No external DLLs
+* No unsafe code
+* No async changes unless requested
+
+---
+
+## 9. Logging Discipline
+
+* No log spam
+* Use one-time warnings where possible
+* Maintain existing log format
+
+---
+
+## 10. JSON / Profile Compatibility
+
+* Do not break existing profiles
+* Prefer legacy fields over deletion unless approved
+
+---
+
+## 11. Definition of Done
+
+A task is complete ONLY when:
+
+* Code compiles
+* Scope respected
+* No unintended behaviour changes
+* Regression risks evaluated
+* Documentation updated
+* RepoStatus updated correctly
+* GitHub docs reviewed
+* Changelog classification included
+
+## 12. Edge Case Awareness
+
+Codex MUST consider and explicitly evaluate edge cases including:
+
+- session transitions
+- telemetry gaps or missing values
+- boundary conditions (zero, max, empty, full)
+- timing edges (start/end of lap, pit entry/exit, race end)
+
+If edge cases are relevant to the change:
+- they must be explicitly addressed in analysis and verification
+
+If no edge cases apply:
+- Codex must explicitly state why

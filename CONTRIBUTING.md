@@ -1,31 +1,55 @@
-# Contributing to Lala Race Assist
+# Contributing
 
-Thank you for helping test and improve the project.
+This project uses strict engineering discipline.
 
-## Reporting Bugs
+---
 
-Please open a GitHub Issue and include:
+## Before contributing
 
-- A clear description of the problem
-- What you expected to happen
-- What actually happened
-- Screenshots if relevant
-- SimHub log file if available
+* Read Docs/Project_Index.md
+* Read CODEX_CONTRACT.txt
+* Understand subsystem boundaries
 
-## Feature Suggestions
+---
 
-Feature ideas are welcome. Please open an Issue and describe:
+## Development principles
 
-- The problem you are trying to solve
-- How the feature might work
-- Any examples from other tools
+* Keep changes scoped and minimal
+* Do not introduce new systems without approval
+* Respect ownership boundaries
 
-## Testing Feedback
+---
 
-If possible include:
+## Documentation
 
-- Car and track used
-- Session type (practice / race / replay)
-- Any relevant plugin settings
+* All changes must update documentation
+* GitHub-facing docs are part of the product
+* Documentation must reflect final behavior
 
-This helps reproduce the issue.
+---
+
+## Pull Requests
+
+Each PR must include:
+
+* Clear description of change
+* Behaviour impact (yes/no)
+* Risk assessment
+* Documentation updates
+* Changelog classification
+
+---
+
+## What not to do
+
+* Do not refactor unrelated code
+* Do not expand scope
+* Do not introduce breaking changes without approval
+
+---
+
+## Philosophy
+
+* Stability over cleverness
+* Clarity over abstraction
+* Explicit behaviour over implicit assumptions

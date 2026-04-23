@@ -1,111 +1,145 @@
 CODEX TASK - <short task name>
 
-Use `Docs/Internal/CODEX_CONTRACT.txt` as mandatory engineering policy.
-Use `Docs/Project_Index.md` as the canonical start point for docs discovery.
-Use affected `Docs/Subsystems/*.md` files as canonical local truth.
-Treat `Docs/Internal/Code_Snapshot.md` as orientation only if canonical docs conflict.
-Keep documentation aligned with final repo state and update `Docs/RepoStatus.md` at the end.
-Review and update GitHub-facing user docs when the task changes anything user-facing.
+Use Docs/Internal/CODEX_CONTRACT.txt as mandatory policy.
+Use Docs/Project_Index.md as canonical entry point.
+
+---
 
 Goal
 
-<State the concrete outcome. Keep it task-specific and testable.>
+<State a concrete, testable outcome>
+
+---
 
 Context
 
-<List the relevant subsystem(s), docs, and constraints already known.>
+<List subsystem, constraints, and known state>
 
-Phase 1 - Codebase analysis (no edits)
+---
+
+Phase 1 - Analysis (NO EDITS)
 
 Before editing:
-- Read `Docs/Project_Index.md`.
-- Read `Docs/Internal/CODEX_CONTRACT.txt`.
-- Read the affected subsystem docs.
-- Check `Docs/RepoStatus.md` when current validated state matters.
-- Use `Docs/Internal/Code_Snapshot.md` only for orientation if needed.
 
-Identify:
-- canonical entry points and owning docs
-- affected code paths and documentation paths
-- subsystem boundaries that must stay intact
-- whether the task changes user-facing behaviour, workflow, UI wording, install steps, or release-visible functionality
-- which GitHub-facing docs must be reviewed
+* Read Project_Index.md
+* Read CODEX_CONTRACT.txt
+* Read relevant subsystem docs
+* Check RepoStatus.md
+* Review relevant Development_Changelog.md entries
 
-Do not edit during this phase.
+---
+
+Identify and explicitly state:
+
+1. Owning subsystem
+2. Upstream dependencies
+3. Downstream consumers
+4. Relevant recent changes
+5. System invariants that must not change
+
+---
+
+Risk assessment
+
+* What could this break?
+* Why is it safe?
+* What edge cases exist?
+
+---
 
 Changelog impact
 
-- Internal development changelog update required? <yes/no>
-- Public changelog update required? <yes/no>
-- If applicable, user-facing summary for release notes: <1-3 concise bullets>
+* Internal: yes/no
+* Public: yes/no
+* Summary (1–3 bullets if needed)
 
-System invariants
+Recent change alignment
 
-- <List behaviour, export, logging, UI, JSON/profile, and compatibility rules that must remain unchanged.>
+* Confirm this task does NOT conflict with recent subsystem changes
+* If overlap exists: explain how compatibility is preserved
+
+---
 
 Edit boundaries
 
-Allowed edits:
-- <List allowed files or areas.>
+Allowed:
 
-Do not:
-- <List explicit out-of-scope files, behaviours, and refactors.>
+* <explicit files/areas>
+
+Do NOT:
+
+* expand scope
+* refactor unrelated systems
+* modify other subsystems
+
+---
 
 Phase 2 - Implementation
 
-Before editing, state:
-- relevant code/doc paths
-- system invariants
-- edit boundaries
-- whether GitHub-facing docs are expected to change
+Explicit behaviour statement:
 
-Implementation rules:
-- keep changes inside the owning subsystem where practical
-- prefer subsystem-local docs over expanding central docs
-- do not widen file responsibilities without clear need
-- update canonical docs when behaviour/contracts change
-- preserve compatibility unless the task explicitly approves a break
-- if user-facing behaviour changes, update GitHub-facing docs in the same task
+* Does this change behaviour? (yes/no)
+* If yes: exact impact
 
-Documentation updates required
+Before editing:
 
-Check and update as needed:
+* confirm invariants
+* confirm boundaries
+* confirm docs impact
 
-Technical / canonical docs:
-- `Docs/Subsystems/<affected>.md`
-- `Docs/Internal/SimHubParameterInventory.md`
-- `Docs/Internal/SimHubLogMessages.md`
-- `Docs/Internal/Plugin_UI_Tooltips.md`
-- `Docs/Project_Index.md`
-- `Docs/RepoStatus.md`
+---
 
-GitHub-facing user docs:
-- `README.md`
-- `CHANGELOG.md`
-- `Docs/Quick_Start.md`
-- `Docs/User_Guide.md`
-- any relevant user-facing feature page(s)
+Implementation rules
 
-If any of the above do not require changes, state why.
+* Keep changes inside owning subsystem
+* Do not widen responsibilities
+* Update canonical docs if behaviour changes
+* Preserve compatibility unless explicitly allowed
+
+---
+
+Documentation updates
+
+Technical:
+
+* Subsystem docs
+* Parameter inventory
+* Log messages
+* Tooltips
+* RepoStatus
+
+GitHub-facing:
+
+* README
+* CHANGELOG
+* Quick_Start
+* User_Guide
+* Feature docs
+
+State explicitly if unchanged and why.
+
+---
 
 Phase 3 - Verification
 
 Confirm:
-- scope stayed within boundaries
-- invariants still hold
-- docs match the final repo state
-- `Docs/RepoStatus.md` reflects the task
-- relevant GitHub-facing docs were reviewed
-- changelog classification is stated (user-facing, internal-only, or both)
-- `Docs/Internal/Development_Changelog.md` was updated when required
-- `CHANGELOG.md` was updated only when public staging/release-note intent applied
-- no unrelated behaviour changed
 
-Output format
+* Scope respected
+* Invariants hold
+* No unintended behaviour changes
+* Edge cases handled
+* Docs match final state
+* RepoStatus updated
+* GitHub docs reviewed
+* Changelog classification included
 
-Provide:
-1. Short summary of what changed
-2. Files added/updated
-3. Verification result
-4. Documentation files reviewed and which ones changed
-5. Any follow-up observations or safe future cleanup candidates
+---
+
+Output
+
+1. Summary of change
+2. Files changed
+3. Behaviour impact (explicit)
+4. Verification result
+5. Docs reviewed/updated
+6. Any follow-up risks or improvements
