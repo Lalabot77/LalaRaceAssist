@@ -166,7 +166,11 @@ namespace LaunchPlugin
                     RefreshDerivedState();
                 }
 
-                PublishSelectionFeedback("Pit.FuelControl.ModeCycle", "FUEL MODE MAN");
+                bool sent = SendCurrentTarget(isAutoUpdate: false, actionNameOverride: "Pit.FuelControl.ModeCycle", allowOffMode: true);
+                if (!sent)
+                {
+                    PublishSelectionFeedback("Pit.FuelControl.ModeCycle", "Pit Cmd Fail");
+                }
                 return;
             }
 
@@ -369,10 +373,10 @@ namespace LaunchPlugin
             }
         }
 
-        private bool SendCurrentTarget(bool isAutoUpdate, string actionNameOverride = null)
+        private bool SendCurrentTarget(bool isAutoUpdate, string actionNameOverride = null, bool allowOffMode = false)
         {
             RefreshDerivedState();
-            if (ResolveEffectiveMode() == PitFuelControlMode.Off)
+            if (!allowOffMode && ResolveEffectiveMode() == PitFuelControlMode.Off)
             {
                 return false;
             }

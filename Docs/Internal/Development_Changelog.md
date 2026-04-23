@@ -33,6 +33,16 @@ The public user-facing release history is maintained in the root `CHANGELOG.md`.
 
 ## Post-v1.0 development
 
+### 2026-04-23 — PR follow-up: restore OFF->MAN progression for ModeCycle-only Fuel Control bindings
+- Classification: **both** (driver-visible mode-cycle progression restore + narrow explicit-command ownership correction).
+- Updated `PitFuelControlEngine.ModeCycle()` OFF branch so it no longer exits on selection-only state mutation.
+  - `OFF -> MAN` now issues a real explicit fuel-amount send attempt via existing raw command ownership (`#fuel ...$`) using current selected source target.
+  - This keeps toggle semantics out of Fuel Control while allowing MFD `dpFuelFill` truth to move to MAN for users who only bind `Pit.FuelControl.ModeCycle`.
+- Preserved invariants:
+  - non-AUTO mode truth remains telemetry-derived from `dpFuelFill`,
+  - no `Pit.ToggleFuel` / `#!fuel` path was reintroduced into Fuel Control,
+  - AUTO entry/exit behavior and existing OFF hard guard semantics outside this transition remain unchanged.
+
 ### 2026-04-23 — Pit Fuel Control mode ownership refactor: remove internal fuel-toggle semantics
 - Classification: **both** (driver-visible Fuel Control mode behavior update + internal ownership simplification).
 - Refactored `PitFuelControlEngine` so Fuel Control no longer depends on `_fuelToggleSender`, `TryToggleFuelFillEnabled(...)`, or `NotifyPluginFuelToggleAction()`; Fuel Control mode/source paths now rely only on explicit raw fuel command sends.

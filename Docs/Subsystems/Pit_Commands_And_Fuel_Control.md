@@ -96,7 +96,7 @@ Canonical log wording and meaning live in `Docs/Internal/SimHubLogMessages.md`; 
 - Tyre compound send failure paths are bounded by retry/cooldown budget to avoid per-tick resend spam.
 - External pit-menu edits can cancel AUTO once and force safety recovery state in fuel control.
 - Fuel Control mode ownership is explicit-command only (no internal `Pit.ToggleFuel` use):
-  - `OFF -> MAN` is selection/intent only and sends no command;
+  - `OFF -> MAN` issues an explicit fuel-amount command attempt using the selected source target (`#fuel ...$`) so MFD truth (`dpFuelFill`) can transition to MAN via telemetry;
   - `AUTO -> OFF` uses explicit raw OFF command `#-fuel$` and only exits AUTO to `Source=STBY` + disarmed on successful transport attempt;
   - MAN remains MFD-derived truth (`dpFuelFill=true`) when AUTO is inactive.
 
