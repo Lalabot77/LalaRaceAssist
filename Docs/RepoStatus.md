@@ -9,6 +9,10 @@ Branch: work
 - No Git remote is configured in this checkout (`git remote -v` returns empty).
 
 ## Documentation sync status
+- Tyre Control PR review follow-up landed (complete AUTO intent match + unknown service-enforcement hold):
+  - AUTO plugin-owned delayed convergence now requires full relevant pending-intent agreement (`service` and `compound` when both are pending/relevant), preventing single-dimension matches from masking external/manual takeover;
+  - tyre-service enforcement retries are now held while service truth is unknown/unavailable (`HasTireServiceSelection=false`), so telemetry gaps do not burn bounded retry budget;
+  - scope remained narrow: no transport, command-model, or mode-cycle redesign.
 - Tyre Control follow-up bundle landed (build fix + authoritative service truth + AUTO cancel hardening):
   - fixed `PitTyreControlEngine.OnTelemetryTick()` local-variable collision build break (`desiredWet`);
   - tyre-service truth availability is now authoritative only when all four tyre-change flags are available (partial/missing flag telemetry is unknown/non-authoritative);

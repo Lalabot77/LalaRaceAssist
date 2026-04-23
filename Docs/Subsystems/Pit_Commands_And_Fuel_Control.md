@@ -1,7 +1,7 @@
 # Pit Commands and Fuel/Tyre Control
 
 Validated against commit: HEAD
-Last updated: 2026-04-22
+Last updated: 2026-04-23
 Branch: work
 
 ## Purpose
@@ -63,7 +63,8 @@ This is the canonical technical document for the pit/custom command stack and re
 6. Maintain Tyre Control enforcement:
    - OFF forces service off,
    - DRY/WET/AUTO keep service on and drive compound request semantics,
-   - AUTO follows declared wetness.
+   - AUTO follows declared wetness,
+   - service enforcement attempt budget is consumed only when four-flag tyre-service truth is authoritative; unknown service truth (partial/missing tyre flags) holds enforcement/retries.
 
 ## Outputs (exports + logs)
 Canonical export names live in `Docs/Internal/SimHubParameterInventory.md`; key families:

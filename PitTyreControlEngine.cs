@@ -307,6 +307,11 @@ namespace LaunchPlugin
 
         private void EnsureTyreService(PitTyreControlSnapshot snapshot, bool desiredSelected)
         {
+            if (!snapshot.HasTireServiceSelection)
+            {
+                return;
+            }
+
             string targetKey = desiredSelected ? "ON" : "OFF";
             if (snapshot.IsTireServiceSelected == desiredSelected)
             {
@@ -459,13 +464,17 @@ namespace LaunchPlugin
         private bool IsObservedTruthConvergingToPluginIntent(PitTyreControlSnapshot snapshot)
         {
             DateTime now = DateTime.UtcNow;
-            bool pluginOwnedConvergence = false;
+            bool serviceIntentRelevant = _hasPendingServiceIntent && now <= _pendingServiceIntentUntilUtc;
+            bool compoundIntentRelevant = _hasPendingCompoundIntent && now <= _pendingCompoundIntentUntilUtc;
 
-            if (_hasPendingServiceIntent && now <= _pendingServiceIntentUntilUtc)
+            bool serviceMatched = !serviceIntentRelevant;
+            bool compoundMatched = !compoundIntentRelevant;
+
+            if (serviceIntentRelevant)
             {
                 if (snapshot.HasTireServiceSelection && snapshot.IsTireServiceSelected == _pendingServiceSelected)
                 {
-                    pluginOwnedConvergence = true;
+                    serviceMatched = true;
                     _hasPendingServiceIntent = false;
                     _pendingServiceIntentUntilUtc = DateTime.MinValue;
                 }
@@ -476,12 +485,12 @@ namespace LaunchPlugin
                 _pendingServiceIntentUntilUtc = DateTime.MinValue;
             }
 
-            if (_hasPendingCompoundIntent && now <= _pendingCompoundIntentUntilUtc)
+            if (compoundIntentRelevant)
             {
                 if (snapshot.HasRequestedCompound &&
                     IsRequestedCompoundInDesiredFamily(snapshot.RequestedCompound, _pendingCompoundWet))
                 {
-                    pluginOwnedConvergence = true;
+                    compoundMatched = true;
                     _hasPendingCompoundIntent = false;
                     _pendingCompoundIntentUntilUtc = DateTime.MinValue;
                 }
@@ -492,7 +501,12 @@ namespace LaunchPlugin
                 _pendingCompoundIntentUntilUtc = DateTime.MinValue;
             }
 
-            return pluginOwnedConvergence;
+            if (!serviceIntentRelevant && !compoundIntentRelevant)
+            {
+                return false;
+            }
+
+            return serviceMatched && compoundMatched;
         }
 
         private void MarkPendingServiceIntent(bool desiredSelected)
