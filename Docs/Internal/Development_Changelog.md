@@ -67,6 +67,54 @@ The public user-facing release history is maintained in the root `CHANGELOG.md`.
   - no `Pit.ToggleFuel`/toggle semantics added to Fuel Control,
   - no retries/poll loops/hidden recovery logic added,
   - AUTO remains the only plugin-owned mode.
+### 2026-04-23 — Tyre Control PR review follow-up: keep service-ON intent tracking for AUTO/DRY/WET `#tc` sends
+- Classification: **both** (driver-visible AUTO ownership/cancel stability fix + narrow internal intent-tracking correction).
+- Updated `PitTyreControlEngine.EnsureCompound(...)` send path so successful DRY/WET/AUTO `#tc ...$` sends now record pending service-ON intent (`desiredSelected=true`) in addition to pending compound intent.
+  - preserves the simplified single-command model (`OFF => #cleartires$`; `DRY/WET/AUTO => #tc ...$`) and does **not** reintroduce `#t$`;
+  - keeps delayed OFF->ON service convergence from successful `#tc` sends attributable to plugin-owned intent even when compound-family confirmation already succeeded.
+- While compound confirmation is pending, service pending intent is also opportunistically cleared as soon as authoritative service truth reports ON.
+
+### 2026-04-23 — Tyre Control PR review follow-up: restore compound confirmation success path before timeout failure
+- Classification: **both** (driver-visible false-failure/false-AUTO-collapse fix + narrow internal confirmation-path correction).
+- Updated `PitTyreControlEngine.EnsureCompound(...)` pending-confirmation path to check for successful requested-compound family convergence before timeout handling.
+  - while `_compoundConfirmationPending` is active, the engine now first confirms success when `snapshot.HasRequestedCompound` and requested compound family matches current dry/wet target;
+  - on match, confirmation state is cleared immediately (pending flag + deadline) and pending compound-intent tracking is also cleared;
+  - timeout fallback to `HandleUnconfirmedCommand(...)` now runs only when the confirmation window expires without a family match.
+- Prevents false `PIT CMD FAIL` emissions (and unintended AUTO collapse to manual truth) after a successful single-send `#tc ...$` compound change.
+
+### 2026-04-23 — Tyre Control PR review follow-up: always issue `#tc` on DRY/WET/AUTO intent (no already-correct send suppression)
+- Classification: **both** (driver-visible DRY/WET/AUTO reliability fix + narrow internal enforcement correction).
+- Updated `PitTyreControlEngine.EnsureCompound(...)` to remove the requested-compound-family short-circuit that previously treated "already correct" as a no-op.
+  - DRY/WET/AUTO now always perform a single `#tc ...$` send when a mode transition or AUTO enforcement event requires compound intent handling.
+  - This preserves the single-send + bounded confirmation window model (no retry loops, no `#t$` reintroduction).
+- Fixes the service-off recovery hole where compound family matched but no command was emitted:
+  - when tyre service is OFF and requested compound already matches DRY/WET family, the engine now still issues `#tc`, allowing iRacing to turn tyre service ON as part of compound request handling.
+
+### 2026-04-23 — Tyre Control simplification follow-up: remove `#t$` sequencing + remove resend loops
+- Classification: **both** (driver-visible tyre command behavior simplification + internal control-path reduction).
+- Simplified `PitTyreControlEngine` to single-send, single-confirmation behaviour:
+  - removed internal tyre service-on command sequencing (`#t$`) from DRY/WET/AUTO flows;
+  - DRY/WET/AUTO now send only one `#tc ...$` attempt per target change, while OFF keeps `#cleartires$`;
+  - removed retry/cooldown resend loops for tyre service/compound sends.
+- Added short bounded command confirmation windows (~900 ms) with single-failure fallback:
+  - on unconfirmed timeout (or immediate send failure), tyre control now publishes standard pit feedback `PIT CMD FAIL`;
+  - mode then remaps to current MFD truth when authoritative truth is available (no stale intended mode hold);
+  - no secondary retry mechanism or duplicate send loop is used.
+- Preserved existing high-level contracts:
+  - mode cycle remains `OFF -> DRY -> WET -> AUTO -> OFF`,
+  - AUTO external/manual ownership-cancel behaviour remains in place,
+  - no internal toggle-semantics reintroduction.
+### 2026-04-23 — LapRef/PB seam reliability follow-up (validated-lap PB writes + immediate LapRef refresh)
+- Classification: **both** (driver-visible SessionBest/PB timing reliability improvement + internal seam hardening).
+- Moved PB write ownership to the accepted validated-lap seam in `UpdateLiveFuelCalcs`:
+  - PB compare/write now uses the same authoritative lap-time candidate used by LapRef validated capture (freshness-guarded `CarIdxLastLapTime` handoff).
+  - This removes fragile dependency on delayed native best-lap event timing for PB persistence.
+- Added a bounded second `UpdateLapReferenceContext(...)` pass in the existing 500ms group immediately after accepted-lap processing so SessionBest/ProfileBest handoff visibility no longer waits an extra update cycle.
+- Kept scope/invariants intact:
+  - condition-specific wet/dry PB ownership remains unchanged,
+  - cleared/non-positive PB values still behave as unavailable baseline,
+  - sector persistence remains optional and only writes when real sectors exist,
+  - no H2H delta semantics or dashboard JSON contracts changed.
 
 ### 2026-04-23 — PR follow-up: restore OFF->MAN progression for ModeCycle-only Fuel Control bindings
 - Classification: **both** (driver-visible mode-cycle progression restore + narrow explicit-command ownership correction).

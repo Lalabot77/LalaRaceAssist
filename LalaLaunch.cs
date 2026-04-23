@@ -3114,6 +3114,28 @@ namespace LaunchPlugin
                         _lastValidLapMs = (int)Math.Round(pbGateLapSec * 1000.0);
                         _lastValidLapNumber = completedLapsNow;
                         _lastValidLapWasWet = lapConditionWet;
+
+                        if (_lastValidLapMs > 0)
+                        {
+                            bool pbAccepted = ProfilesViewModel.TryUpdatePBByCondition(
+                                CurrentCarModel,
+                                CurrentTrackKey,
+                                _lastValidLapMs,
+                                lapConditionWet,
+                                _lastValidatedLapRefSectorMs);
+
+                            string pbLog =
+                                $"[LalaPlugin:Pace] validated-lap PB gate candidate={_lastValidLapMs}ms wet={lapConditionWet} " +
+                                $"car='{CurrentCarModel}' trackKey='{CurrentTrackKey}' -> {(pbAccepted ? "accepted" : "rejected")}";
+                            if (pbAccepted)
+                            {
+                                SimHub.Logging.Current.Info(pbLog);
+                            }
+                            else if (IsVerboseDebugLoggingOn)
+                            {
+                                SimHub.Logging.Current.Debug(pbLog);
+                            }
+                        }
                     }
 
                     if (recordPaceForStats)
@@ -7680,6 +7702,7 @@ namespace LaunchPlugin
             {
                 _poll500ms.Restart();
                 UpdateLiveFuelCalcs(data, pluginManager);
+                UpdateLapReferenceContext(playerCarIdx, carIdxLapDistPct, carIdxLap, sessionTypeName, playerLastLapTimeSec, playerBestLapTimeSec);
 
                 var currentBestLap = data.NewData?.BestLapTime ?? TimeSpan.Zero;
                 if (currentBestLap > TimeSpan.Zero && currentBestLap != _lastSeenBestLap)
@@ -7690,20 +7713,6 @@ namespace LaunchPlugin
                     int completedLapsNow = Convert.ToInt32(data.NewData?.CompletedLaps ?? 0);
                     bool lapValidForPb = _lastValidLapNumber == completedLapsNow && Math.Abs(_lastValidLapMs - lapMs) <= 2;
                     bool lapWasWetForPb = _lastValidLapWasWet;
-
-                    bool accepted = false;
-                    if (lapValidForPb)
-                    {
-                        accepted = ProfilesViewModel.TryUpdatePBByCondition(CurrentCarModel, CurrentTrackKey, lapMs, lapWasWetForPb, _lastValidatedLapRefSectorMs);
-                        string pbLog = $"[LalaPlugin:Pace] candidate={lapMs}ms car='{CurrentCarModel}' trackKey='{CurrentTrackKey}' -> {(accepted ? "accepted" : "rejected")}";
-                        if (accepted)
-                            SimHub.Logging.Current.Info(pbLog);
-                        else
-                            if (IsVerboseDebugLoggingOn)
-                            {
-                                SimHub.Logging.Current.Debug(pbLog);
-                            }
-                    }
 
                     var activeTrackStats = ActiveProfile?.ResolveTrackByNameOrKey(CurrentTrackKey)
                         ?? ActiveProfile?.ResolveTrackByNameOrKey(CurrentTrackName);

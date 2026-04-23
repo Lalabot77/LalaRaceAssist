@@ -44,7 +44,7 @@ This is the canonical technical document for the pit/custom command stack and re
 
 ### Tyre Control state
 - Mode state machine: `OFF -> DRY -> WET -> AUTO -> OFF`.
-- Retry/cooldown bookkeeping for compound sends.
+- Single-send confirmation bookkeeping per commanded tyre target (no retry/cooldown resend loop).
 - Service-state enforcement seam aligned to all-four tyre selection truth.
 - Manual mode-change confirmation window (`OFF`/`DRY`/`WET`) delays immediate external-truth remap long enough for first bounded enforcement send/confirmation pass.
 
@@ -62,10 +62,11 @@ This is the canonical technical document for the pit/custom command stack and re
    - AUTO can cancel on external requested-fuel or MFD-enable edges,
    - lifecycle resets (`IsOnTrackCar` edges, iRacing AutoFuel ownership, offline suppression) force inert/disarmed safety state.
 6. Maintain Tyre Control enforcement:
-   - OFF forces service off,
-   - DRY/WET/AUTO keep service on and drive compound request semantics,
+   - OFF forces service off (`#cleartires$`),
+   - DRY/WET/AUTO drive compound request semantics with a single raw `#tc ...$` send (no `#t$` pre-send),
+   - each DRY/WET/AUTO `#tc ...$` send records both pending compound intent and pending service-ON intent so delayed OFF->ON service convergence is preserved as plugin-owned intent,
    - AUTO follows declared wetness,
-   - service enforcement attempt budget is consumed only when four-flag tyre-service truth is authoritative; unknown service truth (partial/missing tyre flags) holds enforcement/retries.
+   - each action/AUTO enforcement event performs at most one send attempt per target and then waits for a short confirmation window; on unconfirmed timeout, publish `PIT CMD FAIL`, remap mode to MFD truth, and do not retry.
 
 ## Outputs (exports + logs)
 Canonical export names live in `Docs/Internal/SimHubParameterInventory.md`; key families:
@@ -77,7 +78,7 @@ Canonical log wording and meaning live in `Docs/Internal/SimHubLogMessages.md`; 
 - transport mode/attempt path (`postmessage` vs `sendinput`),
 - fallback reason context and suppression cases,
 - effect-confirmed vs unverified delivery semantics,
-- tyre compound attempt/retry diagnostics.
+- tyre compound attempt + single-window confirmation diagnostics.
 
 ## Dependencies / ordering assumptions
 - This subsystem owns transport + command dispatch and must remain the only authority for pit/custom command sends.
@@ -93,7 +94,7 @@ Canonical log wording and meaning live in `Docs/Internal/SimHubLogMessages.md`; 
 - No usable iRacing process/window: command send attempt fails and feedback/log surfaces should make this visible.
 - Direct transport partial-state uncertainty: Auto mode suppresses unsafe fallback on that press to avoid duplicate corruption.
 - Transport success for custom/raw/stateless commands is attempt-only; in-sim effect is unverified by design.
-- Tyre compound send failure paths are bounded by retry/cooldown budget to avoid per-tick resend spam.
+- Tyre control has no resend loop: each target change sends once, then either confirms in-window or fails once (`PIT CMD FAIL`) and falls back to current MFD truth.
 - External pit-menu edits can cancel AUTO once and force safety recovery state in fuel control.
 - Fuel Control mode ownership is explicit-command only (no internal `Pit.ToggleFuel` use):
   - `OFF -> MAN` explicitly sends MFD refuel ON (`#+fuel$`) and then mirrors MAN truth (`Source=STBY`, AUTO disarmed);
