@@ -142,7 +142,7 @@ namespace LaunchPlugin
             if (string.IsNullOrWhiteSpace(normalized))
             {
                 PublishMessage("PIT CMD FAIL");
-                SimHub.Logging.Current.Warn("[LalaPlugin:PitCommand] raw-command send blocked: command text is empty after normalization.");
+                SimHub.Logging.Current.Warn($"[LalaPlugin:PitCommand] raw-command send blocked: command text is empty after normalization raw='{rawCommandText ?? string.Empty}' normalized='{normalized}'");
                 return false;
             }
 
