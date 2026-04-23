@@ -96,7 +96,7 @@ Canonical log wording and meaning live in `Docs/Internal/SimHubLogMessages.md`; 
 - Tyre compound send failure paths are bounded by retry/cooldown budget to avoid per-tick resend spam.
 - External pit-menu edits can cancel AUTO once and force safety recovery state in fuel control.
 - AUTO exit (`AUTO -> OFF`) is guarded by live MFD truth (`dpFuelFill`): if fuel fill is already OFF, the engine must not send a fuel toggle and should only publish OFF state recovery (`Source=STBY`, AUTO cleared).
-- Fuel `OFF -> MAN` uses the existing `Pit.ToggleFuel` stateful confirmation seam and must not add a second blocking snapshot wait loop in the fuel-control engine.
+- Fuel `OFF -> MAN` toggle flow must stay non-blocking in `PitFuelControlEngine.TryToggleFuelFillEnabled(...)`: no wait/re-poll loops, but a single immediate post-send snapshot read must still verify `dpFuelFill` matches expected ON/OFF before reporting success.
 
 ## Test checklist
 - Bind and press representative built-in pit actions from SimHub Controls & Events.

@@ -721,17 +721,24 @@ namespace LaunchPlugin
                 return false;
             }
 
-            // ToggleFuel already uses PitCommandEngine state confirmation (before/after dpFuelFill).
-            // Re-polling snapshot telemetry here can stall ModeCycle and falsely fail when cache refresh
-            // cadence lags behind the validated toggle action result.
             if (!_fuelToggleSender())
             {
                 return false;
             }
 
-            _suppressManualOverrideUntilUtc = DateTime.UtcNow.AddMilliseconds(PluginSendSuppressionMs);
             var startSnapshot = _snapshotProvider();
+            if (startSnapshot == null)
+            {
+                return false;
+            }
+
             UpdateObservedExternalState(startSnapshot);
+            if (startSnapshot.TelemetryFuelFillEnabled != expectedEnabled)
+            {
+                return false;
+            }
+
+            _suppressManualOverrideUntilUtc = DateTime.UtcNow.AddMilliseconds(PluginSendSuppressionMs);
             return true;
         }
 

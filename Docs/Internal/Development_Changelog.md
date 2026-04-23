@@ -39,8 +39,9 @@ The public user-facing release history is maintained in the root `CHANGELOG.md`.
   - `Pit.ToggleFuel` already runs through `PitCommandEngine` stateful before/after confirmation for `dpFuelFill`.
   - The extra poll loop could falsely fail against stale snapshot cadence and made `ModeCycle` appear frozen on `OFF -> MAN`.
 - New behavior is now non-blocking at this seam:
-  - if `Pit.ToggleFuel` confirms success, fuel-mode transition accepts it immediately and preserves existing suppression/observed-state update behavior;
-  - if `Pit.ToggleFuel` fails confirmation, existing `Pit Cmd Fail` behavior remains unchanged.
+  - `TryToggleFuelFillEnabled(...)` now does one immediate post-send snapshot read with no wait loop and only returns success when telemetry `dpFuelFill` matches the expected toggle target;
+  - snapshot unavailable or post-send mismatch now returns failure so ModeCycle does not proceed on transport-attempt-only success;
+  - existing `Pit Cmd Fail` feedback semantics remain unchanged.
 
 ### 2026-04-23 — Tyre Control regression follow-up: restore manual confirmation window on mode changes
 - Classification: **both** (driver-visible tyre command-send restoration + internal manual-truth ordering fix).

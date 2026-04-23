@@ -9,10 +9,14 @@ Branch: work
 - No Git remote is configured in this checkout (`git remote -v` returns empty).
 
 ## Documentation sync status
+- 2026-04-23 PR review follow-up restored non-blocking post-toggle verification in `TryToggleFuelFillEnabled(...)`:
+  - `_fuelToggleSender()` transport-attempt success is no longer treated as confirmed toggle by itself;
+  - after successful send attempt, the engine now performs one immediate snapshot read and requires `dpFuelFill` to match expected ON/OFF before returning success;
+  - no wait/re-poll loops were reintroduced; snapshot unavailable/mismatch returns failure so `ModeCycle` does not advance on unconfirmed toggle.
 - Pit Fuel Control regression follow-up landed (`OFF -> MAN` ModeCycle freeze fix):
   - removed redundant blocking telemetry re-poll loop from `PitFuelControlEngine.TryToggleFuelFillEnabled(...)` after `Pit.ToggleFuel`;
   - `Pit.ToggleFuel` remains the authoritative state-confirmed toggle seam (before/after `dpFuelFill` check in `PitCommandEngine`);
-  - preserves existing suppression/baseline update behavior while preventing false `Pit Cmd Fail` caused by stale snapshot timing during `OFF -> MAN`.
+  - preserves existing non-blocking behavior while keeping toggle-result reporting aligned to immediate telemetry truth during `OFF -> MAN`.
 - Tyre Control regression follow-up landed (manual mode-change confirmation window restore):
   - restored `BeginOrClearManualConfirmation(mode)` arming in `PitTyreControlEngine.SetMode(...)`;
   - prevents immediate manual-truth reconciliation from remapping fresh manual mode selections to stale MFD truth before first enforcement send attempts;
