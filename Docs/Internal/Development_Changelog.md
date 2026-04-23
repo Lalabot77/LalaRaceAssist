@@ -33,6 +33,17 @@ The public user-facing release history is maintained in the root `CHANGELOG.md`.
 
 ## Post-v1.0 development
 
+### 2026-04-23 — Pit command transport regression fix: block chat-open `T` leakage into typed raw/custom commands
+- Classification: **both** (driver-visible pit raw/custom command text integrity fix + transport-path hardening).
+- Updated `PitCommandEngine` chat-injection transport sequencing only (no tyre/fuel control state-machine changes):
+  - direct postmessage path now sends `Esc` pre-close before `T` open-chat, then types payload + submit;
+  - legacy foreground sendinput path now sends `Esc` before `T` as the same stale-open guard.
+- Fix intent/outcome:
+  - prevents stale-open chat state from absorbing the opener key into payload text (no `t#...` / `tt#...` corruption),
+  - raw pit commands like `#tc 0` are now transported as exact payload text.
+- Preserved invariants:
+  - no command-architecture redesign, no tyre control logic change, no new retry/poll loop behavior.
+
 ### 2026-04-23 — PR follow-up: expire satisfied Fuel Control owned-mirror expectations without requiring a change tick
 - Classification: **internal-only** (ownership guard hardening; no new action/export surface).
 - Updated `PitFuelControlEngine` owned-mirror tracking to immediately clear pending requested-fuel / fuel-fill expectations whenever current observed telemetry is already at the queued expected value, even when no same-tick telemetry delta occurs.
