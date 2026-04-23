@@ -33,6 +33,29 @@ The public user-facing release history is maintained in the root `CHANGELOG.md`.
 
 ## Post-v1.0 development
 
+### 2026-04-23 — Tyre Control PR review follow-up: complete AUTO intent match + unknown service-enforcement hold
+- Classification: **both** (driver-visible AUTO ownership correctness + internal enforcement gating hardening).
+- Hardened `PitTyreControlEngine.IsObservedTruthConvergingToPluginIntent(...)` so plugin-owned convergence requires a complete match across the full relevant pending intent set:
+  - when both service and compound plugin intents are pending/relevant, both must match before AUTO treats observed truth as plugin-owned convergence,
+  - single-dimension matches no longer suppress external/manual AUTO cancel when the other pending dimension diverges.
+- Hardened service-enforcement gating in `PitTyreControlEngine.EnsureTyreService(...)`:
+  - tyre-service retries/attempt budget are now held when four-flag service truth is unavailable (`HasTireServiceSelection=false`),
+  - unknown/unavailable service truth no longer burns bounded service retries during telemetry gaps.
+- Kept scope tight: no command-model redesign, no transport changes, and no mode-cycle changes.
+
+### 2026-04-23 — Tyre Control follow-up bundle: build fix + authoritative four-flag truth + AUTO ambiguity/external hardening
+- Classification: **both** (driver-visible AUTO ownership safety correction + internal compile/truth-seam hardening).
+- Fixed `PitTyreControlEngine.OnTelemetryTick()` compile break by removing duplicate local-name collision (`desiredWet`).
+- Tightened tyre-service truth availability seam in `LalaLaunch.BuildPitTyreControlSnapshot()`:
+  - service truth is now authoritative only when all four tyre-change flags are available,
+  - partial/missing flag telemetry now yields unknown service truth (no LF-only/partial fallback authority for manual reconciliation or AUTO ownership detection).
+- Hardened AUTO cancel semantics in `PitTyreControlEngine`:
+  - AUTO cancel no longer forces `OFF` when manual truth mapping is ambiguous/unavailable,
+  - AUTO now stays active until concrete `OFF`/`DRY`/`WET` remap truth exists.
+- Added delayed plugin-result hardening for AUTO external-ownership detection:
+  - plugin-owned protection now includes short-lived intent tracking for recent plugin-issued service/compound targets,
+  - delayed truth convergence that matches recent plugin intent is treated as plugin-owned (no false external-takeover cancel),
+  - genuine external/manual MFD takeover still cancels AUTO with `TYRE AUTO CANCELLED` and concrete remap.
 ### 2026-04-23 — PR follow-up: guard AUTO exit toggle on live fuel-fill truth
 - Classification: **both** (driver-visible OFF transition correctness fix + internal state-machine safety hardening).
 - Updated `PitFuelControlEngine.ModeCycle()` AUTO-exit branch so it no longer blindly sends `Pit.ToggleFuel` OFF.

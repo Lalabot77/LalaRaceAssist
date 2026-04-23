@@ -30,6 +30,7 @@ namespace LaunchPlugin
         private const int ManualConfirmationWindowMs = 1400;
         private const int ManualReconcileCooldownMs = 700;
         private const int PluginOwnedSuppressionWindowMs = 1200;
+        private const int PluginOwnedIntentGraceMs = 4500;
 
         private readonly Func<PitTyreControlSnapshot> _snapshotProvider;
         private readonly Func<string, string, string, bool> _rawCommandSender;
@@ -56,6 +57,12 @@ namespace LaunchPlugin
         private bool _observedServiceSelected;
         private bool _observedHasRequestedCompound;
         private int _observedRequestedCompound = -1;
+        private bool _hasPendingServiceIntent;
+        private bool _pendingServiceSelected;
+        private DateTime _pendingServiceIntentUntilUtc = DateTime.MinValue;
+        private bool _hasPendingCompoundIntent;
+        private bool _pendingCompoundWet;
+        private DateTime _pendingCompoundIntentUntilUtc = DateTime.MinValue;
 
         public PitTyreControlMode Mode { get; private set; } = PitTyreControlMode.Off;
 
@@ -79,6 +86,7 @@ namespace LaunchPlugin
             ResetAttemptState();
             ResetManualSyncState();
             ResetAutoFailureNoticeState();
+            ResetPendingPluginIntentState();
         }
 
         public void ModeCycle()
@@ -122,10 +130,10 @@ namespace LaunchPlugin
                 }
 
                 bool desiredService = true;
-                bool desiredWet = snapshot.WeatherDeclaredWet;
+                bool desiredWetAuto = snapshot.WeatherDeclaredWet;
                 EnsureTyreService(snapshot, desiredService);
-                EnsureCompound(snapshot, desiredWet);
-                HandleAutoFailureFeedback(snapshot, desiredService, desiredWet);
+                EnsureCompound(snapshot, desiredWetAuto);
+                HandleAutoFailureFeedback(snapshot, desiredService, desiredWetAuto);
                 UpdateObservedTruthSample(snapshot);
                 return;
             }
@@ -150,6 +158,7 @@ namespace LaunchPlugin
         {
             Mode = mode;
             ResetAttemptState();
+            ResetPendingPluginIntentState();
             PublishSelectionFeedback(actionName, string.Format("TYRE CHANGE {0}", ModeToText(mode)));
         }
 
@@ -298,12 +307,18 @@ namespace LaunchPlugin
 
         private void EnsureTyreService(PitTyreControlSnapshot snapshot, bool desiredSelected)
         {
+            if (!snapshot.HasTireServiceSelection)
+            {
+                return;
+            }
+
             string targetKey = desiredSelected ? "ON" : "OFF";
             if (snapshot.IsTireServiceSelected == desiredSelected)
             {
                 _lastServiceTargetKey = targetKey;
                 _serviceTargetAttempts = 0;
                 _serviceNextAttemptUtc = DateTime.MinValue;
+                ClearPendingServiceIntentIfMatched(snapshot);
                 return;
             }
 
@@ -322,8 +337,12 @@ namespace LaunchPlugin
             string command = desiredSelected ? "#t$" : "#cleartires$";
             string actionName = desiredSelected ? "Pit.TyreControl.ServiceOn" : "Pit.TyreControl.ServiceOff";
             string feedback = desiredSelected ? "TYRE ON" : "TYRE OFF";
-            MarkPluginOwnedSuppressionWindow();
-            _rawCommandSender?.Invoke(actionName, command, feedback);
+            bool sendAttempted = _rawCommandSender?.Invoke(actionName, command, feedback) ?? false;
+            if (sendAttempted)
+            {
+                MarkPendingServiceIntent(desiredSelected);
+                MarkPluginOwnedSuppressionWindow();
+            }
             _serviceTargetAttempts++;
             _serviceNextAttemptUtc = DateTime.UtcNow.AddMilliseconds(SendCooldownMs);
         }
@@ -338,6 +357,7 @@ namespace LaunchPlugin
                 _lastCompoundTargetKey = targetKey;
                 _compoundTargetAttempts = 0;
                 _compoundNextAttemptUtc = DateTime.MinValue;
+                ClearPendingCompoundIntentIfMatched(snapshot);
                 return;
             }
 
@@ -357,8 +377,12 @@ namespace LaunchPlugin
             string actionName = desiredWet ? "Pit.TyreControl.SetWetCompound" : "Pit.TyreControl.SetDryCompound";
             string feedback = desiredWet ? "TYRE CHANGE WET" : "TYRE CHANGE DRY";
             LogCompoundAttempt(snapshot, desiredWet, command);
-            MarkPluginOwnedSuppressionWindow();
-            _rawCommandSender?.Invoke(actionName, command, feedback);
+            bool sendAttempted = _rawCommandSender?.Invoke(actionName, command, feedback) ?? false;
+            if (sendAttempted)
+            {
+                MarkPendingCompoundIntent(desiredWet);
+                MarkPluginOwnedSuppressionWindow();
+            }
             _compoundTargetAttempts++;
             _compoundNextAttemptUtc = DateTime.UtcNow.AddMilliseconds(SendCooldownMs);
         }
@@ -380,10 +404,15 @@ namespace LaunchPlugin
                 return false;
             }
 
+            if (IsObservedTruthConvergingToPluginIntent(snapshot))
+            {
+                return false;
+            }
+
             PitTyreControlMode truthMode;
             if (!TryMapManualTruthMode(snapshot, out truthMode))
             {
-                truthMode = PitTyreControlMode.Off;
+                return false;
             }
 
             ApplyManualTruthMode(truthMode, "auto-cancel-external-ownership");
@@ -430,6 +459,90 @@ namespace LaunchPlugin
         private void MarkPluginOwnedSuppressionWindow()
         {
             _pluginOwnedSuppressionUntilUtc = DateTime.UtcNow.AddMilliseconds(PluginOwnedSuppressionWindowMs);
+        }
+
+        private bool IsObservedTruthConvergingToPluginIntent(PitTyreControlSnapshot snapshot)
+        {
+            DateTime now = DateTime.UtcNow;
+            bool serviceIntentRelevant = _hasPendingServiceIntent && now <= _pendingServiceIntentUntilUtc;
+            bool compoundIntentRelevant = _hasPendingCompoundIntent && now <= _pendingCompoundIntentUntilUtc;
+
+            bool serviceMatched = !serviceIntentRelevant;
+            bool compoundMatched = !compoundIntentRelevant;
+
+            if (serviceIntentRelevant)
+            {
+                if (snapshot.HasTireServiceSelection && snapshot.IsTireServiceSelected == _pendingServiceSelected)
+                {
+                    serviceMatched = true;
+                    _hasPendingServiceIntent = false;
+                    _pendingServiceIntentUntilUtc = DateTime.MinValue;
+                }
+            }
+            else if (_hasPendingServiceIntent)
+            {
+                _hasPendingServiceIntent = false;
+                _pendingServiceIntentUntilUtc = DateTime.MinValue;
+            }
+
+            if (compoundIntentRelevant)
+            {
+                if (snapshot.HasRequestedCompound &&
+                    IsRequestedCompoundInDesiredFamily(snapshot.RequestedCompound, _pendingCompoundWet))
+                {
+                    compoundMatched = true;
+                    _hasPendingCompoundIntent = false;
+                    _pendingCompoundIntentUntilUtc = DateTime.MinValue;
+                }
+            }
+            else if (_hasPendingCompoundIntent)
+            {
+                _hasPendingCompoundIntent = false;
+                _pendingCompoundIntentUntilUtc = DateTime.MinValue;
+            }
+
+            if (!serviceIntentRelevant && !compoundIntentRelevant)
+            {
+                return false;
+            }
+
+            return serviceMatched && compoundMatched;
+        }
+
+        private void MarkPendingServiceIntent(bool desiredSelected)
+        {
+            _hasPendingServiceIntent = true;
+            _pendingServiceSelected = desiredSelected;
+            _pendingServiceIntentUntilUtc = DateTime.UtcNow.AddMilliseconds(PluginOwnedIntentGraceMs);
+        }
+
+        private void MarkPendingCompoundIntent(bool desiredWet)
+        {
+            _hasPendingCompoundIntent = true;
+            _pendingCompoundWet = desiredWet;
+            _pendingCompoundIntentUntilUtc = DateTime.UtcNow.AddMilliseconds(PluginOwnedIntentGraceMs);
+        }
+
+        private void ClearPendingServiceIntentIfMatched(PitTyreControlSnapshot snapshot)
+        {
+            if (_hasPendingServiceIntent &&
+                snapshot.HasTireServiceSelection &&
+                snapshot.IsTireServiceSelected == _pendingServiceSelected)
+            {
+                _hasPendingServiceIntent = false;
+                _pendingServiceIntentUntilUtc = DateTime.MinValue;
+            }
+        }
+
+        private void ClearPendingCompoundIntentIfMatched(PitTyreControlSnapshot snapshot)
+        {
+            if (_hasPendingCompoundIntent &&
+                snapshot.HasRequestedCompound &&
+                IsRequestedCompoundInDesiredFamily(snapshot.RequestedCompound, _pendingCompoundWet))
+            {
+                _hasPendingCompoundIntent = false;
+                _pendingCompoundIntentUntilUtc = DateTime.MinValue;
+            }
         }
 
         private void LogCompoundAttempt(PitTyreControlSnapshot snapshot, bool desiredWet, string command)
@@ -486,6 +599,16 @@ namespace LaunchPlugin
         {
             _autoServiceFailureNoticeKey = string.Empty;
             _autoCompoundFailureNoticeKey = string.Empty;
+        }
+
+        private void ResetPendingPluginIntentState()
+        {
+            _hasPendingServiceIntent = false;
+            _pendingServiceSelected = false;
+            _pendingServiceIntentUntilUtc = DateTime.MinValue;
+            _hasPendingCompoundIntent = false;
+            _pendingCompoundWet = false;
+            _pendingCompoundIntentUntilUtc = DateTime.MinValue;
         }
 
         private void ResetCompoundAttempts()
