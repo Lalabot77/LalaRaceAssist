@@ -33,6 +33,21 @@ The public user-facing release history is maintained in the root `CHANGELOG.md`.
 
 ## Post-v1.0 development
 
+### 2026-04-23 — Pit Fuel Control contract alignment follow-up: direct-command wording + AUTO/MAN feedback parity + invalid PLAN failure feedback
+- Classification: **both** (driver-visible Fuel Control feedback/state-contract alignment + internal guard correction).
+- Updated `PitFuelControlEngine` to align direct-command behavior with `FuelModesLogicCSV.csv` while preserving explicit raw command ownership (`#fuel$`, `#-fuel$`, `#fuel X$`, additive overshoot payload):
+  - `MAN -> AUTO` immediate source send branch now keeps the source-send feedback (`AUTO REFUEL SET <SRC> X L`) instead of overriding with generic mode text;
+  - AUTO source sends now use AUTO wording (`AUTO REFUEL SET ...`) and AUTO over-space wording (`AUTO FUEL <requested>L >MAX`) instead of MAN wording;
+  - `MAN STBY/PLAN -> AUTO STBY` feedback now uses `AUTO REFUEL STBY`;
+  - `AUTO -> OFF` now publishes `REFUEL OFF`;
+  - MAN invalid `SetPlan` (planner/live mismatch) now publishes `Pit Cmd Fail` instead of silently no-op;
+  - impossible `AUTO + PLAN` state is now guarded to safe no-send recovery (`AUTO STBY`, disarmed) and no longer falls through to PUSH source send.
+- Updated subsystem/docs contract surfaces (`FuelModesLogicCSV.csv`, subsystem doc) to match the corrected behavior wording and impossible-state handling.
+- Preserved invariants:
+  - no `Pit.ToggleFuel` use inside Fuel Control,
+  - no retry loops or command-transport redesign,
+  - no Tyre Control changes.
+
 ### 2026-04-23 — Pit Fuel Control testing/polish pass: OFF->MAN feedback alignment + raw-command observability + max-feedback table alignment
 - Classification: **both** (driver-visible OFF->MAN send/feedback correction + internal observability/docs alignment).
 - Updated Fuel Control OFF->MAN behavior in `PitFuelControlEngine.ModeCycle()`:
