@@ -322,21 +322,21 @@ namespace LaunchPlugin
             string customActionName = $"CustomMessage{slotNumber:00}";
             if (Settings == null || Settings.CustomMessages == null)
             {
-                _pitCommandEngine.ExecuteCustomMessage(customActionName, string.Empty, "Pit Cmd Fail", ResolvePitCommandTransportMode());
+                _pitCommandEngine.ExecuteCustomMessage(customActionName, string.Empty, "PIT CMD FAIL", ResolvePitCommandTransportMode());
                 return;
             }
 
             int index = slotNumber - 1;
             if (index < 0 || index >= Settings.CustomMessages.Count)
             {
-                _pitCommandEngine.ExecuteCustomMessage(customActionName, string.Empty, "Pit Cmd Fail", ResolvePitCommandTransportMode());
+                _pitCommandEngine.ExecuteCustomMessage(customActionName, string.Empty, "PIT CMD FAIL", ResolvePitCommandTransportMode());
                 return;
             }
 
             var slot = Settings.CustomMessages[index];
             if (slot == null)
             {
-                _pitCommandEngine.ExecuteCustomMessage(customActionName, string.Empty, "Pit Cmd Fail", ResolvePitCommandTransportMode());
+                _pitCommandEngine.ExecuteCustomMessage(customActionName, string.Empty, "PIT CMD FAIL", ResolvePitCommandTransportMode());
                 return;
             }
 

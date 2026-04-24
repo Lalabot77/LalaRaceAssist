@@ -166,7 +166,7 @@ namespace LaunchPlugin
                     {
                         AutoArmed = false;
                     }
-                    PublishSelectionFeedback("Pit.FuelControl.SourceCycle", "Pit Cmd Fail");
+                    PublishSelectionFeedback("Pit.FuelControl.SourceCycle", "PIT CMD FAIL");
                     LogActionBlockedInfo("SourceCycle", "send-failed");
                     return;
                 }
@@ -201,7 +201,7 @@ namespace LaunchPlugin
                               _chatCommandSender("Pit.FuelControl.ModeCycle", "#fuel$", "FUEL MAN STBY");
                 if (!sentOn)
                 {
-                    PublishSelectionFeedback("Pit.FuelControl.ModeCycle", "Pit Cmd Fail");
+                    PublishSelectionFeedback("Pit.FuelControl.ModeCycle", "PIT CMD FAIL");
                     LogActionBlockedInfo("ModeCycle", "send-failed");
                     return;
                 }
@@ -241,7 +241,7 @@ namespace LaunchPlugin
                 {
                     Source = PitFuelControlSource.Stby;
                     AutoArmed = false;
-                    PublishSelectionFeedback("Pit.FuelControl.ModeCycle", "Pit Cmd Fail");
+                    PublishSelectionFeedback("Pit.FuelControl.ModeCycle", "PIT CMD FAIL");
                     LogActionBlockedInfo("ModeCycle", "send-failed");
                 }
 
@@ -260,7 +260,7 @@ namespace LaunchPlugin
                            _chatCommandSender("Pit.FuelControl.ModeCycle", "#-fuel$", "REFUEL OFF");
             if (!sentOff)
             {
-                PublishSelectionFeedback("Pit.FuelControl.ModeCycle", "Pit Cmd Fail");
+                PublishSelectionFeedback("Pit.FuelControl.ModeCycle", "PIT CMD FAIL");
                 LogActionBlockedInfo("ModeCycle", "send-failed");
                 return;
             }
@@ -435,7 +435,7 @@ namespace LaunchPlugin
                 if (!sent && effectiveMode == PitFuelControlMode.Man)
                 {
                     Source = PitFuelControlSource.Stby;
-                    PublishSelectionFeedback(actionName, "Pit Cmd Fail");
+                    PublishSelectionFeedback(actionName, "PIT CMD FAIL");
                     LogActionBlockedInfo(SourceToActionLabel(actionName), "send-failed");
                     return;
                 }
@@ -477,7 +477,7 @@ namespace LaunchPlugin
             {
                 if (effectiveMode == PitFuelControlMode.Man)
                 {
-                    PublishSelectionFeedback(actionName, "Pit Cmd Fail");
+                    PublishSelectionFeedback(actionName, "PIT CMD FAIL");
                 }
 
                 LogActionBlockedInfo("SetPlan", "plan-invalid");
@@ -490,7 +490,7 @@ namespace LaunchPlugin
             if (!sent)
             {
                 Source = PitFuelControlSource.Stby;
-                PublishSelectionFeedback(actionName, "Pit Cmd Fail");
+                PublishSelectionFeedback(actionName, "PIT CMD FAIL");
                 LogActionBlockedInfo("SetPlan", "send-failed");
             }
         }
