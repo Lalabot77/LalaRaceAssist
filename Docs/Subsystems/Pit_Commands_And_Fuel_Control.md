@@ -58,11 +58,11 @@ This is the canonical technical document for the pit/custom command stack and re
   - Severity 3 Caution:
     - yellow background
     - red text
-    - blink for 1 second at 500ms
+    - no blink
   - Severity 4 Warning:
     - red background
     - yellow text
-    - blink for 1 second at 250ms
+    - blink for 1 second at 750ms
 - Reset seams that clear command feedback now clear:
   - `Pit.Command.DisplayText` to empty,
   - active pulse window,

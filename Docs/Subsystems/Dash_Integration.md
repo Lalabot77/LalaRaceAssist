@@ -76,11 +76,11 @@ This document is the canonical dash-facing contract layer. It does **not** redef
   - Severity 3 Caution:
     - yellow background
     - red text
-    - blink for 1 second at 500ms
+    - no blink
   - Severity 4 Warning:
     - red background
     - yellow text
-    - blink for 1 second at 250ms
+    - blink for 1 second at 750ms
 - Dashboards can also bind `LalaLaunch.Pit.Command.LastAction`/`LastRaw` for diagnostics, plus `LalaLaunch.Pit.Command.FuelSetMaxToggleState` for real `Pit.FuelSetMax` MAX/ZERO toggle state (`false=last press sent ZERO / next press sends MAX`, `true=last press sent MAX / next press sends ZERO`). Tank-full short-circuit applies to MAX phase only; ZERO phase is still transported as `#fuel 0.01`.
 - Dashboards can bind `LalaLaunch.Pit.FuelControl.*` exports (`Source/SourceText`, `Mode/ModeText`, `TargetLitres`, `OverrideActive`) for pit fuel control state display; dashboards do not own source/mode/plan validity logic.
 - Dashboards can bind `LalaLaunch.Pit.TyreControl.Mode` / `ModeText` for plugin-owned tyre control display (`OFF`/`DRY`/`WET`/`AUTO`); dashboards must not implement tyre decision logic.

@@ -9,6 +9,9 @@ Branch: work
 - No Git remote is configured in this checkout (`git remote -v` returns empty).
 
 ## Documentation sync status
+- 2026-04-24 PR #626 follow-up visual contract correction landed:
+  - pit feedback dash mapping now documents `Caution` as steady (no blink) and `Warning` as blink for 1 second at 750ms;
+  - no `PitCommandEngine` runtime behavior changes were made in this correction.
 - 2026-04-24 PR #626 follow-up landed for pit feedback severity-priority gating:
   - `PitCommandEngine` feedback publisher now suppresses lower-severity incoming feedback while a higher-severity message is active;
   - equal/higher-severity incoming feedback still replaces immediately and restarts the active hold window (including repeated identical message retrigger cases);

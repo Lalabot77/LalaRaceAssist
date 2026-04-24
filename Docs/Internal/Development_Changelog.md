@@ -33,6 +33,15 @@ The public user-facing release history is maintained in the root `CHANGELOG.md`.
 
 ## Post-v1.0 development
 
+### 2026-04-24 — Pit feedback dash visual mapping correction (Caution steady, Warning 750ms blink)
+- Classification: **both** (dash-facing visual contract correction + documentation alignment).
+- Corrected pit feedback dash visual mapping in subsystem/dash/inventory docs:
+  - Severity 3 `Caution` is now steady (`no blink`);
+  - Severity 4 `Warning` now blinks for 1 second at `750ms`.
+- Preserved invariants:
+  - no `PitCommandEngine` code changes,
+  - no payload/transport/timing/state-machine behavior changes.
+
 ### 2026-04-24 — Pit feedback priority gating follow-up (severity-aware active replacement/suppression)
 - Classification: **both** (dash-visible pit feedback sequencing behavior + docs/CSV contract alignment).
 - Updated `PitCommandEngine.PublishMessage(...)` feedback publishing priority logic:
