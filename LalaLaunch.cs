@@ -5363,6 +5363,8 @@ namespace LaunchPlugin
             AttachCore("PitScreenMode", () => _pitScreenMode);
             AttachCore("Pit.Command.DisplayText", () => _pitCommandEngine.DisplayText);
             AttachCore("Pit.Command.Active", () => _pitCommandEngine.Active);
+            AttachCore("Pit.Command.Severity", () => _pitCommandEngine.Severity);
+            AttachCore("Pit.Command.SeverityText", () => _pitCommandEngine.SeverityText);
             AttachCore("Pit.Command.LastAction", () => _pitCommandEngine.LastAction);
             AttachCore("Pit.Command.LastRaw", () => _pitCommandEngine.LastRaw);
             AttachCore("Pit.Command.FuelSetMaxToggleState", () => _pitCommandEngine.FuelSetMaxToggleState);
@@ -6554,6 +6556,7 @@ namespace LaunchPlugin
             _lastPitWindowLogUtc = DateTime.MinValue;
             _pitFuelControlEngine?.ResetToOffStby();
             _pitTyreControlEngine?.ResetToOff();
+            _pitCommandEngine?.ResetFeedbackState();
             _opponentsEngine?.Reset();
             _h2hEngine?.Reset();
         }
@@ -6776,6 +6779,7 @@ namespace LaunchPlugin
             _pit?.Reset();
             _pitLite?.ResetCycle();
             _pit?.ResetPitPhaseState();
+            _pitCommandEngine?.ResetFeedbackState();
             _opponentsEngine?.Reset();
             _carSaEngine?.Reset();
             _h2hEngine?.Reset();
@@ -7090,6 +7094,7 @@ namespace LaunchPlugin
             {
                 _pitFuelControlEngine.ResetToOffStby();
                 _pitTyreControlEngine.ResetToOff();
+                _pitCommandEngine.ResetFeedbackState();
             }
 
             _pitFuelControlLastIsOnTrackCar = isOnTrackCar;
@@ -7101,6 +7106,7 @@ namespace LaunchPlugin
             if (_pitTyreControlHasIsOnTrackCarSample && _pitTyreControlLastIsOnTrackCar != isOnTrackCar)
             {
                 _pitTyreControlEngine.ResetToOff();
+                _pitCommandEngine.ResetFeedbackState();
             }
 
             _pitTyreControlLastIsOnTrackCar = isOnTrackCar;

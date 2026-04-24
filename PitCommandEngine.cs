@@ -34,10 +34,19 @@ namespace LaunchPlugin
 
     internal sealed class PitCommandEngine
     {
+        internal enum PitCommandSeverity
+        {
+            None = 0,
+            Info = 1,
+            Advisory = 2,
+            Caution = 3,
+            Warning = 4
+        }
+
         private const int FuelSetMaxCommandLitres = 150;
         private const string FuelSetZeroCommand = "#fuel 0.01$";
         private const int ConfirmationDelayMs = 180;
-        private const int MessageHoldMs = 1500;
+        private const int MessageHoldMs = 3000;
         private const uint KeyEventKeyUp = 0x0002;
         private const uint InputKeyboard = 1;
         private const uint KeyeventfUnicode = 0x0004;
@@ -51,6 +60,8 @@ namespace LaunchPlugin
         public string DisplayText { get; private set; } = string.Empty;
         public string LastAction { get; private set; } = string.Empty;
         public string LastRaw { get; private set; } = string.Empty;
+        public int Severity { get; private set; } = (int)PitCommandSeverity.None;
+        public string SeverityText => SeverityToText((PitCommandSeverity)Severity);
         public bool FuelSetMaxToggleState { get; private set; }
         public bool Active => !string.IsNullOrWhiteSpace(DisplayText) && DateTime.UtcNow < _messageUntilUtc;
 
@@ -67,14 +78,14 @@ namespace LaunchPlugin
             string command = NormalizeChatCommand(raw);
             if (string.IsNullOrWhiteSpace(command))
             {
-                PublishMessage("PIT CMD FAIL");
+                PublishMessage("PIT CMD FAIL", PitCommandSeverity.Warning);
                 WarnOnce("invalid_command_" + action, $"[LalaPlugin:PitCommand] action={action} failed: chat command mapping is empty.");
                 return false;
             }
 
             if (ShouldShortCircuitForTankFull(action) && tankSpaceLitres <= 0.05)
             {
-                PublishMessage("FUEL MAX");
+                PublishMessage("FUEL MAX", PitCommandSeverity.Advisory);
                 SimHub.Logging.Current.Info($"[LalaPlugin:PitCommand] action={action} transport=chat-injection executed=false reason=tank-full tankSpaceL={tankSpaceLitres:F2}");
                 return false;
             }
@@ -86,7 +97,7 @@ namespace LaunchPlugin
             bool transportAttempted = TryInjectChatCommand(command, transportMode, out transportUsed, out reason, out fallbackFrom);
             if (!transportAttempted)
             {
-                PublishMessage("PIT CMD FAIL");
+                PublishMessage("PIT CMD FAIL", PitCommandSeverity.Warning);
                 SimHub.Logging.Current.Warn($"[LalaPlugin:PitCommand] action={action} transport={transportUsed} local-transport-issue reason={reason}{FormatFallbackSuffix(fallbackFrom)} raw='{raw}' normalized='{command}'");
                 return false;
             }
@@ -112,7 +123,7 @@ namespace LaunchPlugin
             LastRaw = normalized;
             if (string.IsNullOrWhiteSpace(normalized))
             {
-                PublishMessage("PIT CMD FAIL");
+                PublishMessage("PIT CMD FAIL", PitCommandSeverity.Warning);
                 SimHub.Logging.Current.Warn("[LalaPlugin:PitCommand] custom-message send blocked: message text is empty.");
                 return false;
             }
@@ -123,12 +134,12 @@ namespace LaunchPlugin
             bool transportAttempted = TryInjectChatCommand(normalized, transportMode, out transportUsed, out reason, out fallbackFrom);
             if (!transportAttempted)
             {
-                PublishMessage("PIT CMD FAIL");
+                PublishMessage("PIT CMD FAIL", PitCommandSeverity.Warning);
                 SimHub.Logging.Current.Warn($"[LalaPlugin:PitCommand] custom-message transport={transportUsed} local-transport-issue reason={reason}{FormatFallbackSuffix(fallbackFrom)} text='{normalized}'");
                 return false;
             }
 
-            PublishMessage(string.IsNullOrWhiteSpace(feedbackLabel) ? "CUSTOM MSG" : feedbackLabel.Trim());
+            PublishMessage(string.IsNullOrWhiteSpace(feedbackLabel) ? "CUSTOM MSG" : feedbackLabel.Trim(), PitCommandSeverity.Info);
             SimHub.Logging.Current.Info($"[LalaPlugin:PitCommand] custom-message transport={transportUsed} attempted=true delivery=unverified effect-confirmed=false text='{normalized}'");
             return true;
         }
@@ -141,7 +152,7 @@ namespace LaunchPlugin
             string normalized = NormalizeChatCommand(rawCommandText);
             if (string.IsNullOrWhiteSpace(normalized))
             {
-                PublishMessage("PIT CMD FAIL");
+                PublishMessage("PIT CMD FAIL", PitCommandSeverity.Warning);
                 SimHub.Logging.Current.Warn($"[LalaPlugin:PitCommand] raw-command send blocked: command text is empty after normalization raw='{rawCommandText ?? string.Empty}' normalized='{normalized}'");
                 return false;
             }
@@ -152,26 +163,33 @@ namespace LaunchPlugin
             bool transportAttempted = TryInjectChatCommand(normalized, transportMode, out transportUsed, out reason, out fallbackFrom);
             if (!transportAttempted)
             {
-                PublishMessage("PIT CMD FAIL");
+                PublishMessage("PIT CMD FAIL", PitCommandSeverity.Warning);
                 SimHub.Logging.Current.Warn($"[LalaPlugin:PitCommand] raw-command transport={transportUsed} local-transport-issue reason={reason}{FormatFallbackSuffix(fallbackFrom)} raw='{rawCommandText ?? string.Empty}' normalized='{normalized}'");
                 return false;
             }
 
-            PublishMessage(string.IsNullOrWhiteSpace(feedbackLabel) ? "FUEL SET" : feedbackLabel.Trim());
+            PublishMessage(string.IsNullOrWhiteSpace(feedbackLabel) ? "FUEL SET" : feedbackLabel.Trim(), PitCommandSeverity.Advisory);
             SimHub.Logging.Current.Info($"[LalaPlugin:PitCommand] raw-command transport={transportUsed} attempted=true delivery=unverified effect-confirmed=false raw='{rawCommandText ?? string.Empty}' normalized='{normalized}'");
             return true;
         }
 
         public void PublishFeedback(string message)
         {
-            PublishMessage(message);
+            PublishMessage(message, MapSeverityFromFeedback(message, string.Empty));
         }
 
         public void PublishActionFeedback(string actionName, string message, string raw)
         {
             LastAction = string.IsNullOrWhiteSpace(actionName) ? "PitActionFeedback" : actionName.Trim();
             LastRaw = raw ?? string.Empty;
-            PublishMessage(message);
+            PublishMessage(message, MapSeverityFromFeedback(message, LastAction));
+        }
+
+        public void ResetFeedbackState()
+        {
+            DisplayText = string.Empty;
+            _messageUntilUtc = DateTime.MinValue;
+            Severity = (int)PitCommandSeverity.None;
         }
 
         private bool ConfirmAndPublishFeedback(PitCommandAction action, PluginManager pluginManager, bool? before, double tankSpaceLitres, string transportUsed)
@@ -179,13 +197,13 @@ namespace LaunchPlugin
             if (!IsStatefulAction(action))
             {
                 bool reachedFuelMax = WillFuelAddReachMax(action, tankSpaceLitres);
-                PublishMessage(GetStatelessFeedback(action, reachedFuelMax));
+                PublishMessage(GetStatelessFeedback(action, reachedFuelMax), PitCommandSeverity.Advisory);
                 return false;
             }
 
             if (!before.HasValue)
             {
-                PublishMessage("PIT CMD FAIL");
+                PublishMessage("PIT CMD FAIL", PitCommandSeverity.Warning);
                 SimHub.Logging.Current.Warn($"[LalaPlugin:PitCommand] action={action} expected-state-check skipped: before state unavailable.");
                 return false;
             }
@@ -195,12 +213,12 @@ namespace LaunchPlugin
             bool expected = !before.Value;
             if (!after.HasValue || after.Value != expected)
             {
-                PublishMessage("PIT CMD FAIL");
+                PublishMessage("PIT CMD FAIL", PitCommandSeverity.Warning);
                 SimHub.Logging.Current.Warn($"[LalaPlugin:PitCommand] action={action} expected-state-mismatch expected={expected} before={FormatNullable(before)} after={FormatNullable(after)} transport={transportUsed}");
                 return false;
             }
 
-            PublishMessage(GetToggleFeedback(action, after.Value));
+            PublishMessage(GetToggleFeedback(action, after.Value), PitCommandSeverity.Advisory);
             return true;
         }
 
@@ -705,10 +723,61 @@ namespace LaunchPlugin
             return string.Equals(processName, "iRacingSim64DX11", StringComparison.OrdinalIgnoreCase);
         }
 
-        private void PublishMessage(string message)
+        private void PublishMessage(string message, PitCommandSeverity severity)
         {
             DisplayText = message ?? string.Empty;
+            Severity = string.IsNullOrWhiteSpace(DisplayText)
+                ? (int)PitCommandSeverity.None
+                : (int)severity;
             _messageUntilUtc = DateTime.UtcNow.AddMilliseconds(MessageHoldMs);
+        }
+
+        private PitCommandSeverity MapSeverityFromFeedback(string message, string actionName)
+        {
+            string normalized = (message ?? string.Empty).Trim().ToUpperInvariant();
+            string action = (actionName ?? string.Empty).Trim();
+
+            if (normalized == "PIT CMD FAIL")
+            {
+                return PitCommandSeverity.Warning;
+            }
+
+            if (normalized.Contains("CANCELLED") ||
+                action.IndexOf("ExternalMirror", StringComparison.OrdinalIgnoreCase) >= 0 ||
+                action.IndexOf("AutoFuelOwnership", StringComparison.OrdinalIgnoreCase) >= 0)
+            {
+                return PitCommandSeverity.Caution;
+            }
+
+            if (action.StartsWith("Pit.TyreControl.TruthMirror", StringComparison.OrdinalIgnoreCase) ||
+                normalized == "TYRE DRY" || normalized == "TYRE WET" || normalized == "TYRE OFF")
+            {
+                return PitCommandSeverity.Info;
+            }
+
+            if (action.StartsWith("CustomMessage", StringComparison.OrdinalIgnoreCase))
+            {
+                return PitCommandSeverity.Info;
+            }
+
+            return PitCommandSeverity.Advisory;
+        }
+
+        private static string SeverityToText(PitCommandSeverity severity)
+        {
+            switch (severity)
+            {
+                case PitCommandSeverity.Info:
+                    return "Info";
+                case PitCommandSeverity.Advisory:
+                    return "Advisory";
+                case PitCommandSeverity.Caution:
+                    return "Caution";
+                case PitCommandSeverity.Warning:
+                    return "Warning";
+                default:
+                    return "None";
+            }
         }
 
         private void WarnOnce(string key, string message)

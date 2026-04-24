@@ -36,6 +36,14 @@ This is the canonical technical document for the pit/custom command stack and re
 ### Feedback state
 - Short-lived command feedback text/active latch (`Pit.Command.DisplayText`, `Pit.Command.Active`).
 - `Pit.Command.Active` is a restartable visibility pulse: every feedback publish re-arms the active window, including repeated identical `Pit.Command.DisplayText` values.
+- Active hold window is owned in `PitCommandEngine` and is currently 3000 ms (`MessageHoldMs`).
+- Severity is owned/published with feedback in `PitCommandEngine`:
+  - `Pit.Command.Severity` (`0=None`, `1=Info`, `2=Advisory`, `3=Caution`, `4=Warning`)
+  - `Pit.Command.SeverityText` (`None`, `Info`, `Advisory`, `Caution`, `Warning`)
+- Reset seams that clear command feedback now clear:
+  - `Pit.Command.DisplayText` to empty,
+  - active pulse window,
+  - severity to `0` / `None`.
 - Stateful-toggle before/after verification status (effect-confirmed vs attempted-only).
 
 ### Pit Fuel Control state
@@ -61,6 +69,7 @@ This is the canonical technical document for the pit/custom command stack and re
 4. Publish feedback + diagnostics:
    - stateful built-ins use effect confirmation when available,
    - custom/raw/stateless built-ins are transport-attempt only.
+   - all pit/fuel/tyre/custom feedback severity classification is centralized in `PitCommandEngine` (dash consumers should not parse text for behavior).
 5. Maintain Pit Fuel Control ownership rules:
    - AUTO can cancel on external requested-fuel or MFD-enable edges,
    - lifecycle resets (`IsOnTrackCar` edges, iRacing AutoFuel ownership, offline suppression) force inert/disarmed safety state.

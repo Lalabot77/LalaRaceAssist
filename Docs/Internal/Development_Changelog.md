@@ -33,6 +33,24 @@ The public user-facing release history is maintained in the root `CHANGELOG.md`.
 
 ## Post-v1.0 development
 
+### 2026-04-24 — Pit command feedback severity standardization + restartable active hold contract
+- Classification: **both** (dash-facing pit feedback contract extension + bounded internal feedback ownership refactor).
+- Updated `PitCommandEngine` to be the single feedback severity owner across built-in pit actions, Fuel Control, Tyre Control, custom messages, and raw pit commands:
+  - added `Pit.Command.Severity` (`0..4`) and `Pit.Command.SeverityText` (`None/Info/Advisory/Caution/Warning`);
+  - centralized message-to-severity mapping in `PitCommandEngine.Publish*` feedback path.
+- Standardized feedback hold contract:
+  - `Pit.Command.Active` remains the canonical dash trigger surface;
+  - every feedback publish re-arms the same active window even for repeated identical `DisplayText`;
+  - active hold is now standardized at 3000 ms (`MessageHoldMs`), with no counter/sequence export added.
+- Added feedback reset behavior at existing lifecycle reset seams:
+  - clears `Pit.Command.DisplayText`,
+  - clears active hold,
+  - resets severity to `0 / None`.
+- Preserved invariants:
+  - no command payload changes,
+  - no command transport mode/timing changes,
+  - no fuel AUTO or tyre AUTO logic redesign.
+
 ### 2026-04-24 — Tyre Control follow-up: preserve `PIT CMD FAIL` visibility across immediate truth-mirror remap
 - Classification: **both** (driver-visible failure feedback persistence + narrow internal timing gate).
 - Updated `PitTyreControlEngine` send-failure handling:
