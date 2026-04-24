@@ -35,6 +35,7 @@ This is the canonical technical document for the pit/custom command stack and re
 
 ### Feedback state
 - Short-lived command feedback text/active latch (`Pit.Command.DisplayText`, `Pit.Command.Active`).
+- `Pit.Command.Active` is a restartable visibility pulse: every feedback publish re-arms the active window, including repeated identical `Pit.Command.DisplayText` values.
 - Stateful-toggle before/after verification status (effect-confirmed vs attempted-only).
 
 ### Pit Fuel Control state
@@ -68,11 +69,13 @@ This is the canonical technical document for the pit/custom command stack and re
    - DRY sends one combined command (`#t tc 0$`),
    - WET sends one combined command (`#t tc 2$`),
   - AUTO follows declared wetness (`false => DRY`, `true => WET`),
-  - entering AUTO is feedback-only (`TYRE AUTO`) and does not blindly send,
+  - entering AUTO is feedback-only (`TYRE CHANGE AUTO`) and does not blindly send,
   - if AUTO initial evaluation occurs while tyre truth is unknown, initial evaluation remains pending (no send, no desired-state latch) until truth becomes known,
-  - AUTO sends one correction command only when known MFD truth disagrees with declared-wet target,
+  - AUTO sends one correction command only when known MFD truth disagrees with declared-wet target (`TYRE AUTO CHANGE DRY/WET`),
   - once known truth is available for that first evaluation, AUTO either sends one correction on mismatch or clears pending with no send on match,
-  - outside AUTO, known MFD truth remaps mode (`OFF`/`DRY`/`WET`) with no corrective command send,
+  - outside AUTO, known MFD truth remaps mode (`OFF`/`DRY`/`WET`) with no corrective command send and passive mirror wording only (`TYRE OFF` / `TYRE DRY` / `TYRE WET`) when the mirrored mode actually changes,
+  - plugin-driven actions use CHANGE wording (`TYRE CHANGE OFF/DRY/WET/AUTO`) only,
+  - AUTO manual takeover feedback is `TYRE AUTO CANCELLED`,
    - unknown/ambiguous tyre truth is held fail-safe (no mode flip, no send),
    - `PIT CMD FAIL` is transport-failure only (raw send returned false), with no timeout-resend loop.
 

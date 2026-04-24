@@ -88,7 +88,7 @@ namespace LaunchPlugin
             Mode = PitTyreControlMode.Off;
             _autoPendingInitialEvaluation = false;
             _autoLastDesiredWet = null;
-            SendModeCommand("Pit.TyreControl.SetOff", "#cleartires", "TYRE OFF", "driver-action", PitTyreControlMode.Off);
+            SendModeCommand("Pit.TyreControl.SetOff", "#cleartires", "TYRE CHANGE OFF", "driver-action", PitTyreControlMode.Off);
         }
 
         public void SetDry()
@@ -96,7 +96,7 @@ namespace LaunchPlugin
             Mode = PitTyreControlMode.Dry;
             _autoPendingInitialEvaluation = false;
             _autoLastDesiredWet = null;
-            SendModeCommand("Pit.TyreControl.SetDry", "#t tc 0", "TYRE DRY", "driver-action", PitTyreControlMode.Dry);
+            SendModeCommand("Pit.TyreControl.SetDry", "#t tc 0", "TYRE CHANGE DRY", "driver-action", PitTyreControlMode.Dry);
         }
 
         public void SetWet()
@@ -104,7 +104,7 @@ namespace LaunchPlugin
             Mode = PitTyreControlMode.Wet;
             _autoPendingInitialEvaluation = false;
             _autoLastDesiredWet = null;
-            SendModeCommand("Pit.TyreControl.SetWet", "#t tc 2", "TYRE WET", "driver-action", PitTyreControlMode.Wet);
+            SendModeCommand("Pit.TyreControl.SetWet", "#t tc 2", "TYRE CHANGE WET", "driver-action", PitTyreControlMode.Wet);
         }
 
         public void SetAuto()
@@ -112,7 +112,7 @@ namespace LaunchPlugin
             Mode = PitTyreControlMode.Auto;
             _autoPendingInitialEvaluation = true;
             _autoLastDesiredWet = null;
-            _feedbackPublisher?.Invoke("Pit.TyreControl.SetAuto", "TYRE AUTO", string.Empty);
+            _feedbackPublisher?.Invoke("Pit.TyreControl.SetAuto", "TYRE CHANGE AUTO", string.Empty);
             _logger?.Invoke("[LalaPlugin:PitTyreControl] mode=AUTO reason=driver-action command=none");
         }
 
@@ -141,6 +141,7 @@ namespace LaunchPlugin
             if (!inSettleWindow && hasTruth && truthMode != Mode)
             {
                 Mode = truthMode;
+                _feedbackPublisher?.Invoke("Pit.TyreControl.TruthMirror", $"TYRE {ModeToText(Mode)}", string.Empty);
                 _logger?.Invoke($"[LalaPlugin:PitTyreControl] mode={ModeToText(Mode)} reason=truth-mirror serviceKnown={snapshot.HasTireServiceSelection} serviceOn={snapshot.IsTireServiceSelected} requestedCompound={(snapshot.HasRequestedCompound ? snapshot.RequestedCompound.ToString() : "NA")}");
             }
 
@@ -172,11 +173,11 @@ namespace LaunchPlugin
                 {
                     if (desiredMode == PitTyreControlMode.Wet)
                     {
-                        SendModeCommand("Pit.TyreControl.Auto.CorrectionWet", "#t tc 2", "TYRE AUTO WET", "auto-correction", PitTyreControlMode.Auto);
+                        SendModeCommand("Pit.TyreControl.Auto.CorrectionWet", "#t tc 2", "TYRE AUTO CHANGE WET", "auto-correction", PitTyreControlMode.Auto);
                     }
                     else
                     {
-                        SendModeCommand("Pit.TyreControl.Auto.CorrectionDry", "#t tc 0", "TYRE AUTO DRY", "auto-correction", PitTyreControlMode.Auto);
+                        SendModeCommand("Pit.TyreControl.Auto.CorrectionDry", "#t tc 0", "TYRE AUTO CHANGE DRY", "auto-correction", PitTyreControlMode.Auto);
                     }
                 }
 
@@ -192,7 +193,7 @@ namespace LaunchPlugin
                     Mode = truthMode;
                     _autoPendingInitialEvaluation = false;
                     _autoLastDesiredWet = null;
-                    _feedbackPublisher?.Invoke("Pit.TyreControl.Auto.Cancel", "TYRE AUTO CANCEL", string.Empty);
+                    _feedbackPublisher?.Invoke("Pit.TyreControl.Auto.Cancel", "TYRE AUTO CANCELLED", string.Empty);
                     _logger?.Invoke($"[LalaPlugin:PitTyreControl] mode={ModeToText(Mode)} reason=auto-cancel serviceKnown={snapshot.HasTireServiceSelection} serviceOn={snapshot.IsTireServiceSelected} requestedCompound={(snapshot.HasRequestedCompound ? snapshot.RequestedCompound.ToString() : "NA")}");
                 }
             }
