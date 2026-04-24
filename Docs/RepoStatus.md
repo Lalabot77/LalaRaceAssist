@@ -9,6 +9,11 @@ Branch: work
 - No Git remote is configured in this checkout (`git remote -v` returns empty).
 
 ## Documentation sync status
+- 2026-04-24 Tyre Control AUTO-entry follow-up landed (pending initial evaluation no longer clears on unknown truth):
+  - `PitTyreControlEngine.HandleAuto(...)` now preserves `_autoPendingInitialEvaluation` when AUTO is entered/evaluated with unknown tyre truth (`hasTruth == false`);
+  - AUTO initial-evaluation path no longer updates `_autoLastDesiredWet` while truth is unknown, preventing suppression of the later first known-truth evaluation;
+  - when truth becomes known, AUTO performs its normal one-shot first evaluation (single correction send on mismatch, pending clear with no send when already matching);
+  - one-shot/no-retry command model remains unchanged; no new retry/guard/counter ownership was introduced.
 - 2026-04-24 Tyre Control command-model simplification landed (single-send truth-following model):
   - `PitTyreControlEngine` now uses one-shot combined commands (`OFF => #cleartires`, `DRY => #t tc 0`, `WET => #t tc 2`) with transport-owned `$` normalization unchanged; standalone `#t`/`#tc` split logic is removed from tyre control.
   - removed tyre retry/attempt/timeout-fail state machines and plugin-owned suppression/intent-grace tracking; replaced with a single 1.0s settle hold after plugin-issued tyre commands.

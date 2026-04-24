@@ -66,10 +66,12 @@ This is the canonical technical document for the pit/custom command stack and re
    - OFF sends one clear command (`#cleartires$`) and uses settle-hold before reconciliation,
    - DRY sends one combined command (`#t tc 0$`),
    - WET sends one combined command (`#t tc 2$`),
-   - AUTO follows declared wetness (`false => DRY`, `true => WET`),
-   - entering AUTO is feedback-only (`TYRE AUTO`) and does not blindly send,
-   - AUTO sends one correction command only when known MFD truth disagrees with declared-wet target,
-   - outside AUTO, known MFD truth remaps mode (`OFF`/`DRY`/`WET`) with no corrective command send,
+  - AUTO follows declared wetness (`false => DRY`, `true => WET`),
+  - entering AUTO is feedback-only (`TYRE AUTO`) and does not blindly send,
+  - if AUTO initial evaluation occurs while tyre truth is unknown, initial evaluation remains pending (no send, no desired-state latch) until truth becomes known,
+  - AUTO sends one correction command only when known MFD truth disagrees with declared-wet target,
+  - once known truth is available for that first evaluation, AUTO either sends one correction on mismatch or clears pending with no send on match,
+  - outside AUTO, known MFD truth remaps mode (`OFF`/`DRY`/`WET`) with no corrective command send,
    - unknown/ambiguous tyre truth is held fail-safe (no mode flip, no send),
    - `PIT CMD FAIL` is transport-failure only (raw send returned false), with no timeout-resend loop.
 

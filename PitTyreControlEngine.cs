@@ -161,9 +161,14 @@ namespace LaunchPlugin
 
             if (desiredChanged || _autoPendingInitialEvaluation)
             {
+                if (!hasTruth)
+                {
+                    return;
+                }
+
                 _autoLastDesiredWet = desiredWet;
 
-                if (hasTruth && truthMode != desiredMode)
+                if (truthMode != desiredMode)
                 {
                     if (desiredMode == PitTyreControlMode.Wet)
                     {

@@ -33,6 +33,18 @@ The public user-facing release history is maintained in the root `CHANGELOG.md`.
 
 ## Post-v1.0 development
 
+### 2026-04-24 — Tyre Control AUTO entry follow-up: keep initial evaluation pending while truth is unknown
+- Classification: **both** (driver-visible AUTO first-evaluation correctness fix + narrow internal state correction).
+- Updated `PitTyreControlEngine.HandleAuto(...)` initial-evaluation branch so AUTO entry no longer clears pending evaluation when tyre truth is unavailable (`hasTruth == false`).
+  - while truth is unknown, AUTO now keeps `_autoPendingInitialEvaluation=true` and does not update `_autoLastDesiredWet`;
+  - when truth becomes known, the normal first AUTO evaluation runs once:
+    - mismatched truth vs declared target sends one correction command,
+    - already-matching truth clears pending with no send.
+- Preserved invariants:
+  - one-shot/no-retry command model unchanged,
+  - no new guards/counters/retry logic added,
+  - scope limited to `PitTyreControlEngine` behavior seam.
+
 ### 2026-04-24 — Tyre Control simplification: one-shot combined commands + 1.0s settle truth-following model
 - Classification: **both** (driver-visible tyre-control behavior correction + internal state-machine simplification).
 - Reworked `PitTyreControlEngine` command contract to match live-tested MFD behavior:
