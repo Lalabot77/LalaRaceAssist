@@ -9,6 +9,11 @@ Branch: work
 - No Git remote is configured in this checkout (`git remote -v` returns empty).
 
 ## Documentation sync status
+- 2026-04-24 PR #626 follow-up landed for pit feedback severity-priority gating:
+  - `PitCommandEngine` feedback publisher now suppresses lower-severity incoming feedback while a higher-severity message is active;
+  - equal/higher-severity incoming feedback still replaces immediately and restarts the active hold window (including repeated identical message retrigger cases);
+  - no payload/transport/timing/fuel/tyre AUTO behavior changes were introduced, and no counters/sequence fields were added.
+  - pit feedback docs/contracts now include the explicit dash visual mapping (`None/Info/Advisory/Caution/Warning`) and logic CSV contracts include a `Severity` column with consistent uppercase `PIT CMD FAIL`.
 - 2026-04-24 follow-up hardened pit feedback reset seams:
   - removed `PitCommandEngine.ResetFeedbackState()` calls from `Telemetry.IsOnTrackCar` edge handlers in `LalaLaunch`;
   - pit command feedback reset now remains on explicit lifecycle/reset seams only (for example manual/runtime reset flows), avoiding transient on-track telemetry-gap clears while command feedback is active.
