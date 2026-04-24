@@ -9,6 +9,10 @@ Branch: work
 - No Git remote is configured in this checkout (`git remote -v` returns empty).
 
 ## Documentation sync status
+- 2026-04-24 review follow-up landed for Fuel Control impossible-state ModeCycle handling:
+  - `PitFuelControlEngine.ModeCycle()` now guards impossible `AUTO + PLAN` before AUTO->OFF send logic;
+  - impossible branch now recovers to `Source=STBY` + `AutoArmed=false`, remains AUTO/disarmed, and sends no command;
+  - closes residual mismatch where `AUTO + PLAN + ModeCycle` could still send `#-fuel$` despite CSV no-send recovery row.
 - 2026-04-23 Pit Fuel Control contract-alignment follow-up landed (direct-command model preserved; feedback/guard rows aligned):
   - `PitFuelControlEngine` now keeps source-send feedback on `MAN -> AUTO` (`AUTO REFUEL SET <SRC> X L`) and no longer overwrites with generic mode text;
   - AUTO source sends now use AUTO wording (`AUTO REFUEL SET ...`) and AUTO max/over-space wording (`AUTO FUEL <requested>L >MAX`), while MAN max feedback remains `FUEL MAX`;

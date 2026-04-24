@@ -233,6 +233,13 @@ namespace LaunchPlugin
                 return;
             }
 
+            if (Source == PitFuelControlSource.Plan)
+            {
+                Source = PitFuelControlSource.Stby;
+                AutoArmed = false;
+                return;
+            }
+
             bool sentOff = _chatCommandSender != null &&
                            _chatCommandSender("Pit.FuelControl.ModeCycle", "#-fuel$", "REFUEL OFF");
             if (!sentOff)

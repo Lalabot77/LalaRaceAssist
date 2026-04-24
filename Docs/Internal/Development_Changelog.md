@@ -33,6 +33,14 @@ The public user-facing release history is maintained in the root `CHANGELOG.md`.
 
 ## Post-v1.0 development
 
+### 2026-04-24 — Pit Fuel Control review follow-up: AUTO+PLAN ModeCycle impossible-state no-send recovery
+- Classification: **internal-only** (contract-alignment correction; no new surface area).
+- Updated `PitFuelControlEngine.ModeCycle()` AUTO branch to explicitly guard impossible `AUTO + PLAN` before the AUTO->OFF send path:
+  - now recovers to `Source=STBY`, `AutoArmed=false`,
+  - remains AUTO/disarmed,
+  - sends no raw command and publishes no OFF feedback from this impossible-state branch.
+- This aligns runtime behavior with the already-updated CSV row (`AUTO / PLAN / ModeCycle => no-send recovery`) and avoids unintended `#-fuel$` sends from impossible PLAN-in-AUTO state.
+
 ### 2026-04-23 — Pit Fuel Control contract alignment follow-up: direct-command wording + AUTO/MAN feedback parity + invalid PLAN failure feedback
 - Classification: **both** (driver-visible Fuel Control feedback/state-contract alignment + internal guard correction).
 - Updated `PitFuelControlEngine` to align direct-command behavior with `FuelModesLogicCSV.csv` while preserving explicit raw command ownership (`#fuel$`, `#-fuel$`, `#fuel X$`, additive overshoot payload):
