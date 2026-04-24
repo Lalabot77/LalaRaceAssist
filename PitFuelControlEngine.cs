@@ -123,6 +123,13 @@ namespace LaunchPlugin
 
             if (effectiveMode == PitFuelControlMode.Auto)
             {
+                if (Source == PitFuelControlSource.Plan)
+                {
+                    Source = PitFuelControlSource.Stby;
+                    AutoArmed = false;
+                    return;
+                }
+
                 Source = NextAutoSource(Source);
             }
             else
@@ -199,7 +206,7 @@ namespace LaunchPlugin
                 if (Source == PitFuelControlSource.Stby)
                 {
                     AutoArmed = false;
-                    PublishSelectionFeedback("Pit.FuelControl.ModeCycle", "FUEL AUTO STBY");
+                    PublishSelectionFeedback("Pit.FuelControl.ModeCycle", "AUTO REFUEL STBY");
                     return;
                 }
 
@@ -207,7 +214,7 @@ namespace LaunchPlugin
                 {
                     Source = PitFuelControlSource.Stby;
                     AutoArmed = false;
-                    PublishSelectionFeedback("Pit.FuelControl.ModeCycle", "FUEL AUTO STBY");
+                    PublishSelectionFeedback("Pit.FuelControl.ModeCycle", "AUTO REFUEL STBY");
                     return;
                 }
 
@@ -215,7 +222,6 @@ namespace LaunchPlugin
                 if (sent)
                 {
                     AutoArmed = true;
-                    PublishSelectionFeedback("Pit.FuelControl.ModeCycle", "FUEL MODE AUTO");
                 }
                 else
                 {
@@ -227,8 +233,15 @@ namespace LaunchPlugin
                 return;
             }
 
+            if (Source == PitFuelControlSource.Plan)
+            {
+                Source = PitFuelControlSource.Stby;
+                AutoArmed = false;
+                return;
+            }
+
             bool sentOff = _chatCommandSender != null &&
-                           _chatCommandSender("Pit.FuelControl.ModeCycle", "#-fuel$", "FUEL MODE OFF");
+                           _chatCommandSender("Pit.FuelControl.ModeCycle", "#-fuel$", "REFUEL OFF");
             if (!sentOff)
             {
                 PublishSelectionFeedback("Pit.FuelControl.ModeCycle", "Pit Cmd Fail");
@@ -414,6 +427,11 @@ namespace LaunchPlugin
 
             if (!PlanValid)
             {
+                if (effectiveMode == PitFuelControlMode.Man)
+                {
+                    PublishSelectionFeedback(actionName, "Pit Cmd Fail");
+                }
+
                 return;
             }
 
@@ -457,7 +475,8 @@ namespace LaunchPlugin
             string commandText = useMax
                 ? string.Format("#fuel +{0}$", MaxFuelOvershootLitres)
                 : string.Format("#fuel {0}$", roundedTarget);
-            string feedback = BuildFeedbackText(isAutoUpdate, showMaxFeedback, roundedTarget);
+            PitFuelControlMode feedbackMode = ResolveEffectiveMode();
+            string feedback = BuildFeedbackText(isAutoUpdate, showMaxFeedback, roundedTarget, feedbackMode);
             string actionName = !string.IsNullOrWhiteSpace(actionNameOverride)
                 ? actionNameOverride.Trim()
                 : (isAutoUpdate ? "Pit.FuelControl.AutoUpdate" : "Pit.FuelControl.SourceSet");
@@ -798,9 +817,10 @@ namespace LaunchPlugin
             }
         }
 
-        private string BuildFeedbackText(bool isAutoUpdate, bool showMaxFeedback, int roundedTarget)
+        private string BuildFeedbackText(bool isAutoUpdate, bool showMaxFeedback, int roundedTarget, PitFuelControlMode feedbackMode)
         {
             string sourceText = SourceToText(Source);
+            bool autoStyleFeedback = feedbackMode == PitFuelControlMode.Auto;
 
             if (isAutoUpdate)
             {
@@ -811,10 +831,14 @@ namespace LaunchPlugin
 
             if (showMaxFeedback)
             {
-                return "FUEL MAX";
+                return autoStyleFeedback
+                    ? string.Format("AUTO FUEL {0}L >MAX", roundedTarget)
+                    : "FUEL MAX";
             }
 
-            return string.Format("FUEL SET {0} {1}L", sourceText, roundedTarget);
+            return autoStyleFeedback
+                ? string.Format("AUTO REFUEL SET {0} {1}L", sourceText, roundedTarget)
+                : string.Format("REFUEL SET {0} {1}L", sourceText, roundedTarget);
         }
 
         private static PitFuelControlSource NextSource(PitFuelControlSource current)
