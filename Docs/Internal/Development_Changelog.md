@@ -33,6 +33,33 @@ The public user-facing release history is maintained in the root `CHANGELOG.md`.
 
 ## Post-v1.0 development
 
+### 2026-04-24 — Pit Fuel Control suppression gate fix + suppression-reason diagnostics throttling
+- Classification: **both** (driver-visible action unfreeze in valid sessions + internal observability/noise control).
+- Updated `LalaLaunch.BuildPitFuelControlSnapshot(...)` suppression gating:
+  - removed blanket Offline Testing suppression from Fuel Control;
+  - suppression now applies only to truly invalid snapshot contexts (`no-plugin-manager`, `no-session`);
+  - snapshot now carries `SuppressFuelControlReason` for diagnostics.
+- Updated `PitFuelControlEngine` suppression diagnostics:
+  - action blocked logs now include suppression reason (`suppressed:<reason>`);
+  - entry snapshot logs now include `suppressReason=<...>`;
+  - telemetry suppression logging is now transition/throttled (logs on transition/reason change and periodic throttle) with explicit `suppression-cleared` log when suppression ends.
+- Preserved invariants:
+  - no payload/transport/fuel-math redesign,
+  - no internal `Pit.ToggleFuel` use in Fuel Control,
+  - no Tyre Control changes.
+
+### 2026-04-24 — Pit Fuel Control frozen-action diagnostics instrumentation (entry-path + silent-return reasons)
+- Classification: **both** (driver-visible blocked-action feedback/logs + internal observability instrumentation).
+- Added Fuel Control instrumentation without command-model redesign:
+  - `LalaLaunch` Fuel Control action methods now log action-entry receipts (`PitFuelControlModeCycle/SourceCycle/SetPush/SetNorm/SetSave/SetPlan action received`) before forwarding to `PitFuelControlEngine`;
+  - `PitFuelControlEngine` public action entry points now emit compact state snapshots (mode/source/armed/suppression/ownership/plan/target/override/last-sent) for ModeCycle/SourceCycle/SetPush/SetNorm/SetSave/SetPlan and gated `OnLapCross`;
+  - added explicit reason logs before early returns/no-send branches across action paths and ownership seams (`snapshot-null`, `suppressed`, `off-hard-guard`, `auto-plan-blocked`, `plan-invalid`, `source-stby`, `target-invalid`, `send-failed`, `auto-not-armed`, `lap-cross-no-material-delta`, `iracing-autofuel-ownership`, `external-mirror-change`, `owned-mirror-consumed`).
+- Kept invariants unchanged:
+  - no use of `Pit.ToggleFuel` inside Fuel Control,
+  - no fuel maths/transport/payload changes,
+  - no Tyre Control changes,
+  - no CSV behavior-contract redesign.
+
 ### 2026-04-24 — Tyre Control truth-mirror telemetry mapping follow-up
 - Classification: **both** (driver-visible truth classification correction + docs contract alignment).
 - Updated `PitTyreControlEngine.IsRequestedCompoundInDesiredFamily(...)` to map `PitSvTireCompound` truth as:

@@ -9,6 +9,14 @@ Branch: work
 - No Git remote is configured in this checkout (`git remote -v` returns empty).
 
 ## Documentation sync status
+- 2026-04-24 suppression gate fix landed for Pit Fuel Control frozen-action follow-up:
+  - `BuildPitFuelControlSnapshot(...)` no longer blanket-suppresses Fuel Control in Offline Testing; suppression now gates only truly invalid snapshot contexts (`no-plugin-manager`, `no-session`);
+  - snapshot now carries suppression reason for diagnostics (`SuppressFuelControlReason`), and Fuel Control entry logs now expose `suppressReason=<...>`;
+  - action blocked suppression logs now include reason (`suppressed:<reason>`), and telemetry suppression logging is transition/throttled with explicit suppression-clear transition log (no per-tick suppression spam).
+- 2026-04-24 frozen-action diagnostics instrumentation landed for Pit Fuel Control action path tracing:
+  - `LalaLaunch` Fuel Control actions now log entry receipts before engine calls (`PitFuelControl* action received`) to prove SimHub action binding reachability;
+  - `PitFuelControlEngine` action entry points now log compact state snapshots, and action-path early returns now log explicit blocked reasons (`snapshot-null`, `suppressed`, `off-hard-guard`, `auto-plan-blocked`, `plan-invalid`, `source-stby`, `target-invalid`, `send-failed`, `auto-not-armed`, `lap-cross-no-material-delta`, `iracing-autofuel-ownership`, `external-mirror-change`, `owned-mirror-consumed`);
+  - telemetry tick diagnostics remain transition/reason based only (no per-tick spam), and command semantics/payloads were not changed.
 - 2026-04-24 Tyre Control truth-mirror telemetry family mapping fix landed:
   - `PitTyreControlEngine.IsRequestedCompoundInDesiredFamily(...)` now maps requested compound telemetry as `0 => DRY` and `1 => WET` for truth-mirror / AUTO truth classification.
   - outgoing tyre chat commands are unchanged (`DRY => #t tc 0`, `WET => #t tc 2`); only telemetry-family interpretation changed.

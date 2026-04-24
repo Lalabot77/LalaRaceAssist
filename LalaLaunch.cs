@@ -277,12 +277,41 @@ namespace LaunchPlugin
         public void PitToggleFastRepair() => ExecutePitCommand(PitCommandAction.ToggleFastRepair);
         public void PitToggleAutoFuel() => ExecutePitCommand(PitCommandAction.ToggleAutoFuel);
         public void PitWindshield() => ExecutePitCommand(PitCommandAction.Windshield);
-        public void PitFuelControlSourceCycle() => _pitFuelControlEngine.SourceCycle();
-        public void PitFuelControlModeCycle() => _pitFuelControlEngine.ModeCycle();
-        public void PitFuelControlSetPush() => _pitFuelControlEngine.SetPush();
-        public void PitFuelControlSetNorm() => _pitFuelControlEngine.SetNorm();
-        public void PitFuelControlSetSave() => _pitFuelControlEngine.SetSave();
-        public void PitFuelControlSetPlan() => _pitFuelControlEngine.SetPlan();
+        public void PitFuelControlSourceCycle()
+        {
+            SimHub.Logging.Current.Info("[LalaPlugin:PitFuelControl] PitFuelControlSourceCycle action received");
+            _pitFuelControlEngine.SourceCycle();
+        }
+
+        public void PitFuelControlModeCycle()
+        {
+            SimHub.Logging.Current.Info("[LalaPlugin:PitFuelControl] PitFuelControlModeCycle action received");
+            _pitFuelControlEngine.ModeCycle();
+        }
+
+        public void PitFuelControlSetPush()
+        {
+            SimHub.Logging.Current.Info("[LalaPlugin:PitFuelControl] PitFuelControlSetPush action received");
+            _pitFuelControlEngine.SetPush();
+        }
+
+        public void PitFuelControlSetNorm()
+        {
+            SimHub.Logging.Current.Info("[LalaPlugin:PitFuelControl] PitFuelControlSetNorm action received");
+            _pitFuelControlEngine.SetNorm();
+        }
+
+        public void PitFuelControlSetSave()
+        {
+            SimHub.Logging.Current.Info("[LalaPlugin:PitFuelControl] PitFuelControlSetSave action received");
+            _pitFuelControlEngine.SetSave();
+        }
+
+        public void PitFuelControlSetPlan()
+        {
+            SimHub.Logging.Current.Info("[LalaPlugin:PitFuelControl] PitFuelControlSetPlan action received");
+            _pitFuelControlEngine.SetPlan();
+        }
         public void PitTyreControlModeCycle() => _pitTyreControlEngine.ModeCycle();
         public void PitTyreControlSetOff() => _pitTyreControlEngine.SetOff();
         public void PitTyreControlSetDry() => _pitTyreControlEngine.SetDry();
@@ -6944,8 +6973,9 @@ namespace LaunchPlugin
             var snapshot = new PitFuelControlSnapshot();
             string currentSessionTypeName = NormalizeSessionTypeName(Convert.ToString(
                 PluginManager?.GetPropertyValue("DataCorePlugin.GameData.SessionTypeName") ?? string.Empty));
-
-            snapshot.SuppressFuelControl = IsOfflineTestingSession(currentSessionTypeName);
+            string suppressReason;
+            snapshot.SuppressFuelControl = ResolvePitFuelControlSuppression(currentSessionTypeName, out suppressReason);
+            snapshot.SuppressFuelControlReason = suppressReason;
             snapshot.IracingAutoFuelEnabled = Convert.ToBoolean(
                 PluginManager?.GetPropertyValue("DataCorePlugin.GameRawData.Telemetry.dpAutoFuel") ?? false);
             snapshot.TelemetryFuelFillEnabled = SafeReadBool(PluginManager, "DataCorePlugin.GameRawData.Telemetry.dpFuelFill", false);
@@ -6986,6 +7016,24 @@ namespace LaunchPlugin
             snapshot.TankSpaceLitres = Math.Max(0.0, Pit_TankSpaceAvailable);
             snapshot.TelemetryRequestedFuelLitres = SafeReadDouble(PluginManager, "DataCorePlugin.GameRawData.Telemetry.PitSvFuel", 0.0);
             return snapshot;
+        }
+
+        private bool ResolvePitFuelControlSuppression(string sessionTypeName, out string reason)
+        {
+            if (PluginManager == null)
+            {
+                reason = "no-plugin-manager";
+                return true;
+            }
+
+            if (string.IsNullOrWhiteSpace(sessionTypeName))
+            {
+                reason = "no-session";
+                return true;
+            }
+
+            reason = "none";
+            return false;
         }
 
 

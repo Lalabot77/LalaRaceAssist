@@ -86,6 +86,12 @@ Canonical log wording and meaning live in `Docs/Internal/SimHubLogMessages.md`; 
 - transport mode/attempt path (`postmessage` vs `sendinput`),
 - fallback reason context and suppression cases,
 - effect-confirmed vs unverified delivery semantics,
+- tyre compound attempt + single-window confirmation diagnostics.
+- Fuel Control action-path diagnostics:
+  - `LalaLaunch` Fuel Control action entry logs are intentionally emitted (`PitFuelControl* action received`) to prove SimHub binding reached plugin action methods;
+  - `PitFuelControlEngine` emits compact entry snapshots (`entry action=... mode=... source=... suppressReason=...`) for button paths and gated AUTO lap-cross paths;
+  - blocked/no-send branches emit explicit reasons (`snapshot-null`, `suppressed:<reason>`, `off-hard-guard`, `auto-plan-blocked`, `plan-invalid`, `source-stby`, `target-invalid`, `send-failed`, `auto-not-armed`, `lap-cross-no-material-delta`, `iracing-autofuel-ownership`, `external-mirror-change`, `owned-mirror-consumed`);
+  - telemetry suppression diagnostics are transition/throttled only (no per-tick spam), with explicit suppression-clear transition logging.
 - tyre mode transitions, one-shot command sends, and truth-mirror / AUTO-cancel reasons.
 
 ## Dependencies / ordering assumptions
@@ -107,6 +113,7 @@ Canonical log wording and meaning live in `Docs/Internal/SimHubLogMessages.md`; 
 - Tyre command `PIT CMD FAIL` feedback is transport-failure only (raw send returned false).
 - External pit-menu edits can cancel AUTO once and force safety recovery state in fuel control.
 - Fuel Control mode ownership is explicit-command only (no internal `Pit.ToggleFuel` use):
+  - suppression gate is now reserved for truly invalid snapshot contexts (`no-plugin-manager`, `no-session`) and does not blanket-block active in-car/offline-testing pit-control button use;
   - `OFF -> MAN` explicitly sends MFD refuel ON (`#fuel$`) and then mirrors MAN truth (`Source=STBY`, AUTO disarmed);
   - OFF is a hard guard: `SourceCycle`/`SetPush`/`SetNorm`/`SetSave`/`SetPlan` send nothing and hold `OFF STBY`;
   - `MAN -> AUTO`: `PUSH`/`NORM`/`SAVE` send immediately and arm AUTO on success with `AUTO REFUEL SET <SRC> X L` feedback; `STBY` and `PLAN` both enter `AUTO STBY` with no send and `AUTO REFUEL STBY` feedback (PLAN is inhibited in AUTO switching);
@@ -114,6 +121,7 @@ Canonical log wording and meaning live in `Docs/Internal/SimHubLogMessages.md`; 
   - `SetPlan` is MAN-only direct send (`REFUEL SET PLAN X L` semantics). PLAN is blocked in OFF/AUTO and blocked when PLAN validity/session match is false (`Pit Cmd Fail` in MAN when PLAN validity fails);
   - AUTO source sends (`SourceCycle`/`SetPush`/`SetNorm`/`SetSave`) use AUTO feedback wording (`AUTO REFUEL SET <SRC> X L`) and AUTO over-space wording (`AUTO FUEL <requested>L >MAX`), while MAN over-space wording remains `FUEL MAX`;
   - impossible `AUTO + PLAN` state is guarded as no-send recovery (`AUTO STBY`, disarmed) and must not fall through to a PUSH send.
+  - diagnostics-only instrumentation now logs every action-path early return reason before returning; command payload semantics remain unchanged.
   - External MFD/fuel-request changes are mirror-only:
     - while in AUTO, plugin sends nothing and publishes `AUTO REFUEL CANCELLED BY MFD`, then mirrors to `OFF STBY`/`MAN STBY` based on MFD truth;
     - while in MAN/OFF, plugin sends nothing and mirrors with `REFUEL SET OFF BY MFD`, `REFUEL SET ON BY MFD`, or `FUEL CHANGED BY MFD`;
