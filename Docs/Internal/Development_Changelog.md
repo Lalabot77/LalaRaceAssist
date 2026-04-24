@@ -33,6 +33,16 @@ The public user-facing release history is maintained in the root `CHANGELOG.md`.
 
 ## Post-v1.0 development
 
+### 2026-04-24 — Pit Fuel Control feedback polish follow-up (owned OFF->MAN echo + MAN >MAX wording)
+- Classification: **both** (driver-visible feedback correction + narrow ownership-consumption fix).
+- Updated `PitFuelControlEngine` owned-mirror expectation expiry ordering:
+  - same-tick telemetry changes now run owned-consumption first;
+  - expectation expiry now runs only on no-change ticks for each dimension, preserving stale-pending cleanup while preventing plugin-owned `OFF -> MAN` `dpFuelFill=ON` echoes from being misclassified as external `REFUEL SET ON BY MFD`.
+- Updated MAN over-space feedback wording only:
+  - MAN `>MAX` feedback now publishes `REFUEL <SRC> <requested>L >MAX`;
+  - AUTO `>MAX` feedback remains `AUTO FUEL <requested>L >MAX`;
+  - command payloads/transport/fuel maths/override behavior are unchanged.
+
 ### 2026-04-24 — Pit Fuel Control suppression gate fix + suppression-reason diagnostics throttling
 - Classification: **both** (driver-visible action unfreeze in valid sessions + internal observability/noise control).
 - Updated `LalaLaunch.BuildPitFuelControlSnapshot(...)` suppression gating:
