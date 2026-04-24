@@ -7094,7 +7094,6 @@ namespace LaunchPlugin
             {
                 _pitFuelControlEngine.ResetToOffStby();
                 _pitTyreControlEngine.ResetToOff();
-                _pitCommandEngine.ResetFeedbackState();
             }
 
             _pitFuelControlLastIsOnTrackCar = isOnTrackCar;
@@ -7106,7 +7105,6 @@ namespace LaunchPlugin
             if (_pitTyreControlHasIsOnTrackCarSample && _pitTyreControlLastIsOnTrackCar != isOnTrackCar)
             {
                 _pitTyreControlEngine.ResetToOff();
-                _pitCommandEngine.ResetFeedbackState();
             }
 
             _pitTyreControlLastIsOnTrackCar = isOnTrackCar;

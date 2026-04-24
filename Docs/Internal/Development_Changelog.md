@@ -33,6 +33,15 @@ The public user-facing release history is maintained in the root `CHANGELOG.md`.
 
 ## Post-v1.0 development
 
+### 2026-04-24 — Pit feedback reset seam follow-up: avoid on-track edge clears
+- Classification: **internal-only** (reset seam hardening; no command/transport behavior change).
+- Updated `LalaLaunch` pit-control on-track edge handlers so `PitCommandEngine.ResetFeedbackState()` is **not** invoked from `Telemetry.IsOnTrackCar` transitions.
+- `ResetFeedbackState()` remains wired only to explicit lifecycle/reset seams (`ResetAllValues`, `ManualRecoveryReset`) to avoid transient telemetry gap/on-track flaps clearing active pit feedback mid-window.
+- Preserved invariants:
+  - no payload/timing/transport changes,
+  - no fuel/tyre mode-cycle changes,
+  - no severity mapping changes.
+
 ### 2026-04-24 — Pit command feedback severity standardization + restartable active hold contract
 - Classification: **both** (dash-facing pit feedback contract extension + bounded internal feedback ownership refactor).
 - Updated `PitCommandEngine` to be the single feedback severity owner across built-in pit actions, Fuel Control, Tyre Control, custom messages, and raw pit commands:

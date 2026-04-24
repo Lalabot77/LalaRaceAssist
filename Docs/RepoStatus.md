@@ -9,6 +9,9 @@ Branch: work
 - No Git remote is configured in this checkout (`git remote -v` returns empty).
 
 ## Documentation sync status
+- 2026-04-24 follow-up hardened pit feedback reset seams:
+  - removed `PitCommandEngine.ResetFeedbackState()` calls from `Telemetry.IsOnTrackCar` edge handlers in `LalaLaunch`;
+  - pit command feedback reset now remains on explicit lifecycle/reset seams only (for example manual/runtime reset flows), avoiding transient on-track telemetry-gap clears while command feedback is active.
 - 2026-04-24 Pit command feedback severity standardization landed:
   - `PitCommandEngine` now owns unified pit feedback severity classification and exports `Pit.Command.Severity` (`0..4`) + `Pit.Command.SeverityText` (`None/Info/Advisory/Caution/Warning`);
   - `Pit.Command.Active` remains restartable-per-publish and now uses a standardized 3000ms hold window, including retrigger for repeated identical `Pit.Command.DisplayText`;
