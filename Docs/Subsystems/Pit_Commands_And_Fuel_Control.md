@@ -1,7 +1,7 @@
 # Pit Commands and Fuel/Tyre Control
 
 Validated against commit: HEAD
-Last updated: 2026-04-23
+Last updated: 2026-04-24
 Branch: work
 
 ## Purpose
@@ -44,9 +44,10 @@ This is the canonical technical document for the pit/custom command stack and re
 
 ### Tyre Control state
 - Mode state machine: `OFF -> DRY -> WET -> AUTO -> OFF`.
-- Single-send confirmation bookkeeping per commanded tyre target (no retry/cooldown resend loop).
-- Service-state enforcement seam aligned to all-four tyre selection truth.
-- Manual mode-change confirmation window (`OFF`/`DRY`/`WET`) delays immediate external-truth remap long enough for first bounded enforcement send/confirmation pass.
+- Single-send model: each driver action or AUTO correction sends at most one tyre command.
+- Command model: `OFF => #cleartires$`, `DRY => #t tc 0$`, `WET => #t tc 2$` (transport normalizes trailing `$`).
+- One short settle hold (1.0 s) after plugin-issued tyre commands before truth reconciliation/cancel checks.
+- Outside AUTO, plugin mirrors known MFD truth and does not fight manual pit-menu tyre changes.
 
 ## Calculation blocks (high level)
 1. Receive an action from plugin-owned binding surface.
@@ -62,12 +63,15 @@ This is the canonical technical document for the pit/custom command stack and re
    - AUTO can cancel on external requested-fuel or MFD-enable edges,
    - lifecycle resets (`IsOnTrackCar` edges, iRacing AutoFuel ownership, offline suppression) force inert/disarmed safety state.
 6. Maintain Tyre Control enforcement:
-   - OFF forces service off (`#cleartires$`),
-   - DRY/WET/AUTO drive compound request semantics with a single raw `#tc ...$` send (no `#t$` pre-send),
-   - each DRY/WET/AUTO `#tc ...$` send records both pending compound intent and pending service-ON intent so delayed OFF->ON service convergence is preserved as plugin-owned intent,
-   - AUTO follows declared wetness,
-   - pending compound confirmation succeeds as soon as requested compound family truth (`PitSvTireCompound`) matches the desired DRY/WET family (service-flag ON confirmation is not required for this compound-success seam),
-   - each action/AUTO enforcement event performs at most one send attempt per target and then waits for a short confirmation window; on unconfirmed timeout, publish `PIT CMD FAIL`, remap mode to MFD truth, and do not retry.
+   - OFF sends one clear command (`#cleartires$`) and uses settle-hold before reconciliation,
+   - DRY sends one combined command (`#t tc 0$`),
+   - WET sends one combined command (`#t tc 2$`),
+   - AUTO follows declared wetness (`false => DRY`, `true => WET`),
+   - entering AUTO is feedback-only (`TYRE AUTO`) and does not blindly send,
+   - AUTO sends one correction command only when known MFD truth disagrees with declared-wet target,
+   - outside AUTO, known MFD truth remaps mode (`OFF`/`DRY`/`WET`) with no corrective command send,
+   - unknown/ambiguous tyre truth is held fail-safe (no mode flip, no send),
+   - `PIT CMD FAIL` is transport-failure only (raw send returned false), with no timeout-resend loop.
 
 ## Outputs (exports + logs)
 Canonical export names live in `Docs/Internal/SimHubParameterInventory.md`; key families:
@@ -79,7 +83,7 @@ Canonical log wording and meaning live in `Docs/Internal/SimHubLogMessages.md`; 
 - transport mode/attempt path (`postmessage` vs `sendinput`),
 - fallback reason context and suppression cases,
 - effect-confirmed vs unverified delivery semantics,
-- tyre compound attempt + single-window confirmation diagnostics.
+- tyre mode transitions, one-shot command sends, and truth-mirror / AUTO-cancel reasons.
 
 ## Dependencies / ordering assumptions
 - This subsystem owns transport + command dispatch and must remain the only authority for pit/custom command sends.
@@ -96,7 +100,8 @@ Canonical log wording and meaning live in `Docs/Internal/SimHubLogMessages.md`; 
 - Direct transport partial-state uncertainty: Auto mode suppresses unsafe fallback on that press to avoid duplicate corruption.
 - Chat-open leak prevention is explicit in both transport paths: command transport force-sends `Esc` before `T` so stale-open chat does not absorb the opener key into outgoing raw/custom command payload (`t#...` / `tt#...` corruption).
 - Transport success for custom/raw/stateless commands is attempt-only; in-sim effect is unverified by design.
-- Tyre control has no resend loop: each target change sends once, then either confirms in-window or fails once (`PIT CMD FAIL`) and falls back to current MFD truth.
+- Tyre control has no resend loop: each target change/correction sends once at most, with a 1.0s settle hold and truth-following remap outside AUTO.
+- Tyre command `PIT CMD FAIL` feedback is transport-failure only (raw send returned false).
 - External pit-menu edits can cancel AUTO once and force safety recovery state in fuel control.
 - Fuel Control mode ownership is explicit-command only (no internal `Pit.ToggleFuel` use):
   - `OFF -> MAN` explicitly sends MFD refuel ON (`#fuel$`) and then mirrors MAN truth (`Source=STBY`, AUTO disarmed);

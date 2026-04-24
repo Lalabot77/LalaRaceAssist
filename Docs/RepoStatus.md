@@ -1,7 +1,7 @@
 # Repository status
 
 Validated against commit: HEAD
-Last updated: 2026-04-23
+Last updated: 2026-04-24
 Branch: work
 
 ## Current repo/link status
@@ -9,6 +9,12 @@ Branch: work
 - No Git remote is configured in this checkout (`git remote -v` returns empty).
 
 ## Documentation sync status
+- 2026-04-24 Tyre Control command-model simplification landed (single-send truth-following model):
+  - `PitTyreControlEngine` now uses one-shot combined commands (`OFF => #cleartires`, `DRY => #t tc 0`, `WET => #t tc 2`) with transport-owned `$` normalization unchanged; standalone `#t`/`#tc` split logic is removed from tyre control.
+  - removed tyre retry/attempt/timeout-fail state machines and plugin-owned suppression/intent-grace tracking; replaced with a single 1.0s settle hold after plugin-issued tyre commands.
+  - outside AUTO, mode now mirrors known MFD truth only after settle (`OFF` / dry-family / wet-family) and never sends corrective commands for manual pit-menu tyre edits.
+  - AUTO now enters feedback-only (`TYRE AUTO`), performs one correction send only when known MFD truth mismatches declared-wet target, and cancels/remaps on manual takeover with `TYRE AUTO CANCEL` (no fight-back send).
+  - tyre-control `PIT CMD FAIL` is now transport-failure only (raw send returned false); timeout-driven failure/revert paths were removed.
 - 2026-04-23 Pit Fuel Control testing/polish pass landed (command payload fix + observability + table alignment):
   - `PitFuelControlEngine.ModeCycle()` OFF->MAN sends `#fuel$` (no `#+fuel$` additive form) and uses `FUEL MAN STBY` feedback.
   - `PitCommandEngine.ExecuteRawPitCommand(...)` empty-after-normalization blocked path now logs both raw and normalized payload text for diagnosis.

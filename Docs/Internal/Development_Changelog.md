@@ -33,6 +33,26 @@ The public user-facing release history is maintained in the root `CHANGELOG.md`.
 
 ## Post-v1.0 development
 
+### 2026-04-24 — Tyre Control simplification: one-shot combined commands + 1.0s settle truth-following model
+- Classification: **both** (driver-visible tyre-control behavior correction + internal state-machine simplification).
+- Reworked `PitTyreControlEngine` command contract to match live-tested MFD behavior:
+  - `OFF => #cleartires`, `DRY => #t tc 0`, `WET => #t tc 2` (transport still owns trailing `$` normalization),
+  - no standalone tyre-service `#t` command path and no split service/compound command sequence in Tyre Control.
+- Removed tyre-control retry/attempt/timeout-failure machinery and plugin-owned intent/suppression ownership windows.
+  - each driver action sends at most one tyre command,
+  - each AUTO correction decision sends at most one tyre command,
+  - no automatic resend loops.
+- Added single post-send settle hold (1.0s):
+  - outside AUTO, mode mirrors known MFD truth after settle and never fights manual MFD tyre edits,
+  - unknown/ambiguous truth remains hold/no-send fail-safe.
+- Simplified AUTO behavior:
+  - AUTO entry is feedback-only (`TYRE AUTO`) and does not blindly send,
+  - AUTO corrects only when known truth mismatches declared-wet target,
+  - manual takeover inside AUTO cancels/remaps with `TYRE AUTO CANCEL` and no fight-back command.
+- Simplified failure feedback policy:
+  - `PIT CMD FAIL` now comes only from raw transport send failure (`ExecuteRawPitCommand` returned false),
+  - timeout-driven tyre confirmation failures were removed.
+
 ### 2026-04-23 — Pit Fuel Control testing/polish pass: OFF->MAN feedback alignment + raw-command observability + max-feedback table alignment
 - Classification: **both** (driver-visible OFF->MAN send/feedback correction + internal observability/docs alignment).
 - Updated Fuel Control OFF->MAN behavior in `PitFuelControlEngine.ModeCycle()`:
