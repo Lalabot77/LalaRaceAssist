@@ -3,8 +3,8 @@
 **CANONICAL OBSERVABILITY MAP**
 
 Validated against: HEAD
-Last reviewed: 2026-04-23
-Last updated: 2026-04-23
+Last reviewed: 2026-04-24
+Last updated: 2026-04-24
 Branch: work
 
 Scope: Info/Warn logs emitted via `SimHub.Logging.Current.Info(...)` and `SimHub.Logging.Current.Warn(...)`. Use the tag prefixes to filter in SimHub’s log view. Placeholder logs are noted; no deprecated messages are currently removed in code. Legacy/alternate copies of this list do not exist.
@@ -47,10 +47,9 @@ Scope: Info/Warn logs emitted via `SimHub.Logging.Current.Info(...)` and `SimHub
 - **`[LalaPlugin:PitCommand] raw-command send blocked: command text is empty after normalization raw='<raw>' normalized='<normalized>'`** — Raw pit-command request was empty/invalid after command normalization; action publishes `Pit Cmd Fail` and now includes both raw/normalized payload diagnostics.
 - **`[LalaPlugin:PitCommand] raw-command transport=<postmessage|sendinput|none> local-transport-issue reason=<reason> [fallback_from=postmessage] raw='<raw>' normalized='<normalized>'`** — Raw pit-command send hit a local transport-stage issue; action publishes `Pit Cmd Fail`.
 - **`[LalaPlugin:PitCommand] raw-command transport=<postmessage|sendinput> attempted=true delivery=unverified effect-confirmed=false raw='<raw>' normalized='<normalized>'`** — Raw pit-command send audit line for paths that intentionally reuse built-in pit-command normalization before injection; this does not prove in-sim execution.
-- **`[LalaPlugin:PitTyreControl] Compound change attempt target=<DRY|WET> cmd='<#tc ...>' requested=<...> player=<...> weatherDeclaredWet=<true|false> available01='<...>' available02='<...>'`** — Tyre control v1 observability line emitted when the plugin attempts a compound change; includes requested/fitted seams and GT3-first available-compound context from `DriverTires01/02.TireCompoundType`.
-- **`[LalaPlugin:PitTyreControl] Manual truth sync remap reason=<manual-confirmation-fallback|manual-external-truth-sync|auto-cancel-external-ownership> mode=<OFF|DRY|WET>`** — Tyre-control mode remap to actual MFD truth after bounded manual confirmation/reconciliation, or AUTO external-ownership cancel/remap.
-- **`[LalaPlugin:PitTyreControl] AUTO enforcement unconfirmed: ...`** — Info-only AUTO ownership observability when bounded service/compound enforcement attempts are not confirmed; AUTO mode is retained and does not collapse to OFF/DRY/WET.
-- **`[LalaPlugin:PitTyreControl] AUTO cancelled: external tyre ownership detected, remapped=<OFF|DRY|WET>.`** — AUTO ownership cancellation when tyre MFD truth changes outside plugin-owned protection and a concrete manual-truth remap exists; plugin exits AUTO and follows manual truth. Ambiguous/unavailable truth does not cancel AUTO.
+- **`[LalaPlugin:PitTyreControl] mode=<OFF|DRY|WET|AUTO> reason=<driver-action|auto-correction> command='<#cleartires|#t tc 0|#t tc 2>' sent=<true|false>`** — Tyre command-send audit for one-shot sends (driver action or AUTO correction).
+- **`[LalaPlugin:PitTyreControl] mode=<OFF|DRY|WET> reason=truth-mirror serviceKnown=<bool> serviceOn=<bool> requestedCompound=<value|NA>`** — Outside-AUTO truth-following remap to current MFD truth after settle hold (no corrective send).
+- **`[LalaPlugin:PitTyreControl] mode=<OFF|DRY|WET> reason=auto-cancel serviceKnown=<bool> serviceOn=<bool> requestedCompound=<value|NA>`** — AUTO manual-takeover cancel/remap when MFD truth changes away from AUTO desired declared-wet target after settle.
 - **`[LalaPlugin:MsgCx] MsgCx action fired (pressed latched + engines notified).`** — MsgCx action invoked; message engines receive cancel signal.【F:LalaLaunch.cs†L87-L118】
 - **`[LalaPlugin:Launch] State change: <old> -> <new>.`** — Launch state machine transition (e.g., primed → logging).【F:LalaLaunch.cs†L2470-L2494】
 - **`[LalaPlugin:Launch Trace] <reason> – cancelling to Idle.`** — Launch trace aborted to idle with the provided reason (debounced).【F:LalaLaunch.cs†L3048-L3074】
