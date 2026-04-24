@@ -61,6 +61,26 @@ This document is the canonical dash-facing contract layer. It does **not** redef
 - Dashboards can bind short-lived user feedback exports `LalaLaunch.Pit.Command.DisplayText` and `LalaLaunch.Pit.Command.Active` for command confirmations/failures.
 - `LalaLaunch.Pit.Command.Active` is a restartable pulse/hold gate (re-published identical text retriggers the hold window).
 - Dashboards should style pit feedback from `LalaLaunch.Pit.Command.Severity` / `LalaLaunch.Pit.Command.SeverityText` and should not parse `DisplayText` for priority.
+- Publish-priority rule: while an active pit feedback message is live, lower-severity incoming feedback is suppressed; equal/higher severity replaces immediately and restarts the hold.
+- Dash visual mapping contract:
+  - Severity 0 None:
+    - no display
+  - Severity 1 Info:
+    - black background
+    - white text
+    - no blink
+  - Severity 2 Advisory:
+    - black background
+    - cyan text
+    - no blink
+  - Severity 3 Caution:
+    - yellow background
+    - red text
+    - no blink
+  - Severity 4 Warning:
+    - red background
+    - yellow text
+    - blink for 1 second at 750ms
 - Dashboards can also bind `LalaLaunch.Pit.Command.LastAction`/`LastRaw` for diagnostics, plus `LalaLaunch.Pit.Command.FuelSetMaxToggleState` for real `Pit.FuelSetMax` MAX/ZERO toggle state (`false=last press sent ZERO / next press sends MAX`, `true=last press sent MAX / next press sends ZERO`). Tank-full short-circuit applies to MAX phase only; ZERO phase is still transported as `#fuel 0.01`.
 - Dashboards can bind `LalaLaunch.Pit.FuelControl.*` exports (`Source/SourceText`, `Mode/ModeText`, `TargetLitres`, `OverrideActive`) for pit fuel control state display; dashboards do not own source/mode/plan validity logic.
 - Dashboards can bind `LalaLaunch.Pit.TyreControl.Mode` / `ModeText` for plugin-owned tyre control display (`OFF`/`DRY`/`WET`/`AUTO`); dashboards must not implement tyre decision logic.

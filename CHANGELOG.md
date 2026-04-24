@@ -16,7 +16,8 @@ For internal between-release development history, see `Docs/Internal/Development
 - **Strategy/PreRace status logic** refreshed with scenario-first outcomes and clearer status colors/text for no-stop, one-stop, and multi-stop contexts.
 - **Pit command transport behavior** now defaults to direct window-message delivery with bounded legacy fallback options.
 - **Pit Fuel Control behavior** refined so AUTO ownership/cancel behavior is clearer and non-AUTO OFF/MAN follows iRacing MFD fuel-enable truth.
-- **Pit command feedback contract** now standardizes dash severity exports (`Pit.Command.Severity`, `Pit.Command.SeverityText`) and keeps `Pit.Command.Active` as a restartable hold pulse (including repeated identical message retriggers).
+- **Pit command feedback contract** now standardizes dash severity exports (`Pit.Command.Severity`, `Pit.Command.SeverityText`), keeps `Pit.Command.Active` as a restartable hold pulse (including repeated identical message retriggers), and suppresses lower-severity feedback while higher-severity feedback is still active.
+- **Pit feedback severity visual mapping** updated for dashboards: `Caution` is steady (no blink) and `Warning` blinks for 1 second at 750ms.
 - **Dashboard/navigation documentation** and Overview-first workflow guidance were aligned across user docs.
 
 ### Fixed

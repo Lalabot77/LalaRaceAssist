@@ -40,6 +40,29 @@ This is the canonical technical document for the pit/custom command stack and re
 - Severity is owned/published with feedback in `PitCommandEngine`:
   - `Pit.Command.Severity` (`0=None`, `1=Info`, `2=Advisory`, `3=Caution`, `4=Warning`)
   - `Pit.Command.SeverityText` (`None`, `Info`, `Advisory`, `Caution`, `Warning`)
+- Severity-priority publishing rule (owned inside `PitCommandEngine` feedback publisher):
+  - if no feedback is currently active, publish normally;
+  - if feedback is currently active and new severity is higher/equal, replace immediately and restart hold;
+  - if feedback is currently active and new severity is lower, suppress the new feedback and keep the current message/hold unchanged.
+- Dash severity visual contract:
+  - Severity 0 None:
+    - no display
+  - Severity 1 Info:
+    - black background
+    - white text
+    - no blink
+  - Severity 2 Advisory:
+    - black background
+    - cyan text
+    - no blink
+  - Severity 3 Caution:
+    - yellow background
+    - red text
+    - no blink
+  - Severity 4 Warning:
+    - red background
+    - yellow text
+    - blink for 1 second at 750ms
 - Reset seams that clear command feedback now clear:
   - `Pit.Command.DisplayText` to empty,
   - active pulse window,

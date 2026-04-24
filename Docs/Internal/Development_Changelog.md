@@ -33,6 +33,31 @@ The public user-facing release history is maintained in the root `CHANGELOG.md`.
 
 ## Post-v1.0 development
 
+### 2026-04-24 — Pit feedback dash visual mapping correction (Caution steady, Warning 750ms blink)
+- Classification: **both** (dash-facing visual contract correction + documentation alignment).
+- Corrected pit feedback dash visual mapping in subsystem/dash/inventory docs:
+  - Severity 3 `Caution` is now steady (`no blink`);
+  - Severity 4 `Warning` now blinks for 1 second at `750ms`.
+- Preserved invariants:
+  - no `PitCommandEngine` code changes,
+  - no payload/transport/timing/state-machine behavior changes.
+
+### 2026-04-24 — Pit feedback priority gating follow-up (severity-aware active replacement/suppression)
+- Classification: **both** (dash-visible pit feedback sequencing behavior + docs/CSV contract alignment).
+- Updated `PitCommandEngine.PublishMessage(...)` feedback publishing priority logic:
+  - if no pit feedback is active, publish normally;
+  - if a pit feedback message is active, equal/higher severity replaces immediately and restarts the existing 3000 ms hold;
+  - if a pit feedback message is active, lower severity feedback is suppressed and the active message/hold remain unchanged.
+- Preserved invariants:
+  - no counters/sequence exports added,
+  - no command payload/transport/timing changes,
+  - no Fuel Control/Tyre Control command-state logic changes,
+  - repeated identical message at equal severity still retriggers/restarts hold.
+- Updated pit feedback contracts/docs:
+  - subsystem + dash docs now explicitly describe severity-priority suppression/replacement behavior;
+  - SimHub parameter inventory now documents the same priority rule and dash visual severity mapping (`0..4`);
+  - pit logic CSV contracts now include a `Severity` column and use uppercase `PIT CMD FAIL` wording consistently.
+
 ### 2026-04-24 — Pit feedback reset seam follow-up: avoid on-track edge clears
 - Classification: **internal-only** (reset seam hardening; no command/transport behavior change).
 - Updated `LalaLaunch` pit-control on-track edge handlers so `PitCommandEngine.ResetFeedbackState()` is **not** invoked from `Telemetry.IsOnTrackCar` transitions.

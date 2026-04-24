@@ -725,10 +725,20 @@ namespace LaunchPlugin
 
         private void PublishMessage(string message, PitCommandSeverity severity)
         {
-            DisplayText = message ?? string.Empty;
-            Severity = string.IsNullOrWhiteSpace(DisplayText)
-                ? (int)PitCommandSeverity.None
-                : (int)severity;
+            string nextText = message ?? string.Empty;
+            PitCommandSeverity nextSeverity = string.IsNullOrWhiteSpace(nextText)
+                ? PitCommandSeverity.None
+                : severity;
+
+            bool hasActiveMessage = Active;
+            PitCommandSeverity currentSeverity = (PitCommandSeverity)Severity;
+            if (hasActiveMessage && nextSeverity < currentSeverity)
+            {
+                return;
+            }
+
+            DisplayText = nextText;
+            Severity = (int)nextSeverity;
             _messageUntilUtc = DateTime.UtcNow.AddMilliseconds(MessageHoldMs);
         }
 
