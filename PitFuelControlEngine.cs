@@ -21,6 +21,7 @@ namespace LaunchPlugin
     internal sealed class PitFuelControlSnapshot
     {
         public bool SuppressFuelControl;
+        public string SuppressFuelControlReason = "none";
         public bool IracingAutoFuelEnabled;
         public bool TelemetryFuelFillEnabled;
         public string LiveCar = string.Empty;
@@ -69,6 +70,9 @@ namespace LaunchPlugin
         private int _pendingOwnedRequestedFuelLitres = -1;
         private bool _hasPendingOwnedFuelFillEnabled;
         private bool _pendingOwnedFuelFillEnabled;
+        private bool _telemetrySuppressionActive;
+        private string _lastTelemetrySuppressionReason = "none";
+        private DateTime _lastTelemetrySuppressionLogUtc = DateTime.MinValue;
 
         public PitFuelControlSource Source { get; private set; } = PitFuelControlSource.Push;
         private bool IsAutoModeActive { get; set; }
@@ -109,7 +113,7 @@ namespace LaunchPlugin
             LogActionEntry("SourceCycle");
             if (TryApplySuppressedState())
             {
-                LogActionBlockedInfo("SourceCycle", "suppressed");
+                LogActionBlockedSuppressed("SourceCycle");
                 return;
             }
 
@@ -184,7 +188,7 @@ namespace LaunchPlugin
             LogActionEntry("ModeCycle");
             if (TryApplySuppressedState())
             {
-                LogActionBlockedInfo("ModeCycle", "suppressed");
+                LogActionBlockedSuppressed("ModeCycle");
                 return;
             }
 
@@ -279,7 +283,7 @@ namespace LaunchPlugin
         {
             if (TryApplySuppressedState())
             {
-                LogActionBlockedDebug("OnLapCross", "suppressed");
+                LogActionBlockedDebug("OnLapCross", "suppressed:" + ResolveSuppressionReason(_snapshotProvider()));
                 return;
             }
 
@@ -341,8 +345,14 @@ namespace LaunchPlugin
             if (snapshot.SuppressFuelControl)
             {
                 DisarmAutoAndForceStby(clearSuppressWindow: true);
-                LogActionBlockedInfo("OnTelemetryTick", "suppressed");
+                MaybeLogTelemetrySuppressed(snapshot);
                 return;
+            }
+
+            if (_telemetrySuppressionActive)
+            {
+                _telemetrySuppressionActive = false;
+                SimHub.Logging.Current.Info($"[LalaPlugin:PitFuelControl] telemetry suppression-cleared previousReason={_lastTelemetrySuppressionReason}");
             }
 
             int currentRequestedLitres = RoundUpLitres(snapshot.TelemetryRequestedFuelLitres);
@@ -391,7 +401,7 @@ namespace LaunchPlugin
             LogActionEntry(SourceToActionLabel(actionName));
             if (TryApplySuppressedState())
             {
-                LogActionBlockedInfo(SourceToActionLabel(actionName), "suppressed");
+                LogActionBlockedSuppressed(SourceToActionLabel(actionName));
                 return;
             }
 
@@ -440,7 +450,7 @@ namespace LaunchPlugin
             LogActionEntry("SetPlan");
             if (TryApplySuppressedState())
             {
-                LogActionBlockedInfo("SetPlan", "suppressed");
+                LogActionBlockedSuppressed("SetPlan");
                 return;
             }
 
@@ -735,8 +745,9 @@ namespace LaunchPlugin
             string planValidText = snapshot == null ? "n/a" : PlanValid.ToString();
             string targetText = snapshot == null ? "n/a" : TargetLitres.ToString("F2");
             string lastSentText = LastSentFuelLitres >= 0 ? LastSentFuelLitres.ToString() : "none";
+            string suppressReason = ResolveSuppressionReason(snapshot);
             SimHub.Logging.Current.Info(
-                $"[LalaPlugin:PitFuelControl] entry action={actionName} mode={ModeToText(ResolveEffectiveMode())} source={SourceToText(Source)} autoArmed={AutoArmed} isAutoModeActive={IsAutoModeActive} suppressFuelControl={(snapshot != null && snapshot.SuppressFuelControl)} iracingAutoFuelEnabled={(snapshot != null && snapshot.IracingAutoFuelEnabled)} telemetryFuelFillEnabled={(snapshot != null && snapshot.TelemetryFuelFillEnabled)} planValid={planValidText} targetLitres={targetText} overrideActive={OverrideActive} lastSentFuelLitres={lastSentText}");
+                $"[LalaPlugin:PitFuelControl] entry action={actionName} mode={ModeToText(ResolveEffectiveMode())} source={SourceToText(Source)} autoArmed={AutoArmed} isAutoModeActive={IsAutoModeActive} suppressFuelControl={(snapshot != null && snapshot.SuppressFuelControl)} suppressReason={suppressReason} iracingAutoFuelEnabled={(snapshot != null && snapshot.IracingAutoFuelEnabled)} telemetryFuelFillEnabled={(snapshot != null && snapshot.TelemetryFuelFillEnabled)} planValid={planValidText} targetLitres={targetText} overrideActive={OverrideActive} lastSentFuelLitres={lastSentText}");
         }
 
         private void LogActionBlockedInfo(string actionName, string reason)
@@ -767,6 +778,43 @@ namespace LaunchPlugin
             }
 
             return actionName ?? "SetSource";
+        }
+
+        private static string ResolveSuppressionReason(PitFuelControlSnapshot snapshot)
+        {
+            if (snapshot == null)
+            {
+                return "snapshot-null";
+            }
+
+            if (string.IsNullOrWhiteSpace(snapshot.SuppressFuelControlReason))
+            {
+                return "unknown";
+            }
+
+            return snapshot.SuppressFuelControlReason.Trim();
+        }
+
+        private void LogActionBlockedSuppressed(string actionName)
+        {
+            string reason = ResolveSuppressionReason(_snapshotProvider());
+            LogActionBlockedInfo(actionName, "suppressed:" + reason);
+        }
+
+        private void MaybeLogTelemetrySuppressed(PitFuelControlSnapshot snapshot)
+        {
+            string reason = ResolveSuppressionReason(snapshot);
+            DateTime now = DateTime.UtcNow;
+            bool reasonChanged = !string.Equals(_lastTelemetrySuppressionReason, reason, StringComparison.Ordinal);
+            bool dueForThrottleLog = now >= _lastTelemetrySuppressionLogUtc.AddSeconds(5);
+            if (!_telemetrySuppressionActive || reasonChanged || dueForThrottleLog)
+            {
+                LogActionBlockedInfo("OnTelemetryTick", "suppressed:" + reason);
+                _lastTelemetrySuppressionLogUtc = now;
+                _lastTelemetrySuppressionReason = reason;
+            }
+
+            _telemetrySuppressionActive = true;
         }
 
         private void UpdateObservedExternalState(PitFuelControlSnapshot snapshot)

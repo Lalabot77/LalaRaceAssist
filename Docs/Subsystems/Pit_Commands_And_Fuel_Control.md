@@ -82,9 +82,9 @@ Canonical log wording and meaning live in `Docs/Internal/SimHubLogMessages.md`; 
 - tyre compound attempt + single-window confirmation diagnostics.
 - Fuel Control action-path diagnostics:
   - `LalaLaunch` Fuel Control action entry logs are intentionally emitted (`PitFuelControl* action received`) to prove SimHub binding reached plugin action methods;
-  - `PitFuelControlEngine` emits compact entry snapshots (`entry action=... mode=... source=...`) for button paths and gated AUTO lap-cross paths;
-  - blocked/no-send branches emit explicit reasons (`snapshot-null`, `suppressed`, `off-hard-guard`, `auto-plan-blocked`, `plan-invalid`, `source-stby`, `target-invalid`, `send-failed`, `auto-not-armed`, `lap-cross-no-material-delta`, `iracing-autofuel-ownership`, `external-mirror-change`, `owned-mirror-consumed`);
-  - telemetry tick logging remains state-transition/reason based only (no per-tick spam).
+  - `PitFuelControlEngine` emits compact entry snapshots (`entry action=... mode=... source=... suppressReason=...`) for button paths and gated AUTO lap-cross paths;
+  - blocked/no-send branches emit explicit reasons (`snapshot-null`, `suppressed:<reason>`, `off-hard-guard`, `auto-plan-blocked`, `plan-invalid`, `source-stby`, `target-invalid`, `send-failed`, `auto-not-armed`, `lap-cross-no-material-delta`, `iracing-autofuel-ownership`, `external-mirror-change`, `owned-mirror-consumed`);
+  - telemetry suppression diagnostics are transition/throttled only (no per-tick spam), with explicit suppression-clear transition logging.
 
 ## Dependencies / ordering assumptions
 - This subsystem owns transport + command dispatch and must remain the only authority for pit/custom command sends.
@@ -104,6 +104,7 @@ Canonical log wording and meaning live in `Docs/Internal/SimHubLogMessages.md`; 
 - Tyre control has no resend loop: each target change sends once, then either confirms in-window or fails once (`PIT CMD FAIL`) and falls back to current MFD truth.
 - External pit-menu edits can cancel AUTO once and force safety recovery state in fuel control.
 - Fuel Control mode ownership is explicit-command only (no internal `Pit.ToggleFuel` use):
+  - suppression gate is now reserved for truly invalid snapshot contexts (`no-plugin-manager`, `no-session`) and does not blanket-block active in-car/offline-testing pit-control button use;
   - `OFF -> MAN` explicitly sends MFD refuel ON (`#fuel$`) and then mirrors MAN truth (`Source=STBY`, AUTO disarmed);
   - OFF is a hard guard: `SourceCycle`/`SetPush`/`SetNorm`/`SetSave`/`SetPlan` send nothing and hold `OFF STBY`;
   - `MAN -> AUTO`: `PUSH`/`NORM`/`SAVE` send immediately and arm AUTO on success with `AUTO REFUEL SET <SRC> X L` feedback; `STBY` and `PLAN` both enter `AUTO STBY` with no send and `AUTO REFUEL STBY` feedback (PLAN is inhibited in AUTO switching);

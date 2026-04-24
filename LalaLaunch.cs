@@ -6973,8 +6973,9 @@ namespace LaunchPlugin
             var snapshot = new PitFuelControlSnapshot();
             string currentSessionTypeName = NormalizeSessionTypeName(Convert.ToString(
                 PluginManager?.GetPropertyValue("DataCorePlugin.GameData.SessionTypeName") ?? string.Empty));
-
-            snapshot.SuppressFuelControl = IsOfflineTestingSession(currentSessionTypeName);
+            string suppressReason;
+            snapshot.SuppressFuelControl = ResolvePitFuelControlSuppression(currentSessionTypeName, out suppressReason);
+            snapshot.SuppressFuelControlReason = suppressReason;
             snapshot.IracingAutoFuelEnabled = Convert.ToBoolean(
                 PluginManager?.GetPropertyValue("DataCorePlugin.GameRawData.Telemetry.dpAutoFuel") ?? false);
             snapshot.TelemetryFuelFillEnabled = SafeReadBool(PluginManager, "DataCorePlugin.GameRawData.Telemetry.dpFuelFill", false);
@@ -7015,6 +7016,24 @@ namespace LaunchPlugin
             snapshot.TankSpaceLitres = Math.Max(0.0, Pit_TankSpaceAvailable);
             snapshot.TelemetryRequestedFuelLitres = SafeReadDouble(PluginManager, "DataCorePlugin.GameRawData.Telemetry.PitSvFuel", 0.0);
             return snapshot;
+        }
+
+        private bool ResolvePitFuelControlSuppression(string sessionTypeName, out string reason)
+        {
+            if (PluginManager == null)
+            {
+                reason = "no-plugin-manager";
+                return true;
+            }
+
+            if (string.IsNullOrWhiteSpace(sessionTypeName))
+            {
+                reason = "no-session";
+                return true;
+            }
+
+            reason = "none";
+            return false;
         }
 
 

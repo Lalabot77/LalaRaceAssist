@@ -33,6 +33,21 @@ The public user-facing release history is maintained in the root `CHANGELOG.md`.
 
 ## Post-v1.0 development
 
+### 2026-04-24 — Pit Fuel Control suppression gate fix + suppression-reason diagnostics throttling
+- Classification: **both** (driver-visible action unfreeze in valid sessions + internal observability/noise control).
+- Updated `LalaLaunch.BuildPitFuelControlSnapshot(...)` suppression gating:
+  - removed blanket Offline Testing suppression from Fuel Control;
+  - suppression now applies only to truly invalid snapshot contexts (`no-plugin-manager`, `no-session`);
+  - snapshot now carries `SuppressFuelControlReason` for diagnostics.
+- Updated `PitFuelControlEngine` suppression diagnostics:
+  - action blocked logs now include suppression reason (`suppressed:<reason>`);
+  - entry snapshot logs now include `suppressReason=<...>`;
+  - telemetry suppression logging is now transition/throttled (logs on transition/reason change and periodic throttle) with explicit `suppression-cleared` log when suppression ends.
+- Preserved invariants:
+  - no payload/transport/fuel-math redesign,
+  - no internal `Pit.ToggleFuel` use in Fuel Control,
+  - no Tyre Control changes.
+
 ### 2026-04-24 — Pit Fuel Control frozen-action diagnostics instrumentation (entry-path + silent-return reasons)
 - Classification: **both** (driver-visible blocked-action feedback/logs + internal observability instrumentation).
 - Added Fuel Control instrumentation without command-model redesign:
