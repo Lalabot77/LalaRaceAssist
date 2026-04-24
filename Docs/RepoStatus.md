@@ -19,6 +19,11 @@ Branch: work
   - AUTO manual takeover feedback now uses `TYRE AUTO CANCELLED`;
   - outside AUTO truth-mirror remaps now publish passive state wording (`TYRE OFF/DRY/WET`) only when mirrored mode actually changes (no passive spam after plugin-driven sends);
   - `Pit.Command.Active` behavior confirmed unchanged and already restartable per publish: every feedback publish restarts the active display window even when `Pit.Command.DisplayText` is identical.
+- 2026-04-24 feedback polish follow-up landed for Pit Fuel Control:
+  - owned-mirror expectation expiry now skips changed telemetry dimensions for that tick, so plugin-owned `OFF -> MAN` `#fuel$` ON echoes are consumed as owned (no false `REFUEL SET ON BY MFD` external message);
+  - no-change expectation expiry behavior is retained to prevent stale pending-owned masking of later genuine manual MFD edits;
+  - MAN over-space feedback wording now includes source/requested litres (`REFUEL <SRC> <requested>L >MAX`), while AUTO wording remains `AUTO FUEL <requested>L >MAX`;
+  - command payloads, transport, AUTO external-cancel behavior, and fuel maths are unchanged.
 - 2026-04-24 suppression gate fix landed for Pit Fuel Control frozen-action follow-up:
   - `BuildPitFuelControlSnapshot(...)` no longer blanket-suppresses Fuel Control in Offline Testing; suppression now gates only truly invalid snapshot contexts (`no-plugin-manager`, `no-session`);
   - snapshot now carries suppression reason for diagnostics (`SuppressFuelControlReason`), and Fuel Control entry logs now expose `suppressReason=<...>`;

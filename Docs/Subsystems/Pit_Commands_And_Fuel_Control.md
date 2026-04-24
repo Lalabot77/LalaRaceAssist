@@ -123,14 +123,14 @@ Canonical log wording and meaning live in `Docs/Internal/SimHubLogMessages.md`; 
   - `MAN -> AUTO`: `PUSH`/`NORM`/`SAVE` send immediately and arm AUTO on success with `AUTO REFUEL SET <SRC> X L` feedback; `STBY` and `PLAN` both enter `AUTO STBY` with no send and `AUTO REFUEL STBY` feedback (PLAN is inhibited in AUTO switching);
   - `AUTO -> OFF` always attempts explicit raw OFF command `#-fuel$`; on send failure AUTO remains unchanged, on success exits AUTO and mirrors OFF truth with `REFUEL OFF` feedback;
   - `SetPlan` is MAN-only direct send (`REFUEL SET PLAN X L` semantics). PLAN is blocked in OFF/AUTO and blocked when PLAN validity/session match is false (`Pit Cmd Fail` in MAN when PLAN validity fails);
-  - AUTO source sends (`SourceCycle`/`SetPush`/`SetNorm`/`SetSave`) use AUTO feedback wording (`AUTO REFUEL SET <SRC> X L`) and AUTO over-space wording (`AUTO FUEL <requested>L >MAX`), while MAN over-space wording remains `FUEL MAX`;
+  - AUTO source sends (`SourceCycle`/`SetPush`/`SetNorm`/`SetSave`) use AUTO feedback wording (`AUTO REFUEL SET <SRC> X L`) and AUTO over-space wording (`AUTO FUEL <requested>L >MAX`), while MAN over-space wording is `REFUEL <SRC> <requested>L >MAX`;
   - impossible `AUTO + PLAN` state is guarded as no-send recovery (`AUTO STBY`, disarmed) and must not fall through to a PUSH send.
   - diagnostics-only instrumentation now logs every action-path early return reason before returning; command payload semantics remain unchanged.
   - External MFD/fuel-request changes are mirror-only:
     - while in AUTO, plugin sends nothing and publishes `AUTO REFUEL CANCELLED BY MFD`, then mirrors to `OFF STBY`/`MAN STBY` based on MFD truth;
     - while in MAN/OFF, plugin sends nothing and mirrors with `REFUEL SET OFF BY MFD`, `REFUEL SET ON BY MFD`, or `FUEL CHANGED BY MFD`;
     - MAN-owned plugin sends are tracked so delayed telemetry echoes are consumed as owned mirror updates (not reclassified as external MFD takeover).
-    - Pending owned-mirror expectations are expired as soon as current observed telemetry already matches the expected value, even without a same-tick change event.
+    - Pending owned-mirror expectations are expired only on no-change ticks when observed telemetry already matches expected values, so same-tick owned ON/OFF transitions are consumed first and not misclassified as external MFD edits.
 
 ## Test checklist
 - Bind and press representative built-in pit actions from SimHub Controls & Events.

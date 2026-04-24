@@ -357,13 +357,13 @@ namespace LaunchPlugin
 
             int currentRequestedLitres = RoundUpLitres(snapshot.TelemetryRequestedFuelLitres);
             bool currentFuelFillEnabled = snapshot.TelemetryFuelFillEnabled;
-            ExpireSatisfiedOwnedMirrorExpectations(currentRequestedLitres, currentFuelFillEnabled);
             if (!_hasObservedRequestedFuelLitres || !_hasObservedFuelFillEnabled)
             {
                 _hasObservedRequestedFuelLitres = true;
                 _lastObservedRequestedFuelLitres = currentRequestedLitres;
                 _hasObservedFuelFillEnabled = true;
                 _lastObservedFuelFillEnabled = currentFuelFillEnabled;
+                ExpireSatisfiedOwnedMirrorExpectations(currentRequestedLitres, currentFuelFillEnabled, requestedFuelChanged: false, fuelFillChanged: false);
                 return;
             }
 
@@ -371,6 +371,8 @@ namespace LaunchPlugin
             bool fuelFillChanged = currentFuelFillEnabled != _lastObservedFuelFillEnabled;
             _lastObservedRequestedFuelLitres = currentRequestedLitres;
             _lastObservedFuelFillEnabled = currentFuelFillEnabled;
+
+            ExpireSatisfiedOwnedMirrorExpectations(currentRequestedLitres, currentFuelFillEnabled, requestedFuelChanged, fuelFillChanged);
 
             if (snapshot.IracingAutoFuelEnabled)
             {
@@ -828,7 +830,7 @@ namespace LaunchPlugin
             _lastObservedRequestedFuelLitres = RoundUpLitres(snapshot.TelemetryRequestedFuelLitres);
             _hasObservedFuelFillEnabled = true;
             _lastObservedFuelFillEnabled = snapshot.TelemetryFuelFillEnabled;
-            ExpireSatisfiedOwnedMirrorExpectations(_lastObservedRequestedFuelLitres, _lastObservedFuelFillEnabled);
+            ExpireSatisfiedOwnedMirrorExpectations(_lastObservedRequestedFuelLitres, _lastObservedFuelFillEnabled, requestedFuelChanged: false, fuelFillChanged: false);
         }
 
         private void ClearObservedExternalState()
@@ -858,15 +860,15 @@ namespace LaunchPlugin
             }
         }
 
-        private void ExpireSatisfiedOwnedMirrorExpectations(int currentRequestedLitres, bool currentFuelFillEnabled)
+        private void ExpireSatisfiedOwnedMirrorExpectations(int currentRequestedLitres, bool currentFuelFillEnabled, bool requestedFuelChanged, bool fuelFillChanged)
         {
-            if (_hasPendingOwnedRequestedFuelLitres && currentRequestedLitres == _pendingOwnedRequestedFuelLitres)
+            if (!requestedFuelChanged && _hasPendingOwnedRequestedFuelLitres && currentRequestedLitres == _pendingOwnedRequestedFuelLitres)
             {
                 _hasPendingOwnedRequestedFuelLitres = false;
                 _pendingOwnedRequestedFuelLitres = -1;
             }
 
-            if (_hasPendingOwnedFuelFillEnabled && currentFuelFillEnabled == _pendingOwnedFuelFillEnabled)
+            if (!fuelFillChanged && _hasPendingOwnedFuelFillEnabled && currentFuelFillEnabled == _pendingOwnedFuelFillEnabled)
             {
                 _hasPendingOwnedFuelFillEnabled = false;
                 _pendingOwnedFuelFillEnabled = false;
@@ -967,7 +969,7 @@ namespace LaunchPlugin
             {
                 return autoStyleFeedback
                     ? string.Format("AUTO FUEL {0}L >MAX", roundedTarget)
-                    : "FUEL MAX";
+                    : string.Format("REFUEL {0} {1}L >MAX", sourceText, roundedTarget);
             }
 
             return autoStyleFeedback
