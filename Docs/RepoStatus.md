@@ -17,6 +17,20 @@ Branch: work
   - `LalaLaunch` Fuel Control actions now log entry receipts before engine calls (`PitFuelControl* action received`) to prove SimHub action binding reachability;
   - `PitFuelControlEngine` action entry points now log compact state snapshots, and action-path early returns now log explicit blocked reasons (`snapshot-null`, `suppressed`, `off-hard-guard`, `auto-plan-blocked`, `plan-invalid`, `source-stby`, `target-invalid`, `send-failed`, `auto-not-armed`, `lap-cross-no-material-delta`, `iracing-autofuel-ownership`, `external-mirror-change`, `owned-mirror-consumed`);
   - telemetry tick diagnostics remain transition/reason based only (no per-tick spam), and command semantics/payloads were not changed.
+- 2026-04-24 Tyre Control truth-mirror telemetry family mapping fix landed:
+  - `PitTyreControlEngine.IsRequestedCompoundInDesiredFamily(...)` now maps requested compound telemetry as `0 => DRY` and `1 => WET` for truth-mirror / AUTO truth classification.
+  - outgoing tyre chat commands are unchanged (`DRY => #t tc 0`, `WET => #t tc 2`); only telemetry-family interpretation changed.
+- 2026-04-24 Tyre Control AUTO-entry follow-up landed (pending initial evaluation no longer clears on unknown truth):
+  - `PitTyreControlEngine.HandleAuto(...)` now preserves `_autoPendingInitialEvaluation` when AUTO is entered/evaluated with unknown tyre truth (`hasTruth == false`);
+  - AUTO initial-evaluation path no longer updates `_autoLastDesiredWet` while truth is unknown, preventing suppression of the later first known-truth evaluation;
+  - when truth becomes known, AUTO performs its normal one-shot first evaluation (single correction send on mismatch, pending clear with no send when already matching);
+  - one-shot/no-retry command model remains unchanged; no new retry/guard/counter ownership was introduced.
+- 2026-04-24 Tyre Control command-model simplification landed (single-send truth-following model):
+  - `PitTyreControlEngine` now uses one-shot combined commands (`OFF => #cleartires`, `DRY => #t tc 0`, `WET => #t tc 2`) with transport-owned `$` normalization unchanged; standalone `#t`/`#tc` split logic is removed from tyre control.
+  - removed tyre retry/attempt/timeout-fail state machines and plugin-owned suppression/intent-grace tracking; replaced with a single 1.0s settle hold after plugin-issued tyre commands.
+  - outside AUTO, mode now mirrors known MFD truth only after settle (`OFF` / dry-family / wet-family) and never sends corrective commands for manual pit-menu tyre edits.
+  - AUTO now enters feedback-only (`TYRE AUTO`), performs one correction send only when known MFD truth mismatches declared-wet target, and cancels/remaps on manual takeover with `TYRE AUTO CANCEL` (no fight-back send).
+  - tyre-control `PIT CMD FAIL` is now transport-failure only (raw send returned false); timeout-driven failure/revert paths were removed.
 - 2026-04-24 review follow-up landed for Fuel Control impossible-state ModeCycle handling:
   - `PitFuelControlEngine.ModeCycle()` now guards impossible `AUTO + PLAN` before AUTO->OFF send logic;
   - impossible branch now recovers to `Source=STBY` + `AutoArmed=false`, remains AUTO/disarmed, and sends no command;
