@@ -1,7 +1,7 @@
 # Pit Commands and Fuel/Tyre Control
 
 Validated against commit: HEAD
-Last updated: 2026-04-23
+Last updated: 2026-04-24
 Branch: work
 
 ## Purpose
@@ -80,6 +80,11 @@ Canonical log wording and meaning live in `Docs/Internal/SimHubLogMessages.md`; 
 - fallback reason context and suppression cases,
 - effect-confirmed vs unverified delivery semantics,
 - tyre compound attempt + single-window confirmation diagnostics.
+- Fuel Control action-path diagnostics:
+  - `LalaLaunch` Fuel Control action entry logs are intentionally emitted (`PitFuelControl* action received`) to prove SimHub binding reached plugin action methods;
+  - `PitFuelControlEngine` emits compact entry snapshots (`entry action=... mode=... source=...`) for button paths and gated AUTO lap-cross paths;
+  - blocked/no-send branches emit explicit reasons (`snapshot-null`, `suppressed`, `off-hard-guard`, `auto-plan-blocked`, `plan-invalid`, `source-stby`, `target-invalid`, `send-failed`, `auto-not-armed`, `lap-cross-no-material-delta`, `iracing-autofuel-ownership`, `external-mirror-change`, `owned-mirror-consumed`);
+  - telemetry tick logging remains state-transition/reason based only (no per-tick spam).
 
 ## Dependencies / ordering assumptions
 - This subsystem owns transport + command dispatch and must remain the only authority for pit/custom command sends.
@@ -106,6 +111,7 @@ Canonical log wording and meaning live in `Docs/Internal/SimHubLogMessages.md`; 
   - `SetPlan` is MAN-only direct send (`REFUEL SET PLAN X L` semantics). PLAN is blocked in OFF/AUTO and blocked when PLAN validity/session match is false (`Pit Cmd Fail` in MAN when PLAN validity fails);
   - AUTO source sends (`SourceCycle`/`SetPush`/`SetNorm`/`SetSave`) use AUTO feedback wording (`AUTO REFUEL SET <SRC> X L`) and AUTO over-space wording (`AUTO FUEL <requested>L >MAX`), while MAN over-space wording remains `FUEL MAX`;
   - impossible `AUTO + PLAN` state is guarded as no-send recovery (`AUTO STBY`, disarmed) and must not fall through to a PUSH send.
+  - diagnostics-only instrumentation now logs every action-path early return reason before returning; command payload semantics remain unchanged.
   - External MFD/fuel-request changes are mirror-only:
     - while in AUTO, plugin sends nothing and publishes `AUTO REFUEL CANCELLED BY MFD`, then mirrors to `OFF STBY`/`MAN STBY` based on MFD truth;
     - while in MAN/OFF, plugin sends nothing and mirrors with `REFUEL SET OFF BY MFD`, `REFUEL SET ON BY MFD`, or `FUEL CHANGED BY MFD`;

@@ -106,8 +106,10 @@ namespace LaunchPlugin
 
         public void SourceCycle()
         {
+            LogActionEntry("SourceCycle");
             if (TryApplySuppressedState())
             {
+                LogActionBlockedInfo("SourceCycle", "suppressed");
                 return;
             }
 
@@ -118,6 +120,7 @@ namespace LaunchPlugin
                 Source = PitFuelControlSource.Stby;
                 AutoArmed = false;
                 IsAutoModeActive = false;
+                LogActionBlockedInfo("SourceCycle", "off-hard-guard");
                 return;
             }
 
@@ -127,6 +130,7 @@ namespace LaunchPlugin
                 {
                     Source = PitFuelControlSource.Stby;
                     AutoArmed = false;
+                    LogActionBlockedInfo("SourceCycle", "auto-plan-blocked");
                     return;
                 }
 
@@ -159,6 +163,7 @@ namespace LaunchPlugin
                         AutoArmed = false;
                     }
                     PublishSelectionFeedback("Pit.FuelControl.SourceCycle", "Pit Cmd Fail");
+                    LogActionBlockedInfo("SourceCycle", "send-failed");
                     return;
                 }
 
@@ -176,8 +181,10 @@ namespace LaunchPlugin
 
         public void ModeCycle()
         {
+            LogActionEntry("ModeCycle");
             if (TryApplySuppressedState())
             {
+                LogActionBlockedInfo("ModeCycle", "suppressed");
                 return;
             }
 
@@ -191,6 +198,7 @@ namespace LaunchPlugin
                 if (!sentOn)
                 {
                     PublishSelectionFeedback("Pit.FuelControl.ModeCycle", "Pit Cmd Fail");
+                    LogActionBlockedInfo("ModeCycle", "send-failed");
                     return;
                 }
 
@@ -207,6 +215,7 @@ namespace LaunchPlugin
                 {
                     AutoArmed = false;
                     PublishSelectionFeedback("Pit.FuelControl.ModeCycle", "AUTO REFUEL STBY");
+                    LogActionBlockedInfo("ModeCycle", "source-stby");
                     return;
                 }
 
@@ -215,6 +224,7 @@ namespace LaunchPlugin
                     Source = PitFuelControlSource.Stby;
                     AutoArmed = false;
                     PublishSelectionFeedback("Pit.FuelControl.ModeCycle", "AUTO REFUEL STBY");
+                    LogActionBlockedInfo("ModeCycle", "auto-plan-blocked");
                     return;
                 }
 
@@ -228,6 +238,7 @@ namespace LaunchPlugin
                     Source = PitFuelControlSource.Stby;
                     AutoArmed = false;
                     PublishSelectionFeedback("Pit.FuelControl.ModeCycle", "Pit Cmd Fail");
+                    LogActionBlockedInfo("ModeCycle", "send-failed");
                 }
 
                 return;
@@ -237,6 +248,7 @@ namespace LaunchPlugin
             {
                 Source = PitFuelControlSource.Stby;
                 AutoArmed = false;
+                LogActionBlockedInfo("ModeCycle", "auto-plan-blocked");
                 return;
             }
 
@@ -245,6 +257,7 @@ namespace LaunchPlugin
             if (!sentOff)
             {
                 PublishSelectionFeedback("Pit.FuelControl.ModeCycle", "Pit Cmd Fail");
+                LogActionBlockedInfo("ModeCycle", "send-failed");
                 return;
             }
 
@@ -266,24 +279,32 @@ namespace LaunchPlugin
         {
             if (TryApplySuppressedState())
             {
+                LogActionBlockedDebug("OnLapCross", "suppressed");
                 return;
             }
 
             RefreshDerivedState();
+            if (IsAutoModeActive || AutoArmed)
+            {
+                LogActionEntry("OnLapCross");
+            }
 
             if (!IsAutoModeActive || !AutoArmed)
             {
+                LogActionBlockedDebug("OnLapCross", "auto-not-armed");
                 return;
             }
 
             if (Source == PitFuelControlSource.Plan || Source == PitFuelControlSource.Stby)
             {
+                LogActionBlockedDebug("OnLapCross", "source-stby");
                 return;
             }
 
             int targetRounded = ComputeRoundedTargetLitres();
             if (targetRounded < 0)
             {
+                LogActionBlockedDebug("OnLapCross", "target-invalid");
                 return;
             }
 
@@ -292,6 +313,7 @@ namespace LaunchPlugin
                 int delta = Math.Abs(targetRounded - LastSentFuelLitres);
                 if (delta < 1 || targetRounded == LastSentFuelLitres)
                 {
+                    LogActionBlockedDebug("OnLapCross", "lap-cross-no-material-delta");
                     return;
                 }
             }
@@ -306,6 +328,7 @@ namespace LaunchPlugin
 
             if (snapshot == null)
             {
+                LogActionBlockedDebug("OnTelemetryTick", "snapshot-null");
                 return;
             }
 
@@ -318,6 +341,7 @@ namespace LaunchPlugin
             if (snapshot.SuppressFuelControl)
             {
                 DisarmAutoAndForceStby(clearSuppressWindow: true);
+                LogActionBlockedInfo("OnTelemetryTick", "suppressed");
                 return;
             }
 
@@ -340,6 +364,7 @@ namespace LaunchPlugin
 
             if (snapshot.IracingAutoFuelEnabled)
             {
+                LogActionBlockedInfo("OnTelemetryTick", "iracing-autofuel-ownership");
                 CancelAutoToStby("Pit.FuelControl.AutoFuelOwnership", "AUTO CANCELLED");
                 return;
             }
@@ -348,9 +373,11 @@ namespace LaunchPlugin
             {
                 if (TryConsumeOwnedMirrorChange(currentRequestedLitres, currentFuelFillEnabled, requestedFuelChanged, fuelFillChanged))
                 {
+                    LogActionBlockedDebug("OnTelemetryTick", "owned-mirror-consumed");
                     return;
                 }
 
+                LogActionBlockedInfo("OnTelemetryTick", "external-mirror-change");
                 HandleExternalMirrorChange(currentFuelFillEnabled, requestedFuelChanged);
                 return;
             }
@@ -361,8 +388,10 @@ namespace LaunchPlugin
 
         private void SetSource(PitFuelControlSource requestedSource, string actionName)
         {
+            LogActionEntry(SourceToActionLabel(actionName));
             if (TryApplySuppressedState())
             {
+                LogActionBlockedInfo(SourceToActionLabel(actionName), "suppressed");
                 return;
             }
 
@@ -373,11 +402,13 @@ namespace LaunchPlugin
                 Source = PitFuelControlSource.Stby;
                 AutoArmed = false;
                 IsAutoModeActive = false;
+                LogActionBlockedInfo(SourceToActionLabel(actionName), "off-hard-guard");
                 return;
             }
 
             if (requestedSource == PitFuelControlSource.Plan)
             {
+                LogActionBlockedInfo(SourceToActionLabel(actionName), "auto-plan-blocked");
                 return;
             }
 
@@ -393,6 +424,7 @@ namespace LaunchPlugin
                 {
                     Source = PitFuelControlSource.Stby;
                     PublishSelectionFeedback(actionName, "Pit Cmd Fail");
+                    LogActionBlockedInfo(SourceToActionLabel(actionName), "send-failed");
                     return;
                 }
             }
@@ -405,8 +437,10 @@ namespace LaunchPlugin
 
         private void SetPlanSource(string actionName)
         {
+            LogActionEntry("SetPlan");
             if (TryApplySuppressedState())
             {
+                LogActionBlockedInfo("SetPlan", "suppressed");
                 return;
             }
 
@@ -417,11 +451,13 @@ namespace LaunchPlugin
                 Source = PitFuelControlSource.Stby;
                 AutoArmed = false;
                 IsAutoModeActive = false;
+                LogActionBlockedInfo("SetPlan", "off-hard-guard");
                 return;
             }
 
             if (effectiveMode == PitFuelControlMode.Auto)
             {
+                LogActionBlockedInfo("SetPlan", "auto-plan-blocked");
                 return;
             }
 
@@ -432,6 +468,7 @@ namespace LaunchPlugin
                     PublishSelectionFeedback(actionName, "Pit Cmd Fail");
                 }
 
+                LogActionBlockedInfo("SetPlan", "plan-invalid");
                 return;
             }
 
@@ -442,6 +479,7 @@ namespace LaunchPlugin
             {
                 Source = PitFuelControlSource.Stby;
                 PublishSelectionFeedback(actionName, "Pit Cmd Fail");
+                LogActionBlockedInfo("SetPlan", "send-failed");
             }
         }
 
@@ -450,22 +488,26 @@ namespace LaunchPlugin
             RefreshDerivedState();
             if (!allowOffMode && ResolveEffectiveMode() == PitFuelControlMode.Off)
             {
+                LogActionBlockedInfo(actionNameOverride ?? "SendCurrentTarget", "off-hard-guard");
                 return false;
             }
 
             if (Source == PitFuelControlSource.Stby)
             {
+                LogActionBlockedInfo(actionNameOverride ?? "SendCurrentTarget", "source-stby");
                 return false;
             }
 
             int roundedTarget = ComputeRoundedTargetLitres();
             if (roundedTarget < 0)
             {
+                LogActionBlockedInfo(actionNameOverride ?? "SendCurrentTarget", "target-invalid");
                 return false;
             }
 
             if (Source == PitFuelControlSource.Plan && !PlanValid)
             {
+                LogActionBlockedInfo(actionNameOverride ?? "SendCurrentTarget", "plan-invalid");
                 return false;
             }
 
@@ -492,6 +534,10 @@ namespace LaunchPlugin
                 {
                     AutoArmed = true;
                 }
+            }
+            else
+            {
+                LogActionBlockedInfo(actionName, "send-failed");
             }
 
             return sent;
@@ -681,6 +727,46 @@ namespace LaunchPlugin
             }
 
             PublishSelectionFeedback("Pit.FuelControl.ExternalMirror", "REFUEL SET ON BY MFD");
+        }
+
+        private void LogActionEntry(string actionName)
+        {
+            var snapshot = _snapshotProvider();
+            string planValidText = snapshot == null ? "n/a" : PlanValid.ToString();
+            string targetText = snapshot == null ? "n/a" : TargetLitres.ToString("F2");
+            string lastSentText = LastSentFuelLitres >= 0 ? LastSentFuelLitres.ToString() : "none";
+            SimHub.Logging.Current.Info(
+                $"[LalaPlugin:PitFuelControl] entry action={actionName} mode={ModeToText(ResolveEffectiveMode())} source={SourceToText(Source)} autoArmed={AutoArmed} isAutoModeActive={IsAutoModeActive} suppressFuelControl={(snapshot != null && snapshot.SuppressFuelControl)} iracingAutoFuelEnabled={(snapshot != null && snapshot.IracingAutoFuelEnabled)} telemetryFuelFillEnabled={(snapshot != null && snapshot.TelemetryFuelFillEnabled)} planValid={planValidText} targetLitres={targetText} overrideActive={OverrideActive} lastSentFuelLitres={lastSentText}");
+        }
+
+        private void LogActionBlockedInfo(string actionName, string reason)
+        {
+            SimHub.Logging.Current.Info($"[LalaPlugin:PitFuelControl] blocked action={actionName} reason={reason}");
+        }
+
+        private void LogActionBlockedDebug(string actionName, string reason)
+        {
+            SimHub.Logging.Current.Debug($"[LalaPlugin:PitFuelControl] blocked action={actionName} reason={reason}");
+        }
+
+        private static string SourceToActionLabel(string actionName)
+        {
+            if (string.Equals(actionName, "Pit.FuelControl.SetPush", StringComparison.Ordinal))
+            {
+                return "SetPush";
+            }
+
+            if (string.Equals(actionName, "Pit.FuelControl.SetNorm", StringComparison.Ordinal))
+            {
+                return "SetNorm";
+            }
+
+            if (string.Equals(actionName, "Pit.FuelControl.SetSave", StringComparison.Ordinal))
+            {
+                return "SetSave";
+            }
+
+            return actionName ?? "SetSource";
         }
 
         private void UpdateObservedExternalState(PitFuelControlSnapshot snapshot)

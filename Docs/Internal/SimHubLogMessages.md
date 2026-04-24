@@ -3,8 +3,8 @@
 **CANONICAL OBSERVABILITY MAP**
 
 Validated against: HEAD
-Last reviewed: 2026-04-23
-Last updated: 2026-04-23
+Last reviewed: 2026-04-24
+Last updated: 2026-04-24
 Branch: work
 
 Scope: Info/Warn logs emitted via `SimHub.Logging.Current.Info(...)` and `SimHub.Logging.Current.Warn(...)`. Use the tag prefixes to filter in SimHub’s log view. Placeholder logs are noted; no deprecated messages are currently removed in code. Legacy/alternate copies of this list do not exist.
@@ -47,6 +47,9 @@ Scope: Info/Warn logs emitted via `SimHub.Logging.Current.Info(...)` and `SimHub
 - **`[LalaPlugin:PitCommand] raw-command send blocked: command text is empty after normalization raw='<raw>' normalized='<normalized>'`** — Raw pit-command request was empty/invalid after command normalization; action publishes `Pit Cmd Fail` and now includes both raw/normalized payload diagnostics.
 - **`[LalaPlugin:PitCommand] raw-command transport=<postmessage|sendinput|none> local-transport-issue reason=<reason> [fallback_from=postmessage] raw='<raw>' normalized='<normalized>'`** — Raw pit-command send hit a local transport-stage issue; action publishes `Pit Cmd Fail`.
 - **`[LalaPlugin:PitCommand] raw-command transport=<postmessage|sendinput> attempted=true delivery=unverified effect-confirmed=false raw='<raw>' normalized='<normalized>'`** — Raw pit-command send audit line for paths that intentionally reuse built-in pit-command normalization before injection; this does not prove in-sim execution.
+- **`[LalaPlugin:PitFuelControl] PitFuelControlModeCycle action received`** — `LalaLaunch` action entry marker proving SimHub binding reached plugin method for ModeCycle (same pattern used for SourceCycle/SetPush/SetNorm/SetSave/SetPlan).
+- **`[LalaPlugin:PitFuelControl] entry action=<ModeCycle|SourceCycle|SetPush|SetNorm|SetSave|SetPlan|OnLapCross> mode=<OFF|MAN|AUTO> source=<PUSH|NORM|SAVE|PLAN|STBY> autoArmed=<bool> isAutoModeActive=<bool> suppressFuelControl=<bool> iracingAutoFuelEnabled=<bool> telemetryFuelFillEnabled=<bool> planValid=<bool|n/a> targetLitres=<value|n/a> overrideActive=<bool> lastSentFuelLitres=<value|none>`** — Fuel Control engine entry snapshot emitted on button/action entry and gated lap-cross AUTO evaluation paths.
+- **`[LalaPlugin:PitFuelControl] blocked action=<...> reason=<snapshot-null|suppressed|off-hard-guard|auto-plan-blocked|plan-invalid|source-stby|target-invalid|send-failed|auto-not-armed|lap-cross-no-material-delta|iracing-autofuel-ownership|external-mirror-change|owned-mirror-consumed>`** — Explicit no-send/early-return diagnostics for Fuel Control action and ownership paths (`INFO` for user/action-relevant blocks, `DEBUG` for cadence-heavy no-op detail).
 - **`[LalaPlugin:PitTyreControl] Compound change attempt target=<DRY|WET> cmd='<#tc ...>' requested=<...> player=<...> weatherDeclaredWet=<true|false> available01='<...>' available02='<...>'`** — Tyre control v1 observability line emitted when the plugin attempts a compound change; includes requested/fitted seams and GT3-first available-compound context from `DriverTires01/02.TireCompoundType`.
 - **`[LalaPlugin:PitTyreControl] Manual truth sync remap reason=<manual-confirmation-fallback|manual-external-truth-sync|auto-cancel-external-ownership> mode=<OFF|DRY|WET>`** — Tyre-control mode remap to actual MFD truth after bounded manual confirmation/reconciliation, or AUTO external-ownership cancel/remap.
 - **`[LalaPlugin:PitTyreControl] AUTO enforcement unconfirmed: ...`** — Info-only AUTO ownership observability when bounded service/compound enforcement attempts are not confirmed; AUTO mode is retained and does not collapse to OFF/DRY/WET.

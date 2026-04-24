@@ -33,6 +33,18 @@ The public user-facing release history is maintained in the root `CHANGELOG.md`.
 
 ## Post-v1.0 development
 
+### 2026-04-24 — Pit Fuel Control frozen-action diagnostics instrumentation (entry-path + silent-return reasons)
+- Classification: **both** (driver-visible blocked-action feedback/logs + internal observability instrumentation).
+- Added Fuel Control instrumentation without command-model redesign:
+  - `LalaLaunch` Fuel Control action methods now log action-entry receipts (`PitFuelControlModeCycle/SourceCycle/SetPush/SetNorm/SetSave/SetPlan action received`) before forwarding to `PitFuelControlEngine`;
+  - `PitFuelControlEngine` public action entry points now emit compact state snapshots (mode/source/armed/suppression/ownership/plan/target/override/last-sent) for ModeCycle/SourceCycle/SetPush/SetNorm/SetSave/SetPlan and gated `OnLapCross`;
+  - added explicit reason logs before early returns/no-send branches across action paths and ownership seams (`snapshot-null`, `suppressed`, `off-hard-guard`, `auto-plan-blocked`, `plan-invalid`, `source-stby`, `target-invalid`, `send-failed`, `auto-not-armed`, `lap-cross-no-material-delta`, `iracing-autofuel-ownership`, `external-mirror-change`, `owned-mirror-consumed`).
+- Kept invariants unchanged:
+  - no use of `Pit.ToggleFuel` inside Fuel Control,
+  - no fuel maths/transport/payload changes,
+  - no Tyre Control changes,
+  - no CSV behavior-contract redesign.
+
 ### 2026-04-24 — Pit Fuel Control review follow-up: AUTO+PLAN ModeCycle impossible-state no-send recovery
 - Classification: **internal-only** (contract-alignment correction; no new surface area).
 - Updated `PitFuelControlEngine.ModeCycle()` AUTO branch to explicitly guard impossible `AUTO + PLAN` before the AUTO->OFF send path:

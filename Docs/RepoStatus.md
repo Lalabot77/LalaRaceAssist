@@ -1,7 +1,7 @@
 # Repository status
 
 Validated against commit: HEAD
-Last updated: 2026-04-23
+Last updated: 2026-04-24
 Branch: work
 
 ## Current repo/link status
@@ -9,6 +9,10 @@ Branch: work
 - No Git remote is configured in this checkout (`git remote -v` returns empty).
 
 ## Documentation sync status
+- 2026-04-24 frozen-action diagnostics instrumentation landed for Pit Fuel Control action path tracing:
+  - `LalaLaunch` Fuel Control actions now log entry receipts before engine calls (`PitFuelControl* action received`) to prove SimHub action binding reachability;
+  - `PitFuelControlEngine` action entry points now log compact state snapshots, and action-path early returns now log explicit blocked reasons (`snapshot-null`, `suppressed`, `off-hard-guard`, `auto-plan-blocked`, `plan-invalid`, `source-stby`, `target-invalid`, `send-failed`, `auto-not-armed`, `lap-cross-no-material-delta`, `iracing-autofuel-ownership`, `external-mirror-change`, `owned-mirror-consumed`);
+  - telemetry tick diagnostics remain transition/reason based only (no per-tick spam), and command semantics/payloads were not changed.
 - 2026-04-24 review follow-up landed for Fuel Control impossible-state ModeCycle handling:
   - `PitFuelControlEngine.ModeCycle()` now guards impossible `AUTO + PLAN` before AUTO->OFF send logic;
   - impossible branch now recovers to `Source=STBY` + `AutoArmed=false`, remains AUTO/disarmed, and sends no command;
