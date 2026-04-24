@@ -33,6 +33,17 @@ The public user-facing release history is maintained in the root `CHANGELOG.md`.
 
 ## Post-v1.0 development
 
+### 2026-04-24 — Tyre Control truth-mirror telemetry mapping follow-up
+- Classification: **both** (driver-visible truth classification correction + docs contract alignment).
+- Updated `PitTyreControlEngine.IsRequestedCompoundInDesiredFamily(...)` to map `PitSvTireCompound` truth as:
+  - dry family: `0`
+  - wet family: `1`
+- Preserved outgoing one-shot command contract:
+  - DRY command remains `#t tc 0`
+  - WET command remains `#t tc 2`
+- Scope intentionally narrow:
+  - no retries, no transport changes, no fuel-control changes.
+
 ### 2026-04-24 — Tyre Control AUTO entry follow-up: keep initial evaluation pending while truth is unknown
 - Classification: **both** (driver-visible AUTO first-evaluation correctness fix + narrow internal state correction).
 - Updated `PitTyreControlEngine.HandleAuto(...)` initial-evaluation branch so AUTO entry no longer clears pending evaluation when tyre truth is unavailable (`hasTruth == false`).

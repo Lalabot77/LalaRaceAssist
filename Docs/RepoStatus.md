@@ -9,6 +9,9 @@ Branch: work
 - No Git remote is configured in this checkout (`git remote -v` returns empty).
 
 ## Documentation sync status
+- 2026-04-24 Tyre Control truth-mirror telemetry family mapping fix landed:
+  - `PitTyreControlEngine.IsRequestedCompoundInDesiredFamily(...)` now maps requested compound telemetry as `0 => DRY` and `1 => WET` for truth-mirror / AUTO truth classification.
+  - outgoing tyre chat commands are unchanged (`DRY => #t tc 0`, `WET => #t tc 2`); only telemetry-family interpretation changed.
 - 2026-04-24 Tyre Control AUTO-entry follow-up landed (pending initial evaluation no longer clears on unknown truth):
   - `PitTyreControlEngine.HandleAuto(...)` now preserves `_autoPendingInitialEvaluation` when AUTO is entered/evaluated with unknown tyre truth (`hasTruth == false`);
   - AUTO initial-evaluation path no longer updates `_autoLastDesiredWet` while truth is unknown, preventing suppression of the later first known-truth evaluation;

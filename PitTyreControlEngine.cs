@@ -259,10 +259,10 @@ namespace LaunchPlugin
         {
             if (desiredWet)
             {
-                return requestedCompound == 2 || requestedCompound == 3;
+                return requestedCompound == 1;
             }
 
-            return requestedCompound == 0 || requestedCompound == 1;
+            return requestedCompound == 0;
         }
 
         private static string ModeToText(PitTyreControlMode mode)

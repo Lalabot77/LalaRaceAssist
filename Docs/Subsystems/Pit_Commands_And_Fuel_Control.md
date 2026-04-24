@@ -46,6 +46,7 @@ This is the canonical technical document for the pit/custom command stack and re
 - Mode state machine: `OFF -> DRY -> WET -> AUTO -> OFF`.
 - Single-send model: each driver action or AUTO correction sends at most one tyre command.
 - Command model: `OFF => #cleartires$`, `DRY => #t tc 0$`, `WET => #t tc 2$` (transport normalizes trailing `$`).
+- Truth-mirror requested-compound family mapping uses telemetry `PitSvTireCompound` semantics (`0 => DRY`, `1 => WET`), which are intentionally separate from outgoing chat command values.
 - One short settle hold (1.0 s) after plugin-issued tyre commands before truth reconciliation/cancel checks.
 - Outside AUTO, plugin mirrors known MFD truth and does not fight manual pit-menu tyre changes.
 
