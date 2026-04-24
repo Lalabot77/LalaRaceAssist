@@ -9,6 +9,16 @@ Branch: work
 - No Git remote is configured in this checkout (`git remote -v` returns empty).
 
 ## Documentation sync status
+- 2026-04-24 Tyre Control review-follow-up landed for send-failure feedback hold:
+  - `PitTyreControlEngine` now tracks a short send-failure hold timestamp when raw tyre command send returns false;
+  - outside AUTO, truth-mirror mode remap still occurs as before, but passive mirror feedback publish (`TYRE OFF/DRY/WET`) is suppressed only during the failure-hold window so `PIT CMD FAIL` remains visible;
+  - command payloads and mode-cycle behavior are unchanged (`#cleartires`, `#t tc 0`, `#t tc 2`; `OFF->DRY->WET->AUTO->OFF`).
+- 2026-04-24 Tyre Control feedback wording + command-active retrigger follow-up landed:
+  - plugin-driven Tyre Control feedback now uses CHANGE wording (`TYRE CHANGE OFF/DRY/WET/AUTO`);
+  - AUTO correction feedback now uses `TYRE AUTO CHANGE DRY/WET`;
+  - AUTO manual takeover feedback now uses `TYRE AUTO CANCELLED`;
+  - outside AUTO truth-mirror remaps now publish passive state wording (`TYRE OFF/DRY/WET`) only when mirrored mode actually changes (no passive spam after plugin-driven sends);
+  - `Pit.Command.Active` behavior confirmed unchanged and already restartable per publish: every feedback publish restarts the active display window even when `Pit.Command.DisplayText` is identical.
 - 2026-04-24 feedback polish follow-up landed for Pit Fuel Control:
   - owned-mirror expectation expiry now skips changed telemetry dimensions for that tick, so plugin-owned `OFF -> MAN` `#fuel$` ON echoes are consumed as owned (no false `REFUEL SET ON BY MFD` external message);
   - no-change expectation expiry behavior is retained to prevent stale pending-owned masking of later genuine manual MFD edits;
@@ -34,7 +44,7 @@ Branch: work
   - `PitTyreControlEngine` now uses one-shot combined commands (`OFF => #cleartires`, `DRY => #t tc 0`, `WET => #t tc 2`) with transport-owned `$` normalization unchanged; standalone `#t`/`#tc` split logic is removed from tyre control.
   - removed tyre retry/attempt/timeout-fail state machines and plugin-owned suppression/intent-grace tracking; replaced with a single 1.0s settle hold after plugin-issued tyre commands.
   - outside AUTO, mode now mirrors known MFD truth only after settle (`OFF` / dry-family / wet-family) and never sends corrective commands for manual pit-menu tyre edits.
-  - AUTO now enters feedback-only (`TYRE AUTO`), performs one correction send only when known MFD truth mismatches declared-wet target, and cancels/remaps on manual takeover with `TYRE AUTO CANCEL` (no fight-back send).
+  - AUTO now enters feedback-only (`TYRE AUTO`), performs one correction send only when known MFD truth mismatches declared-wet target, and cancels/remaps on manual takeover with `TYRE AUTO CANCELLED` (no fight-back send).
   - tyre-control `PIT CMD FAIL` is now transport-failure only (raw send returned false); timeout-driven failure/revert paths were removed.
 - 2026-04-24 review follow-up landed for Fuel Control impossible-state ModeCycle handling:
   - `PitFuelControlEngine.ModeCycle()` now guards impossible `AUTO + PLAN` before AUTO->OFF send logic;

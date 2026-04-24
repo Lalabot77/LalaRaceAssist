@@ -26,6 +26,7 @@ namespace LaunchPlugin
     internal sealed class PitTyreControlEngine
     {
         private const int SettleWindowMs = 1000;
+        private const int SendFailureHoldMs = 1000;
 
         private readonly Func<PitTyreControlSnapshot> _snapshotProvider;
         private readonly Func<string, string, string, bool> _rawCommandSender;
@@ -33,6 +34,7 @@ namespace LaunchPlugin
         private readonly Action<string> _logger;
 
         private DateTime _settleUntilUtc = DateTime.MinValue;
+        private DateTime _sendFailureHoldUntilUtc = DateTime.MinValue;
         private bool _autoPendingInitialEvaluation;
         private bool? _autoLastDesiredWet;
         private bool _hasLastTruthMode;
@@ -58,6 +60,7 @@ namespace LaunchPlugin
         {
             Mode = PitTyreControlMode.Off;
             _settleUntilUtc = DateTime.MinValue;
+            _sendFailureHoldUntilUtc = DateTime.MinValue;
             _autoPendingInitialEvaluation = false;
             _autoLastDesiredWet = null;
             _hasLastTruthMode = false;
@@ -88,7 +91,7 @@ namespace LaunchPlugin
             Mode = PitTyreControlMode.Off;
             _autoPendingInitialEvaluation = false;
             _autoLastDesiredWet = null;
-            SendModeCommand("Pit.TyreControl.SetOff", "#cleartires", "TYRE OFF", "driver-action", PitTyreControlMode.Off);
+            SendModeCommand("Pit.TyreControl.SetOff", "#cleartires", "TYRE CHANGE OFF", "driver-action", PitTyreControlMode.Off);
         }
 
         public void SetDry()
@@ -96,7 +99,7 @@ namespace LaunchPlugin
             Mode = PitTyreControlMode.Dry;
             _autoPendingInitialEvaluation = false;
             _autoLastDesiredWet = null;
-            SendModeCommand("Pit.TyreControl.SetDry", "#t tc 0", "TYRE DRY", "driver-action", PitTyreControlMode.Dry);
+            SendModeCommand("Pit.TyreControl.SetDry", "#t tc 0", "TYRE CHANGE DRY", "driver-action", PitTyreControlMode.Dry);
         }
 
         public void SetWet()
@@ -104,7 +107,7 @@ namespace LaunchPlugin
             Mode = PitTyreControlMode.Wet;
             _autoPendingInitialEvaluation = false;
             _autoLastDesiredWet = null;
-            SendModeCommand("Pit.TyreControl.SetWet", "#t tc 2", "TYRE WET", "driver-action", PitTyreControlMode.Wet);
+            SendModeCommand("Pit.TyreControl.SetWet", "#t tc 2", "TYRE CHANGE WET", "driver-action", PitTyreControlMode.Wet);
         }
 
         public void SetAuto()
@@ -112,7 +115,7 @@ namespace LaunchPlugin
             Mode = PitTyreControlMode.Auto;
             _autoPendingInitialEvaluation = true;
             _autoLastDesiredWet = null;
-            _feedbackPublisher?.Invoke("Pit.TyreControl.SetAuto", "TYRE AUTO", string.Empty);
+            _feedbackPublisher?.Invoke("Pit.TyreControl.SetAuto", "TYRE CHANGE AUTO", string.Empty);
             _logger?.Invoke("[LalaPlugin:PitTyreControl] mode=AUTO reason=driver-action command=none");
         }
 
@@ -127,6 +130,7 @@ namespace LaunchPlugin
             PitTyreControlMode truthMode;
             bool hasTruth = TryMapManualTruthMode(snapshot, out truthMode);
             bool inSettleWindow = DateTime.UtcNow < _settleUntilUtc;
+            bool inSendFailureHoldWindow = DateTime.UtcNow < _sendFailureHoldUntilUtc;
 
             if (Mode == PitTyreControlMode.Auto)
             {
@@ -141,6 +145,10 @@ namespace LaunchPlugin
             if (!inSettleWindow && hasTruth && truthMode != Mode)
             {
                 Mode = truthMode;
+                if (!inSendFailureHoldWindow)
+                {
+                    _feedbackPublisher?.Invoke("Pit.TyreControl.TruthMirror", $"TYRE {ModeToText(Mode)}", string.Empty);
+                }
                 _logger?.Invoke($"[LalaPlugin:PitTyreControl] mode={ModeToText(Mode)} reason=truth-mirror serviceKnown={snapshot.HasTireServiceSelection} serviceOn={snapshot.IsTireServiceSelected} requestedCompound={(snapshot.HasRequestedCompound ? snapshot.RequestedCompound.ToString() : "NA")}");
             }
 
@@ -172,11 +180,11 @@ namespace LaunchPlugin
                 {
                     if (desiredMode == PitTyreControlMode.Wet)
                     {
-                        SendModeCommand("Pit.TyreControl.Auto.CorrectionWet", "#t tc 2", "TYRE AUTO WET", "auto-correction", PitTyreControlMode.Auto);
+                        SendModeCommand("Pit.TyreControl.Auto.CorrectionWet", "#t tc 2", "TYRE AUTO CHANGE WET", "auto-correction", PitTyreControlMode.Auto);
                     }
                     else
                     {
-                        SendModeCommand("Pit.TyreControl.Auto.CorrectionDry", "#t tc 0", "TYRE AUTO DRY", "auto-correction", PitTyreControlMode.Auto);
+                        SendModeCommand("Pit.TyreControl.Auto.CorrectionDry", "#t tc 0", "TYRE AUTO CHANGE DRY", "auto-correction", PitTyreControlMode.Auto);
                     }
                 }
 
@@ -192,7 +200,7 @@ namespace LaunchPlugin
                     Mode = truthMode;
                     _autoPendingInitialEvaluation = false;
                     _autoLastDesiredWet = null;
-                    _feedbackPublisher?.Invoke("Pit.TyreControl.Auto.Cancel", "TYRE AUTO CANCEL", string.Empty);
+                    _feedbackPublisher?.Invoke("Pit.TyreControl.Auto.Cancel", "TYRE AUTO CANCELLED", string.Empty);
                     _logger?.Invoke($"[LalaPlugin:PitTyreControl] mode={ModeToText(Mode)} reason=auto-cancel serviceKnown={snapshot.HasTireServiceSelection} serviceOn={snapshot.IsTireServiceSelected} requestedCompound={(snapshot.HasRequestedCompound ? snapshot.RequestedCompound.ToString() : "NA")}");
                 }
             }
@@ -205,6 +213,11 @@ namespace LaunchPlugin
             if (sent)
             {
                 _settleUntilUtc = DateTime.UtcNow.AddMilliseconds(SettleWindowMs);
+                _sendFailureHoldUntilUtc = DateTime.MinValue;
+            }
+            else
+            {
+                _sendFailureHoldUntilUtc = DateTime.UtcNow.AddMilliseconds(SendFailureHoldMs);
             }
         }
 

@@ -33,6 +33,32 @@ The public user-facing release history is maintained in the root `CHANGELOG.md`.
 
 ## Post-v1.0 development
 
+### 2026-04-24 — Tyre Control follow-up: preserve `PIT CMD FAIL` visibility across immediate truth-mirror remap
+- Classification: **both** (driver-visible failure feedback persistence + narrow internal timing gate).
+- Updated `PitTyreControlEngine` send-failure handling:
+  - raw tyre send failure now arms a short failure-hold timestamp;
+  - during that short hold, passive truth-mirror feedback publish (`TYRE OFF/DRY/WET`) is suppressed only.
+- Preserved existing control semantics:
+  - truth-mirror mode remap still occurs during the hold,
+  - command payloads are unchanged (`#cleartires`, `#t tc 0`, `#t tc 2`),
+  - mode cycle is unchanged,
+  - no retries/counters/confirmation windows/new guards were added.
+
+### 2026-04-24 — Tyre Control feedback wording polish + `Pit.Command.Active` retrigger verification
+- Classification: **both** (driver-visible tyre feedback wording alignment + internal feedback-pulse contract clarification).
+- Updated `PitTyreControlEngine` feedback wording contract:
+  - plugin-driven mode actions now publish `TYRE CHANGE OFF/DRY/WET/AUTO`;
+  - AUTO correction publishes `TYRE AUTO CHANGE DRY/WET`;
+  - AUTO manual takeover publishes `TYRE AUTO CANCELLED`.
+- Added passive truth-mirror feedback publication outside AUTO:
+  - remaps now publish state-only wording (`TYRE OFF` / `TYRE DRY` / `TYRE WET`) only when mirrored mode actually changes;
+  - passive feedback is not emitted immediately after plugin-driven commands unless a later external truth change occurs.
+- Verified `Pit.Command.Active` restart behavior in `PitCommandEngine`:
+  - no code change required; every feedback publish already re-arms the same active display window even when message text is unchanged.
+- Preserved invariants:
+  - tyre payloads unchanged (`#cleartires`, `#t tc 0`, `#t tc 2`),
+  - no retries/confirmation-timeout tyre failures added,
+  - no transport/fuel-control/dashboard changes.
 ### 2026-04-24 — Pit Fuel Control feedback polish follow-up (owned OFF->MAN echo + MAN >MAX wording)
 - Classification: **both** (driver-visible feedback correction + narrow ownership-consumption fix).
 - Updated `PitFuelControlEngine` owned-mirror expectation expiry ordering:
@@ -108,7 +134,7 @@ The public user-facing release history is maintained in the root `CHANGELOG.md`.
 - Simplified AUTO behavior:
   - AUTO entry is feedback-only (`TYRE AUTO`) and does not blindly send,
   - AUTO corrects only when known truth mismatches declared-wet target,
-  - manual takeover inside AUTO cancels/remaps with `TYRE AUTO CANCEL` and no fight-back command.
+  - manual takeover inside AUTO cancels/remaps with `TYRE AUTO CANCELLED` and no fight-back command.
 - Simplified failure feedback policy:
   - `PIT CMD FAIL` now comes only from raw transport send failure (`ExecuteRawPitCommand` returned false),
   - timeout-driven tyre confirmation failures were removed.
