@@ -9,6 +9,14 @@ Branch: work
 - No Git remote is configured in this checkout (`git remote -v` returns empty).
 
 ## Documentation sync status
+- 2026-04-24 follow-up hardened pit feedback reset seams:
+  - removed `PitCommandEngine.ResetFeedbackState()` calls from `Telemetry.IsOnTrackCar` edge handlers in `LalaLaunch`;
+  - pit command feedback reset now remains on explicit lifecycle/reset seams only (for example manual/runtime reset flows), avoiding transient on-track telemetry-gap clears while command feedback is active.
+- 2026-04-24 Pit command feedback severity standardization landed:
+  - `PitCommandEngine` now owns unified pit feedback severity classification and exports `Pit.Command.Severity` (`0..4`) + `Pit.Command.SeverityText` (`None/Info/Advisory/Caution/Warning`);
+  - `Pit.Command.Active` remains restartable-per-publish and now uses a standardized 3000ms hold window, including retrigger for repeated identical `Pit.Command.DisplayText`;
+  - reset seams now clear pit feedback display/active hold and reset severity to `None` without changing `LastAction/LastRaw` semantics;
+  - Fuel Control, Tyre Control, built-in pit commands, custom messages, and raw command feedback continue to flow through `PitCommandEngine` publisher ownership.
 - 2026-04-24 Tyre Control review-follow-up landed for send-failure feedback hold:
   - `PitTyreControlEngine` now tracks a short send-failure hold timestamp when raw tyre command send returns false;
   - outside AUTO, truth-mirror mode remap still occurs as before, but passive mirror feedback publish (`TYRE OFF/DRY/WET`) is suppressed only during the failure-hold window so `PIT CMD FAIL` remains visible;
