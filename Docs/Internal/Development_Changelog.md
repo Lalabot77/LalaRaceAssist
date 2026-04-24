@@ -33,6 +33,17 @@ The public user-facing release history is maintained in the root `CHANGELOG.md`.
 
 ## Post-v1.0 development
 
+### 2026-04-24 — Tyre Control follow-up: preserve `PIT CMD FAIL` visibility across immediate truth-mirror remap
+- Classification: **both** (driver-visible failure feedback persistence + narrow internal timing gate).
+- Updated `PitTyreControlEngine` send-failure handling:
+  - raw tyre send failure now arms a short failure-hold timestamp;
+  - during that short hold, passive truth-mirror feedback publish (`TYRE OFF/DRY/WET`) is suppressed only.
+- Preserved existing control semantics:
+  - truth-mirror mode remap still occurs during the hold,
+  - command payloads are unchanged (`#cleartires`, `#t tc 0`, `#t tc 2`),
+  - mode cycle is unchanged,
+  - no retries/counters/confirmation windows/new guards were added.
+
 ### 2026-04-24 — Tyre Control feedback wording polish + `Pit.Command.Active` retrigger verification
 - Classification: **both** (driver-visible tyre feedback wording alignment + internal feedback-pulse contract clarification).
 - Updated `PitTyreControlEngine` feedback wording contract:

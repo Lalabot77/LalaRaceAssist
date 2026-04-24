@@ -74,6 +74,7 @@ This is the canonical technical document for the pit/custom command stack and re
   - AUTO sends one correction command only when known MFD truth disagrees with declared-wet target (`TYRE AUTO CHANGE DRY/WET`),
   - once known truth is available for that first evaluation, AUTO either sends one correction on mismatch or clears pending with no send on match,
   - outside AUTO, known MFD truth remaps mode (`OFF`/`DRY`/`WET`) with no corrective command send and passive mirror wording only (`TYRE OFF` / `TYRE DRY` / `TYRE WET`) when the mirrored mode actually changes,
+  - after a raw tyre send failure, a short failure-hold window suppresses only passive truth-mirror feedback publication so `PIT CMD FAIL` remains visible; truth-mode remap still occurs,
   - plugin-driven actions use CHANGE wording (`TYRE CHANGE OFF/DRY/WET/AUTO`) only,
   - AUTO manual takeover feedback is `TYRE AUTO CANCELLED`,
    - unknown/ambiguous tyre truth is held fail-safe (no mode flip, no send),
@@ -113,7 +114,7 @@ Canonical log wording and meaning live in `Docs/Internal/SimHubLogMessages.md`; 
 - Chat-open leak prevention is explicit in both transport paths: command transport force-sends `Esc` before `T` so stale-open chat does not absorb the opener key into outgoing raw/custom command payload (`t#...` / `tt#...` corruption).
 - Transport success for custom/raw/stateless commands is attempt-only; in-sim effect is unverified by design.
 - Tyre control has no resend loop: each target change/correction sends once at most, with a 1.0s settle hold and truth-following remap outside AUTO.
-- Tyre command `PIT CMD FAIL` feedback is transport-failure only (raw send returned false).
+- Tyre command `PIT CMD FAIL` feedback is transport-failure only (raw send returned false), and passive truth-mirror feedback is briefly suppressed after send failure so failure text is not immediately overwritten.
 - External pit-menu edits can cancel AUTO once and force safety recovery state in fuel control.
 - Fuel Control mode ownership is explicit-command only (no internal `Pit.ToggleFuel` use):
   - suppression gate is now reserved for truly invalid snapshot contexts (`no-plugin-manager`, `no-session`) and does not blanket-block active in-car/offline-testing pit-control button use;

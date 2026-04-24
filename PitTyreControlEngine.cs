@@ -26,6 +26,7 @@ namespace LaunchPlugin
     internal sealed class PitTyreControlEngine
     {
         private const int SettleWindowMs = 1000;
+        private const int SendFailureHoldMs = 1000;
 
         private readonly Func<PitTyreControlSnapshot> _snapshotProvider;
         private readonly Func<string, string, string, bool> _rawCommandSender;
@@ -33,6 +34,7 @@ namespace LaunchPlugin
         private readonly Action<string> _logger;
 
         private DateTime _settleUntilUtc = DateTime.MinValue;
+        private DateTime _sendFailureHoldUntilUtc = DateTime.MinValue;
         private bool _autoPendingInitialEvaluation;
         private bool? _autoLastDesiredWet;
         private bool _hasLastTruthMode;
@@ -58,6 +60,7 @@ namespace LaunchPlugin
         {
             Mode = PitTyreControlMode.Off;
             _settleUntilUtc = DateTime.MinValue;
+            _sendFailureHoldUntilUtc = DateTime.MinValue;
             _autoPendingInitialEvaluation = false;
             _autoLastDesiredWet = null;
             _hasLastTruthMode = false;
@@ -127,6 +130,7 @@ namespace LaunchPlugin
             PitTyreControlMode truthMode;
             bool hasTruth = TryMapManualTruthMode(snapshot, out truthMode);
             bool inSettleWindow = DateTime.UtcNow < _settleUntilUtc;
+            bool inSendFailureHoldWindow = DateTime.UtcNow < _sendFailureHoldUntilUtc;
 
             if (Mode == PitTyreControlMode.Auto)
             {
@@ -141,7 +145,10 @@ namespace LaunchPlugin
             if (!inSettleWindow && hasTruth && truthMode != Mode)
             {
                 Mode = truthMode;
-                _feedbackPublisher?.Invoke("Pit.TyreControl.TruthMirror", $"TYRE {ModeToText(Mode)}", string.Empty);
+                if (!inSendFailureHoldWindow)
+                {
+                    _feedbackPublisher?.Invoke("Pit.TyreControl.TruthMirror", $"TYRE {ModeToText(Mode)}", string.Empty);
+                }
                 _logger?.Invoke($"[LalaPlugin:PitTyreControl] mode={ModeToText(Mode)} reason=truth-mirror serviceKnown={snapshot.HasTireServiceSelection} serviceOn={snapshot.IsTireServiceSelected} requestedCompound={(snapshot.HasRequestedCompound ? snapshot.RequestedCompound.ToString() : "NA")}");
             }
 
@@ -206,6 +213,11 @@ namespace LaunchPlugin
             if (sent)
             {
                 _settleUntilUtc = DateTime.UtcNow.AddMilliseconds(SettleWindowMs);
+                _sendFailureHoldUntilUtc = DateTime.MinValue;
+            }
+            else
+            {
+                _sendFailureHoldUntilUtc = DateTime.UtcNow.AddMilliseconds(SendFailureHoldMs);
             }
         }
 

@@ -9,6 +9,10 @@ Branch: work
 - No Git remote is configured in this checkout (`git remote -v` returns empty).
 
 ## Documentation sync status
+- 2026-04-24 Tyre Control review-follow-up landed for send-failure feedback hold:
+  - `PitTyreControlEngine` now tracks a short send-failure hold timestamp when raw tyre command send returns false;
+  - outside AUTO, truth-mirror mode remap still occurs as before, but passive mirror feedback publish (`TYRE OFF/DRY/WET`) is suppressed only during the failure-hold window so `PIT CMD FAIL` remains visible;
+  - command payloads and mode-cycle behavior are unchanged (`#cleartires`, `#t tc 0`, `#t tc 2`; `OFF->DRY->WET->AUTO->OFF`).
 - 2026-04-24 Tyre Control feedback wording + command-active retrigger follow-up landed:
   - plugin-driven Tyre Control feedback now uses CHANGE wording (`TYRE CHANGE OFF/DRY/WET/AUTO`);
   - AUTO correction feedback now uses `TYRE AUTO CHANGE DRY/WET`;
