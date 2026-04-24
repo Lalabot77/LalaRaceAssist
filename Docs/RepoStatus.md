@@ -23,6 +23,18 @@ Branch: work
   - outside AUTO, mode now mirrors known MFD truth only after settle (`OFF` / dry-family / wet-family) and never sends corrective commands for manual pit-menu tyre edits.
   - AUTO now enters feedback-only (`TYRE AUTO`), performs one correction send only when known MFD truth mismatches declared-wet target, and cancels/remaps on manual takeover with `TYRE AUTO CANCEL` (no fight-back send).
   - tyre-control `PIT CMD FAIL` is now transport-failure only (raw send returned false); timeout-driven failure/revert paths were removed.
+- 2026-04-24 review follow-up landed for Fuel Control impossible-state ModeCycle handling:
+  - `PitFuelControlEngine.ModeCycle()` now guards impossible `AUTO + PLAN` before AUTO->OFF send logic;
+  - impossible branch now recovers to `Source=STBY` + `AutoArmed=false`, remains AUTO/disarmed, and sends no command;
+  - closes residual mismatch where `AUTO + PLAN + ModeCycle` could still send `#-fuel$` despite CSV no-send recovery row.
+- 2026-04-23 Pit Fuel Control contract-alignment follow-up landed (direct-command model preserved; feedback/guard rows aligned):
+  - `PitFuelControlEngine` now keeps source-send feedback on `MAN -> AUTO` (`AUTO REFUEL SET <SRC> X L`) and no longer overwrites with generic mode text;
+  - AUTO source sends now use AUTO wording (`AUTO REFUEL SET ...`) and AUTO max/over-space wording (`AUTO FUEL <requested>L >MAX`), while MAN max feedback remains `FUEL MAX`;
+  - `MAN STBY/PLAN -> AUTO STBY` now publishes `AUTO REFUEL STBY`;
+  - `AUTO -> OFF` now publishes `REFUEL OFF` while still sending explicit `#-fuel$`;
+  - invalid MAN `SetPlan` (planner/live mismatch) now publishes `Pit Cmd Fail` instead of silent no-op;
+  - impossible `AUTO + PLAN` state is now guarded to no-send recovery (`AUTO STBY`, disarmed) and cannot fall through to PUSH send.
+  - `Pit.ToggleFuel` action remains unchanged/available as an independent manual binding and is not used by Fuel Control ownership logic.
 - 2026-04-23 Pit Fuel Control testing/polish pass landed (command payload fix + observability + table alignment):
   - `PitFuelControlEngine.ModeCycle()` OFF->MAN sends `#fuel$` (no `#+fuel$` additive form) and uses `FUEL MAN STBY` feedback.
   - `PitCommandEngine.ExecuteRawPitCommand(...)` empty-after-normalization blocked path now logs both raw and normalized payload text for diagnosis.

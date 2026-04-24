@@ -15,7 +15,7 @@ MAN,PLAN,SetPlan,direct PLAN send plugin action,REFUEL SET PLAN X L,Sends Planne
 invalid PLAN -> Pit Cmd Fail",MAN STBY,PLAN send only when planner/live match is valid
 AUTO,PUSH/NORM/SAVE,ModeCycle,select OFF and STBY,REFUEL OFF,Sends #-fuel$,Refuel OFF,OFF,If send fails -> Pit Cmd Fail,AUTO STBY,
 AUTO,STBY,ModeCycle,select OFF and STBY,REFUEL OFF,Sends #-fuel$,Refuel OFF,OFF,If send fails -> Pit Cmd Fail,AUTO STBY,
-AUTO,PLAN,ModeCycle,,FUEL MODE OFF,Sends #-fuel$,Refuel OFF,OFF,PLAN blocked in AUTO,AUTO STBY,PLAN in AUTO Should never be possible
+AUTO,PLAN,ModeCycle,recover impossible state to AUTO STBY (disarmed),None,No command sent,No change,AUTO STBY,PLAN blocked in AUTO and must not send PUSH fallback,None (safe no-send recovery),PLAN in AUTO Should never be possible
 AUTO,PUSH/NORM/SAVE,SourceCycle,select next SRC in order which fires command,AUTO REFUEL SET <SRC> X L,Sends new fuel amount,Refuel ON X L set,AUTOwith SRC that was just sent,Immediate send,AUTO STBY,
 AUTO,STBY,SourceCycle,select next SRC in order which fires command,AUTO REFUEL SET <SRC> X L,Sends new fuel amount,Refuel ON X L set,AUTOwith SRC that was just sent,STBY cleared on send,AUTO STBY,
 AUTO,PLAN,none,none,none,none,no change,AUTO STBY,PLAN blocked in AUTO,AUTO STBY,PLAN in AUTO Should never be possible
