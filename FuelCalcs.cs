@@ -2005,15 +2005,6 @@ namespace LaunchPlugin
                 return 0.0;
             }
 
-            if (_appliedPreset != null)
-            {
-                var presetValue = GetPresetMaxFuelOverrideLitres(_appliedPreset);
-                if (presetValue.HasValue)
-                {
-                    return presetValue.Value;
-                }
-            }
-
             return MaxFuelOverride;
         }
         set => MaxFuelOverride = value;

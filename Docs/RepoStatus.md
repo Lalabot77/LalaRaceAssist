@@ -1,7 +1,7 @@
 # Repository status
 
 Validated against commit: HEAD
-Last updated: 2026-04-24
+Last updated: 2026-04-28
 Branch: work
 
 ## Current repo/link status
@@ -9,6 +9,10 @@ Branch: work
 - No Git remote is configured in this checkout (`git remote -v` returns empty).
 
 ## Documentation sync status
+- 2026-04-28 Issue #552 fix landed for Strategy max-fuel override control sync:
+  - in Profile mode, Max Fuel Override slider/textbox now stay bound to the authoritative planner value after preset apply and during manual drag/edit;
+  - helper percent text and strategy calculations continue to update from the same authoritative value;
+  - Live Snapshot lock/authority behavior is unchanged (control remains live-cap-owned and non-editable).
 - 2026-04-24 PR #626 follow-up visual contract correction landed:
   - pit feedback dash mapping now documents `Caution` as steady (no blink) and `Warning` as blink for 1 second at 750ms;
   - no `PitCommandEngine` runtime behavior changes were made in this correction.
