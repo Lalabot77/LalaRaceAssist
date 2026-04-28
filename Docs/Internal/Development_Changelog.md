@@ -33,6 +33,26 @@ The public user-facing release history is maintained in the root `CHANGELOG.md`.
 
 ## Post-v1.0 development
 
+### 2026-04-28 — Burn To End exports + contingency-aware tactical fuel deltas
+- Classification: **both** (driver-facing Strategy fuel guidance semantics + export contract extension/docs alignment).
+- Added new Fuel runtime exports in `LalaLaunch`:
+  - `Fuel.RequiredBurnToEnd`, `Fuel.RequiredBurnToEnd.Valid`, `Fuel.RequiredBurnToEnd.State`, `Fuel.RequiredBurnToEnd.StateText`, `Fuel.RequiredBurnToEnd.Source`
+  - `Fuel.Contingency.Litres`, `Fuel.Contingency.Laps`, `Fuel.Contingency.Source`
+- Burn-to-end behavior:
+  - raw burn-to-end uses `LiveLapsRemainingInRace_Stable` and active contingency reserve;
+  - displayed `Fuel.RequiredBurnToEnd` is clamped to save/push burn bounds;
+  - state/text use raw unbounded burn-to-end (`CRITICAL/SAVE/HOLD/PUSH`) with fixed hold-band rule.
+- Contingency authority:
+  - planner-first (`FuelCalcs` live contingency),
+  - profile track fallback (`TrackStats` contingency),
+  - default fallback `1.5 laps`;
+  - zero contingency remains valid.
+- Updated tactical driver-facing delta semantics:
+  - `Fuel.Delta.LitresCurrent/Plan/WillAdd` and Push/Save variants now include contingency on required-to-finish side only.
+- Preserved invariants:
+  - `Fuel.Pit.WillAdd` remains clamp mirror (`min(requestedAdd, tankSpace)`),
+  - no pit-window/severity/pit-command/fuel-control/tyre-control redesign.
+
 ### 2026-04-28 — Strategy max-fuel display follow-up: remove preset-state display dependency path
 - Classification: **internal-only** (binding/notification hygiene to lock in Issue #552 behavior contract).
 - Updated `RaisePresetStateChanged()` to stop raising `MaxFuelOverrideDisplayValue` notifications.

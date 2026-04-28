@@ -9,6 +9,11 @@ Branch: work
 - No Git remote is configured in this checkout (`git remote -v` returns empty).
 
 ## Documentation sync status
+- 2026-04-28 Burn-to-end + contingency tactical fuel guidance update landed:
+  - added new runtime exports: `Fuel.RequiredBurnToEnd`, `Fuel.RequiredBurnToEnd.Valid`, `Fuel.RequiredBurnToEnd.State`, `Fuel.RequiredBurnToEnd.StateText`, `Fuel.RequiredBurnToEnd.Source`, `Fuel.Contingency.Litres`, `Fuel.Contingency.Laps`, `Fuel.Contingency.Source`;
+  - tactical `Fuel.Delta.LitresCurrent/Plan/WillAdd` and Push/Save variants now protect active contingency reserve on the required-to-finish side only;
+  - contingency authority now resolves planner-first, then profile track fallback, then default `1.5 laps` fallback (zero contingency remains valid);
+  - preserved invariants: `Fuel.Pit.WillAdd` clamp semantics, pit-window outputs, pit-stop count seams, stint burn target/band, predictor outputs, PreRace `FuelDelta/Stints`, and pit command/control engines.
 - 2026-04-28 Issue #552 follow-up landed for max-fuel display ownership cleanup:
   - `RaisePresetStateChanged()` no longer raises `MaxFuelOverrideDisplayValue` notifications;
   - max-fuel display ownership is now explicit: Profile display follows authoritative `MaxFuelOverride`, Live Snapshot display follows live cap branch;

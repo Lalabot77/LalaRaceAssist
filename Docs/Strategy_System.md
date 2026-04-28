@@ -157,6 +157,9 @@ If Strategy looks repeatedly wrong, the usual causes are:
 - Let the plugin keep building live confidence.
 - Avoid constant planner tweaking unless something is clearly wrong.
 - Use the strategy displays as stable guidance, not as a reason to chase every lap.
+- For end-of-race fuel pacing, prefer plugin-owned tactical guidance:
+  - `Fuel.RequiredBurnToEnd*` for burn-to-end/state/source,
+  - `Fuel.Delta.Litres*` tactical deltas (now contingency-protecting on the required-to-finish side).
 
 ### After the race
 
