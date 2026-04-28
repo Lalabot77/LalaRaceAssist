@@ -126,6 +126,8 @@ Fault export contract (diagnostic/visual only):
 - Both exports intentionally suppress evaluation during each subsystem’s existing post-command settle/suppression windows to avoid normal latency flash.
 - Both exports compute from final post-tick state after mirror/remap/cancel handling; they are not latched from pre-remap state.
 - During intentional same-tick mirror/remap/cancel transitions (external mirror, truth-mirror, AUTO cancel), fault export is suppressed to `0` for that tick to avoid one-tick false non-zero flashes.
+- Fuel request-fault evaluation is ownership-gated (`AUTO`/armed ownership only), and external mirror/takeover handling clears pending owned mirror expectations so stale request ownership cannot leak after surrender.
+- Tyre AUTO correction-send ticks are explicitly fault-suppressed (`0`) in the same tick as correction issue, and settle-window gating is evaluated from post-handler state.
 - `Pit.TyreControl.Fault` additionally suppresses DRY/WET evaluation when requested-compound truth is present but cannot be mapped to a known dry/wet family (unknown/unmappable truth => `0`).
 - Fault exports never trigger command sends/retries/corrections.
 
