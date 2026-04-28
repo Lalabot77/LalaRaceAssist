@@ -9,6 +9,19 @@ Branch: work
 - No Git remote is configured in this checkout (`git remote -v` returns empty).
 
 ## Documentation sync status
+- 2026-04-28 Lap-based contingency basis-scaling follow-up landed:
+  - tactical `Fuel.Delta.LitresCurrent/Plan/WillAdd` and Push/Save required-to-finish paths now resolve contingency litres per matching burn basis when contingency is configured in laps (stable for Normal, push burn for Push, save burn for Save);
+  - preserved public `Fuel.Contingency.Litres/Laps/Source` exports as stable-basis display/debug values;
+  - fixed push/save reserve protection bias from reusing a single stable-basis contingency litre value across all tactical modes.
+- 2026-04-28 Pit Fuel Control contingency double-count follow-up landed:
+  - corrected live `NORM/PUSH/SAVE` target composition in `BuildPitFuelControlSnapshot()` so `Pit.FuelControl.TargetLitres` consumes `-Fuel.Delta.LitresCurrent*` directly with non-negative clamp;
+  - removed contingency re-add in Pit Fuel Control live target path because tactical deltas already protect contingency on required-to-finish;
+  - preserved planner `PLAN` target ownership (`PlannerNextAddLitres`) and all existing tactical delta semantics.
+- 2026-04-28 Burn-to-end + contingency tactical fuel guidance update landed:
+  - added new runtime exports: `Fuel.RequiredBurnToEnd`, `Fuel.RequiredBurnToEnd.Valid`, `Fuel.RequiredBurnToEnd.State`, `Fuel.RequiredBurnToEnd.StateText`, `Fuel.RequiredBurnToEnd.Source`, `Fuel.Contingency.Litres`, `Fuel.Contingency.Laps`, `Fuel.Contingency.Source`;
+  - tactical `Fuel.Delta.LitresCurrent/Plan/WillAdd` and Push/Save variants now protect active contingency reserve on the required-to-finish side only;
+  - contingency authority now resolves planner-first, then profile track fallback, then default `1.5 laps` fallback (zero contingency remains valid);
+  - preserved invariants: `Fuel.Pit.WillAdd` clamp semantics, pit-window outputs, pit-stop count seams, stint burn target/band, predictor outputs, PreRace `FuelDelta/Stints`, and pit command/control engines.
 - 2026-04-28 Pit Fuel/Tyre fault-pipeline consistency pass landed:
   - Fuel fault request-bit evaluation is now ownership-gated (`IsAutoModeActive || AutoArmed`) and external mirror/takeover handling explicitly clears pending owned mirror expectations;
   - closes stale owned-request leakage so post-surrender mirror states cannot keep `Pit.FuelControl.Fault=2` latched after ownership transitions;

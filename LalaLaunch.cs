@@ -824,6 +824,14 @@ namespace LaunchPlugin
         public double PushFuelPerLap { get; private set; }
         public double DeltaLapsIfPush { get; private set; }
         public bool CanAffordToPush { get; private set; }
+        public double RequiredBurnToEnd { get; private set; }
+        public bool RequiredBurnToEnd_Valid { get; private set; }
+        public int RequiredBurnToEnd_State { get; private set; }
+        public string RequiredBurnToEnd_StateText { get; private set; } = "CRITICAL";
+        public string RequiredBurnToEnd_Source { get; private set; } = "invalid";
+        public double Contingency_Litres { get; private set; }
+        public double Contingency_Laps { get; private set; }
+        public string Contingency_Source { get; private set; } = "none";
 
         private double _maxFuelPerLapSession = 0.0;
         public double MaxFuelPerLapDisplay => _maxFuelPerLapSession;
@@ -1462,6 +1470,160 @@ namespace LaunchPlugin
             if (value < ShiftAssistShiftLightModePrimaryOnly) value = ShiftAssistShiftLightModePrimaryOnly;
             if (value > ShiftAssistShiftLightModeBoth) value = ShiftAssistShiftLightModeBoth;
             return value;
+        }
+
+        private sealed class ResolvedContingency
+        {
+            public double Litres;
+            public double Laps;
+            public string Source = "none";
+            public bool UsedFallbackConversion;
+            public bool IsConfiguredInLaps;
+        }
+
+        private TrackStats ResolveCurrentTrackStats()
+        {
+            try
+            {
+                var car = ActiveProfile;
+                if (car == null) return null;
+                return car.ResolveTrackByNameOrKey(CurrentTrackKey) ?? car.ResolveTrackByNameOrKey(CurrentTrackName);
+            }
+            catch
+            {
+                return null;
+            }
+        }
+
+        private static bool IsFiniteNonNegative(double value)
+        {
+            return !double.IsNaN(value) && !double.IsInfinity(value) && value >= 0.0;
+        }
+
+        private static ResolvedContingency BuildContingencyFromValue(double rawValue, bool inLaps, double fuelPerLapBasis, string source)
+        {
+            double sanitized = IsFiniteNonNegative(rawValue) ? rawValue : 0.0;
+            var result = new ResolvedContingency();
+            result.Source = string.IsNullOrWhiteSpace(source) ? "none" : source;
+            result.IsConfiguredInLaps = inLaps;
+
+            if (inLaps)
+            {
+                result.Laps = sanitized;
+                if (fuelPerLapBasis > 0.0)
+                {
+                    result.Litres = sanitized * fuelPerLapBasis;
+                }
+                else
+                {
+                    result.Litres = 0.0;
+                    result.UsedFallbackConversion = true;
+                }
+            }
+            else
+            {
+                result.Litres = sanitized;
+                if (fuelPerLapBasis > 0.0)
+                {
+                    result.Laps = sanitized / fuelPerLapBasis;
+                }
+                else
+                {
+                    result.Laps = 0.0;
+                    result.UsedFallbackConversion = true;
+                }
+            }
+
+            if (result.UsedFallbackConversion)
+            {
+                result.Source = "fallback";
+            }
+
+            return result;
+        }
+
+        private ResolvedContingency ResolveActiveContingency(double fuelPerLapBasis)
+        {
+            double conversionBasis = fuelPerLapBasis;
+            if (conversionBasis <= 0.0)
+            {
+                conversionBasis = LiveFuelPerLap_Stable > 0.0 ? LiveFuelPerLap_Stable : LiveFuelPerLap;
+            }
+
+            if (FuelCalculator != null)
+            {
+                return BuildContingencyFromValue(
+                    FuelCalculator.ContingencyValue,
+                    FuelCalculator.IsContingencyInLaps,
+                    conversionBasis,
+                    "planner");
+            }
+
+            var track = ResolveCurrentTrackStats();
+            if (track != null)
+            {
+                return BuildContingencyFromValue(
+                    track.FuelContingencyValue,
+                    track.IsContingencyInLaps,
+                    conversionBasis,
+                    "profile");
+            }
+
+            // Final fallback per task contract: default 1.5 laps.
+            return BuildContingencyFromValue(1.5, true, conversionBasis, "default");
+        }
+
+        private string ResolveBurnToEndSource(bool valid)
+        {
+            if (!valid)
+            {
+                return "invalid";
+            }
+
+            string fuelSrc = (LiveFuelPerLap_StableSource ?? string.Empty).Trim();
+            string lapSrc = (ProjectionLapTime_StableSource ?? string.Empty).Trim();
+
+            bool fuelLive = string.Equals(fuelSrc, "Live", StringComparison.OrdinalIgnoreCase);
+            bool fuelProfile = string.Equals(fuelSrc, "Profile", StringComparison.OrdinalIgnoreCase);
+            bool lapLive = lapSrc.StartsWith("pace.", StringComparison.OrdinalIgnoreCase) ||
+                           string.Equals(lapSrc, "telemetry.lastlap", StringComparison.OrdinalIgnoreCase);
+            bool lapProfile = lapSrc.StartsWith("profile.", StringComparison.OrdinalIgnoreCase);
+
+            if (fuelLive || lapLive)
+            {
+                return "live";
+            }
+
+            if (fuelProfile && lapProfile)
+            {
+                return "profile";
+            }
+
+            return "fallback";
+        }
+
+        private void SetRequiredBurnToEndState(double rawBurnToEnd, double stableBurn, double saveBurn, double holdBand)
+        {
+            if (rawBurnToEnd < saveBurn)
+            {
+                RequiredBurnToEnd_State = 0;
+                RequiredBurnToEnd_StateText = "CRITICAL";
+            }
+            else if (rawBurnToEnd < (stableBurn - holdBand))
+            {
+                RequiredBurnToEnd_State = 1;
+                RequiredBurnToEnd_StateText = "SAVE";
+            }
+            else if (Math.Abs(rawBurnToEnd - stableBurn) <= holdBand)
+            {
+                RequiredBurnToEnd_State = 2;
+                RequiredBurnToEnd_StateText = "HOLD";
+            }
+            else
+            {
+                RequiredBurnToEnd_State = 3;
+                RequiredBurnToEnd_StateText = "PUSH";
+            }
         }
 
         private bool ResolveShiftAssistCombinedLightLatch()
@@ -3598,6 +3760,14 @@ namespace LaunchPlugin
                 StintBurnTargetBand = "current";
                 FuelBurnPredictor = 0;
                 FuelBurnPredictorSource = "SIMHUB";
+                RequiredBurnToEnd = 0;
+                RequiredBurnToEnd_Valid = false;
+                RequiredBurnToEnd_State = 0;
+                RequiredBurnToEnd_StateText = "CRITICAL";
+                RequiredBurnToEnd_Source = "invalid";
+                Contingency_Litres = 0;
+                Contingency_Laps = 0;
+                Contingency_Source = "none";
                 LiveProjectedDriveTimeAfterZero = 0;
                 LiveProjectedDriveSecondsRemaining = 0;
 
@@ -3795,6 +3965,51 @@ namespace LaunchPlugin
                     Pit_PushDeltaAfterStop = 0.0;
                 }
 
+                var resolvedContingency = ResolveActiveContingency(LiveFuelPerLap_Stable);
+                Contingency_Litres = Math.Max(0.0, resolvedContingency.Litres);
+                Contingency_Laps = Math.Max(0.0, resolvedContingency.Laps);
+                Contingency_Source = string.IsNullOrWhiteSpace(resolvedContingency.Source)
+                    ? "none"
+                    : resolvedContingency.Source;
+                double contingencyLitresNormal = Contingency_Litres;
+                double contingencyLitresPush = Contingency_Litres;
+                double contingencyLitresSave = Contingency_Litres;
+
+                if (resolvedContingency.IsConfiguredInLaps)
+                {
+                    contingencyLitresNormal = Math.Max(0.0, ResolveActiveContingency(stableFuelPerLap).Litres);
+                    contingencyLitresPush = Math.Max(0.0, ResolveActiveContingency(PushFuelPerLap).Litres);
+                    contingencyLitresSave = Math.Max(0.0, ResolveActiveContingency(FuelSaveFuelPerLap).Litres);
+                }
+
+                bool hasBurnToEndBasis =
+                    LiveLapsRemainingInRace_Stable > 0.0 &&
+                    LiveFuelPerLap_Stable > 0.0 &&
+                    FuelSaveFuelPerLap > 0.0 &&
+                    PushFuelPerLap > 0.0 &&
+                    currentFuel >= 0.0 &&
+                    !double.IsNaN(currentFuel) &&
+                    !double.IsInfinity(currentFuel);
+
+                RequiredBurnToEnd_Valid = hasBurnToEndBasis;
+                if (hasBurnToEndBasis)
+                {
+                    double usableFuelForEnd = currentFuel - Contingency_Litres;
+                    double rawBurnToEnd = usableFuelForEnd / LiveLapsRemainingInRace_Stable;
+                    double holdBand = Math.Max(0.03, LiveFuelPerLap_Stable * 0.01);
+
+                    SetRequiredBurnToEndState(rawBurnToEnd, LiveFuelPerLap_Stable, FuelSaveFuelPerLap, holdBand);
+                    RequiredBurnToEnd = Math.Min(PushFuelPerLap, Math.Max(FuelSaveFuelPerLap, rawBurnToEnd));
+                    RequiredBurnToEnd_Source = ResolveBurnToEndSource(true);
+                }
+                else
+                {
+                    RequiredBurnToEnd = 0.0;
+                    RequiredBurnToEnd_State = 0;
+                    RequiredBurnToEnd_StateText = "CRITICAL";
+                    RequiredBurnToEnd_Source = ResolveBurnToEndSource(false);
+                }
+
                 // --- Stint burn target: live guidance for the current tank only (no strategy intent) ---
                 double stableBurn = fuelPerLapForCalc;
                 double ecoBurn = FuelSaveFuelPerLap;
@@ -3884,19 +4099,19 @@ namespace LaunchPlugin
                 }
 
                 bool hasNormalRequirement = stableFuelPerLap > 0.0 && stableLapsRemaining > 0.0;
-                double requiredLitresNormal = hasNormalRequirement ? stableLapsRemaining * stableFuelPerLap : 0.0;
+                double requiredLitresNormal = hasNormalRequirement ? (stableLapsRemaining * stableFuelPerLap) + contingencyLitresNormal : 0.0;
                 Fuel_Delta_LitresCurrent = ComputeDeltaLitres(currentFuel, requiredLitresNormal, hasNormalRequirement);
                 Fuel_Delta_LitresPlan = ComputeDeltaLitres(fuelPlanExit, requiredLitresNormal, hasNormalRequirement);
                 Fuel_Delta_LitresWillAdd = ComputeDeltaLitres(fuelWillAddExit, requiredLitresNormal, hasNormalRequirement);
 
                 bool hasPushRequirement = PushFuelPerLap > 0.0 && stableLapsRemaining > 0.0;
-                double requiredLitresPush = hasPushRequirement ? stableLapsRemaining * PushFuelPerLap : 0.0;
+                double requiredLitresPush = hasPushRequirement ? (stableLapsRemaining * PushFuelPerLap) + contingencyLitresPush : 0.0;
                 Fuel_Delta_LitresCurrentPush = ComputeDeltaLitres(currentFuel, requiredLitresPush, hasPushRequirement);
                 Fuel_Delta_LitresPlanPush = ComputeDeltaLitres(fuelPlanExit, requiredLitresPush, hasPushRequirement);
                 Fuel_Delta_LitresWillAddPush = ComputeDeltaLitres(fuelWillAddExit, requiredLitresPush, hasPushRequirement);
 
                 bool hasSaveRequirement = FuelSaveFuelPerLap > 0.0 && stableLapsRemaining > 0.0;
-                double requiredLitresSave = hasSaveRequirement ? stableLapsRemaining * FuelSaveFuelPerLap : 0.0;
+                double requiredLitresSave = hasSaveRequirement ? (stableLapsRemaining * FuelSaveFuelPerLap) + contingencyLitresSave : 0.0;
                 Fuel_Delta_LitresCurrentSave = ComputeDeltaLitres(currentFuel, requiredLitresSave, hasSaveRequirement);
                 Fuel_Delta_LitresPlanSave = ComputeDeltaLitres(fuelPlanExit, requiredLitresSave, hasSaveRequirement);
                 Fuel_Delta_LitresWillAddSave = ComputeDeltaLitres(fuelWillAddExit, requiredLitresSave, hasSaveRequirement);
@@ -5197,6 +5412,14 @@ namespace LaunchPlugin
             AttachCore("Fuel.FuelBurnPredictorSource", () => FuelBurnPredictorSource);
             AttachCore("Fuel.DeltaLapsIfPush", () => DeltaLapsIfPush);
             AttachCore("Fuel.CanAffordToPush", () => CanAffordToPush);
+            AttachCore("Fuel.RequiredBurnToEnd", () => RequiredBurnToEnd);
+            AttachCore("Fuel.RequiredBurnToEnd.Valid", () => RequiredBurnToEnd_Valid);
+            AttachCore("Fuel.RequiredBurnToEnd.State", () => RequiredBurnToEnd_State);
+            AttachCore("Fuel.RequiredBurnToEnd.StateText", () => RequiredBurnToEnd_StateText);
+            AttachCore("Fuel.RequiredBurnToEnd.Source", () => RequiredBurnToEnd_Source);
+            AttachCore("Fuel.Contingency.Litres", () => Contingency_Litres);
+            AttachCore("Fuel.Contingency.Laps", () => Contingency_Laps);
+            AttachCore("Fuel.Contingency.Source", () => Contingency_Source);
             AttachCore("Fuel.Delta.LitresCurrent", () => Math.Round(Fuel_Delta_LitresCurrent, 1));
             AttachCore("Fuel.Delta.LitresPlan", () => Math.Round(Fuel_Delta_LitresPlan, 1));
             AttachCore("Fuel.Delta.LitresWillAdd", () => Math.Round(Fuel_Delta_LitresWillAdd, 1));
@@ -7005,17 +7228,13 @@ namespace LaunchPlugin
             snapshot.HasPlannerRaceLength = plannerMatchSnapshot.HasPlannerRaceLength;
             snapshot.PlannerRaceLengthValue = plannerMatchSnapshot.PlannerRaceLengthValue;
 
-            double contingencyNormLitres = ResolveLivePitFuelControlContingencyLitres(LiveFuelPerLap_Stable);
-            double contingencyPushLitres = ResolveLivePitFuelControlContingencyLitres(PushFuelPerLap);
-            double contingencySaveLitres = ResolveLivePitFuelControlContingencyLitres(FuelSaveFuelPerLap);
-
             double normNeedLitres = -Fuel_Delta_LitresCurrent;
             double pushNeedLitres = -Fuel_Delta_LitresCurrentPush;
             double saveNeedLitres = -Fuel_Delta_LitresCurrentSave;
 
-            snapshot.TargetNormLitres = Math.Max(0.0, normNeedLitres + contingencyNormLitres);
-            snapshot.TargetPushLitres = Math.Max(0.0, pushNeedLitres + contingencyPushLitres);
-            snapshot.TargetSaveLitres = Math.Max(0.0, saveNeedLitres + contingencySaveLitres);
+            snapshot.TargetNormLitres = Math.Max(0.0, normNeedLitres);
+            snapshot.TargetPushLitres = Math.Max(0.0, pushNeedLitres);
+            snapshot.TargetSaveLitres = Math.Max(0.0, saveNeedLitres);
             snapshot.TargetPlanLitres = Math.Max(0.0, FuelCalculator?.PlannerNextAddLitres ?? 0.0);
             snapshot.StopsRequiredToEnd = Pit_StopsRequiredToEnd;
             snapshot.CurrentFuelLitres = Math.Max(0.0, _lastFuelLevel);
@@ -7070,24 +7289,8 @@ namespace LaunchPlugin
 
         private double ResolveLivePitFuelControlContingencyLitres(double fuelPerLapBasis)
         {
-            double contingencyValue = Math.Max(0.0, FuelCalculator?.ContingencyValue ?? 0.0);
-            if (contingencyValue <= 0.0)
-            {
-                return 0.0;
-            }
-
-            bool contingencyInLaps = FuelCalculator?.IsContingencyInLaps ?? true;
-            if (contingencyInLaps)
-            {
-                if (fuelPerLapBasis <= 0.0)
-                {
-                    return 0.0;
-                }
-
-                return Math.Max(0.0, contingencyValue * fuelPerLapBasis);
-            }
-
-            return contingencyValue;
+            var contingency = ResolveActiveContingency(fuelPerLapBasis);
+            return Math.Max(0.0, contingency.Litres);
         }
 
         private void HandlePitFuelControlOnTrackResets(bool isOnTrackCar)
@@ -14921,6 +15124,14 @@ namespace LaunchPlugin
             Fuel_Delta_LitresCurrentSave = 0;
             Fuel_Delta_LitresPlanSave = 0;
             Fuel_Delta_LitresWillAddSave = 0;
+            RequiredBurnToEnd = 0;
+            RequiredBurnToEnd_Valid = false;
+            RequiredBurnToEnd_State = 0;
+            RequiredBurnToEnd_StateText = "CRITICAL";
+            RequiredBurnToEnd_Source = "invalid";
+            Contingency_Litres = 0;
+            Contingency_Laps = 0;
+            Contingency_Source = "none";
 
             PreRace_Selected = 3;
             PreRace_SelectedText = "Auto";

@@ -169,12 +169,20 @@ The full authoritative export list lives in `Docs/Internal/SimHubParameterInvent
 - `Fuel.LiveFuelPerLap*`
 - `Fuel.LiveLapsRemainingInRace*`
 - `Fuel.LapsRemainingInTank`
+- `Fuel.RequiredBurnToEnd*`
+- `Fuel.Contingency.*`
 - `Fuel.TargetFuelPerLap`
 - `Fuel.Delta*`
 - `Fuel.Pit.*`
 - `Fuel.StintBurnTarget*`
 - `Fuel.Live.ProjectedDriveSecondsRemaining`
 - `LalaLaunch.PreRace.*` as the separate pre-race/on-grid info layer (Auto uses live race-definition authority first: `_SessionTime` for timed races, `_SessionLaps` for lap-limited races)
+
+Contingency-aware tactical contract:
+- `Fuel.RequiredBurnToEnd*` provides driver-facing burn-to-end guidance while protecting active contingency reserve.
+- Active contingency authority is planner-first, then profile track fallback, then default fallback.
+- `Fuel.Delta.LitresCurrent/Plan/WillAdd` and Push/Save variants protect active contingency on the **required-to-finish side only**; when contingency is configured in laps, contingency litres are resolved per burn basis (stable for Normal, push burn for Push, save burn for Save).
+- `Fuel.Pit.WillAdd` remains pure clamp mirror (`min(requestedAdd, tankSpaceAvailable)`) and does not add contingency directly.
 
 ### Logging expectations
 The subsystem logs:

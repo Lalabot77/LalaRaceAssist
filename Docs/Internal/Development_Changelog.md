@@ -33,6 +33,47 @@ The public user-facing release history is maintained in the root `CHANGELOG.md`.
 
 ## Post-v1.0 development
 
+### 2026-04-28 — Lap-based contingency scaling for tactical Push/Save deltas
+- Classification: **both** (driver-facing tactical fuel-delta correctness + docs contract alignment).
+- Fixed `UpdateLiveFuelCalcs` tactical required-to-finish composition so lap-configured contingency is resolved per burn basis instead of reusing one stable-basis litre reserve for all modes.
+  - normal required litres now use stable-burn contingency litres,
+  - push required litres now use push-burn contingency litres,
+  - save required litres now use save-burn contingency litres.
+- Preserved invariants:
+  - public `Fuel.Contingency.Litres/Laps/Source` exports remain stable-basis display/debug seams,
+  - litre-configured contingency behavior remains unchanged (same fixed litre reserve for normal/push/save),
+  - reserve remains owned only on required-to-finish side (no reserve added to requested fuel, `Fuel.Pit.WillAdd`, or clamp amounts),
+  - Pit Fuel Control live targets continue to consume `-Fuel.Delta.LitresCurrent*` seams without re-adding contingency.
+
+### 2026-04-28 — Pit Fuel Control contingency double-count follow-up
+- Classification: **both** (driver-facing pit fuel target correctness + docs contract alignment).
+- Fixed `BuildPitFuelControlSnapshot()` live `NORM/PUSH/SAVE` target composition to consume contingency-aware tactical deltas directly without re-adding contingency.
+  - `TargetNormLitres/TargetPushLitres/TargetSaveLitres` now use `max(0, -Fuel_Delta_LitresCurrent*)`.
+  - prevents contingency from being counted twice when tactical deltas already include contingency on required-to-finish.
+- Preserved invariants:
+  - `PLAN` remains planner-owned via `PlannerNextAddLitres`,
+  - tactical delta contingency protection remains unchanged and remains owned in the fuel runtime delta seams.
+
+### 2026-04-28 — Burn To End exports + contingency-aware tactical fuel deltas
+- Classification: **both** (driver-facing Strategy fuel guidance semantics + export contract extension/docs alignment).
+- Added new Fuel runtime exports in `LalaLaunch`:
+  - `Fuel.RequiredBurnToEnd`, `Fuel.RequiredBurnToEnd.Valid`, `Fuel.RequiredBurnToEnd.State`, `Fuel.RequiredBurnToEnd.StateText`, `Fuel.RequiredBurnToEnd.Source`
+  - `Fuel.Contingency.Litres`, `Fuel.Contingency.Laps`, `Fuel.Contingency.Source`
+- Burn-to-end behavior:
+  - raw burn-to-end uses `LiveLapsRemainingInRace_Stable` and active contingency reserve;
+  - displayed `Fuel.RequiredBurnToEnd` is clamped to save/push burn bounds;
+  - state/text use raw unbounded burn-to-end (`CRITICAL/SAVE/HOLD/PUSH`) with fixed hold-band rule.
+- Contingency authority:
+  - planner-first (`FuelCalcs` live contingency),
+  - profile track fallback (`TrackStats` contingency),
+  - default fallback `1.5 laps`;
+  - zero contingency remains valid.
+- Updated tactical driver-facing delta semantics:
+  - `Fuel.Delta.LitresCurrent/Plan/WillAdd` and Push/Save variants now include contingency on required-to-finish side only.
+- Preserved invariants:
+  - `Fuel.Pit.WillAdd` remains clamp mirror (`min(requestedAdd, tankSpace)`),
+  - no pit-window/severity/pit-command/fuel-control/tyre-control redesign.
+
 ### 2026-04-28 — Pit Fuel/Tyre fault-pipeline consistency + ownership-leak follow-up
 - Classification: **internal-only** (diagnostic fault-pipeline correctness/consistency; no command-path behavior redesign).
 - Fuel follow-up:
