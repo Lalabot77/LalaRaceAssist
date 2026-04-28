@@ -33,6 +33,23 @@ The public user-facing release history is maintained in the root `CHANGELOG.md`.
 
 ## Post-v1.0 development
 
+### 2026-04-28 — Strategy max-fuel display follow-up: remove preset-state display dependency path
+- Classification: **internal-only** (binding/notification hygiene to lock in Issue #552 behavior contract).
+- Updated `RaisePresetStateChanged()` to stop raising `MaxFuelOverrideDisplayValue` notifications.
+  - `MaxFuelOverrideDisplayValue` is now explicitly authoritative-value driven (`MaxFuelOverride` in Profile mode, live cap in Live Snapshot mode), so preset badge/state changes no longer imply a display-value ownership path.
+- Preserved invariants:
+  - preset apply still writes `MaxFuelOverride` in Profile mode,
+  - `MaxFuelOverride` setter remains the owner of dependent display/percent/warning notifications + strategy/preset refresh,
+  - no fuel maths or Live Snapshot lock semantics changed.
+
+### 2026-04-28 — Strategy max-fuel override UI desync fix after preset apply
+- Classification: **both** (driver-visible Strategy UI binding correction + internal consistency with existing planner authority contract).
+- Updated `FuelCalcs.MaxFuelOverrideDisplayValue` profile-mode getter to always mirror authoritative `MaxFuelOverride`.
+  - removes stale `_appliedPreset` display override that could hold slider/textbox visuals at preset value while strategy math and helper percent used updated manual value.
+- Preserved invariants:
+  - Live Snapshot max-fuel lock/authority remains unchanged (still sourced from live cap and non-editable),
+  - no fuel math, pit fuel control, or export contract changes.
+
 ### 2026-04-24 — Pit feedback dash visual mapping correction (Caution steady, Warning 750ms blink)
 - Classification: **both** (dash-facing visual contract correction + documentation alignment).
 - Corrected pit feedback dash visual mapping in subsystem/dash/inventory docs:
