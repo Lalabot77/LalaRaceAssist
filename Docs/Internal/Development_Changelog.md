@@ -33,6 +33,18 @@ The public user-facing release history is maintained in the root `CHANGELOG.md`.
 
 ## Post-v1.0 development
 
+### 2026-04-28 — Lap-based contingency scaling for tactical Push/Save deltas
+- Classification: **both** (driver-facing tactical fuel-delta correctness + docs contract alignment).
+- Fixed `UpdateLiveFuelCalcs` tactical required-to-finish composition so lap-configured contingency is resolved per burn basis instead of reusing one stable-basis litre reserve for all modes.
+  - normal required litres now use stable-burn contingency litres,
+  - push required litres now use push-burn contingency litres,
+  - save required litres now use save-burn contingency litres.
+- Preserved invariants:
+  - public `Fuel.Contingency.Litres/Laps/Source` exports remain stable-basis display/debug seams,
+  - litre-configured contingency behavior remains unchanged (same fixed litre reserve for normal/push/save),
+  - reserve remains owned only on required-to-finish side (no reserve added to requested fuel, `Fuel.Pit.WillAdd`, or clamp amounts),
+  - Pit Fuel Control live targets continue to consume `-Fuel.Delta.LitresCurrent*` seams without re-adding contingency.
+
 ### 2026-04-28 — Pit Fuel Control contingency double-count follow-up
 - Classification: **both** (driver-facing pit fuel target correctness + docs contract alignment).
 - Fixed `BuildPitFuelControlSnapshot()` live `NORM/PUSH/SAVE` target composition to consume contingency-aware tactical deltas directly without re-adding contingency.

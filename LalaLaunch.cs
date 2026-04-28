@@ -1478,6 +1478,7 @@ namespace LaunchPlugin
             public double Laps;
             public string Source = "none";
             public bool UsedFallbackConversion;
+            public bool IsConfiguredInLaps;
         }
 
         private TrackStats ResolveCurrentTrackStats()
@@ -1504,6 +1505,7 @@ namespace LaunchPlugin
             double sanitized = IsFiniteNonNegative(rawValue) ? rawValue : 0.0;
             var result = new ResolvedContingency();
             result.Source = string.IsNullOrWhiteSpace(source) ? "none" : source;
+            result.IsConfiguredInLaps = inLaps;
 
             if (inLaps)
             {
@@ -3969,6 +3971,16 @@ namespace LaunchPlugin
                 Contingency_Source = string.IsNullOrWhiteSpace(resolvedContingency.Source)
                     ? "none"
                     : resolvedContingency.Source;
+                double contingencyLitresNormal = Contingency_Litres;
+                double contingencyLitresPush = Contingency_Litres;
+                double contingencyLitresSave = Contingency_Litres;
+
+                if (resolvedContingency.IsConfiguredInLaps)
+                {
+                    contingencyLitresNormal = Math.Max(0.0, ResolveActiveContingency(stableFuelPerLap).Litres);
+                    contingencyLitresPush = Math.Max(0.0, ResolveActiveContingency(PushFuelPerLap).Litres);
+                    contingencyLitresSave = Math.Max(0.0, ResolveActiveContingency(FuelSaveFuelPerLap).Litres);
+                }
 
                 bool hasBurnToEndBasis =
                     LiveLapsRemainingInRace_Stable > 0.0 &&
@@ -4087,19 +4099,19 @@ namespace LaunchPlugin
                 }
 
                 bool hasNormalRequirement = stableFuelPerLap > 0.0 && stableLapsRemaining > 0.0;
-                double requiredLitresNormal = hasNormalRequirement ? (stableLapsRemaining * stableFuelPerLap) + Contingency_Litres : 0.0;
+                double requiredLitresNormal = hasNormalRequirement ? (stableLapsRemaining * stableFuelPerLap) + contingencyLitresNormal : 0.0;
                 Fuel_Delta_LitresCurrent = ComputeDeltaLitres(currentFuel, requiredLitresNormal, hasNormalRequirement);
                 Fuel_Delta_LitresPlan = ComputeDeltaLitres(fuelPlanExit, requiredLitresNormal, hasNormalRequirement);
                 Fuel_Delta_LitresWillAdd = ComputeDeltaLitres(fuelWillAddExit, requiredLitresNormal, hasNormalRequirement);
 
                 bool hasPushRequirement = PushFuelPerLap > 0.0 && stableLapsRemaining > 0.0;
-                double requiredLitresPush = hasPushRequirement ? (stableLapsRemaining * PushFuelPerLap) + Contingency_Litres : 0.0;
+                double requiredLitresPush = hasPushRequirement ? (stableLapsRemaining * PushFuelPerLap) + contingencyLitresPush : 0.0;
                 Fuel_Delta_LitresCurrentPush = ComputeDeltaLitres(currentFuel, requiredLitresPush, hasPushRequirement);
                 Fuel_Delta_LitresPlanPush = ComputeDeltaLitres(fuelPlanExit, requiredLitresPush, hasPushRequirement);
                 Fuel_Delta_LitresWillAddPush = ComputeDeltaLitres(fuelWillAddExit, requiredLitresPush, hasPushRequirement);
 
                 bool hasSaveRequirement = FuelSaveFuelPerLap > 0.0 && stableLapsRemaining > 0.0;
-                double requiredLitresSave = hasSaveRequirement ? (stableLapsRemaining * FuelSaveFuelPerLap) + Contingency_Litres : 0.0;
+                double requiredLitresSave = hasSaveRequirement ? (stableLapsRemaining * FuelSaveFuelPerLap) + contingencyLitresSave : 0.0;
                 Fuel_Delta_LitresCurrentSave = ComputeDeltaLitres(currentFuel, requiredLitresSave, hasSaveRequirement);
                 Fuel_Delta_LitresPlanSave = ComputeDeltaLitres(fuelPlanExit, requiredLitresSave, hasSaveRequirement);
                 Fuel_Delta_LitresWillAddSave = ComputeDeltaLitres(fuelWillAddExit, requiredLitresSave, hasSaveRequirement);

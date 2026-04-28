@@ -9,6 +9,10 @@ Branch: work
 - No Git remote is configured in this checkout (`git remote -v` returns empty).
 
 ## Documentation sync status
+- 2026-04-28 Lap-based contingency basis-scaling follow-up landed:
+  - tactical `Fuel.Delta.LitresCurrent/Plan/WillAdd` and Push/Save required-to-finish paths now resolve contingency litres per matching burn basis when contingency is configured in laps (stable for Normal, push burn for Push, save burn for Save);
+  - preserved public `Fuel.Contingency.Litres/Laps/Source` exports as stable-basis display/debug values;
+  - fixed push/save reserve protection bias from reusing a single stable-basis contingency litre value across all tactical modes.
 - 2026-04-28 Pit Fuel Control contingency double-count follow-up landed:
   - corrected live `NORM/PUSH/SAVE` target composition in `BuildPitFuelControlSnapshot()` so `Pit.FuelControl.TargetLitres` consumes `-Fuel.Delta.LitresCurrent*` directly with non-negative clamp;
   - removed contingency re-add in Pit Fuel Control live target path because tactical deltas already protect contingency on required-to-finish;
