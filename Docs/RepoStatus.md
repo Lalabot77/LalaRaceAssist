@@ -9,6 +9,10 @@ Branch: work
 - No Git remote is configured in this checkout (`git remote -v` returns empty).
 
 ## Documentation sync status
+- 2026-04-28 Pit Fuel Control contingency double-count follow-up landed:
+  - corrected live `NORM/PUSH/SAVE` target composition in `BuildPitFuelControlSnapshot()` so `Pit.FuelControl.TargetLitres` consumes `-Fuel.Delta.LitresCurrent*` directly with non-negative clamp;
+  - removed contingency re-add in Pit Fuel Control live target path because tactical deltas already protect contingency on required-to-finish;
+  - preserved planner `PLAN` target ownership (`PlannerNextAddLitres`) and all existing tactical delta semantics.
 - 2026-04-28 Burn-to-end + contingency tactical fuel guidance update landed:
   - added new runtime exports: `Fuel.RequiredBurnToEnd`, `Fuel.RequiredBurnToEnd.Valid`, `Fuel.RequiredBurnToEnd.State`, `Fuel.RequiredBurnToEnd.StateText`, `Fuel.RequiredBurnToEnd.Source`, `Fuel.Contingency.Litres`, `Fuel.Contingency.Laps`, `Fuel.Contingency.Source`;
   - tactical `Fuel.Delta.LitresCurrent/Plan/WillAdd` and Push/Save variants now protect active contingency reserve on the required-to-finish side only;

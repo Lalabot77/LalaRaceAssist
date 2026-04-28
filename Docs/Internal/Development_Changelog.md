@@ -33,6 +33,15 @@ The public user-facing release history is maintained in the root `CHANGELOG.md`.
 
 ## Post-v1.0 development
 
+### 2026-04-28 — Pit Fuel Control contingency double-count follow-up
+- Classification: **both** (driver-facing pit fuel target correctness + docs contract alignment).
+- Fixed `BuildPitFuelControlSnapshot()` live `NORM/PUSH/SAVE` target composition to consume contingency-aware tactical deltas directly without re-adding contingency.
+  - `TargetNormLitres/TargetPushLitres/TargetSaveLitres` now use `max(0, -Fuel_Delta_LitresCurrent*)`.
+  - prevents contingency from being counted twice when tactical deltas already include contingency on required-to-finish.
+- Preserved invariants:
+  - `PLAN` remains planner-owned via `PlannerNextAddLitres`,
+  - tactical delta contingency protection remains unchanged and remains owned in the fuel runtime delta seams.
+
 ### 2026-04-28 — Burn To End exports + contingency-aware tactical fuel deltas
 - Classification: **both** (driver-facing Strategy fuel guidance semantics + export contract extension/docs alignment).
 - Added new Fuel runtime exports in `LalaLaunch`:

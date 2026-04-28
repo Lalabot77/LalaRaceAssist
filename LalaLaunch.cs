@@ -7214,17 +7214,13 @@ namespace LaunchPlugin
             snapshot.HasPlannerRaceLength = plannerMatchSnapshot.HasPlannerRaceLength;
             snapshot.PlannerRaceLengthValue = plannerMatchSnapshot.PlannerRaceLengthValue;
 
-            double contingencyNormLitres = ResolveLivePitFuelControlContingencyLitres(LiveFuelPerLap_Stable);
-            double contingencyPushLitres = ResolveLivePitFuelControlContingencyLitres(PushFuelPerLap);
-            double contingencySaveLitres = ResolveLivePitFuelControlContingencyLitres(FuelSaveFuelPerLap);
-
             double normNeedLitres = -Fuel_Delta_LitresCurrent;
             double pushNeedLitres = -Fuel_Delta_LitresCurrentPush;
             double saveNeedLitres = -Fuel_Delta_LitresCurrentSave;
 
-            snapshot.TargetNormLitres = Math.Max(0.0, normNeedLitres + contingencyNormLitres);
-            snapshot.TargetPushLitres = Math.Max(0.0, pushNeedLitres + contingencyPushLitres);
-            snapshot.TargetSaveLitres = Math.Max(0.0, saveNeedLitres + contingencySaveLitres);
+            snapshot.TargetNormLitres = Math.Max(0.0, normNeedLitres);
+            snapshot.TargetPushLitres = Math.Max(0.0, pushNeedLitres);
+            snapshot.TargetSaveLitres = Math.Max(0.0, saveNeedLitres);
             snapshot.TargetPlanLitres = Math.Max(0.0, FuelCalculator?.PlannerNextAddLitres ?? 0.0);
             snapshot.StopsRequiredToEnd = Pit_StopsRequiredToEnd;
             snapshot.CurrentFuelLitres = Math.Max(0.0, _lastFuelLevel);
