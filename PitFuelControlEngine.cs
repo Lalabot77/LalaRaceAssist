@@ -81,6 +81,7 @@ namespace LaunchPlugin
         public int LastSentFuelLitres { get; private set; } = -1;
         public double TargetLitres { get; private set; }
         public bool OverrideActive { get; private set; }
+        public int Fault { get; private set; }
 
         public bool PlanValid { get; private set; }
 
@@ -103,6 +104,7 @@ namespace LaunchPlugin
             ClearObservedExternalState();
             TargetLitres = 0.0;
             OverrideActive = false;
+            Fault = 0;
             _maxOverrideArmed = false;
             _suppressManualOverrideUntilUtc = DateTime.MinValue;
             RefreshDerivedState();
@@ -332,18 +334,21 @@ namespace LaunchPlugin
 
             if (snapshot == null)
             {
+                Fault = 0;
                 LogActionBlockedDebug("OnTelemetryTick", "snapshot-null");
                 return;
             }
 
             if (DateTime.UtcNow < _suppressManualOverrideUntilUtc)
             {
+                Fault = 0;
                 UpdateObservedExternalState(snapshot);
                 return;
             }
 
             if (snapshot.SuppressFuelControl)
             {
+                Fault = 0;
                 DisarmAutoAndForceStby(clearSuppressWindow: true);
                 MaybeLogTelemetrySuppressed(snapshot);
                 return;
@@ -364,6 +369,7 @@ namespace LaunchPlugin
                 _hasObservedFuelFillEnabled = true;
                 _lastObservedFuelFillEnabled = currentFuelFillEnabled;
                 ExpireSatisfiedOwnedMirrorExpectations(currentRequestedLitres, currentFuelFillEnabled, requestedFuelChanged: false, fuelFillChanged: false);
+                Fault = ComputeFault(snapshot, currentRequestedLitres);
                 return;
             }
 
@@ -373,6 +379,7 @@ namespace LaunchPlugin
             _lastObservedFuelFillEnabled = currentFuelFillEnabled;
 
             ExpireSatisfiedOwnedMirrorExpectations(currentRequestedLitres, currentFuelFillEnabled, requestedFuelChanged, fuelFillChanged);
+            Fault = ComputeFault(snapshot, currentRequestedLitres);
 
             if (snapshot.IracingAutoFuelEnabled)
             {
@@ -913,6 +920,48 @@ namespace LaunchPlugin
         {
             PitFuelControlMode effectiveMode = ResolveEffectiveMode();
             return IsAutoModeActive || effectiveMode == PitFuelControlMode.Man;
+        }
+
+        private int ComputeFault(PitFuelControlSnapshot snapshot, int currentRequestedLitres)
+        {
+            if (snapshot == null || snapshot.SuppressFuelControl)
+            {
+                return 0;
+            }
+
+            bool modeFault = false;
+            PitFuelControlMode mode = ResolveEffectiveMode();
+            if (mode == PitFuelControlMode.Off)
+            {
+                modeFault = snapshot.TelemetryFuelFillEnabled;
+            }
+            else if (mode == PitFuelControlMode.Man)
+            {
+                modeFault = !snapshot.TelemetryFuelFillEnabled;
+            }
+            else if (mode == PitFuelControlMode.Auto)
+            {
+                modeFault = !snapshot.TelemetryFuelFillEnabled;
+            }
+
+            bool requestFault = false;
+            if (_hasPendingOwnedRequestedFuelLitres)
+            {
+                requestFault = currentRequestedLitres != _pendingOwnedRequestedFuelLitres;
+            }
+
+            int value = 0;
+            if (modeFault)
+            {
+                value |= 1;
+            }
+
+            if (requestFault)
+            {
+                value |= 2;
+            }
+
+            return value;
         }
 
         private static bool ComputePlanValidity(PitFuelControlSnapshot snapshot)

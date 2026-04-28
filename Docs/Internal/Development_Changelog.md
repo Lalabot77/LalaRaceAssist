@@ -33,6 +33,18 @@ The public user-facing release history is maintained in the root `CHANGELOG.md`.
 
 ## Post-v1.0 development
 
+### 2026-04-28 — Pit Fuel/Tyre selector diagnostic fault exports
+- Classification: **both** (new dash-facing diagnostic exports + internal contract/docs alignment).
+- Added Fuel Control diagnostic export `Pit.FuelControl.Fault` with numeric contract:
+  - `0=None`, `1=Mode fault`, `2=Source/request fault`, `3=Mode + Source/request fault`.
+- Added Tyre Control diagnostic export `Pit.TyreControl.Fault` with numeric contract:
+  - `0=None`, `1=Mode fault`, `2=Source/request fault`, `3=Mode + Source/request fault`.
+- Preserved invariants:
+  - no pit fuel command payload changes,
+  - no pit tyre command payload changes,
+  - no retries/correction sends added,
+  - fault evaluation is suppressed during existing post-command settle/suppression windows and unknown-truth states to avoid normal latency flash.
+
 ### 2026-04-24 — Pit feedback dash visual mapping correction (Caution steady, Warning 750ms blink)
 - Classification: **both** (dash-facing visual contract correction + documentation alignment).
 - Corrected pit feedback dash visual mapping in subsystem/dash/inventory docs:

@@ -1,7 +1,7 @@
 # Repository status
 
 Validated against commit: HEAD
-Last updated: 2026-04-24
+Last updated: 2026-04-28
 Branch: work
 
 ## Current repo/link status
@@ -9,6 +9,10 @@ Branch: work
 - No Git remote is configured in this checkout (`git remote -v` returns empty).
 
 ## Documentation sync status
+- 2026-04-28 Pit Fuel/Tyre selector diagnostic fault exports landed:
+  - added `Pit.FuelControl.Fault` and `Pit.TyreControl.Fault` (`0=None`, `1=Mode fault`, `2=Source/request fault`, `3=Mode + Source/request fault`) for dash-visibility diagnostics only;
+  - fault evaluation is suppressed during existing post-command settle/suppression windows and unknown-truth windows to avoid normal command-latency flash;
+  - no fuel/tyre command payload, transport, retry, or correction-send behavior changes were introduced.
 - 2026-04-24 PR #626 follow-up visual contract correction landed:
   - pit feedback dash mapping now documents `Caution` as steady (no blink) and `Warning` as blink for 1 second at 750ms;
   - no `PitCommandEngine` runtime behavior changes were made in this correction.

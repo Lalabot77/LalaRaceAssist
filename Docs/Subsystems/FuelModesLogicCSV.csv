@@ -31,6 +31,7 @@ MAN,any,External fuel change,none(monitor and mirror only),FUEL CHANGED BY MFD,A
 OFF,any,External MFD OFF action,none(monitor and mirror only),REFUEL SET OFF BY MFD,Advisory,No plugin send,Refuel OFF,OFF STBY,"Mirror MFD State, OFF or MAN and STBY",OFF  to match MFD,
 OFF,any,External MFD ON action,none(monitor and mirror only),REFUEL SET ON BY MFD,Advisory,No plugin send,Refuel ON,MAN STBY,"Mirror MFD State, OFF or MAN and STBY",MAN to match MFD,
 OFF,any,External fuel change,none(monitor and mirror only),FUEL CHANGED BY MFD,Advisory,No plugin send,Refuel ON X L set,MAN STBY,"Mirror MFD State, OFF or MAN and STBY",MAN to match MFD,
+any,any,Fault export evaluation,diagnostic only (no send),Pit.FuelControl.Fault (0/1/2/3),Info,No command sent,No change,No state change,Suppress fault evaluation during post-send settle/suppression windows. Clear to 0 when telemetry/snapshot truth is unavailable or intentionally mirrored.,No command correction/retry paths from fault detection,
 ,,,,,,,,,,,
 ,,,,,,,,,,,
 ,,,,,,,,,,,
