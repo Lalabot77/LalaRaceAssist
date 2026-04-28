@@ -893,7 +893,6 @@ namespace LaunchPlugin
         OnPropertyChanged(nameof(AppliedPreset));
         OnPropertyChanged(nameof(PresetBadge));
         OnPropertyChanged(nameof(IsPresetModifiedFlag));
-        OnPropertyChanged(nameof(MaxFuelOverrideDisplayValue));
     }
 
     public string FuelPerLapText
@@ -2005,15 +2004,7 @@ namespace LaunchPlugin
                 return 0.0;
             }
 
-            if (_appliedPreset != null)
-            {
-                var presetValue = GetPresetMaxFuelOverrideLitres(_appliedPreset);
-                if (presetValue.HasValue)
-                {
-                    return presetValue.Value;
-                }
-            }
-
+            // Profile mode display must always reflect the authoritative planner value.
             return MaxFuelOverride;
         }
         set => MaxFuelOverride = value;

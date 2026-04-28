@@ -26,6 +26,14 @@ Branch: work
   - added `Pit.FuelControl.Fault` and `Pit.TyreControl.Fault` (`0=None`, `1=Mode fault`, `2=Source/request fault`, `3=Mode + Source/request fault`) for dash-visibility diagnostics only;
   - fault evaluation is suppressed during existing post-command settle/suppression windows and unknown-truth windows to avoid normal command-latency flash;
   - no fuel/tyre command payload, transport, retry, or correction-send behavior changes were introduced.
+- 2026-04-28 Issue #552 follow-up landed for max-fuel display ownership cleanup:
+  - `RaisePresetStateChanged()` no longer raises `MaxFuelOverrideDisplayValue` notifications;
+  - max-fuel display ownership is now explicit: Profile display follows authoritative `MaxFuelOverride`, Live Snapshot display follows live cap branch;
+  - no strategy fuel math, preset application semantics, or Live Snapshot lock behavior changes.
+- 2026-04-28 Issue #552 fix landed for Strategy max-fuel override control sync:
+  - in Profile mode, Max Fuel Override slider/textbox now stay bound to the authoritative planner value after preset apply and during manual drag/edit;
+  - helper percent text and strategy calculations continue to update from the same authoritative value;
+  - Live Snapshot lock/authority behavior is unchanged (control remains live-cap-owned and non-editable).
 - 2026-04-24 PR #626 follow-up visual contract correction landed:
   - pit feedback dash mapping now documents `Caution` as steady (no blink) and `Warning` as blink for 1 second at 750ms;
   - no `PitCommandEngine` runtime behavior changes were made in this correction.
