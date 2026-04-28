@@ -22,6 +22,29 @@ Branch: work
   - tactical `Fuel.Delta.LitresCurrent/Plan/WillAdd` and Push/Save variants now protect active contingency reserve on the required-to-finish side only;
   - contingency authority now resolves planner-first, then profile track fallback, then default `1.5 laps` fallback (zero contingency remains valid);
   - preserved invariants: `Fuel.Pit.WillAdd` clamp semantics, pit-window outputs, pit-stop count seams, stint burn target/band, predictor outputs, PreRace `FuelDelta/Stints`, and pit command/control engines.
+- 2026-04-28 Pit Fuel/Tyre fault-pipeline consistency pass landed:
+  - Fuel fault request-bit evaluation is now ownership-gated (`IsAutoModeActive || AutoArmed`) and external mirror/takeover handling explicitly clears pending owned mirror expectations;
+  - closes stale owned-request leakage so post-surrender mirror states cannot keep `Pit.FuelControl.Fault=2` latched after ownership transitions;
+  - Tyre AUTO correction-send ticks now force `Pit.TyreControl.Fault=0` in the same tick as correction issue (post-handler settle evaluation retained);
+  - Tyre unmappable requested-compound truth (`service selected + requested compound present + !hasTruth`) now hard-suppresses fault to `0` across mode paths;
+  - no command payload/timing/retry/transport/fuel-math/tyre-mode behavior changes were introduced.
+- 2026-04-28 Pit Tyre AUTO-correction settle-window fault timing hotfix landed:
+  - `PitTyreControlEngine.OnTelemetryTick()` now re-checks settle-window state after `HandleAuto(...)` and before `Pit.TyreControl.Fault` assignment;
+  - AUTO correction-send ticks are now suppressed to `Pit.TyreControl.Fault = 0` as intended by settle-window gating;
+  - no command behavior/AUTO logic/retry/payload changes were introduced.
+- 2026-04-28 Pit Fuel/Tyre diagnostic fault timing follow-up landed:
+  - Fuel and Tyre fault exports now compute from final post-tick state after same-tick mirror/remap/cancel handling (no pre-remap stale fault publish);
+  - Fuel suppresses fault to `0` on the tick that applies external mirror remap (`AUTO REFUEL CANCELLED BY MFD` / OFF-MAN mirror remap path);
+  - Tyre suppresses fault to `0` on truth-mirror remap / AUTO cancel remap ticks so legitimate mirror transitions do not flash one-tick non-zero faults;
+  - no command payload, mode-remap behavior, retries, or correction-send behavior changes were introduced.
+- 2026-04-28 Pit Tyre Control DRY/WET fault follow-up landed:
+  - `PitTyreControlEngine.ComputeFault(...)` now returns `0` when DRY/WET diagnostic evaluation has requested-compound telemetry but cannot map truth into known dry/wet family (`hasTruth == false`);
+  - known DRY/WET truth mismatch after settle still raises diagnostic fault bits as before;
+  - no tyre command payload, AUTO behavior, or truth-mirror behavior changes were introduced.
+- 2026-04-28 Pit Fuel/Tyre selector diagnostic fault exports landed:
+  - added `Pit.FuelControl.Fault` and `Pit.TyreControl.Fault` (`0=None`, `1=Mode fault`, `2=Source/request fault`, `3=Mode + Source/request fault`) for dash-visibility diagnostics only;
+  - fault evaluation is suppressed during existing post-command settle/suppression windows and unknown-truth windows to avoid normal command-latency flash;
+  - no fuel/tyre command payload, transport, retry, or correction-send behavior changes were introduced.
 - 2026-04-28 Issue #552 follow-up landed for max-fuel display ownership cleanup:
   - `RaisePresetStateChanged()` no longer raises `MaxFuelOverrideDisplayValue` notifications;
   - max-fuel display ownership is now explicit: Profile display follows authoritative `MaxFuelOverride`, Live Snapshot display follows live cap branch;

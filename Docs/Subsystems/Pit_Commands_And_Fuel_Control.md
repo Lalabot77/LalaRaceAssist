@@ -73,6 +73,7 @@ This is the canonical technical document for the pit/custom command stack and re
 - Source state (`STBY`/runtime modes) and AUTO arming semantics.
 - Mode state where AUTO is plugin-owned; non-AUTO mode mirrors MFD truth (`OFF`/`MAN` from `dpFuelFill`).
 - Target litres and override-active semantics for command generation.
+- Fault export state (`Pit.FuelControl.Fault`) for post-settle selector disagreement diagnostics only (`0/1/2/3` contract).
 
 ### Tyre Control state
 - Mode state machine: `OFF -> DRY -> WET -> AUTO -> OFF`.
@@ -81,6 +82,7 @@ This is the canonical technical document for the pit/custom command stack and re
 - Truth-mirror requested-compound family mapping uses telemetry `PitSvTireCompound` semantics (`0 => DRY`, `1 => WET`), which are intentionally separate from outgoing chat command values.
 - One short settle hold (1.0 s) after plugin-issued tyre commands before truth reconciliation/cancel checks.
 - Outside AUTO, plugin mirrors known MFD truth and does not fight manual pit-menu tyre changes.
+- Fault export state (`Pit.TyreControl.Fault`) for post-settle selector disagreement diagnostics only (`0/1/2/3` contract).
 
 ## Calculation blocks (high level)
 1. Receive an action from plugin-owned binding surface.
@@ -115,8 +117,19 @@ This is the canonical technical document for the pit/custom command stack and re
 ## Outputs (exports + logs)
 Canonical export names live in `Docs/Internal/SimHubParameterInventory.md`; key families:
 - `Pit.Command.*` (display text, active, last action/raw, max-toggle state),
-- `Pit.FuelControl.*` (source, mode, target, override),
-- `Pit.TyreControl.*` (mode text/state).
+- `Pit.FuelControl.*` (source, mode, target, override, fault),
+- `Pit.TyreControl.*` (mode text/state + fault).
+
+Fault export contract (diagnostic/visual only):
+- `Pit.FuelControl.Fault`: `0=None`, `1=Mode fault`, `2=Source/request fault`, `3=Mode + Source/request fault`.
+- `Pit.TyreControl.Fault`: `0=None`, `1=Mode fault`, `2=Source/request fault`, `3=Mode + Source/request fault`.
+- Both exports intentionally suppress evaluation during each subsystem’s existing post-command settle/suppression windows to avoid normal latency flash.
+- Both exports compute from final post-tick state after mirror/remap/cancel handling; they are not latched from pre-remap state.
+- During intentional same-tick mirror/remap/cancel transitions (external mirror, truth-mirror, AUTO cancel), fault export is suppressed to `0` for that tick to avoid one-tick false non-zero flashes.
+- Fuel request-fault evaluation is ownership-gated (`AUTO`/armed ownership only), and external mirror/takeover handling clears pending owned mirror expectations so stale request ownership cannot leak after surrender.
+- Tyre AUTO correction-send ticks are explicitly fault-suppressed (`0`) in the same tick as correction issue, and settle-window gating is evaluated from post-handler state.
+- `Pit.TyreControl.Fault` additionally suppresses DRY/WET evaluation when requested-compound truth is present but cannot be mapped to a known dry/wet family (unknown/unmappable truth => `0`).
+- Fault exports never trigger command sends/retries/corrections.
 
 Canonical log wording and meaning live in `Docs/Internal/SimHubLogMessages.md`; key themes:
 - transport mode/attempt path (`postmessage` vs `sendinput`),

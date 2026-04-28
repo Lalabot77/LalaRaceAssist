@@ -5597,8 +5597,10 @@ namespace LaunchPlugin
             AttachCore("Pit.FuelControl.ModeText", () => _pitFuelControlEngine.ModeText);
             AttachCore("Pit.FuelControl.TargetLitres", () => _pitFuelControlEngine.TargetLitres);
             AttachCore("Pit.FuelControl.OverrideActive", () => _pitFuelControlEngine.OverrideActive);
+            AttachCore("Pit.FuelControl.Fault", () => _pitFuelControlEngine.Fault);
             AttachCore("Pit.TyreControl.Mode", () => (int)_pitTyreControlEngine.Mode);
             AttachCore("Pit.TyreControl.ModeText", () => _pitTyreControlEngine.ModeText);
+            AttachCore("Pit.TyreControl.Fault", () => _pitTyreControlEngine.Fault);
             AttachCore("Pit.EntryLineDebrief", () => _pit.PitEntryLineDebrief);
             AttachCore("Pit.EntryLineDebriefText", () => _pit.PitEntryLineDebriefText);
             AttachCore("Pit.EntryLineTimeLoss_s", () => _pit.PitEntryLineTimeLoss_s);
