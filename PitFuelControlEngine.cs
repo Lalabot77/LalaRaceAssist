@@ -733,6 +733,8 @@ namespace LaunchPlugin
 
         private void HandleExternalMirrorChange(bool currentFuelFillEnabled, bool requestedFuelChanged)
         {
+            ClearPendingOwnedMirrorExpectations();
+
             if (IsAutoModeActive)
             {
                 DisarmAutoAndForceStby(clearSuppressWindow: true);
@@ -877,6 +879,14 @@ namespace LaunchPlugin
             }
         }
 
+        private void ClearPendingOwnedMirrorExpectations()
+        {
+            _hasPendingOwnedRequestedFuelLitres = false;
+            _pendingOwnedRequestedFuelLitres = -1;
+            _hasPendingOwnedFuelFillEnabled = false;
+            _pendingOwnedFuelFillEnabled = false;
+        }
+
         private void ExpireSatisfiedOwnedMirrorExpectations(int currentRequestedLitres, bool currentFuelFillEnabled, bool requestedFuelChanged, bool fuelFillChanged)
         {
             if (!requestedFuelChanged && _hasPendingOwnedRequestedFuelLitres && currentRequestedLitres == _pendingOwnedRequestedFuelLitres)
@@ -955,7 +965,8 @@ namespace LaunchPlugin
             }
 
             bool requestFault = false;
-            if (_hasPendingOwnedRequestedFuelLitres)
+            bool ownershipActive = IsAutoModeActive || AutoArmed;
+            if (ownershipActive && _hasPendingOwnedRequestedFuelLitres)
             {
                 requestFault = currentRequestedLitres != _pendingOwnedRequestedFuelLitres;
             }

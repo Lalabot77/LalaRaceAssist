@@ -9,6 +9,12 @@ Branch: work
 - No Git remote is configured in this checkout (`git remote -v` returns empty).
 
 ## Documentation sync status
+- 2026-04-28 Pit Fuel/Tyre fault-pipeline consistency pass landed:
+  - Fuel fault request-bit evaluation is now ownership-gated (`IsAutoModeActive || AutoArmed`) and external mirror/takeover handling explicitly clears pending owned mirror expectations;
+  - closes stale owned-request leakage so post-surrender mirror states cannot keep `Pit.FuelControl.Fault=2` latched after ownership transitions;
+  - Tyre AUTO correction-send ticks now force `Pit.TyreControl.Fault=0` in the same tick as correction issue (post-handler settle evaluation retained);
+  - Tyre unmappable requested-compound truth (`service selected + requested compound present + !hasTruth`) now hard-suppresses fault to `0` across mode paths;
+  - no command payload/timing/retry/transport/fuel-math/tyre-mode behavior changes were introduced.
 - 2026-04-28 Pit Tyre AUTO-correction settle-window fault timing hotfix landed:
   - `PitTyreControlEngine.OnTelemetryTick()` now re-checks settle-window state after `HandleAuto(...)` and before `Pit.TyreControl.Fault` assignment;
   - AUTO correction-send ticks are now suppressed to `Pit.TyreControl.Fault = 0` as intended by settle-window gating;

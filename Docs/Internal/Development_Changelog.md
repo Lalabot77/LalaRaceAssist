@@ -33,6 +33,20 @@ The public user-facing release history is maintained in the root `CHANGELOG.md`.
 
 ## Post-v1.0 development
 
+### 2026-04-28 — Pit Fuel/Tyre fault-pipeline consistency + ownership-leak follow-up
+- Classification: **internal-only** (diagnostic fault-pipeline correctness/consistency; no command-path behavior redesign).
+- Fuel follow-up:
+  - external mirror/takeover handling now clears pending owned mirror expectations before remap/cancel state application;
+  - request-fault bit evaluation is now ownership-gated (`IsAutoModeActive || AutoArmed`) so stale pending expectations cannot leak after ownership surrender.
+- Tyre follow-up:
+  - AUTO correction-send ticks now explicitly suppress `Pit.TyreControl.Fault` to `0` in the same tick as the correction send;
+  - unmappable requested-compound truth (`HasTireServiceSelection && IsTireServiceSelected && HasRequestedCompound && !hasTruth`) now hard-suppresses fault to `0` across mode paths.
+- Preserved invariants:
+  - no command payload changes,
+  - no transport/timing/retry changes,
+  - no fuel math changes,
+  - no tyre mode-cycle/AUTO ownership redesign.
+
 ### 2026-04-28 — Pit Tyre AUTO-correction settle-window fault timing hotfix
 - Classification: **internal-only** (diagnostic export timing correction; no command/AUTO behavior change).
 - Updated `PitTyreControlEngine.OnTelemetryTick()` to re-evaluate settle suppression *after* `HandleAuto(...)` before assigning `Pit.TyreControl.Fault`.

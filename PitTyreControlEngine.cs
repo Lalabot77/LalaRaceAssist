@@ -135,11 +135,11 @@ namespace LaunchPlugin
             bool inSettleWindow = DateTime.UtcNow < _settleUntilUtc;
             bool inSendFailureHoldWindow = DateTime.UtcNow < _sendFailureHoldUntilUtc;
             bool remapAppliedThisTick = false;
+            bool autoCorrectionSendIssuedThisTick = false;
 
             if (Mode == PitTyreControlMode.Auto)
             {
-                remapAppliedThisTick = HandleAuto(snapshot, hasTruth, truthMode, inSettleWindow);
-                UpdateTruthHistory(hasTruth, truthMode);
+                remapAppliedThisTick = HandleAuto(snapshot, hasTruth, truthMode, inSettleWindow, out autoCorrectionSendIssuedThisTick);
             }
             else
             {
@@ -166,12 +166,19 @@ namespace LaunchPlugin
                 return;
             }
 
+            if (autoCorrectionSendIssuedThisTick)
+            {
+                Fault = 0;
+                return;
+            }
+
             bool inSettleWindowAfterHandlers = DateTime.UtcNow < _settleUntilUtc;
             Fault = ComputeFault(snapshot, hasTruth, truthMode, inSettleWindowAfterHandlers);
         }
 
-        private bool HandleAuto(PitTyreControlSnapshot snapshot, bool hasTruth, PitTyreControlMode truthMode, bool inSettleWindow)
+        private bool HandleAuto(PitTyreControlSnapshot snapshot, bool hasTruth, PitTyreControlMode truthMode, bool inSettleWindow, out bool autoCorrectionSendIssuedThisTick)
         {
+            autoCorrectionSendIssuedThisTick = false;
             bool desiredWet = snapshot.WeatherDeclaredWet;
             PitTyreControlMode desiredMode = desiredWet ? PitTyreControlMode.Wet : PitTyreControlMode.Dry;
             bool desiredChanged = !_autoLastDesiredWet.HasValue || _autoLastDesiredWet.Value != desiredWet;
@@ -201,6 +208,8 @@ namespace LaunchPlugin
                     {
                         SendModeCommand("Pit.TyreControl.Auto.CorrectionDry", "#t tc 0", "TYRE AUTO CHANGE DRY", "auto-correction", PitTyreControlMode.Auto);
                     }
+
+                    autoCorrectionSendIssuedThisTick = true;
                 }
 
                 _autoPendingInitialEvaluation = false;
@@ -299,6 +308,14 @@ namespace LaunchPlugin
         private int ComputeFault(PitTyreControlSnapshot snapshot, bool hasTruth, PitTyreControlMode truthMode, bool inSettleWindow)
         {
             if (snapshot == null || inSettleWindow)
+            {
+                return 0;
+            }
+
+            if (snapshot.HasTireServiceSelection &&
+                snapshot.IsTireServiceSelected &&
+                snapshot.HasRequestedCompound &&
+                !hasTruth)
             {
                 return 0;
             }
