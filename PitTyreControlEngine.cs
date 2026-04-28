@@ -134,33 +134,42 @@ namespace LaunchPlugin
             bool hasTruth = TryMapManualTruthMode(snapshot, out truthMode);
             bool inSettleWindow = DateTime.UtcNow < _settleUntilUtc;
             bool inSendFailureHoldWindow = DateTime.UtcNow < _sendFailureHoldUntilUtc;
-
-            Fault = ComputeFault(snapshot, hasTruth, truthMode, inSettleWindow);
+            bool remapAppliedThisTick = false;
 
             if (Mode == PitTyreControlMode.Auto)
             {
-                HandleAuto(snapshot, hasTruth, truthMode, inSettleWindow);
+                remapAppliedThisTick = HandleAuto(snapshot, hasTruth, truthMode, inSettleWindow);
                 UpdateTruthHistory(hasTruth, truthMode);
-                return;
             }
-
-            _autoPendingInitialEvaluation = false;
-            _autoLastDesiredWet = null;
-
-            if (!inSettleWindow && hasTruth && truthMode != Mode)
+            else
             {
-                Mode = truthMode;
-                if (!inSendFailureHoldWindow)
+                _autoPendingInitialEvaluation = false;
+                _autoLastDesiredWet = null;
+
+                if (!inSettleWindow && hasTruth && truthMode != Mode)
                 {
-                    _feedbackPublisher?.Invoke("Pit.TyreControl.TruthMirror", $"TYRE {ModeToText(Mode)}", string.Empty);
+                    Mode = truthMode;
+                    remapAppliedThisTick = true;
+                    if (!inSendFailureHoldWindow)
+                    {
+                        _feedbackPublisher?.Invoke("Pit.TyreControl.TruthMirror", $"TYRE {ModeToText(Mode)}", string.Empty);
+                    }
+                    _logger?.Invoke($"[LalaPlugin:PitTyreControl] mode={ModeToText(Mode)} reason=truth-mirror serviceKnown={snapshot.HasTireServiceSelection} serviceOn={snapshot.IsTireServiceSelected} requestedCompound={(snapshot.HasRequestedCompound ? snapshot.RequestedCompound.ToString() : "NA")}");
                 }
-                _logger?.Invoke($"[LalaPlugin:PitTyreControl] mode={ModeToText(Mode)} reason=truth-mirror serviceKnown={snapshot.HasTireServiceSelection} serviceOn={snapshot.IsTireServiceSelected} requestedCompound={(snapshot.HasRequestedCompound ? snapshot.RequestedCompound.ToString() : "NA")}");
             }
 
             UpdateTruthHistory(hasTruth, truthMode);
+
+            if (remapAppliedThisTick)
+            {
+                Fault = 0;
+                return;
+            }
+
+            Fault = ComputeFault(snapshot, hasTruth, truthMode, inSettleWindow);
         }
 
-        private void HandleAuto(PitTyreControlSnapshot snapshot, bool hasTruth, PitTyreControlMode truthMode, bool inSettleWindow)
+        private bool HandleAuto(PitTyreControlSnapshot snapshot, bool hasTruth, PitTyreControlMode truthMode, bool inSettleWindow)
         {
             bool desiredWet = snapshot.WeatherDeclaredWet;
             PitTyreControlMode desiredMode = desiredWet ? PitTyreControlMode.Wet : PitTyreControlMode.Dry;
@@ -169,14 +178,14 @@ namespace LaunchPlugin
             if (inSettleWindow)
             {
                 _autoLastDesiredWet = desiredWet;
-                return;
+                return false;
             }
 
             if (desiredChanged || _autoPendingInitialEvaluation)
             {
                 if (!hasTruth)
                 {
-                    return;
+                    return false;
                 }
 
                 _autoLastDesiredWet = desiredWet;
@@ -194,7 +203,7 @@ namespace LaunchPlugin
                 }
 
                 _autoPendingInitialEvaluation = false;
-                return;
+                return false;
             }
 
             if (hasTruth && _hasLastTruthMode)
@@ -207,8 +216,11 @@ namespace LaunchPlugin
                     _autoLastDesiredWet = null;
                     _feedbackPublisher?.Invoke("Pit.TyreControl.Auto.Cancel", "TYRE AUTO CANCELLED", string.Empty);
                     _logger?.Invoke($"[LalaPlugin:PitTyreControl] mode={ModeToText(Mode)} reason=auto-cancel serviceKnown={snapshot.HasTireServiceSelection} serviceOn={snapshot.IsTireServiceSelected} requestedCompound={(snapshot.HasRequestedCompound ? snapshot.RequestedCompound.ToString() : "NA")}");
+                    return true;
                 }
             }
+
+            return false;
         }
 
         private void SendModeCommand(string actionName, string command, string feedbackText, string reason, PitTyreControlMode modeForLog)

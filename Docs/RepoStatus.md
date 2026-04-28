@@ -9,6 +9,11 @@ Branch: work
 - No Git remote is configured in this checkout (`git remote -v` returns empty).
 
 ## Documentation sync status
+- 2026-04-28 Pit Fuel/Tyre diagnostic fault timing follow-up landed:
+  - Fuel and Tyre fault exports now compute from final post-tick state after same-tick mirror/remap/cancel handling (no pre-remap stale fault publish);
+  - Fuel suppresses fault to `0` on the tick that applies external mirror remap (`AUTO REFUEL CANCELLED BY MFD` / OFF-MAN mirror remap path);
+  - Tyre suppresses fault to `0` on truth-mirror remap / AUTO cancel remap ticks so legitimate mirror transitions do not flash one-tick non-zero faults;
+  - no command payload, mode-remap behavior, retries, or correction-send behavior changes were introduced.
 - 2026-04-28 Pit Tyre Control DRY/WET fault follow-up landed:
   - `PitTyreControlEngine.ComputeFault(...)` now returns `0` when DRY/WET diagnostic evaluation has requested-compound telemetry but cannot map truth into known dry/wet family (`hasTruth == false`);
   - known DRY/WET truth mismatch after settle still raises diagnostic fault bits as before;

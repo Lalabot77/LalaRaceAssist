@@ -33,6 +33,18 @@ The public user-facing release history is maintained in the root `CHANGELOG.md`.
 
 ## Post-v1.0 development
 
+### 2026-04-28 — Pit Fuel/Tyre diagnostic fault timing correction follow-up
+- Classification: **internal-only** (diagnostic export timing correction; no command-path behavior change).
+- Updated telemetry-tick fault timing so both `Pit.FuelControl.Fault` and `Pit.TyreControl.Fault` are evaluated from final post-tick state after mirror/remap/cancel handling in the same tick.
+- Added intentional-transition suppression to prevent false one-tick flashes:
+  - Fuel fault now suppresses to `0` on same-tick external mirror remap handling.
+  - Tyre fault now suppresses to `0` on same-tick truth-mirror remap and AUTO-cancel remap handling.
+- Preserved invariants:
+  - no command behavior changes,
+  - no mode remap behavior changes,
+  - no retries added,
+  - no payload changes.
+
 ### 2026-04-28 — Pit Tyre Control DRY/WET diagnostic fault unmappable-truth suppression follow-up
 - Classification: **internal-only** (diagnostic fault evaluation correction; no command-path behavior change).
 - Updated `PitTyreControlEngine.ComputeFault(...)` DRY/WET branch so unmappable requested-compound truth (`hasTruth == false`) returns fault `0` instead of raising request faults.
