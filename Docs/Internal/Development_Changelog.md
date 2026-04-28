@@ -33,6 +33,16 @@ The public user-facing release history is maintained in the root `CHANGELOG.md`.
 
 ## Post-v1.0 development
 
+### 2026-04-28 — Pit Tyre AUTO-correction settle-window fault timing hotfix
+- Classification: **internal-only** (diagnostic export timing correction; no command/AUTO behavior change).
+- Updated `PitTyreControlEngine.OnTelemetryTick()` to re-evaluate settle suppression *after* `HandleAuto(...)` before assigning `Pit.TyreControl.Fault`.
+- Prevents one-tick false non-zero fault flashes when AUTO issues a correction send in the same tick and starts a new settle window.
+- Preserved invariants:
+  - no command behavior changes,
+  - no AUTO correction logic changes,
+  - no retries added,
+  - no payload changes.
+
 ### 2026-04-28 — Pit Fuel/Tyre diagnostic fault timing correction follow-up
 - Classification: **internal-only** (diagnostic export timing correction; no command-path behavior change).
 - Updated telemetry-tick fault timing so both `Pit.FuelControl.Fault` and `Pit.TyreControl.Fault` are evaluated from final post-tick state after mirror/remap/cancel handling in the same tick.

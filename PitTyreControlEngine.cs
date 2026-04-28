@@ -166,7 +166,8 @@ namespace LaunchPlugin
                 return;
             }
 
-            Fault = ComputeFault(snapshot, hasTruth, truthMode, inSettleWindow);
+            bool inSettleWindowAfterHandlers = DateTime.UtcNow < _settleUntilUtc;
+            Fault = ComputeFault(snapshot, hasTruth, truthMode, inSettleWindowAfterHandlers);
         }
 
         private bool HandleAuto(PitTyreControlSnapshot snapshot, bool hasTruth, PitTyreControlMode truthMode, bool inSettleWindow)

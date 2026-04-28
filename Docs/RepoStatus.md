@@ -9,6 +9,10 @@ Branch: work
 - No Git remote is configured in this checkout (`git remote -v` returns empty).
 
 ## Documentation sync status
+- 2026-04-28 Pit Tyre AUTO-correction settle-window fault timing hotfix landed:
+  - `PitTyreControlEngine.OnTelemetryTick()` now re-checks settle-window state after `HandleAuto(...)` and before `Pit.TyreControl.Fault` assignment;
+  - AUTO correction-send ticks are now suppressed to `Pit.TyreControl.Fault = 0` as intended by settle-window gating;
+  - no command behavior/AUTO logic/retry/payload changes were introduced.
 - 2026-04-28 Pit Fuel/Tyre diagnostic fault timing follow-up landed:
   - Fuel and Tyre fault exports now compute from final post-tick state after same-tick mirror/remap/cancel handling (no pre-remap stale fault publish);
   - Fuel suppresses fault to `0` on the tick that applies external mirror remap (`AUTO REFUEL CANCELLED BY MFD` / OFF-MAN mirror remap path);
