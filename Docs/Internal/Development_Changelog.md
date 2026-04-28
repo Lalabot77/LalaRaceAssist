@@ -33,6 +33,14 @@ The public user-facing release history is maintained in the root `CHANGELOG.md`.
 
 ## Post-v1.0 development
 
+### 2026-04-28 — Pit Tyre Control DRY/WET diagnostic fault unmappable-truth suppression follow-up
+- Classification: **internal-only** (diagnostic fault evaluation correction; no command-path behavior change).
+- Updated `PitTyreControlEngine.ComputeFault(...)` DRY/WET branch so unmappable requested-compound truth (`hasTruth == false`) returns fault `0` instead of raising request faults.
+- Preserved existing behavior:
+  - known DRY/WET truth mismatch after settle still raises fault bits,
+  - command sends/transport/AUTO correction behavior is unchanged,
+  - truth-mirror behavior is unchanged.
+
 ### 2026-04-28 — Pit Fuel/Tyre selector diagnostic fault exports
 - Classification: **both** (new dash-facing diagnostic exports + internal contract/docs alignment).
 - Added Fuel Control diagnostic export `Pit.FuelControl.Fault` with numeric contract:

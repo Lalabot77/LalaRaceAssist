@@ -9,6 +9,10 @@ Branch: work
 - No Git remote is configured in this checkout (`git remote -v` returns empty).
 
 ## Documentation sync status
+- 2026-04-28 Pit Tyre Control DRY/WET fault follow-up landed:
+  - `PitTyreControlEngine.ComputeFault(...)` now returns `0` when DRY/WET diagnostic evaluation has requested-compound telemetry but cannot map truth into known dry/wet family (`hasTruth == false`);
+  - known DRY/WET truth mismatch after settle still raises diagnostic fault bits as before;
+  - no tyre command payload, AUTO behavior, or truth-mirror behavior changes were introduced.
 - 2026-04-28 Pit Fuel/Tyre selector diagnostic fault exports landed:
   - added `Pit.FuelControl.Fault` and `Pit.TyreControl.Fault` (`0=None`, `1=Mode fault`, `2=Source/request fault`, `3=Mode + Source/request fault`) for dash-visibility diagnostics only;
   - fault evaluation is suppressed during existing post-command settle/suppression windows and unknown-truth windows to avoid normal command-latency flash;

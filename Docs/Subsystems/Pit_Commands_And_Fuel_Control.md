@@ -124,6 +124,7 @@ Fault export contract (diagnostic/visual only):
 - `Pit.FuelControl.Fault`: `0=None`, `1=Mode fault`, `2=Source/request fault`, `3=Mode + Source/request fault`.
 - `Pit.TyreControl.Fault`: `0=None`, `1=Mode fault`, `2=Source/request fault`, `3=Mode + Source/request fault`.
 - Both exports intentionally suppress evaluation during each subsystem’s existing post-command settle/suppression windows to avoid normal latency flash.
+- `Pit.TyreControl.Fault` additionally suppresses DRY/WET evaluation when requested-compound truth is present but cannot be mapped to a known dry/wet family (unknown/unmappable truth => `0`).
 - Fault exports never trigger command sends/retries/corrections.
 
 Canonical log wording and meaning live in `Docs/Internal/SimHubLogMessages.md`; key themes:

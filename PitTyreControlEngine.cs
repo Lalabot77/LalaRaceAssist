@@ -314,7 +314,12 @@ namespace LaunchPlugin
                     return 0;
                 }
 
-                modeFault = !hasTruth || truthMode != Mode;
+                if (!hasTruth)
+                {
+                    return 0;
+                }
+
+                modeFault = truthMode != Mode;
                 requestFault = !snapshot.IsTireServiceSelected || !IsRequestedCompoundInDesiredFamily(snapshot.RequestedCompound, desiredWet);
             }
             else
