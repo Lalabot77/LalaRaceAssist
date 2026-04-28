@@ -9,6 +9,10 @@ Branch: work
 - No Git remote is configured in this checkout (`git remote -v` returns empty).
 
 ## Documentation sync status
+- 2026-04-28 Issue #552 follow-up landed for max-fuel display ownership cleanup:
+  - `RaisePresetStateChanged()` no longer raises `MaxFuelOverrideDisplayValue` notifications;
+  - max-fuel display ownership is now explicit: Profile display follows authoritative `MaxFuelOverride`, Live Snapshot display follows live cap branch;
+  - no strategy fuel math, preset application semantics, or Live Snapshot lock behavior changes.
 - 2026-04-28 Issue #552 fix landed for Strategy max-fuel override control sync:
   - in Profile mode, Max Fuel Override slider/textbox now stay bound to the authoritative planner value after preset apply and during manual drag/edit;
   - helper percent text and strategy calculations continue to update from the same authoritative value;
