@@ -81,6 +81,7 @@ namespace LaunchPlugin
         public int LastSentFuelLitres { get; private set; } = -1;
         public double TargetLitres { get; private set; }
         public bool OverrideActive { get; private set; }
+        public int Fault { get; private set; }
 
         public bool PlanValid { get; private set; }
 
@@ -103,6 +104,7 @@ namespace LaunchPlugin
             ClearObservedExternalState();
             TargetLitres = 0.0;
             OverrideActive = false;
+            Fault = 0;
             _maxOverrideArmed = false;
             _suppressManualOverrideUntilUtc = DateTime.MinValue;
             RefreshDerivedState();
@@ -332,18 +334,21 @@ namespace LaunchPlugin
 
             if (snapshot == null)
             {
+                Fault = 0;
                 LogActionBlockedDebug("OnTelemetryTick", "snapshot-null");
                 return;
             }
 
             if (DateTime.UtcNow < _suppressManualOverrideUntilUtc)
             {
+                Fault = 0;
                 UpdateObservedExternalState(snapshot);
                 return;
             }
 
             if (snapshot.SuppressFuelControl)
             {
+                Fault = 0;
                 DisarmAutoAndForceStby(clearSuppressWindow: true);
                 MaybeLogTelemetrySuppressed(snapshot);
                 return;
@@ -357,6 +362,7 @@ namespace LaunchPlugin
 
             int currentRequestedLitres = RoundUpLitres(snapshot.TelemetryRequestedFuelLitres);
             bool currentFuelFillEnabled = snapshot.TelemetryFuelFillEnabled;
+            bool remapAppliedThisTick = false;
             if (!_hasObservedRequestedFuelLitres || !_hasObservedFuelFillEnabled)
             {
                 _hasObservedRequestedFuelLitres = true;
@@ -364,35 +370,46 @@ namespace LaunchPlugin
                 _hasObservedFuelFillEnabled = true;
                 _lastObservedFuelFillEnabled = currentFuelFillEnabled;
                 ExpireSatisfiedOwnedMirrorExpectations(currentRequestedLitres, currentFuelFillEnabled, requestedFuelChanged: false, fuelFillChanged: false);
-                return;
             }
-
-            bool requestedFuelChanged = currentRequestedLitres != _lastObservedRequestedFuelLitres;
-            bool fuelFillChanged = currentFuelFillEnabled != _lastObservedFuelFillEnabled;
-            _lastObservedRequestedFuelLitres = currentRequestedLitres;
-            _lastObservedFuelFillEnabled = currentFuelFillEnabled;
-
-            ExpireSatisfiedOwnedMirrorExpectations(currentRequestedLitres, currentFuelFillEnabled, requestedFuelChanged, fuelFillChanged);
-
-            if (snapshot.IracingAutoFuelEnabled)
+            else
             {
-                LogActionBlockedInfo("OnTelemetryTick", "iracing-autofuel-ownership");
-                CancelAutoToStby("Pit.FuelControl.AutoFuelOwnership", "AUTO CANCELLED");
-                return;
-            }
+                bool requestedFuelChanged = currentRequestedLitres != _lastObservedRequestedFuelLitres;
+                bool fuelFillChanged = currentFuelFillEnabled != _lastObservedFuelFillEnabled;
+                _lastObservedRequestedFuelLitres = currentRequestedLitres;
+                _lastObservedFuelFillEnabled = currentFuelFillEnabled;
 
-            if (requestedFuelChanged || fuelFillChanged)
-            {
-                if (TryConsumeOwnedMirrorChange(currentRequestedLitres, currentFuelFillEnabled, requestedFuelChanged, fuelFillChanged))
+                ExpireSatisfiedOwnedMirrorExpectations(currentRequestedLitres, currentFuelFillEnabled, requestedFuelChanged, fuelFillChanged);
+
+                if (snapshot.IracingAutoFuelEnabled)
                 {
-                    LogActionBlockedDebug("OnTelemetryTick", "owned-mirror-consumed");
+                    LogActionBlockedInfo("OnTelemetryTick", "iracing-autofuel-ownership");
+                    CancelAutoToStby("Pit.FuelControl.AutoFuelOwnership", "AUTO CANCELLED");
+                    Fault = 0;
                     return;
                 }
 
-                LogActionBlockedInfo("OnTelemetryTick", "external-mirror-change");
-                HandleExternalMirrorChange(currentFuelFillEnabled, requestedFuelChanged);
+                if (requestedFuelChanged || fuelFillChanged)
+                {
+                    if (TryConsumeOwnedMirrorChange(currentRequestedLitres, currentFuelFillEnabled, requestedFuelChanged, fuelFillChanged))
+                    {
+                        LogActionBlockedDebug("OnTelemetryTick", "owned-mirror-consumed");
+                    }
+                    else
+                    {
+                        LogActionBlockedInfo("OnTelemetryTick", "external-mirror-change");
+                        HandleExternalMirrorChange(currentFuelFillEnabled, requestedFuelChanged);
+                        remapAppliedThisTick = true;
+                    }
+                }
+            }
+
+            if (remapAppliedThisTick)
+            {
+                Fault = 0;
                 return;
             }
+
+            Fault = ComputeFault(snapshot, currentRequestedLitres);
         }
 
         public string SourceText => SourceToText(Source);
@@ -913,6 +930,48 @@ namespace LaunchPlugin
         {
             PitFuelControlMode effectiveMode = ResolveEffectiveMode();
             return IsAutoModeActive || effectiveMode == PitFuelControlMode.Man;
+        }
+
+        private int ComputeFault(PitFuelControlSnapshot snapshot, int currentRequestedLitres)
+        {
+            if (snapshot == null || snapshot.SuppressFuelControl)
+            {
+                return 0;
+            }
+
+            bool modeFault = false;
+            PitFuelControlMode mode = ResolveEffectiveMode();
+            if (mode == PitFuelControlMode.Off)
+            {
+                modeFault = snapshot.TelemetryFuelFillEnabled;
+            }
+            else if (mode == PitFuelControlMode.Man)
+            {
+                modeFault = !snapshot.TelemetryFuelFillEnabled;
+            }
+            else if (mode == PitFuelControlMode.Auto)
+            {
+                modeFault = !snapshot.TelemetryFuelFillEnabled;
+            }
+
+            bool requestFault = false;
+            if (_hasPendingOwnedRequestedFuelLitres)
+            {
+                requestFault = currentRequestedLitres != _pendingOwnedRequestedFuelLitres;
+            }
+
+            int value = 0;
+            if (modeFault)
+            {
+                value |= 1;
+            }
+
+            if (requestFault)
+            {
+                value |= 2;
+            }
+
+            return value;
         }
 
         private static bool ComputePlanValidity(PitFuelControlSnapshot snapshot)

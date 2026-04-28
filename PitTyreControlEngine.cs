@@ -41,6 +41,7 @@ namespace LaunchPlugin
         private PitTyreControlMode _lastTruthMode = PitTyreControlMode.Off;
 
         public PitTyreControlMode Mode { get; private set; } = PitTyreControlMode.Off;
+        public int Fault { get; private set; }
 
         public PitTyreControlEngine(
             Func<PitTyreControlSnapshot> snapshotProvider,
@@ -65,6 +66,7 @@ namespace LaunchPlugin
             _autoLastDesiredWet = null;
             _hasLastTruthMode = false;
             _lastTruthMode = PitTyreControlMode.Off;
+            Fault = 0;
         }
 
         public void ModeCycle()
@@ -124,6 +126,7 @@ namespace LaunchPlugin
             var snapshot = _snapshotProvider();
             if (snapshot == null)
             {
+                Fault = 0;
                 return;
             }
 
@@ -131,31 +134,43 @@ namespace LaunchPlugin
             bool hasTruth = TryMapManualTruthMode(snapshot, out truthMode);
             bool inSettleWindow = DateTime.UtcNow < _settleUntilUtc;
             bool inSendFailureHoldWindow = DateTime.UtcNow < _sendFailureHoldUntilUtc;
+            bool remapAppliedThisTick = false;
 
             if (Mode == PitTyreControlMode.Auto)
             {
-                HandleAuto(snapshot, hasTruth, truthMode, inSettleWindow);
+                remapAppliedThisTick = HandleAuto(snapshot, hasTruth, truthMode, inSettleWindow);
                 UpdateTruthHistory(hasTruth, truthMode);
-                return;
             }
-
-            _autoPendingInitialEvaluation = false;
-            _autoLastDesiredWet = null;
-
-            if (!inSettleWindow && hasTruth && truthMode != Mode)
+            else
             {
-                Mode = truthMode;
-                if (!inSendFailureHoldWindow)
+                _autoPendingInitialEvaluation = false;
+                _autoLastDesiredWet = null;
+
+                if (!inSettleWindow && hasTruth && truthMode != Mode)
                 {
-                    _feedbackPublisher?.Invoke("Pit.TyreControl.TruthMirror", $"TYRE {ModeToText(Mode)}", string.Empty);
+                    Mode = truthMode;
+                    remapAppliedThisTick = true;
+                    if (!inSendFailureHoldWindow)
+                    {
+                        _feedbackPublisher?.Invoke("Pit.TyreControl.TruthMirror", $"TYRE {ModeToText(Mode)}", string.Empty);
+                    }
+                    _logger?.Invoke($"[LalaPlugin:PitTyreControl] mode={ModeToText(Mode)} reason=truth-mirror serviceKnown={snapshot.HasTireServiceSelection} serviceOn={snapshot.IsTireServiceSelected} requestedCompound={(snapshot.HasRequestedCompound ? snapshot.RequestedCompound.ToString() : "NA")}");
                 }
-                _logger?.Invoke($"[LalaPlugin:PitTyreControl] mode={ModeToText(Mode)} reason=truth-mirror serviceKnown={snapshot.HasTireServiceSelection} serviceOn={snapshot.IsTireServiceSelected} requestedCompound={(snapshot.HasRequestedCompound ? snapshot.RequestedCompound.ToString() : "NA")}");
             }
 
             UpdateTruthHistory(hasTruth, truthMode);
+
+            if (remapAppliedThisTick)
+            {
+                Fault = 0;
+                return;
+            }
+
+            bool inSettleWindowAfterHandlers = DateTime.UtcNow < _settleUntilUtc;
+            Fault = ComputeFault(snapshot, hasTruth, truthMode, inSettleWindowAfterHandlers);
         }
 
-        private void HandleAuto(PitTyreControlSnapshot snapshot, bool hasTruth, PitTyreControlMode truthMode, bool inSettleWindow)
+        private bool HandleAuto(PitTyreControlSnapshot snapshot, bool hasTruth, PitTyreControlMode truthMode, bool inSettleWindow)
         {
             bool desiredWet = snapshot.WeatherDeclaredWet;
             PitTyreControlMode desiredMode = desiredWet ? PitTyreControlMode.Wet : PitTyreControlMode.Dry;
@@ -164,14 +179,14 @@ namespace LaunchPlugin
             if (inSettleWindow)
             {
                 _autoLastDesiredWet = desiredWet;
-                return;
+                return false;
             }
 
             if (desiredChanged || _autoPendingInitialEvaluation)
             {
                 if (!hasTruth)
                 {
-                    return;
+                    return false;
                 }
 
                 _autoLastDesiredWet = desiredWet;
@@ -189,7 +204,7 @@ namespace LaunchPlugin
                 }
 
                 _autoPendingInitialEvaluation = false;
-                return;
+                return false;
             }
 
             if (hasTruth && _hasLastTruthMode)
@@ -202,8 +217,11 @@ namespace LaunchPlugin
                     _autoLastDesiredWet = null;
                     _feedbackPublisher?.Invoke("Pit.TyreControl.Auto.Cancel", "TYRE AUTO CANCELLED", string.Empty);
                     _logger?.Invoke($"[LalaPlugin:PitTyreControl] mode={ModeToText(Mode)} reason=auto-cancel serviceKnown={snapshot.HasTireServiceSelection} serviceOn={snapshot.IsTireServiceSelected} requestedCompound={(snapshot.HasRequestedCompound ? snapshot.RequestedCompound.ToString() : "NA")}");
+                    return true;
                 }
             }
+
+            return false;
         }
 
         private void SendModeCommand(string actionName, string command, string feedbackText, string reason, PitTyreControlMode modeForLog)
@@ -276,6 +294,72 @@ namespace LaunchPlugin
             }
 
             return requestedCompound == 0;
+        }
+
+        private int ComputeFault(PitTyreControlSnapshot snapshot, bool hasTruth, PitTyreControlMode truthMode, bool inSettleWindow)
+        {
+            if (snapshot == null || inSettleWindow)
+            {
+                return 0;
+            }
+
+            if (Mode == PitTyreControlMode.Auto && _autoPendingInitialEvaluation && !hasTruth)
+            {
+                return 0;
+            }
+
+            bool modeFault = false;
+            bool requestFault = false;
+
+            if (Mode == PitTyreControlMode.Off)
+            {
+                if (snapshot.HasTireServiceSelection)
+                {
+                    modeFault = snapshot.IsTireServiceSelected;
+                    requestFault = snapshot.IsTireServiceSelected;
+                }
+            }
+            else if (Mode == PitTyreControlMode.Dry || Mode == PitTyreControlMode.Wet)
+            {
+                bool desiredWet = Mode == PitTyreControlMode.Wet;
+                if (!snapshot.HasTireServiceSelection || !snapshot.HasRequestedCompound)
+                {
+                    return 0;
+                }
+
+                if (!hasTruth)
+                {
+                    return 0;
+                }
+
+                modeFault = truthMode != Mode;
+                requestFault = !snapshot.IsTireServiceSelected || !IsRequestedCompoundInDesiredFamily(snapshot.RequestedCompound, desiredWet);
+            }
+            else
+            {
+                bool desiredWet = snapshot.WeatherDeclaredWet;
+                PitTyreControlMode desiredMode = desiredWet ? PitTyreControlMode.Wet : PitTyreControlMode.Dry;
+                if (!snapshot.HasTireServiceSelection || !snapshot.HasRequestedCompound || !hasTruth)
+                {
+                    return 0;
+                }
+
+                modeFault = truthMode != desiredMode;
+                requestFault = !snapshot.IsTireServiceSelected || !IsRequestedCompoundInDesiredFamily(snapshot.RequestedCompound, desiredWet);
+            }
+
+            int value = 0;
+            if (modeFault)
+            {
+                value |= 1;
+            }
+
+            if (requestFault)
+            {
+                value |= 2;
+            }
+
+            return value;
         }
 
         private static string ModeToText(PitTyreControlMode mode)
