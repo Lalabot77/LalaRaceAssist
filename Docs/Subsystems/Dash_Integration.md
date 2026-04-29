@@ -44,6 +44,7 @@ This document is the canonical dash-facing contract layer. It does **not** redef
   - `Fuel.Delta.LitresCurrent/Plan/WillAdd` + Push/Save variants for tactical deltas.
 - Do not rebuild burn-to-end with dash-side NCALC formula chains from raw fuel/time/pace properties; use plugin-owned `Fuel.RequiredBurnToEnd`.
 - Tactical delta exports are contingency-aware on the required-to-finish side only; `Fuel.Pit.WillAdd` remains clamp mirror and should not be treated as reserve-augmented request.
+- Runtime pit-space exports are live-cap authoritative when available: `Fuel.Pit.TankSpaceAvailable` reflects live remaining capacity and `Fuel.Pit.WillAdd`/`Fuel.Pit.FuelOnExit` consume that runtime cap seam (not Strategy/Profile max-fuel override when live cap exists).
 
 ### Launch
 - Gate live launch widgets on `LaunchModeActive` and related launch-visible state.

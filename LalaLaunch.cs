@@ -3735,7 +3735,7 @@ namespace LaunchPlugin
                 fuelToRequest = 0.0;
             }
             double pitWindowRequestedAdd = Math.Max(0, fuelToRequest);
-            double maxTankCapacity = ResolveMaxTankCapacity();
+            double maxTankCapacity = ResolveRuntimeLiveMaxTankCapacity();
 
             // --- Always-on pit menu reality (NOT dependent on fuel-per-lap validity) ---
             requestedAddLitresForSmooth = pitWindowRequestedAdd;
@@ -15646,22 +15646,32 @@ namespace LaunchPlugin
             LogLiveMaxFuelHealth(computedMaxFuel, fallbackFresh ? "fallback" : "none");
         }
 
-        private double ResolveMaxTankCapacity()
+        private double ResolveRuntimeLiveMaxTankCapacity()
         {
-            double maxTankCapacity = FuelCalculator?.MaxFuelOverride ?? 0.0;
+            double runtimeCap = EffectiveLiveMaxTank;
+            if (runtimeCap > 0.0)
+            {
+                return runtimeCap;
+            }
 
+            return FuelCalculator?.MaxFuelOverride ?? 0.0;
+        }
+
+        private double ResolvePlanningMaxTankCapacity()
+        {
+            double planningCap = FuelCalculator?.MaxFuelOverride ?? 0.0;
             double sessionMaxFuel = EffectiveLiveMaxTank;
 
-            if (maxTankCapacity <= 0.0)
+            if (planningCap <= 0.0)
             {
-                maxTankCapacity = sessionMaxFuel;
+                planningCap = sessionMaxFuel;
             }
             else if (sessionMaxFuel > 0.0)
             {
-                maxTankCapacity = Math.Min(maxTankCapacity, sessionMaxFuel);
+                planningCap = Math.Min(planningCap, sessionMaxFuel);
             }
 
-            return maxTankCapacity;
+            return planningCap;
         }
 
         private bool ShouldLogProjection(double simLapsRemaining, double projectedLapsRemaining)

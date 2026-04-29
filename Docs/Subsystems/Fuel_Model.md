@@ -136,12 +136,18 @@ Session-phase authority is intentionally split:
 If the runtime projection path is invalid, the subsystem can still fall back to sim-provided laps-remaining behavior.
 
 ### 6) Pit math and stint guidance
-Using current fuel, stable burn, projection laps, tank-space limits, and pit-menu add intent, the subsystem computes:
+Using current fuel, stable burn, projection laps, runtime tank-cap authority, and pit-menu add intent, the subsystem computes:
 - laps remaining in tank,
 - total fuel needed to end,
 - fuel to add,
 - stops required,
 - current-stint burn target and burn band.
+
+
+Runtime tank-cap ownership:
+- Runtime pit exports (`Fuel.Pit.TankSpaceAvailable`, `Fuel.Pit.WillAdd`, `Fuel.Pit.FuelOnExit`) now resolve tank cap from the live session authority seam first (`EffectiveLiveMaxTank` raw/fresh fallback path).
+- Strategy/Profile `MaxFuelOverride` remains planner-owned and does not clamp these runtime pit exports when live cap authority exists.
+- If no live cap authority is currently available, runtime safely falls back to planner/profile cap (`MaxFuelOverride`) so outputs remain bounded instead of collapsing.
 
 `Fuel.Pit.WillAdd` remains runtime math output (`min(requestedAdd, tankSpaceAvailable)`) and is intentionally clamp-driven. During an in-box fill, rising current fuel can reduce remaining tank space, so `WillAdd` may step down near end-of-stop; this is expected from the clamp model and is retained for runtime semantics.
 

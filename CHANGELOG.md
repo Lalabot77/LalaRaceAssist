@@ -25,6 +25,7 @@ For internal between-release development history, see `Docs/Internal/Development
 - Fixed wet/dry PB and pace persistence routing edge cases around lap-validation timing and wet-compound detection.
 - Hardened pit/custom command observability and confirmation wording so attempted transport is not shown as guaranteed in-sim effect.
 - Fixed Pit Fuel Control OFF->MAN command emission to avoid additive plus-sign payload form and aligned over-max fuel feedback wording contract (`FUEL MAX` / `AUTO FUEL … >MAX`) without changing refuel math or send strategy.
+- Fixed live pit tank-space/WillAdd guidance so stale Strategy max-fuel presets no longer under-cap runtime refuel space when live session tank-cap authority is available.
 
 ## v1.0 – Initial Public Release
 
