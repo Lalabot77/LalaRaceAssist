@@ -1,3 +1,11 @@
+## 2026-04-29 — Runtime pit tank-space cap ownership split (live cap vs planner override)
+- Classification: **both** (runtime dash-visible fuel outputs corrected + docs/contract alignment).
+- Confirmed root cause: runtime pit-space helper used planner `MaxFuelOverride` as primary cap and min-clamped against live cap, allowing stale preset/profile overrides to under-cap live tank-space math.
+- Split tank-cap ownership in `LalaLaunch.cs`:
+  - runtime pit exports now use `ResolveRuntimeLiveMaxTankCapacity()` (live cap seam first, safe planner fallback only when live cap unavailable);
+  - retained separate planning-cap helper ownership (`ResolvePlanningMaxTankCapacity()`) for planner semantics boundaries.
+- Preserved invariants: planner Profile/Live Snapshot behavior, preset apply semantics, pit command/control state machine, and `Fuel.Pit.WillAdd = min(requestedAdd, tankSpace)` clamp shape remain unchanged.
+
 # Development Changelog
 
 This file tracks internal development history between releases.

@@ -1,3 +1,9 @@
+- Runtime fuel pit-space cap authority fix (2026-04-29):
+  - live pit-space exports (`Fuel.Pit.TankSpaceAvailable`, `Fuel.Pit.WillAdd`, `Fuel.Pit.FuelOnExit`) now resolve cap from runtime live tank authority first (`EffectiveLiveMaxTank` seam);
+  - stale Strategy/Profile `MaxFuelOverride` no longer silently clamps runtime pit-space when live cap authority exists;
+  - safe fallback retained: planner/profile cap is used only when live cap authority is unavailable;
+  - planner semantics unchanged: Profile/Live Snapshot planner max-fuel ownership, preset apply behavior, and max-fuel UI display behavior remain intact.
+
 # Repository status
 
 Validated against commit: HEAD
