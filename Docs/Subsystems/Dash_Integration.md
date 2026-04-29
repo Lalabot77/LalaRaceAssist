@@ -28,8 +28,10 @@ This document is the canonical dash-facing contract layer. It does **not** redef
   - required one-stop path uses `(current fuel + pit fuel request) - total fuel needed`,
   - required no-stop/multi-stop paths use `current fuel - total fuel needed`.
 - `LalaLaunch.PreRace.FuelSource` / `LapTimeSource` contract:
-  - Auto uses runtime ownership labels (`live`/`profile`/`fallback`) and does not publish `planner`,
-  - manual PreRace selections (`No Stop`/`Single Stop`/`Multi Stop`) keep planner-owned labeling where applicable.
+  - `FuelSource` accepted values are `live`, `profile`, `planner-profile`, `planner-manual`, `fallback` (`planner`/`simhub` are not emitted),
+  - Auto uses runtime ownership labels only (`live`/`profile`/`fallback`) and does not publish planner-classified labels,
+  - manual PreRace selections (`No Stop`/`Single Stop`/`Multi Stop`) classify planner ownership using existing planner state (`planner-manual` when manual override is active, `planner-profile` when planner/profile-loaded value is active),
+  - manual PreRace selections may still emit `live` when planner fuel value is active from live snapshot/runtime source labeling.
 - PreRace status is scenario-first (`required strategy` vs `selected strategy`) and fully partitioned:
   - required `No Stop` => `NO STOP OKAY` or `ADD FUEL FOR NO STOP`; selecting stop strategies shows `NO STOP POSSIBLE`,
   - required `One Stop` => no-stop `SINGLE STINT NOT POSSIBLE`, one-stop feasibility (pit-stop refill-capacity gate, then `ONE STOP REQUIRES MORE FUEL` / `OVERFUELLED` / `SINGLE STOP OKAY`), multi-stop `SINGLE STOP POSSIBLE`,

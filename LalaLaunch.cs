@@ -907,22 +907,53 @@ namespace LaunchPlugin
             return RequiredPreRaceStrategy.MultiStop;
         }
 
+        private string ClassifyManualPreRaceFuelSource(bool hasPlannerFuel, bool hasLiveFallbackFuel)
+        {
+            if (!hasPlannerFuel)
+            {
+                return hasLiveFallbackFuel ? "live" : "fallback";
+            }
+
+            if (FuelCalculator?.IsFuelPerLapManual == true)
+            {
+                return "planner-manual";
+            }
+
+            string sourceInfo = (FuelCalculator?.FuelPerLapSourceInfo ?? string.Empty).Trim();
+            if (sourceInfo.StartsWith("Live", StringComparison.OrdinalIgnoreCase))
+            {
+                return "live";
+            }
+
+            if (sourceInfo.StartsWith("Profile", StringComparison.OrdinalIgnoreCase))
+            {
+                return "planner-profile";
+            }
+
+            if (sourceInfo.StartsWith("Manual", StringComparison.OrdinalIgnoreCase))
+            {
+                return "planner-manual";
+            }
+
+            return "planner-profile";
+        }
+
         private double GetPreRaceFuelPerLap(double fallbackFuelPerLap, out string source)
         {
             double plannerFuel = FuelCalculator?.FuelPerLap ?? 0.0;
             if (plannerFuel > 0.0)
             {
-                source = "planner";
+                source = ClassifyManualPreRaceFuelSource(hasPlannerFuel: true, hasLiveFallbackFuel: fallbackFuelPerLap > 0.0);
                 return plannerFuel;
             }
 
             if (fallbackFuelPerLap > 0.0)
             {
-                source = "simhub";
+                source = ClassifyManualPreRaceFuelSource(hasPlannerFuel: false, hasLiveFallbackFuel: true);
                 return fallbackFuelPerLap;
             }
 
-            source = "fallback";
+            source = ClassifyManualPreRaceFuelSource(hasPlannerFuel: false, hasLiveFallbackFuel: false);
             return PreRaceFallbackFuelPerLapLiters;
         }
 
@@ -1157,9 +1188,20 @@ namespace LaunchPlugin
             if (selectedStrategy == 3 && LiveFuelPerLap_Stable > 0.0)
             {
                 preRaceFuelPerLap = LiveFuelPerLap_Stable;
-                preRaceFuelSource = string.Equals(LiveFuelPerLap_StableSource, "Live", StringComparison.OrdinalIgnoreCase)
-                    ? "live"
-                    : (string.Equals(LiveFuelPerLap_StableSource, "Profile", StringComparison.OrdinalIgnoreCase) ? "profile" : "fallback");
+                if (string.Equals(LiveFuelPerLap_StableSource, "Live", StringComparison.OrdinalIgnoreCase))
+                {
+                    preRaceFuelSource = "live";
+                }
+                else if (string.Equals(LiveFuelPerLap_StableSource, "Profile", StringComparison.OrdinalIgnoreCase))
+                {
+                    preRaceFuelSource = "profile";
+                }
+                else
+                {
+                    var (profileDry, profileWet) = GetProfileFuelBaselines();
+                    double profileFuel = _isWetMode ? profileWet : profileDry;
+                    preRaceFuelSource = profileFuel > 0.0 ? "profile" : "fallback";
+                }
             }
             else if (selectedStrategy == 3)
             {
