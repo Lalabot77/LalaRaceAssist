@@ -9,6 +9,11 @@ Branch: work
 - No Git remote is configured in this checkout (`git remote -v` returns empty).
 
 ## Documentation sync status
+- 2026-04-29 Auto PreRace stable-source provenance follow-up landed:
+  - in Auto (`selectedStrategy == 3`) when `LiveFuelPerLap_Stable > 0`, `LalaLaunch.PreRace.FuelSource` now follows the selected stable source only (`Live => live`, `Profile => profile`, other/non-standard stable source => `fallback`);
+  - removed profile-baseline availability inference from this stable-consumption path so non-profile stable fallback cannot be mislabeled as `profile`;
+  - preserved Auto fallback branch behavior for `LiveFuelPerLap_Stable <= 0` (direct profile-fuel selection still labels `profile` when selected).
+
 - 2026-04-29 PreRace fuel-source label clarification + Auto profile fallback-source correction landed:
   - `LalaLaunch.PreRace.FuelSource` legacy labels `planner` and `simhub` were removed from runtime output;
   - accepted fuel-source outputs are now `live`, `profile`, `planner-profile`, `planner-manual`, `fallback`;

@@ -1198,9 +1198,7 @@ namespace LaunchPlugin
                 }
                 else
                 {
-                    var (profileDry, profileWet) = GetProfileFuelBaselines();
-                    double profileFuel = _isWetMode ? profileWet : profileDry;
-                    preRaceFuelSource = profileFuel > 0.0 ? "profile" : "fallback";
+                    preRaceFuelSource = "fallback";
                 }
             }
             else if (selectedStrategy == 3)

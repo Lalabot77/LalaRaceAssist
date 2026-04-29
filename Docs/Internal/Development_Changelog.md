@@ -33,6 +33,16 @@ The public user-facing release history is maintained in the root `CHANGELOG.md`.
 
 ## Post-v1.0 development
 
+### 2026-04-29 — PreRace Auto stable-source provenance follow-up
+- Classification: **both** (dash-facing source-provenance correctness + docs contract clarification).
+- Fixed Auto PreRace source-label seam in `LalaLaunch` when `selectedStrategy == Auto` and `LiveFuelPerLap_Stable > 0`:
+  - source mapping now follows the selected stable-source label exactly (`Live => live`, `Profile => profile`, otherwise `fallback`).
+- Removed profile-availability inference from that stable-consumption branch so Auto cannot report `profile` when the selected stable value came from non-profile fallback authority.
+- Preserved invariants:
+  - Auto fallback branch for `LiveFuelPerLap_Stable <= 0` still chooses profile fuel directly when available and labels `profile`,
+  - no pre-race fuel-maths redesign,
+  - no new persistent state.
+
 ### 2026-04-29 — PreRace fuel-source label clarification + Auto profile-source fallback fix
 - Classification: **both** (dash-facing source-label contract clarity + narrow pre-race source correctness fix).
 - Updated `LalaLaunch.PreRace.FuelSource` classification to remove ambiguous legacy labels:

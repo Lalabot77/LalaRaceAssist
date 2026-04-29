@@ -30,6 +30,7 @@ This document is the canonical dash-facing contract layer. It does **not** redef
 - `LalaLaunch.PreRace.FuelSource` / `LapTimeSource` contract:
   - `FuelSource` accepted values are `live`, `profile`, `planner-profile`, `planner-manual`, `fallback` (`planner`/`simhub` are not emitted),
   - Auto uses runtime ownership labels only (`live`/`profile`/`fallback`) and does not publish planner-classified labels,
+  - when Auto consumes `LiveFuelPerLap_Stable`, `FuelSource` mirrors the selected stable-source label only (`Live => live`, `Profile => profile`, otherwise `fallback`) instead of inferring from profile availability,
   - manual PreRace selections (`No Stop`/`Single Stop`/`Multi Stop`) classify planner ownership using existing planner state (`planner-manual` when manual override is active, `planner-profile` when planner/profile-loaded value is active),
   - manual PreRace selections may still emit `live` when planner fuel value is active from live snapshot/runtime source labeling.
 - PreRace status is scenario-first (`required strategy` vs `selected strategy`) and fully partitioned:
