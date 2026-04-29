@@ -33,6 +33,34 @@ The public user-facing release history is maintained in the root `CHANGELOG.md`.
 
 ## Post-v1.0 development
 
+### 2026-04-29 — PreRace Auto stable-source provenance follow-up
+- Classification: **both** (dash-facing source-provenance correctness + docs contract clarification).
+- Fixed Auto PreRace source-label seam in `LalaLaunch` when `selectedStrategy == Auto` and `LiveFuelPerLap_Stable > 0`:
+  - source mapping now follows the selected stable-source label exactly (`Live => live`, `Profile => profile`, otherwise `fallback`).
+- Removed profile-availability inference from that stable-consumption branch so Auto cannot report `profile` when the selected stable value came from non-profile fallback authority.
+- Preserved invariants:
+  - Auto fallback branch for `LiveFuelPerLap_Stable <= 0` still chooses profile fuel directly when available and labels `profile`,
+  - no pre-race fuel-maths redesign,
+  - no new persistent state.
+
+### 2026-04-29 — PreRace fuel-source label clarification + Auto profile-source fallback fix
+- Classification: **both** (dash-facing source-label contract clarity + narrow pre-race source correctness fix).
+- Updated `LalaLaunch.PreRace.FuelSource` classification to remove ambiguous legacy labels:
+  - removed `planner` and `simhub`,
+  - accepted values are now `live`, `profile`, `planner-profile`, `planner-manual`, `fallback`.
+- Added a narrow manual-mode pre-race source classifier in `LalaLaunch` that reuses existing planner ownership state:
+  - `FuelCalculator.IsFuelPerLapManual`,
+  - `FuelCalculator.FuelPerLapSourceInfo`.
+- Preserved Auto-mode invariant (runtime-only labels):
+  - Auto continues to publish only `live`/`profile`/`fallback` (never planner-classified values).
+- Fixed Auto-mode source-label correctness seam:
+  - when Auto uses stable fuel-per-lap with non-live/non-profile stable source text, pre-race source now resolves to `profile` if profile baseline fuel is available, else `fallback`,
+  - prevents false `fallback` labeling when profile/track fuel burn is actually driving pre-race fuel delta.
+- Preserved invariants:
+  - no pre-race fuel maths redesign,
+  - no preset-source label introduced,
+  - no new persistent state.
+
 ### 2026-04-28 — Lap-based contingency scaling for tactical Push/Save deltas
 - Classification: **both** (driver-facing tactical fuel-delta correctness + docs contract alignment).
 - Fixed `UpdateLiveFuelCalcs` tactical required-to-finish composition so lap-configured contingency is resolved per burn basis instead of reusing one stable-basis litre reserve for all modes.

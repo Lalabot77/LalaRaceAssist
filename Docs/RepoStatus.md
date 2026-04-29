@@ -9,6 +9,17 @@ Branch: work
 - No Git remote is configured in this checkout (`git remote -v` returns empty).
 
 ## Documentation sync status
+- 2026-04-29 Auto PreRace stable-source provenance follow-up landed:
+  - in Auto (`selectedStrategy == 3`) when `LiveFuelPerLap_Stable > 0`, `LalaLaunch.PreRace.FuelSource` now follows the selected stable source only (`Live => live`, `Profile => profile`, other/non-standard stable source => `fallback`);
+  - removed profile-baseline availability inference from this stable-consumption path so non-profile stable fallback cannot be mislabeled as `profile`;
+  - preserved Auto fallback branch behavior for `LiveFuelPerLap_Stable <= 0` (direct profile-fuel selection still labels `profile` when selected).
+
+- 2026-04-29 PreRace fuel-source label clarification + Auto profile fallback-source correction landed:
+  - `LalaLaunch.PreRace.FuelSource` legacy labels `planner` and `simhub` were removed from runtime output;
+  - accepted fuel-source outputs are now `live`, `profile`, `planner-profile`, `planner-manual`, `fallback`;
+  - Auto mode remains runtime-only (`live`/`profile`/`fallback`) and does not emit planner-classified labels;
+  - manual PreRace modes now classify planner-driven fuel source via existing `FuelCalculator` ownership state (`IsFuelPerLapManual`, `FuelPerLapSourceInfo`);
+  - fixed Auto-mode source-label seam so profile baseline availability resolves to `profile` (not false `fallback`) when stable source text is non-live/non-profile.
 - 2026-04-28 Lap-based contingency basis-scaling follow-up landed:
   - tactical `Fuel.Delta.LitresCurrent/Plan/WillAdd` and Push/Save required-to-finish paths now resolve contingency litres per matching burn basis when contingency is configured in laps (stable for Normal, push burn for Push, save burn for Save);
   - preserved public `Fuel.Contingency.Litres/Laps/Source` exports as stable-basis display/debug values;
