@@ -312,12 +312,13 @@ namespace LaunchPlugin
 
             if (!SendCurrentTarget(isAutoUpdate: false, actionNameOverride: actionName))
             {
-                if (effectiveMode == PitFuelControlMode.Man)
+                Source = PitFuelControlSource.Stby;
+                if (effectiveMode == PitFuelControlMode.Auto)
                 {
-                    Source = PitFuelControlSource.Stby;
-                    PublishSelectionFeedback(actionName, "PIT CMD FAIL");
+                    AutoArmed = false;
                 }
 
+                PublishSelectionFeedback(actionName, "PIT CMD FAIL");
                 LogActionBlockedInfo("RefreshCurrentSourceTarget", "send-failed");
             }
         }

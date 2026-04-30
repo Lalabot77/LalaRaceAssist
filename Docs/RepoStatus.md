@@ -21,7 +21,8 @@ Branch: work
   - added configurable profile guard setting (`0..30%`, default 10%) in Global Dash Functions fuel settings;
   - only internal Pit Fuel Control PUSH/SAVE target composition is affected; NORM and PLAN behavior remain unchanged;
   - fallback is silent to existing live PUSH/SAVE behavior when profile/track/condition/guard inputs are invalid;
-  - mode toggle now refresh-sends current target immediately in MAN/AUTO when source is PUSH/SAVE (no send for OFF/STBY/NORM/PLAN).
+  - mode toggle now refresh-sends current target immediately in MAN/AUTO when source is PUSH/SAVE (no send for OFF/STBY/NORM/PLAN);
+  - explicit toggle refresh send failures now follow SourceCycle-style fallback (`PIT CMD FAIL`, force `STBY`, AUTO disarm).
 - 2026-04-29 Auto PreRace stable-source provenance follow-up landed:
   - in Auto (`selectedStrategy == 3`) when `LiveFuelPerLap_Stable > 0`, `LalaLaunch.PreRace.FuelSource` now follows the selected stable source only (`Live => live`, `Profile => profile`, other/non-standard stable source => `fallback`);
   - removed profile-baseline availability inference from this stable-consumption path so non-profile stable fallback cannot be mislabeled as `profile`;

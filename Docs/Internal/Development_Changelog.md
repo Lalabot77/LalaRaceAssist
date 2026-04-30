@@ -46,7 +46,7 @@ The public user-facing release history is maintained in the root `CHANGELOG.md`.
 - Added `Pit.FuelControl.PushSaveMode` (`0=LIVE`, `1=PROFILE`) and `Pit.FuelControl.PushSaveModeText` exports plus new action `Pit.FuelControl.PushSaveModeCycle`.
 - Added settings-layer guard slider `Pit Fuel Push/Save Profile Guard (%)` (`0..30`, default `10`).
 - Behavior: only internal Pit Fuel Control `PUSH`/`SAVE` target composition can switch to profile track max/min burn values (wet/dry aware) when eligible; both burns are clamped inside configured guard band `[stableNorm*(1-guard), stableNorm*(1+guard)]`; `NORM` and `PLAN` remain unchanged.
-- Safety/fallback: profile-assisted path requires valid active profile + matching track stats + valid condition burn values + valid stable NORM burn for guard; otherwise silently falls back to existing live PUSH/SAVE behavior (no warnings/no action block). Push/Save mode toggle now performs immediate one-shot target refresh send in `MAN`/`AUTO` only when current source is `PUSH` or `SAVE`.
+- Safety/fallback: profile-assisted path requires valid active profile + matching track stats + valid condition burn values + valid stable NORM burn for guard; otherwise silently falls back to existing live PUSH/SAVE behavior (no warnings/no action block). Push/Save mode toggle now performs immediate one-shot target refresh send in `MAN`/`AUTO` only when current source is `PUSH` or `SAVE`; explicit toggle refresh send-failure semantics align with `SourceCycle` shape (`PIT CMD FAIL` + `STBY`, and AUTO disarms).
 
 ### 2026-04-29 — PreRace Auto stable-source provenance follow-up
 - Classification: **both** (dash-facing source-provenance correctness + docs contract clarification).
