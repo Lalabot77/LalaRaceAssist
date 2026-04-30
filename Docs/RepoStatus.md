@@ -15,6 +15,13 @@ Branch: work
 - No Git remote is configured in this checkout (`git remote -v` returns empty).
 
 ## Documentation sync status
+- 2026-04-30 Race finish/end-phase authority redesign landed:
+  - finish phase now exports `Race.EndPhase`, `Race.EndPhaseText`, `Race.EndPhaseConfidence`, and `Race.LastLapLikely` for dash-safe race-end gating;
+  - `SessionState` is now primary authority for timed-race overall leader completion (`SessionState>=5`) and end-phase classification;
+  - single-class effective/class leader finish now mirrors overall finish latch, while multiclass class-finish remains class-targeted;
+  - session checkered flag is no longer used as proof of overall leader finish; player checkered remains driver-side timing/summary context only;
+  - finish latches now resist single-tick non-race telemetry blips via sustained non-race reset guard.
+
 - 2026-04-30 League Race Class Phase 1 cleanup pass landed:
   - player preview now uses live player identity when available (CustomerId/UserID + name), with explicit not-available wording while telemetry identity is missing;
   - CSV reload now handles read exceptions safely and reports non-fatal status text instead of throwing during init/reload;

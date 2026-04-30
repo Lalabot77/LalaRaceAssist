@@ -1,3 +1,19 @@
+## 2026-04-30 — Race finish/end-phase authority redesign (SessionState-first + dash stability gates)
+- Classification: **both** (new dash-facing race-end exports + finish-detection contract correction).
+- Updated `LalaLaunch` finish detection precedence:
+  - `Race.EndPhase` now resolves each tick from race `SessionState` authority (`Unknown/Running/AfterZeroLeaderRunning/LeaderFinished/SessionComplete`) with `Race.EndPhaseConfidence`;
+  - `Race.LastLapLikely` now gates dash end-lap behavior (`SessionState==5` any race type, plus timed-race `SessionState==4 && SessionTimeRemain<=0`);
+  - overall leader finish now latches from `SessionState>=5` high-confidence state authority;
+  - single-class class-leader finish now mirrors overall finish; multiclass class finish remains class-targeted (no SessionState-only class-proof promotion);
+  - effective `Race.LeaderHasFinished` now uses single-class overall latch directly and multiclass class-valid + class-latch selector.
+- Removed session-checkered-flag use as proof of overall leader finish and kept player checkered handling only for driver-side finish/summary timing.
+- Added sustained non-race reset guard for finish latches (anti-blip): finish state is no longer cleared on a single transient non-race tick.
+- Preserved invariants:
+  - no fuel-learning changes,
+  - no fuel-projection math redesign,
+  - no pit fuel-control/pit-command behavior changes,
+  - no dashboard ownership shift into plugin logic.
+
 ## 2026-04-29 — Runtime pit tank-space cap ownership split (live cap vs planner override)
 - Classification: **both** (runtime dash-visible fuel outputs corrected + docs/contract alignment).
 - Confirmed root cause: runtime pit-space helper used planner `MaxFuelOverride` as primary cap and min-clamped against live cap, allowing stale preset/profile overrides to under-cap live tank-space math.
