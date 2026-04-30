@@ -1,7 +1,7 @@
 # Pit Commands and Fuel/Tyre Control
 
 Validated against commit: HEAD
-Last updated: 2026-04-24
+Last updated: 2026-04-30
 Branch: work
 
 ## Purpose
@@ -73,6 +73,8 @@ This is the canonical technical document for the pit/custom command stack and re
 - Source state (`STBY`/runtime modes) and AUTO arming semantics.
 - Mode state where AUTO is plugin-owned; non-AUTO mode mirrors MFD truth (`OFF`/`MAN` from `dpFuelFill`).
 - Target litres and override-active semantics for command generation.
+- Push/Save burn-basis mode (`LIVE`/`PROFILE`) for internal PUSH/SAVE target composition only.
+- Toggling Push/Save mode while source is `PUSH`/`SAVE` refreshes current pit fuel request immediately in `MAN`/`AUTO` (no refresh send in `OFF`, `STBY`, `NORM`, or `PLAN`).
 - Fault export state (`Pit.FuelControl.Fault`) for post-settle selector disagreement diagnostics only (`0/1/2/3` contract).
 
 ### Tyre Control state
@@ -117,7 +119,7 @@ This is the canonical technical document for the pit/custom command stack and re
 ## Outputs (exports + logs)
 Canonical export names live in `Docs/Internal/SimHubParameterInventory.md`; key families:
 - `Pit.Command.*` (display text, active, last action/raw, max-toggle state),
-- `Pit.FuelControl.*` (source, mode, target, override, fault),
+- `Pit.FuelControl.*` (source, mode, target, override, fault, push/save mode),
 - `Pit.TyreControl.*` (mode text/state + fault).
 
 Fault export contract (diagnostic/visual only):
