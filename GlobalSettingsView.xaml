@@ -123,7 +123,7 @@
                                Foreground="#FFC107"
                                TextWrapping="Wrap"
                                Text="Note: pit commands are most reliable when iRacing is in the foreground/focus." />
-                    <StackPanel Orientation="Horizontal" Margin="0,8,0,0">
+                    <StackPanel Orientation="Horizontal" Margin="0,8,0,0" Visibility="{Binding LeagueClassShowCsvSection, Converter={StaticResource BooleanToVisibilityConverter}}">
                         <TextBlock VerticalAlignment="Center" Margin="0,0,8,0" Text="Pit command transport"/>
                         <ComboBox Width="330"
                                   SelectedValue="{Binding Settings.PitCommandTransportMode, Mode=TwoWay}"
@@ -220,13 +220,32 @@
                         <styles:SHButtonPrimary Content="Browse" Margin="8,0,0,0" Click="BrowseLeagueClassCsv_Click"/>
                         <styles:SHButtonPrimary Content="Reload" Margin="8,0,0,0" Click="ReloadLeagueClassCsv_Click"/>
                     </StackPanel>
-                    <TextBlock Margin="0,6,0,0" Foreground="LightGray" Text="{Binding LeagueClassStatus.ConfigStatusText, StringFormat='Status: {0}'}"/>
-                    <TextBlock Foreground="LightGray" Text="{Binding LeagueClassStatus.LoadedCount, StringFormat='Loaded rows: {0}'}"/>
-                    <TextBlock Foreground="LightGray" Text="{Binding LeagueClassStatus.ValidDriverCount, StringFormat='Valid drivers: {0}'}"/>
-                    <TextBlock Foreground="LightGray" Text="{Binding LeagueClassStatus.InvalidRowCount, StringFormat='Invalid rows: {0}'}"/>
-                    <TextBlock Foreground="LightGray" Text="{Binding LeagueClassStatus.DuplicateRowCount, StringFormat='Duplicate rows: {0}'}"/>
+                    <StackPanel Visibility="{Binding LeagueClassShowCsvSection, Converter={StaticResource BooleanToVisibilityConverter}}">
+                        <TextBlock Margin="0,6,0,0" Foreground="LightGray" Text="{Binding LeagueClassStatus.ConfigStatusText, StringFormat='Status: {0}'}"/>
+                        <TextBlock Foreground="LightGray" Text="{Binding LeagueClassStatus.LoadedCount, StringFormat='Loaded rows: {0}'}"/>
+                        <TextBlock Foreground="LightGray" Text="{Binding LeagueClassStatus.ValidDriverCount, StringFormat='Valid drivers: {0}'}"/>
+                        <TextBlock Foreground="LightGray" Text="{Binding LeagueClassStatus.InvalidRowCount, StringFormat='Invalid rows: {0}'}"/>
+                        <TextBlock Foreground="LightGray" Text="{Binding LeagueClassStatus.DuplicateRowCount, StringFormat='Duplicate rows: {0}'}"/>
+                        <TextBlock Margin="0,8,0,2" Text="Detected classes" FontWeight="SemiBold"/>
+                        <TextBlock FontWeight="SemiBold" Text="Enabled   CSV Class Name   Short Name   Rank   Colour Hex   Colour Preview"/>
+                        <ItemsControl ItemsSource="{Binding LeagueClassStatus.DetectedClassRows}">
+                            <ItemsControl.ItemTemplate>
+                                <DataTemplate>
+                                    <StackPanel Orientation="Horizontal" Margin="0,2,0,2">
+                                        <CheckBox IsChecked="{Binding Enabled}" IsEnabled="False" VerticalAlignment="Center"/>
+                                        <TextBox Width="130" Margin="6,0,0,0" Text="{Binding ClassName}" IsReadOnly="True"/>
+                                        <TextBox Width="100" Margin="6,0,0,0" Text="{Binding ShortName}" IsReadOnly="True"/>
+                                        <TextBox Width="50" Margin="6,0,0,0" Text="{Binding Rank}" IsReadOnly="True"/>
+                                        <TextBox Width="90" Margin="6,0,0,0" Text="{Binding ColourHex}" IsReadOnly="True"/>
+                                        <Border Width="18" Height="18" Margin="6,2,0,0" BorderBrush="#777" BorderThickness="1" Background="{Binding ColourHex, Converter={StaticResource HexToBrushConverter}}"/>
+                                    </StackPanel>
+                                </DataTemplate>
+                            </ItemsControl.ItemTemplate>
+                        </ItemsControl>
+                    </StackPanel>
 
                     <TextBlock Margin="0,8,0,2" Text="Player race class" FontWeight="SemiBold"/>
+                    <TextBlock FontWeight="SemiBold" Text="Class Name   Short Name   Rank   Colour Hex   Colour Preview"/>
                     <StackPanel Orientation="Horizontal">
                         <ComboBox Width="180" SelectedValue="{Binding Settings.LeagueClassPlayerOverrideMode, Mode=TwoWay}" SelectedValuePath="Tag">
                             <ComboBoxItem Content="Auto-detect" Tag="0"/>
@@ -240,8 +259,9 @@
                     </StackPanel>
                     <TextBlock Margin="0,6,0,0" Foreground="LightGray" Text="{Binding LeagueClassPlayerPreviewText}"/>
 
-                    <TextBlock Margin="0,8,0,2" Text="Fallback rules (suffix)" FontWeight="SemiBold"/>
-                    <ItemsControl ItemsSource="{Binding Settings.LeagueClassFallbackRules}">
+                    <TextBlock Margin="0,8,0,2" Text="Fallback rules (suffix)" FontWeight="SemiBold" Visibility="{Binding LeagueClassShowFallbackSection, Converter={StaticResource BooleanToVisibilityConverter}}"/>
+                    <TextBlock FontWeight="SemiBold" Text="Enabled   Match Suffix   Class Name   Short Name   Rank   Colour Hex   Colour Preview" Visibility="{Binding LeagueClassShowFallbackSection, Converter={StaticResource BooleanToVisibilityConverter}}"/>
+                    <ItemsControl ItemsSource="{Binding Settings.LeagueClassFallbackRules}" Visibility="{Binding LeagueClassShowFallbackSection, Converter={StaticResource BooleanToVisibilityConverter}}">
                         <ItemsControl.ItemTemplate>
                             <DataTemplate>
                                 <StackPanel Orientation="Horizontal" Margin="0,2,0,2">

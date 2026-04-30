@@ -4765,6 +4765,8 @@ namespace LaunchPlugin
 
             OnPropertyChanged(nameof(LeagueClassStatus));
             OnPropertyChanged(nameof(LeagueClassPlayerPreviewText));
+            OnPropertyChanged(nameof(LeagueClassShowCsvSection));
+            OnPropertyChanged(nameof(LeagueClassShowFallbackSection));
         }
 
         public string LeagueClassPlayerPreviewText
@@ -4778,8 +4780,8 @@ namespace LaunchPlugin
                 var info = _leagueClassResolver.ResolvePlayerPreview(Settings, playerCustomerId, playerName);
                 if (info.Valid)
                 {
-                    string suffix = !string.IsNullOrWhiteSpace(playerName) ? (" for " + playerName) : string.Empty;
-                    return $"Detected: {info.Name} ({info.Source}){suffix}";
+                    string livePlayerText = !string.IsNullOrWhiteSpace(playerName) ? playerName : "(name unavailable)";
+                    return $"Player: {livePlayerText} | Source: {info.Source} | Resolved class: {info.Name}";
                 }
 
                 if (Settings != null && Settings.LeagueClassPlayerOverrideMode == 1)
@@ -4792,9 +4794,17 @@ namespace LaunchPlugin
                     return "Live player identity not available yet";
                 }
 
-                return "Detected: unresolved";
+                return $"Player: {playerName} | Source: NONE | Resolved class: unresolved";
             }
         }
+
+        public bool LeagueClassShowCsvSection => Settings != null &&
+            ((LeagueClassMode)Settings.LeagueClassMode == LeagueClassMode.CsvOnly ||
+             (LeagueClassMode)Settings.LeagueClassMode == LeagueClassMode.CsvThenName);
+
+        public bool LeagueClassShowFallbackSection => Settings != null &&
+            ((LeagueClassMode)Settings.LeagueClassMode == LeagueClassMode.NameOnly ||
+             (LeagueClassMode)Settings.LeagueClassMode == LeagueClassMode.CsvThenName);
 
         private bool TryGetLivePlayerIdentityPreview(out int? customerId, out string driverName)
         {
@@ -4843,6 +4853,8 @@ namespace LaunchPlugin
             _leagueClassPreviewIdentitySnapshot = identitySnapshot;
             _leagueClassPreviewSettingsSnapshot = settingsSnapshot;
             OnPropertyChanged(nameof(LeagueClassPlayerPreviewText));
+            OnPropertyChanged(nameof(LeagueClassShowCsvSection));
+            OnPropertyChanged(nameof(LeagueClassShowFallbackSection));
         }
 
         private void ApplyLeagueClassEnableModeGuard()
@@ -4862,6 +4874,8 @@ namespace LaunchPlugin
                 OnPropertyChanged(nameof(Settings));
                 OnPropertyChanged(nameof(LeagueClassStatus));
                 OnPropertyChanged(nameof(LeagueClassPlayerPreviewText));
+                OnPropertyChanged(nameof(LeagueClassShowCsvSection));
+                OnPropertyChanged(nameof(LeagueClassShowFallbackSection));
             }
 
             _leagueClassLastEnabledState = isEnabled;
@@ -6842,6 +6856,12 @@ namespace LaunchPlugin
             if (settings.LeagueClassFallbackRules.Count > 3)
             {
                 settings.LeagueClassFallbackRules = settings.LeagueClassFallbackRules.Take(3).ToList();
+            }
+
+            if (settings.LeagueClassPlayerOverrideMode == 1 &&
+                string.IsNullOrWhiteSpace(settings.LeagueClassPlayerOverrideClassName))
+            {
+                settings.LeagueClassPlayerOverrideMode = 0;
             }
         }
 

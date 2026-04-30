@@ -64,6 +64,7 @@ namespace LaunchPlugin
         public int DuplicateRowCount { get; set; }
         public int ValidDriverCount { get; set; }
         public IReadOnlyList<string> DetectedClasses { get; set; } = Array.Empty<string>();
+        public IReadOnlyList<LeagueClassFallbackRule> DetectedClassRows { get; set; } = Array.Empty<LeagueClassFallbackRule>();
     }
 
     public sealed class LeagueClassResolver
@@ -170,7 +171,22 @@ namespace LaunchPlugin
                 InvalidRowCount = invalid,
                 DuplicateRowCount = duplicate,
                 ValidDriverCount = _csvByCustomerId.Count,
-                DetectedClasses = _detectedClassNames.ToArray()
+                DetectedClasses = _detectedClassNames.ToArray(),
+                DetectedClassRows = _detectedClassNames
+                    .Select(name =>
+                    {
+                        var first = _csvByCustomerId.Values.FirstOrDefault(v => string.Equals(v.ClassName, name, StringComparison.OrdinalIgnoreCase));
+                        return new LeagueClassFallbackRule
+                        {
+                            Enabled = true,
+                            MatchSuffix = string.Empty,
+                            ClassName = name,
+                            ShortName = name,
+                            Rank = first?.Rank ?? 0,
+                            ColourHex = first?.ColourHex ?? string.Empty
+                        };
+                    })
+                    .ToArray()
             };
         }
 
