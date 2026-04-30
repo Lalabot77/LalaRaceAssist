@@ -16259,21 +16259,10 @@ namespace LaunchPlugin
                     $"[LalaPlugin:Finish] overall_finish trigger=state state={sessionStateNumeric} phase={RaceEndPhaseText} conf={RaceEndPhaseConfidence}");
             }
 
-            if (!isTimedRace)
-            {
-                if (classLeaderIdx >= 0 && lapDistPct != null && classLeaderIdx < lapDistPct.Length)
-                {
-                    _lastClassLeaderLapPct = lapDistPct[classLeaderIdx];
-                    _lastClassLeaderCarIdx = classLeaderIdx;
-                }
+            bool canRunClassFinishHeuristic = isTimedRace && _timerZeroSeen && classLeaderIdx >= 0;
+            bool canRunOverallFinishHeuristic = isTimedRace && _timerZeroSeen && !hasSessionState && overallLeaderIdx >= 0;
 
-                if (overallLeaderIdx >= 0 && lapDistPct != null && overallLeaderIdx < lapDistPct.Length)
-                {
-                    _lastOverallLeaderLapPct = lapDistPct[overallLeaderIdx];
-                    _lastOverallLeaderCarIdx = overallLeaderIdx;
-                }
-            }
-            else if (_timerZeroSeen && !hasSessionState)
+            if (canRunClassFinishHeuristic)
             {
                 MaybeLatchLeaderFinished(
                     isClassLeader: true,
@@ -16282,31 +16271,27 @@ namespace LaunchPlugin
                     trackSurfaces,
                     sessionTime,
                     sessionStateNumeric);
-
-                if (overallLeaderIdx >= 0)
-                {
-                    MaybeLatchLeaderFinished(
-                        isClassLeader: false,
-                        leaderIdx: overallLeaderIdx,
-                        lapDistPct,
-                        trackSurfaces,
-                        sessionTime,
-                        sessionStateNumeric);
-                }
             }
-            else
+            else if (classLeaderIdx >= 0 && lapDistPct != null && classLeaderIdx < lapDistPct.Length)
             {
-                if (classLeaderIdx >= 0 && lapDistPct != null && classLeaderIdx < lapDistPct.Length)
-                {
-                    _lastClassLeaderLapPct = lapDistPct[classLeaderIdx];
-                    _lastClassLeaderCarIdx = classLeaderIdx;
-                }
+                _lastClassLeaderLapPct = lapDistPct[classLeaderIdx];
+                _lastClassLeaderCarIdx = classLeaderIdx;
+            }
 
-                if (overallLeaderIdx >= 0 && lapDistPct != null && overallLeaderIdx < lapDistPct.Length)
-                {
-                    _lastOverallLeaderLapPct = lapDistPct[overallLeaderIdx];
-                    _lastOverallLeaderCarIdx = overallLeaderIdx;
-                }
+            if (canRunOverallFinishHeuristic)
+            {
+                MaybeLatchLeaderFinished(
+                    isClassLeader: false,
+                    leaderIdx: overallLeaderIdx,
+                    lapDistPct,
+                    trackSurfaces,
+                    sessionTime,
+                    sessionStateNumeric);
+            }
+            else if (overallLeaderIdx >= 0 && lapDistPct != null && overallLeaderIdx < lapDistPct.Length)
+            {
+                _lastOverallLeaderLapPct = lapDistPct[overallLeaderIdx];
+                _lastOverallLeaderCarIdx = overallLeaderIdx;
             }
 
             if (!isMultiClassSession && OverallLeaderHasFinished && !ClassLeaderHasFinished)
