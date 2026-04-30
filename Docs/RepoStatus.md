@@ -1,3 +1,9 @@
+- 2026-04-30 Pit Fuel Control Push/Save mode UI/control-surface pass landed:
+  - added `Push/Save Mode` selector in Dash Control -> Global Dash Functions -> Fuel bound to `Settings.PitFuelControlPushSaveMode` (`LIVE=0`, `PROFILE=1`);
+  - selector shares the existing setting with `Pit.FuelControl.PushSaveModeCycle` action path (no UI-local independent state);
+  - added Pit Commands settings binding row `Push/Save Mode Cycle` under Pit Fuel Control for `LalaLaunch.Pit.FuelControl.PushSaveModeCycle`;
+  - no PitFuelControlEngine behavior/fuel-target math/guard/transport changes were introduced.
+
 - Runtime fuel pit-space cap authority fix (2026-04-29):
   - live pit-space exports (`Fuel.Pit.TankSpaceAvailable`, `Fuel.Pit.WillAdd`, `Fuel.Pit.FuelOnExit`) now resolve cap from runtime live tank authority first (`EffectiveLiveMaxTank` seam);
   - stale Strategy/Profile `MaxFuelOverride` no longer silently clamps runtime pit-space when live cap authority exists;

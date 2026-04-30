@@ -150,6 +150,9 @@
                         <TextBlock Margin="0,12,0,4" FontWeight="SemiBold" Text="Tyre Control"/>
                         <TextBlock Foreground="LightGray" TextWrapping="Wrap" Text="Plugin-owned tyre mode control (OFF / DRY / WET / AUTO)."/>
                         <ui:ControlsEditor ActionName="LalaLaunch.Pit.TyreControl.ModeCycle" FriendlyName="Tyre Mode Cycle"/>
+                        <TextBlock Margin="0,12,0,4" FontWeight="SemiBold" Text="Pit Fuel Control"/>
+                        <TextBlock Foreground="LightGray" TextWrapping="Wrap" Text="Plugin-owned pit fuel control surface (source/mode logic remains plugin-owned)."/>
+                        <ui:ControlsEditor ActionName="LalaLaunch.Pit.FuelControl.PushSaveModeCycle" FriendlyName="Push/Save Mode Cycle"/>
                     </StackPanel>
                 </StackPanel>
             </Expander>
