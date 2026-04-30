@@ -723,6 +723,11 @@ namespace LaunchPlugin
             return string.Equals(processName, "iRacingSim64DX11", StringComparison.OrdinalIgnoreCase);
         }
 
+        public void PublishInfoMessage(string message)
+        {
+            PublishMessage(message, PitCommandSeverity.Info);
+        }
+
         private void PublishMessage(string message, PitCommandSeverity severity)
         {
             string nextText = message ?? string.Empty;

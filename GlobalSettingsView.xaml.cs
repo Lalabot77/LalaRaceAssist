@@ -348,16 +348,14 @@ namespace LaunchPlugin
                 return;
             }
 
-            using (var dialog = new Microsoft.Win32.OpenFileDialog())
+            var dialog = new Microsoft.Win32.OpenFileDialog();
+            dialog.Filter = "CSV files (*.csv)|*.csv|All files (*.*)|*.*";
+            dialog.CheckFileExists = true;
+            dialog.Multiselect = false;
+            if (dialog.ShowDialog() == true)
             {
-                dialog.Filter = "CSV files (*.csv)|*.csv|All files (*.*)|*.*";
-                dialog.CheckFileExists = true;
-                dialog.Multiselect = false;
-                if (dialog.ShowDialog() == true)
-                {
-                    Plugin.Settings.LeagueClassCsvPath = dialog.FileName;
-                    Plugin.ReloadLeagueClassConfig();
-                }
+                Plugin.Settings.LeagueClassCsvPath = dialog.FileName;
+                Plugin.ReloadLeagueClassConfig();
             }
         }
 

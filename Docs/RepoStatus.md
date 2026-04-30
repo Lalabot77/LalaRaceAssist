@@ -15,6 +15,12 @@ Branch: work
 - No Git remote is configured in this checkout (`git remote -v` returns empty).
 
 ## Documentation sync status
+
+- 2026-04-30 Build-fix pass landed (compile-only):
+  - fixed League Class CSV browse dialog disposal compile error by removing `using` wrapper around `OpenFileDialog`;
+  - fixed Push/Save mode-cycle feedback accessibility by routing through a new public `PitCommandEngine.PublishInfoMessage(...)` wrapper;
+  - fixed League Class settings initializer legality by setting `LaunchPluginSettings.LeagueClassMode` default to literal `0`;
+  - no intended behavior changes to pit-command transport, feedback hold/severity semantics, or League Class runtime logic.
 - 2026-04-30 League Race Class Phase 1 cleanup pass landed:
   - player preview now uses live player identity when available (CustomerId/UserID + name), with explicit not-available wording while telemetry identity is missing;
   - CSV reload now handles read exceptions safely and reports non-fatal status text instead of throwing during init/reload;

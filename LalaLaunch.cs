@@ -324,7 +324,7 @@ namespace LaunchPlugin
             Settings.PitFuelControlPushSaveMode = nextMode;
             SaveSettings();
             string modeText = nextMode == 1 ? "PROFILE" : "LIVE";
-            _pitCommandEngine.PublishMessage($"PUSH/SAVE {modeText}");
+            _pitCommandEngine.PublishInfoMessage($"PUSH/SAVE {modeText}");
             _pitFuelControlEngine?.RefreshCurrentSourceTarget("Pit.FuelControl.PushSaveModeCycle");
             SimHub.Logging.Current.Info($"[LalaPlugin:PitFuelControl] PitFuelControlPushSaveModeCycle -> mode={modeText}");
         }
@@ -17553,7 +17553,7 @@ namespace LaunchPlugin
         public double PitFuelPushSaveProfileGuardPct { get; set; } = 10.0;
         public bool EnableAutoDashSwitch { get; set; } = true;
         public bool LeagueClassEnabled { get; set; } = false;
-        public int LeagueClassMode { get; set; } = (int)LeagueClassMode.CsvOnly;
+        public int LeagueClassMode { get; set; } = 0;
         public string LeagueClassCsvPath { get; set; } = string.Empty;
         public int LeagueClassPlayerOverrideMode { get; set; } = 0; // 0=Auto,1=Manual
         public string LeagueClassPlayerOverrideClassName { get; set; } = string.Empty;
