@@ -639,6 +639,58 @@ namespace LaunchPlugin
             }
         }
 
+        public int RaceEndPhase
+        {
+            get => _raceEndPhase;
+            private set
+            {
+                if (_raceEndPhase != value)
+                {
+                    _raceEndPhase = value;
+                    OnPropertyChanged();
+                }
+            }
+        }
+
+        public string RaceEndPhaseText
+        {
+            get => _raceEndPhaseText;
+            private set
+            {
+                if (!string.Equals(_raceEndPhaseText, value, StringComparison.Ordinal))
+                {
+                    _raceEndPhaseText = value;
+                    OnPropertyChanged();
+                }
+            }
+        }
+
+        public int RaceEndPhaseConfidence
+        {
+            get => _raceEndPhaseConfidence;
+            private set
+            {
+                if (_raceEndPhaseConfidence != value)
+                {
+                    _raceEndPhaseConfidence = value;
+                    OnPropertyChanged();
+                }
+            }
+        }
+
+        public bool RaceLastLapLikely
+        {
+            get => _raceLastLapLikely;
+            private set
+            {
+                if (_raceLastLapLikely != value)
+                {
+                    _raceLastLapLikely = value;
+                    OnPropertyChanged();
+                }
+            }
+        }
+
         public bool ClassLeaderValid { get; private set; }
         public int ClassLeaderCarIdx { get; private set; } = -1;
         public string ClassLeaderName { get; private set; } = string.Empty;
@@ -682,6 +734,11 @@ namespace LaunchPlugin
         private bool _classLeaderHasFinished;
         private bool _overallLeaderHasFinishedValid;
         private bool _classLeaderHasFinishedValid;
+        private int _raceEndPhase;
+        private string _raceEndPhaseText = "Unknown";
+        private int _raceEndPhaseConfidence;
+        private bool _raceLastLapLikely;
+        private int _nonRaceFinishTickStreak;
         private double _lastClassLeaderLapPct = double.NaN;
         private double _lastOverallLeaderLapPct = double.NaN;
         private int _lastClassLeaderCarIdx = -1;
@@ -5790,6 +5847,10 @@ namespace LaunchPlugin
             AttachCore("Race.ClassLeaderHasFinished", () => ClassLeaderHasFinished);
             AttachCore("Race.ClassLeaderHasFinishedValid", () => ClassLeaderHasFinishedValid);
             AttachCore("Race.LeaderHasFinished", () => LeaderHasFinished);
+            AttachCore("Race.EndPhase", () => RaceEndPhase);
+            AttachCore("Race.EndPhaseText", () => RaceEndPhaseText);
+            AttachCore("Race.EndPhaseConfidence", () => RaceEndPhaseConfidence);
+            AttachCore("Race.LastLapLikely", () => RaceLastLapLikely);
             AttachCore("MsgCxPressed", () => _msgCxPressed);
             AttachCore("Debug.EventMarkerPressed", () => _eventMarkerPressed);
             AttachCore("Debug.Hide_1", () => Settings?.DebugHide1 == true ? 1 : 0);
@@ -7118,6 +7179,11 @@ namespace LaunchPlugin
             _lastCompletedLapForFinish = -1;
             LeaderHasFinished = false;
             _leaderFinishLatchedByFlag = false;
+            RaceEndPhase = 0;
+            RaceEndPhaseText = "Unknown";
+            RaceEndPhaseConfidence = 0;
+            RaceLastLapLikely = false;
+            _nonRaceFinishTickStreak = 0;
         }
 
         private void ResetPitScreenToAuto(string reason)
@@ -16091,11 +16157,27 @@ namespace LaunchPlugin
 
             if (!isRace)
             {
+                _nonRaceFinishTickStreak++;
+                if (_nonRaceFinishTickStreak >= 3)
+                {
+                    if (OverallLeaderHasFinished || ClassLeaderHasFinished || LeaderHasFinished || RaceLastLapLikely || RaceEndPhase != 0)
+                    {
+                        SimHub.Logging.Current.Info("[LalaPlugin:Finish] reset trigger=non_race_sustained ticks=3");
+                    }
+
+                    ResetFinishTimingState();
+                }
+
                 _prevSessionTimeRemain = !double.IsNaN(sessionTimeRemain) ? sessionTimeRemain : double.NaN;
                 return;
             }
 
+            _nonRaceFinishTickStreak = 0;
+
             bool hasRemain = !double.IsNaN(sessionTimeRemain);
+            bool isTimedRace = hasRemain;
+            int sessionStateNumeric = ReadSessionStateInt(pluginManager);
+            bool hasSessionState = sessionStateNumeric > 0;
 
             // Detect first genuine crossing to zero
             bool crossedToZero =
@@ -16111,9 +16193,76 @@ namespace LaunchPlugin
                 _timerZeroSessionTime = sessionTime;
             }
 
-            int sessionStateNumeric = ReadSessionStateInt(pluginManager);
-            bool isTimedRace = hasRemain;
-            bool sessionStateRaceOrLater = sessionStateNumeric >= 4;
+            int resolvedEndPhase = 0;
+            string resolvedEndPhaseText = "Unknown";
+            int resolvedEndPhaseConfidence = 0;
+
+            if (hasSessionState)
+            {
+                if (sessionStateNumeric >= 6)
+                {
+                    resolvedEndPhase = 4;
+                    resolvedEndPhaseText = "SessionComplete";
+                    resolvedEndPhaseConfidence = 3;
+                }
+                else if (sessionStateNumeric == 5)
+                {
+                    resolvedEndPhase = 3;
+                    resolvedEndPhaseText = "LeaderFinished";
+                    resolvedEndPhaseConfidence = 3;
+                }
+                else if (sessionStateNumeric == 4)
+                {
+                    if (isTimedRace && hasRemain && sessionTimeRemain <= 0.0)
+                    {
+                        resolvedEndPhase = 2;
+                        resolvedEndPhaseText = "AfterZeroLeaderRunning";
+                        resolvedEndPhaseConfidence = 3;
+                    }
+                    else
+                    {
+                        resolvedEndPhase = 1;
+                        resolvedEndPhaseText = "Running";
+                        resolvedEndPhaseConfidence = 3;
+                    }
+                }
+            }
+
+            bool endPhaseChanged = (RaceEndPhase != resolvedEndPhase) ||
+                                   !string.Equals(RaceEndPhaseText, resolvedEndPhaseText, StringComparison.Ordinal) ||
+                                   RaceEndPhaseConfidence != resolvedEndPhaseConfidence;
+
+            RaceEndPhase = resolvedEndPhase;
+            RaceEndPhaseText = resolvedEndPhaseText;
+            RaceEndPhaseConfidence = resolvedEndPhaseConfidence;
+
+            if (endPhaseChanged)
+            {
+                SimHub.Logging.Current.Info(
+                    $"[LalaPlugin:Finish] end_phase phase={RaceEndPhaseText}({RaceEndPhase}) conf={RaceEndPhaseConfidence} " +
+                    $"state={sessionStateNumeric} timed={isTimedRace} tRemain={FormatSecondsOrNA(sessionTimeRemain)}");
+            }
+
+            bool lastLapLikelyNow = false;
+            if (hasSessionState)
+            {
+                if (sessionStateNumeric == 5)
+                {
+                    lastLapLikelyNow = true;
+                }
+                else if (sessionStateNumeric == 4 && isTimedRace && hasRemain && sessionTimeRemain <= 0.0)
+                {
+                    lastLapLikelyNow = true;
+                }
+            }
+
+            if (lastLapLikelyNow != RaceLastLapLikely)
+            {
+                SimHub.Logging.Current.Info(
+                    $"[LalaPlugin:Finish] last_lap_likely={lastLapLikelyNow} phase={RaceEndPhaseText} state={sessionStateNumeric} " +
+                    $"timed={isTimedRace} tRemain={FormatSecondsOrNA(sessionTimeRemain)}");
+            }
+            RaceLastLapLikely = lastLapLikelyNow;
 
             int playerCarIdx = GetInt(pluginManager, "DataCorePlugin.GameRawData.Telemetry.PlayerCarIdx", -1);
             bool isMultiClassSession = IsMultiClassSession(pluginManager);
@@ -16125,58 +16274,19 @@ namespace LaunchPlugin
             ClassLeaderHasFinishedValid = classLeaderIdx >= 0;
 
             int overallLeaderIdx = FindOverallLeaderCarIdx(overallPositions, trackSurfaces);
-
-            // Validity means “we know who the leader is”, not “we are using it”
             OverallLeaderHasFinishedValid = overallLeaderIdx >= 0;
 
-            bool checkeredFlagData = isRace && ReadFlagBool(
-                pluginManager,
-                "DataCorePlugin.GameRawData.Telemetry.SessionFlagsDetails.IsCheckeredFlag",
-                "DataCorePlugin.GameRawData.Telemetry.SessionFlagsDetails.IsCheckered"
-            );
-            if (checkeredFlagData && !_leaderFinishLatchedByFlag)
+            if (!OverallLeaderHasFinished && hasSessionState && sessionStateNumeric >= 5)
             {
-                _leaderFinishLatchedByFlag = true;
                 OverallLeaderHasFinished = true;
-                OverallLeaderHasFinishedValid = true;
-
-                if (isMultiClassSession)
-                {
-                    ClassLeaderHasFinished = true;
-                    ClassLeaderHasFinishedValid = classLeaderIdx >= 0;
-                }
-
-                _leaderFinishedSeen = true;
-                if (double.IsNaN(_leaderCheckeredSessionTime))
-                {
-                    _leaderCheckeredSessionTime = sessionTime;
-                }
-
                 SimHub.Logging.Current.Info(
-                    $"[LalaPlugin:Finish] checkered_flag trigger=flag leader_finished={LeaderHasFinished} " +
-                    $"class_finished={ClassLeaderHasFinished} class_valid={ClassLeaderHasFinishedValid} " +
-                    $"overall_finished={OverallLeaderHasFinished} overall_valid={OverallLeaderHasFinishedValid} " +
-                    $"multiclass={isMultiClassSession}"
-                );
+                    $"[LalaPlugin:Finish] overall_finish trigger=state state={sessionStateNumeric} phase={RaceEndPhaseText} conf={RaceEndPhaseConfidence}");
             }
 
+            bool canRunClassFinishHeuristic = isTimedRace && _timerZeroSeen && classLeaderIdx >= 0;
+            bool canRunOverallFinishHeuristic = isTimedRace && _timerZeroSeen && !hasSessionState && overallLeaderIdx >= 0;
 
-            if (!isTimedRace)
-            {
-                // Lap-limited: no derivation path without per-car lap counts or finish flags.
-                if (classLeaderIdx >= 0 && lapDistPct != null && classLeaderIdx < lapDistPct.Length)
-                {
-                    _lastClassLeaderLapPct = lapDistPct[classLeaderIdx];
-                    _lastClassLeaderCarIdx = classLeaderIdx;
-                }
-
-                if (overallLeaderIdx >= 0 && lapDistPct != null && overallLeaderIdx < lapDistPct.Length)
-                {
-                    _lastOverallLeaderLapPct = lapDistPct[overallLeaderIdx];
-                    _lastOverallLeaderCarIdx = overallLeaderIdx;
-                }
-            }
-            else if (_timerZeroSeen && sessionStateRaceOrLater)
+            if (canRunClassFinishHeuristic)
             {
                 MaybeLatchLeaderFinished(
                     isClassLeader: true,
@@ -16185,37 +16295,39 @@ namespace LaunchPlugin
                     trackSurfaces,
                     sessionTime,
                     sessionStateNumeric);
-
-                if (overallLeaderIdx >= 0)
-                {
-                    MaybeLatchLeaderFinished(
-                        isClassLeader: false,
-                        leaderIdx: overallLeaderIdx,
-                        lapDistPct,
-                        trackSurfaces,
-                        sessionTime,
-                        sessionStateNumeric);
-                }
             }
-            else
+            else if (classLeaderIdx >= 0 && lapDistPct != null && classLeaderIdx < lapDistPct.Length)
             {
-                if (classLeaderIdx >= 0 && lapDistPct != null && classLeaderIdx < lapDistPct.Length)
-                {
-                    _lastClassLeaderLapPct = lapDistPct[classLeaderIdx];
-                    _lastClassLeaderCarIdx = classLeaderIdx;
-                }
+                _lastClassLeaderLapPct = lapDistPct[classLeaderIdx];
+                _lastClassLeaderCarIdx = classLeaderIdx;
+            }
 
-                if (overallLeaderIdx >= 0 && lapDistPct != null && overallLeaderIdx < lapDistPct.Length)
-                {
-                    _lastOverallLeaderLapPct = lapDistPct[overallLeaderIdx];
-                    _lastOverallLeaderCarIdx = overallLeaderIdx;
-                }
+            if (canRunOverallFinishHeuristic)
+            {
+                MaybeLatchLeaderFinished(
+                    isClassLeader: false,
+                    leaderIdx: overallLeaderIdx,
+                    lapDistPct,
+                    trackSurfaces,
+                    sessionTime,
+                    sessionStateNumeric);
+            }
+            else if (overallLeaderIdx >= 0 && lapDistPct != null && overallLeaderIdx < lapDistPct.Length)
+            {
+                _lastOverallLeaderLapPct = lapDistPct[overallLeaderIdx];
+                _lastOverallLeaderCarIdx = overallLeaderIdx;
+            }
+
+            if (!isMultiClassSession && OverallLeaderHasFinished && !ClassLeaderHasFinished)
+            {
+                ClassLeaderHasFinished = true;
+                SimHub.Logging.Current.Info("[LalaPlugin:Finish] class_finish trigger=single_class_mirror source=overall");
             }
 
             bool derivedLeaderBefore = LeaderHasFinished;
             bool derivedLeaderAfter = isMultiClassSession
                 ? (ClassLeaderHasFinishedValid && ClassLeaderHasFinished)
-                : (OverallLeaderHasFinishedValid && OverallLeaderHasFinished);
+                : OverallLeaderHasFinished;
             LeaderHasFinished = derivedLeaderAfter;
 
             if (!derivedLeaderBefore && derivedLeaderAfter)
@@ -16224,10 +16336,9 @@ namespace LaunchPlugin
                 _leaderCheckeredSessionTime = sessionTime;
                 SimHub.Logging.Current.Info(
                     $"[LalaPlugin:Finish] leader_finish trigger=derived source={(isMultiClassSession ? "class" : "overall")} " +
-                    $"session_state={sessionStateNumeric} timer0_seen={_timerZeroSeen}");
+                    $"session_state={sessionStateNumeric} timer0_seen={_timerZeroSeen} phase={RaceEndPhaseText}");
             }
 
-            // ----- DRIVER FINISH -----
             bool lapCompleted =
                 (_lastCompletedLapForFinish >= 0) &&
                 (completedLaps > _lastCompletedLapForFinish);
@@ -16241,7 +16352,7 @@ namespace LaunchPlugin
                 "DataCorePlugin.GameRawData.Telemetry.SessionFlagsDetails.IsCheckered"
             );
 
-            bool sessionEnded = checkeredFlag || checkeredFlagData;
+            bool sessionEnded = hasSessionState && sessionStateNumeric >= 5;
 
             if (lapCompleted && checkeredFlag)
             {
@@ -16275,7 +16386,6 @@ namespace LaunchPlugin
                     sessionTime);
 
                 MaybeLogAfterZeroResult(sessionTime, sessionEnded);
-                ResetFinishTimingState();
             }
             else if (sessionEnded)
             {

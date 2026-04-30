@@ -154,6 +154,11 @@ Scope: Info/Warn logs emitted via `SimHub.Logging.Current.Info(...)` and `SimHub
 - **`[LalaPlugin:PitScreen] Reset to auto (session-change|combo-change) -> mode=..., manual=..., dismissed=...`** — Manual pit screen was cleared due to session token or car/track combo changes.【F:LalaLaunch.cs†L3820-L3834】【F:LalaLaunch.cs†L4068-L4435】
 
 ## Finish timing and after-zero observation
+- **`[LalaPlugin:Finish] end_phase phase=...`** — End-phase transition log from SessionState authority resolver (`Unknown/Running/AfterZeroLeaderRunning/LeaderFinished/SessionComplete`) with confidence and remaining-time context.
+- **`[LalaPlugin:Finish] overall_finish trigger=state ...`** — Overall leader-finished latch from SessionState authority (`>=5`).
+- **`[LalaPlugin:Finish] class_finish trigger=single_class_mirror source=overall`** — Single-class class-leader-finished mirror latch from overall leader state.
+- **`[LalaPlugin:Finish] last_lap_likely=...`** — Last-lap-likely dash gate transition log (`SessionState==5` any race type, or timed-race state 4 with zero remaining).
+- **`[LalaPlugin:Finish] reset trigger=non_race_sustained ticks=3`** — Finish latches reset only after sustained non-race transition guard (anti-blip).
 - **`[LalaPlugin:Finish] checkered_flag trigger=flag ...`** — Finish detection driven by session flag data; includes leader/class validity and multiclass flag.【F:LalaLaunch.cs†L4566-L4715】
 - **`[LalaPlugin:Finish] leader_finish trigger=derived source=...`** — Derived leader finish (class/overall) once timer zero seen and heuristics trip.【F:LalaLaunch.cs†L4716-L4740】
 - **`[LalaPlugin:Finish] finish_latch trigger=driver_checkered ...`** — Driver checkered lap detected; logs timer0, leader/driver checkered times, after-zero measurements.【F:LalaLaunch.cs†L4729-L4780】

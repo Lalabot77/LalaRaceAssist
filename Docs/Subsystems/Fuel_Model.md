@@ -189,6 +189,7 @@ Contingency-aware tactical contract:
 - `Fuel.RequiredBurnToEnd*` provides driver-facing burn-to-end guidance while protecting active contingency reserve.
 - Active contingency authority is planner-first, then profile track fallback, then default fallback.
 - `Fuel.Delta.LitresCurrent/Plan/WillAdd` and Push/Save variants protect active contingency on the **required-to-finish side only**; when contingency is configured in laps, contingency litres are resolved per burn basis (stable for Normal, push burn for Push, save burn for Save).
+- race-end phase classification is finish-detection owned; dash-side stability behavior near finish should consume `Race.EndPhase` / `Race.EndPhaseText` / `Race.EndPhaseConfidence` and `Race.LastLapLikely` rather than player-scoped flag inference.
 - `Fuel.Pit.WillAdd` remains pure clamp mirror (`min(requestedAdd, tankSpaceAvailable)`) and does not add contingency directly.
 
 ### Logging expectations
