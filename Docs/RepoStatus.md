@@ -15,6 +15,12 @@ Branch: work
 - No Git remote is configured in this checkout (`git remote -v` returns empty).
 
 ## Documentation sync status
+- 2026-04-30 League Race Class Phase 1 cleanup pass landed:
+  - player preview now uses live player identity when available (CustomerId/UserID + name), with explicit not-available wording while telemetry identity is missing;
+  - CSV reload now handles read exceptions safely and reports non-fatal status text instead of throwing during init/reload;
+  - League Race colour preview uses safe hex-to-brush conversion fallback (transparent on invalid/blank);
+  - fallback-rule settings normalization now guarantees a stable 3-row editable collection.
+
 - 2026-04-30 League Race Class Phase 1 infrastructure landed:
   - added settings/UI scaffold for League Class enable/mode, CSV path + reload, player override fields, and suffix fallback rules;
   - added resolver/cache infrastructure with CSV counters/status and preview resolution;

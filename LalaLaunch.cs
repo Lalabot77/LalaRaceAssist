@@ -4735,7 +4735,15 @@ namespace LaunchPlugin
 
         public void ReloadLeagueClassConfig()
         {
-            _leagueClassResolver.Reload(Settings);
+            try
+            {
+                _leagueClassResolver.Reload(Settings);
+            }
+            catch (Exception ex)
+            {
+                SimHub.Logging.Current.Warn("[LalaPlugin:LeagueClass] reload failed: " + ex.Message);
+            }
+
             OnPropertyChanged(nameof(LeagueClassStatus));
             OnPropertyChanged(nameof(LeagueClassPlayerPreviewText));
         }
@@ -4744,10 +4752,62 @@ namespace LaunchPlugin
         {
             get
             {
-                var info = _leagueClassResolver.ResolvePlayerPreview(Settings, null, string.Empty);
-                if (!info.Valid) return "Detected: unresolved";
-                return $"Detected: {info.Name} ({info.Source})";
+                int? playerCustomerId = null;
+                string playerName = string.Empty;
+                bool hasLiveIdentity = TryGetLivePlayerIdentityPreview(out playerCustomerId, out playerName);
+
+                var info = _leagueClassResolver.ResolvePlayerPreview(Settings, playerCustomerId, playerName);
+                if (info.Valid)
+                {
+                    string suffix = !string.IsNullOrWhiteSpace(playerName) ? (" for " + playerName) : string.Empty;
+                    return $"Detected: {info.Name} ({info.Source}){suffix}";
+                }
+
+                if (Settings != null && Settings.LeagueClassPlayerOverrideMode == 1)
+                {
+                    return "Detected: manual override invalid";
+                }
+
+                if (!hasLiveIdentity)
+                {
+                    return "Live player identity not available yet";
+                }
+
+                return "Detected: unresolved";
             }
+        }
+
+        private bool TryGetLivePlayerIdentityPreview(out int? customerId, out string driverName)
+        {
+            customerId = null;
+            driverName = string.Empty;
+
+            var pluginManager = PluginManager;
+            if (pluginManager == null)
+            {
+                return false;
+            }
+
+            int playerCarIdx = SafeReadInt(pluginManager, "DataCorePlugin.GameRawData.Telemetry.PlayerCarIdx", -1);
+            if (playerCarIdx < 0)
+            {
+                return false;
+            }
+
+            if (TryGetCarIdentityFromSessionInfo(pluginManager, playerCarIdx, out var name, out _, out _))
+            {
+                driverName = name ?? string.Empty;
+            }
+
+            if (TryGetCarDriverInfo(pluginManager, playerCarIdx, out _, out _, out _, out _, out _, out _, out _, out _, out int userId, out _))
+            {
+                if (userId > 0)
+                {
+                    customerId = userId;
+                }
+            }
+
+            return customerId.HasValue || !string.IsNullOrWhiteSpace(driverName);
         }
 
         private ObservableCollection<LaunchPluginFriendEntry> _friendsCollection;
@@ -6539,6 +6599,7 @@ namespace LaunchPlugin
             NormalizeShiftAssistSettings(settings);
             NormalizeDarkModeSettings(settings);
             NormalizePitCommandSettings(settings);
+            NormalizeLeagueClassSettings(settings);
             return settings;
         }
 
@@ -6665,6 +6726,29 @@ namespace LaunchPlugin
             settings.CarSAStatusEBackgroundColors = NormalizeStatusColorMap(settings.CarSAStatusEBackgroundColors);
             settings.CarSABorderColors = NormalizeBorderColorMap(settings.CarSABorderColors);
             NormalizeFriendSettings(settings);
+        }
+
+        private static void NormalizeLeagueClassSettings(LaunchPluginSettings settings)
+        {
+            if (settings == null)
+            {
+                return;
+            }
+
+            if (settings.LeagueClassFallbackRules == null)
+            {
+                settings.LeagueClassFallbackRules = new List<LeagueClassFallbackRule>();
+            }
+
+            while (settings.LeagueClassFallbackRules.Count < 3)
+            {
+                settings.LeagueClassFallbackRules.Add(new LeagueClassFallbackRule());
+            }
+
+            if (settings.LeagueClassFallbackRules.Count > 3)
+            {
+                settings.LeagueClassFallbackRules = settings.LeagueClassFallbackRules.Take(3).ToList();
+            }
         }
 
         private static void NormalizePitCommandSettings(LaunchPluginSettings settings)
@@ -17290,7 +17374,7 @@ namespace LaunchPlugin
         public double ResultsDisplayTime { get; set; } = 5.0; // Corrected to 5 seconds
         public double FuelReadyConfidence { get; set; } = LalaLaunch.FuelReadyConfidenceDefault;
         public int StintFuelMarginPct { get; set; } = LalaLaunch.StintFuelMarginPctDefault;
-                public bool EnableAutoDashSwitch { get; set; } = true;
+        public bool EnableAutoDashSwitch { get; set; } = true;
         public bool LeagueClassEnabled { get; set; } = false;
         public int LeagueClassMode { get; set; } = (int)LeagueClassMode.CsvOnly;
         public string LeagueClassCsvPath { get; set; } = string.Empty;

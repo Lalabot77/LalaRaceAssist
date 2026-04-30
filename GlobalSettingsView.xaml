@@ -13,6 +13,7 @@
 
     <UserControl.Resources>
         <BooleanToVisibilityConverter x:Key="BooleanToVisibilityConverter"/>
+        <local:HexToBrushConverter x:Key="HexToBrushConverter"/>
         <x:Array x:Key="DriverTagOptions" Type="{x:Type sys:String}">
             <sys:String>Friend</sys:String>
             <sys:String>Teammate</sys:String>
@@ -235,7 +236,7 @@
                         <TextBox Width="90" Margin="8,0,0,0" Text="{Binding Settings.LeagueClassPlayerOverrideShortName, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" ToolTip="Short"/>
                         <TextBox Width="50" Margin="8,0,0,0" Text="{Binding Settings.LeagueClassPlayerOverrideRank, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" ToolTip="Rank"/>
                         <TextBox Width="90" Margin="8,0,0,0" Text="{Binding Settings.LeagueClassPlayerOverrideColourHex, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" ToolTip="#RRGGBB"/>
-                        <Border Width="18" Height="18" Margin="6,2,0,0" BorderBrush="#777" BorderThickness="1" Background="{Binding Settings.LeagueClassPlayerOverrideColourHex}"/>
+                        <Border Width="18" Height="18" Margin="6,2,0,0" BorderBrush="#777" BorderThickness="1" Background="{Binding Settings.LeagueClassPlayerOverrideColourHex, Converter={StaticResource HexToBrushConverter}}"/>
                     </StackPanel>
                     <TextBlock Margin="0,6,0,0" Foreground="LightGray" Text="{Binding LeagueClassPlayerPreviewText}"/>
 
@@ -250,7 +251,7 @@
                                     <TextBox Width="90" Margin="6,0,0,0" Text="{Binding ShortName, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" ToolTip="Short"/>
                                     <TextBox Width="50" Margin="6,0,0,0" Text="{Binding Rank, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" ToolTip="Rank"/>
                                     <TextBox Width="90" Margin="6,0,0,0" Text="{Binding ColourHex, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" ToolTip="#RRGGBB"/>
-                                    <Border Width="18" Height="18" Margin="6,2,0,0" BorderBrush="#777" BorderThickness="1" Background="{Binding ColourHex}"/>
+                                    <Border Width="18" Height="18" Margin="6,2,0,0" BorderBrush="#777" BorderThickness="1" Background="{Binding ColourHex, Converter={StaticResource HexToBrushConverter}}"/>
                                 </StackPanel>
                             </DataTemplate>
                         </ItemsControl.ItemTemplate>

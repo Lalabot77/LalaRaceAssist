@@ -93,10 +93,13 @@ namespace LaunchPlugin
             bool csvMode = mode == LeagueClassMode.CsvOnly || mode == LeagueClassMode.CsvThenName;
             string path = settings.LeagueClassCsvPath ?? string.Empty;
 
+            string readError = string.Empty;
             if (csvMode && !string.IsNullOrWhiteSpace(path) && File.Exists(path))
             {
-                foreach (string rawLine in File.ReadAllLines(path))
+                try
                 {
+                    foreach (string rawLine in File.ReadAllLines(path))
+                    {
                     string line = (rawLine ?? string.Empty).Trim();
                     if (string.IsNullOrWhiteSpace(line)) continue;
 
@@ -148,11 +151,21 @@ namespace LaunchPlugin
                         _detectedClassNames.Add(className);
                     }
                 }
+                }
+                catch (Exception ex)
+                {
+                    readError = ex.Message;
+                    loaded = 0;
+                    invalid = 0;
+                    duplicate = 0;
+                    _csvByCustomerId.Clear();
+                    _detectedClassNames.Clear();
+                }
             }
 
             _status = new LeagueClassStatus
             {
-                ConfigStatusText = BuildStatusText(settings, path, csvMode),
+                ConfigStatusText = BuildStatusText(settings, path, csvMode, readError),
                 LoadedCount = loaded,
                 InvalidRowCount = invalid,
                 DuplicateRowCount = duplicate,
@@ -223,12 +236,13 @@ namespace LaunchPlugin
             return EffectiveRaceClassInfo.Invalid(LeagueClassSource.Native);
         }
 
-        private static string BuildStatusText(LaunchPluginSettings settings, string path, bool csvMode)
+        private static string BuildStatusText(LaunchPluginSettings settings, string path, bool csvMode, string readError)
         {
             if (!settings.LeagueClassEnabled) return "Disabled";
             if (!csvMode) return "Name fallback mode active";
             if (string.IsNullOrWhiteSpace(path)) return "CSV path not set";
             if (!File.Exists(path)) return "CSV file not found";
+            if (!string.IsNullOrWhiteSpace(readError)) return "CSV read error: " + readError;
             return "CSV loaded";
         }
 
