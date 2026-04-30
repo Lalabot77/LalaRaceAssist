@@ -1,6 +1,6 @@
 ## 2026-04-30 — Pit Fuel Control Push/Save mode UI surface + binding row
 - Classification: **both** (plugin settings/binding UI surface only + docs alignment).
-- Added Dash Control -> Global Dash Functions -> Fuel selector `Push/Save Mode` bound directly to `Settings.PitFuelControlPushSaveMode` (`LIVE=0`, `PROFILE=1`).
+- Added Dash Control -> Global Dash Functions -> Fuel two-state toggle `Push/Save Profile Mode` (OFF=`LIVE`, ON=`PROFILE`) bound to the shared Push/Save mode setting via `Settings.PitFuelControlPushSaveMode`.
 - Added Settings -> Pit Commands -> Pit Fuel Control binding row for `LalaLaunch.Pit.FuelControl.PushSaveModeCycle` with label `Push/Save Mode Cycle`.
 - Preserved invariants: no PitFuelControlEngine logic, fuel math, guard semantics, transport, or command payload changes.
 

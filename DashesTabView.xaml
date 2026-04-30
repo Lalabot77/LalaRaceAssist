@@ -114,19 +114,15 @@
                                      Maximum="30"
                                      Value="{Binding Settings.StintFuelMarginPct, Mode=TwoWay}"
                                      ToolTip="Reserve fuel as a percentage of one lap (based on stable fuel burn) when calculating stint burn targets." />
-                    <StackPanel Orientation="Horizontal" Margin="0,8,0,0">
-                        <TextBlock Text="Push/Save Mode:"
-                                   VerticalAlignment="Center"
-                                   Margin="0,0,8,0"
-                                   ToolTip="Select Push/Save burn basis for Pit Fuel Control: LIVE uses runtime push/save burn, PROFILE uses profile track push/save burn with guard limits." />
-                        <ComboBox Width="120"
-                                  SelectedValue="{Binding Settings.PitFuelControlPushSaveMode, Mode=TwoWay}"
-                                  SelectedValuePath="Tag"
-                                  ToolTip="Pit Fuel Control Push/Save mode: LIVE=0, PROFILE=1. This setting is shared with PushSaveModeCycle action and reflects action changes immediately.">
-                            <ComboBoxItem Content="LIVE" Tag="0" />
-                            <ComboBoxItem Content="PROFILE" Tag="1" />
-                        </ComboBox>
-                    </StackPanel>
+                    <styles:SHToggleCheckbox Content="Push/Save Profile Mode"
+                                             Margin="0,8,0,0"
+                                             IsChecked="{Binding Settings.PitFuelControlPushSaveProfileModeEnabled, Mode=TwoWay}"
+                                             ToolTip="Toggle Pit Fuel Control Push/Save basis. OFF = LIVE (0), ON = PROFILE (1). This setting is shared with PushSaveModeCycle action and reflects action changes immediately." />
+                    <TextBlock Text="OFF = LIVE, ON = PROFILE"
+                               FontSize="11"
+                               Opacity="0.7"
+                               TextWrapping="Wrap"
+                               Margin="0,2,0,0"/>
                     <ui:TitledSlider Title="Pit Fuel Push/Save Profile Guard (%): "
                                      Margin="0,8,0,0"
                                      Minimum="0"

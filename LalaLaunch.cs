@@ -17573,7 +17573,26 @@ namespace LaunchPlugin
         public double ResultsDisplayTime { get; set; } = 5.0; // Corrected to 5 seconds
         public double FuelReadyConfidence { get; set; } = LalaLaunch.FuelReadyConfidenceDefault;
         public int StintFuelMarginPct { get; set; } = LalaLaunch.StintFuelMarginPctDefault;
-        public int PitFuelControlPushSaveMode { get; set; } = 0;
+        private int _pitFuelControlPushSaveMode = 0;
+        public int PitFuelControlPushSaveMode
+        {
+            get { return _pitFuelControlPushSaveMode; }
+            set
+            {
+                int normalized = value == 1 ? 1 : 0;
+                if (_pitFuelControlPushSaveMode == normalized) return;
+                _pitFuelControlPushSaveMode = normalized;
+                OnPropertyChanged(nameof(PitFuelControlPushSaveMode));
+                OnPropertyChanged(nameof(PitFuelControlPushSaveProfileModeEnabled));
+            }
+        }
+
+        [JsonIgnore]
+        public bool PitFuelControlPushSaveProfileModeEnabled
+        {
+            get { return PitFuelControlPushSaveMode == 1; }
+            set { PitFuelControlPushSaveMode = value ? 1 : 0; }
+        }
         public double PitFuelPushSaveProfileGuardPct { get; set; } = 10.0;
         public bool EnableAutoDashSwitch { get; set; } = true;
         public bool LeagueClassEnabled { get; set; } = false;

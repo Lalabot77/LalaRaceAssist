@@ -7,7 +7,7 @@ Branch: work
 ## Purpose
 This subsystem owns plugin-driven pit-lane command dispatch and command-state surfaces used by dashboards and hardware bindings.
 
-UI/control surface note: Dash Control -> Global Dash Functions -> Fuel exposes `Push/Save Mode` (`LIVE`/`PROFILE`) bound to `Settings.PitFuelControlPushSaveMode`, and Settings -> Pit Commands exposes `Push/Save Mode Cycle` binding for `LalaLaunch.Pit.FuelControl.PushSaveModeCycle`.
+UI/control surface note: Dash Control -> Global Dash Functions -> Fuel exposes `Push/Save Profile Mode` toggle (OFF=`LIVE`, ON=`PROFILE`) bound to `Settings.PitFuelControlPushSaveMode`, and Settings -> Pit Commands exposes `Push/Save Mode Cycle` binding for `LalaLaunch.Pit.FuelControl.PushSaveModeCycle`.
 
 It combines:
 - built-in pit command actions (`LalaLaunch.Pit.*`),
