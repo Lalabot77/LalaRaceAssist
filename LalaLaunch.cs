@@ -312,6 +312,22 @@ namespace LaunchPlugin
             SimHub.Logging.Current.Info("[LalaPlugin:PitFuelControl] PitFuelControlSetPlan action received");
             _pitFuelControlEngine.SetPlan();
         }
+
+        public void PitFuelControlPushSaveModeCycle()
+        {
+            if (Settings == null)
+            {
+                return;
+            }
+
+            int nextMode = (Settings.PitFuelControlPushSaveMode + 1) % 2;
+            Settings.PitFuelControlPushSaveMode = nextMode;
+            SaveSettings();
+            string modeText = nextMode == 1 ? "PROFILE" : "LIVE";
+            _pitCommandEngine.PublishMessage($"PUSH/SAVE {modeText}");
+            _pitFuelControlEngine?.RefreshCurrentSourceTarget("Pit.FuelControl.PushSaveModeCycle");
+            SimHub.Logging.Current.Info($"[LalaPlugin:PitFuelControl] PitFuelControlPushSaveModeCycle -> mode={modeText}");
+        }
         public void PitTyreControlModeCycle() => _pitTyreControlEngine.ModeCycle();
         public void PitTyreControlSetOff() => _pitTyreControlEngine.SetOff();
         public void PitTyreControlSetDry() => _pitTyreControlEngine.SetDry();
@@ -5436,6 +5452,7 @@ namespace LaunchPlugin
             this.AddAction("Pit.FuelControl.SetNorm", (a, b) => PitFuelControlSetNorm());
             this.AddAction("Pit.FuelControl.SetSave", (a, b) => PitFuelControlSetSave());
             this.AddAction("Pit.FuelControl.SetPlan", (a, b) => PitFuelControlSetPlan());
+            this.AddAction("Pit.FuelControl.PushSaveModeCycle", (a, b) => PitFuelControlPushSaveModeCycle());
             this.AddAction("Pit.TyreControl.ModeCycle", (a, b) => PitTyreControlModeCycle());
             this.AddAction("Pit.TyreControl.SetOff", (a, b) => PitTyreControlSetOff());
             this.AddAction("Pit.TyreControl.SetDry", (a, b) => PitTyreControlSetDry());
@@ -5771,6 +5788,8 @@ namespace LaunchPlugin
             AttachCore("Pit.FuelControl.TargetLitres", () => _pitFuelControlEngine.TargetLitres);
             AttachCore("Pit.FuelControl.OverrideActive", () => _pitFuelControlEngine.OverrideActive);
             AttachCore("Pit.FuelControl.Fault", () => _pitFuelControlEngine.Fault);
+            AttachCore("Pit.FuelControl.PushSaveMode", () => GetPitFuelControlPushSaveMode());
+            AttachCore("Pit.FuelControl.PushSaveModeText", () => GetPitFuelControlPushSaveModeText());
             AttachCore("Pit.TyreControl.Mode", () => (int)_pitTyreControlEngine.Mode);
             AttachCore("Pit.TyreControl.ModeText", () => _pitTyreControlEngine.ModeText);
             AttachCore("Pit.TyreControl.Fault", () => _pitTyreControlEngine.Fault);
@@ -6816,6 +6835,17 @@ namespace LaunchPlugin
                 settings.PitCommandTransportMode = (int)PitCommandTransportMode.Auto;
             }
 
+            if (settings.PitFuelControlPushSaveMode < 0 || settings.PitFuelControlPushSaveMode > 1)
+            {
+                settings.PitFuelControlPushSaveMode = 0;
+            }
+
+            settings.PitFuelPushSaveProfileGuardPct = ClampToRange(
+                settings.PitFuelPushSaveProfileGuardPct,
+                0.0,
+                30.0,
+                10.0);
+
 
             if (settings.CustomMessages == null)
             {
@@ -7429,6 +7459,17 @@ namespace LaunchPlugin
             double pushNeedLitres = -Fuel_Delta_LitresCurrentPush;
             double saveNeedLitres = -Fuel_Delta_LitresCurrentSave;
 
+            if (GetPitFuelControlPushSaveMode() == 1)
+            {
+                double stableLapsRemaining = LiveLapsRemainingInRace_Stable;
+                double currentFuel = Math.Max(0.0, _lastFuelLevel);
+                if (TryResolveProfileAssistedPushSaveNeeds(stableLapsRemaining, currentFuel, out double profilePushNeed, out double profileSaveNeed))
+                {
+                    pushNeedLitres = profilePushNeed;
+                    saveNeedLitres = profileSaveNeed;
+                }
+            }
+
             snapshot.TargetNormLitres = Math.Max(0.0, normNeedLitres);
             snapshot.TargetPushLitres = Math.Max(0.0, pushNeedLitres);
             snapshot.TargetSaveLitres = Math.Max(0.0, saveNeedLitres);
@@ -7438,6 +7479,87 @@ namespace LaunchPlugin
             snapshot.TankSpaceLitres = Math.Max(0.0, Pit_TankSpaceAvailable);
             snapshot.TelemetryRequestedFuelLitres = SafeReadDouble(PluginManager, "DataCorePlugin.GameRawData.Telemetry.PitSvFuel", 0.0);
             return snapshot;
+        }
+
+        private int GetPitFuelControlPushSaveMode()
+        {
+            int mode = Settings?.PitFuelControlPushSaveMode ?? 0;
+            if (mode < 0) return 0;
+            if (mode > 1) return 1;
+            return mode;
+        }
+
+        private string GetPitFuelControlPushSaveModeText()
+        {
+            return GetPitFuelControlPushSaveMode() == 1 ? "PROFILE" : "LIVE";
+        }
+
+        private bool TryResolveProfileAssistedPushSaveNeeds(double stableLapsRemaining, double currentFuel, out double pushNeedLitres, out double saveNeedLitres)
+        {
+            pushNeedLitres = -Fuel_Delta_LitresCurrentPush;
+            saveNeedLitres = -Fuel_Delta_LitresCurrentSave;
+
+            if (stableLapsRemaining <= 0.0 || !IsFinitePositive(LiveFuelPerLap_Stable))
+            {
+                return false;
+            }
+
+            if (!TryGetProfilePushSaveBurnsForCurrentCondition(out double profilePushBurn, out double profileSaveBurn))
+            {
+                return false;
+            }
+
+            double guardPct = ClampToRange(Settings?.PitFuelPushSaveProfileGuardPct ?? 10.0, 0.0, 30.0, 10.0);
+            double guardFraction = guardPct / 100.0;
+            double stableNorm = LiveFuelPerLap_Stable;
+            double maxPush = stableNorm * (1.0 + guardFraction);
+            double minSave = stableNorm * (1.0 - guardFraction);
+
+            profilePushBurn = Math.Max(minSave, Math.Min(maxPush, profilePushBurn));
+            profileSaveBurn = Math.Max(minSave, Math.Min(maxPush, profileSaveBurn));
+
+            if (!IsFinitePositive(profilePushBurn) || !IsFinitePositive(profileSaveBurn))
+            {
+                return false;
+            }
+
+            double contingencyPush = ResolveLivePitFuelControlContingencyLitres(profilePushBurn);
+            double contingencySave = ResolveLivePitFuelControlContingencyLitres(profileSaveBurn);
+
+            double requiredPush = (stableLapsRemaining * profilePushBurn) + contingencyPush;
+            double requiredSave = (stableLapsRemaining * profileSaveBurn) + contingencySave;
+
+            pushNeedLitres = Math.Max(0.0, requiredPush - currentFuel);
+            saveNeedLitres = Math.Max(0.0, requiredSave - currentFuel);
+            return true;
+        }
+
+        private bool TryGetProfilePushSaveBurnsForCurrentCondition(out double pushBurn, out double saveBurn)
+        {
+            pushBurn = 0.0;
+            saveBurn = 0.0;
+            try
+            {
+                var car = ActiveProfile;
+                if (car == null) return false;
+
+                var ts = car.ResolveTrackByNameOrKey(CurrentTrackKey) ??
+                         car.ResolveTrackByNameOrKey(CurrentTrackName);
+                if (ts == null) return false;
+
+                pushBurn = _isWetMode ? (ts.MaxFuelPerLapWet ?? 0.0) : (ts.MaxFuelPerLapDry ?? 0.0);
+                saveBurn = _isWetMode ? (ts.MinFuelPerLapWet ?? 0.0) : (ts.MinFuelPerLapDry ?? 0.0);
+                return IsFinitePositive(pushBurn) && IsFinitePositive(saveBurn);
+            }
+            catch
+            {
+                return false;
+            }
+        }
+
+        private static bool IsFinitePositive(double value)
+        {
+            return value > 0.0 && !double.IsNaN(value) && !double.IsInfinity(value);
         }
 
         private bool ResolvePitFuelControlSuppression(string sessionTypeName, out string reason)
@@ -17427,6 +17549,8 @@ namespace LaunchPlugin
         public double ResultsDisplayTime { get; set; } = 5.0; // Corrected to 5 seconds
         public double FuelReadyConfidence { get; set; } = LalaLaunch.FuelReadyConfidenceDefault;
         public int StintFuelMarginPct { get; set; } = LalaLaunch.StintFuelMarginPctDefault;
+        public int PitFuelControlPushSaveMode { get; set; } = 0;
+        public double PitFuelPushSaveProfileGuardPct { get; set; } = 10.0;
         public bool EnableAutoDashSwitch { get; set; } = true;
         public bool LeagueClassEnabled { get; set; } = false;
         public int LeagueClassMode { get; set; } = (int)LeagueClassMode.CsvOnly;

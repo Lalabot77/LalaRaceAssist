@@ -114,6 +114,14 @@
                                      Maximum="30"
                                      Value="{Binding Settings.StintFuelMarginPct, Mode=TwoWay}"
                                      ToolTip="Reserve fuel as a percentage of one lap (based on stable fuel burn) when calculating stint burn targets." />
+                    <ui:TitledSlider Title="Pit Fuel Push/Save Profile Guard (%): "
+                                     Margin="0,8,0,0"
+                                     Minimum="0"
+                                     Maximum="30"
+                                     TickFrequency="1"
+                                     IsSnapToTickEnabled="True"
+                                     Value="{Binding Settings.PitFuelPushSaveProfileGuardPct, Mode=TwoWay}"
+                                     ToolTip="When Push/Save mode is PROFILE, caps profile push/save burn around live stable NORM burn by this guard percentage." />
                     
                     <styles:SHToggleCheckbox Content="Pit.Box: include optional repairs in service countdown"
                          Margin="0,0,0,10"

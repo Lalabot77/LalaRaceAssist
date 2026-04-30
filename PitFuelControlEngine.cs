@@ -281,6 +281,48 @@ namespace LaunchPlugin
         public void SetSave() => SetSource(PitFuelControlSource.Save, "Pit.FuelControl.SetSave");
         public void SetPlan() => SetPlanSource("Pit.FuelControl.SetPlan");
 
+        public void RefreshCurrentSourceTarget(string actionName = "Pit.FuelControl.PushSaveModeCycle")
+        {
+            LogActionEntry("RefreshCurrentSourceTarget");
+            if (TryApplySuppressedState())
+            {
+                LogActionBlockedSuppressed("RefreshCurrentSourceTarget");
+                return;
+            }
+
+            RefreshDerivedState();
+            PitFuelControlMode effectiveMode = ResolveEffectiveMode();
+            if (effectiveMode == PitFuelControlMode.Off)
+            {
+                LogActionBlockedInfo("RefreshCurrentSourceTarget", "off-hard-guard");
+                return;
+            }
+
+            if (Source != PitFuelControlSource.Push && Source != PitFuelControlSource.Save)
+            {
+                LogActionBlockedDebug("RefreshCurrentSourceTarget", "source-not-push-save");
+                return;
+            }
+
+            if (effectiveMode != PitFuelControlMode.Man && effectiveMode != PitFuelControlMode.Auto)
+            {
+                LogActionBlockedDebug("RefreshCurrentSourceTarget", "mode-not-man-auto");
+                return;
+            }
+
+            if (!SendCurrentTarget(isAutoUpdate: false, actionNameOverride: actionName))
+            {
+                Source = PitFuelControlSource.Stby;
+                if (effectiveMode == PitFuelControlMode.Auto)
+                {
+                    AutoArmed = false;
+                }
+
+                PublishSelectionFeedback(actionName, "PIT CMD FAIL");
+                LogActionBlockedInfo("RefreshCurrentSourceTarget", "send-failed");
+            }
+        }
+
         public void OnLapCross()
         {
             if (TryApplySuppressedState())

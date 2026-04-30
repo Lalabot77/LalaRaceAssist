@@ -7,12 +7,14 @@ For internal between-release development history, see `Docs/Internal/Development
 ## v1.1 (Unreleased)
 
 ### Added
+- Pit Fuel Control Push/Save basis mode toggle (`LIVE`/`PROFILE`) with mode action/export support for dash and hardware bindings.
 - **Overview tab** as the plugin front door for quick links, release-check visibility, and at-a-glance status.
 - **Plugin-owned pit/custom command workflow** with built-in pit actions, custom-message slots, and in-plugin transport selection.
 - **Pit Fuel Control + Tyre Control** command surfaces for dashboard/hardware bindings (`LalaLaunch.Pit.FuelControl.*`, `LalaLaunch.Pit.TyreControl.*`).
 - **ClassBest export family** for class session-best holder visibility on dashboards.
 
 ### Changed
+- Pit Fuel Control PUSH/SAVE can optionally use profile-backed burn values (guarded around live stable NORM burn); NORM and PLAN behavior remain unchanged.
 - **Strategy/PreRace status logic** refreshed with scenario-first outcomes and clearer status colors/text for no-stop, one-stop, and multi-stop contexts.
 - **Pit command transport behavior** now defaults to direct window-message delivery with bounded legacy fallback options.
 - **Pit Fuel Control behavior** refined so AUTO ownership/cancel behavior is clearer and non-AUTO OFF/MAN follows iRacing MFD fuel-enable truth.
@@ -30,12 +32,14 @@ For internal between-release development history, see `Docs/Internal/Development
 ## v1.0 – Initial Public Release
 
 ### Added
+- Pit Fuel Control Push/Save basis mode toggle (`LIVE`/`PROFILE`) with mode action/export support for dash and hardware bindings.
 - Public plugin package for SimHub + iRacing users.
 - Public documentation set (`README.md` plus focused `Docs/` guides).
 - Strategy workflow documentation as the main planning story.
 - Shift Assist and H2H documentation as first-class user features.
 
 ### Changed
+- Pit Fuel Control PUSH/SAVE can optionally use profile-backed burn values (guarded around live stable NORM burn); NORM and PLAN behavior remain unchanged.
 - Consolidated planning language around the Strategy tab and Strategy preset workflow.
 - Clarified live snapshot behavior, launch settings location, and dashboard control guidance.
 - Synced user-facing and subsystem docs so navigation between user docs and technical ownership docs is coherent.
