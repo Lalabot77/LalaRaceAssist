@@ -1569,3 +1569,9 @@ The public user-facing release history is maintained in the root `CHANGELOG.md`.
 - Fixed launch trace housekeeping analysis to explicitly skip the summary CSV header row that follows `[LaunchSummaryHeader]`.
 - Prevented valid mixed trace files from routing `TimestampUtc,...` through telemetry row parsing, eliminating the false telemetry DateTime parse error during Launch Analysis file scans.
 - Kept launch trace naming/CSV format/summary schema unchanged; empty/header-only cleanup and completed trace retention rules remain intact.
+
+## 2026-04-30 — Build-fix pass (CS1674/CS0122/CS0236)
+- Classification: **internal-only** (compile/legal-access fixes only; no runtime behavior redesign).
+- `GlobalSettingsView.xaml.cs`: removed `using (...)` around `Microsoft.Win32.OpenFileDialog` because it is not `IDisposable`; dialog flow and reload behavior unchanged.
+- `PitCommandEngine`: added narrow public wrapper `PublishInfoMessage(string)` and switched Push/Save mode-cycle feedback call site to that seam; severity mapping/hold behavior unchanged.
+- `LaunchPluginSettings`: changed `LeagueClassMode` default initializer to literal `0` to avoid illegal instance-member reference in initializer; runtime normalization/behavior unchanged.
