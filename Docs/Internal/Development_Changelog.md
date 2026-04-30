@@ -1582,6 +1582,8 @@ The public user-facing release history is maintained in the root `CHANGELOG.md`.
 - `PitCommandEngine`: added narrow public wrapper `PublishInfoMessage(string)` and switched Push/Save mode-cycle feedback call site to that seam; severity mapping/hold behavior unchanged.
 - `LaunchPluginSettings`: changed `LeagueClassMode` default initializer to literal `0` to avoid illegal instance-member reference in initializer; runtime normalization/behavior unchanged.
 ### 2026-04-30 — League Race Phase 1 UI usability follow-up
+
+- Follow-up fix: removed unintended `LeagueClassShowCsvSection` visibility gate from the Pit Commands transport selector row in `GlobalSettingsView.xaml`, restoring always-visible access to pit transport mode regardless of League Class classification mode.
 - Classification: **both** (settings UX visibility/clarity improvements + internal behavior-safe normalization).
 - League Class settings UI now defaults/normalizes player override to **Auto-detect** when persisted manual override is invalid (manual selected with blank class name).
 - Added explicit column headers for player override and suffix fallback rows, plus a detected-classes readout table after CSV load (read-only in this phase).
