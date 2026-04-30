@@ -1,3 +1,16 @@
+- 2026-04-30 Pit Fuel Control Push/Save mode UI/control-surface pass landed:
+  - added `Push/Save Profile Mode` toggle in Dash Control -> Global Dash Functions -> Fuel (OFF=`LIVE`, ON=`PROFILE`) bound to `Settings.PitFuelControlPushSaveMode`;
+  - selector shares the existing setting with `Pit.FuelControl.PushSaveModeCycle` action path (no UI-local independent state);
+  - notification hardening ensures `Pit.FuelControl.PushSaveModeCycle` programmatic changes immediately notify both int/bool settings bindings used by the open plugin toggle UI;
+  - added Pit Commands settings binding row `Push/Save Mode Cycle` under Pit Fuel Control for `LalaLaunch.Pit.FuelControl.PushSaveModeCycle`;
+  - no PitFuelControlEngine behavior/fuel-target math/guard/transport changes were introduced.
+
+- Runtime fuel pit-space cap authority fix (2026-04-29):
+  - live pit-space exports (`Fuel.Pit.TankSpaceAvailable`, `Fuel.Pit.WillAdd`, `Fuel.Pit.FuelOnExit`) now resolve cap from runtime live tank authority first (`EffectiveLiveMaxTank` seam);
+  - stale Strategy/Profile `MaxFuelOverride` no longer silently clamps runtime pit-space when live cap authority exists;
+  - safe fallback retained: planner/profile cap is used only when live cap authority is unavailable;
+  - planner semantics unchanged: Profile/Live Snapshot planner max-fuel ownership, preset apply behavior, and max-fuel UI display behavior remain intact.
+
 # Repository status
 
 Validated against commit: HEAD
