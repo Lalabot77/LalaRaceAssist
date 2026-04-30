@@ -322,6 +322,7 @@ namespace LaunchPlugin
 
             int nextMode = (Settings.PitFuelControlPushSaveMode + 1) % 2;
             Settings.PitFuelControlPushSaveMode = nextMode;
+            Settings.RaisePitFuelControlPushSaveModeChanged();
             SaveSettings();
             string modeText = nextMode == 1 ? "PROFILE" : "LIVE";
             _pitCommandEngine.PublishInfoMessage($"PUSH/SAVE {modeText}");
@@ -17592,6 +17593,12 @@ namespace LaunchPlugin
         {
             get { return PitFuelControlPushSaveMode == 1; }
             set { PitFuelControlPushSaveMode = value ? 1 : 0; }
+        }
+
+        public void RaisePitFuelControlPushSaveModeChanged()
+        {
+            OnPropertyChanged(nameof(PitFuelControlPushSaveMode));
+            OnPropertyChanged(nameof(PitFuelControlPushSaveProfileModeEnabled));
         }
         public double PitFuelPushSaveProfileGuardPct { get; set; } = 10.0;
         public bool EnableAutoDashSwitch { get; set; } = true;
