@@ -48,6 +48,21 @@ The public user-facing release history is maintained in the root `CHANGELOG.md`.
 
 ## Post-v1.0 development
 
+## 2026-04-30 — Race finish/end-phase authority redesign (SessionState-first + dash stability gates)
+- Classification: **both** (new dash-facing race-end exports + finish-detection contract correction).
+- Updated `LalaLaunch` finish detection precedence:
+  - `Race.EndPhase` now resolves each tick from race `SessionState` authority (`Unknown/Running/AfterZeroLeaderRunning/LeaderFinished/SessionComplete`) with `Race.EndPhaseConfidence`;
+  - `Race.LastLapLikely` now gates dash end-lap behavior (`SessionState==5` any race type, plus timed-race `SessionState==4 && SessionTimeRemain<=0`);
+  - overall leader finish now latches from `SessionState>=5` high-confidence state authority;
+  - single-class class-leader finish now mirrors overall finish; multiclass class finish remains class-targeted (no SessionState-only class-proof promotion);
+  - effective `Race.LeaderHasFinished` now uses single-class overall latch directly and multiclass class-valid + class-latch selector.
+- Removed session-checkered-flag use as proof of overall leader finish and kept player checkered handling only for driver-side finish/summary timing.
+- Added sustained non-race reset guard for finish latches (anti-blip): finish state is no longer cleared on a single transient non-race tick.
+- Preserved invariants:
+  - no fuel-learning changes,
+  - no fuel-projection math redesign,
+  - no pit fuel-control/pit-command behavior changes,
+  - no dashboard ownership shift into plugin logic.
 ### 2026-04-30 — League Class enable-time mode guard (Disabled -> CsvThenName)
 - Classification: **both** (runtime behavior guard + docs alignment).
 - Added a narrow enable-edge guard in `LalaLaunch` so when `LeagueClassEnabled` flips `false -> true` and `LeagueClassMode` is still `Disabled (0)`, mode is auto-set to `CsvThenName (3)`.

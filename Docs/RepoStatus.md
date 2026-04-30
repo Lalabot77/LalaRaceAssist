@@ -22,6 +22,19 @@ Branch: work
 - No Git remote is configured in this checkout (`git remote -v` returns empty).
 
 ## Documentation sync status
+- Runtime fuel pit-space cap authority fix (2026-04-29):
+  - live pit-space exports (`Fuel.Pit.TankSpaceAvailable`, `Fuel.Pit.WillAdd`, `Fuel.Pit.FuelOnExit`) now resolve cap from runtime live tank authority first (`EffectiveLiveMaxTank` seam);
+  - stale Strategy/Profile `MaxFuelOverride` no longer silently clamps runtime pit-space when live cap authority exists;
+  - safe fallback retained: planner/profile cap is used only when live cap authority is unavailable;
+  - planner semantics unchanged: Profile/Live Snapshot planner max-fuel ownership, preset apply behavior, and max-fuel UI display behavior remain intact.
+
+- 2026-04-30 Race finish/end-phase authority redesign landed:
+  - finish phase now exports `Race.EndPhase`, `Race.EndPhaseText`, `Race.EndPhaseConfidence`, and `Race.LastLapLikely` for dash-safe race-end gating;
+  - `SessionState` is now primary authority for timed-race overall leader completion (`SessionState>=5`) and end-phase classification;
+  - single-class effective/class leader finish now mirrors overall finish latch, while multiclass class-finish remains class-targeted;
+  - session checkered flag is no longer used as proof of overall leader finish; player checkered remains driver-side timing/summary context only;
+  - finish latches now resist single-tick non-race telemetry blips via sustained non-race reset guard.
+
 
 - 2026-04-30 League Class enable-time mode guard landed:
   - added a narrow runtime guard that auto-corrects `LeagueClassMode` from `Disabled (0)` to `CsvThenName (3)` only when `LeagueClassEnabled` transitions from false to true;
