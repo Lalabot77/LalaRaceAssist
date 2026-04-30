@@ -97,3 +97,5 @@ Opponents now reads from:
 - No direct leaderboard `RelativeGapToLeader` parity path.
 - Gap/pit-exit values are now native progress/pace-derived approximations.
 - When native identity/order prerequisites are absent, outputs intentionally remain invalid instead of silently falling back.
+
+- 2026-04-30 Phase 1 League Race Class infrastructure: no Opponents same-class or pit-exit class-row behavior changes yet (settings/resolver only).

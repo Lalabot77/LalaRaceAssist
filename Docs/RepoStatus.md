@@ -15,6 +15,11 @@ Branch: work
 - No Git remote is configured in this checkout (`git remote -v` returns empty).
 
 ## Documentation sync status
+- 2026-04-30 League Race Class Phase 1 infrastructure landed:
+  - added settings/UI scaffold for League Class enable/mode, CSV path + reload, player override fields, and suffix fallback rules;
+  - added resolver/cache infrastructure with CSV counters/status and preview resolution;
+  - default remains disabled and no runtime class-cohort behavior injection was applied yet.
+
 - 2026-04-29 Auto PreRace stable-source provenance follow-up landed:
   - in Auto (`selectedStrategy == 3`) when `LiveFuelPerLap_Stable > 0`, `LalaLaunch.PreRace.FuelSource` now follows the selected stable source only (`Live => live`, `Profile => profile`, other/non-standard stable source => `fallback`);
   - removed profile-baseline availability inference from this stable-consumption path so non-profile stable fallback cannot be mislabeled as `profile`;

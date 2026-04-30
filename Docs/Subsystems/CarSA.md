@@ -244,3 +244,5 @@ When `EnableOffTrackDebugCsv` is enabled (and a probe `OffTrackDebugProbeCarIdx`
 - Single-pass candidate selection with fixed arrays (no per-tick allocations).
 - No LINQ or string formatting in per-tick loops.
 - Car-centric cache avoids per-slot computations for closing and status latches.
+
+- 2026-04-30 Phase 1 League Race Class infrastructure: CarSA spatial selection/hysteresis logic remains unchanged; no effective-class selection injection in this phase.

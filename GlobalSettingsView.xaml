@@ -196,7 +196,68 @@
             </Expander>
 
             
-            <StackPanel Visibility="{Binding HardDebugEnabledForUi, Converter={StaticResource BooleanToVisibilityConverter}}">
+            
+            <Expander Header="League Race"
+                      Margin="0,0,0,10"
+                      IsExpanded="False">
+                <StackPanel Margin="0,10,0,0">
+                    <styles:SHToggleCheckbox Content="Enable League Class System"
+                                             IsChecked="{Binding Settings.LeagueClassEnabled, Mode=TwoWay}"/>
+                    <StackPanel Orientation="Horizontal" Margin="0,8,0,0">
+                        <TextBlock Text="Classification mode" VerticalAlignment="Center" Margin="0,0,8,0"/>
+                        <ComboBox Width="320"
+                                  SelectedValue="{Binding Settings.LeagueClassMode, Mode=TwoWay}"
+                                  SelectedValuePath="Tag">
+                            <ComboBoxItem Content="CSV only" Tag="1"/>
+                            <ComboBoxItem Content="Name suffix only" Tag="2"/>
+                            <ComboBoxItem Content="CSV, then name suffix" Tag="3"/>
+                        </ComboBox>
+                    </StackPanel>
+                    <StackPanel Orientation="Horizontal" Margin="0,8,0,0">
+                        <TextBlock Text="CSV file" VerticalAlignment="Center" Margin="0,0,8,0"/>
+                        <TextBox x:Name="LeagueClassCsvPathTextBox" Width="420" Text="{Binding Settings.LeagueClassCsvPath, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"/>
+                        <styles:SHButtonPrimary Content="Browse" Margin="8,0,0,0" Click="BrowseLeagueClassCsv_Click"/>
+                        <styles:SHButtonPrimary Content="Reload" Margin="8,0,0,0" Click="ReloadLeagueClassCsv_Click"/>
+                    </StackPanel>
+                    <TextBlock Margin="0,6,0,0" Foreground="LightGray" Text="{Binding LeagueClassStatus.ConfigStatusText, StringFormat='Status: {0}'}"/>
+                    <TextBlock Foreground="LightGray" Text="{Binding LeagueClassStatus.LoadedCount, StringFormat='Loaded rows: {0}'}"/>
+                    <TextBlock Foreground="LightGray" Text="{Binding LeagueClassStatus.ValidDriverCount, StringFormat='Valid drivers: {0}'}"/>
+                    <TextBlock Foreground="LightGray" Text="{Binding LeagueClassStatus.InvalidRowCount, StringFormat='Invalid rows: {0}'}"/>
+                    <TextBlock Foreground="LightGray" Text="{Binding LeagueClassStatus.DuplicateRowCount, StringFormat='Duplicate rows: {0}'}"/>
+
+                    <TextBlock Margin="0,8,0,2" Text="Player race class" FontWeight="SemiBold"/>
+                    <StackPanel Orientation="Horizontal">
+                        <ComboBox Width="180" SelectedValue="{Binding Settings.LeagueClassPlayerOverrideMode, Mode=TwoWay}" SelectedValuePath="Tag">
+                            <ComboBoxItem Content="Auto-detect" Tag="0"/>
+                            <ComboBoxItem Content="Manual override" Tag="1"/>
+                        </ComboBox>
+                        <TextBox Width="120" Margin="8,0,0,0" Text="{Binding Settings.LeagueClassPlayerOverrideClassName, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" ToolTip="Class name"/>
+                        <TextBox Width="90" Margin="8,0,0,0" Text="{Binding Settings.LeagueClassPlayerOverrideShortName, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" ToolTip="Short"/>
+                        <TextBox Width="50" Margin="8,0,0,0" Text="{Binding Settings.LeagueClassPlayerOverrideRank, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" ToolTip="Rank"/>
+                        <TextBox Width="90" Margin="8,0,0,0" Text="{Binding Settings.LeagueClassPlayerOverrideColourHex, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" ToolTip="#RRGGBB"/>
+                        <Border Width="18" Height="18" Margin="6,2,0,0" BorderBrush="#777" BorderThickness="1" Background="{Binding Settings.LeagueClassPlayerOverrideColourHex}"/>
+                    </StackPanel>
+                    <TextBlock Margin="0,6,0,0" Foreground="LightGray" Text="{Binding LeagueClassPlayerPreviewText}"/>
+
+                    <TextBlock Margin="0,8,0,2" Text="Fallback rules (suffix)" FontWeight="SemiBold"/>
+                    <ItemsControl ItemsSource="{Binding Settings.LeagueClassFallbackRules}">
+                        <ItemsControl.ItemTemplate>
+                            <DataTemplate>
+                                <StackPanel Orientation="Horizontal" Margin="0,2,0,2">
+                                    <CheckBox IsChecked="{Binding Enabled, Mode=TwoWay}" VerticalAlignment="Center"/>
+                                    <TextBox Width="90" Margin="6,0,0,0" Text="{Binding MatchSuffix, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" ToolTip="Suffix"/>
+                                    <TextBox Width="120" Margin="6,0,0,0" Text="{Binding ClassName, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" ToolTip="Class name"/>
+                                    <TextBox Width="90" Margin="6,0,0,0" Text="{Binding ShortName, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" ToolTip="Short"/>
+                                    <TextBox Width="50" Margin="6,0,0,0" Text="{Binding Rank, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" ToolTip="Rank"/>
+                                    <TextBox Width="90" Margin="6,0,0,0" Text="{Binding ColourHex, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" ToolTip="#RRGGBB"/>
+                                    <Border Width="18" Height="18" Margin="6,2,0,0" BorderBrush="#777" BorderThickness="1" Background="{Binding ColourHex}"/>
+                                </StackPanel>
+                            </DataTemplate>
+                        </ItemsControl.ItemTemplate>
+                    </ItemsControl>
+                </StackPanel>
+            </Expander>
+<StackPanel Visibility="{Binding HardDebugEnabledForUi, Converter={StaticResource BooleanToVisibilityConverter}}">
                 <TextBlock Text="DEBUG" FontSize="16" FontWeight="Bold" Margin="0,5,10,0"/>
                 <styles:SHToggleCheckbox x:Name="DebugMasterToggle"
                                          Content="Enable debugging mode"

@@ -4730,6 +4730,26 @@ namespace LaunchPlugin
         private int _friendsCount;
         private readonly HashSet<LaunchPluginFriendEntry> _friendEntrySubscriptions = new HashSet<LaunchPluginFriendEntry>();
         private readonly HashSet<CustomMessageSlot> _customMessageEntrySubscriptions = new HashSet<CustomMessageSlot>();
+        private readonly LeagueClassResolver _leagueClassResolver = new LeagueClassResolver();
+        public LeagueClassStatus LeagueClassStatus => _leagueClassResolver.Status;
+
+        public void ReloadLeagueClassConfig()
+        {
+            _leagueClassResolver.Reload(Settings);
+            OnPropertyChanged(nameof(LeagueClassStatus));
+            OnPropertyChanged(nameof(LeagueClassPlayerPreviewText));
+        }
+
+        public string LeagueClassPlayerPreviewText
+        {
+            get
+            {
+                var info = _leagueClassResolver.ResolvePlayerPreview(Settings, null, string.Empty);
+                if (!info.Valid) return "Detected: unresolved";
+                return $"Detected: {info.Name} ({info.Source})";
+            }
+        }
+
         private ObservableCollection<LaunchPluginFriendEntry> _friendsCollection;
         private ObservableCollection<CustomMessageSlot> _customMessagesCollection;
         private bool _customMessageSavePending;
@@ -5120,6 +5140,7 @@ namespace LaunchPlugin
             EnforceHardDebugSettings(Settings);
             HookFriendSettings(Settings);
             HookCustomMessageSettings(Settings);
+            ReloadLeagueClassConfig();
             MarkFriendsDirty();
             _shiftAssistAudio = new ShiftAssistAudio(() => Settings);
 
@@ -17269,7 +17290,21 @@ namespace LaunchPlugin
         public double ResultsDisplayTime { get; set; } = 5.0; // Corrected to 5 seconds
         public double FuelReadyConfidence { get; set; } = LalaLaunch.FuelReadyConfidenceDefault;
         public int StintFuelMarginPct { get; set; } = LalaLaunch.StintFuelMarginPctDefault;
-        public bool EnableAutoDashSwitch { get; set; } = true;
+                public bool EnableAutoDashSwitch { get; set; } = true;
+        public bool LeagueClassEnabled { get; set; } = false;
+        public int LeagueClassMode { get; set; } = (int)LeagueClassMode.CsvOnly;
+        public string LeagueClassCsvPath { get; set; } = string.Empty;
+        public int LeagueClassPlayerOverrideMode { get; set; } = 0; // 0=Auto,1=Manual
+        public string LeagueClassPlayerOverrideClassName { get; set; } = string.Empty;
+        public string LeagueClassPlayerOverrideShortName { get; set; } = string.Empty;
+        public int LeagueClassPlayerOverrideRank { get; set; } = 0;
+        public string LeagueClassPlayerOverrideColourHex { get; set; } = string.Empty;
+        public List<LeagueClassFallbackRule> LeagueClassFallbackRules { get; set; } = new List<LeagueClassFallbackRule>
+        {
+            new LeagueClassFallbackRule(),
+            new LeagueClassFallbackRule(),
+            new LeagueClassFallbackRule()
+        };
         private int _darkModeMode = 1;
         public int DarkModeMode
         {
