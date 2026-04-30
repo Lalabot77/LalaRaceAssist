@@ -41,6 +41,12 @@ The public user-facing release history is maintained in the root `CHANGELOG.md`.
 
 ## Post-v1.0 development
 
+### 2026-04-30 — League Class enable-time mode guard (Disabled -> CsvThenName)
+- Classification: **both** (runtime behavior guard + docs alignment).
+- Added a narrow enable-edge guard in `LalaLaunch` so when `LeagueClassEnabled` flips `false -> true` and `LeagueClassMode` is still `Disabled (0)`, mode is auto-set to `CsvThenName (3)`.
+- Preserved user intent for all non-disabled modes (no override when user already selected `CsvOnly`, `NameOnly`, or `CsvThenName`).
+- Purpose: prevent an inactive enabled state and ensure League Class preview/resolution paths become active immediately after enable.
+
 ### 2026-04-30 — Pit Fuel Control Push/Save profile-assisted mode + guard
 - Classification: **both** (new dash-facing controls/exports + bounded internal target-selection behavior change).
 - Added `Pit.FuelControl.PushSaveMode` (`0=LIVE`, `1=PROFILE`) and `Pit.FuelControl.PushSaveModeText` exports plus new action `Pit.FuelControl.PushSaveModeCycle`.
