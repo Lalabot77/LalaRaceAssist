@@ -4731,6 +4731,8 @@ namespace LaunchPlugin
         private readonly HashSet<LaunchPluginFriendEntry> _friendEntrySubscriptions = new HashSet<LaunchPluginFriendEntry>();
         private readonly HashSet<CustomMessageSlot> _customMessageEntrySubscriptions = new HashSet<CustomMessageSlot>();
         private readonly LeagueClassResolver _leagueClassResolver = new LeagueClassResolver();
+        private string _leagueClassPreviewIdentitySnapshot = string.Empty;
+        private string _leagueClassPreviewSettingsSnapshot = string.Empty;
         public LeagueClassStatus LeagueClassStatus => _leagueClassResolver.Status;
 
         public void ReloadLeagueClassConfig()
@@ -4808,6 +4810,56 @@ namespace LaunchPlugin
             }
 
             return customerId.HasValue || !string.IsNullOrWhiteSpace(driverName);
+        }
+
+
+        private void MaybeRefreshLeagueClassPreview(PluginManager pluginManager)
+        {
+            string identitySnapshot = BuildLeagueClassIdentitySnapshot(pluginManager);
+            string settingsSnapshot = BuildLeagueClassSettingsSnapshot();
+            if (string.Equals(identitySnapshot, _leagueClassPreviewIdentitySnapshot, StringComparison.Ordinal)
+                && string.Equals(settingsSnapshot, _leagueClassPreviewSettingsSnapshot, StringComparison.Ordinal))
+            {
+                return;
+            }
+
+            _leagueClassPreviewIdentitySnapshot = identitySnapshot;
+            _leagueClassPreviewSettingsSnapshot = settingsSnapshot;
+            OnPropertyChanged(nameof(LeagueClassPlayerPreviewText));
+        }
+
+        private string BuildLeagueClassIdentitySnapshot(PluginManager pluginManager)
+        {
+            if (!TryGetLivePlayerIdentityPreview(out int? customerId, out string driverName))
+            {
+                return "no-live-identity";
+            }
+
+            return (customerId.HasValue ? customerId.Value.ToString(CultureInfo.InvariantCulture) : string.Empty)
+                + "|" + (driverName ?? string.Empty);
+        }
+
+        private string BuildLeagueClassSettingsSnapshot()
+        {
+            if (Settings == null)
+            {
+                return string.Empty;
+            }
+
+            var rules = Settings.LeagueClassFallbackRules ?? new List<LeagueClassFallbackRule>();
+            string ruleSnapshot = string.Join(";", rules.Select(r =>
+                (r.Enabled ? "1" : "0") + "," + (r.MatchSuffix ?? string.Empty) + "," + (r.ClassName ?? string.Empty) + "," +
+                (r.ShortName ?? string.Empty) + "," + r.Rank.ToString(CultureInfo.InvariantCulture) + "," + (r.ColourHex ?? string.Empty)));
+
+            return (Settings.LeagueClassEnabled ? "1" : "0") + "|" +
+                Settings.LeagueClassMode.ToString(CultureInfo.InvariantCulture) + "|" +
+                (Settings.LeagueClassCsvPath ?? string.Empty) + "|" +
+                Settings.LeagueClassPlayerOverrideMode.ToString(CultureInfo.InvariantCulture) + "|" +
+                (Settings.LeagueClassPlayerOverrideClassName ?? string.Empty) + "|" +
+                (Settings.LeagueClassPlayerOverrideShortName ?? string.Empty) + "|" +
+                Settings.LeagueClassPlayerOverrideRank.ToString(CultureInfo.InvariantCulture) + "|" +
+                (Settings.LeagueClassPlayerOverrideColourHex ?? string.Empty) + "|" +
+                ruleSnapshot;
         }
 
         private ObservableCollection<LaunchPluginFriendEntry> _friendsCollection;
@@ -7518,6 +7570,7 @@ namespace LaunchPlugin
             EnforceHardDebugSettings(Settings);
             TryFlushPendingCustomMessageSaveDebounce(false);
             EvaluateDarkMode(pluginManager);
+            MaybeRefreshLeagueClassPreview(pluginManager);
             if (!data.GameRunning || data.NewData == null) return;
 
             _isRefuelSelected = IsRefuelSelected(pluginManager);

@@ -100,57 +100,57 @@ namespace LaunchPlugin
                 {
                     foreach (string rawLine in File.ReadAllLines(path))
                     {
-                    string line = (rawLine ?? string.Empty).Trim();
-                    if (string.IsNullOrWhiteSpace(line)) continue;
+                        string line = (rawLine ?? string.Empty).Trim();
+                        if (string.IsNullOrWhiteSpace(line)) continue;
 
-                    var parts = line.Split(';');
-                    if (parts.Length < 4)
-                    {
-                        invalid++;
-                        continue;
-                    }
-
-                    if (!int.TryParse(parts[0].Trim(), NumberStyles.Integer, CultureInfo.InvariantCulture, out int customerId))
-                    {
-                        if (parts[0].Trim().Equals("CustomerId", StringComparison.OrdinalIgnoreCase))
+                        var parts = line.Split(';');
+                        if (parts.Length < 4)
                         {
+                            invalid++;
                             continue;
                         }
-                        invalid++;
-                        continue;
+
+                        if (!int.TryParse(parts[0].Trim(), NumberStyles.Integer, CultureInfo.InvariantCulture, out int customerId))
+                        {
+                            if (parts[0].Trim().Equals("CustomerId", StringComparison.OrdinalIgnoreCase))
+                            {
+                                continue;
+                            }
+                            invalid++;
+                            continue;
+                        }
+
+                        string className = (parts[1] ?? string.Empty).Trim();
+                        string colourHex = NormalizeHex(parts[2]);
+                        if (!int.TryParse((parts[3] ?? string.Empty).Trim(), NumberStyles.Integer, CultureInfo.InvariantCulture, out int rank))
+                        {
+                            invalid++;
+                            continue;
+                        }
+
+                        if (string.IsNullOrWhiteSpace(className) || rank <= 0)
+                        {
+                            invalid++;
+                            continue;
+                        }
+
+                        var entry = new LeagueClassCsvEntry
+                        {
+                            CustomerId = customerId,
+                            ClassName = className,
+                            ColourHex = colourHex,
+                            Rank = rank
+                        };
+
+                        if (_csvByCustomerId.ContainsKey(customerId)) duplicate++;
+                        _csvByCustomerId[customerId] = entry;
+                        loaded++;
+
+                        if (!_detectedClassNames.Contains(className, StringComparer.OrdinalIgnoreCase))
+                        {
+                            _detectedClassNames.Add(className);
+                        }
                     }
-
-                    string className = (parts[1] ?? string.Empty).Trim();
-                    string colourHex = NormalizeHex(parts[2]);
-                    if (!int.TryParse((parts[3] ?? string.Empty).Trim(), NumberStyles.Integer, CultureInfo.InvariantCulture, out int rank))
-                    {
-                        invalid++;
-                        continue;
-                    }
-
-                    if (string.IsNullOrWhiteSpace(className) || rank <= 0)
-                    {
-                        invalid++;
-                        continue;
-                    }
-
-                    var entry = new LeagueClassCsvEntry
-                    {
-                        CustomerId = customerId,
-                        ClassName = className,
-                        ColourHex = colourHex,
-                        Rank = rank
-                    };
-
-                    if (_csvByCustomerId.ContainsKey(customerId)) duplicate++;
-                    _csvByCustomerId[customerId] = entry;
-                    loaded++;
-
-                    if (!_detectedClassNames.Contains(className, StringComparer.OrdinalIgnoreCase))
-                    {
-                        _detectedClassNames.Add(className);
-                    }
-                }
                 }
                 catch (Exception ex)
                 {
