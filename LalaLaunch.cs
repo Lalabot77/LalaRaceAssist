@@ -325,6 +325,7 @@ namespace LaunchPlugin
             SaveSettings();
             string modeText = nextMode == 1 ? "PROFILE" : "LIVE";
             _pitCommandEngine.PublishMessage($"PUSH/SAVE {modeText}");
+            _pitFuelControlEngine?.RefreshCurrentSourceTarget("Pit.FuelControl.PushSaveModeCycle");
             SimHub.Logging.Current.Info($"[LalaPlugin:PitFuelControl] PitFuelControlPushSaveModeCycle -> mode={modeText}");
         }
         public void PitTyreControlModeCycle() => _pitTyreControlEngine.ModeCycle();
@@ -7357,8 +7358,8 @@ namespace LaunchPlugin
             double maxPush = stableNorm * (1.0 + guardFraction);
             double minSave = stableNorm * (1.0 - guardFraction);
 
-            profilePushBurn = Math.Min(profilePushBurn, maxPush);
-            profileSaveBurn = Math.Max(profileSaveBurn, minSave);
+            profilePushBurn = Math.Max(minSave, Math.Min(maxPush, profilePushBurn));
+            profileSaveBurn = Math.Max(minSave, Math.Min(maxPush, profileSaveBurn));
 
             if (!IsFinitePositive(profilePushBurn) || !IsFinitePositive(profileSaveBurn))
             {

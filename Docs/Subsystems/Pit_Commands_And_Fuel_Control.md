@@ -74,6 +74,7 @@ This is the canonical technical document for the pit/custom command stack and re
 - Mode state where AUTO is plugin-owned; non-AUTO mode mirrors MFD truth (`OFF`/`MAN` from `dpFuelFill`).
 - Target litres and override-active semantics for command generation.
 - Push/Save burn-basis mode (`LIVE`/`PROFILE`) for internal PUSH/SAVE target composition only.
+- Toggling Push/Save mode while source is `PUSH`/`SAVE` refreshes current pit fuel request immediately in `MAN`/`AUTO` (no refresh send in `OFF`, `STBY`, `NORM`, or `PLAN`).
 - Fault export state (`Pit.FuelControl.Fault`) for post-settle selector disagreement diagnostics only (`0/1/2/3` contract).
 
 ### Tyre Control state
