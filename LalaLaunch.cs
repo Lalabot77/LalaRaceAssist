@@ -4749,6 +4749,7 @@ namespace LaunchPlugin
         private readonly LeagueClassResolver _leagueClassResolver = new LeagueClassResolver();
         private string _leagueClassPreviewIdentitySnapshot = string.Empty;
         private string _leagueClassPreviewSettingsSnapshot = string.Empty;
+        private bool _leagueClassLastEnabledState = false;
         public LeagueClassStatus LeagueClassStatus => _leagueClassResolver.Status;
 
         public void ReloadLeagueClassConfig()
@@ -4842,6 +4843,28 @@ namespace LaunchPlugin
             _leagueClassPreviewIdentitySnapshot = identitySnapshot;
             _leagueClassPreviewSettingsSnapshot = settingsSnapshot;
             OnPropertyChanged(nameof(LeagueClassPlayerPreviewText));
+        }
+
+        private void ApplyLeagueClassEnableModeGuard()
+        {
+            if (Settings == null)
+            {
+                return;
+            }
+
+            bool isEnabled = Settings.LeagueClassEnabled;
+            if (isEnabled &&
+                !_leagueClassLastEnabledState &&
+                Settings.LeagueClassMode == (int)LeagueClassMode.Disabled)
+            {
+                Settings.LeagueClassMode = (int)LeagueClassMode.CsvThenName;
+                SaveSettings();
+                OnPropertyChanged(nameof(Settings));
+                OnPropertyChanged(nameof(LeagueClassStatus));
+                OnPropertyChanged(nameof(LeagueClassPlayerPreviewText));
+            }
+
+            _leagueClassLastEnabledState = isEnabled;
         }
 
         private string BuildLeagueClassIdentitySnapshot(PluginManager pluginManager)
@@ -7692,6 +7715,7 @@ namespace LaunchPlugin
             EnforceHardDebugSettings(Settings);
             TryFlushPendingCustomMessageSaveDebounce(false);
             EvaluateDarkMode(pluginManager);
+            ApplyLeagueClassEnableModeGuard();
             MaybeRefreshLeagueClassPreview(pluginManager);
             if (!data.GameRunning || data.NewData == null) return;
 
