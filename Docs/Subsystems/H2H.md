@@ -83,3 +83,5 @@ Both `H2HRace.*` and `H2HTrack.*` expose the same flat shape:
 - H2H still keeps lightweight participant context for `ActiveSegment`, `LapRef`, `LiveGapSec`, `LiveDeltaToBestSec`, and lap-summary publication.
 - H2H no longer owns target-bound sector completion timing, bind-aware row rebuild mechanics, or sector-6 lap-wrap carryover. Those published sector outputs are now entirely driven by the CarSA cache.
 - `ClassColor` is published in one canonical uppercase hex format: `#RRGGBB`.
+
+- 2026-04-30 Phase 1 League Race Class infrastructure: no H2HRace/H2HTrack selector behavior changes yet; H2HTrack remains CarSA-native selection.

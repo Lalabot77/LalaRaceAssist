@@ -340,5 +340,31 @@ namespace LaunchPlugin
 
             public string TagId { get; }
         }
+
+        private void BrowseLeagueClassCsv_Click(object sender, RoutedEventArgs e)
+        {
+            if (Plugin?.Settings == null)
+            {
+                return;
+            }
+
+            using (var dialog = new Microsoft.Win32.OpenFileDialog())
+            {
+                dialog.Filter = "CSV files (*.csv)|*.csv|All files (*.*)|*.*";
+                dialog.CheckFileExists = true;
+                dialog.Multiselect = false;
+                if (dialog.ShowDialog() == true)
+                {
+                    Plugin.Settings.LeagueClassCsvPath = dialog.FileName;
+                    Plugin.ReloadLeagueClassConfig();
+                }
+            }
+        }
+
+        private void ReloadLeagueClassCsv_Click(object sender, RoutedEventArgs e)
+        {
+            Plugin?.ReloadLeagueClassConfig();
+        }
+
     }
 }

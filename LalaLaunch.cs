@@ -4746,6 +4746,138 @@ namespace LaunchPlugin
         private int _friendsCount;
         private readonly HashSet<LaunchPluginFriendEntry> _friendEntrySubscriptions = new HashSet<LaunchPluginFriendEntry>();
         private readonly HashSet<CustomMessageSlot> _customMessageEntrySubscriptions = new HashSet<CustomMessageSlot>();
+        private readonly LeagueClassResolver _leagueClassResolver = new LeagueClassResolver();
+        private string _leagueClassPreviewIdentitySnapshot = string.Empty;
+        private string _leagueClassPreviewSettingsSnapshot = string.Empty;
+        public LeagueClassStatus LeagueClassStatus => _leagueClassResolver.Status;
+
+        public void ReloadLeagueClassConfig()
+        {
+            try
+            {
+                _leagueClassResolver.Reload(Settings);
+            }
+            catch (Exception ex)
+            {
+                SimHub.Logging.Current.Warn("[LalaPlugin:LeagueClass] reload failed: " + ex.Message);
+            }
+
+            OnPropertyChanged(nameof(LeagueClassStatus));
+            OnPropertyChanged(nameof(LeagueClassPlayerPreviewText));
+        }
+
+        public string LeagueClassPlayerPreviewText
+        {
+            get
+            {
+                int? playerCustomerId = null;
+                string playerName = string.Empty;
+                bool hasLiveIdentity = TryGetLivePlayerIdentityPreview(out playerCustomerId, out playerName);
+
+                var info = _leagueClassResolver.ResolvePlayerPreview(Settings, playerCustomerId, playerName);
+                if (info.Valid)
+                {
+                    string suffix = !string.IsNullOrWhiteSpace(playerName) ? (" for " + playerName) : string.Empty;
+                    return $"Detected: {info.Name} ({info.Source}){suffix}";
+                }
+
+                if (Settings != null && Settings.LeagueClassPlayerOverrideMode == 1)
+                {
+                    return "Detected: manual override invalid";
+                }
+
+                if (!hasLiveIdentity)
+                {
+                    return "Live player identity not available yet";
+                }
+
+                return "Detected: unresolved";
+            }
+        }
+
+        private bool TryGetLivePlayerIdentityPreview(out int? customerId, out string driverName)
+        {
+            customerId = null;
+            driverName = string.Empty;
+
+            var pluginManager = PluginManager;
+            if (pluginManager == null)
+            {
+                return false;
+            }
+
+            int playerCarIdx = SafeReadInt(pluginManager, "DataCorePlugin.GameRawData.Telemetry.PlayerCarIdx", -1);
+            if (playerCarIdx < 0)
+            {
+                return false;
+            }
+
+            if (TryGetCarIdentityFromSessionInfo(pluginManager, playerCarIdx, out var name, out _, out _))
+            {
+                driverName = name ?? string.Empty;
+            }
+
+            if (TryGetCarDriverInfo(pluginManager, playerCarIdx, out _, out _, out _, out _, out _, out _, out _, out _, out int userId, out _))
+            {
+                if (userId > 0)
+                {
+                    customerId = userId;
+                }
+            }
+
+            return customerId.HasValue || !string.IsNullOrWhiteSpace(driverName);
+        }
+
+
+        private void MaybeRefreshLeagueClassPreview(PluginManager pluginManager)
+        {
+            string identitySnapshot = BuildLeagueClassIdentitySnapshot(pluginManager);
+            string settingsSnapshot = BuildLeagueClassSettingsSnapshot();
+            if (string.Equals(identitySnapshot, _leagueClassPreviewIdentitySnapshot, StringComparison.Ordinal)
+                && string.Equals(settingsSnapshot, _leagueClassPreviewSettingsSnapshot, StringComparison.Ordinal))
+            {
+                return;
+            }
+
+            _leagueClassPreviewIdentitySnapshot = identitySnapshot;
+            _leagueClassPreviewSettingsSnapshot = settingsSnapshot;
+            OnPropertyChanged(nameof(LeagueClassPlayerPreviewText));
+        }
+
+        private string BuildLeagueClassIdentitySnapshot(PluginManager pluginManager)
+        {
+            if (!TryGetLivePlayerIdentityPreview(out int? customerId, out string driverName))
+            {
+                return "no-live-identity";
+            }
+
+            return (customerId.HasValue ? customerId.Value.ToString(CultureInfo.InvariantCulture) : string.Empty)
+                + "|" + (driverName ?? string.Empty);
+        }
+
+        private string BuildLeagueClassSettingsSnapshot()
+        {
+            if (Settings == null)
+            {
+                return string.Empty;
+            }
+
+            var rules = Settings.LeagueClassFallbackRules ?? new List<LeagueClassFallbackRule>();
+            string ruleSnapshot = string.Join(";", rules.Select(r =>
+                (r.Enabled ? "1" : "0") + "," + (r.MatchSuffix ?? string.Empty) + "," + (r.ClassName ?? string.Empty) + "," +
+                (r.ShortName ?? string.Empty) + "," + r.Rank.ToString(CultureInfo.InvariantCulture) + "," + (r.ColourHex ?? string.Empty)));
+
+            return (Settings.LeagueClassEnabled ? "1" : "0") + "|" +
+                Settings.LeagueClassMode.ToString(CultureInfo.InvariantCulture) + "|" +
+                (Settings.LeagueClassCsvPath ?? string.Empty) + "|" +
+                Settings.LeagueClassPlayerOverrideMode.ToString(CultureInfo.InvariantCulture) + "|" +
+                (Settings.LeagueClassPlayerOverrideClassName ?? string.Empty) + "|" +
+                (Settings.LeagueClassPlayerOverrideShortName ?? string.Empty) + "|" +
+                Settings.LeagueClassPlayerOverrideRank.ToString(CultureInfo.InvariantCulture) + "|" +
+                (Settings.LeagueClassPlayerOverrideColourHex ?? string.Empty) + "|" +
+                ruleSnapshot;
+        }
+
         private ObservableCollection<LaunchPluginFriendEntry> _friendsCollection;
         private ObservableCollection<CustomMessageSlot> _customMessagesCollection;
         private bool _customMessageSavePending;
@@ -5136,6 +5268,7 @@ namespace LaunchPlugin
             EnforceHardDebugSettings(Settings);
             HookFriendSettings(Settings);
             HookCustomMessageSettings(Settings);
+            ReloadLeagueClassConfig();
             MarkFriendsDirty();
             _shiftAssistAudio = new ShiftAssistAudio(() => Settings);
 
@@ -6537,6 +6670,7 @@ namespace LaunchPlugin
             NormalizeShiftAssistSettings(settings);
             NormalizeDarkModeSettings(settings);
             NormalizePitCommandSettings(settings);
+            NormalizeLeagueClassSettings(settings);
             return settings;
         }
 
@@ -6663,6 +6797,29 @@ namespace LaunchPlugin
             settings.CarSAStatusEBackgroundColors = NormalizeStatusColorMap(settings.CarSAStatusEBackgroundColors);
             settings.CarSABorderColors = NormalizeBorderColorMap(settings.CarSABorderColors);
             NormalizeFriendSettings(settings);
+        }
+
+        private static void NormalizeLeagueClassSettings(LaunchPluginSettings settings)
+        {
+            if (settings == null)
+            {
+                return;
+            }
+
+            if (settings.LeagueClassFallbackRules == null)
+            {
+                settings.LeagueClassFallbackRules = new List<LeagueClassFallbackRule>();
+            }
+
+            while (settings.LeagueClassFallbackRules.Count < 3)
+            {
+                settings.LeagueClassFallbackRules.Add(new LeagueClassFallbackRule());
+            }
+
+            if (settings.LeagueClassFallbackRules.Count > 3)
+            {
+                settings.LeagueClassFallbackRules = settings.LeagueClassFallbackRules.Take(3).ToList();
+            }
         }
 
         private static void NormalizePitCommandSettings(LaunchPluginSettings settings)
@@ -7535,6 +7692,7 @@ namespace LaunchPlugin
             EnforceHardDebugSettings(Settings);
             TryFlushPendingCustomMessageSaveDebounce(false);
             EvaluateDarkMode(pluginManager);
+            MaybeRefreshLeagueClassPreview(pluginManager);
             if (!data.GameRunning || data.NewData == null) return;
 
             _isRefuelSelected = IsRefuelSelected(pluginManager);
@@ -17394,6 +17552,20 @@ namespace LaunchPlugin
         public int PitFuelControlPushSaveMode { get; set; } = 0;
         public double PitFuelPushSaveProfileGuardPct { get; set; } = 10.0;
         public bool EnableAutoDashSwitch { get; set; } = true;
+        public bool LeagueClassEnabled { get; set; } = false;
+        public int LeagueClassMode { get; set; } = (int)LeagueClassMode.CsvOnly;
+        public string LeagueClassCsvPath { get; set; } = string.Empty;
+        public int LeagueClassPlayerOverrideMode { get; set; } = 0; // 0=Auto,1=Manual
+        public string LeagueClassPlayerOverrideClassName { get; set; } = string.Empty;
+        public string LeagueClassPlayerOverrideShortName { get; set; } = string.Empty;
+        public int LeagueClassPlayerOverrideRank { get; set; } = 0;
+        public string LeagueClassPlayerOverrideColourHex { get; set; } = string.Empty;
+        public List<LeagueClassFallbackRule> LeagueClassFallbackRules { get; set; } = new List<LeagueClassFallbackRule>
+        {
+            new LeagueClassFallbackRule(),
+            new LeagueClassFallbackRule(),
+            new LeagueClassFallbackRule()
+        };
         private int _darkModeMode = 1;
         public int DarkModeMode
         {
