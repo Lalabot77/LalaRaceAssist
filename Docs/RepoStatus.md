@@ -908,3 +908,11 @@ Branch: work
 - `Docs/Internal/Development_Changelog.md`
 - `Docs/RepoStatus.md`
 - `CHANGELOG.md`
+- 2026-04-30 League Race Phase 1 UI usability follow-up landed:
+
+  - follow-up fix: Pit command transport row visibility no longer depends on League Class CSV mode visibility; control is now always visible within Pit Commands settings.
+  - player override invalid-manual persisted states now normalize to Auto-detect (manual remains active only when explicitly selected and valid);
+  - League Class settings now show explicit column headers for player override and suffix fallback rule rows;
+  - CSV-mode UI now displays detected class rows (read-only Phase 1 visibility table with class/short/rank/colour preview);
+  - mode-driven section visibility now matches classifier mode (`CSV only`, `Name suffix only`, `CSV then name suffix`);
+  - player preview now reports clear identity-unavailable text and, when available, shows player/source/resolved-class summary.

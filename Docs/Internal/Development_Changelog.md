@@ -1603,3 +1603,17 @@ The public user-facing release history is maintained in the root `CHANGELOG.md`.
 - `GlobalSettingsView.xaml.cs`: removed `using (...)` around `Microsoft.Win32.OpenFileDialog` because it is not `IDisposable`; dialog flow and reload behavior unchanged.
 - `PitCommandEngine`: added narrow public wrapper `PublishInfoMessage(string)` and switched Push/Save mode-cycle feedback call site to that seam; severity mapping/hold behavior unchanged.
 - `LaunchPluginSettings`: changed `LeagueClassMode` default initializer to literal `0` to avoid illegal instance-member reference in initializer; runtime normalization/behavior unchanged.
+### 2026-04-30 — League Race Phase 1 UI usability follow-up
+
+- Follow-up fix: removed unintended `LeagueClassShowCsvSection` visibility gate from the Pit Commands transport selector row in `GlobalSettingsView.xaml`, restoring always-visible access to pit transport mode regardless of League Class classification mode.
+- Classification: **both** (settings UX visibility/clarity improvements + internal behavior-safe normalization).
+- League Class settings UI now defaults/normalizes player override to **Auto-detect** when persisted manual override is invalid (manual selected with blank class name).
+- Added explicit column headers for player override and suffix fallback rows, plus a detected-classes readout table after CSV load (read-only in this phase).
+- Classification mode now controls section visibility:
+  - `CSV only`: CSV path/status + detected classes visible; suffix fallback hidden.
+  - `Name suffix only`: suffix fallback visible; CSV path/status hidden.
+  - `CSV then name suffix`: both visible.
+- Player preview text now uses clearer wording:
+  - explicit unavailable text when live identity is not yet available,
+  - otherwise shows `Player`, `Source`, and `Resolved class`.
+- Preserved safe color-hex handling (invalid hex renders transparent preview) and avoided per-tick preview spam by retaining snapshot-based refresh gating.
