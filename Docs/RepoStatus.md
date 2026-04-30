@@ -22,6 +22,17 @@ Branch: work
   - session checkered flag is no longer used as proof of overall leader finish; player checkered remains driver-side timing/summary context only;
   - finish latches now resist single-tick non-race telemetry blips via sustained non-race reset guard.
 
+
+- 2026-04-30 League Class enable-time mode guard landed:
+  - added a narrow runtime guard that auto-corrects `LeagueClassMode` from `Disabled (0)` to `CsvThenName (3)` only when `LeagueClassEnabled` transitions from false to true;
+  - preserves all existing user-selected non-disabled modes;
+  - ensures League Class preview/resolution activates immediately when users enable League Class without touching mode.
+
+- 2026-04-30 Build-fix pass landed (compile-only):
+  - fixed League Class CSV browse dialog disposal compile error by removing `using` wrapper around `OpenFileDialog`;
+  - fixed Push/Save mode-cycle feedback accessibility by routing through a new public `PitCommandEngine.PublishInfoMessage(...)` wrapper;
+  - fixed League Class settings initializer legality by setting `LaunchPluginSettings.LeagueClassMode` default to literal `0`;
+  - no intended behavior changes to pit-command transport, feedback hold/severity semantics, or League Class runtime logic.
 - 2026-04-30 League Race Class Phase 1 cleanup pass landed:
   - player preview now uses live player identity when available (CustomerId/UserID + name), with explicit not-available wording while telemetry identity is missing;
   - CSV reload now handles read exceptions safely and reports non-fatal status text instead of throwing during init/reload;

@@ -324,7 +324,7 @@ namespace LaunchPlugin
             Settings.PitFuelControlPushSaveMode = nextMode;
             SaveSettings();
             string modeText = nextMode == 1 ? "PROFILE" : "LIVE";
-            _pitCommandEngine.PublishMessage($"PUSH/SAVE {modeText}");
+            _pitCommandEngine.PublishInfoMessage($"PUSH/SAVE {modeText}");
             _pitFuelControlEngine?.RefreshCurrentSourceTarget("Pit.FuelControl.PushSaveModeCycle");
             SimHub.Logging.Current.Info($"[LalaPlugin:PitFuelControl] PitFuelControlPushSaveModeCycle -> mode={modeText}");
         }
@@ -4806,6 +4806,7 @@ namespace LaunchPlugin
         private readonly LeagueClassResolver _leagueClassResolver = new LeagueClassResolver();
         private string _leagueClassPreviewIdentitySnapshot = string.Empty;
         private string _leagueClassPreviewSettingsSnapshot = string.Empty;
+        private bool _leagueClassLastEnabledState = false;
         public LeagueClassStatus LeagueClassStatus => _leagueClassResolver.Status;
 
         public void ReloadLeagueClassConfig()
@@ -4899,6 +4900,28 @@ namespace LaunchPlugin
             _leagueClassPreviewIdentitySnapshot = identitySnapshot;
             _leagueClassPreviewSettingsSnapshot = settingsSnapshot;
             OnPropertyChanged(nameof(LeagueClassPlayerPreviewText));
+        }
+
+        private void ApplyLeagueClassEnableModeGuard()
+        {
+            if (Settings == null)
+            {
+                return;
+            }
+
+            bool isEnabled = Settings.LeagueClassEnabled;
+            if (isEnabled &&
+                !_leagueClassLastEnabledState &&
+                Settings.LeagueClassMode == (int)LeagueClassMode.Disabled)
+            {
+                Settings.LeagueClassMode = (int)LeagueClassMode.CsvThenName;
+                SaveSettings();
+                OnPropertyChanged(nameof(Settings));
+                OnPropertyChanged(nameof(LeagueClassStatus));
+                OnPropertyChanged(nameof(LeagueClassPlayerPreviewText));
+            }
+
+            _leagueClassLastEnabledState = isEnabled;
         }
 
         private string BuildLeagueClassIdentitySnapshot(PluginManager pluginManager)
@@ -7758,6 +7781,7 @@ namespace LaunchPlugin
             EnforceHardDebugSettings(Settings);
             TryFlushPendingCustomMessageSaveDebounce(false);
             EvaluateDarkMode(pluginManager);
+            ApplyLeagueClassEnableModeGuard();
             MaybeRefreshLeagueClassPreview(pluginManager);
             if (!data.GameRunning || data.NewData == null) return;
 
@@ -17663,7 +17687,7 @@ namespace LaunchPlugin
         public double PitFuelPushSaveProfileGuardPct { get; set; } = 10.0;
         public bool EnableAutoDashSwitch { get; set; } = true;
         public bool LeagueClassEnabled { get; set; } = false;
-        public int LeagueClassMode { get; set; } = (int)LeagueClassMode.CsvOnly;
+        public int LeagueClassMode { get; set; } = 0;
         public string LeagueClassCsvPath { get; set; } = string.Empty;
         public int LeagueClassPlayerOverrideMode { get; set; } = 0; // 0=Auto,1=Manual
         public string LeagueClassPlayerOverrideClassName { get; set; } = string.Empty;

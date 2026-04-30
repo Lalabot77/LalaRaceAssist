@@ -56,6 +56,11 @@ The public user-facing release history is maintained in the root `CHANGELOG.md`.
   - no fuel-projection math redesign,
   - no pit fuel-control/pit-command behavior changes,
   - no dashboard ownership shift into plugin logic.
+### 2026-04-30 — League Class enable-time mode guard (Disabled -> CsvThenName)
+- Classification: **both** (runtime behavior guard + docs alignment).
+- Added a narrow enable-edge guard in `LalaLaunch` so when `LeagueClassEnabled` flips `false -> true` and `LeagueClassMode` is still `Disabled (0)`, mode is auto-set to `CsvThenName (3)`.
+- Preserved user intent for all non-disabled modes (no override when user already selected `CsvOnly`, `NameOnly`, or `CsvThenName`).
+- Purpose: prevent an inactive enabled state and ensure League Class preview/resolution paths become active immediately after enable.
 
 ### 2026-04-30 — Pit Fuel Control Push/Save profile-assisted mode + guard
 - Classification: **both** (new dash-facing controls/exports + bounded internal target-selection behavior change).
@@ -1585,3 +1590,9 @@ The public user-facing release history is maintained in the root `CHANGELOG.md`.
 - Fixed launch trace housekeeping analysis to explicitly skip the summary CSV header row that follows `[LaunchSummaryHeader]`.
 - Prevented valid mixed trace files from routing `TimestampUtc,...` through telemetry row parsing, eliminating the false telemetry DateTime parse error during Launch Analysis file scans.
 - Kept launch trace naming/CSV format/summary schema unchanged; empty/header-only cleanup and completed trace retention rules remain intact.
+
+## 2026-04-30 — Build-fix pass (CS1674/CS0122/CS0236)
+- Classification: **internal-only** (compile/legal-access fixes only; no runtime behavior redesign).
+- `GlobalSettingsView.xaml.cs`: removed `using (...)` around `Microsoft.Win32.OpenFileDialog` because it is not `IDisposable`; dialog flow and reload behavior unchanged.
+- `PitCommandEngine`: added narrow public wrapper `PublishInfoMessage(string)` and switched Push/Save mode-cycle feedback call site to that seam; severity mapping/hold behavior unchanged.
+- `LaunchPluginSettings`: changed `LeagueClassMode` default initializer to literal `0` to avoid illegal instance-member reference in initializer; runtime normalization/behavior unchanged.
