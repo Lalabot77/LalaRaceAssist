@@ -1,3 +1,8 @@
+## 2026-05-01 — League Class UI disabled-mode + CSV path binding cleanup
+- Classification: **both** (settings UI behavior clarity + persisted-setting binding reliability).
+- League Class settings UI now collapses all lower controls when disabled and shows only master enable plus disabled status text.
+- CSV browse path write remains settings-owned (`LeagueClassCsvPath`) and now immediately reflects in the textbox after browse assignment.
+- Reload button path is now guarded against disabled-mode invocation (no-op when disabled); re-enable flow keeps saved settings and existing enable-time mode guard behavior.
 ## 2026-05-01 — League Race Phase 2 compile blocker hotfix (undefined live identity fields)
 - Classification: **internal-only** (compile fix only; no runtime behavior change).
 - Replaced `LeagueClass.Player.*` export bindings that referenced undefined `_liveLeagueClassIdentityCustomerId/_liveLeagueClassIdentityName` symbols with a resolver helper that reads live player identity via `TryGetLivePlayerIdentityPreview(...)` and resolves through existing `LeagueClassResolver` seams.

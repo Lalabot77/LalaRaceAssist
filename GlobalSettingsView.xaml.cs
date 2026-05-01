@@ -361,7 +361,12 @@ namespace LaunchPlugin
 
         private void ReloadLeagueClassCsv_Click(object sender, RoutedEventArgs e)
         {
-            Plugin?.ReloadLeagueClassConfig();
+            if (Plugin?.Settings == null || !Plugin.Settings.LeagueClassEnabled)
+            {
+                return;
+            }
+
+            Plugin.ReloadLeagueClassConfig();
         }
 
     }
