@@ -257,8 +257,8 @@
                         <TextBox Width="120" Margin="8,0,0,0" Text="{Binding Settings.LeagueClassPlayerOverrideClassName, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" ToolTip="Class name"/>
                         <TextBox Width="90" Margin="8,0,0,0" Text="{Binding Settings.LeagueClassPlayerOverrideShortName, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" ToolTip="Short"/>
                         <TextBox Width="50" Margin="8,0,0,0" Text="{Binding Settings.LeagueClassPlayerOverrideRank, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" ToolTip="Rank"/>
-                        <TextBox Width="90" Margin="8,0,0,0" Text="{Binding Settings.LeagueClassPlayerOverrideColourHex, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" ToolTip="#RRGGBB"/>
-                        <Border Width="18" Height="18" Margin="6,2,0,0" BorderBrush="#777" BorderThickness="1" Background="{Binding Settings.LeagueClassPlayerOverrideColourHex, Converter={StaticResource HexToBrushConverter}}"/>
+                        <TextBox x:Name="LeagueClassPlayerOverrideColourHexTextBox" Width="90" Margin="8,0,0,0" Text="{Binding Settings.LeagueClassPlayerOverrideColourHex, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" ToolTip="#RRGGBB"/>
+                        <Border Width="18" Height="18" Margin="6,2,0,0" BorderBrush="#777" BorderThickness="1" Background="{Binding Text, ElementName=LeagueClassPlayerOverrideColourHexTextBox, Converter={StaticResource HexToBrushConverter}}"/>
                     </StackPanel>
                     <TextBlock Margin="0,6,0,0" Foreground="LightGray" Text="{Binding LeagueClassPlayerPreviewText}"/>
 

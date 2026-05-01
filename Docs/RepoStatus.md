@@ -1,9 +1,3 @@
-- 2026-05-01 League Race Phase 2 debug/metadata export pass landed:
-  - added global `LeagueClass.*` status + player metadata exports (enabled/mode/status/counters + player name/short/rank/colour/valid/source/override);
-  - added passive resolver-backed League Class metadata per Opp slots `Opp.Ahead1..5` / `Opp.Behind1..5`;
-  - added optional passive resolver-backed League Class metadata per CarSA physical slots `Car.Ahead01..05` / `Car.Behind01..05`;
-  - no Opponents selection/grouping changes, no CarSA ordering/filtering changes, no H2HRace/H2HTrack/ClassLeader/ClassBest behavior changes.
-
 - 2026-04-30 Pit Fuel Control Push/Save mode UI/control-surface pass landed:
   - added `Push/Save Profile Mode` toggle in Dash Control -> Global Dash Functions -> Fuel (OFF=`LIVE`, ON=`PROFILE`) bound to `Settings.PitFuelControlPushSaveMode`;
   - selector shares the existing setting with `Pit.FuelControl.PushSaveModeCycle` action path (no UI-local independent state);
@@ -32,6 +26,16 @@ Branch: work
   - fixed undefined-symbol build break in `LeagueClass.Player.*` export attachments (removed references to undeclared `_liveLeagueClassIdentityCustomerId/_liveLeagueClassIdentityName`);
   - exports now resolve live player identity through existing `TryGetLivePlayerIdentityPreview(...)` + resolver helper seam;
   - behavior remains passive/resolver-backed with no opponent/CarSA/H2H selection changes.
+- 2026-05-01 League Race Phase 2 debug/metadata export pass landed:
+  - added global `LeagueClass.*` status + player metadata exports (enabled/mode/status/counters + player name/short/rank/colour/valid/source/override);
+  - added passive resolver-backed League Class metadata per Opp slots `Opp.Ahead1..5` / `Opp.Behind1..5`;
+  - added optional passive resolver-backed League Class metadata per CarSA physical slots `Car.Ahead01..05` / `Car.Behind01..05`;
+  - no Opponents selection/grouping changes, no CarSA ordering/filtering changes, no H2HRace/H2HTrack/ClassLeader/ClassBest behavior changes.
+
+- 2026-05-01 League Race Phase 1 player override colour preview UI fix landed:
+  - fixed Player race class preview swatch binding in `GlobalSettingsView.xaml` to use the same hex-to-brush conversion path as CSV/fallback previews via the override colour hex textbox source;
+  - invalid/blank override hex remains safe and renders transparent;
+  - no resolver/settings/export semantic changes were introduced.
 
 - Runtime fuel pit-space cap authority fix (2026-04-29):
   - live pit-space exports (`Fuel.Pit.TankSpaceAvailable`, `Fuel.Pit.WillAdd`, `Fuel.Pit.FuelOnExit`) now resolve cap from runtime live tank authority first (`EffectiveLiveMaxTank` seam);

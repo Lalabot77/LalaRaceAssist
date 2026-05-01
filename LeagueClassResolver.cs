@@ -190,7 +190,7 @@ namespace LaunchPlugin
             };
         }
 
-        public EffectiveRaceClassInfo ResolvePlayerPreview(LaunchPluginSettings settings, int? playerCustomerId, string playerName)
+        public EffectiveRaceClassInfo ResolvePlayerEffectiveClass(LaunchPluginSettings settings, int? playerCustomerId, string playerName)
         {
             if (settings == null || !settings.LeagueClassEnabled)
             {
@@ -210,11 +210,21 @@ namespace LaunchPlugin
                 };
             }
 
+            return ResolveDriverEffectiveClass(settings, playerCustomerId, playerName);
+        }
+
+        public EffectiveRaceClassInfo ResolveDriverEffectiveClass(LaunchPluginSettings settings, int? customerId, string driverName)
+        {
+            if (settings == null || !settings.LeagueClassEnabled)
+            {
+                return EffectiveRaceClassInfo.Invalid(LeagueClassSource.None);
+            }
+
             var mode = (LeagueClassMode)settings.LeagueClassMode;
             bool checkCsvFirst = mode == LeagueClassMode.CsvOnly || mode == LeagueClassMode.CsvThenName;
             bool checkName = mode == LeagueClassMode.NameOnly || mode == LeagueClassMode.CsvThenName;
 
-            if (checkCsvFirst && playerCustomerId.HasValue && _csvByCustomerId.TryGetValue(playerCustomerId.Value, out var csv))
+            if (checkCsvFirst && customerId.HasValue && _csvByCustomerId.TryGetValue(customerId.Value, out var csv))
             {
                 return new EffectiveRaceClassInfo
                 {
@@ -234,7 +244,7 @@ namespace LaunchPlugin
                     if (!rule.Enabled) continue;
                     string suffix = (rule.MatchSuffix ?? string.Empty).Trim();
                     if (string.IsNullOrWhiteSpace(suffix)) continue;
-                    if ((playerName ?? string.Empty).Trim().EndsWith(suffix, StringComparison.OrdinalIgnoreCase))
+                    if ((driverName ?? string.Empty).Trim().EndsWith(suffix, StringComparison.OrdinalIgnoreCase))
                     {
                         return new EffectiveRaceClassInfo
                         {
@@ -250,6 +260,11 @@ namespace LaunchPlugin
             }
 
             return EffectiveRaceClassInfo.Invalid(LeagueClassSource.Native);
+        }
+
+        public EffectiveRaceClassInfo ResolvePlayerPreview(LaunchPluginSettings settings, int? playerCustomerId, string playerName)
+        {
+            return ResolvePlayerEffectiveClass(settings, playerCustomerId, playerName);
         }
 
         private static string BuildStatusText(LaunchPluginSettings settings, string path, bool csvMode, string readError)
