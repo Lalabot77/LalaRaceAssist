@@ -4815,6 +4815,14 @@ namespace LaunchPlugin
             return _leagueClassResolver.ResolvePlayerPreview(Settings, customerId, driverName);
         }
 
+        private EffectiveRaceClassInfo ResolveLivePlayerLeagueClassInfo()
+        {
+            int? customerId;
+            string driverName;
+            TryGetLivePlayerIdentityPreview(out customerId, out driverName);
+            return ResolveLeagueClassInfo(customerId, driverName);
+        }
+
         private static string LeagueClassSourceToExportText(LeagueClassSource source)
         {
             switch (source)
@@ -6173,12 +6181,12 @@ namespace LaunchPlugin
             AttachCore("LeagueClass.ValidDriverCount", () => LeagueClassStatus?.ValidDriverCount ?? 0);
             AttachCore("LeagueClass.InvalidRowCount", () => LeagueClassStatus?.InvalidRowCount ?? 0);
             AttachCore("LeagueClass.DuplicateRowCount", () => LeagueClassStatus?.DuplicateRowCount ?? 0);
-            AttachCore("LeagueClass.Player.Name", () => ResolveLeagueClassInfo(_liveLeagueClassIdentityCustomerId, _liveLeagueClassIdentityName).Name ?? string.Empty);
-            AttachCore("LeagueClass.Player.ShortName", () => ResolveLeagueClassInfo(_liveLeagueClassIdentityCustomerId, _liveLeagueClassIdentityName).ShortName ?? string.Empty);
-            AttachCore("LeagueClass.Player.Rank", () => ResolveLeagueClassInfo(_liveLeagueClassIdentityCustomerId, _liveLeagueClassIdentityName).Rank);
-            AttachCore("LeagueClass.Player.ColourHex", () => ResolveLeagueClassInfo(_liveLeagueClassIdentityCustomerId, _liveLeagueClassIdentityName).ColourHex ?? string.Empty);
-            AttachCore("LeagueClass.Player.Valid", () => ResolveLeagueClassInfo(_liveLeagueClassIdentityCustomerId, _liveLeagueClassIdentityName).Valid);
-            AttachCore("LeagueClass.Player.Source", () => LeagueClassSourceToExportText(ResolveLeagueClassInfo(_liveLeagueClassIdentityCustomerId, _liveLeagueClassIdentityName).Source));
+            AttachCore("LeagueClass.Player.Name", () => ResolveLivePlayerLeagueClassInfo().Name ?? string.Empty);
+            AttachCore("LeagueClass.Player.ShortName", () => ResolveLivePlayerLeagueClassInfo().ShortName ?? string.Empty);
+            AttachCore("LeagueClass.Player.Rank", () => ResolveLivePlayerLeagueClassInfo().Rank);
+            AttachCore("LeagueClass.Player.ColourHex", () => ResolveLivePlayerLeagueClassInfo().ColourHex ?? string.Empty);
+            AttachCore("LeagueClass.Player.Valid", () => ResolveLivePlayerLeagueClassInfo().Valid);
+            AttachCore("LeagueClass.Player.Source", () => LeagueClassSourceToExportText(ResolveLivePlayerLeagueClassInfo().Source));
             AttachCore("LeagueClass.Player.OverrideActive", () => (Settings?.LeagueClassPlayerOverrideMode ?? 0) == 1);
 
             double SafeOppValue(double v) => (double.IsNaN(v) || double.IsInfinity(v)) ? 0.0 : v;

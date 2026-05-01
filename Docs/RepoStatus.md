@@ -28,6 +28,11 @@ Branch: work
 - No Git remote is configured in this checkout (`git remote -v` returns empty).
 
 ## Documentation sync status
+- 2026-05-01 League Race Phase 2 compile blocker hotfix landed:
+  - fixed undefined-symbol build break in `LeagueClass.Player.*` export attachments (removed references to undeclared `_liveLeagueClassIdentityCustomerId/_liveLeagueClassIdentityName`);
+  - exports now resolve live player identity through existing `TryGetLivePlayerIdentityPreview(...)` + resolver helper seam;
+  - behavior remains passive/resolver-backed with no opponent/CarSA/H2H selection changes.
+
 - Runtime fuel pit-space cap authority fix (2026-04-29):
   - live pit-space exports (`Fuel.Pit.TankSpaceAvailable`, `Fuel.Pit.WillAdd`, `Fuel.Pit.FuelOnExit`) now resolve cap from runtime live tank authority first (`EffectiveLiveMaxTank` seam);
   - stale Strategy/Profile `MaxFuelOverride` no longer silently clamps runtime pit-space when live cap authority exists;

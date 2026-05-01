@@ -1,3 +1,8 @@
+## 2026-05-01 — League Race Phase 2 compile blocker hotfix (undefined live identity fields)
+- Classification: **internal-only** (compile fix only; no runtime behavior change).
+- Replaced `LeagueClass.Player.*` export bindings that referenced undefined `_liveLeagueClassIdentityCustomerId/_liveLeagueClassIdentityName` symbols with a resolver helper that reads live player identity via `TryGetLivePlayerIdentityPreview(...)` and resolves through existing `LeagueClassResolver` seams.
+- Restored buildability by removing `CS0103` undefined-identifier failures while preserving existing resolver-backed export semantics.
+
 ## 2026-05-01 — League Race Phase 2 debug/metadata exports only
 - Classification: **both** (new dash-facing debug metadata exports + docs alignment).
 - Added League Class global/player export family in `LalaLaunch` using resolver-only authority: `LeagueClass.Enabled`, `LeagueClass.Mode`, `LeagueClass.ConfigStatusText`, `LeagueClass.LoadedCount`, `LeagueClass.ValidDriverCount`, `LeagueClass.InvalidRowCount`, `LeagueClass.DuplicateRowCount`, `LeagueClass.Player.*` (`Name/ShortName/Rank/ColourHex/Valid/Source/OverrideActive`).
