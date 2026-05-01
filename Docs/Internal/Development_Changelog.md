@@ -1,3 +1,8 @@
+
+## 2026-05-01 — League Race Phase 1 player override colour preview binding fix
+- Classification: **internal-only** (UI binding correction only; no resolver/settings/export behavior changes).
+- `GlobalSettingsView.xaml`: fixed the Player race class preview swatch binding to source from the override colour hex textbox text via `HexToBrushConverter`, matching CSV/fallback preview behavior and preserving transparent output for invalid/blank hex.
+
 ## 2026-04-30 — Pit Fuel Control Push/Save mode UI surface + binding row
 - Classification: **both** (plugin settings/binding UI surface only + docs alignment).
 - Notification hardening: `PitFuelControlPushSaveModeCycle` now explicitly raises Push/Save mode property change notifications after programmatic setting updates so an open toggle UI reflects hardware/dash cycle presses immediately.
