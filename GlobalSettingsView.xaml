@@ -196,6 +196,7 @@
                             </DataTemplate>
                         </ItemsControl.ItemTemplate>
                     </ItemsControl>
+                    </StackPanel>
                 </StackPanel>
             </Expander>
 
@@ -207,6 +208,21 @@
                 <StackPanel Margin="0,10,0,0">
                     <styles:SHToggleCheckbox Content="Enable League Class System"
                                              IsChecked="{Binding Settings.LeagueClassEnabled, Mode=TwoWay}"/>
+                    <TextBlock Margin="0,4,0,0" Foreground="LightGray" Text="League Class system disabled">
+                        <TextBlock.Style>
+                            <Style TargetType="TextBlock">
+                                <Setter Property="Visibility" Value="Visible"/>
+                                <Style.Triggers>
+                                    <DataTrigger Binding="{Binding Settings.LeagueClassEnabled}" Value="True">
+                                        <Setter Property="Visibility" Value="Collapsed"/>
+                                    </DataTrigger>
+                                </Style.Triggers>
+                            </Style>
+                        </TextBlock.Style>
+                    </TextBlock>
+
+
+                    <StackPanel Margin="0,6,0,0" Visibility="{Binding Settings.LeagueClassEnabled, Converter={StaticResource BooleanToVisibilityConverter}}">
                     <StackPanel Orientation="Horizontal" Margin="0,8,0,0">
                         <TextBlock Text="Classification mode" VerticalAlignment="Center" Margin="0,0,8,0"/>
                         <ComboBox Width="320"
@@ -279,6 +295,7 @@
                             </DataTemplate>
                         </ItemsControl.ItemTemplate>
                     </ItemsControl>
+                    </StackPanel>
                 </StackPanel>
             </Expander>
 <StackPanel Visibility="{Binding HardDebugEnabledForUi, Converter={StaticResource BooleanToVisibilityConverter}}">

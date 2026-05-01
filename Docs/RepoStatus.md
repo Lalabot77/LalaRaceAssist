@@ -1,3 +1,9 @@
+- 2026-05-01 League Class disabled-mode UI/state cleanup landed:
+  - League Class settings now hide the entire lower configuration area while disabled, showing only the section header, master enable toggle, and disabled helper text;
+  - CSV browse now writes directly to persisted `Settings.LeagueClassCsvPath` and immediately mirrors the chosen value in the textbox;
+  - Reload action now no-ops while disabled by UI flow (control hidden with disabled section) and explicit click-guard;
+  - re-enable preserves persisted CSV/fallback/manual settings, with existing enable-time mode guard (`Disabled` -> `CsvThenName`) unchanged.
+
 - 2026-04-30 Pit Fuel Control Push/Save mode UI/control-surface pass landed:
   - added `Push/Save Profile Mode` toggle in Dash Control -> Global Dash Functions -> Fuel (OFF=`LIVE`, ON=`PROFILE`) bound to `Settings.PitFuelControlPushSaveMode`;
   - selector shares the existing setting with `Pit.FuelControl.PushSaveModeCycle` action path (no UI-local independent state);

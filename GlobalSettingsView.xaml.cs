@@ -355,13 +355,19 @@ namespace LaunchPlugin
             if (dialog.ShowDialog() == true)
             {
                 Plugin.Settings.LeagueClassCsvPath = dialog.FileName;
+                LeagueClassCsvPathTextBox.Text = Plugin.Settings.LeagueClassCsvPath ?? string.Empty;
                 Plugin.ReloadLeagueClassConfig();
             }
         }
 
         private void ReloadLeagueClassCsv_Click(object sender, RoutedEventArgs e)
         {
-            Plugin?.ReloadLeagueClassConfig();
+            if (Plugin?.Settings == null || !Plugin.Settings.LeagueClassEnabled)
+            {
+                return;
+            }
+
+            Plugin.ReloadLeagueClassConfig();
         }
 
     }
