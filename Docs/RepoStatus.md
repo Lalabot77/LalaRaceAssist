@@ -1,9 +1,3 @@
-- 2026-05-01 League Race Phase 2 debug/metadata export pass landed:
-  - added global `LeagueClass.*` status + player metadata exports (enabled/mode/status/counters + player name/short/rank/colour/valid/source/override);
-  - added passive resolver-backed League Class metadata per Opp slots `Opp.Ahead1..5` / `Opp.Behind1..5`;
-  - added optional passive resolver-backed League Class metadata per CarSA physical slots `Car.Ahead01..05` / `Car.Behind01..05`;
-  - no Opponents selection/grouping changes, no CarSA ordering/filtering changes, no H2HRace/H2HTrack/ClassLeader/ClassBest behavior changes.
-
 - 2026-04-30 Pit Fuel Control Push/Save mode UI/control-surface pass landed:
   - added `Push/Save Profile Mode` toggle in Dash Control -> Global Dash Functions -> Fuel (OFF=`LIVE`, ON=`PROFILE`) bound to `Settings.PitFuelControlPushSaveMode`;
   - selector shares the existing setting with `Pit.FuelControl.PushSaveModeCycle` action path (no UI-local independent state);
@@ -28,6 +22,12 @@ Branch: work
 - No Git remote is configured in this checkout (`git remote -v` returns empty).
 
 ## Documentation sync status
+- 2026-05-01 League Race Phase 2 debug/metadata export pass landed:
+  - added global `LeagueClass.*` status + player metadata exports (enabled/mode/status/counters + player name/short/rank/colour/valid/source/override);
+  - added passive resolver-backed League Class metadata per Opp slots `Opp.Ahead1..5` / `Opp.Behind1..5`;
+  - added optional passive resolver-backed League Class metadata per CarSA physical slots `Car.Ahead01..05` / `Car.Behind01..05`;
+  - no Opponents selection/grouping changes, no CarSA ordering/filtering changes, no H2HRace/H2HTrack/ClassLeader/ClassBest behavior changes.
+
 - Runtime fuel pit-space cap authority fix (2026-04-29):
   - live pit-space exports (`Fuel.Pit.TankSpaceAvailable`, `Fuel.Pit.WillAdd`, `Fuel.Pit.FuelOnExit`) now resolve cap from runtime live tank authority first (`EffectiveLiveMaxTank` seam);
   - stale Strategy/Profile `MaxFuelOverride` no longer silently clamps runtime pit-space when live cap authority exists;

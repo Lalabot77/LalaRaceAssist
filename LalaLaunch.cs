@@ -4810,9 +4810,14 @@ namespace LaunchPlugin
         private bool _leagueClassLastEnabledState = false;
         public LeagueClassStatus LeagueClassStatus => _leagueClassResolver.Status;
 
-        private EffectiveRaceClassInfo ResolveLeagueClassInfo(int? customerId, string driverName)
+        private EffectiveRaceClassInfo ResolveLeagueClassPlayerInfo(int? customerId, string driverName)
         {
-            return _leagueClassResolver.ResolvePlayerPreview(Settings, customerId, driverName);
+            return _leagueClassResolver.ResolvePlayerEffectiveClass(Settings, customerId, driverName);
+        }
+
+        private EffectiveRaceClassInfo ResolveLeagueClassDriverInfo(int? customerId, string driverName)
+        {
+            return _leagueClassResolver.ResolveDriverEffectiveClass(Settings, customerId, driverName);
         }
 
         private static string LeagueClassSourceToExportText(LeagueClassSource source)
@@ -4852,7 +4857,7 @@ namespace LaunchPlugin
                 string playerName = string.Empty;
                 bool hasLiveIdentity = TryGetLivePlayerIdentityPreview(out playerCustomerId, out playerName);
 
-                var info = _leagueClassResolver.ResolvePlayerPreview(Settings, playerCustomerId, playerName);
+                var info = _leagueClassResolver.ResolvePlayerEffectiveClass(Settings, playerCustomerId, playerName);
                 if (info.Valid)
                 {
                     string livePlayerText = !string.IsNullOrWhiteSpace(playerName) ? playerName : "(name unavailable)";
@@ -6173,12 +6178,12 @@ namespace LaunchPlugin
             AttachCore("LeagueClass.ValidDriverCount", () => LeagueClassStatus?.ValidDriverCount ?? 0);
             AttachCore("LeagueClass.InvalidRowCount", () => LeagueClassStatus?.InvalidRowCount ?? 0);
             AttachCore("LeagueClass.DuplicateRowCount", () => LeagueClassStatus?.DuplicateRowCount ?? 0);
-            AttachCore("LeagueClass.Player.Name", () => ResolveLeagueClassInfo(_liveLeagueClassIdentityCustomerId, _liveLeagueClassIdentityName).Name ?? string.Empty);
-            AttachCore("LeagueClass.Player.ShortName", () => ResolveLeagueClassInfo(_liveLeagueClassIdentityCustomerId, _liveLeagueClassIdentityName).ShortName ?? string.Empty);
-            AttachCore("LeagueClass.Player.Rank", () => ResolveLeagueClassInfo(_liveLeagueClassIdentityCustomerId, _liveLeagueClassIdentityName).Rank);
-            AttachCore("LeagueClass.Player.ColourHex", () => ResolveLeagueClassInfo(_liveLeagueClassIdentityCustomerId, _liveLeagueClassIdentityName).ColourHex ?? string.Empty);
-            AttachCore("LeagueClass.Player.Valid", () => ResolveLeagueClassInfo(_liveLeagueClassIdentityCustomerId, _liveLeagueClassIdentityName).Valid);
-            AttachCore("LeagueClass.Player.Source", () => LeagueClassSourceToExportText(ResolveLeagueClassInfo(_liveLeagueClassIdentityCustomerId, _liveLeagueClassIdentityName).Source));
+            AttachCore("LeagueClass.Player.Name", () => ResolveLeagueClassPlayerInfo(_liveLeagueClassIdentityCustomerId, _liveLeagueClassIdentityName).Name ?? string.Empty);
+            AttachCore("LeagueClass.Player.ShortName", () => ResolveLeagueClassPlayerInfo(_liveLeagueClassIdentityCustomerId, _liveLeagueClassIdentityName).ShortName ?? string.Empty);
+            AttachCore("LeagueClass.Player.Rank", () => ResolveLeagueClassPlayerInfo(_liveLeagueClassIdentityCustomerId, _liveLeagueClassIdentityName).Rank);
+            AttachCore("LeagueClass.Player.ColourHex", () => ResolveLeagueClassPlayerInfo(_liveLeagueClassIdentityCustomerId, _liveLeagueClassIdentityName).ColourHex ?? string.Empty);
+            AttachCore("LeagueClass.Player.Valid", () => ResolveLeagueClassPlayerInfo(_liveLeagueClassIdentityCustomerId, _liveLeagueClassIdentityName).Valid);
+            AttachCore("LeagueClass.Player.Source", () => LeagueClassSourceToExportText(ResolveLeagueClassPlayerInfo(_liveLeagueClassIdentityCustomerId, _liveLeagueClassIdentityName).Source));
             AttachCore("LeagueClass.Player.OverrideActive", () => (Settings?.LeagueClassPlayerOverrideMode ?? 0) == 1);
 
             double SafeOppValue(double v) => (double.IsNaN(v) || double.IsInfinity(v)) ? 0.0 : v;
@@ -6233,12 +6238,12 @@ namespace LaunchPlugin
                 AttachCore(aheadPrefix + ".BlendedPaceSec", () => SafeOppValue(getAheadSlot(slotIndex)?.BlendedPaceSec ?? 0.0));
                 AttachCore(aheadPrefix + ".PaceDeltaSecPerLap", () => SafeOppValue(getAheadSlot(slotIndex)?.PaceDeltaSecPerLap ?? double.NaN));
                 AttachCore(aheadPrefix + ".LapsToFight", () => SafeOppValue(getAheadSlot(slotIndex)?.LapsToFight ?? double.NaN));
-                AttachCore(aheadPrefix + ".LeagueClassName", () => ResolveLeagueClassInfo(getAheadSlot(slotIndex)?.UserID, getAheadSlot(slotIndex)?.Name).Name ?? string.Empty);
-                AttachCore(aheadPrefix + ".LeagueClassShortName", () => ResolveLeagueClassInfo(getAheadSlot(slotIndex)?.UserID, getAheadSlot(slotIndex)?.Name).ShortName ?? string.Empty);
-                AttachCore(aheadPrefix + ".LeagueClassRank", () => ResolveLeagueClassInfo(getAheadSlot(slotIndex)?.UserID, getAheadSlot(slotIndex)?.Name).Rank);
-                AttachCore(aheadPrefix + ".LeagueClassColourHex", () => ResolveLeagueClassInfo(getAheadSlot(slotIndex)?.UserID, getAheadSlot(slotIndex)?.Name).ColourHex ?? string.Empty);
-                AttachCore(aheadPrefix + ".LeagueClassValid", () => ResolveLeagueClassInfo(getAheadSlot(slotIndex)?.UserID, getAheadSlot(slotIndex)?.Name).Valid);
-                AttachCore(aheadPrefix + ".LeagueClassSource", () => LeagueClassSourceToExportText(ResolveLeagueClassInfo(getAheadSlot(slotIndex)?.UserID, getAheadSlot(slotIndex)?.Name).Source));
+                AttachCore(aheadPrefix + ".LeagueClassName", () => ResolveLeagueClassDriverInfo(getAheadSlot(slotIndex)?.UserID, getAheadSlot(slotIndex)?.Name).Name ?? string.Empty);
+                AttachCore(aheadPrefix + ".LeagueClassShortName", () => ResolveLeagueClassDriverInfo(getAheadSlot(slotIndex)?.UserID, getAheadSlot(slotIndex)?.Name).ShortName ?? string.Empty);
+                AttachCore(aheadPrefix + ".LeagueClassRank", () => ResolveLeagueClassDriverInfo(getAheadSlot(slotIndex)?.UserID, getAheadSlot(slotIndex)?.Name).Rank);
+                AttachCore(aheadPrefix + ".LeagueClassColourHex", () => ResolveLeagueClassDriverInfo(getAheadSlot(slotIndex)?.UserID, getAheadSlot(slotIndex)?.Name).ColourHex ?? string.Empty);
+                AttachCore(aheadPrefix + ".LeagueClassValid", () => ResolveLeagueClassDriverInfo(getAheadSlot(slotIndex)?.UserID, getAheadSlot(slotIndex)?.Name).Valid);
+                AttachCore(aheadPrefix + ".LeagueClassSource", () => LeagueClassSourceToExportText(ResolveLeagueClassDriverInfo(getAheadSlot(slotIndex)?.UserID, getAheadSlot(slotIndex)?.Name).Source));
 
                 AttachCore(behindPrefix + ".CarIdx", () => getBehindSlot(slotIndex)?.CarIdx ?? -1);
                 AttachCore(behindPrefix + ".Name", () => getBehindSlot(slotIndex)?.Name ?? string.Empty);
@@ -6283,12 +6288,12 @@ namespace LaunchPlugin
                 AttachCore(behindPrefix + ".BlendedPaceSec", () => SafeOppValue(getBehindSlot(slotIndex)?.BlendedPaceSec ?? 0.0));
                 AttachCore(behindPrefix + ".PaceDeltaSecPerLap", () => SafeOppValue(getBehindSlot(slotIndex)?.PaceDeltaSecPerLap ?? double.NaN));
                 AttachCore(behindPrefix + ".LapsToFight", () => SafeOppValue(getBehindSlot(slotIndex)?.LapsToFight ?? double.NaN));
-                AttachCore(behindPrefix + ".LeagueClassName", () => ResolveLeagueClassInfo(getBehindSlot(slotIndex)?.UserID, getBehindSlot(slotIndex)?.Name).Name ?? string.Empty);
-                AttachCore(behindPrefix + ".LeagueClassShortName", () => ResolveLeagueClassInfo(getBehindSlot(slotIndex)?.UserID, getBehindSlot(slotIndex)?.Name).ShortName ?? string.Empty);
-                AttachCore(behindPrefix + ".LeagueClassRank", () => ResolveLeagueClassInfo(getBehindSlot(slotIndex)?.UserID, getBehindSlot(slotIndex)?.Name).Rank);
-                AttachCore(behindPrefix + ".LeagueClassColourHex", () => ResolveLeagueClassInfo(getBehindSlot(slotIndex)?.UserID, getBehindSlot(slotIndex)?.Name).ColourHex ?? string.Empty);
-                AttachCore(behindPrefix + ".LeagueClassValid", () => ResolveLeagueClassInfo(getBehindSlot(slotIndex)?.UserID, getBehindSlot(slotIndex)?.Name).Valid);
-                AttachCore(behindPrefix + ".LeagueClassSource", () => LeagueClassSourceToExportText(ResolveLeagueClassInfo(getBehindSlot(slotIndex)?.UserID, getBehindSlot(slotIndex)?.Name).Source));
+                AttachCore(behindPrefix + ".LeagueClassName", () => ResolveLeagueClassDriverInfo(getBehindSlot(slotIndex)?.UserID, getBehindSlot(slotIndex)?.Name).Name ?? string.Empty);
+                AttachCore(behindPrefix + ".LeagueClassShortName", () => ResolveLeagueClassDriverInfo(getBehindSlot(slotIndex)?.UserID, getBehindSlot(slotIndex)?.Name).ShortName ?? string.Empty);
+                AttachCore(behindPrefix + ".LeagueClassRank", () => ResolveLeagueClassDriverInfo(getBehindSlot(slotIndex)?.UserID, getBehindSlot(slotIndex)?.Name).Rank);
+                AttachCore(behindPrefix + ".LeagueClassColourHex", () => ResolveLeagueClassDriverInfo(getBehindSlot(slotIndex)?.UserID, getBehindSlot(slotIndex)?.Name).ColourHex ?? string.Empty);
+                AttachCore(behindPrefix + ".LeagueClassValid", () => ResolveLeagueClassDriverInfo(getBehindSlot(slotIndex)?.UserID, getBehindSlot(slotIndex)?.Name).Valid);
+                AttachCore(behindPrefix + ".LeagueClassSource", () => LeagueClassSourceToExportText(ResolveLeagueClassDriverInfo(getBehindSlot(slotIndex)?.UserID, getBehindSlot(slotIndex)?.Name).Source));
             }
 
             AttachCore("Opp.Leader.BlendedPaceSec", () => SafeOppValue(_opponentsEngine != null ? _opponentsEngine.Outputs.LeaderBlendedPaceSec : double.NaN));
@@ -6435,12 +6440,12 @@ namespace LaunchPlugin
                 AttachCore($"Car.Ahead{label}.IsTeammate", () => _carSaEngine?.Outputs.AheadSlots[slotIndex].IsTeammate ?? false);
                 AttachCore($"Car.Ahead{label}.IsBad", () => _carSaEngine?.Outputs.AheadSlots[slotIndex].IsBad ?? false);
                 AttachCore($"Car.Ahead{label}.LapsSincePit", () => _carSaEngine?.Outputs.AheadSlots[slotIndex].LapsSincePit ?? -1);
-                AttachCore($"Car.Ahead{label}.LeagueClassName", () => ResolveLeagueClassInfo(_carSaEngine?.Outputs.AheadSlots[slotIndex].UserID, _carSaEngine?.Outputs.AheadSlots[slotIndex].Name).Name ?? string.Empty);
-                AttachCore($"Car.Ahead{label}.LeagueClassShortName", () => ResolveLeagueClassInfo(_carSaEngine?.Outputs.AheadSlots[slotIndex].UserID, _carSaEngine?.Outputs.AheadSlots[slotIndex].Name).ShortName ?? string.Empty);
-                AttachCore($"Car.Ahead{label}.LeagueClassRank", () => ResolveLeagueClassInfo(_carSaEngine?.Outputs.AheadSlots[slotIndex].UserID, _carSaEngine?.Outputs.AheadSlots[slotIndex].Name).Rank);
-                AttachCore($"Car.Ahead{label}.LeagueClassColourHex", () => ResolveLeagueClassInfo(_carSaEngine?.Outputs.AheadSlots[slotIndex].UserID, _carSaEngine?.Outputs.AheadSlots[slotIndex].Name).ColourHex ?? string.Empty);
-                AttachCore($"Car.Ahead{label}.LeagueClassValid", () => ResolveLeagueClassInfo(_carSaEngine?.Outputs.AheadSlots[slotIndex].UserID, _carSaEngine?.Outputs.AheadSlots[slotIndex].Name).Valid);
-                AttachCore($"Car.Ahead{label}.LeagueClassSource", () => LeagueClassSourceToExportText(ResolveLeagueClassInfo(_carSaEngine?.Outputs.AheadSlots[slotIndex].UserID, _carSaEngine?.Outputs.AheadSlots[slotIndex].Name).Source));
+                AttachCore($"Car.Ahead{label}.LeagueClassName", () => ResolveLeagueClassDriverInfo(_carSaEngine?.Outputs.AheadSlots[slotIndex].UserID, _carSaEngine?.Outputs.AheadSlots[slotIndex].Name).Name ?? string.Empty);
+                AttachCore($"Car.Ahead{label}.LeagueClassShortName", () => ResolveLeagueClassDriverInfo(_carSaEngine?.Outputs.AheadSlots[slotIndex].UserID, _carSaEngine?.Outputs.AheadSlots[slotIndex].Name).ShortName ?? string.Empty);
+                AttachCore($"Car.Ahead{label}.LeagueClassRank", () => ResolveLeagueClassDriverInfo(_carSaEngine?.Outputs.AheadSlots[slotIndex].UserID, _carSaEngine?.Outputs.AheadSlots[slotIndex].Name).Rank);
+                AttachCore($"Car.Ahead{label}.LeagueClassColourHex", () => ResolveLeagueClassDriverInfo(_carSaEngine?.Outputs.AheadSlots[slotIndex].UserID, _carSaEngine?.Outputs.AheadSlots[slotIndex].Name).ColourHex ?? string.Empty);
+                AttachCore($"Car.Ahead{label}.LeagueClassValid", () => ResolveLeagueClassDriverInfo(_carSaEngine?.Outputs.AheadSlots[slotIndex].UserID, _carSaEngine?.Outputs.AheadSlots[slotIndex].Name).Valid);
+                AttachCore($"Car.Ahead{label}.LeagueClassSource", () => LeagueClassSourceToExportText(ResolveLeagueClassDriverInfo(_carSaEngine?.Outputs.AheadSlots[slotIndex].UserID, _carSaEngine?.Outputs.AheadSlots[slotIndex].Name).Source));
                 AttachCore($"Car.Ahead{label}.BestLapTimeSec", () => _carSaEngine?.Outputs.AheadSlots[slotIndex].BestLapTimeSec ?? double.NaN);
                 AttachCore($"Car.Ahead{label}.LastLapTimeSec", () => _carSaEngine?.Outputs.AheadSlots[slotIndex].LastLapTimeSec ?? double.NaN);
                 AttachCore($"Car.Ahead{label}.BestLap", () => _carSaEngine?.Outputs.AheadSlots[slotIndex].BestLap ?? string.Empty);
@@ -6505,12 +6510,12 @@ namespace LaunchPlugin
                 AttachCore($"Car.Behind{label}.IsTeammate", () => _carSaEngine?.Outputs.BehindSlots[slotIndex].IsTeammate ?? false);
                 AttachCore($"Car.Behind{label}.IsBad", () => _carSaEngine?.Outputs.BehindSlots[slotIndex].IsBad ?? false);
                 AttachCore($"Car.Behind{label}.LapsSincePit", () => _carSaEngine?.Outputs.BehindSlots[slotIndex].LapsSincePit ?? -1);
-                AttachCore($"Car.Behind{label}.LeagueClassName", () => ResolveLeagueClassInfo(_carSaEngine?.Outputs.BehindSlots[slotIndex].UserID, _carSaEngine?.Outputs.BehindSlots[slotIndex].Name).Name ?? string.Empty);
-                AttachCore($"Car.Behind{label}.LeagueClassShortName", () => ResolveLeagueClassInfo(_carSaEngine?.Outputs.BehindSlots[slotIndex].UserID, _carSaEngine?.Outputs.BehindSlots[slotIndex].Name).ShortName ?? string.Empty);
-                AttachCore($"Car.Behind{label}.LeagueClassRank", () => ResolveLeagueClassInfo(_carSaEngine?.Outputs.BehindSlots[slotIndex].UserID, _carSaEngine?.Outputs.BehindSlots[slotIndex].Name).Rank);
-                AttachCore($"Car.Behind{label}.LeagueClassColourHex", () => ResolveLeagueClassInfo(_carSaEngine?.Outputs.BehindSlots[slotIndex].UserID, _carSaEngine?.Outputs.BehindSlots[slotIndex].Name).ColourHex ?? string.Empty);
-                AttachCore($"Car.Behind{label}.LeagueClassValid", () => ResolveLeagueClassInfo(_carSaEngine?.Outputs.BehindSlots[slotIndex].UserID, _carSaEngine?.Outputs.BehindSlots[slotIndex].Name).Valid);
-                AttachCore($"Car.Behind{label}.LeagueClassSource", () => LeagueClassSourceToExportText(ResolveLeagueClassInfo(_carSaEngine?.Outputs.BehindSlots[slotIndex].UserID, _carSaEngine?.Outputs.BehindSlots[slotIndex].Name).Source));
+                AttachCore($"Car.Behind{label}.LeagueClassName", () => ResolveLeagueClassDriverInfo(_carSaEngine?.Outputs.BehindSlots[slotIndex].UserID, _carSaEngine?.Outputs.BehindSlots[slotIndex].Name).Name ?? string.Empty);
+                AttachCore($"Car.Behind{label}.LeagueClassShortName", () => ResolveLeagueClassDriverInfo(_carSaEngine?.Outputs.BehindSlots[slotIndex].UserID, _carSaEngine?.Outputs.BehindSlots[slotIndex].Name).ShortName ?? string.Empty);
+                AttachCore($"Car.Behind{label}.LeagueClassRank", () => ResolveLeagueClassDriverInfo(_carSaEngine?.Outputs.BehindSlots[slotIndex].UserID, _carSaEngine?.Outputs.BehindSlots[slotIndex].Name).Rank);
+                AttachCore($"Car.Behind{label}.LeagueClassColourHex", () => ResolveLeagueClassDriverInfo(_carSaEngine?.Outputs.BehindSlots[slotIndex].UserID, _carSaEngine?.Outputs.BehindSlots[slotIndex].Name).ColourHex ?? string.Empty);
+                AttachCore($"Car.Behind{label}.LeagueClassValid", () => ResolveLeagueClassDriverInfo(_carSaEngine?.Outputs.BehindSlots[slotIndex].UserID, _carSaEngine?.Outputs.BehindSlots[slotIndex].Name).Valid);
+                AttachCore($"Car.Behind{label}.LeagueClassSource", () => LeagueClassSourceToExportText(ResolveLeagueClassDriverInfo(_carSaEngine?.Outputs.BehindSlots[slotIndex].UserID, _carSaEngine?.Outputs.BehindSlots[slotIndex].Name).Source));
                 AttachCore($"Car.Behind{label}.BestLapTimeSec", () => _carSaEngine?.Outputs.BehindSlots[slotIndex].BestLapTimeSec ?? double.NaN);
                 AttachCore($"Car.Behind{label}.LastLapTimeSec", () => _carSaEngine?.Outputs.BehindSlots[slotIndex].LastLapTimeSec ?? double.NaN);
                 AttachCore($"Car.Behind{label}.BestLap", () => _carSaEngine?.Outputs.BehindSlots[slotIndex].BestLap ?? string.Empty);
