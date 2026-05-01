@@ -4825,7 +4825,7 @@ namespace LaunchPlugin
             int? customerId;
             string driverName;
             TryGetLivePlayerIdentityPreview(out customerId, out driverName);
-            return ResolveLeagueClassInfo(customerId, driverName);
+            return ResolveLeagueClassPlayerInfo(customerId, driverName);
         }
 
         private static string LeagueClassSourceToExportText(LeagueClassSource source)
