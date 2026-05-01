@@ -22,6 +22,11 @@ Branch: work
 - No Git remote is configured in this checkout (`git remote -v` returns empty).
 
 ## Documentation sync status
+- 2026-05-01 League Race Phase 2 debug/metadata export pass landed:
+  - added global `LeagueClass.*` status + player metadata exports (enabled/mode/status/counters + player name/short/rank/colour/valid/source/override);
+  - added passive resolver-backed League Class metadata per Opp slots `Opp.Ahead1..5` / `Opp.Behind1..5`;
+  - added optional passive resolver-backed League Class metadata per CarSA physical slots `Car.Ahead01..05` / `Car.Behind01..05`;
+  - no Opponents selection/grouping changes, no CarSA ordering/filtering changes, no H2HRace/H2HTrack/ClassLeader/ClassBest behavior changes.
 
 - 2026-05-01 League Race Phase 1 player override colour preview UI fix landed:
   - fixed Player race class preview swatch binding in `GlobalSettingsView.xaml` to use the same hex-to-brush conversion path as CSV/fallback previews via the override colour hex textbox source;

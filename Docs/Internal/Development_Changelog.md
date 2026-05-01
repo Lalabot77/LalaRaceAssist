@@ -53,6 +53,14 @@ The public user-facing release history is maintained in the root `CHANGELOG.md`.
 
 ## Post-v1.0 development
 
+## 2026-05-01 — League Race Phase 2 debug/metadata exports only
+- Classification: **both** (new dash-facing debug metadata exports + docs alignment).
+- Added League Class global/player export family in `LalaLaunch` using resolver-only authority: `LeagueClass.Enabled`, `LeagueClass.Mode`, `LeagueClass.ConfigStatusText`, `LeagueClass.LoadedCount`, `LeagueClass.ValidDriverCount`, `LeagueClass.InvalidRowCount`, `LeagueClass.DuplicateRowCount`, `LeagueClass.Player.*` (`Name/ShortName/Rank/ColourHex/Valid/Source/OverrideActive`).
+- Added passive League Class metadata exports for Opp slots (`Opp.Ahead1..5.*` / `Opp.Behind1..5.*`): `LeagueClassName`, `LeagueClassShortName`, `LeagueClassRank`, `LeagueClassColourHex`, `LeagueClassValid`, `LeagueClassSource`.
+- Added optional passive League Class metadata exports for CarSA physical slots (`Car.Ahead01..05.*` / `Car.Behind01..05.*`) with the same fields.
+- Source text contract is uppercase: `CSV`, `NAME`, `MANUAL`, `NATIVE`, `NONE`; unresolved exports publish `Valid=false` with empty/zero display values.
+- Preserved invariants: no Opponents same-class selection changes, no PitExit class-row filtering changes, no H2H/ClassLeader/ClassBest behavior changes, no CarSA physical-selection/order/filtering changes.
+
 ## 2026-04-30 — Race finish/end-phase authority redesign (SessionState-first + dash stability gates)
 - Classification: **both** (new dash-facing race-end exports + finish-detection contract correction).
 - Updated `LalaLaunch` finish detection precedence:

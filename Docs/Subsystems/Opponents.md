@@ -81,6 +81,7 @@ Opponents now reads from:
 ## Outputs
 - `Opp.Ahead1..5.*`, `Opp.Behind1..5.*` under the existing flat `Opp.*` namespace.
   - Compatibility: existing `Opp.Ahead1/2.*` and `Opp.Behind1/2.*` names remain unchanged.
+  - Passive League Class metadata is exported per slot (`LeagueClassName/ShortName/Rank/ColourHex/Valid/Source`) via `LeagueClassResolver` only; no opponent selection/filter/order behavior is altered.
   - Minimum per-slot shape includes:
     - identity/cosmetic: `CarIdx`, `Name`, `AbbrevName`, `CarNumber`, `ClassName`, `ClassColor`, `ClassColorHex`
     - validity/position/pit: `IsValid`, `IsOnTrack`, `IsOnPitRoad`, `PositionInClass` (effective/live race order)
