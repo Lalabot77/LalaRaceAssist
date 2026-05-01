@@ -22,6 +22,10 @@ Branch: work
 - No Git remote is configured in this checkout (`git remote -v` returns empty).
 
 ## Documentation sync status
+- 2026-05-01 League Race Phase 2 compile blocker hotfix landed:
+  - fixed undefined-symbol build break in `LeagueClass.Player.*` export attachments (removed references to undeclared `_liveLeagueClassIdentityCustomerId/_liveLeagueClassIdentityName`);
+  - exports now resolve live player identity through existing `TryGetLivePlayerIdentityPreview(...)` + resolver helper seam;
+  - behavior remains passive/resolver-backed with no opponent/CarSA/H2H selection changes.
 - 2026-05-01 League Race Phase 2 debug/metadata export pass landed:
   - added global `LeagueClass.*` status + player metadata exports (enabled/mode/status/counters + player name/short/rank/colour/valid/source/override);
   - added passive resolver-backed League Class metadata per Opp slots `Opp.Ahead1..5` / `Opp.Behind1..5`;
