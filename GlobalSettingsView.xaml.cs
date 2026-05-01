@@ -355,7 +355,6 @@ namespace LaunchPlugin
             if (dialog.ShowDialog() == true)
             {
                 Plugin.Settings.LeagueClassCsvPath = dialog.FileName;
-                LeagueClassCsvPathTextBox.Text = Plugin.Settings.LeagueClassCsvPath ?? string.Empty;
                 Plugin.ReloadLeagueClassConfig();
             }
         }

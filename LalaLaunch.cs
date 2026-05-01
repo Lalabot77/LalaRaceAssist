@@ -17803,7 +17803,18 @@ namespace LaunchPlugin
         public bool EnableAutoDashSwitch { get; set; } = true;
         public bool LeagueClassEnabled { get; set; } = false;
         public int LeagueClassMode { get; set; } = 0;
-        public string LeagueClassCsvPath { get; set; } = string.Empty;
+        private string _leagueClassCsvPath = string.Empty;
+        public string LeagueClassCsvPath
+        {
+            get { return _leagueClassCsvPath; }
+            set
+            {
+                string normalized = value ?? string.Empty;
+                if (string.Equals(_leagueClassCsvPath, normalized, StringComparison.Ordinal)) return;
+                _leagueClassCsvPath = normalized;
+                OnPropertyChanged(nameof(LeagueClassCsvPath));
+            }
+        }
         public int LeagueClassPlayerOverrideMode { get; set; } = 0; // 0=Auto,1=Manual
         public string LeagueClassPlayerOverrideClassName { get; set; } = string.Empty;
         public string LeagueClassPlayerOverrideShortName { get; set; } = string.Empty;

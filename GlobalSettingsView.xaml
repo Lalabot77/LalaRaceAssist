@@ -196,7 +196,6 @@
                             </DataTemplate>
                         </ItemsControl.ItemTemplate>
                     </ItemsControl>
-                    </StackPanel>
                 </StackPanel>
             </Expander>
 
@@ -223,7 +222,7 @@
 
 
                     <StackPanel Margin="0,6,0,0" Visibility="{Binding Settings.LeagueClassEnabled, Converter={StaticResource BooleanToVisibilityConverter}}">
-                    <StackPanel Orientation="Horizontal" Margin="0,8,0,0">
+                        <StackPanel Orientation="Horizontal" Margin="0,8,0,0">
                         <TextBlock Text="Classification mode" VerticalAlignment="Center" Margin="0,0,8,0"/>
                         <ComboBox Width="320"
                                   SelectedValue="{Binding Settings.LeagueClassMode, Mode=TwoWay}"
@@ -298,7 +297,7 @@
                     </StackPanel>
                 </StackPanel>
             </Expander>
-<StackPanel Visibility="{Binding HardDebugEnabledForUi, Converter={StaticResource BooleanToVisibilityConverter}}">
+            <StackPanel Visibility="{Binding HardDebugEnabledForUi, Converter={StaticResource BooleanToVisibilityConverter}}">
                 <TextBlock Text="DEBUG" FontSize="16" FontWeight="Bold" Margin="0,5,10,0"/>
                 <styles:SHToggleCheckbox x:Name="DebugMasterToggle"
                                          Content="Enable debugging mode"
