@@ -58,6 +58,7 @@ CarSA owns the per-car fixed-6-sector cache consumed by H2H:
 - **Gap.RelativeSec (GateGap v2):** mini-sector gate timing produces a gate truth gap that is filtered forward in time with a rate EMA, corrected toward fresh truth, and held briefly (sticky publish) if inputs drop; values are mapped to ahead/behind sign so wraps stay direction-safe. Falls back to `Gap.TrackSec` when no gate data exists. Normalization guards handle lapped cars and mismatch fallbacks when gate gaps diverge from track gaps.
 - **Gap.RelativeSource:** tracks which input fed the relative gap (filtered, truth, track fallback, sticky hold, invalid).
 - **Slot 01 precision gaps:** `Car.Ahead01P.Gap.Sec` / `Car.Behind01P.Gap.Sec` surface the best available gate-gap truth/filtered proximity (falling back to track gaps) for the closest ahead/behind slot.
+- Passive League Class metadata is additionally exported on `Car.Ahead01..05` and `Car.Behind01..05` (`LeagueClassName/ShortName/Rank/ColourHex/Valid/Source`) via resolver-only lookup; CarSA physical selection/order/filter logic is unchanged.
 - **ClosingRateSecPerSec:** derived from change in absolute delta pct over time; **positive values mean closing**; clamped to ±5 s/s.
 - **Lap time estimate:** player average pace, else last lap, else 120 s fallback.
 - **LapDelta:** computed from CarIdx lap counters with S/F straddle guards to avoid one-tick spikes when cars are physically close around the line.
