@@ -22,6 +22,12 @@ Branch: work
 - No Git remote is configured in this checkout (`git remote -v` returns empty).
 
 ## Documentation sync status
+
+- 2026-05-01 League Race Phase 1 player override colour preview UI fix landed:
+  - fixed Player race class preview swatch binding in `GlobalSettingsView.xaml` to use the same hex-to-brush conversion path as CSV/fallback previews via the override colour hex textbox source;
+  - invalid/blank override hex remains safe and renders transparent;
+  - no resolver/settings/export semantic changes were introduced.
+
 - Runtime fuel pit-space cap authority fix (2026-04-29):
   - live pit-space exports (`Fuel.Pit.TankSpaceAvailable`, `Fuel.Pit.WillAdd`, `Fuel.Pit.FuelOnExit`) now resolve cap from runtime live tank authority first (`EffectiveLiveMaxTank` seam);
   - stale Strategy/Profile `MaxFuelOverride` no longer silently clamps runtime pit-space when live cap authority exists;
