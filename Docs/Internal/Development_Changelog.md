@@ -1,3 +1,19 @@
+## 2026-05-02 — League Class startup enable+disabled-mode guard follow-up
+- Classification: **internal-only** (settings/UI guard correction only; no resolver/export/runtime cohort changes).
+- Updated `ApplyLeagueClassEnableModeGuard()` in `LalaLaunch.cs` to auto-correct `LeagueClassMode` from `Disabled (0)` to `CsvThenName (3)` whenever `LeagueClassEnabled == true` and mode is `0`, covering both:
+  - runtime enable transition (`false -> true`), and
+  - legacy startup/load state where settings already load as enabled with disabled mode.
+- Preserved behavior boundaries:
+  - selected non-disabled modes (`1/2/3`) are unchanged,
+  - disabled master state (`LeagueClassEnabled == false`) remains unchanged,
+  - no Opponents/PitExit/H2H/CarSA/ClassBest or resolver/export contract changes.
+
+## 2026-05-01 — League Class enable-toggle live visibility hotfix
+- Classification: **internal-only** (settings/property-notification plumbing only; no resolver/selection/export logic changes).
+- Converted `LaunchPluginSettings.LeagueClassEnabled` to a notifying backing-field property (`OnPropertyChanged(nameof(LeagueClassEnabled))`) so the bound enable toggle updates visibility immediately while SimHub remains open.
+- Added settings-level League Class property-change hook in `LalaLaunch` to refresh dependent UI-bound plugin properties on `LeagueClassEnabled`/`LeagueClassMode` changes: `LeagueClassStatus`, `LeagueClassPlayerPreviewText`, `LeagueClassShowCsvSection`, `LeagueClassShowFallbackSection`.
+- Preserved existing enable-edge mode guard behavior (`Disabled (0)` -> `CsvThenName (3)` only on `false -> true` enable transition) by invoking the same guard from the settings change hook.
+
 ## 2026-05-01 — League Class UI disabled-mode + CSV path binding cleanup
 - Classification: **both** (settings UI behavior clarity + persisted-setting binding reliability).
 - League Class settings UI now collapses all lower controls when disabled and shows only master enable plus disabled status text.

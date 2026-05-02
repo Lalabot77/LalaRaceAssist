@@ -1,3 +1,8 @@
+- 2026-05-02 League Class startup guard regression fix landed:
+  - `ApplyLeagueClassEnableModeGuard()` now auto-corrects `LeagueClassMode` `0 -> 3` whenever `LeagueClassEnabled==true`, covering both runtime enable-edge (`false -> true`) and legacy startup/load enabled+mode0 states;
+  - preserves user-selected modes `1/2/3` and keeps `LeagueClassEnabled==false` behavior unchanged;
+  - scope remains settings/UI guard only (no resolver/export/Opponents/PitExit/H2H/CarSA/ClassBest changes).
+
 - 2026-05-01 League Class disabled-mode UI/state cleanup landed:
   - League Class settings now hide the entire lower configuration area while disabled, showing only the section header, master enable toggle, and disabled helper text;
   - CSV browse now writes directly to persisted `Settings.LeagueClassCsvPath` and immediately mirrors the chosen value in the textbox;
@@ -16,6 +21,13 @@
   - stale Strategy/Profile `MaxFuelOverride` no longer silently clamps runtime pit-space when live cap authority exists;
   - safe fallback retained: planner/profile cap is used only when live cap authority is unavailable;
   - planner semantics unchanged: Profile/Live Snapshot planner max-fuel ownership, preset apply behavior, and max-fuel UI display behavior remain intact.
+
+- 2026-05-01 League Class enable-toggle live visibility hotfix landed:
+  - `LaunchPluginSettings.LeagueClassEnabled` now raises `OnPropertyChanged(nameof(LeagueClassEnabled))` via backing-field setter so enable/disable visibility bindings refresh live without restart;
+  - League Class settings change hook now refreshes dependent plugin UI properties (`LeagueClassStatus`, `LeagueClassPlayerPreviewText`, `LeagueClassShowCsvSection`, `LeagueClassShowFallbackSection`) when enable/mode changes;
+  - existing enable-edge mode guard remains active (`Disabled (0)` -> `CsvThenName (3)` only on `false -> true`).
+
+
 
 # Repository status
 

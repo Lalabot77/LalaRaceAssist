@@ -4953,9 +4953,10 @@ namespace LaunchPlugin
             }
 
             bool isEnabled = Settings.LeagueClassEnabled;
-            if (isEnabled &&
-                !_leagueClassLastEnabledState &&
-                Settings.LeagueClassMode == (int)LeagueClassMode.Disabled)
+            bool modeIsDisabled = Settings.LeagueClassMode == (int)LeagueClassMode.Disabled;
+            bool shouldAutoCorrectMode = isEnabled && modeIsDisabled &&
+                (!_leagueClassLastEnabledState || _subscribedLeagueClassSettings != null);
+            if (shouldAutoCorrectMode)
             {
                 Settings.LeagueClassMode = (int)LeagueClassMode.CsvThenName;
                 SaveSettings();
@@ -5008,6 +5009,7 @@ namespace LaunchPlugin
         private bool _customMessageSavePending;
         private DateTime _customMessageSaveDueUtc = DateTime.MinValue;
         private bool _friendsDirty = true;
+        private LaunchPluginSettings _subscribedLeagueClassSettings;
         private bool _isSavingSettings;
         private bool _carSaBestLapFallbackInfoLogged;
         private const double CarSaLapTimeUpdateVisibilitySeconds = 3.0;
@@ -5393,6 +5395,7 @@ namespace LaunchPlugin
             EnforceHardDebugSettings(Settings);
             HookFriendSettings(Settings);
             HookCustomMessageSettings(Settings);
+            HookLeagueClassSettings(Settings);
             ReloadLeagueClassConfig();
             MarkFriendsDirty();
             _shiftAssistAudio = new ShiftAssistAudio(() => Settings);
@@ -11348,6 +11351,40 @@ namespace LaunchPlugin
             _customMessagesCollection = customMessages;
             _customMessagesCollection.CollectionChanged += OnCustomMessagesCollectionChanged;
             SubscribeCustomMessageEntries(_customMessagesCollection);
+        }
+
+        private void HookLeagueClassSettings(LaunchPluginSettings settings)
+        {
+            if (_subscribedLeagueClassSettings != null)
+            {
+                _subscribedLeagueClassSettings.PropertyChanged -= OnLeagueClassSettingsPropertyChanged;
+                _subscribedLeagueClassSettings = null;
+            }
+
+            if (settings == null)
+            {
+                return;
+            }
+
+            _subscribedLeagueClassSettings = settings;
+            _subscribedLeagueClassSettings.PropertyChanged += OnLeagueClassSettingsPropertyChanged;
+            _leagueClassLastEnabledState = settings.LeagueClassEnabled;
+        }
+
+        private void OnLeagueClassSettingsPropertyChanged(object sender, PropertyChangedEventArgs e)
+        {
+            string propertyName = e?.PropertyName ?? string.Empty;
+            if (!string.Equals(propertyName, nameof(LaunchPluginSettings.LeagueClassEnabled), StringComparison.Ordinal) &&
+                !string.Equals(propertyName, nameof(LaunchPluginSettings.LeagueClassMode), StringComparison.Ordinal))
+            {
+                return;
+            }
+
+            ApplyLeagueClassEnableModeGuard();
+            OnPropertyChanged(nameof(LeagueClassStatus));
+            OnPropertyChanged(nameof(LeagueClassPlayerPreviewText));
+            OnPropertyChanged(nameof(LeagueClassShowCsvSection));
+            OnPropertyChanged(nameof(LeagueClassShowFallbackSection));
         }
 
         private void SubscribeCustomMessageEntries(IList<CustomMessageSlot> entries)
@@ -17801,7 +17838,17 @@ namespace LaunchPlugin
         }
         public double PitFuelPushSaveProfileGuardPct { get; set; } = 10.0;
         public bool EnableAutoDashSwitch { get; set; } = true;
-        public bool LeagueClassEnabled { get; set; } = false;
+        private bool _leagueClassEnabled = false;
+        public bool LeagueClassEnabled
+        {
+            get { return _leagueClassEnabled; }
+            set
+            {
+                if (_leagueClassEnabled == value) return;
+                _leagueClassEnabled = value;
+                OnPropertyChanged(nameof(LeagueClassEnabled));
+            }
+        }
         public int LeagueClassMode { get; set; } = 0;
         private string _leagueClassCsvPath = string.Empty;
         public string LeagueClassCsvPath
