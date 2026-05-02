@@ -17,6 +17,13 @@
   - safe fallback retained: planner/profile cap is used only when live cap authority is unavailable;
   - planner semantics unchanged: Profile/Live Snapshot planner max-fuel ownership, preset apply behavior, and max-fuel UI display behavior remain intact.
 
+- 2026-05-01 League Class enable-toggle live visibility hotfix landed:
+  - `LaunchPluginSettings.LeagueClassEnabled` now raises `OnPropertyChanged(nameof(LeagueClassEnabled))` via backing-field setter so enable/disable visibility bindings refresh live without restart;
+  - League Class settings change hook now refreshes dependent plugin UI properties (`LeagueClassStatus`, `LeagueClassPlayerPreviewText`, `LeagueClassShowCsvSection`, `LeagueClassShowFallbackSection`) when enable/mode changes;
+  - existing enable-edge mode guard remains active (`Disabled (0)` -> `CsvThenName (3)` only on `false -> true`).
+
+
+
 # Repository status
 
 Validated against commit: HEAD
