@@ -4953,9 +4953,10 @@ namespace LaunchPlugin
             }
 
             bool isEnabled = Settings.LeagueClassEnabled;
-            if (isEnabled &&
-                !_leagueClassLastEnabledState &&
-                Settings.LeagueClassMode == (int)LeagueClassMode.Disabled)
+            bool modeIsDisabled = Settings.LeagueClassMode == (int)LeagueClassMode.Disabled;
+            bool shouldAutoCorrectMode = isEnabled && modeIsDisabled &&
+                (!_leagueClassLastEnabledState || _subscribedLeagueClassSettings != null);
+            if (shouldAutoCorrectMode)
             {
                 Settings.LeagueClassMode = (int)LeagueClassMode.CsvThenName;
                 SaveSettings();
