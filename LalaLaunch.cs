@@ -4861,6 +4861,37 @@ namespace LaunchPlugin
             return _leagueClassResolver.ResolveDriverEffectiveClass(Settings, customerId, driverName);
         }
 
+        private OpponentsEngine.IsRaceContextClassMatch BuildRaceContextLeagueClassMatchDelegate()
+        {
+            var playerEffectiveClass = ResolveLivePlayerLeagueClassInfo();
+            if (!(Settings?.LeagueClassEnabled == true) || !playerEffectiveClass.Valid || string.IsNullOrWhiteSpace(playerEffectiveClass.Name))
+            {
+                return null;
+            }
+
+            string normalizedPlayerClassName = playerEffectiveClass.Name.Trim();
+            return (playerRow, candidateRow) =>
+            {
+                if (playerRow == null || candidateRow == null)
+                {
+                    return false;
+                }
+
+                if (string.Equals(playerRow.IdentityKey, candidateRow.IdentityKey, StringComparison.Ordinal))
+                {
+                    return true;
+                }
+
+                var candidateEffectiveClass = ResolveLeagueClassDriverInfo(candidateRow.UserID > 0 ? (int?)candidateRow.UserID : null, candidateRow.Name);
+                if (!candidateEffectiveClass.Valid || string.IsNullOrWhiteSpace(candidateEffectiveClass.Name))
+                {
+                    return false;
+                }
+
+                return string.Equals(normalizedPlayerClassName, candidateEffectiveClass.Name.Trim(), StringComparison.OrdinalIgnoreCase);
+            };
+        }
+
         private EffectiveRaceClassInfo ResolveLivePlayerLeagueClassInfo()
         {
             int? customerId;
@@ -4896,6 +4927,19 @@ namespace LaunchPlugin
             OnPropertyChanged(nameof(LeagueClassPlayerPreviewText));
             OnPropertyChanged(nameof(LeagueClassShowCsvSection));
             OnPropertyChanged(nameof(LeagueClassShowFallbackSection));
+        }
+
+        public void ToggleLeagueClassEnabled()
+        {
+            if (Settings == null)
+            {
+                return;
+            }
+
+            Settings.LeagueClassEnabled = !Settings.LeagueClassEnabled;
+            ApplyLeagueClassEnableModeGuard();
+            ReloadLeagueClassConfig();
+            SaveSettings();
         }
 
         public string LeagueClassPlayerPreviewText
@@ -5627,6 +5671,7 @@ namespace LaunchPlugin
             this.AddAction("Pit.TyreControl.SetDry", (a, b) => PitTyreControlSetDry());
             this.AddAction("Pit.TyreControl.SetWet", (a, b) => PitTyreControlSetWet());
             this.AddAction("Pit.TyreControl.SetAuto", (a, b) => PitTyreControlSetAuto());
+            this.AddAction("LeagueClass.ToggleEnabled", (a, b) => ToggleLeagueClassEnabled());
             this.AddAction("CustomMessage01", (a, b) => TriggerCustomMessageSlot(1));
             this.AddAction("CustomMessage02", (a, b) => TriggerCustomMessageSlot(2));
             this.AddAction("CustomMessage03", (a, b) => TriggerCustomMessageSlot(3));
@@ -8137,7 +8182,7 @@ namespace LaunchPlugin
                 : (data.NewData?.SessionTypeName ?? string.Empty);
             bool debugMaster = IsDebugOnForLogic;
             bool verboseLogs = IsVerboseDebugLoggingOn;
-            _opponentsEngine?.Update(data, pluginManager, isOpponentsEligibleSessionNow, isRaceSessionNow, completedLaps, myPaceSec, pitLossSec, pitTripActive, inLane, trackPct, sessionTimeSec, sessionTimeRemainingSec, verboseLogs);
+            _opponentsEngine?.Update(data, pluginManager, isOpponentsEligibleSessionNow, isRaceSessionNow, completedLaps, myPaceSec, pitLossSec, pitTripActive, inLane, trackPct, sessionTimeSec, sessionTimeRemainingSec, verboseLogs, null, BuildRaceContextLeagueClassMatchDelegate());
             UpdatePitExitTimeToExitSec(pluginManager, inLane, speedKph);
             int[] carIdxLap = SafeReadIntArray(pluginManager, "DataCorePlugin.GameRawData.Telemetry.CarIdxLap");
             int[] carIdxTrackSurface = SafeReadIntArray(pluginManager, "DataCorePlugin.GameRawData.Telemetry.CarIdxTrackSurface");

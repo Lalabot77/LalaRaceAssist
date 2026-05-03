@@ -85,3 +85,7 @@ Both `H2HRace.*` and `H2HTrack.*` expose the same flat shape:
 - `ClassColor` is published in one canonical uppercase hex format: `#RRGGBB`.
 
 - 2026-04-30 Phase 1 League Race Class infrastructure: no H2HRace/H2HTrack selector behavior changes yet; H2HTrack remains CarSA-native selection.
+- 2026-05-03 League Race Phase 3:
+  - `H2HRace.*` target identity can now change in enabled+valid League Class mode because its selector seam (`Opp.Ahead1` / `Opp.Behind1`) is now effective-class-cohort aware in Opponents;
+  - `H2HTrack.*` selection remains unchanged and CarSA-native;
+  - H2H lap/sector/delta calculation ownership and behavior remain unchanged.

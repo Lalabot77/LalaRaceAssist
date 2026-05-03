@@ -15,6 +15,12 @@
   - Fuel-per-lap helper text now renders below input to prevent narrow-width clipping; fuel source buttons/calcs unchanged;
   - Track Condition control now includes explicit Auto/Dry/Wet ownership with matching helper labels (`Automatic (...)` / `Manual override: ...`);
   - Race Type now includes persistent Live Detect ownership that reads declared race metadata from `SessionInfo.Sessions01..64` (`IsRace==true`) and locks race-length edits while active.
+- 2026-05-03 League Race Phase 3 landed:
+  - Opponents race-context cohort seam now supports resolver-backed League Class matching when enabled and player effective class is valid (player effective class vs opponent effective class);
+  - disabled mode and enabled+unresolved-player mode both fall back to unchanged native class-color cohort behavior;
+  - H2HRace target identity follows the same updated Opponents race-context seam; H2HTrack remains unchanged;
+  - added plugin action `LeagueClass.ToggleEnabled` (registered as `LalaLaunch.LeagueClass.ToggleEnabled`) to toggle `Settings.LeagueClassEnabled` using existing enable-time mode guard and normal settings save flow;
+  - no CarSA physical selection/filter/order changes, no H2HTrack changes, no PitExit class-row filtering changes, no ClassLeader/ClassBest changes.
 
 - 2026-05-02 League Class startup guard regression fix landed:
   - `ApplyLeagueClassEnableModeGuard()` now auto-corrects `LeagueClassMode` `0 -> 3` whenever `LeagueClassEnabled==true`, covering both runtime enable-edge (`false -> true`) and legacy startup/load enabled+mode0 states;
@@ -58,6 +64,11 @@ Branch: work
 - No Git remote is configured in this checkout (`git remote -v` returns empty).
 
 ## Documentation sync status
+- 2026-05-03 League Race Phase 3 PR #651 review follow-up fixes landed:
+  - fixed `Opponents.NativeRaceModel.GetBlendedPaceForPosition(...)` compile blocker by persisting the in-scope race-context class-match delegate from `Build(...)` and reusing that stored delegate in pace lookup (no cohort behavior redesign);
+  - fixed enabled+manual League Class edge where player row could become unmatched by forcing self-row class-match pass in the race-context delegate (`player identity == candidate identity`) before resolver-based opponent matching;
+  - preserves resolver-based effective-class opponent matching semantics and native class-color fallback behavior outside enabled+valid League Class mode.
+
 - 2026-05-01 League Race Phase 2 compile blocker hotfix landed:
   - fixed undefined-symbol build break in `LeagueClass.Player.*` export attachments (removed references to undeclared `_liveLeagueClassIdentityCustomerId/_liveLeagueClassIdentityName`);
   - exports now resolve live player identity through existing `TryGetLivePlayerIdentityPreview(...)` + resolver helper seam;

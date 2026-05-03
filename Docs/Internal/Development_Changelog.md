@@ -19,6 +19,23 @@
 - Fuel-per-lap helper/source text moved below the input field to avoid clipping in narrow SimHub layouts.
 - Track Condition now exposes explicit `Auto`/`Dry`/`Wet` radio ownership with helper text showing automatic detected mode vs manual override mode.
 - Race Type now includes persistent `Live Detect`; when selected, race definition is sourced from declared race session metadata (`SessionInfo.Sessions01..64`, `IsRace==true`) and race-length controls are read-only until manual mode is reselected.
+## 2026-05-03 — League Race Phase 3 (Opponents + H2HRace effective class cohort seam)
+
+- Classification: **both** (runtime race-context behavior + docs/control-surface alignment).
+- Opponents same-class cohort equality seam is now resolver-pluggable:
+  - default path remains native class-color matching;
+  - League Class path activates only when `LeagueClassEnabled==true` and player effective class resolves valid;
+  - in League Class path, Opp race-context cohort comparison is `player effective class` vs `opponent effective class` via `LeagueClassResolver` (manual override applies only to player effective class).
+- Disabled mode and enabled+unresolved-player mode explicitly keep native fallback behavior unchanged.
+- `H2HRace.*` follows the updated Opponents race-target seam naturally (`Opp.Ahead1`/`Opp.Behind1`); H2H timing/sector/delta math remains unchanged.
+- Added plugin action `LeagueClass.ToggleEnabled` (`LalaLaunch.LeagueClass.ToggleEnabled`) that toggles `Settings.LeagueClassEnabled`, applies existing enable-time mode guard, reloads resolver config, and saves settings.
+- Preserved boundaries: no CarSA physical selection/order/filter changes, no H2HTrack selector changes, no PitExit class-row filtering changes, no ClassLeader/ClassBest changes.
+
+## 2026-05-03 — PR #651 review follow-up: race-context compile fix + player-row match guard
+- Classification: **internal-only** (build restore + cohort guardrail; no new exports/UI/actions).
+- Fixed `Opponents.NativeRaceModel.GetBlendedPaceForPosition(...)` to reuse the in-scope race-context class-match delegate captured during `Build(...)`, resolving the undefined-symbol compile break (`CS0103`).
+- Hardened `BuildRaceContextLeagueClassMatchDelegate()` so the player row always self-matches by identity before resolver-based opponent class comparison, preventing enabled+manual-override/no-player-CSV-name-match edge cases from excluding the player from same-class cohort construction.
+- Preserved subsystem boundaries and behavior scope: opponent effective-class resolution stays resolver-owned, and fallback native class-color matching remains unchanged outside enabled+valid League Class mode.
 
 ## 2026-05-02 — League Class startup enable+disabled-mode guard follow-up
 - Classification: **internal-only** (settings/UI guard correction only; no resolver/export/runtime cohort changes).

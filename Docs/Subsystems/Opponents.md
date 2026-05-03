@@ -99,4 +99,7 @@ Opponents now reads from:
 - Gap/pit-exit values are now native progress/pace-derived approximations.
 - When native identity/order prerequisites are absent, outputs intentionally remain invalid instead of silently falling back.
 
-- 2026-04-30 Phase 1 League Race Class infrastructure: no Opponents same-class or pit-exit class-row behavior changes yet (settings/resolver only).
+- 2026-05-03 League Race Phase 3 behavior seam:
+  - when League Class is enabled and the player effective class resolves valid, Opponents race-context cohort filtering (`Opp.Ahead1..5` / `Opp.Behind1..5`) switches from native class-color matching to resolver-backed effective-class-name matching (player effective class vs opponent effective class);
+  - when League Class is disabled, or enabled with unresolved player effective class, Opponents keeps exact native class-color cohort behavior (fallback unchanged);
+  - race-order ordering/gap/fight math remains unchanged; only the class cohort equality seam changed.
