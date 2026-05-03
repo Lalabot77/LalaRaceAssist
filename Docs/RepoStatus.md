@@ -1,3 +1,9 @@
+- 2026-05-02 Strategy tab usability bundle (#512, #628, #633) landed:
+  - Fuel per Lap helper/source text now appears below the input instead of beside it, reducing narrow-window clipping without changing fuel entry or AVG/ECO/MAX behavior;
+  - Track Condition now has explicit Auto/Dry/Wet ownership, with Auto returning from manual override to detected condition ownership and helper text showing `Automatic (dry/wet)` or `Manual override: dry/wet`;
+  - Race Type now includes `Live Detect` as a one-shot declared-race import from `SessionData.SessionInfo.SessionsXX` race metadata, leaving race length manually editable after import;
+  - no runtime fuel model changes, pit command changes, dashboard export contract changes, global Live Snapshot changes, or preset ownership changes were introduced.
+
 - 2026-05-01 League Class disabled-mode UI/state cleanup landed:
   - League Class settings now hide the entire lower configuration area while disabled, showing only the section header, master enable toggle, and disabled helper text;
   - CSV browse now writes directly to persisted `Settings.LeagueClassCsvPath` and immediately mirrors the chosen value in the textbox;

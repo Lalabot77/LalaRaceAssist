@@ -47,6 +47,26 @@ Use this when you want Strategy to follow the current session snapshot.
 
 When valid live values exist, the matching manual controls are disabled. That keeps the source of the plan clear instead of blending manual and live ownership.
 
+### Track condition
+
+Track Condition has three explicit choices:
+
+- **Auto** follows the plugin's detected dry/wet condition and shows the current automatic result.
+- **Dry** manually forces dry planning.
+- **Wet** manually forces wet planning and enables the wet-factor workflow.
+
+Use **Auto** to return from a manual Dry/Wet override to detected condition ownership.
+
+### Race type
+
+Race Type has three choices:
+
+- **Lap-Limited** for manually planned lap-count races.
+- **Time-Limited** for manually planned timed races.
+- **Live Detect** for a one-shot import of the declared iRacing race session definition.
+
+Live Detect reads the declared race session from iRacing session metadata, applies either Race Laps or Race Minutes, and then leaves those fields editable. It does not continuously follow live session data and does not use the current Practice/Qualifying session length as the upcoming race definition.
+
 ## 4. What Live Snapshot means in practice
 
 Live Snapshot is about **using the session as the source** for the relevant planning values. That can include:

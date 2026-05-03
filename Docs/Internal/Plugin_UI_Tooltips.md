@@ -37,9 +37,10 @@ Branch: work
 - L252: Select a car profile to plan a strategy for.
 - L255: Choose the track and layout for planning.
 - L260: Select the track and layout.
-- L268: Select dry or wet planning mode for this track.
-- L270: Plan using dry track data.
-- L272: Plan using wet track data and the wet factor.
+- L268: Choose automatic track-condition ownership or force dry/wet planning mode for this track.
+- L270: Use the detected dry/wet condition for planner inputs.
+- L272: Manually override Strategy planning to dry track data.
+- L275: Manually override Strategy planning to wet track data and the wet factor.
 - L276: Scale fuel burn for wet running (%). Higher = higher burn.
 - L280: Apply the suggested wet factor from saved or live data.
 - L293: Average lap time used for strategy (m:ss.fff).
@@ -51,25 +52,26 @@ Branch: work
 - L359: Adjust the pace delta to the leader (sec) used in the plan. Disabled while Planning Source is Live Snapshot.
 - L382: Profile mode: limit the usable tank size for restricted fuel races (L). Live Snapshot: locked to the detected live session cap.
 - L385: Profile mode: edit the planner tank limit. Live Snapshot: this control is locked to the detected live session cap.
-- L414: Fuel burn per lap used for strategy (L/lap).
-- L417: Fuel burn per lap (L/lap). Edit to override the suggested value.
-- L452: Use the average fuel per lap saved in the selected profile.
-- L453: Use the most fuel-efficient lap stored in the selected profile.
-- L454: Use the highest recorded fuel per lap stored in the selected profile.
-- L474: Use the live rolling average fuel per lap.
-- L475: Use the most fuel-efficient lap observed in the current live session.
-- L476: Use the highest valid fuel per lap observed in the current live session.
-- L485: Live rolling average fuel per lap.
-- L486: Most efficient lap recorded in this session.
-- L487: Highest valid fuel per lap recorded in this session.
+- L411: Fuel burn per lap used for strategy (L/lap).
+- L414: Fuel burn per lap (L/lap). Edit to override the suggested value.
+- L449: Use the average fuel per lap saved in the selected profile.
+- L450: Use the most fuel-efficient lap stored in the selected profile.
+- L451: Use the highest recorded fuel per lap stored in the selected profile.
+- L471: Use the live rolling average fuel per lap.
+- L472: Use the most fuel-efficient lap observed in the current live session.
+- L473: Use the highest valid fuel per lap observed in the current live session.
+- L482: Live rolling average fuel per lap.
+- L483: Most efficient lap recorded in this session.
+- L484: Highest valid fuel per lap recorded in this session.
 - L513: Select a preset to apply.
 - L526: Open the Preset Manager to create, rename, edit, or delete strategy presets.
-- L533: Choose whether the race is limited by laps or time.
-- L535: Plan for a fixed number of laps.
-- L537: Plan for a fixed race duration (minutes).
-- L541: Total race distance in laps.
-- L543: Total race duration in minutes.
-- L546: Fuel to reserve for formation or pace laps (L).
+- L538: Choose a manual race basis or import the declared race definition from iRacing session metadata.
+- L540: Plan for a fixed number of laps.
+- L542: Plan for a fixed race duration (minutes).
+- L546: One-shot import of the declared race session from iRacing metadata. After import, race length remains manually editable.
+- L550: Total race distance in laps.
+- L552: Total race duration in minutes.
+- L555: Fuel to reserve for formation or pace laps (L).
 - L551: Choose whether contingency is in laps or litres.
 - L553: Add extra laps of fuel as a safety margin.
 - L555: Add extra litres as a safety margin.

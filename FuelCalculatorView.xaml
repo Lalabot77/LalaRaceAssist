@@ -266,11 +266,14 @@
                             <StackPanel Grid.Row="3" Margin="0,5,0,5">
                                 <StackPanel Orientation="Horizontal" Margin="0,5,0,0">
                                     <TextBlock Text="Track Condition:" VerticalAlignment="Center" Margin="0,0,10,0"
-                                               ToolTip="Select dry or wet planning mode for this track."/>
-                                    <RadioButton Content="Dry" IsChecked="{Binding IsDry, Mode=TwoWay}" GroupName="TrackCondition"
-                                                 ToolTip="Plan using dry track data."/>
-                                    <RadioButton Content="Wet" IsChecked="{Binding IsWet, Mode=TwoWay}" GroupName="TrackCondition" Margin="10,0,0,0"
-                                                 ToolTip="Plan using wet track data and the wet factor."/>
+                                               ToolTip="Choose automatic track-condition ownership or force dry/wet planning mode for this track."/>
+                                    <RadioButton Content="Auto" IsChecked="{Binding IsTrackConditionAuto, Mode=TwoWay}" GroupName="TrackCondition"
+                                                 ToolTip="Use the detected dry/wet condition for planner inputs."/>
+                                    <RadioButton Content="Dry" IsChecked="{Binding IsManualDryTrackCondition, Mode=TwoWay}" GroupName="TrackCondition"
+                                                 Margin="10,0,0,0"
+                                                 ToolTip="Manually override Strategy planning to dry track data."/>
+                                    <RadioButton Content="Wet" IsChecked="{Binding IsManualWetTrackCondition, Mode=TwoWay}" GroupName="TrackCondition" Margin="10,0,0,0"
+                                                 ToolTip="Manually override Strategy planning to wet track data and the wet factor."/>
                                 </StackPanel>
                                 <TextBlock Text="{Binding TrackConditionModeLabel}" Style="{StaticResource UnitHint}" Margin="2,2,0,0" />
                                 <ui:TitledSlider Title="Wet Factor (%):" Minimum="70" Maximum="130" Value="{Binding WetFactorPercent, Mode=TwoWay}" Visibility="{Binding IsWet, Converter={StaticResource BooleanToVisibilityConverter}, Mode=OneWay}" Margin="0,5,0,0"
@@ -410,7 +413,7 @@
                             <TextBox Grid.Row="0" Grid.Column="1" VerticalAlignment="Center" Width="50" HorizontalAlignment="Left" Text="{Binding FuelPerLapText, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
                                      ToolTip="Fuel burn per lap (L/lap). Edit to override the suggested value." />
 
-                            <TextBlock Grid.Row="0" Grid.Column="2" Margin="10,0,0,0" VerticalAlignment="Center">
+                            <TextBlock Grid.Row="1" Grid.Column="1" Grid.ColumnSpan="2" Margin="0,4,0,0" VerticalAlignment="Center" TextWrapping="Wrap">
                                 <TextBlock.Style>
                                     <Style TargetType="TextBlock">
                                         <Setter Property="Text" Value="{Binding FuelPerLapSourceInfo}"/>
@@ -535,11 +538,13 @@
 
                             <StackPanel Orientation="Horizontal" Margin="0,5,0,10">
                             <TextBlock Text="Race Type:" VerticalAlignment="Center" Margin="0,0,10,0"
-                                       ToolTip="Choose whether the race is limited by laps or time."/>
+                                       ToolTip="Choose a manual race basis or import the declared race definition from iRacing session metadata."/>
                             <RadioButton Content="Lap-Limited" IsChecked="{Binding IsLapLimitedRace, Mode=TwoWay}" GroupName="RaceType"
                                          ToolTip="Plan for a fixed number of laps."/>
                             <RadioButton Content="Time-Limited" IsChecked="{Binding IsTimeLimitedRace, Mode=TwoWay}" GroupName="RaceType" Margin="10,0,0,0"
                                          ToolTip="Plan for a fixed race duration (minutes)."/>
+                            <RadioButton Content="Live Detect" IsChecked="{Binding IsLiveDetectRace, Mode=TwoWay}" GroupName="RaceType" Margin="10,0,0,0"
+                                         ToolTip="One-shot import of the declared race session from iRacing metadata. After import, race length remains manually editable."/>
                         </StackPanel>
 
                         <ui:TitledSlider Title="Race Laps:" Minimum="1" Maximum="500" Value="{Binding RaceLaps, Mode=TwoWay}" Visibility="{Binding IsLapLimitedRace, Converter={StaticResource BooleanToVisibilityConverter}, Mode=OneWay}"

@@ -7,6 +7,7 @@ For internal between-release development history, see `Docs/Internal/Development
 ## v1.1 (Unreleased)
 
 ### Added
+- Strategy Race Type **Live Detect** option for one-shot import of the declared iRacing race session definition into Race Laps or Race Minutes.
 - Pit Fuel Control Push/Save basis mode toggle (`LIVE`/`PROFILE`) with mode action/export support for dash and hardware bindings.
 - **Overview tab** as the plugin front door for quick links, release-check visibility, and at-a-glance status.
 - **Plugin-owned pit/custom command workflow** with built-in pit actions, custom-message slots, and in-plugin transport selection.
@@ -14,6 +15,8 @@ For internal between-release development history, see `Docs/Internal/Development
 - **ClassBest export family** for class session-best holder visibility on dashboards.
 
 ### Changed
+- Strategy Track Condition now offers explicit **Auto / Dry / Wet** ownership, so manual Dry/Wet overrides can return to automatic detection.
+- Strategy Fuel per Lap helper/source text now sits below the input to improve narrow-window readability.
 - Pit Fuel Control PUSH/SAVE can optionally use profile-backed burn values (guarded around live stable NORM burn); NORM and PLAN behavior remain unchanged.
 - **Strategy/PreRace status logic** refreshed with scenario-first outcomes and clearer status colors/text for no-stop, one-stop, and multi-stop contexts.
 - **Pit command transport behavior** now defaults to direct window-message delivery with bounded legacy fallback options.

@@ -35,6 +35,13 @@
   - retained separate planning-cap helper ownership (`ResolvePlanningMaxTankCapacity()`) for planner semantics boundaries.
 - Preserved invariants: planner Profile/Live Snapshot behavior, preset apply semantics, pit command/control state machine, and `Fuel.Pit.WillAdd = min(requestedAdd, tankSpace)` clamp shape remain unchanged.
 
+## 2026-05-02 - Strategy tab usability bundle (#512, #628, #633)
+- Classification: **both** (Strategy UI workflow changes + docs alignment).
+- Moved the Fuel per Lap helper/source label underneath the Fuel per Lap input so narrow Strategy layouts no longer clip the helper text beside the input; AVG/ECO/MAX helper values and fuel-per-lap behavior are unchanged.
+- Replaced the Track Condition Dry/Wet-only selector with explicit Auto/Dry/Wet ownership. Auto clears manual override and shows `Automatic (dry/wet)`; Dry/Wet show `Manual override: dry/wet`.
+- Added Race Type `Live Detect` as a one-shot declared-race import from `DataCorePlugin.GameRawData.SessionData.SessionInfo.SessionsXX` race metadata (`IsRace == true`) using `IsLimitedSessionLaps`/`SessionLaps` or `IsLimitedTime`/`SessionTime`; active Practice/Qualifying `CurrentSessionInfo` is not used for this import.
+- Preserved invariants: no runtime fuel model changes, no pit command changes, no dashboard export contract changes, no global Live Snapshot behavior change, and presets remain deterministic applied planner values.
+
 # Development Changelog
 
 This file tracks internal development history between releases.

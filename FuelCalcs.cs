@@ -1071,6 +1071,7 @@ namespace LaunchPlugin
                 OnPropertyChanged("SelectedRaceType");
                 OnPropertyChanged("IsLapLimitedRace");
                 OnPropertyChanged("IsTimeLimitedRace");
+                OnPropertyChanged(nameof(IsLiveDetectRace));
                 CalculateStrategy();
                 RaisePresetStateChanged();
             }
@@ -1087,6 +1088,19 @@ namespace LaunchPlugin
     {
         get => SelectedRaceType == RaceType.TimeLimited;
         set { if (value) SelectedRaceType = RaceType.TimeLimited; }
+    }
+
+    public bool IsLiveDetectRace
+    {
+        get => false;
+        set
+        {
+            if (value)
+            {
+                ApplyLiveDetectedRaceDefinition();
+                OnPropertyChanged(nameof(IsLiveDetectRace));
+            }
+        }
     }
 
     public double RaceLaps
@@ -1440,6 +1454,9 @@ namespace LaunchPlugin
     public void ResetTrackConditionOverrideForSessionChange()
     {
         _isTrackConditionManualOverride = false;
+        OnPropertyChanged(nameof(IsTrackConditionAuto));
+        OnPropertyChanged(nameof(IsManualDryTrackCondition));
+        OnPropertyChanged(nameof(IsManualWetTrackCondition));
         MaybeAutoApplyTrackConditionFromTelemetry(_liveWeatherIsWet);
     }
 
@@ -1705,6 +1722,9 @@ namespace LaunchPlugin
                 IsFuelPerLapManual = false;
 
                 OnPropertyChanged(nameof(SelectedTrackCondition));
+                OnPropertyChanged(nameof(IsTrackConditionAuto));
+                OnPropertyChanged(nameof(IsManualDryTrackCondition));
+                OnPropertyChanged(nameof(IsManualWetTrackCondition));
                 OnPropertyChanged(nameof(IsDry));
                 OnPropertyChanged(nameof(IsWet));
                 OnPropertyChanged(nameof(ShowDrySnapshotRows));
@@ -1771,13 +1791,47 @@ namespace LaunchPlugin
     public bool IsDry
     {
         get => SelectedTrackCondition == TrackCondition.Dry;
-        set { if (value) SelectedTrackCondition = TrackCondition.Dry; }
+        set { if (value) ApplyManualTrackCondition(TrackCondition.Dry); }
     }
 
     public bool IsWet
     {
         get => SelectedTrackCondition == TrackCondition.Wet;
-        set { if (value) SelectedTrackCondition = TrackCondition.Wet; }
+        set { if (value) ApplyManualTrackCondition(TrackCondition.Wet); }
+    }
+
+    public bool IsTrackConditionAuto
+    {
+        get => !_isTrackConditionManualOverride;
+        set
+        {
+            if (!value)
+            {
+                return;
+            }
+
+            if (_isTrackConditionManualOverride)
+            {
+                _isTrackConditionManualOverride = false;
+                OnPropertyChanged(nameof(IsTrackConditionAuto));
+                OnPropertyChanged(nameof(IsManualDryTrackCondition));
+                OnPropertyChanged(nameof(IsManualWetTrackCondition));
+            }
+
+            MaybeAutoApplyTrackConditionFromTelemetry(_liveWeatherIsWet);
+        }
+    }
+
+    public bool IsManualDryTrackCondition
+    {
+        get => _isTrackConditionManualOverride && IsDry;
+        set { if (value) ApplyManualTrackCondition(TrackCondition.Dry); }
+    }
+
+    public bool IsManualWetTrackCondition
+    {
+        get => _isTrackConditionManualOverride && IsWet;
+        set { if (value) ApplyManualTrackCondition(TrackCondition.Wet); }
     }
     public bool ShowDrySnapshotRows => IsDry;
     public bool ShowWetSnapshotRows => (_liveWeatherIsWet == true) || IsWet;
@@ -1885,6 +1939,187 @@ namespace LaunchPlugin
         {
             return fallback;
         }
+    }
+
+    private void ApplyLiveDetectedRaceDefinition()
+    {
+        bool isLapLimited;
+        double value;
+        if (!TryReadDeclaredRaceDefinition(out isLapLimited, out value))
+        {
+            SimHub.Logging.Current.Info("[LalaPlugin:Strategy] Live Detect race definition unavailable; planner race type/length unchanged.");
+            OnPropertyChanged(nameof(IsLapLimitedRace));
+            OnPropertyChanged(nameof(IsTimeLimitedRace));
+            OnPropertyChanged(nameof(IsLiveDetectRace));
+            return;
+        }
+
+        ApplySourceUpdate(() =>
+        {
+            if (isLapLimited)
+            {
+                SelectedRaceType = RaceType.LapLimited;
+                RaceLaps = value;
+            }
+            else
+            {
+                SelectedRaceType = RaceType.TimeLimited;
+                RaceMinutes = value / 60.0;
+            }
+        });
+
+        OnPropertyChanged(nameof(IsLapLimitedRace));
+        OnPropertyChanged(nameof(IsTimeLimitedRace));
+        OnPropertyChanged(nameof(IsLiveDetectRace));
+
+        SimHub.Logging.Current.Info(
+            isLapLimited
+                ? $"[LalaPlugin:Strategy] Live Detect imported declared race definition: laps={value:0.#}."
+                : $"[LalaPlugin:Strategy] Live Detect imported declared race definition: minutes={(value / 60.0):0.#}.");
+    }
+
+    private bool TryReadDeclaredRaceDefinition(out bool isLapLimited, out double value)
+    {
+        isLapLimited = false;
+        value = 0.0;
+
+        var pluginManager = _plugin?.PluginManager;
+        if (pluginManager == null)
+        {
+            return false;
+        }
+
+        for (int i = 0; i < 64; i++)
+        {
+            string basePath = $"DataCorePlugin.GameRawData.SessionData.SessionInfo.Sessions{i:00}";
+            bool isRace;
+            if (!TryReadPluginBool(pluginManager, basePath + ".IsRace", out isRace))
+            {
+                basePath = $"DataCorePlugin.GameRawData.SessionData.SessionInfo.Sessions{i}";
+                if (!TryReadPluginBool(pluginManager, basePath + ".IsRace", out isRace))
+                    continue;
+            }
+
+            if (!isRace)
+                continue;
+
+            return TryReadDeclaredRaceDefinitionFromRaceSession(pluginManager, basePath, out isLapLimited, out value);
+        }
+
+        return false;
+    }
+
+    private static bool TryReadDeclaredRaceDefinitionFromRaceSession(PluginManager pluginManager, string basePath, out bool isLapLimited, out double value)
+    {
+        isLapLimited = false;
+        value = 0.0;
+
+        bool limitedByLaps;
+        if (TryReadPluginBool(pluginManager, basePath + ".IsLimitedSessionLaps", out limitedByLaps) && limitedByLaps)
+        {
+            double laps;
+            if (TryReadPluginDouble(pluginManager, basePath + ".SessionLaps", out laps) && laps > 0.0)
+            {
+                isLapLimited = true;
+                value = laps;
+                return true;
+            }
+        }
+
+        bool limitedByTime;
+        if (TryReadPluginBool(pluginManager, basePath + ".IsLimitedTime", out limitedByTime) && limitedByTime)
+        {
+            double seconds;
+            if (TryReadPluginDouble(pluginManager, basePath + ".SessionTime", out seconds) && seconds > 0.0)
+            {
+                isLapLimited = false;
+                value = seconds;
+                return true;
+            }
+        }
+
+        return false;
+    }
+
+    private static bool TryReadPluginDouble(PluginManager pluginManager, string propertyName, out double value)
+    {
+        value = 0.0;
+        if (pluginManager == null)
+        {
+            return false;
+        }
+
+        object raw = pluginManager.GetPropertyValue(propertyName);
+        if (raw == null)
+        {
+            return false;
+        }
+
+        try
+        {
+            value = Convert.ToDouble(raw, CultureInfo.InvariantCulture);
+            return !double.IsNaN(value) && !double.IsInfinity(value);
+        }
+        catch
+        {
+            return false;
+        }
+    }
+
+    private static bool TryReadPluginBool(PluginManager pluginManager, string propertyName, out bool value)
+    {
+        value = false;
+        if (pluginManager == null)
+        {
+            return false;
+        }
+
+        object raw = pluginManager.GetPropertyValue(propertyName);
+        if (raw == null)
+        {
+            return false;
+        }
+
+        if (raw is bool boolValue)
+        {
+            value = boolValue;
+            return true;
+        }
+
+        if (raw is int intValue)
+        {
+            value = intValue != 0;
+            return true;
+        }
+
+        if (raw is long longValue)
+        {
+            value = longValue != 0L;
+            return true;
+        }
+
+        string text = Convert.ToString(raw, CultureInfo.InvariantCulture);
+        if (string.IsNullOrWhiteSpace(text))
+        {
+            return false;
+        }
+
+        text = text.Trim();
+        if (string.Equals(text, "1", StringComparison.OrdinalIgnoreCase)
+            || string.Equals(text, "yes", StringComparison.OrdinalIgnoreCase))
+        {
+            value = true;
+            return true;
+        }
+
+        if (string.Equals(text, "0", StringComparison.OrdinalIgnoreCase)
+            || string.Equals(text, "no", StringComparison.OrdinalIgnoreCase))
+        {
+            value = false;
+            return true;
+        }
+
+        return bool.TryParse(text, out value);
     }
 
     private bool? GetGameConnectedOrNull()
@@ -3441,12 +3676,31 @@ namespace LaunchPlugin
         UpdateTrackConditionModeLabel();
     }
 
+    private void ApplyManualTrackCondition(TrackCondition condition)
+    {
+        if (SelectedTrackCondition == condition)
+        {
+            if (!_isTrackConditionManualOverride)
+            {
+                _isTrackConditionManualOverride = true;
+                OnPropertyChanged(nameof(IsTrackConditionAuto));
+                OnPropertyChanged(nameof(IsManualDryTrackCondition));
+                OnPropertyChanged(nameof(IsManualWetTrackCondition));
+                UpdateTrackConditionModeLabel();
+            }
+
+            return;
+        }
+
+        SelectedTrackCondition = condition;
+    }
+
     private void UpdateTrackConditionModeLabel()
     {
         string modeText;
         if (_isTrackConditionManualOverride)
         {
-            modeText = "Manual override";
+            modeText = IsWet ? "Manual override: wet" : "Manual override: dry";
         }
         else
         {

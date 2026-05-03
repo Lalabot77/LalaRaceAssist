@@ -194,6 +194,8 @@ Scope: Info/Warn logs emitted via `SimHub.Logging.Current.Info(...)` and `SimHub
 - **`[LalaPlugin:Strategy] live-cap authority available=... source=... litres=...`** — Strategy live-cap resolver state from runtime-authoritative seam.
 - **`[LalaPlugin:Strategy] UpdateLiveDisplay: live max tank refresh ...`** — Strategy live snapshot max-tank display refresh event.
 - **`[LalaPlugin:Strategy] RefreshLiveSnapshot requested.`** — Explicit strategy-side live-snapshot refresh action invoked.
+- **`[LalaPlugin:Strategy] Live Detect imported declared race definition: ...`** — Strategy Race Type Live Detect successfully imported the declared iRacing race session limit into planner race laps or minutes.
+- **`[LalaPlugin:Strategy] Live Detect race definition unavailable; planner race type/length unchanged.`** — Strategy Race Type Live Detect found no usable declared race-session limit and left current planner values untouched.
 
 ## Message system v1
 - **`[LalaPlugin:MSGV1] <message>`** — General MSGV1 engine logs (e.g., stack outputs).【F:Messaging/MessageEngine.cs†L478-L560】

@@ -54,6 +54,12 @@ These are **authoritative** once set by the user:
   - Live average.
   - Session max (for safety scenarios).
 
+- **Race type and race length**
+  - Manual `Lap-Limited` / `Time-Limited` selection.
+  - Manual race laps or race minutes edits.
+  - `Live Detect` one-shot import of the declared iRacing race session definition from `SessionData.SessionInfo.SessionsXX` where `IsRace == true`.
+  - Live Detect reads the declared race session's own `IsLimitedSessionLaps`, `IsLimitedTime`, `SessionLaps`, and `SessionTime` fields. It does not use active Practice/Qualifying `CurrentSessionInfo`, and it does not continuously follow live session data after import.
+
 - **Fuel to Add (MFD request)**
   - Used for pit math and pit window evaluation.
   - Clamped by tank capacity.
@@ -111,7 +117,9 @@ The planner tracks *what source is currently active* for each input:
 - The old manual "use live/reset to live" recovery path is no longer part of normal leader-delta operation.
 
 ### Track-condition handling (dry vs wet)
-- **Manual selection:** Drivers can explicitly switch the planner into dry or wet mode (per-track).
+- **Auto selection:** The Strategy tab can leave track-condition ownership with the existing telemetry/system dry/wet signal and labels the effective condition as `Automatic (dry)` or `Automatic (wet)`.
+- **Manual selection:** Drivers can explicitly switch the planner into dry or wet mode (per-track), with helper text showing `Manual override: dry` or `Manual override: wet`.
+- **Return to Auto:** The explicit `Auto` selector clears manual condition ownership without changing wet/dry detection logic.
 - **Live Snapshot sync:** When the live surface mode is known (tyre compound), Live Snapshot mode auto-switches the planner to match unless the user has manually overridden the condition.
 - **Wet factor support:** If wet mode is selected but only dry profile stats exist, the planner scales dry values by the selected track's wet-factor percentage and labels the source accordingly.
 
@@ -195,6 +203,8 @@ Live snapshot values update continuously, but planner-selected values:
 - Or reset on session identity change.
 
 This ensures that the planner remains **predictable mid-race**.
+
+`Race Type -> Live Detect` is also explicit and one-shot: it imports the declared race session type/length into the normal planner fields, then the driver can edit Race Laps / Race Minutes or reselect manual Lap-Limited / Time-Limited at any time. Presets remain deterministic applied planner values and do not create hidden race-definition ownership.
 
 Additional Live Session rules:
 - The Live Session panel is **live-only**. When no live samples exist, summaries render `-` rather than falling back to profile values.
@@ -294,7 +304,17 @@ Reset semantics are shared with the Fuel Model and documented centrally in:
    - Enter manual value.
    - Live suggestions no longer override.
 
-5. **Session reset**
+5. **Track condition ownership**
+   - Auto follows detected dry/wet condition and can be restored after manual Dry/Wet.
+   - Manual Dry/Wet helper text clearly identifies override ownership.
+
+6. **Race definition import**
+   - Manual Lap-Limited / Time-Limited still work.
+   - Live Detect imports from `SessionData.SessionInfo.SessionsXX` race metadata only.
+   - Practice/Qualifying current-session length is not used as the declared race definition.
+   - Race length remains manually editable after import.
+
+7. **Session reset**
    - Change subsession/session.
    - Planner resets cleanly with no stale values.
 
