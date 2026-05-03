@@ -16,6 +16,7 @@ namespace LaunchPlugin
         private readonly NativeRaceModel _raceModel = new NativeRaceModel();
         private readonly PitExitPredictor _pitExitPredictor;
         private TryGetCheckpointGapSec _tryGetCheckpointGapSec;
+        private IsRaceContextClassMatch _isRaceContextClassMatch;
 
         private bool _gateActive;
         private bool _gateOpenedLogged;
@@ -26,6 +27,7 @@ namespace LaunchPlugin
 
         public OpponentOutputs Outputs { get; } = new OpponentOutputs();
         public delegate bool TryGetCheckpointGapSec(int playerCarIdx, int targetCarIdx, out double signedGapSec);
+        public delegate bool IsRaceContextClassMatch(NativeCarRow playerRow, NativeCarRow candidateRow);
 
         public OpponentsEngine()
         {
@@ -46,10 +48,11 @@ namespace LaunchPlugin
             _pitExitPredictor.Reset();
         }
 
-        public void Update(GameData data, PluginManager pluginManager, bool isEligibleSession, bool isRaceSession, int completedLaps, double myPaceSec, double pitLossSec, bool pitTripActive, bool onPitRoad, double trackPct, double sessionTimeSec, double sessionTimeRemainingSec, bool debugEnabled, TryGetCheckpointGapSec tryGetCheckpointGapSec = null)
+        public void Update(GameData data, PluginManager pluginManager, bool isEligibleSession, bool isRaceSession, int completedLaps, double myPaceSec, double pitLossSec, bool pitTripActive, bool onPitRoad, double trackPct, double sessionTimeSec, double sessionTimeRemainingSec, bool debugEnabled, TryGetCheckpointGapSec tryGetCheckpointGapSec = null, IsRaceContextClassMatch isRaceContextClassMatch = null)
         {
             var _ = data;
             _tryGetCheckpointGapSec = tryGetCheckpointGapSec;
+            _isRaceContextClassMatch = isRaceContextClassMatch;
 
             if (!isEligibleSession)
             {
@@ -83,7 +86,7 @@ namespace LaunchPlugin
 
             _playerIdentityKey = snapshot.PlayerIdentityKey;
             double validatedMyPace = SanitizePace(myPaceSec);
-            _raceModel.Build(snapshot, validatedMyPace, _entityCache);
+            _raceModel.Build(snapshot, validatedMyPace, _entityCache, _isRaceContextClassMatch);
             PublishRaceOutputs(validatedMyPace);
 
             if (isRaceSession)
@@ -868,7 +871,7 @@ namespace LaunchPlugin
                 Array.Clear(_behindSlots, 0, _behindSlots.Length);
             }
 
-            public void Build(NativeSnapshot snapshot, double myPaceSec, EntityCache cache)
+            public void Build(NativeSnapshot snapshot, double myPaceSec, EntityCache cache, IsRaceContextClassMatch isRaceContextClassMatch)
             {
                 ClearTransientState();
                 _rows.AddRange(snapshot.Rows.Where(r => r != null && r.IsConnected && !string.IsNullOrWhiteSpace(r.IdentityKey)));
@@ -907,7 +910,7 @@ namespace LaunchPlugin
                     overallOrdered[i].PositionOverall = i + 1;
                 }
 
-                var sameClass = _rows.Where(r => string.Equals(r.ClassColor, Player.ClassColor, StringComparison.Ordinal)).ToList();
+                var sameClass = _rows.Where(r => IsRaceContextClassMatch(Player, r, isRaceContextClassMatch)).ToList();
                 if (sameClass.Count == 0)
                 {
                     return;
@@ -988,8 +991,23 @@ namespace LaunchPlugin
                     return double.NaN;
                 }
 
-                var row = _rows.FirstOrDefault(r => string.Equals(r.ClassColor, Player.ClassColor, StringComparison.Ordinal) && r.EffectivePositionInClass == positionInClass);
+                var row = _rows.FirstOrDefault(r => IsRaceContextClassMatch(Player, r, isRaceContextClassMatch) && r.EffectivePositionInClass == positionInClass);
                 return row != null ? row.BlendedPaceSec : double.NaN;
+            }
+
+            private static bool IsRaceContextClassMatch(NativeCarRow playerRow, NativeCarRow candidateRow, IsRaceContextClassMatch classMatchOverride)
+            {
+                if (playerRow == null || candidateRow == null)
+                {
+                    return false;
+                }
+
+                if (classMatchOverride != null)
+                {
+                    return classMatchOverride(playerRow, candidateRow);
+                }
+
+                return string.Equals(candidateRow.ClassColor, playerRow.ClassColor, StringComparison.Ordinal);
             }
 
             public double GetPaceReferenceSec()

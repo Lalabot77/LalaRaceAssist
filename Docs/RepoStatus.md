@@ -1,3 +1,10 @@
+- 2026-05-03 League Race Phase 3 landed:
+  - Opponents race-context cohort seam now supports resolver-backed League Class matching when enabled and player effective class is valid (player effective class vs opponent effective class);
+  - disabled mode and enabled+unresolved-player mode both fall back to unchanged native class-color cohort behavior;
+  - H2HRace target identity follows the same updated Opponents race-context seam; H2HTrack remains unchanged;
+  - added plugin action `LeagueClass.ToggleEnabled` (registered as `LalaLaunch.LeagueClass.ToggleEnabled`) to toggle `Settings.LeagueClassEnabled` using existing enable-time mode guard and normal settings save flow;
+  - no CarSA physical selection/filter/order changes, no H2HTrack changes, no PitExit class-row filtering changes, no ClassLeader/ClassBest changes.
+
 - 2026-05-02 League Class startup guard regression fix landed:
   - `ApplyLeagueClassEnableModeGuard()` now auto-corrects `LeagueClassMode` `0 -> 3` whenever `LeagueClassEnabled==true`, covering both runtime enable-edge (`false -> true`) and legacy startup/load enabled+mode0 states;
   - preserves user-selected modes `1/2/3` and keeps `LeagueClassEnabled==false` behavior unchanged;

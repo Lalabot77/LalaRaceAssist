@@ -1,3 +1,15 @@
+## 2026-05-03 — League Race Phase 3 (Opponents + H2HRace effective class cohort seam)
+
+- Classification: **both** (runtime race-context behavior + docs/control-surface alignment).
+- Opponents same-class cohort equality seam is now resolver-pluggable:
+  - default path remains native class-color matching;
+  - League Class path activates only when `LeagueClassEnabled==true` and player effective class resolves valid;
+  - in League Class path, Opp race-context cohort comparison is `player effective class` vs `opponent effective class` via `LeagueClassResolver` (manual override applies only to player effective class).
+- Disabled mode and enabled+unresolved-player mode explicitly keep native fallback behavior unchanged.
+- `H2HRace.*` follows the updated Opponents race-target seam naturally (`Opp.Ahead1`/`Opp.Behind1`); H2H timing/sector/delta math remains unchanged.
+- Added plugin action `LeagueClass.ToggleEnabled` (`LalaLaunch.LeagueClass.ToggleEnabled`) that toggles `Settings.LeagueClassEnabled`, applies existing enable-time mode guard, reloads resolver config, and saves settings.
+- Preserved boundaries: no CarSA physical selection/order/filter changes, no H2HTrack selector changes, no PitExit class-row filtering changes, no ClassLeader/ClassBest changes.
+
 ## 2026-05-02 — League Class startup enable+disabled-mode guard follow-up
 - Classification: **internal-only** (settings/UI guard correction only; no resolver/export/runtime cohort changes).
 - Updated `ApplyLeagueClassEnableModeGuard()` in `LalaLaunch.cs` to auto-correct `LeagueClassMode` from `Disabled (0)` to `CsvThenName (3)` whenever `LeagueClassEnabled == true` and mode is `0`, covering both:
