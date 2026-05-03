@@ -1,3 +1,8 @@
+- 2026-05-03 Build triage follow-up (PR range #647-#652):
+  - fixed Fuel per Lap helper TextBlock XAML compile break by removing duplicate Style assignment in `FuelCalculatorView.xaml` while preserving existing source-text trigger behavior (`FuelPerLapSourceInfo` / Profile / Live);
+  - confirmed `InvertBooleanConverter` and `LapTimeValidationRule` class/namespace wiring are valid in-project; reported lookup errors were downstream/designer fallout from the XAML parse failure;
+  - fixed League Class race-context delegate accessibility seam by making `OpponentsEngine.NativeCarRow` publicly accessible to match the public delegate signature consumed by `LalaLaunch` (`IsRaceContextClassMatch`), with no opponent ordering/filtering logic changes.
+
 - 2026-05-03 Strategy planner-basis/condition-notify follow-up landed:
   - effective track-condition visibility properties now notify on SelectedTrackCondition changes;
   - planner/live session-match snapshot now uses Live Detect effective basis/length (or reports non-comparable until detected basis exists).

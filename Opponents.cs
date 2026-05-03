@@ -1626,7 +1626,7 @@ namespace LaunchPlugin
             }
         }
 
-        private class NativeCarRow
+        public class NativeCarRow
         {
             public int CarIdx;
             public string IdentityKey;
