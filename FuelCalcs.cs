@@ -1076,6 +1076,8 @@ namespace LaunchPlugin
                 OnPropertyChanged("IsTimeLimitedRace");
                 OnPropertyChanged(nameof(IsLiveDetectRace));
                 OnPropertyChanged(nameof(IsRaceLengthEditable));
+                OnPropertyChanged(nameof(ShowEffectiveLapLimitedRace));
+                OnPropertyChanged(nameof(ShowEffectiveTimeLimitedRace));
                 CalculateStrategy();
                 RaisePresetStateChanged();
             }
@@ -1084,15 +1086,17 @@ namespace LaunchPlugin
 
     public bool IsLapLimitedRace
     {
-        get => SelectedRaceType == RaceType.LapLimited || (SelectedRaceType == RaceType.LiveDetect && _liveDetectedRaceType == RaceType.LapLimited);
+        get => SelectedRaceType == RaceType.LapLimited;
         set { if (value) SelectedRaceType = RaceType.LapLimited; }
     }
 
     public bool IsTimeLimitedRace
     {
-        get => SelectedRaceType == RaceType.TimeLimited || (SelectedRaceType == RaceType.LiveDetect && _liveDetectedRaceType == RaceType.TimeLimited);
+        get => SelectedRaceType == RaceType.TimeLimited;
         set { if (value) SelectedRaceType = RaceType.TimeLimited; }
     }
+    public bool ShowEffectiveLapLimitedRace => IsLapLimitedRace || (IsLiveDetectRace && _liveDetectedRaceType == RaceType.LapLimited);
+    public bool ShowEffectiveTimeLimitedRace => IsTimeLimitedRace || (IsLiveDetectRace && _liveDetectedRaceType == RaceType.TimeLimited);
 
     public double RaceLaps
     {
@@ -1713,6 +1717,8 @@ namespace LaunchPlugin
                 OnPropertyChanged(nameof(IsDry));
                 OnPropertyChanged(nameof(IsWet));
                 OnPropertyChanged(nameof(IsTrackConditionAuto));
+                OnPropertyChanged(nameof(IsTrackConditionManualDry));
+                OnPropertyChanged(nameof(IsTrackConditionManualWet));
                 OnPropertyChanged(nameof(ShowDrySnapshotRows));
                 OnPropertyChanged(nameof(ShowWetSnapshotRows));
                 UpdateTrackConditionModeLabel();
@@ -1810,11 +1816,25 @@ namespace LaunchPlugin
                 _isTrackConditionManualOverride = false;
                 MaybeAutoApplyTrackConditionFromTelemetry(_liveWeatherIsWet);
                 OnPropertyChanged(nameof(IsTrackConditionAuto));
+                OnPropertyChanged(nameof(IsTrackConditionManualDry));
+                OnPropertyChanged(nameof(IsTrackConditionManualWet));
             }
         }
     }
-    public bool ShowDrySnapshotRows => IsDry;
-    public bool ShowWetSnapshotRows => (_liveWeatherIsWet == true) || IsWet;
+    public bool IsTrackConditionManualDry
+    {
+        get => _isTrackConditionManualOverride && SelectedTrackCondition == TrackCondition.Dry;
+        set { if (value) IsDry = true; }
+    }
+    public bool IsTrackConditionManualWet
+    {
+        get => _isTrackConditionManualOverride && SelectedTrackCondition == TrackCondition.Wet;
+        set { if (value) IsWet = true; }
+    }
+    public bool IsEffectiveDryCondition => SelectedTrackCondition == TrackCondition.Dry;
+    public bool IsEffectiveWetCondition => SelectedTrackCondition == TrackCondition.Wet;
+    public bool ShowDrySnapshotRows => IsEffectiveDryCondition;
+    public bool ShowWetSnapshotRows => (_liveWeatherIsWet == true) || IsEffectiveWetCondition;
 
     private const double DefaultBaseTankLitres = 120.0;
 

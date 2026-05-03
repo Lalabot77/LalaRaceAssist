@@ -1,3 +1,9 @@
+## 2026-05-03 — Strategy UI ownership-binding follow-up
+- Classification: **internal-only** (binding truth-model correctness + telemetry safety hardening).
+- Track Condition radio bindings now represent ownership-only state (`Auto` vs manual `Dry/Wet`) while effective dry/wet condition remains separate for calculations/visibility.
+- Race Type radio bindings now represent ownership-only state (Lap/Time/Live Detect) with separate effective basis visibility for lap/time sliders while Live Detect is selected.
+- Hardened Live Detect session scan against malformed/missing SessionInfo values by using safe reads and tolerant long parsing in telemetry loop.
+
 ## 2026-05-03 — Strategy tab UI enhancements bundle (#512, #628, #633)
 - Classification: **both** (user-facing Strategy UI ownership clarity + docs alignment).
 - Fuel-per-lap helper/source text moved below the input field to avoid clipping in narrow SimHub layouts.

@@ -1,3 +1,8 @@
+- 2026-05-03 Strategy ownership-binding follow-up landed:
+  - Track Condition and Race Type radio groups now bind to ownership-only states (no mixed effective-state double-selection);
+  - effective race-basis visibility remains separate while Live Detect is selected;
+  - Live Detect session scan now uses safe read/tolerant parsing for SessionInfo loop inputs.
+
 - 2026-05-03 Strategy tab UI bundle (#512, #628, #633) landed:
   - Fuel-per-lap helper text now renders below input to prevent narrow-width clipping; fuel source buttons/calcs unchanged;
   - Track Condition control now includes explicit Auto/Dry/Wet ownership with matching helper labels (`Automatic (...)` / `Manual override: ...`);

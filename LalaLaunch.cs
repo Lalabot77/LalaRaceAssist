@@ -3014,12 +3014,17 @@ namespace LaunchPlugin
             for (int i = 1; i <= 64; i++)
             {
                 string idx = i.ToString("00", CultureInfo.InvariantCulture);
-                bool isRace = Convert.ToBoolean(pluginManager.GetPropertyValue($"DataCorePlugin.GameRawData.SessionData.SessionInfo.Sessions{idx}.IsRace") ?? false);
+                bool isRace = SafeReadBool(pluginManager, $"DataCorePlugin.GameRawData.SessionData.SessionInfo.Sessions{idx}.IsRace", false);
                 if (!isRace) continue;
 
-                bool isLimitedLaps = Convert.ToBoolean(pluginManager.GetPropertyValue($"DataCorePlugin.GameRawData.SessionData.SessionInfo.Sessions{idx}.IsLimitedSessionLaps") ?? false);
-                long sessionLapsValue = Convert.ToInt64(pluginManager.GetPropertyValue($"DataCorePlugin.GameRawData.SessionData.SessionInfo.Sessions{idx}.SessionLaps") ?? 0L);
-                bool isLimitedTime = Convert.ToBoolean(pluginManager.GetPropertyValue($"DataCorePlugin.GameRawData.SessionData.SessionInfo.Sessions{idx}.IsLimitedTime") ?? false);
+                bool isLimitedLaps = SafeReadBool(pluginManager, $"DataCorePlugin.GameRawData.SessionData.SessionInfo.Sessions{idx}.IsLimitedSessionLaps", false);
+                object sessionLapsRaw = pluginManager.GetPropertyValue($"DataCorePlugin.GameRawData.SessionData.SessionInfo.Sessions{idx}.SessionLaps");
+                long sessionLapsValue = 0L;
+                if (sessionLapsRaw != null)
+                {
+                    long.TryParse(sessionLapsRaw.ToString(), NumberStyles.Any, CultureInfo.InvariantCulture, out sessionLapsValue);
+                }
+                bool isLimitedTime = SafeReadBool(pluginManager, $"DataCorePlugin.GameRawData.SessionData.SessionInfo.Sessions{idx}.IsLimitedTime", false);
                 double sessionTimeSeconds = SafeReadDouble(pluginManager, $"DataCorePlugin.GameRawData.SessionData.SessionInfo.Sessions{idx}.SessionTime", 0.0);
 
                 if (isLimitedLaps && sessionLapsValue > 0)
