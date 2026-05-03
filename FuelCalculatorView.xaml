@@ -412,7 +412,7 @@
                             <TextBox Grid.Row="0" Grid.Column="1" VerticalAlignment="Center" Width="50" HorizontalAlignment="Left" Text="{Binding FuelPerLapText, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
                                      ToolTip="Fuel burn per lap (L/lap). Edit to override the suggested value." />
 
-                            <TextBlock Grid.Row="1" Grid.Column="0" Grid.ColumnSpan="3" Margin="2,4,0,0" VerticalAlignment="Center" Style="{StaticResource UnitHint}">
+                            <TextBlock Grid.Row="1" Grid.Column="0" Grid.ColumnSpan="3" Margin="2,4,0,0" VerticalAlignment="Center">
                                 <TextBlock.Style>
                                     <Style TargetType="TextBlock">
                                         <Setter Property="Text" Value="{Binding FuelPerLapSourceInfo}"/>
