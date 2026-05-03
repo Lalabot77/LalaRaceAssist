@@ -1,3 +1,20 @@
+- 2026-05-03 Strategy planner-basis/condition-notify follow-up landed:
+  - effective track-condition visibility properties now notify on SelectedTrackCondition changes;
+  - planner/live session-match snapshot now uses Live Detect effective basis/length (or reports non-comparable until detected basis exists).
+
+- 2026-05-03 Strategy Live Detect follow-up landed:
+  - Live Detect now recomputes strategy when detected basis changes (lap/time) even when numeric values are unchanged;
+  - race-session scan now checks all `Sessions01..64` race rows, prefers valid lap-limited definitions, and falls back to timed only when needed.
+
+- 2026-05-03 Strategy ownership-binding follow-up landed:
+  - Track Condition and Race Type radio groups now bind to ownership-only states (no mixed effective-state double-selection);
+  - effective race-basis visibility remains separate while Live Detect is selected;
+  - Live Detect session scan now uses safe read/tolerant parsing for SessionInfo loop inputs.
+
+- 2026-05-03 Strategy tab UI bundle (#512, #628, #633) landed:
+  - Fuel-per-lap helper text now renders below input to prevent narrow-width clipping; fuel source buttons/calcs unchanged;
+  - Track Condition control now includes explicit Auto/Dry/Wet ownership with matching helper labels (`Automatic (...)` / `Manual override: ...`);
+  - Race Type now includes persistent Live Detect ownership that reads declared race metadata from `SessionInfo.Sessions01..64` (`IsRace==true`) and locks race-length edits while active.
 - 2026-05-03 League Race Phase 3 landed:
   - Opponents race-context cohort seam now supports resolver-backed League Class matching when enabled and player effective class is valid (player effective class vs opponent effective class);
   - disabled mode and enabled+unresolved-player mode both fall back to unchanged native class-color cohort behavior;

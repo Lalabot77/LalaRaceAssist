@@ -37,9 +37,10 @@ Branch: work
 - L252: Select a car profile to plan a strategy for.
 - L255: Choose the track and layout for planning.
 - L260: Select the track and layout.
-- L268: Select dry or wet planning mode for this track.
-- L270: Plan using dry track data.
-- L272: Plan using wet track data and the wet factor.
+- L268: Select automatic, dry, or wet planning mode for this track.
+- L270: Use automatic dry/wet detection.
+- L272: Plan using dry track data.
+- L274: Plan using wet track data and the wet factor.
 - L276: Scale fuel burn for wet running (%). Higher = higher burn.
 - L280: Apply the suggested wet factor from saved or live data.
 - L293: Average lap time used for strategy (m:ss.fff).
@@ -64,7 +65,7 @@ Branch: work
 - L487: Highest valid fuel per lap recorded in this session.
 - L513: Select a preset to apply.
 - L526: Open the Preset Manager to create, rename, edit, or delete strategy presets.
-- L533: Choose whether the race is limited by laps or time.
+- L533: Choose lap-limited, time-limited, or persistent Live Detect race ownership.
 - L535: Plan for a fixed number of laps.
 - L537: Plan for a fixed race duration (minutes).
 - L541: Total race distance in laps.

@@ -267,15 +267,17 @@
                                 <StackPanel Orientation="Horizontal" Margin="0,5,0,0">
                                     <TextBlock Text="Track Condition:" VerticalAlignment="Center" Margin="0,0,10,0"
                                                ToolTip="Select dry or wet planning mode for this track."/>
-                                    <RadioButton Content="Dry" IsChecked="{Binding IsDry, Mode=TwoWay}" GroupName="TrackCondition"
+                                    <RadioButton Content="Auto" IsChecked="{Binding IsTrackConditionAuto, Mode=TwoWay}" GroupName="TrackCondition"
+                                                 ToolTip="Use automatic dry/wet detection."/>
+                                    <RadioButton Content="Dry" IsChecked="{Binding IsTrackConditionManualDry, Mode=TwoWay}" GroupName="TrackCondition" Margin="10,0,0,0"
                                                  ToolTip="Plan using dry track data."/>
-                                    <RadioButton Content="Wet" IsChecked="{Binding IsWet, Mode=TwoWay}" GroupName="TrackCondition" Margin="10,0,0,0"
+                                    <RadioButton Content="Wet" IsChecked="{Binding IsTrackConditionManualWet, Mode=TwoWay}" GroupName="TrackCondition" Margin="10,0,0,0"
                                                  ToolTip="Plan using wet track data and the wet factor."/>
                                 </StackPanel>
                                 <TextBlock Text="{Binding TrackConditionModeLabel}" Style="{StaticResource UnitHint}" Margin="2,2,0,0" />
-                                <ui:TitledSlider Title="Wet Factor (%):" Minimum="70" Maximum="130" Value="{Binding WetFactorPercent, Mode=TwoWay}" Visibility="{Binding IsWet, Converter={StaticResource BooleanToVisibilityConverter}, Mode=OneWay}" Margin="0,5,0,0"
+                                <ui:TitledSlider Title="Wet Factor (%):" Minimum="70" Maximum="130" Value="{Binding WetFactorPercent, Mode=TwoWay}" Visibility="{Binding IsEffectiveWetCondition, Converter={StaticResource BooleanToVisibilityConverter}, Mode=OneWay}" Margin="0,5,0,0"
                                                  ToolTip="Scale fuel burn for wet running (%). Higher = higher burn."/>
-                                <StackPanel Orientation="Horizontal" Margin="0,4,0,0" Visibility="{Binding IsWet, Converter={StaticResource BooleanToVisibilityConverter}}">
+                                <StackPanel Orientation="Horizontal" Margin="0,4,0,0" Visibility="{Binding IsEffectiveWetCondition, Converter={StaticResource BooleanToVisibilityConverter}}">
                                     <TextBlock Text="{Binding SourceWetFactorDisplay}" Style="{StaticResource UnitHint}" VerticalAlignment="Center" Visibility="{Binding HasSourceWetFactor, Converter={StaticResource BooleanToVisibilityConverter}}"/>
                                     <Button Content="Use source" Command="{Binding ApplySourceWetFactorCommand}" Margin="10,0,0,0" Visibility="{Binding HasSourceWetFactor, Converter={StaticResource BooleanToVisibilityConverter}}"
                                             ToolTip="Apply the suggested wet factor from saved or live data."/>
@@ -410,7 +412,7 @@
                             <TextBox Grid.Row="0" Grid.Column="1" VerticalAlignment="Center" Width="50" HorizontalAlignment="Left" Text="{Binding FuelPerLapText, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
                                      ToolTip="Fuel burn per lap (L/lap). Edit to override the suggested value." />
 
-                            <TextBlock Grid.Row="0" Grid.Column="2" Margin="10,0,0,0" VerticalAlignment="Center">
+                            <TextBlock Grid.Row="1" Grid.Column="0" Grid.ColumnSpan="3" Margin="2,4,0,0" VerticalAlignment="Center" Style="{StaticResource UnitHint}">
                                 <TextBlock.Style>
                                     <Style TargetType="TextBlock">
                                         <Setter Property="Text" Value="{Binding FuelPerLapSourceInfo}"/>
@@ -540,11 +542,13 @@
                                          ToolTip="Plan for a fixed number of laps."/>
                             <RadioButton Content="Time-Limited" IsChecked="{Binding IsTimeLimitedRace, Mode=TwoWay}" GroupName="RaceType" Margin="10,0,0,0"
                                          ToolTip="Plan for a fixed race duration (minutes)."/>
+                            <RadioButton Content="Live Detect" IsChecked="{Binding IsLiveDetectRace, Mode=TwoWay}" GroupName="RaceType" Margin="10,0,0,0"
+                                         ToolTip="Use declared race session metadata as race type/length authority."/>
                         </StackPanel>
 
-                        <ui:TitledSlider Title="Race Laps:" Minimum="1" Maximum="500" Value="{Binding RaceLaps, Mode=TwoWay}" Visibility="{Binding IsLapLimitedRace, Converter={StaticResource BooleanToVisibilityConverter}, Mode=OneWay}"
+                        <ui:TitledSlider Title="Race Laps:" Minimum="1" Maximum="500" Value="{Binding RaceLaps, Mode=TwoWay}" Visibility="{Binding ShowEffectiveLapLimitedRace, Converter={StaticResource BooleanToVisibilityConverter}, Mode=OneWay}" IsEnabled="{Binding IsRaceLengthEditable}"
                                          ToolTip="Total race distance in laps."/>
-                        <ui:TitledSlider Title="Race Minutes:" Minimum="10" Maximum="1440" Value="{Binding RaceMinutes, Mode=TwoWay}" Visibility="{Binding IsTimeLimitedRace, Converter={StaticResource BooleanToVisibilityConverter}, Mode=OneWay}"
+                        <ui:TitledSlider Title="Race Minutes:" Minimum="10" Maximum="1440" Value="{Binding RaceMinutes, Mode=TwoWay}" Visibility="{Binding ShowEffectiveTimeLimitedRace, Converter={StaticResource BooleanToVisibilityConverter}, Mode=OneWay}" IsEnabled="{Binding IsRaceLengthEditable}"
                                          ToolTip="Total race duration in minutes."/>
 
                         <ui:TitledSlider Title="Formation Lap Fuel (liters):" Minimum="0" Maximum="10" Value="{Binding FormationLapFuelLiters, Mode=TwoWay}" Margin="0,10,0,0"

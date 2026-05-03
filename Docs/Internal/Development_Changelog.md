@@ -1,3 +1,24 @@
+## 2026-05-03 — Strategy follow-up (effective condition notifications + Live Detect planner-basis snapshot)
+- Classification: **internal-only** (view-model notification correctness + planner/live comparability correctness).
+- `SelectedTrackCondition` now raises `IsEffectiveDryCondition` and `IsEffectiveWetCondition` property notifications when condition changes (including auto-applied telemetry condition flips through the same setter path).
+- `GetPlannerSessionMatchSnapshot()` now resolves planner basis/length from effective race basis under Live Detect (detected lap/time), and reports no comparable planner basis until Live Detect has a valid detected race definition.
+
+## 2026-05-03 — Strategy Live Detect review follow-up (basis-recompute + full race-session scan)
+- Classification: **internal-only** (strategy ownership correctness + telemetry candidate selection hardening).
+- `UpdateLiveDetectedRaceDefinition(...)` now forces strategy recompute/notifications when Live Detect effective basis flips lap<->time even if numeric race-length value is unchanged.
+- Live Detect session scan now evaluates `Sessions01..64` race entries fully, prefers valid lap-limited definitions, and only falls back to timed definitions when no valid lap candidate exists.
+
+## 2026-05-03 — Strategy UI ownership-binding follow-up
+- Classification: **internal-only** (binding truth-model correctness + telemetry safety hardening).
+- Track Condition radio bindings now represent ownership-only state (`Auto` vs manual `Dry/Wet`) while effective dry/wet condition remains separate for calculations/visibility.
+- Race Type radio bindings now represent ownership-only state (Lap/Time/Live Detect) with separate effective basis visibility for lap/time sliders while Live Detect is selected.
+- Hardened Live Detect session scan against malformed/missing SessionInfo values by using safe reads and tolerant long parsing in telemetry loop.
+
+## 2026-05-03 — Strategy tab UI enhancements bundle (#512, #628, #633)
+- Classification: **both** (user-facing Strategy UI ownership clarity + docs alignment).
+- Fuel-per-lap helper/source text moved below the input field to avoid clipping in narrow SimHub layouts.
+- Track Condition now exposes explicit `Auto`/`Dry`/`Wet` radio ownership with helper text showing automatic detected mode vs manual override mode.
+- Race Type now includes persistent `Live Detect`; when selected, race definition is sourced from declared race session metadata (`SessionInfo.Sessions01..64`, `IsRace==true`) and race-length controls are read-only until manual mode is reselected.
 ## 2026-05-03 — League Race Phase 3 (Opponents + H2HRace effective class cohort seam)
 
 - Classification: **both** (runtime race-context behavior + docs/control-surface alignment).

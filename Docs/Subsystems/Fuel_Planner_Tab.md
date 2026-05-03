@@ -305,3 +305,9 @@ Reset semantics are shared with the Fuel Model and documented centrally in:
 - TODO/VERIFY: Confirm exact confidence threshold used to set `IsFuelReady` and whether it differs for lap time vs fuel.
 - TODO/VERIFY: Confirm whether planner pit loss always prefers DTL or falls back to direct lane loss when DTL unavailable.
 - TODO/VERIFY: Confirm which planner outputs are exported as `_S` (smoothed) vs numeric only.
+
+
+## 2026-05 Strategy UI pass
+- Fuel-per-lap source/helper text now renders below the input to avoid narrow-width clipping.
+- Track Condition now has explicit `Auto` / `Dry` / `Wet` ownership states. Auto clears manual override and shows `Automatic (dry|wet)`; manual states show `Manual override: dry|wet`.
+- Race Type now includes persistent `Live Detect` ownership. While selected, race type/length consume declared race metadata (`SessionInfo.SessionsXX` where `IsRace==true`) and race-length controls are read-only.

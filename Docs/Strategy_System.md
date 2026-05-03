@@ -166,3 +166,9 @@ If Strategy looks repeatedly wrong, the usual causes are:
 - Review anything that looked repeatedly wrong.
 - Relearn only the affected saved values when needed.
 - Keep good locks in place once validated.
+
+
+## 11. Strategy ownership updates (May 2026)
+- Fuel-per-lap source helper now sits under the input for narrow-width readability.
+- Track condition ownership is explicit: `Auto`, `Dry`, `Wet`.
+- Race type ownership now includes persistent `Live Detect`; detected race format/length are pulled from declared race metadata rather than current practice/qualifying session length.
