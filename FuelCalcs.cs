@@ -5165,28 +5165,59 @@ namespace LaunchPlugin
 
         bool hasLap = isLapLimited == true && raceLaps.HasValue && raceLaps.Value > 0.0;
         bool hasTime = isTimeLimited == true && raceMinutes.HasValue && raceMinutes.Value > 0.0;
+        bool shouldRecalculate = false;
 
         if (hasLap)
         {
+            if (_liveDetectedRaceType != RaceType.LapLimited)
+            {
+                shouldRecalculate = true;
+            }
             _liveDetectedRaceType = RaceType.LapLimited;
-            _lastLiveDetectedRaceLaps = raceLaps.Value;
             OnPropertyChanged(nameof(IsLapLimitedRace));
             OnPropertyChanged(nameof(IsTimeLimitedRace));
-            if (SelectedRaceType != RaceType.LiveDetect || Math.Abs(RaceLaps - _lastLiveDetectedRaceLaps) > 0.001)
+            OnPropertyChanged(nameof(ShowEffectiveLapLimitedRace));
+            OnPropertyChanged(nameof(ShowEffectiveTimeLimitedRace));
+
+            if (Math.Abs(_lastLiveDetectedRaceLaps - raceLaps.Value) > 0.001)
+            {
+                shouldRecalculate = true;
+            }
+            _lastLiveDetectedRaceLaps = raceLaps.Value;
+            if (Math.Abs(RaceLaps - _lastLiveDetectedRaceLaps) > 0.001)
             {
                 RaceLaps = _lastLiveDetectedRaceLaps;
+                shouldRecalculate = false; // RaceLaps setter already recalculates
             }
         }
         else if (hasTime)
         {
+            if (_liveDetectedRaceType != RaceType.TimeLimited)
+            {
+                shouldRecalculate = true;
+            }
             _liveDetectedRaceType = RaceType.TimeLimited;
-            _lastLiveDetectedRaceMinutes = raceMinutes.Value;
             OnPropertyChanged(nameof(IsLapLimitedRace));
             OnPropertyChanged(nameof(IsTimeLimitedRace));
-            if (SelectedRaceType != RaceType.LiveDetect || Math.Abs(RaceMinutes - _lastLiveDetectedRaceMinutes) > 0.001)
+            OnPropertyChanged(nameof(ShowEffectiveLapLimitedRace));
+            OnPropertyChanged(nameof(ShowEffectiveTimeLimitedRace));
+
+            if (Math.Abs(_lastLiveDetectedRaceMinutes - raceMinutes.Value) > 0.001)
+            {
+                shouldRecalculate = true;
+            }
+            _lastLiveDetectedRaceMinutes = raceMinutes.Value;
+            if (Math.Abs(RaceMinutes - _lastLiveDetectedRaceMinutes) > 0.001)
             {
                 RaceMinutes = _lastLiveDetectedRaceMinutes;
+                shouldRecalculate = false; // RaceMinutes setter already recalculates
             }
+        }
+
+        if (shouldRecalculate)
+        {
+            CalculateStrategy();
+            RaisePresetStateChanged();
         }
     }
 }

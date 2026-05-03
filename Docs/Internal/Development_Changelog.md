@@ -1,3 +1,8 @@
+## 2026-05-03 — Strategy Live Detect review follow-up (basis-recompute + full race-session scan)
+- Classification: **internal-only** (strategy ownership correctness + telemetry candidate selection hardening).
+- `UpdateLiveDetectedRaceDefinition(...)` now forces strategy recompute/notifications when Live Detect effective basis flips lap<->time even if numeric race-length value is unchanged.
+- Live Detect session scan now evaluates `Sessions01..64` race entries fully, prefers valid lap-limited definitions, and only falls back to timed definitions when no valid lap candidate exists.
+
 ## 2026-05-03 — Strategy UI ownership-binding follow-up
 - Classification: **internal-only** (binding truth-model correctness + telemetry safety hardening).
 - Track Condition radio bindings now represent ownership-only state (`Auto` vs manual `Dry/Wet`) while effective dry/wet condition remains separate for calculations/visibility.

@@ -1,3 +1,7 @@
+- 2026-05-03 Strategy Live Detect follow-up landed:
+  - Live Detect now recomputes strategy when detected basis changes (lap/time) even when numeric values are unchanged;
+  - race-session scan now checks all `Sessions01..64` race rows, prefers valid lap-limited definitions, and falls back to timed only when needed.
+
 - 2026-05-03 Strategy ownership-binding follow-up landed:
   - Track Condition and Race Type radio groups now bind to ownership-only states (no mixed effective-state double-selection);
   - effective race-basis visibility remains separate while Live Detect is selected;

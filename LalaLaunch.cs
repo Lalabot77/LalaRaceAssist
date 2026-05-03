@@ -3029,15 +3029,22 @@ namespace LaunchPlugin
 
                 if (isLimitedLaps && sessionLapsValue > 0)
                 {
+                    // Prefer any valid lap-limited race definition over timed definitions.
                     detectedLapLimited = true;
                     detectedRaceLaps = sessionLapsValue;
+                    detectedTimeLimited = null;
+                    detectedRaceMinutes = null;
+                    break;
                 }
                 else if (isLimitedTime && sessionTimeSeconds > 0.0)
                 {
-                    detectedTimeLimited = true;
-                    detectedRaceMinutes = sessionTimeSeconds / 60.0;
+                    // Keep timed candidate only as fallback if no valid lap-limited race is found.
+                    if (!detectedTimeLimited.HasValue || detectedRaceMinutes.GetValueOrDefault() <= 0.0)
+                    {
+                        detectedTimeLimited = true;
+                        detectedRaceMinutes = sessionTimeSeconds / 60.0;
+                    }
                 }
-                break;
             }
             FuelCalculator?.UpdateLiveDetectedRaceDefinition(detectedLapLimited, detectedRaceLaps, detectedTimeLimited, detectedRaceMinutes);
 
