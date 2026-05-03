@@ -1,3 +1,8 @@
+## 2026-05-03 — Strategy follow-up (effective condition notifications + Live Detect planner-basis snapshot)
+- Classification: **internal-only** (view-model notification correctness + planner/live comparability correctness).
+- `SelectedTrackCondition` now raises `IsEffectiveDryCondition` and `IsEffectiveWetCondition` property notifications when condition changes (including auto-applied telemetry condition flips through the same setter path).
+- `GetPlannerSessionMatchSnapshot()` now resolves planner basis/length from effective race basis under Live Detect (detected lap/time), and reports no comparable planner basis until Live Detect has a valid detected race definition.
+
 ## 2026-05-03 — Strategy Live Detect review follow-up (basis-recompute + full race-session scan)
 - Classification: **internal-only** (strategy ownership correctness + telemetry candidate selection hardening).
 - `UpdateLiveDetectedRaceDefinition(...)` now forces strategy recompute/notifications when Live Detect effective basis flips lap<->time even if numeric race-length value is unchanged.

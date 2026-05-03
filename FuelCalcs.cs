@@ -58,18 +58,49 @@ namespace LaunchPlugin
             plannerTrack = _lastLoadedTrackKey.Trim();
         }
 
-        bool plannerTimeLimited = IsTimeLimitedRace;
-        double plannerRaceLength = plannerTimeLimited
-            ? Math.Max(0.0, RaceMinutes)
-            : Math.Max(0.0, RaceLaps);
+        bool hasComparableBasis = true;
+        bool plannerTimeLimited = false;
+        double plannerRaceLength = 0.0;
+
+        if (SelectedRaceType == RaceType.TimeLimited)
+        {
+            plannerTimeLimited = true;
+            plannerRaceLength = Math.Max(0.0, RaceMinutes);
+        }
+        else if (SelectedRaceType == RaceType.LapLimited)
+        {
+            plannerTimeLimited = false;
+            plannerRaceLength = Math.Max(0.0, RaceLaps);
+        }
+        else if (SelectedRaceType == RaceType.LiveDetect && _liveDetectedRaceType.HasValue)
+        {
+            if (_liveDetectedRaceType.Value == RaceType.TimeLimited)
+            {
+                plannerTimeLimited = true;
+                plannerRaceLength = Math.Max(0.0, RaceMinutes);
+            }
+            else if (_liveDetectedRaceType.Value == RaceType.LapLimited)
+            {
+                plannerTimeLimited = false;
+                plannerRaceLength = Math.Max(0.0, RaceLaps);
+            }
+            else
+            {
+                hasComparableBasis = false;
+            }
+        }
+        else
+        {
+            hasComparableBasis = false;
+        }
 
         return new PlannerLiveSessionMatchSnapshot
         {
             PlannerCar = plannerCar,
             PlannerTrack = plannerTrack,
-            HasPlannerBasis = true,
+            HasPlannerBasis = hasComparableBasis,
             PlannerBasisIsTimeLimited = plannerTimeLimited,
-            HasPlannerRaceLength = plannerRaceLength > 0.0,
+            HasPlannerRaceLength = hasComparableBasis && plannerRaceLength > 0.0,
             PlannerRaceLengthValue = plannerRaceLength
         };
     }
@@ -1719,6 +1750,8 @@ namespace LaunchPlugin
                 OnPropertyChanged(nameof(IsTrackConditionAuto));
                 OnPropertyChanged(nameof(IsTrackConditionManualDry));
                 OnPropertyChanged(nameof(IsTrackConditionManualWet));
+                OnPropertyChanged(nameof(IsEffectiveDryCondition));
+                OnPropertyChanged(nameof(IsEffectiveWetCondition));
                 OnPropertyChanged(nameof(ShowDrySnapshotRows));
                 OnPropertyChanged(nameof(ShowWetSnapshotRows));
                 UpdateTrackConditionModeLabel();
