@@ -1,3 +1,8 @@
+- 2026-05-03 Strategy tab UI bundle (#512, #628, #633) landed:
+  - Fuel-per-lap helper text now renders below input to prevent narrow-width clipping; fuel source buttons/calcs unchanged;
+  - Track Condition control now includes explicit Auto/Dry/Wet ownership with matching helper labels (`Automatic (...)` / `Manual override: ...`);
+  - Race Type now includes persistent Live Detect ownership that reads declared race metadata from `SessionInfo.Sessions01..64` (`IsRace==true`) and locks race-length edits while active.
+
 - 2026-05-02 League Class startup guard regression fix landed:
   - `ApplyLeagueClassEnableModeGuard()` now auto-corrects `LeagueClassMode` `0 -> 3` whenever `LeagueClassEnabled==true`, covering both runtime enable-edge (`false -> true`) and legacy startup/load enabled+mode0 states;
   - preserves user-selected modes `1/2/3` and keeps `LeagueClassEnabled==false` behavior unchanged;

@@ -1,3 +1,9 @@
+## 2026-05-03 — Strategy tab UI enhancements bundle (#512, #628, #633)
+- Classification: **both** (user-facing Strategy UI ownership clarity + docs alignment).
+- Fuel-per-lap helper/source text moved below the input field to avoid clipping in narrow SimHub layouts.
+- Track Condition now exposes explicit `Auto`/`Dry`/`Wet` radio ownership with helper text showing automatic detected mode vs manual override mode.
+- Race Type now includes persistent `Live Detect`; when selected, race definition is sourced from declared race session metadata (`SessionInfo.Sessions01..64`, `IsRace==true`) and race-length controls are read-only until manual mode is reselected.
+
 ## 2026-05-02 — League Class startup enable+disabled-mode guard follow-up
 - Classification: **internal-only** (settings/UI guard correction only; no resolver/export/runtime cohort changes).
 - Updated `ApplyLeagueClassEnableModeGuard()` in `LalaLaunch.cs` to auto-correct `LeagueClassMode` from `Disabled (0)` to `CsvThenName (3)` whenever `LeagueClassEnabled == true` and mode is `0`, covering both:

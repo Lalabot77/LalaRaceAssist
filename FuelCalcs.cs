@@ -17,7 +17,7 @@ namespace LaunchPlugin
     public class FuelCalcs : INotifyPropertyChanged
     {
         // --- Enums and Structs ---
-        public enum RaceType { LapLimited, TimeLimited }
+        public enum RaceType { LapLimited, TimeLimited, LiveDetect }
         public enum TrackCondition { Dry, Wet }
         public enum PlanningSourceMode { Profile, LiveSnapshot }
         public enum PreRaceMode
@@ -90,6 +90,9 @@ namespace LaunchPlugin
     private CarProfile _selectedCarProfile; // CHANGED to CarProfile object
     private string _selectedTrack;
     private RaceType _raceType;
+    private RaceType? _liveDetectedRaceType;
+    private double _lastLiveDetectedRaceLaps;
+    private double _lastLiveDetectedRaceMinutes;
     private double _raceLaps;
     private double _raceMinutes;
     private string _estimatedLapTime;
@@ -1071,6 +1074,8 @@ namespace LaunchPlugin
                 OnPropertyChanged("SelectedRaceType");
                 OnPropertyChanged("IsLapLimitedRace");
                 OnPropertyChanged("IsTimeLimitedRace");
+                OnPropertyChanged(nameof(IsLiveDetectRace));
+                OnPropertyChanged(nameof(IsRaceLengthEditable));
                 CalculateStrategy();
                 RaisePresetStateChanged();
             }
@@ -1079,13 +1084,13 @@ namespace LaunchPlugin
 
     public bool IsLapLimitedRace
     {
-        get => SelectedRaceType == RaceType.LapLimited;
+        get => SelectedRaceType == RaceType.LapLimited || (SelectedRaceType == RaceType.LiveDetect && _liveDetectedRaceType == RaceType.LapLimited);
         set { if (value) SelectedRaceType = RaceType.LapLimited; }
     }
 
     public bool IsTimeLimitedRace
     {
-        get => SelectedRaceType == RaceType.TimeLimited;
+        get => SelectedRaceType == RaceType.TimeLimited || (SelectedRaceType == RaceType.LiveDetect && _liveDetectedRaceType == RaceType.TimeLimited);
         set { if (value) SelectedRaceType = RaceType.TimeLimited; }
     }
 
@@ -1707,6 +1712,7 @@ namespace LaunchPlugin
                 OnPropertyChanged(nameof(SelectedTrackCondition));
                 OnPropertyChanged(nameof(IsDry));
                 OnPropertyChanged(nameof(IsWet));
+                OnPropertyChanged(nameof(IsTrackConditionAuto));
                 OnPropertyChanged(nameof(ShowDrySnapshotRows));
                 OnPropertyChanged(nameof(ShowWetSnapshotRows));
                 UpdateTrackConditionModeLabel();
@@ -1771,13 +1777,41 @@ namespace LaunchPlugin
     public bool IsDry
     {
         get => SelectedTrackCondition == TrackCondition.Dry;
-        set { if (value) SelectedTrackCondition = TrackCondition.Dry; }
+        set
+        {
+            if (value)
+            {
+                _isTrackConditionManualOverride = true;
+                SelectedTrackCondition = TrackCondition.Dry;
+            }
+        }
     }
 
     public bool IsWet
     {
         get => SelectedTrackCondition == TrackCondition.Wet;
-        set { if (value) SelectedTrackCondition = TrackCondition.Wet; }
+        set
+        {
+            if (value)
+            {
+                _isTrackConditionManualOverride = true;
+                SelectedTrackCondition = TrackCondition.Wet;
+            }
+        }
+    }
+    public bool IsTrackConditionAuto
+    {
+        get => !_isTrackConditionManualOverride;
+        set
+        {
+            if (!value) return;
+            if (_isTrackConditionManualOverride)
+            {
+                _isTrackConditionManualOverride = false;
+                MaybeAutoApplyTrackConditionFromTelemetry(_liveWeatherIsWet);
+                OnPropertyChanged(nameof(IsTrackConditionAuto));
+            }
+        }
     }
     public bool ShowDrySnapshotRows => IsDry;
     public bool ShowWetSnapshotRows => (_liveWeatherIsWet == true) || IsWet;
@@ -3446,7 +3480,7 @@ namespace LaunchPlugin
         string modeText;
         if (_isTrackConditionManualOverride)
         {
-            modeText = "Manual override";
+            modeText = IsWet ? "Manual override: wet" : "Manual override: dry";
         }
         else
         {
@@ -5094,5 +5128,46 @@ namespace LaunchPlugin
     }
 
 
+    public bool IsLiveDetectRace
+    {
+        get => SelectedRaceType == RaceType.LiveDetect;
+        set { if (value) SelectedRaceType = RaceType.LiveDetect; }
+    }
+
+    public bool IsRaceLengthEditable => !IsLiveDetectRace;
+
+    public void UpdateLiveDetectedRaceDefinition(bool? isLapLimited, double? raceLaps, bool? isTimeLimited, double? raceMinutes)
+    {
+        if (!IsLiveDetectRace)
+        {
+            return;
+        }
+
+        bool hasLap = isLapLimited == true && raceLaps.HasValue && raceLaps.Value > 0.0;
+        bool hasTime = isTimeLimited == true && raceMinutes.HasValue && raceMinutes.Value > 0.0;
+
+        if (hasLap)
+        {
+            _liveDetectedRaceType = RaceType.LapLimited;
+            _lastLiveDetectedRaceLaps = raceLaps.Value;
+            OnPropertyChanged(nameof(IsLapLimitedRace));
+            OnPropertyChanged(nameof(IsTimeLimitedRace));
+            if (SelectedRaceType != RaceType.LiveDetect || Math.Abs(RaceLaps - _lastLiveDetectedRaceLaps) > 0.001)
+            {
+                RaceLaps = _lastLiveDetectedRaceLaps;
+            }
+        }
+        else if (hasTime)
+        {
+            _liveDetectedRaceType = RaceType.TimeLimited;
+            _lastLiveDetectedRaceMinutes = raceMinutes.Value;
+            OnPropertyChanged(nameof(IsLapLimitedRace));
+            OnPropertyChanged(nameof(IsTimeLimitedRace));
+            if (SelectedRaceType != RaceType.LiveDetect || Math.Abs(RaceMinutes - _lastLiveDetectedRaceMinutes) > 0.001)
+            {
+                RaceMinutes = _lastLiveDetectedRaceMinutes;
+            }
+        }
+    }
 }
 }
