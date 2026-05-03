@@ -844,6 +844,7 @@ namespace LaunchPlugin
         {
             private readonly List<NativeCarRow> _rows = new List<NativeCarRow>();
             private double _paceReferenceSec = 120.0;
+            private IsRaceContextClassMatch _raceContextClassMatchOverride;
             private readonly NativeCarRow[] _aheadSlots = new NativeCarRow[NeighborSlotCount];
             private readonly NativeCarRow[] _behindSlots = new NativeCarRow[NeighborSlotCount];
             private readonly Dictionary<int, int> _lastPitLapByCarIdx = new Dictionary<int, int>();
@@ -874,6 +875,7 @@ namespace LaunchPlugin
             public void Build(NativeSnapshot snapshot, double myPaceSec, EntityCache cache, IsRaceContextClassMatch isRaceContextClassMatch)
             {
                 ClearTransientState();
+                _raceContextClassMatchOverride = isRaceContextClassMatch;
                 _rows.AddRange(snapshot.Rows.Where(r => r != null && r.IsConnected && !string.IsNullOrWhiteSpace(r.IdentityKey)));
                 Player = _rows.FirstOrDefault(r => string.Equals(r.IdentityKey, snapshot.PlayerIdentityKey, StringComparison.Ordinal));
                 if (Player == null)
@@ -991,7 +993,7 @@ namespace LaunchPlugin
                     return double.NaN;
                 }
 
-                var row = _rows.FirstOrDefault(r => IsRaceContextClassMatch(Player, r, isRaceContextClassMatch) && r.EffectivePositionInClass == positionInClass);
+                var row = _rows.FirstOrDefault(r => IsRaceContextClassMatch(Player, r, _raceContextClassMatchOverride) && r.EffectivePositionInClass == positionInClass);
                 return row != null ? row.BlendedPaceSec : double.NaN;
             }
 

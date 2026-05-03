@@ -4836,6 +4836,11 @@ namespace LaunchPlugin
                     return false;
                 }
 
+                if (string.Equals(playerRow.IdentityKey, candidateRow.IdentityKey, StringComparison.Ordinal))
+                {
+                    return true;
+                }
+
                 var candidateEffectiveClass = ResolveLeagueClassDriverInfo(candidateRow.UserID > 0 ? (int?)candidateRow.UserID : null, candidateRow.Name);
                 if (!candidateEffectiveClass.Valid || string.IsNullOrWhiteSpace(candidateEffectiveClass.Name))
                 {

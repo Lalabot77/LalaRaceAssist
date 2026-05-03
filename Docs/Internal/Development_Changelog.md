@@ -10,6 +10,12 @@
 - Added plugin action `LeagueClass.ToggleEnabled` (`LalaLaunch.LeagueClass.ToggleEnabled`) that toggles `Settings.LeagueClassEnabled`, applies existing enable-time mode guard, reloads resolver config, and saves settings.
 - Preserved boundaries: no CarSA physical selection/order/filter changes, no H2HTrack selector changes, no PitExit class-row filtering changes, no ClassLeader/ClassBest changes.
 
+## 2026-05-03 — PR #651 review follow-up: race-context compile fix + player-row match guard
+- Classification: **internal-only** (build restore + cohort guardrail; no new exports/UI/actions).
+- Fixed `Opponents.NativeRaceModel.GetBlendedPaceForPosition(...)` to reuse the in-scope race-context class-match delegate captured during `Build(...)`, resolving the undefined-symbol compile break (`CS0103`).
+- Hardened `BuildRaceContextLeagueClassMatchDelegate()` so the player row always self-matches by identity before resolver-based opponent class comparison, preventing enabled+manual-override/no-player-CSV-name-match edge cases from excluding the player from same-class cohort construction.
+- Preserved subsystem boundaries and behavior scope: opponent effective-class resolution stays resolver-owned, and fallback native class-color matching remains unchanged outside enabled+valid League Class mode.
+
 ## 2026-05-02 — League Class startup enable+disabled-mode guard follow-up
 - Classification: **internal-only** (settings/UI guard correction only; no resolver/export/runtime cohort changes).
 - Updated `ApplyLeagueClassEnableModeGuard()` in `LalaLaunch.cs` to auto-correct `LeagueClassMode` from `Disabled (0)` to `CsvThenName (3)` whenever `LeagueClassEnabled == true` and mode is `0`, covering both:

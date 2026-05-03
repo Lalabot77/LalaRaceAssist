@@ -47,6 +47,11 @@ Branch: work
 - No Git remote is configured in this checkout (`git remote -v` returns empty).
 
 ## Documentation sync status
+- 2026-05-03 League Race Phase 3 PR #651 review follow-up fixes landed:
+  - fixed `Opponents.NativeRaceModel.GetBlendedPaceForPosition(...)` compile blocker by persisting the in-scope race-context class-match delegate from `Build(...)` and reusing that stored delegate in pace lookup (no cohort behavior redesign);
+  - fixed enabled+manual League Class edge where player row could become unmatched by forcing self-row class-match pass in the race-context delegate (`player identity == candidate identity`) before resolver-based opponent matching;
+  - preserves resolver-based effective-class opponent matching semantics and native class-color fallback behavior outside enabled+valid League Class mode.
+
 - 2026-05-01 League Race Phase 2 compile blocker hotfix landed:
   - fixed undefined-symbol build break in `LeagueClass.Player.*` export attachments (removed references to undeclared `_liveLeagueClassIdentityCustomerId/_liveLeagueClassIdentityName`);
   - exports now resolve live player identity through existing `TryGetLivePlayerIdentityPreview(...)` + resolver helper seam;
