@@ -1,3 +1,7 @@
+- 2026-05-04 Strategy Live Detect P1/P2 review follow-up landed:
+  - current-session race definition acceptance now requires matching limit flags (`IsLimitedSessionLaps` for laps, `IsLimitedTime` for timed) in addition to positive values;
+  - `SafeReadLong` now range-checks decimal values before casting, so out-of-range decimals safely return fallback instead of throwing.
+
 - 2026-05-04 Strategy Live Detect P1 review follow-up landed:
   - fallback scan of `Sessions01..64` now still runs when `CurrentSessionInfo.IsRace==true` but current-session race length is missing/invalid, allowing fallback recovery of valid declared race definitions;
   - Live Detect lap-count reads now use tolerant parsing for current-session and SessionsXX (`_SessionLaps` then `SessionLaps`) so invalid/null/string values degrade safely to `0` in telemetry path.

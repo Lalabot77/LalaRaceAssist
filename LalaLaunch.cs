@@ -3065,13 +3065,13 @@ namespace LaunchPlugin
                     detectedSessionTimeRaw = SafeReadDouble(pluginManager, "DataCorePlugin.GameRawData.CurrentSessionInfo.SessionTime", 0.0);
                 }
 
-                if (detectedSessionLapsRaw > 0L)
+                if (detectedIsLimitedSessionLaps && detectedSessionLapsRaw > 0L)
                 {
                     detectedLapLimited = true;
                     detectedRaceLaps = detectedSessionLapsRaw;
                     selectedReason = "lap-limited";
                 }
-                else if (detectedSessionTimeRaw > 0.0)
+                else if (detectedIsLimitedTime && detectedSessionTimeRaw > 0.0)
                 {
                     detectedTimeLimited = true;
                     detectedRaceMinutes = detectedSessionTimeRaw / 60.0;
@@ -13850,6 +13850,10 @@ namespace LaunchPlugin
                 case float f when !float.IsNaN(f) && !float.IsInfinity(f):
                     return (long)f;
                 case decimal m:
+                    if (m > long.MaxValue || m < long.MinValue)
+                    {
+                        return fallback;
+                    }
                     return (long)m;
             }
 

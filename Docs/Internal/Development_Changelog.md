@@ -1,3 +1,7 @@
+- 2026-05-04 Strategy Live Detect review fix-up 2 landed:
+  - `CurrentSessionInfo` race-length detection now respects race limit flags (`IsLimitedSessionLaps`/`IsLimitedTime`) before accepting `_SessionLaps`/`_SessionTime`, with Sessions fallback still active when flagged current-session length is unusable;
+  - hardened `SafeReadLong` decimal conversion with explicit `long` range guard to prevent overflow throw paths in telemetry updates.
+
 - 2026-05-04 Strategy Live Detect review fix-up landed:
   - when `CurrentSessionInfo.IsRace==true` but current-session race length is unusable, Live Detect now continues to `Sessions01..64` fallback scanning so declared race definitions can still be recovered;
   - replaced telemetry-path lap-count casts in Live Detect detection with tolerant long parsing (`SafeReadLong`) for current-session and SessionsXX underscore/non-underscore lap properties to avoid invalid-cast throw paths.
