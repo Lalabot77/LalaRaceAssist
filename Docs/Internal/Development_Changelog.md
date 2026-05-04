@@ -7,6 +7,13 @@
   - Disabled class definitions now mark CSV-resolved league class invalid (`Source=Native` fallback path), so drivers safely fall back to native class behavior; manual player override path remains independent.
   - CSV reload merge behavior now preserves edits for matching class names, adds defaults for new names, and prunes removed names by mirroring current detected CSV class set.
 
+- 2026-05-04 League Race detected-classes UI binding/notification fix landed:
+  - `LaunchPluginSettings.LeagueClassDefinitions` now raises `PropertyChanged` when CSV reload replaces the list, so WPF `ItemsControl` refreshes rows immediately;
+  - `LeagueClassDefinition` now implements `INotifyPropertyChanged` for `Enabled`, `ShortName`, `Rank`, and `ColourHex` so row edits update UI bindings/live preview consistently;
+  - plugin now subscribes to League Class definition row changes to save settings immediately and refresh resolver-consumer preview paths without restart;
+  - scope remains UI/settings/resolver-binding only (no Opponents/H2H/CarSA/PitExit/ClassLeader cohort ownership changes).
+
+
 - 2026-05-03 Build triage follow-up (PR range #647-#652):
 - 2026-05-03 Strategy Live Detect functional follow-up (#633) landed:
   - added Live Detect helper text under Race Type showing detected declared race session + basis + value, or explicit unavailable wording when no valid declared race exists;

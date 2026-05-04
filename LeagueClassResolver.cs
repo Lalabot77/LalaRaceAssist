@@ -1,6 +1,8 @@
 using System;
 using System.Collections.Generic;
 using System.Globalization;
+using System.ComponentModel;
+using System.Runtime.CompilerServices;
 using System.IO;
 using System.Linq;
 
@@ -46,13 +48,77 @@ namespace LaunchPlugin
         public int Rank { get; set; }
     }
 
-    public sealed class LeagueClassDefinition
+    public sealed class LeagueClassDefinition : INotifyPropertyChanged
     {
-        public string CsvClassName { get; set; } = string.Empty;
-        public bool Enabled { get; set; } = true;
-        public string ShortName { get; set; } = string.Empty;
-        public int Rank { get; set; }
-        public string ColourHex { get; set; } = string.Empty;
+        private string _csvClassName = string.Empty;
+        private bool _enabled = true;
+        private string _shortName = string.Empty;
+        private int _rank;
+        private string _colourHex = string.Empty;
+
+        public string CsvClassName
+        {
+            get { return _csvClassName; }
+            set
+            {
+                string normalized = value ?? string.Empty;
+                if (string.Equals(_csvClassName, normalized, StringComparison.Ordinal)) return;
+                _csvClassName = normalized;
+                OnPropertyChanged();
+            }
+        }
+
+        public bool Enabled
+        {
+            get { return _enabled; }
+            set
+            {
+                if (_enabled == value) return;
+                _enabled = value;
+                OnPropertyChanged();
+            }
+        }
+
+        public string ShortName
+        {
+            get { return _shortName; }
+            set
+            {
+                string normalized = value ?? string.Empty;
+                if (string.Equals(_shortName, normalized, StringComparison.Ordinal)) return;
+                _shortName = normalized;
+                OnPropertyChanged();
+            }
+        }
+
+        public int Rank
+        {
+            get { return _rank; }
+            set
+            {
+                if (_rank == value) return;
+                _rank = value;
+                OnPropertyChanged();
+            }
+        }
+
+        public string ColourHex
+        {
+            get { return _colourHex; }
+            set
+            {
+                string normalized = value ?? string.Empty;
+                if (string.Equals(_colourHex, normalized, StringComparison.Ordinal)) return;
+                _colourHex = normalized;
+                OnPropertyChanged();
+            }
+        }
+
+        public event PropertyChangedEventHandler PropertyChanged;
+        private void OnPropertyChanged([CallerMemberName] string propertyName = null)
+        {
+            PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(propertyName));
+        }
     }
 
     public sealed class LeagueClassFallbackRule
