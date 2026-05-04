@@ -1,3 +1,14 @@
+- 2026-05-04 Setup fuel fallback export landed:
+  - Classification: **both** (new dash-facing fuel setup exports + internal contract/docs alignment).
+  - Added `Fuel.Setup.FuelLevel`, `Fuel.Setup.FuelLevelValid`, and `Fuel.Setup.FuelLevelSource` in `LalaLaunch.cs`.
+  - Added setup fuel resolver seam with strict source priority:
+    1) `CarSetup.BrakesDriveUnit.Fuel.FuelLevel`
+    2) `CarSetup.Chassis.Front.FuelLevel`
+    3) `CarSetup.Chassis.Rear.FuelLevel`
+    4) `CarSetup.Suspension.Rear.FuelLevel`
+  - Resolver accepts numeric values and string values with litre units (`77.0 L`, `77 L`, `77,0 L`) and rejects null/blank/NaN/infinity/non-positive values.
+  - Preserved invariants: no overwrite of `Telemetry.FuelLevel`; no changes to `Fuel.LiveFuelPerLap`, pit math, planner math, PreRace strategy logic, or max tank authority.
+
 - 2026-05-03 Build triage follow-up (PR range #647-#652):
   - fixed Fuel per Lap helper TextBlock XAML compile break by removing duplicate Style assignment in `FuelCalculatorView.xaml` while preserving existing source-text trigger behavior (`FuelPerLapSourceInfo` / Profile / Live);
   - confirmed `InvertBooleanConverter` and `LapTimeValidationRule` class/namespace wiring are valid in-project; reported lookup errors were downstream/designer fallout from the XAML parse failure;

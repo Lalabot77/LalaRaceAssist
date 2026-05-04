@@ -69,6 +69,12 @@ Branch: work
 - No Git remote is configured in this checkout (`git remote -v` returns empty).
 
 ## Documentation sync status
+- 2026-05-04 Setup fuel fallback export landed:
+  - added new read-only fuel setup exports `Fuel.Setup.FuelLevel`, `Fuel.Setup.FuelLevelValid`, `Fuel.Setup.FuelLevelSource`;
+  - setup resolver checks setup paths in strict priority (`BrakesDriveUnit` -> `Chassis.Front` -> `Chassis.Rear` -> `Suspension.Rear`) and accepts numeric or unit-suffixed string values (for example `77.0 L`, `77 L`, `77,0 L`);
+  - invalid/null/non-positive values now publish `Fuel.Setup.FuelLevel=0`, `Fuel.Setup.FuelLevelValid=false`, `Fuel.Setup.FuelLevelSource=none`;
+  - preserved invariants: no overwrite of live telemetry fuel and no changes to live fuel model, pit math, planner math, PreRace strategy outputs, or max-tank authority.
+
 - 2026-05-03 League Race Phase 3 PR #651 review follow-up fixes landed:
   - fixed `Opponents.NativeRaceModel.GetBlendedPaceForPosition(...)` compile blocker by persisting the in-scope race-context class-match delegate from `Build(...)` and reusing that stored delegate in pace lookup (no cohort behavior redesign);
   - fixed enabled+manual League Class edge where player row could become unmatched by forcing self-row class-match pass in the race-context delegate (`player identity == candidate identity`) before resolver-based opponent matching;
