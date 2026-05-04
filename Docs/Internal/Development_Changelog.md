@@ -1,3 +1,12 @@
+### 2026-05-04 — StrategyDash phase compile-fix follow-up (PR #660)
+- Classification: **internal-only** (build fix; no fuel/planner/pit semantics redesign).
+- Fixed `LalaLaunch.UpdateStrategyDashAdvice(...)` phase detection to consume real call-path session booleans (`isRaceRunning`, `isGridOrFormation`) instead of removed/non-existent fields.
+- Kept StrategyDash phase contract unchanged:
+  - `1 = PLANNING`
+  - `2 = GRID FORMATION` (grid + formation combined)
+  - `3 = RACE`
+- Scope bounded to StrategyDash phase input plumbing only; no changes to Fuel DATA/MODE/SOURCE behavior, `PitFuelControlEngine`, `Fuel.Delta.*`, `Fuel.RequiredBurnToEnd*`, `Fuel.Pit.*`, boxed refuel latch behavior, or `Pit.FuelControl.*` semantics.
+
 ### 2026-05-04 — League Race header checkbox-column alignment follow-up
 - Classification: **internal-only** (UI layout correction; no runtime/resolver/settings semantic changes).
 - Fixed League Class table header misalignment by reserving a fixed checkbox column width (`18`) for both header and row grids in `Detected classes` and `Fallback rules` sections.
