@@ -425,8 +425,7 @@ namespace LaunchPlugin
             bool hasKeyedState = _pit.TryGetStoredTrackMarkers(key, out entryPct, out exitPct, out updatedUtc, out current);
             if (!hasKeyedState)
             {
-                // Safe fallback: default to unlocked baseline for unknown/missing keyed rows.
-                current = false;
+                // Keep the store-provided default lock baseline for missing keyed rows.
             }
             _pit.SetTrackMarkersLock(key, !current);
         }
