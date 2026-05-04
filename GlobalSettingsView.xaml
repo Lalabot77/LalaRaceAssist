@@ -246,15 +246,15 @@
                         <TextBlock Foreground="LightGray" Text="{Binding LeagueClassStatus.DuplicateRowCount, StringFormat='Duplicate rows: {0}'}"/>
                         <TextBlock Margin="0,8,0,2" Text="Detected classes" FontWeight="SemiBold"/>
                         <TextBlock FontWeight="SemiBold" Text="Enabled   CSV Class Name   Short Name   Rank   Colour Hex   Colour Preview"/>
-                        <ItemsControl ItemsSource="{Binding LeagueClassStatus.DetectedClassRows}">
+                        <ItemsControl ItemsSource="{Binding Settings.LeagueClassDefinitions}">
                             <ItemsControl.ItemTemplate>
                                 <DataTemplate>
                                     <StackPanel Orientation="Horizontal" Margin="0,2,0,2">
-                                        <CheckBox IsChecked="{Binding Enabled}" IsEnabled="False" VerticalAlignment="Center"/>
-                                        <TextBox Width="130" Margin="6,0,0,0" Text="{Binding ClassName}" IsReadOnly="True"/>
-                                        <TextBox Width="100" Margin="6,0,0,0" Text="{Binding ShortName}" IsReadOnly="True"/>
-                                        <TextBox Width="50" Margin="6,0,0,0" Text="{Binding Rank}" IsReadOnly="True"/>
-                                        <TextBox Width="90" Margin="6,0,0,0" Text="{Binding ColourHex}" IsReadOnly="True"/>
+                                        <CheckBox IsChecked="{Binding Enabled, Mode=TwoWay}" VerticalAlignment="Center"/>
+                                        <TextBox Width="130" Margin="6,0,0,0" Text="{Binding CsvClassName}" IsReadOnly="True"/>
+                                        <TextBox Width="100" Margin="6,0,0,0" Text="{Binding ShortName, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"/>
+                                        <TextBox Width="50" Margin="6,0,0,0" Text="{Binding Rank, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"/>
+                                        <TextBox Width="90" Margin="6,0,0,0" Text="{Binding ColourHex, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"/>
                                         <Border Width="18" Height="18" Margin="6,2,0,0" BorderBrush="#777" BorderThickness="1" Background="{Binding ColourHex, Converter={StaticResource HexToBrushConverter}}"/>
                                     </StackPanel>
                                 </DataTemplate>

@@ -5117,9 +5117,13 @@ namespace LaunchPlugin
             }
 
             var rules = Settings.LeagueClassFallbackRules ?? new List<LeagueClassFallbackRule>();
+            var classDefs = Settings.LeagueClassDefinitions ?? new List<LeagueClassDefinition>();
             string ruleSnapshot = string.Join(";", rules.Select(r =>
                 (r.Enabled ? "1" : "0") + "," + (r.MatchSuffix ?? string.Empty) + "," + (r.ClassName ?? string.Empty) + "," +
                 (r.ShortName ?? string.Empty) + "," + r.Rank.ToString(CultureInfo.InvariantCulture) + "," + (r.ColourHex ?? string.Empty)));
+            string classDefSnapshot = string.Join(";", classDefs.Select(d =>
+                (d.Enabled ? "1" : "0") + "," + (d.CsvClassName ?? string.Empty) + "," + (d.ShortName ?? string.Empty) + "," +
+                d.Rank.ToString(CultureInfo.InvariantCulture) + "," + (d.ColourHex ?? string.Empty)));
 
             return (Settings.LeagueClassEnabled ? "1" : "0") + "|" +
                 Settings.LeagueClassMode.ToString(CultureInfo.InvariantCulture) + "|" +
@@ -5129,7 +5133,7 @@ namespace LaunchPlugin
                 (Settings.LeagueClassPlayerOverrideShortName ?? string.Empty) + "|" +
                 Settings.LeagueClassPlayerOverrideRank.ToString(CultureInfo.InvariantCulture) + "|" +
                 (Settings.LeagueClassPlayerOverrideColourHex ?? string.Empty) + "|" +
-                ruleSnapshot;
+                ruleSnapshot + "|" + classDefSnapshot;
         }
 
         private ObservableCollection<LaunchPluginFriendEntry> _friendsCollection;
@@ -7125,6 +7129,11 @@ namespace LaunchPlugin
                 string.IsNullOrWhiteSpace(settings.LeagueClassPlayerOverrideClassName))
             {
                 settings.LeagueClassPlayerOverrideMode = 0;
+            }
+
+            if (settings.LeagueClassDefinitions == null)
+            {
+                settings.LeagueClassDefinitions = new List<LeagueClassDefinition>();
             }
         }
 
@@ -18002,6 +18011,7 @@ namespace LaunchPlugin
             new LeagueClassFallbackRule(),
             new LeagueClassFallbackRule()
         };
+        public List<LeagueClassDefinition> LeagueClassDefinitions { get; set; } = new List<LeagueClassDefinition>();
         private int _darkModeMode = 1;
         public int DarkModeMode
         {

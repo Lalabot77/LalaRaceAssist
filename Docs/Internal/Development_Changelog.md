@@ -1,3 +1,12 @@
+- 2026-05-03 League Race CSV detected-classes editing layer landed:
+  - Classification: **both** (user-facing League Class UI editability + resolver/settings persistence behavior alignment).
+  - Added persisted class-definition layer `LeagueClassDefinitions` keyed by CSV class name with editable fields: `Enabled`, `ShortName`, `Rank`, `ColourHex` (CSV class name remains read-only in UI).
+  - CSV detected-classes table now binds to settings-owned definitions (two-way fields) with colour preview, instead of resolver status-only readout rows.
+  - Kept resolver ownership split: CSV mapping remains `CustomerId -> raw CSV ClassName`; resolver then applies class-definition metadata when producing effective class output.
+  - Rank semantics now preserved as driver-meaning order (`1` fastest/highest, `2` next, ...); no reverse ordering or alphabetical inference. Missing/invalid CSV ranks default to stable detected-order ranks starting at `1`.
+  - Disabled class definitions now mark CSV-resolved league class invalid (`Source=Native` fallback path), so drivers safely fall back to native class behavior; manual player override path remains independent.
+  - CSV reload merge behavior now preserves edits for matching class names, adds defaults for new names, and prunes removed names by mirroring current detected CSV class set.
+
 - 2026-05-03 Build triage follow-up (PR range #647-#652):
 - 2026-05-03 Strategy Live Detect functional follow-up (#633) landed:
   - added Live Detect helper text under Race Type showing detected declared race session + basis + value, or explicit unavailable wording when no valid declared race exists;
