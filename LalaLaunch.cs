@@ -1494,14 +1494,23 @@ namespace LaunchPlugin
             if (forecastRaceLaps > 0.0)
             {
                 double selectedBurn = preRaceFuelPerLap;
-                var source = _pitFuelControlEngine?.Source ?? PitFuelControlSource.Stby;
-                if (source == PitFuelControlSource.Push && PushFuelPerLap > 0.0)
+                double preRacePushBurn = (_maxFuelPerLapSession > 0.0 && _maxFuelPerLapSession >= preRaceFuelPerLap)
+                    ? _maxFuelPerLapSession
+                    : preRaceFuelPerLap * 1.02;
+                double preRaceSaveBurn = _isWetMode ? _minWetFuelPerLap : _minDryFuelPerLap;
+                if (preRaceSaveBurn <= 0.0 && preRaceFuelPerLap > 0.0)
                 {
-                    selectedBurn = PushFuelPerLap;
+                    preRaceSaveBurn = preRaceFuelPerLap * 0.97;
                 }
-                else if (source == PitFuelControlSource.Save && FuelSaveFuelPerLap > 0.0)
+
+                var source = _pitFuelControlEngine?.Source ?? PitFuelControlSource.Stby;
+                if (source == PitFuelControlSource.Push && preRacePushBurn > 0.0)
                 {
-                    selectedBurn = FuelSaveFuelPerLap;
+                    selectedBurn = preRacePushBurn;
+                }
+                else if (source == PitFuelControlSource.Save && preRaceSaveBurn > 0.0)
+                {
+                    selectedBurn = preRaceSaveBurn;
                 }
 
                 if (selectedBurn > 0.0)

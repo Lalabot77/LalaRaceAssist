@@ -84,6 +84,10 @@ Branch: work
 - No Git remote is configured in this checkout (`git remote -v` returns empty).
 
 ## Documentation sync status
+- 2026-05-04 StrategyDash one-stop burn-basis current-tick refresh fix landed:
+  - one-stop `StrategyDash.NextRefuelTargetLitres` PUSH/SAVE selection now uses current-tick locally resolved burns in `UpdatePreRaceOutputs(...)` (not shared prior-frame `PushFuelPerLap`/`FuelSaveFuelPerLap` fields at that stage);
+  - fallback remains NORM when source is STBY/OFF/invalid or selected burn is unavailable;
+  - preserved invariants: no behavior changes to `PitFuelControlEngine`, `Fuel.Delta.*`, `Fuel.RequiredBurnToEnd*`, `Fuel.Pit.*`, boxed refuel latches, or `Pit.FuelControl.*` exports/semantics.
 - 2026-05-04 StrategyDash V2 seam + PreRace contingency-basis correction synced (legacy PreRace/Fuel/Pit/Pit.FuelControl exports retained).
 - 2026-05-04 PreRace current-fuel setup-fallback follow-up landed:
   - `UpdatePreRaceOutputs(...)` now resolves effective current fuel as live fuel when valid/positive, else setup fallback (`Fuel.Setup.FuelLevel` when valid), else `0`;
