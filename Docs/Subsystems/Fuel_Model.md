@@ -73,6 +73,7 @@ Out of scope:
 - Wet mode follows tyre-compound telemetry for learning/persistence routing.
 - Track wetness is exported for UI use, but tyre mode remains the canonical routing choice for fuel learning.
 - Cross-condition fallback is allowed, but confidence is penalized when dry data is being used in wet mode or vice versa.
+- Track Learning dash condition exports (`TrackLearning.Condition.*`) consume this same active wet/dry routing and do not introduce a parallel condition authority seam.
 
 ### Persistence state
 - Dry and wet condition stats persist independently.
@@ -242,3 +243,6 @@ Driving → Race transitions can seed race state from the just-learned baseline 
 
 ## v1 documentation note
 Use **Strategy** terminology for GitHub-facing explanations. Treat older “Fuel tab” wording as legacy technical language only; the canonical UI story is now the Strategy tab plus the separate runtime Fuel Model.
+
+- `LalaLaunch.PreRace.TotalFuelNeeded` now uses active contingency litres (`base race fuel + active contingency`) and no longer applies the legacy hardcoded `+2 laps` PreRace buffer.
+- Added additive `StrategyDash.*` pre-green advice seam; it does not replace runtime `Fuel.*`, `Fuel.Pit.*`, `Fuel.Delta.*`, `Fuel.RequiredBurnToEnd*`, or `Pit.FuelControl.*` ownership.

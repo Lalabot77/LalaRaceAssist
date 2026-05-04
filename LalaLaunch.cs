@@ -406,6 +406,45 @@ namespace LaunchPlugin
             _pit?.SetTrackMarkersLock(key, locked);
         }
 
+        public void ToggleTrackLearningPitLossLock()
+        {
+            var track = ResolveCurrentTrackStats();
+            if (track == null) return;
+            track.PitLaneLossLocked = !track.PitLaneLossLocked;
+            ProfilesViewModel?.SaveProfiles();
+        }
+
+        public void ToggleTrackLearningMarkersLock()
+        {
+            var key = GetCanonicalTrackKeyForMarkers();
+            if (string.IsNullOrWhiteSpace(key) || _pit == null) return;
+            double entryPct;
+            double exitPct;
+            DateTime updatedUtc;
+            bool current;
+            bool hasKeyedState = _pit.TryGetStoredTrackMarkers(key, out entryPct, out exitPct, out updatedUtc, out current);
+            if (!hasKeyedState)
+            {
+                // Keep the store-provided default lock baseline for missing keyed rows.
+            }
+            _pit.SetTrackMarkersLock(key, !current);
+        }
+
+        public void ToggleTrackLearningConditionLock()
+        {
+            var track = ResolveCurrentTrackStats();
+            if (track == null) return;
+            if (_isWetMode)
+            {
+                track.WetConditionsLocked = !track.WetConditionsLocked;
+            }
+            else
+            {
+                track.DryConditionsLocked = !track.DryConditionsLocked;
+            }
+            ProfilesViewModel?.SaveProfiles();
+        }
+
         public TrackMarkersSnapshot GetTrackMarkersSnapshot(string trackKey)
         {
             if (string.IsNullOrWhiteSpace(trackKey) || _pit == null)
@@ -865,6 +904,18 @@ namespace LaunchPlugin
         public string PreRace_LapTimeSource { get; private set; } = "fallback";
         public string PreRace_StatusText { get; private set; } = "STRATEGY OKAY";
         public string PreRace_StatusColour { get; private set; } = "green";
+        public int StrategyDash_Phase { get; private set; }
+        public string StrategyDash_PhaseText { get; private set; } = "HIDDEN";
+        public bool StrategyDash_IsAutoStrategy { get; private set; }
+        public int StrategyDash_RequiredStopsPreGreen { get; private set; }
+        public string StrategyDash_StrategyText { get; private set; } = "NO STOP";
+        public double StrategyDash_StartFuelRequiredLitres { get; private set; }
+        public string StrategyDash_StartFuelAdviceText { get; private set; } = "N/A";
+        public int StrategyDash_StartFuelStatus { get; private set; }
+        public double StrategyDash_NextRefuelTargetLitres { get; private set; }
+        public string StrategyDash_NextRefuelAdviceText { get; private set; } = "N/A";
+        public int StrategyDash_NextRefuelStatus { get; private set; }
+        public string StrategyDash_ContingencyText { get; private set; } = "CONT 0";
         private bool _isRefuelSelected = true;
         private bool _isTireChangeSelected = true;
         public double LiveCarMaxFuel { get; private set; }
@@ -1251,6 +1302,64 @@ namespace LaunchPlugin
             return new PreRaceStatusDecision { Text = "NO STOP NOT POSSIBLE", Colour = "red" };
         }
 
+        private void UpdateStrategyDashAdvice(
+            int selectedStrategy,
+            RequiredPreRaceStrategy requiredStrategy,
+            double currentFuel,
+            double plannedSingleStopRefuel,
+            double effectiveMaxTank,
+            double maxTankCapacity,
+            double contingencyLitres,
+            string contingencyText,
+            double oneStopNextRefuelTargetLitres)
+        {
+            bool isRaceRunning = string.Equals(_sessionState, "Racing", StringComparison.OrdinalIgnoreCase);
+            bool isGridFormation = _isOnGrid || _isFormationLap || _isRaceStarting;
+            StrategyDash_Phase = isRaceRunning ? 3 : (isGridFormation ? 2 : 1);
+            StrategyDash_PhaseText = StrategyDash_Phase == 3 ? "RACE" : (StrategyDash_Phase == 2 ? "GRID FORMATION" : "PLANNING");
+
+            StrategyDash_IsAutoStrategy = selectedStrategy == 3;
+            StrategyDash_RequiredStopsPreGreen = requiredStrategy == RequiredPreRaceStrategy.NoStop ? 0 : (requiredStrategy == RequiredPreRaceStrategy.OneStop ? 1 : 2);
+            StrategyDash_StrategyText = requiredStrategy == RequiredPreRaceStrategy.NoStop ? "NO STOP" : (requiredStrategy == RequiredPreRaceStrategy.OneStop ? "ONE STOP" : "MULTI STOP");
+
+            double cap = effectiveMaxTank > 0.0 ? effectiveMaxTank : maxTankCapacity;
+            StrategyDash_StartFuelRequiredLitres = cap > 0.0 ? Math.Min(PreRace_TotalFuelNeeded, cap) : PreRace_TotalFuelNeeded;
+            StrategyDash_StartFuelAdviceText = PreRace_StatusText;
+            StrategyDash_StartFuelStatus = string.Equals(PreRace_StatusColour, "green", StringComparison.OrdinalIgnoreCase) ? 0
+                : (string.Equals(PreRace_StatusColour, "orange", StringComparison.OrdinalIgnoreCase) ? 1 : 2);
+
+            double nextRefuelTarget = 0.0;
+            if (requiredStrategy == RequiredPreRaceStrategy.OneStop)
+            {
+                nextRefuelTarget = Math.Max(0.0, oneStopNextRefuelTargetLitres);
+            }
+            else if (requiredStrategy == RequiredPreRaceStrategy.MultiStop)
+            {
+                nextRefuelTarget = Math.Max(0.0, cap);
+            }
+            StrategyDash_NextRefuelTargetLitres = nextRefuelTarget;
+            if (requiredStrategy == RequiredPreRaceStrategy.NoStop)
+            {
+                StrategyDash_NextRefuelAdviceText = "N/A";
+                StrategyDash_NextRefuelStatus = 0;
+            }
+            else if (requiredStrategy == RequiredPreRaceStrategy.MultiStop)
+            {
+                StrategyDash_NextRefuelAdviceText = "REFUEL MAX";
+                StrategyDash_NextRefuelStatus = cap > 0.0 && plannedSingleStopRefuel >= (cap - 0.5) ? 0 : 1;
+            }
+            else
+            {
+                StrategyDash_NextRefuelAdviceText = string.Format(CultureInfo.InvariantCulture, "SET {0:F1} L", StrategyDash_NextRefuelTargetLitres);
+                double refuelGap = Math.Abs(plannedSingleStopRefuel - StrategyDash_NextRefuelTargetLitres);
+                StrategyDash_NextRefuelStatus = refuelGap <= 0.5 ? 0 : (refuelGap <= 2.0 ? 1 : 2);
+            }
+
+            StrategyDash_ContingencyText = string.IsNullOrWhiteSpace(contingencyText)
+                ? string.Format(CultureInfo.InvariantCulture, "CONT {0:F1} L", Math.Max(0.0, contingencyLitres))
+                : contingencyText;
+        }
+
         private void UpdatePreRaceOutputs(
             GameData data,
             double liveCurrentFuel,
@@ -1375,12 +1484,14 @@ namespace LaunchPlugin
                 forecastRaceLaps = stableLapsRemaining;
             }
 
-            PreRace_TotalFuelNeeded =
+            var preRaceContingency = ResolveActiveContingency(preRaceFuelPerLap);
+            double contingencyLitres = Math.Max(0.0, preRaceContingency.Litres);
+            double baseRaceFuelLitres =
                 (forecastRaceLaps > 0.0 && preRaceFuelPerLap > 0.0)
                     ? forecastRaceLaps * preRaceFuelPerLap
                     : 0.0;
-
-            PreRace_TotalFuelNeeded += 2.0 * preRaceFuelPerLap;
+            PreRace_TotalFuelNeeded =
+                baseRaceFuelLitres + contingencyLitres;
 
             PreRace_Stints = usableTank > 0.0
                 ? Math.Round(Math.Max(0.0, PreRace_TotalFuelNeeded / usableTank), 1)
@@ -1403,7 +1514,6 @@ namespace LaunchPlugin
 
             PreRace_FuelSource = preRaceFuelSource;
             PreRace_LapTimeSource = preRaceLapSource;
-            double contingencyLitres = ResolveLivePitFuelControlContingencyLitres(preRaceFuelPerLap);
             var status = EvaluatePreRaceStatus(
                 selectedStrategy,
                 plannerMismatch: plannerMatchResult.HasComparableInputs && !plannerMatchResult.IsMatch,
@@ -1417,6 +1527,48 @@ namespace LaunchPlugin
                 contingencyLitres: contingencyLitres);
             PreRace_StatusText = status.Text;
             PreRace_StatusColour = status.Colour;
+
+            double oneStopNormTarget = Math.Max(0.0, PreRace_TotalFuelNeeded - currentFuel);
+            double oneStopTarget = oneStopNormTarget;
+            if (forecastRaceLaps > 0.0)
+            {
+                double selectedBurn = preRaceFuelPerLap;
+                double preRacePushBurn = (_maxFuelPerLapSession > 0.0 && _maxFuelPerLapSession >= preRaceFuelPerLap)
+                    ? _maxFuelPerLapSession
+                    : preRaceFuelPerLap * 1.02;
+                double preRaceSaveBurn = _isWetMode ? _minWetFuelPerLap : _minDryFuelPerLap;
+                if (preRaceSaveBurn <= 0.0 && preRaceFuelPerLap > 0.0)
+                {
+                    preRaceSaveBurn = preRaceFuelPerLap * 0.97;
+                }
+
+                var source = _pitFuelControlEngine?.Source ?? PitFuelControlSource.Stby;
+                if (source == PitFuelControlSource.Push && preRacePushBurn > 0.0)
+                {
+                    selectedBurn = preRacePushBurn;
+                }
+                else if (source == PitFuelControlSource.Save && preRaceSaveBurn > 0.0)
+                {
+                    selectedBurn = preRaceSaveBurn;
+                }
+
+                if (selectedBurn > 0.0)
+                {
+                    double selectedContingency = Math.Max(0.0, ResolveActiveContingency(selectedBurn).Litres);
+                    double selectedTotalNeeded = (forecastRaceLaps * selectedBurn) + selectedContingency;
+                    oneStopTarget = Math.Max(0.0, selectedTotalNeeded - currentFuel);
+                }
+            }
+
+            string contingencyText;
+            if (preRaceContingency.IsConfiguredInLaps && preRaceContingency.Laps > 0.0)
+                contingencyText = string.Format(CultureInfo.InvariantCulture, "CONT {0:F1} LAPS", preRaceContingency.Laps);
+            else if (contingencyLitres > 0.0)
+                contingencyText = string.Format(CultureInfo.InvariantCulture, "CONT {0:F1} L", contingencyLitres);
+            else
+                contingencyText = "CONT 0";
+
+            UpdateStrategyDashAdvice(selectedStrategy, requiredStrategy, currentFuel, plannedSingleStopRefuel, effectiveMaxTank, maxTankCapacity, contingencyLitres, contingencyText, oneStopTarget);
         }
 
         // Stable model inputs
@@ -1631,6 +1783,15 @@ namespace LaunchPlugin
             {
                 return null;
             }
+        }
+
+        private static string ToTrackLearningPitLossSourceText(string source)
+        {
+            string s = (source ?? string.Empty).Trim().ToLowerInvariant();
+            if (s == "dtl" || s == "total") return "DTL";
+            if (s == "direct") return "DIRECT";
+            if (s == "manual") return "MANUAL";
+            return "-";
         }
 
         private static bool IsFiniteNonNegative(double value)
@@ -5838,6 +5999,9 @@ namespace LaunchPlugin
             this.AddAction("LaunchMode", (a, b) => LaunchMode());
             this.AddAction("TrackMarkersLock", (a, b) => SetTrackMarkersLocked(true));
             this.AddAction("TrackMarkersUnlock", (a, b) => SetTrackMarkersLocked(false));
+            this.AddAction("TrackLearning.PitLoss.ToggleLock", (a, b) => ToggleTrackLearningPitLossLock());
+            this.AddAction("TrackLearning.Markers.ToggleLock", (a, b) => ToggleTrackLearningMarkersLock());
+            this.AddAction("TrackLearning.Condition.ToggleLock", (a, b) => ToggleTrackLearningConditionLock());
             this.AddAction("Debug_Hide_1_Toggle", (a, b) =>
             {
                 if (Settings == null)
@@ -5870,6 +6034,17 @@ namespace LaunchPlugin
                 Settings.DebugHide3 = !Settings.DebugHide3;
                 SaveSettings();
                 SimHub.Logging.Current.Info($"[LalaPlugin:Debug] Debug_Hide_3_Toggle -> Hide={Settings.DebugHide3}");
+            });
+            this.AddAction("OfflineDataModule_Toggle", (a, b) =>
+            {
+                if (Settings == null)
+                {
+                    return;
+                }
+
+                Settings.OfflineDataModule = !Settings.OfflineDataModule;
+                SaveSettings();
+                SimHub.Logging.Current.Info($"[LalaPlugin:Debug] OfflineDataModule_Toggle -> Enabled={Settings.OfflineDataModule}");
             });
             this.AddAction("ShiftAssist_ResetDelayStats", (a, b) => ExecuteShiftAssistResetDelayStatsAction());
             this.AddAction("ShiftAssist_ToggleShiftAssist", (a, b) =>
@@ -6004,6 +6179,64 @@ namespace LaunchPlugin
             AttachCore("Fuel.Live.RefuelRate_Lps", () => FuelCalculator?.EffectiveRefuelRateLps ?? 0.0);
             AttachCore("Fuel.Live.TireChangeTime_S", () => GetEffectiveTireChangeTimeSeconds());
             AttachCore("Fuel.Live.PitLaneLoss_S", () => FuelCalculator?.PitLaneTimeLoss ?? 0.0);
+            AttachCore("TrackLearning.PitLoss.ValueSec", () =>
+            {
+                var ts = ResolveCurrentTrackStats();
+                return ts?.PitLaneLossSeconds ?? 0.0;
+            });
+            AttachCore("TrackLearning.PitLoss.Display", () =>
+            {
+                var ts = ResolveCurrentTrackStats();
+                var value = ts?.PitLaneLossSeconds;
+                return (value.HasValue && value.Value > 0.0) ? value.Value.ToString("0.0", CultureInfo.InvariantCulture) + "s" : "-";
+            });
+            AttachCore("TrackLearning.PitLoss.SourceText", () =>
+            {
+                var ts = ResolveCurrentTrackStats();
+                return ToTrackLearningPitLossSourceText(ts?.PitLaneLossSource);
+            });
+            AttachCore("TrackLearning.PitLoss.Locked", () => ResolveCurrentTrackStats()?.PitLaneLossLocked ?? false);
+            AttachCore("TrackLearning.Markers.EntryPct", () => _pit?.TrackMarkersStoredEntryPct ?? double.NaN);
+            AttachCore("TrackLearning.Markers.ExitPct", () => _pit?.TrackMarkersStoredExitPct ?? double.NaN);
+            AttachCore("TrackLearning.Markers.Locked", () => _pit?.TrackMarkersStoredLocked ?? false);
+            AttachCore("TrackLearning.Condition.IsWet", () => _isWetMode);
+            AttachCore("TrackLearning.Condition.ModeText", () => _isWetMode ? "WET" : "DRY");
+            AttachCore("TrackLearning.Condition.AvgLapDisplay", () =>
+            {
+                var ts = ResolveCurrentTrackStats();
+                int? lapMs = _isWetMode ? ts?.AvgLapTimeWet : ts?.AvgLapTimeDry;
+                return ts != null ? ts.MillisecondsToLapTimeString(lapMs) : "-";
+            });
+            AttachCore("TrackLearning.Condition.AvgLapSamples", () =>
+            {
+                var ts = ResolveCurrentTrackStats();
+                return _isWetMode ? (ts?.WetLapTimeSampleCount ?? 0) : (ts?.DryLapTimeSampleCount ?? 0);
+            });
+            AttachCore("TrackLearning.Condition.FuelSave", () =>
+            {
+                var ts = ResolveCurrentTrackStats();
+                return _isWetMode ? (ts?.MinFuelPerLapWet ?? 0.0) : (ts?.MinFuelPerLapDry ?? 0.0);
+            });
+            AttachCore("TrackLearning.Condition.FuelAvg", () =>
+            {
+                var ts = ResolveCurrentTrackStats();
+                return _isWetMode ? (ts?.AvgFuelPerLapWet ?? 0.0) : (ts?.AvgFuelPerLapDry ?? 0.0);
+            });
+            AttachCore("TrackLearning.Condition.FuelMax", () =>
+            {
+                var ts = ResolveCurrentTrackStats();
+                return _isWetMode ? (ts?.MaxFuelPerLapWet ?? 0.0) : (ts?.MaxFuelPerLapDry ?? 0.0);
+            });
+            AttachCore("TrackLearning.Condition.FuelSamples", () =>
+            {
+                var ts = ResolveCurrentTrackStats();
+                return _isWetMode ? (ts?.WetFuelSampleCount ?? 0) : (ts?.DryFuelSampleCount ?? 0);
+            });
+            AttachCore("TrackLearning.Condition.Locked", () =>
+            {
+                var ts = ResolveCurrentTrackStats();
+                return _isWetMode ? (ts?.WetConditionsLocked ?? false) : (ts?.DryConditionsLocked ?? false);
+            });
             AttachCore("Fuel.Live.TotalStopLoss", () => CalculateTotalStopLossSeconds());
             AttachCore("Fuel.Live.DriveTimeAfterZero", () => LiveProjectedDriveTimeAfterZero);
             AttachCore("Fuel.After0.PlannerSeconds", () => AfterZeroPlannerSeconds);
@@ -6018,6 +6251,18 @@ namespace LaunchPlugin
             AttachCore("LalaLaunch.PreRace.LapTimeSource", () => PreRace_LapTimeSource);
             AttachCore("LalaLaunch.PreRace.StatusText", () => PreRace_StatusText);
             AttachCore("LalaLaunch.PreRace.StatusColour", () => PreRace_StatusColour);
+            AttachCore("StrategyDash.Phase", () => StrategyDash_Phase);
+            AttachCore("StrategyDash.PhaseText", () => StrategyDash_PhaseText);
+            AttachCore("StrategyDash.IsAutoStrategy", () => StrategyDash_IsAutoStrategy);
+            AttachCore("StrategyDash.RequiredStopsPreGreen", () => StrategyDash_RequiredStopsPreGreen);
+            AttachCore("StrategyDash.StrategyText", () => StrategyDash_StrategyText);
+            AttachCore("StrategyDash.StartFuelRequiredLitres", () => Math.Round(StrategyDash_StartFuelRequiredLitres, 1));
+            AttachCore("StrategyDash.StartFuelAdviceText", () => StrategyDash_StartFuelAdviceText);
+            AttachCore("StrategyDash.StartFuelStatus", () => StrategyDash_StartFuelStatus);
+            AttachCore("StrategyDash.NextRefuelTargetLitres", () => Math.Round(StrategyDash_NextRefuelTargetLitres, 1));
+            AttachCore("StrategyDash.NextRefuelAdviceText", () => StrategyDash_NextRefuelAdviceText);
+            AttachCore("StrategyDash.NextRefuelStatus", () => StrategyDash_NextRefuelStatus);
+            AttachCore("StrategyDash.ContingencyText", () => StrategyDash_ContingencyText);
             AttachCore("Fuel.ProjectionLapTime_Stable", () => ProjectionLapTime_Stable);
             AttachCore("Fuel.ProjectionLapTime_StableSource", () => ProjectionLapTime_StableSource);
             AttachCore("Fuel.Live.ProjectedDriveSecondsRemaining", () => LiveProjectedDriveSecondsRemaining);
@@ -6139,6 +6384,7 @@ namespace LaunchPlugin
             AttachCore("Debug.Hide_1", () => Settings?.DebugHide1 == true ? 1 : 0);
             AttachCore("Debug.Hide_2", () => Settings?.DebugHide2 == true ? 1 : 0);
             AttachCore("Debug.Hide_3", () => Settings?.DebugHide3 == true ? 1 : 0);
+            AttachCore("OfflineDataModule", () => Settings?.OfflineDataModule == true ? 1 : 0);
             AttachCore("PitScreenActive", () => _pitScreenActive);
             AttachCore("PitScreenMode", () => _pitScreenMode);
             AttachCore("Pit.Command.DisplayText", () => _pitCommandEngine.DisplayText);
@@ -16044,6 +16290,18 @@ namespace LaunchPlugin
             PreRace_LapTimeSource = "fallback";
             PreRace_StatusText = "STRATEGY OKAY";
             PreRace_StatusColour = "green";
+            StrategyDash_Phase = 0;
+            StrategyDash_PhaseText = "HIDDEN";
+            StrategyDash_IsAutoStrategy = false;
+            StrategyDash_RequiredStopsPreGreen = 0;
+            StrategyDash_StrategyText = "NO STOP";
+            StrategyDash_StartFuelRequiredLitres = 0;
+            StrategyDash_StartFuelAdviceText = "N/A";
+            StrategyDash_StartFuelStatus = 0;
+            StrategyDash_NextRefuelTargetLitres = 0;
+            StrategyDash_NextRefuelAdviceText = "N/A";
+            StrategyDash_NextRefuelStatus = 0;
+            StrategyDash_ContingencyText = "CONT 0";
 
             // --- Additional dashboard-facing fuel/projection outputs that must not latch across resets ---
             // (These were listed in SessionResetIssues.docx)
@@ -16645,6 +16903,11 @@ namespace LaunchPlugin
                 _finishTimingSessionType = sessionType;
                 _afterZeroResultLogged = false;
                 ResetFinishTimingState();
+
+                if (FuelCalculator != null && FuelCalculator.IsLiveDetectRace)
+                {
+                    UpdateLiveFuelCalcs(data, pluginManager);
+                }
             }
 
             if (!isRace)
@@ -18323,6 +18586,7 @@ namespace LaunchPlugin
         public bool DebugHide1 { get; set; } = false;
         public bool DebugHide2 { get; set; } = false;
         public bool DebugHide3 { get; set; } = false;
+        public bool OfflineDataModule { get; set; } = false;
         public bool EnableDebugLogging { get; set; } = false;
         public bool EnableCarSADebugExport { get; set; } = false;
         public bool EnableOffTrackDebugCsv { get; set; } = false;
