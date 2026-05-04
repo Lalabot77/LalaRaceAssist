@@ -3046,6 +3046,7 @@ namespace LaunchPlugin
             string selectedReason = "no declared race found";
 
             bool currentIsRace = SafeReadBool(pluginManager, "DataCorePlugin.GameRawData.CurrentSessionInfo.IsRace", false);
+            bool shouldScanSessionFallback = !currentIsRace;
             if (currentIsRace)
             {
                 detectedSource = "CurrentSessionInfo";
@@ -3053,10 +3054,10 @@ namespace LaunchPlugin
                 detectedSessionName = "current race";
                 detectedIsLimitedSessionLaps = SafeReadBool(pluginManager, "DataCorePlugin.GameRawData.CurrentSessionInfo.IsLimitedSessionLaps", false);
                 detectedIsLimitedTime = SafeReadBool(pluginManager, "DataCorePlugin.GameRawData.CurrentSessionInfo.IsLimitedTime", false);
-                detectedSessionLapsRaw = Convert.ToInt64(pluginManager.GetPropertyValue("DataCorePlugin.GameRawData.CurrentSessionInfo._SessionLaps") ?? 0L);
+                detectedSessionLapsRaw = SafeReadLong(pluginManager, "DataCorePlugin.GameRawData.CurrentSessionInfo._SessionLaps", 0L);
                 if (detectedSessionLapsRaw <= 0L)
                 {
-                    detectedSessionLapsRaw = Convert.ToInt64(pluginManager.GetPropertyValue("DataCorePlugin.GameRawData.CurrentSessionInfo.SessionLaps") ?? 0L);
+                    detectedSessionLapsRaw = SafeReadLong(pluginManager, "DataCorePlugin.GameRawData.CurrentSessionInfo.SessionLaps", 0L);
                 }
                 detectedSessionTimeRaw = SafeReadDouble(pluginManager, "DataCorePlugin.GameRawData.CurrentSessionInfo._SessionTime", 0.0);
                 if (detectedSessionTimeRaw <= 0.0)
@@ -3079,9 +3080,10 @@ namespace LaunchPlugin
                 else
                 {
                     selectedReason = "race found, no valid length";
+                    shouldScanSessionFallback = true;
                 }
             }
-            else
+            if (shouldScanSessionFallback)
             {
                 bool foundRaceSession = false;
                 for (int i = 1; i <= 64; i++)
@@ -3102,10 +3104,10 @@ namespace LaunchPlugin
 
                     bool isLimitedLaps = SafeReadBool(pluginManager, $"DataCorePlugin.GameRawData.SessionData.SessionInfo.Sessions{idx}.IsLimitedSessionLaps", false);
                     bool isLimitedTime = SafeReadBool(pluginManager, $"DataCorePlugin.GameRawData.SessionData.SessionInfo.Sessions{idx}.IsLimitedTime", false);
-                    long sessionLapsValue = Convert.ToInt64(pluginManager.GetPropertyValue($"DataCorePlugin.GameRawData.SessionData.SessionInfo.Sessions{idx}._SessionLaps") ?? 0L);
+                    long sessionLapsValue = SafeReadLong(pluginManager, $"DataCorePlugin.GameRawData.SessionData.SessionInfo.Sessions{idx}._SessionLaps", 0L);
                     if (sessionLapsValue <= 0L)
                     {
-                        sessionLapsValue = Convert.ToInt64(pluginManager.GetPropertyValue($"DataCorePlugin.GameRawData.SessionData.SessionInfo.Sessions{idx}.SessionLaps") ?? 0L);
+                        sessionLapsValue = SafeReadLong(pluginManager, $"DataCorePlugin.GameRawData.SessionData.SessionInfo.Sessions{idx}.SessionLaps", 0L);
                     }
                     double sessionTimeSeconds = SafeReadDouble(pluginManager, $"DataCorePlugin.GameRawData.SessionData.SessionInfo.Sessions{idx}._SessionTime", 0.0);
                     if (sessionTimeSeconds <= 0.0)
@@ -13809,6 +13811,54 @@ namespace LaunchPlugin
             {
                 return fallback;
             }
+        }
+
+        private static long SafeReadLong(PluginManager pluginManager, string propertyName, long fallback)
+        {
+            if (pluginManager == null || string.IsNullOrWhiteSpace(propertyName))
+            {
+                return fallback;
+            }
+
+            object raw;
+            try
+            {
+                raw = pluginManager.GetPropertyValue(propertyName);
+            }
+            catch
+            {
+                return fallback;
+            }
+
+            if (raw == null)
+            {
+                return fallback;
+            }
+
+            switch (raw)
+            {
+                case long l:
+                    return l;
+                case int i:
+                    return i;
+                case short s:
+                    return s;
+                case byte b:
+                    return b;
+                case double d when !double.IsNaN(d) && !double.IsInfinity(d):
+                    return (long)d;
+                case float f when !float.IsNaN(f) && !float.IsInfinity(f):
+                    return (long)f;
+                case decimal m:
+                    return (long)m;
+            }
+
+            if (long.TryParse(Convert.ToString(raw), NumberStyles.Any, CultureInfo.InvariantCulture, out long parsed))
+            {
+                return parsed;
+            }
+
+            return fallback;
         }
 
         private static bool SafeReadBool(PluginManager pluginManager, string propertyName, bool fallback)

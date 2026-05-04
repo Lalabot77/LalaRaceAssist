@@ -1,3 +1,7 @@
+- 2026-05-04 Strategy Live Detect review fix-up landed:
+  - when `CurrentSessionInfo.IsRace==true` but current-session race length is unusable, Live Detect now continues to `Sessions01..64` fallback scanning so declared race definitions can still be recovered;
+  - replaced telemetry-path lap-count casts in Live Detect detection with tolerant long parsing (`SafeReadLong`) for current-session and SessionsXX underscore/non-underscore lap properties to avoid invalid-cast throw paths.
+
 - 2026-05-04 Strategy Live Detect race-definition source/underscore fix landed:
   - Live Detect now prioritizes `CurrentSessionInfo` only when `CurrentSessionInfo.IsRace==true`, resolving race length from underscore fields first (`_SessionLaps`, `_SessionTime`) with non-underscore compatibility fallback only when underscore values are unusable;
   - `Sessions01..64` fallback now runs only when current session is not race/unavailable/has no usable length, and helper wording now distinguishes `race found, no valid length` from `no declared race found`;
