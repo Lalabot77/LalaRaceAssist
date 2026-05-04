@@ -1311,10 +1311,10 @@ namespace LaunchPlugin
             double maxTankCapacity,
             double contingencyLitres,
             string contingencyText,
-            double oneStopNextRefuelTargetLitres)
+            double oneStopNextRefuelTargetLitres,
+            bool isRaceRunning,
+            bool isGridFormation)
         {
-            bool isRaceRunning = string.Equals(_sessionState, "Racing", StringComparison.OrdinalIgnoreCase);
-            bool isGridFormation = _isOnGrid || _isFormationLap || _isRaceStarting;
             StrategyDash_Phase = isRaceRunning ? 3 : (isGridFormation ? 2 : 1);
             StrategyDash_PhaseText = StrategyDash_Phase == 3 ? "RACE" : (StrategyDash_Phase == 2 ? "GRID FORMATION" : "PLANNING");
 
@@ -1370,7 +1370,9 @@ namespace LaunchPlugin
             double fallbackFuelPerLap,
             double effectiveMaxTank,
             double maxTankCapacity,
-            bool allowSetupFallback)
+            bool allowSetupFallback,
+            bool isRaceRunning,
+            bool isGridOrFormation)
         {
             int selectedStrategy = NormalizeStrategyMode(FuelCalculator?.SelectedPreRaceMode ?? 3);
             PreRace_Selected = selectedStrategy;
@@ -1568,7 +1570,7 @@ namespace LaunchPlugin
             else
                 contingencyText = "CONT 0";
 
-            UpdateStrategyDashAdvice(selectedStrategy, requiredStrategy, currentFuel, plannedSingleStopRefuel, effectiveMaxTank, maxTankCapacity, contingencyLitres, contingencyText, oneStopTarget);
+            UpdateStrategyDashAdvice(selectedStrategy, requiredStrategy, currentFuel, plannedSingleStopRefuel, effectiveMaxTank, maxTankCapacity, contingencyLitres, contingencyText, oneStopTarget, isRaceRunning, isGridOrFormation);
         }
 
         // Stable model inputs
@@ -4194,7 +4196,9 @@ namespace LaunchPlugin
                     fallbackFuelPerLap,
                     effectiveMaxTank,
                     maxTankCapacity,
-                    allowSetupFallback: isGridOrFormation);
+                    allowSetupFallback: isGridOrFormation,
+                    isRaceRunning: isRaceRunning,
+                    isGridOrFormation: isGridOrFormation);
 
                 Fuel_Delta_LitresCurrent = 0;
                 Fuel_Delta_LitresPlan = 0;
@@ -4385,7 +4389,9 @@ namespace LaunchPlugin
                     fallbackFuelPerLap,
                     effectiveMaxTank,
                     maxTankCapacity,
-                    allowSetupFallback: isGridOrFormation);
+                    allowSetupFallback: isGridOrFormation,
+                    isRaceRunning: isRaceRunning,
+                    isGridOrFormation: isGridOrFormation);
 
                 PitStopsRequiredByFuel = Math.Max(0, stopsRequiredByFuel);
                 PitStopsRequiredByPlan = plannedStops;
