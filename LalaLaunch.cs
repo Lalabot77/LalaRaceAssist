@@ -3150,51 +3150,117 @@ namespace LaunchPlugin
             double? detectedRaceMinutes = null;
             int detectedSessionIndex = 0;
             string detectedSessionName = string.Empty;
-            string unavailableReason = "no declared race found";
-            for (int i = 1; i <= 64; i++)
+            string detectedSource = "none";
+            bool detectedIsRace = false;
+            bool detectedIsLimitedSessionLaps = false;
+            bool detectedIsLimitedTime = false;
+            long detectedSessionLapsRaw = 0L;
+            double detectedSessionTimeRaw = 0.0;
+            string selectedReason = "no declared race found";
+
+            bool currentIsRace = SafeReadBool(pluginManager, "DataCorePlugin.GameRawData.CurrentSessionInfo.IsRace", false);
+            bool shouldScanSessionFallback = !currentIsRace;
+            if (currentIsRace)
             {
-                string idx = i.ToString("00", CultureInfo.InvariantCulture);
-                bool isRace = SafeReadBool(pluginManager, $"DataCorePlugin.GameRawData.SessionData.SessionInfo.Sessions{idx}.IsRace", false);
-                if (!isRace) continue;
-                if (detectedSessionIndex == 0)
+                detectedSource = "CurrentSessionInfo";
+                detectedIsRace = true;
+                detectedSessionName = "current race";
+                detectedIsLimitedSessionLaps = SafeReadBool(pluginManager, "DataCorePlugin.GameRawData.CurrentSessionInfo.IsLimitedSessionLaps", false);
+                detectedIsLimitedTime = SafeReadBool(pluginManager, "DataCorePlugin.GameRawData.CurrentSessionInfo.IsLimitedTime", false);
+                detectedSessionLapsRaw = SafeReadLong(pluginManager, "DataCorePlugin.GameRawData.CurrentSessionInfo._SessionLaps", 0L);
+                if (detectedSessionLapsRaw <= 0L)
                 {
-                    detectedSessionIndex = i;
-                    detectedSessionName = (pluginManager.GetPropertyValue($"DataCorePlugin.GameRawData.SessionData.SessionInfo.Sessions{idx}.SessionName") ?? string.Empty).ToString();
-                    unavailableReason = "declared race has no valid lap/time definition";
+                    detectedSessionLapsRaw = SafeReadLong(pluginManager, "DataCorePlugin.GameRawData.CurrentSessionInfo.SessionLaps", 0L);
+                }
+                detectedSessionTimeRaw = SafeReadDouble(pluginManager, "DataCorePlugin.GameRawData.CurrentSessionInfo._SessionTime", 0.0);
+                if (detectedSessionTimeRaw <= 0.0)
+                {
+                    detectedSessionTimeRaw = SafeReadDouble(pluginManager, "DataCorePlugin.GameRawData.CurrentSessionInfo.SessionTime", 0.0);
                 }
 
-                bool isLimitedLaps = SafeReadBool(pluginManager, $"DataCorePlugin.GameRawData.SessionData.SessionInfo.Sessions{idx}.IsLimitedSessionLaps", false);
-                object sessionLapsRaw = pluginManager.GetPropertyValue($"DataCorePlugin.GameRawData.SessionData.SessionInfo.Sessions{idx}.SessionLaps");
-                long sessionLapsValue = 0L;
-                if (sessionLapsRaw != null)
+                if (detectedIsLimitedSessionLaps && detectedSessionLapsRaw > 0L)
                 {
-                    long.TryParse(sessionLapsRaw.ToString(), NumberStyles.Any, CultureInfo.InvariantCulture, out sessionLapsValue);
-                }
-                bool isLimitedTime = SafeReadBool(pluginManager, $"DataCorePlugin.GameRawData.SessionData.SessionInfo.Sessions{idx}.IsLimitedTime", false);
-                double sessionTimeSeconds = SafeReadDouble(pluginManager, $"DataCorePlugin.GameRawData.SessionData.SessionInfo.Sessions{idx}.SessionTime", 0.0);
-
-                if (isLimitedLaps && sessionLapsValue > 0)
-                {
-                    // Prefer any valid lap-limited race definition over timed definitions.
                     detectedLapLimited = true;
-                    detectedRaceLaps = sessionLapsValue;
-                    detectedSessionIndex = i;
-                    detectedSessionName = (pluginManager.GetPropertyValue($"DataCorePlugin.GameRawData.SessionData.SessionInfo.Sessions{idx}.SessionName") ?? string.Empty).ToString();
-                    detectedTimeLimited = null;
-                    detectedRaceMinutes = null;
-                    unavailableReason = string.Empty;
-                    break;
+                    detectedRaceLaps = detectedSessionLapsRaw;
+                    selectedReason = "lap-limited";
                 }
-                else if (isLimitedTime && sessionTimeSeconds > 0.0)
+                else if (detectedIsLimitedTime && detectedSessionTimeRaw > 0.0)
                 {
-                    // Keep timed candidate only as fallback if no valid lap-limited race is found.
-                    if (!detectedTimeLimited.HasValue || detectedRaceMinutes.GetValueOrDefault() <= 0.0)
+                    detectedTimeLimited = true;
+                    detectedRaceMinutes = detectedSessionTimeRaw / 60.0;
+                    selectedReason = "time-limited";
+                }
+                else
+                {
+                    selectedReason = "race found, no valid length";
+                    shouldScanSessionFallback = true;
+                }
+            }
+            if (shouldScanSessionFallback)
+            {
+                bool foundRaceSession = false;
+                for (int i = 1; i <= 64; i++)
+                {
+                    string idx = i.ToString("00", CultureInfo.InvariantCulture);
+                    bool isRace = SafeReadBool(pluginManager, $"DataCorePlugin.GameRawData.SessionData.SessionInfo.Sessions{idx}.IsRace", false);
+                    if (!isRace) continue;
+
+                    if (!foundRaceSession)
                     {
-                        detectedTimeLimited = true;
-                        detectedRaceMinutes = sessionTimeSeconds / 60.0;
+                        foundRaceSession = true;
                         detectedSessionIndex = i;
-                        detectedSessionName = (pluginManager.GetPropertyValue($"DataCorePlugin.GameRawData.SessionData.SessionInfo.Sessions{idx}.SessionName") ?? string.Empty).ToString();
-                        unavailableReason = string.Empty;
+                        detectedSessionName = $"Session{idx}";
+                        detectedSource = "SessionsXX";
+                        detectedIsRace = true;
+                        selectedReason = "race found, no valid length";
+                    }
+
+                    bool isLimitedLaps = SafeReadBool(pluginManager, $"DataCorePlugin.GameRawData.SessionData.SessionInfo.Sessions{idx}.IsLimitedSessionLaps", false);
+                    bool isLimitedTime = SafeReadBool(pluginManager, $"DataCorePlugin.GameRawData.SessionData.SessionInfo.Sessions{idx}.IsLimitedTime", false);
+                    long sessionLapsValue = SafeReadLong(pluginManager, $"DataCorePlugin.GameRawData.SessionData.SessionInfo.Sessions{idx}._SessionLaps", 0L);
+                    if (sessionLapsValue <= 0L)
+                    {
+                        sessionLapsValue = SafeReadLong(pluginManager, $"DataCorePlugin.GameRawData.SessionData.SessionInfo.Sessions{idx}.SessionLaps", 0L);
+                    }
+                    double sessionTimeSeconds = SafeReadDouble(pluginManager, $"DataCorePlugin.GameRawData.SessionData.SessionInfo.Sessions{idx}._SessionTime", 0.0);
+                    if (sessionTimeSeconds <= 0.0)
+                    {
+                        sessionTimeSeconds = SafeReadDouble(pluginManager, $"DataCorePlugin.GameRawData.SessionData.SessionInfo.Sessions{idx}.SessionTime", 0.0);
+                    }
+
+                    if (isLimitedLaps && sessionLapsValue > 0L)
+                    {
+                        detectedLapLimited = true;
+                        detectedRaceLaps = sessionLapsValue;
+                        detectedSessionIndex = i;
+                        detectedSessionName = $"Session{idx}";
+                        detectedSource = "SessionsXX";
+                        detectedIsRace = true;
+                        detectedIsLimitedSessionLaps = isLimitedLaps;
+                        detectedSessionLapsRaw = sessionLapsValue;
+                        detectedIsLimitedTime = isLimitedTime;
+                        detectedSessionTimeRaw = sessionTimeSeconds;
+                        selectedReason = "lap-limited";
+                        detectedTimeLimited = null;
+                        detectedRaceMinutes = null;
+                        break;
+                    }
+                    else if (isLimitedTime && sessionTimeSeconds > 0.0)
+                    {
+                        if (!detectedTimeLimited.HasValue || detectedRaceMinutes.GetValueOrDefault() <= 0.0)
+                        {
+                            detectedTimeLimited = true;
+                            detectedRaceMinutes = sessionTimeSeconds / 60.0;
+                            detectedSessionIndex = i;
+                            detectedSessionName = $"Session{idx}";
+                            detectedSource = "SessionsXX";
+                            detectedIsRace = true;
+                            detectedIsLimitedSessionLaps = isLimitedLaps;
+                            detectedSessionLapsRaw = sessionLapsValue;
+                            detectedIsLimitedTime = isLimitedTime;
+                            detectedSessionTimeRaw = sessionTimeSeconds;
+                            selectedReason = "time-limited";
+                        }
                     }
                 }
             }
@@ -3210,7 +3276,7 @@ namespace LaunchPlugin
                 detectedSessionIndex,
                 liveDetectBasis,
                 liveDetectValue,
-                unavailableReason ?? string.Empty);
+                selectedReason ?? string.Empty);
             if (!string.Equals(signature, _lastLiveDetectLogSignature, StringComparison.Ordinal))
             {
                 _lastLiveDetectLogSignature = signature;
@@ -3220,11 +3286,17 @@ namespace LaunchPlugin
                 SimHub.Logging.Current.Info(
                     string.Format(
                         CultureInfo.InvariantCulture,
-                        "[LalaPlugin:Strategy] Live Detect changed: session={0} basis={1} value={2:0.###} reason={3}",
+                        "[LalaPlugin:Strategy] Live Detect changed: source={0} session={1} isRace={2} isLimitedSessionLaps={3} sessionLaps={4} isLimitedTime={5} sessionTime={6:0.###} basis={7} value={8:0.###} reason={9}",
+                        detectedSource,
                         sessionLabel,
+                        detectedIsRace,
+                        detectedIsLimitedSessionLaps,
+                        detectedSessionLapsRaw,
+                        detectedIsLimitedTime,
+                        detectedSessionTimeRaw,
                         liveDetectBasis,
                         liveDetectValue,
-                        string.IsNullOrWhiteSpace(unavailableReason) ? "n/a" : unavailableReason));
+                        string.IsNullOrWhiteSpace(selectedReason) ? "n/a" : selectedReason));
             }
 
             // --- 1) Gather required data ---
@@ -13941,6 +14013,58 @@ namespace LaunchPlugin
             }
         }
 
+        private static long SafeReadLong(PluginManager pluginManager, string propertyName, long fallback)
+        {
+            if (pluginManager == null || string.IsNullOrWhiteSpace(propertyName))
+            {
+                return fallback;
+            }
+
+            object raw;
+            try
+            {
+                raw = pluginManager.GetPropertyValue(propertyName);
+            }
+            catch
+            {
+                return fallback;
+            }
+
+            if (raw == null)
+            {
+                return fallback;
+            }
+
+            switch (raw)
+            {
+                case long l:
+                    return l;
+                case int i:
+                    return i;
+                case short s:
+                    return s;
+                case byte b:
+                    return b;
+                case double d when !double.IsNaN(d) && !double.IsInfinity(d):
+                    return (long)d;
+                case float f when !float.IsNaN(f) && !float.IsInfinity(f):
+                    return (long)f;
+                case decimal m:
+                    if (m > long.MaxValue || m < long.MinValue)
+                    {
+                        return fallback;
+                    }
+                    return (long)m;
+            }
+
+            if (long.TryParse(Convert.ToString(raw), NumberStyles.Any, CultureInfo.InvariantCulture, out long parsed))
+            {
+                return parsed;
+            }
+
+            return fallback;
+        }
+
         private static bool SafeReadBool(PluginManager pluginManager, string propertyName, bool fallback)
         {
             if (pluginManager == null || string.IsNullOrWhiteSpace(propertyName))
@@ -16658,6 +16782,11 @@ namespace LaunchPlugin
                 _finishTimingSessionType = sessionType;
                 _afterZeroResultLogged = false;
                 ResetFinishTimingState();
+
+                if (FuelCalculator != null && FuelCalculator.IsLiveDetectRace)
+                {
+                    UpdateLiveFuelCalcs(data, pluginManager);
+                }
             }
 
             if (!isRace)
