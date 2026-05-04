@@ -1767,3 +1767,20 @@ The public user-facing release history is maintained in the root `CHANGELOG.md`.
   - explicit unavailable text when live identity is not yet available,
   - otherwise shows `Player`, `Source`, and `Resolved class`.
 - Preserved safe color-hex handling (invalid hex renders transparent preview) and avoided per-tick preview spam by retaining snapshot-based refresh gating.
+### 2026-05-04 — TrackLearning dash export/action family for Offline Testing review/lock flow
+- Classification: **both** (new dash-consumable exports/actions + internal contract documentation updates).
+- Added narrow `TrackLearning.*` core export family in `LalaLaunch` for profile/track review only:
+  - pit loss: `TrackLearning.PitLoss.Display/ValueSec/SourceText/Locked`,
+  - markers: `TrackLearning.Markers.EntryPct/ExitPct/Locked`,
+  - active-condition routing: `TrackLearning.Condition.IsWet/ModeText/AvgLapDisplay/AvgLapSamples/FuelSave/FuelAvg/FuelMax/FuelSamples/Locked`.
+- Added lock-only toggle actions:
+  - `TrackLearning.PitLoss.ToggleLock`,
+  - `TrackLearning.Markers.ToggleLock`,
+  - `TrackLearning.Condition.ToggleLock`.
+- Preserved existing ownership/invariants:
+  - no learning-rule, fuel-math, pit-loss-calculation, or marker-calculation changes,
+  - no relearn/reset/save actions added for this dash surface,
+  - existing `TrackMarkersLock` / `TrackMarkersUnlock` actions unchanged.
+- Persistence behavior:
+  - pit-loss and condition lock toggles persist immediately through existing `ProfilesViewModel.SaveProfiles()` convention,
+  - marker toggle uses the existing marker-store lock seam (`SetTrackMarkersLock`) and keeps existing marker persistence conventions.

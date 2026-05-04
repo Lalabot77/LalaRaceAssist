@@ -406,6 +406,37 @@ namespace LaunchPlugin
             _pit?.SetTrackMarkersLock(key, locked);
         }
 
+        public void ToggleTrackLearningPitLossLock()
+        {
+            var track = ResolveCurrentTrackStats();
+            if (track == null) return;
+            track.PitLaneLossLocked = !track.PitLaneLossLocked;
+            ProfilesViewModel?.SaveProfiles();
+        }
+
+        public void ToggleTrackLearningMarkersLock()
+        {
+            var key = GetCanonicalTrackKeyForMarkers();
+            if (string.IsNullOrWhiteSpace(key) || _pit == null) return;
+            bool current = _pit.TrackMarkersStoredLocked;
+            _pit.SetTrackMarkersLock(key, !current);
+        }
+
+        public void ToggleTrackLearningConditionLock()
+        {
+            var track = ResolveCurrentTrackStats();
+            if (track == null) return;
+            if (_isWetMode)
+            {
+                track.WetConditionsLocked = !track.WetConditionsLocked;
+            }
+            else
+            {
+                track.DryConditionsLocked = !track.DryConditionsLocked;
+            }
+            ProfilesViewModel?.SaveProfiles();
+        }
+
         public TrackMarkersSnapshot GetTrackMarkersSnapshot(string trackKey)
         {
             if (string.IsNullOrWhiteSpace(trackKey) || _pit == null)
@@ -1631,6 +1662,15 @@ namespace LaunchPlugin
             {
                 return null;
             }
+        }
+
+        private static string ToTrackLearningPitLossSourceText(string source)
+        {
+            string s = (source ?? string.Empty).Trim().ToLowerInvariant();
+            if (s == "dtl" || s == "total") return "DTL";
+            if (s == "direct") return "DIRECT";
+            if (s == "manual") return "MANUAL";
+            return "-";
         }
 
         private static bool IsFiniteNonNegative(double value)
@@ -5838,6 +5878,9 @@ namespace LaunchPlugin
             this.AddAction("LaunchMode", (a, b) => LaunchMode());
             this.AddAction("TrackMarkersLock", (a, b) => SetTrackMarkersLocked(true));
             this.AddAction("TrackMarkersUnlock", (a, b) => SetTrackMarkersLocked(false));
+            this.AddAction("TrackLearning.PitLoss.ToggleLock", (a, b) => ToggleTrackLearningPitLossLock());
+            this.AddAction("TrackLearning.Markers.ToggleLock", (a, b) => ToggleTrackLearningMarkersLock());
+            this.AddAction("TrackLearning.Condition.ToggleLock", (a, b) => ToggleTrackLearningConditionLock());
             this.AddAction("Debug_Hide_1_Toggle", (a, b) =>
             {
                 if (Settings == null)
@@ -6004,6 +6047,64 @@ namespace LaunchPlugin
             AttachCore("Fuel.Live.RefuelRate_Lps", () => FuelCalculator?.EffectiveRefuelRateLps ?? 0.0);
             AttachCore("Fuel.Live.TireChangeTime_S", () => GetEffectiveTireChangeTimeSeconds());
             AttachCore("Fuel.Live.PitLaneLoss_S", () => FuelCalculator?.PitLaneTimeLoss ?? 0.0);
+            AttachCore("TrackLearning.PitLoss.ValueSec", () =>
+            {
+                var ts = ResolveCurrentTrackStats();
+                return ts?.PitLaneLossSeconds ?? 0.0;
+            });
+            AttachCore("TrackLearning.PitLoss.Display", () =>
+            {
+                var ts = ResolveCurrentTrackStats();
+                var value = ts?.PitLaneLossSeconds;
+                return (value.HasValue && value.Value > 0.0) ? value.Value.ToString("0.0", CultureInfo.InvariantCulture) + "s" : "-";
+            });
+            AttachCore("TrackLearning.PitLoss.SourceText", () =>
+            {
+                var ts = ResolveCurrentTrackStats();
+                return ToTrackLearningPitLossSourceText(ts?.PitLaneLossSource);
+            });
+            AttachCore("TrackLearning.PitLoss.Locked", () => ResolveCurrentTrackStats()?.PitLaneLossLocked ?? false);
+            AttachCore("TrackLearning.Markers.EntryPct", () => _pit?.TrackMarkersStoredEntryPct ?? double.NaN);
+            AttachCore("TrackLearning.Markers.ExitPct", () => _pit?.TrackMarkersStoredExitPct ?? double.NaN);
+            AttachCore("TrackLearning.Markers.Locked", () => _pit?.TrackMarkersStoredLocked ?? false);
+            AttachCore("TrackLearning.Condition.IsWet", () => _isWetMode);
+            AttachCore("TrackLearning.Condition.ModeText", () => _isWetMode ? "WET" : "DRY");
+            AttachCore("TrackLearning.Condition.AvgLapDisplay", () =>
+            {
+                var ts = ResolveCurrentTrackStats();
+                int? lapMs = _isWetMode ? ts?.AvgLapTimeWet : ts?.AvgLapTimeDry;
+                return ts != null ? ts.MillisecondsToLapTimeString(lapMs) : "-";
+            });
+            AttachCore("TrackLearning.Condition.AvgLapSamples", () =>
+            {
+                var ts = ResolveCurrentTrackStats();
+                return _isWetMode ? (ts?.WetLapTimeSampleCount ?? 0) : (ts?.DryLapTimeSampleCount ?? 0);
+            });
+            AttachCore("TrackLearning.Condition.FuelSave", () =>
+            {
+                var ts = ResolveCurrentTrackStats();
+                return _isWetMode ? (ts?.MinFuelPerLapWet ?? 0.0) : (ts?.MinFuelPerLapDry ?? 0.0);
+            });
+            AttachCore("TrackLearning.Condition.FuelAvg", () =>
+            {
+                var ts = ResolveCurrentTrackStats();
+                return _isWetMode ? (ts?.AvgFuelPerLapWet ?? 0.0) : (ts?.AvgFuelPerLapDry ?? 0.0);
+            });
+            AttachCore("TrackLearning.Condition.FuelMax", () =>
+            {
+                var ts = ResolveCurrentTrackStats();
+                return _isWetMode ? (ts?.MaxFuelPerLapWet ?? 0.0) : (ts?.MaxFuelPerLapDry ?? 0.0);
+            });
+            AttachCore("TrackLearning.Condition.FuelSamples", () =>
+            {
+                var ts = ResolveCurrentTrackStats();
+                return _isWetMode ? (ts?.WetFuelSampleCount ?? 0) : (ts?.DryFuelSampleCount ?? 0);
+            });
+            AttachCore("TrackLearning.Condition.Locked", () =>
+            {
+                var ts = ResolveCurrentTrackStats();
+                return _isWetMode ? (ts?.WetConditionsLocked ?? false) : (ts?.DryConditionsLocked ?? false);
+            });
             AttachCore("Fuel.Live.TotalStopLoss", () => CalculateTotalStopLossSeconds());
             AttachCore("Fuel.Live.DriveTimeAfterZero", () => LiveProjectedDriveTimeAfterZero);
             AttachCore("Fuel.After0.PlannerSeconds", () => AfterZeroPlannerSeconds);

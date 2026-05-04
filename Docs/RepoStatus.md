@@ -1024,3 +1024,20 @@ Branch: work
   - CSV-mode UI now displays detected class rows (read-only Phase 1 visibility table with class/short/rank/colour preview);
   - mode-driven section visibility now matches classifier mode (`CSV only`, `Name suffix only`, `CSV then name suffix`);
   - player preview now reports clear identity-unavailable text and, when available, shows player/source/resolved-class summary.
+### Changed in TrackLearning dash export/action family for Offline Testing lock/review
+- Added a narrow plugin-owned `TrackLearning.*` export family for dash-consumer review of current profile/track learning state:
+  - `TrackLearning.PitLoss.Display/ValueSec/SourceText/Locked`,
+  - `TrackLearning.Markers.EntryPct/ExitPct/Locked`,
+  - `TrackLearning.Condition.IsWet/ModeText/AvgLapDisplay/AvgLapSamples/FuelSave/FuelAvg/FuelMax/FuelSamples/Locked`.
+- Added lock toggle actions only:
+  - `TrackLearning.PitLoss.ToggleLock`,
+  - `TrackLearning.Markers.ToggleLock`,
+  - `TrackLearning.Condition.ToggleLock`.
+- Preserved compatibility + invariants:
+  - existing `TrackMarkersLock` / `TrackMarkersUnlock` remain unchanged,
+  - no relearn/reset/refresh/save actions introduced for this dash page,
+  - no fuel-learning, pace-learning, pit-loss-calculation, marker-calculation, or profile-schema behavior changes.
+- Lock/persistence semantics:
+  - `TrackLearning.Condition.Locked` is active-condition mapped (`DryConditionsLocked` vs `WetConditionsLocked`) and therefore shared by condition avg-lap + fuel persistence ownership,
+  - pit-loss and condition toggles use existing immediate profile-save behavior,
+  - marker toggle uses the existing marker-store lock seam.

@@ -60,6 +60,7 @@ This document is the canonical dash-facing contract layer. It does **not** redef
 - Built-in pit command rows are user-configured in plugin **Settings → Pit Commands**; dashboards should bind those action ids directly and not carry raw transport syntax.
 - Custom chat buttons should bind to plugin-owned actions `LalaLaunch.CustomMessage01..LalaLaunch.CustomMessage10` (configured in Settings → Custom Messages) rather than embedding transport/raw chat syntax in dash logic.
 - Message-dash widgets should consume the message engine outputs directly rather than rebuilding message priority logic in SimHub expressions.
+- Offline Testing Track Learning lock/review pages should consume the `TrackLearning.*` export family and actions (`TrackLearning.PitLoss.ToggleLock`, `TrackLearning.Markers.ToggleLock`, `TrackLearning.Condition.ToggleLock`) as a pure consumer surface; dashboards must not reimplement profile lock routing or persistence behavior.
 
 ### Pit command transport contract
 - Dashboards trigger pit actions only; transport ownership is in-plugin.
