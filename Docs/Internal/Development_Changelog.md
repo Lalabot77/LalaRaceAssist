@@ -1,3 +1,8 @@
+- 2026-05-04 League Race settings table alignment polish landed:
+  - replaced spaced header text rows with fixed-column Grid headers for Detected classes, Player race class, and Fallback rules so headers align exactly with input columns;
+  - removed visible header labels for Enabled and Colour Preview while preserving checkbox and colour-preview controls in all rows;
+  - added concise League Class tooltips for CSV Class Name, Match Suffix, Short Name, Rank, and Colour Hex; bindings and editability semantics are unchanged (CSV Class Name remains read-only).
+
 - 2026-05-04 Strategy Live Detect review fix-up 2 landed:
   - `CurrentSessionInfo` race-length detection now respects race limit flags (`IsLimitedSessionLaps`/`IsLimitedTime`) before accepting `_SessionLaps`/`_SessionTime`, with Sessions fallback still active when flagged current-session length is unusable;
   - hardened `SafeReadLong` decimal conversion with explicit `long` range guard to prevent overflow throw paths in telemetry updates.

@@ -245,52 +245,150 @@
                         <TextBlock Foreground="LightGray" Text="{Binding LeagueClassStatus.InvalidRowCount, StringFormat='Invalid rows: {0}'}"/>
                         <TextBlock Foreground="LightGray" Text="{Binding LeagueClassStatus.DuplicateRowCount, StringFormat='Duplicate rows: {0}'}"/>
                         <TextBlock Margin="0,8,0,2" Text="Detected classes" FontWeight="SemiBold"/>
-                        <TextBlock FontWeight="SemiBold" Text="Enabled   CSV Class Name   Short Name   Rank   Colour Hex   Colour Preview"/>
+                        <Grid Margin="0,0,0,2">
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="Auto"/>
+                                <ColumnDefinition Width="6"/>
+                                <ColumnDefinition Width="130"/>
+                                <ColumnDefinition Width="6"/>
+                                <ColumnDefinition Width="100"/>
+                                <ColumnDefinition Width="6"/>
+                                <ColumnDefinition Width="50"/>
+                                <ColumnDefinition Width="6"/>
+                                <ColumnDefinition Width="90"/>
+                                <ColumnDefinition Width="6"/>
+                                <ColumnDefinition Width="18"/>
+                            </Grid.ColumnDefinitions>
+                            <TextBlock Grid.Column="2" FontWeight="SemiBold" Text="CSV Class Name" ToolTip="Class name read from CSV"/>
+                            <TextBlock Grid.Column="4" FontWeight="SemiBold" Text="Short Name" ToolTip="Dash/display label"/>
+                            <TextBlock Grid.Column="6" FontWeight="SemiBold" Text="Rank" ToolTip="1 = fastest/highest class"/>
+                            <TextBlock Grid.Column="8" FontWeight="SemiBold" Text="Colour Hex" ToolTip="Dash colour, #RRGGBB"/>
+                        </Grid>
                         <ItemsControl ItemsSource="{Binding Settings.LeagueClassDefinitions}">
                             <ItemsControl.ItemTemplate>
                                 <DataTemplate>
-                                    <StackPanel Orientation="Horizontal" Margin="0,2,0,2">
-                                        <CheckBox IsChecked="{Binding Enabled, Mode=TwoWay}" VerticalAlignment="Center"/>
-                                        <TextBox Width="130" Margin="6,0,0,0" Text="{Binding CsvClassName}" IsReadOnly="True"/>
-                                        <TextBox Width="100" Margin="6,0,0,0" Text="{Binding ShortName, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"/>
-                                        <TextBox Width="50" Margin="6,0,0,0" Text="{Binding Rank, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"/>
-                                        <TextBox Width="90" Margin="6,0,0,0" Text="{Binding ColourHex, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"/>
-                                        <Border Width="18" Height="18" Margin="6,2,0,0" BorderBrush="#777" BorderThickness="1" Background="{Binding ColourHex, Converter={StaticResource HexToBrushConverter}}"/>
-                                    </StackPanel>
+                                    <Grid Margin="0,2,0,2">
+                                        <Grid.ColumnDefinitions>
+                                            <ColumnDefinition Width="Auto"/>
+                                            <ColumnDefinition Width="6"/>
+                                            <ColumnDefinition Width="130"/>
+                                            <ColumnDefinition Width="6"/>
+                                            <ColumnDefinition Width="100"/>
+                                            <ColumnDefinition Width="6"/>
+                                            <ColumnDefinition Width="50"/>
+                                            <ColumnDefinition Width="6"/>
+                                            <ColumnDefinition Width="90"/>
+                                            <ColumnDefinition Width="6"/>
+                                            <ColumnDefinition Width="18"/>
+                                        </Grid.ColumnDefinitions>
+                                        <CheckBox Grid.Column="0" IsChecked="{Binding Enabled, Mode=TwoWay}" VerticalAlignment="Center"/>
+                                        <TextBox Grid.Column="2" Width="130" Text="{Binding CsvClassName}" IsReadOnly="True" ToolTip="Class name read from CSV"/>
+                                        <TextBox Grid.Column="4" Width="100" Text="{Binding ShortName, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" ToolTip="Dash/display label"/>
+                                        <TextBox Grid.Column="6" Width="50" Text="{Binding Rank, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" ToolTip="1 = fastest/highest class"/>
+                                        <TextBox Grid.Column="8" Width="90" Text="{Binding ColourHex, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" ToolTip="Dash colour, #RRGGBB"/>
+                                        <Border Grid.Column="10" Width="18" Height="18" Margin="0,2,0,0" BorderBrush="#777" BorderThickness="1" Background="{Binding ColourHex, Converter={StaticResource HexToBrushConverter}}"/>
+                                    </Grid>
                                 </DataTemplate>
                             </ItemsControl.ItemTemplate>
                         </ItemsControl>
                     </StackPanel>
 
                     <TextBlock Margin="0,8,0,2" Text="Player race class" FontWeight="SemiBold"/>
-                    <TextBlock FontWeight="SemiBold" Text="Class Name   Short Name   Rank   Colour Hex   Colour Preview"/>
-                    <StackPanel Orientation="Horizontal">
-                        <ComboBox Width="180" SelectedValue="{Binding Settings.LeagueClassPlayerOverrideMode, Mode=TwoWay}" SelectedValuePath="Tag">
+                    <Grid Margin="0,0,0,2">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="180"/>
+                            <ColumnDefinition Width="8"/>
+                            <ColumnDefinition Width="120"/>
+                            <ColumnDefinition Width="8"/>
+                            <ColumnDefinition Width="90"/>
+                            <ColumnDefinition Width="8"/>
+                            <ColumnDefinition Width="50"/>
+                            <ColumnDefinition Width="8"/>
+                            <ColumnDefinition Width="90"/>
+                            <ColumnDefinition Width="6"/>
+                            <ColumnDefinition Width="18"/>
+                        </Grid.ColumnDefinitions>
+                        <TextBlock Grid.Column="2" FontWeight="SemiBold" Text="Class Name"/>
+                        <TextBlock Grid.Column="4" FontWeight="SemiBold" Text="Short Name"/>
+                        <TextBlock Grid.Column="6" FontWeight="SemiBold" Text="Rank"/>
+                        <TextBlock Grid.Column="8" FontWeight="SemiBold" Text="Colour Hex"/>
+                    </Grid>
+                    <Grid>
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="180"/>
+                            <ColumnDefinition Width="8"/>
+                            <ColumnDefinition Width="120"/>
+                            <ColumnDefinition Width="8"/>
+                            <ColumnDefinition Width="90"/>
+                            <ColumnDefinition Width="8"/>
+                            <ColumnDefinition Width="50"/>
+                            <ColumnDefinition Width="8"/>
+                            <ColumnDefinition Width="90"/>
+                            <ColumnDefinition Width="6"/>
+                            <ColumnDefinition Width="18"/>
+                        </Grid.ColumnDefinitions>
+                        <ComboBox Grid.Column="0" Width="180" SelectedValue="{Binding Settings.LeagueClassPlayerOverrideMode, Mode=TwoWay}" SelectedValuePath="Tag">
                             <ComboBoxItem Content="Auto-detect" Tag="0"/>
                             <ComboBoxItem Content="Manual override" Tag="1"/>
                         </ComboBox>
-                        <TextBox Width="120" Margin="8,0,0,0" Text="{Binding Settings.LeagueClassPlayerOverrideClassName, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" ToolTip="Class name"/>
-                        <TextBox Width="90" Margin="8,0,0,0" Text="{Binding Settings.LeagueClassPlayerOverrideShortName, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" ToolTip="Short"/>
-                        <TextBox Width="50" Margin="8,0,0,0" Text="{Binding Settings.LeagueClassPlayerOverrideRank, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" ToolTip="Rank"/>
-                        <TextBox x:Name="LeagueClassPlayerOverrideColourHexTextBox" Width="90" Margin="8,0,0,0" Text="{Binding Settings.LeagueClassPlayerOverrideColourHex, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" ToolTip="#RRGGBB"/>
-                        <Border Width="18" Height="18" Margin="6,2,0,0" BorderBrush="#777" BorderThickness="1" Background="{Binding Text, ElementName=LeagueClassPlayerOverrideColourHexTextBox, Converter={StaticResource HexToBrushConverter}}"/>
-                    </StackPanel>
+                        <TextBox Grid.Column="2" Width="120" Text="{Binding Settings.LeagueClassPlayerOverrideClassName, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" ToolTip="Class name"/>
+                        <TextBox Grid.Column="4" Width="90" Text="{Binding Settings.LeagueClassPlayerOverrideShortName, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" ToolTip="Short"/>
+                        <TextBox Grid.Column="6" Width="50" Text="{Binding Settings.LeagueClassPlayerOverrideRank, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" ToolTip="Rank"/>
+                        <TextBox x:Name="LeagueClassPlayerOverrideColourHexTextBox" Grid.Column="8" Width="90" Text="{Binding Settings.LeagueClassPlayerOverrideColourHex, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" ToolTip="#RRGGBB"/>
+                        <Border Grid.Column="10" Width="18" Height="18" Margin="0,2,0,0" BorderBrush="#777" BorderThickness="1" Background="{Binding Text, ElementName=LeagueClassPlayerOverrideColourHexTextBox, Converter={StaticResource HexToBrushConverter}}"/>
+                    </Grid>
                     <TextBlock Margin="0,6,0,0" Foreground="LightGray" Text="{Binding LeagueClassPlayerPreviewText}"/>
 
                     <TextBlock Margin="0,8,0,2" Text="Fallback rules (suffix)" FontWeight="SemiBold" Visibility="{Binding LeagueClassShowFallbackSection, Converter={StaticResource BooleanToVisibilityConverter}}"/>
-                    <TextBlock FontWeight="SemiBold" Text="Enabled   Match Suffix   Class Name   Short Name   Rank   Colour Hex   Colour Preview" Visibility="{Binding LeagueClassShowFallbackSection, Converter={StaticResource BooleanToVisibilityConverter}}"/>
+                    <Grid Margin="0,0,0,2" Visibility="{Binding LeagueClassShowFallbackSection, Converter={StaticResource BooleanToVisibilityConverter}}">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="Auto"/>
+                            <ColumnDefinition Width="6"/>
+                            <ColumnDefinition Width="90"/>
+                            <ColumnDefinition Width="6"/>
+                            <ColumnDefinition Width="120"/>
+                            <ColumnDefinition Width="6"/>
+                            <ColumnDefinition Width="90"/>
+                            <ColumnDefinition Width="6"/>
+                            <ColumnDefinition Width="50"/>
+                            <ColumnDefinition Width="6"/>
+                            <ColumnDefinition Width="90"/>
+                            <ColumnDefinition Width="6"/>
+                            <ColumnDefinition Width="18"/>
+                        </Grid.ColumnDefinitions>
+                        <TextBlock Grid.Column="2" FontWeight="SemiBold" Text="Match Suffix" ToolTip="Name ending to match, e.g. (P)"/>
+                        <TextBlock Grid.Column="4" FontWeight="SemiBold" Text="Class Name"/>
+                        <TextBlock Grid.Column="6" FontWeight="SemiBold" Text="Short Name" ToolTip="Dash/display label"/>
+                        <TextBlock Grid.Column="8" FontWeight="SemiBold" Text="Rank" ToolTip="1 = fastest/highest class"/>
+                        <TextBlock Grid.Column="10" FontWeight="SemiBold" Text="Colour Hex" ToolTip="Dash colour, #RRGGBB"/>
+                    </Grid>
                     <ItemsControl ItemsSource="{Binding Settings.LeagueClassFallbackRules}" Visibility="{Binding LeagueClassShowFallbackSection, Converter={StaticResource BooleanToVisibilityConverter}}">
                         <ItemsControl.ItemTemplate>
                             <DataTemplate>
-                                <StackPanel Orientation="Horizontal" Margin="0,2,0,2">
-                                    <CheckBox IsChecked="{Binding Enabled, Mode=TwoWay}" VerticalAlignment="Center"/>
-                                    <TextBox Width="90" Margin="6,0,0,0" Text="{Binding MatchSuffix, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" ToolTip="Suffix"/>
-                                    <TextBox Width="120" Margin="6,0,0,0" Text="{Binding ClassName, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" ToolTip="Class name"/>
-                                    <TextBox Width="90" Margin="6,0,0,0" Text="{Binding ShortName, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" ToolTip="Short"/>
-                                    <TextBox Width="50" Margin="6,0,0,0" Text="{Binding Rank, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" ToolTip="Rank"/>
-                                    <TextBox Width="90" Margin="6,0,0,0" Text="{Binding ColourHex, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" ToolTip="#RRGGBB"/>
-                                    <Border Width="18" Height="18" Margin="6,2,0,0" BorderBrush="#777" BorderThickness="1" Background="{Binding ColourHex, Converter={StaticResource HexToBrushConverter}}"/>
-                                </StackPanel>
+                                <Grid Margin="0,2,0,2">
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition Width="Auto"/>
+                                        <ColumnDefinition Width="6"/>
+                                        <ColumnDefinition Width="90"/>
+                                        <ColumnDefinition Width="6"/>
+                                        <ColumnDefinition Width="120"/>
+                                        <ColumnDefinition Width="6"/>
+                                        <ColumnDefinition Width="90"/>
+                                        <ColumnDefinition Width="6"/>
+                                        <ColumnDefinition Width="50"/>
+                                        <ColumnDefinition Width="6"/>
+                                        <ColumnDefinition Width="90"/>
+                                        <ColumnDefinition Width="6"/>
+                                        <ColumnDefinition Width="18"/>
+                                    </Grid.ColumnDefinitions>
+                                    <CheckBox Grid.Column="0" IsChecked="{Binding Enabled, Mode=TwoWay}" VerticalAlignment="Center"/>
+                                    <TextBox Grid.Column="2" Width="90" Text="{Binding MatchSuffix, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" ToolTip="Name ending to match, e.g. (P)"/>
+                                    <TextBox Grid.Column="4" Width="120" Text="{Binding ClassName, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" ToolTip="Class name"/>
+                                    <TextBox Grid.Column="6" Width="90" Text="{Binding ShortName, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" ToolTip="Dash/display label"/>
+                                    <TextBox Grid.Column="8" Width="50" Text="{Binding Rank, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" ToolTip="1 = fastest/highest class"/>
+                                    <TextBox Grid.Column="10" Width="90" Text="{Binding ColourHex, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" ToolTip="Dash colour, #RRGGBB"/>
+                                    <Border Grid.Column="12" Width="18" Height="18" Margin="0,2,0,0" BorderBrush="#777" BorderThickness="1" Background="{Binding ColourHex, Converter={StaticResource HexToBrushConverter}}"/>
+                                </Grid>
                             </DataTemplate>
                         </ItemsControl.ItemTemplate>
                     </ItemsControl>
