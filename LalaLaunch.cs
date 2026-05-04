@@ -1110,7 +1110,7 @@ namespace LaunchPlugin
             return targetMax > 0.0 && currentFuel >= (targetMax - PreRaceMaxStartToleranceLitres);
         }
 
-        private double ResolvePreRaceCurrentFuelLitres(double liveCurrentFuel, out string source)
+        private double ResolvePreRaceCurrentFuelLitres(double liveCurrentFuel, bool allowSetupFallback, out string source)
         {
             if (!double.IsNaN(liveCurrentFuel) && !double.IsInfinity(liveCurrentFuel) && liveCurrentFuel > 0.0)
             {
@@ -1118,14 +1118,14 @@ namespace LaunchPlugin
                 return liveCurrentFuel;
             }
 
-            if (Fuel_Setup_FuelLevelValid && Fuel_Setup_FuelLevel > 0.0 && !double.IsNaN(Fuel_Setup_FuelLevel) && !double.IsInfinity(Fuel_Setup_FuelLevel))
+            if (allowSetupFallback && Fuel_Setup_FuelLevelValid && Fuel_Setup_FuelLevel > 0.0 && !double.IsNaN(Fuel_Setup_FuelLevel) && !double.IsInfinity(Fuel_Setup_FuelLevel))
             {
                 source = "setup";
                 return Fuel_Setup_FuelLevel;
             }
 
             source = "none";
-            return (!double.IsNaN(liveCurrentFuel) && !double.IsInfinity(liveCurrentFuel) && liveCurrentFuel > 0.0) ? liveCurrentFuel : 0.0;
+            return 0.0;
         }
 
         private static bool IsOneStopFeasibleForPreRace(
@@ -1259,12 +1259,13 @@ namespace LaunchPlugin
             double stableLapsRemaining,
             double fallbackFuelPerLap,
             double effectiveMaxTank,
-            double maxTankCapacity)
+            double maxTankCapacity,
+            bool allowSetupFallback)
         {
             int selectedStrategy = NormalizeStrategyMode(FuelCalculator?.SelectedPreRaceMode ?? 3);
             PreRace_Selected = selectedStrategy;
             PreRace_SelectedText = StrategyModeText(selectedStrategy);
-            double currentFuel = ResolvePreRaceCurrentFuelLitres(liveCurrentFuel, out _);
+            double currentFuel = ResolvePreRaceCurrentFuelLitres(liveCurrentFuel, allowSetupFallback, out _);
 
             double usableTank = effectiveMaxTank > 0.0 ? effectiveMaxTank : maxTankCapacity;
 
@@ -3916,7 +3917,8 @@ namespace LaunchPlugin
                     stableLapsRemaining: 0.0,
                     fallbackFuelPerLap,
                     effectiveMaxTank,
-                    maxTankCapacity);
+                    maxTankCapacity,
+                    allowSetupFallback: isGridOrFormation);
 
                 Fuel_Delta_LitresCurrent = 0;
                 Fuel_Delta_LitresPlan = 0;
@@ -4106,7 +4108,8 @@ namespace LaunchPlugin
                     stableLapsRemaining,
                     fallbackFuelPerLap,
                     effectiveMaxTank,
-                    maxTankCapacity);
+                    maxTankCapacity,
+                    allowSetupFallback: isGridOrFormation);
 
                 PitStopsRequiredByFuel = Math.Max(0, stopsRequiredByFuel);
                 PitStopsRequiredByPlan = plannedStops;

@@ -150,8 +150,9 @@ The public user-facing release history is maintained in the root `CHANGELOG.md`.
 - Classification: **both** (PreRace on-grid/status behavior improvement + docs alignment).
 - `UpdatePreRaceOutputs(...)` now resolves an effective PreRace current-fuel basis using:
   1) live current fuel when valid/positive,
-  2) setup fallback (`Fuel.Setup.FuelLevel`) when live current fuel is unavailable/zero and setup fallback is valid,
+  2) setup fallback (`Fuel.Setup.FuelLevel`) when live current fuel is unavailable/zero and setup fallback is valid **during pre-race/grid/formation only** (SessionState `<4`),
   3) existing zero/fallback behavior when neither is available.
+- Active race-running (SessionState `==4`) now keeps live fuel authoritative for PreRace outputs even when live fuel is `0` (setup fallback disabled in race-running phase).
 - PreRace one-stop/no-stop/multi-stop delta/status feasibility paths now use that effective PreRace-only current-fuel basis.
 - Preserved invariants: no overwrite of telemetry fuel, no live fuel-learning changes, no `Fuel.Pit.*` runtime math changes, no planner/max-tank authority changes.
 
