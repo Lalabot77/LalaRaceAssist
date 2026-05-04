@@ -262,6 +262,7 @@ Implementation note (no new export):
 | RejoinThreatLevel / RejoinThreatLevelName / RejoinTimeToThreat | int/string/double | Threat scoring and time-to-threat for rejoin assist. | Per tick. | `RejoinAssistEngine` outputs + `AttachCore`【F:LalaLaunch.cs†L2826-L2831】【F:RejoinAssistEngine.cs†L540-L640】 |
 | MsgCxPressed | bool | Latched true for 500 ms after MsgCx action. | Per tick. | `LalaLaunch.cs` — `RegisterMsgCxPress` + `AttachCore`【F:LalaLaunch.cs†L2475-L2479】【F:LalaLaunch.cs†L2815-L2820】 |
 | Debug.EventMarkerPressed | bool | Latched true for 500 ms after the Event Marker action. | Per tick. | `LalaLaunch.cs` — `RegisterEventMarkerPress` + `AttachCore`【F:LalaLaunch.cs†L2481-L2492】【F:LalaLaunch.cs†L2816-L2822】 |
+| OfflineDataModule | int (`0`/`1`) | Plugin-owned offline-data module toggle state for dash visibility gating. Flipped by action `OfflineDataModule_Toggle`; not exposed in plugin bindings UI section. | Per tick. | `LaunchPluginSettings.OfflineDataModule` + `LalaLaunch.cs` `AddAction`/`AttachCore`. |
 
 ## Shift Assist
 

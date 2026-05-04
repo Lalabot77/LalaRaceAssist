@@ -1,3 +1,7 @@
+- 2026-05-04 Offline data module toggle landed:
+  - added plugin action `OfflineDataModule_Toggle` (debug-toggle style persisted flip) for dash control workflows;
+  - added exported property `OfflineDataModule` (`0/1`) so dashboards can gate visibility directly from plugin state;
+  - no plugin bindings-section UI row was added (action/property are surfaced via SimHub action/property surfaces).
 - 2026-05-04 Strategy Live Detect effective-basis/runtime-refresh fix landed:
   - strategy planner now computes from an explicit effective race basis/length seam (manual or Live Detect) and never silently defaults Live Detect-null basis to Lap-Limited/manual laps;
   - timed Live Detect strategy paths (fuel total/stints/first-stint/after-zero) now consistently use detected minutes, while lap-limited Live Detect uses detected laps;
