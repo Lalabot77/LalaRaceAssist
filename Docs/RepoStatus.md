@@ -1,4 +1,8 @@
 ## Documentation sync status
+- 2026-05-04 Pit-loss mode/source consistency fix landed:
+  - FuelCalcs track-save overwrite now also stamps `PitLaneLossSource="manual"` and `PitLaneLossLearningMode="manual"` when writing `PitLaneLossSeconds`;
+  - prevents stale `boxed_stop` mode from persisting across manual/planner pit-loss overwrites and incorrectly subtracting transition allowance in normalized pit-loss exports.
+
 - 2026-05-04 Pit-loss source-aware normalization follow-up landed:
   - added persisted `PitLaneLossLearningMode` metadata (`drive_through` / `boxed_stop` / `manual`) on saved track pit-loss records;
   - `Fuel.Live.PitLaneLoss_S` and `TrackLearning.PitLoss.ValueSec/Display` now expose drive-through-equivalent pit-lane loss (boxed-stop-learned values subtract fixed transition allowance and clamp at `0`);

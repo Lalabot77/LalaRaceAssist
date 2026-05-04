@@ -163,6 +163,11 @@ The public user-facing release history is maintained in the root `CHANGELOG.md`.
 - `Fuel.Live.TotalStopLoss` now composes from drive-through-equivalent pit-lane loss + modeled boxed service (+repair-aware) + fixed transition allowance so transition time is not double-counted while maintaining expected pit-stop totals.
 
 
+## 2026-05-04 — Pit-loss mode/source consistency fix for FuelCalcs overwrite path
+- Classification: **both** (pit-loss export correctness on planner/manual overwrite path + internal state consistency).
+- Fixed FuelCalcs track-save path to set `PitLaneLossSource="manual"` and `PitLaneLossLearningMode="manual"` whenever it overwrites `PitLaneLossSeconds`, preventing stale `boxed_stop` mode from incorrectly subtracting transition allowance on edited/manual pit-loss values.
+- Scope is narrow and write-path only; no pit-cycle classification, transition allowance constant, or boxed-stop service math changes were made.
+
 ## Pre-v1 public development history
 
 ### Initial release foundations

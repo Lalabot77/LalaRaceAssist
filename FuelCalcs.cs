@@ -2729,6 +2729,8 @@ namespace LaunchPlugin
         }
 
         trackRecord.PitLaneLossSeconds = this.PitLaneTimeLoss;
+        trackRecord.PitLaneLossSource = "manual";
+        trackRecord.PitLaneLossLearningMode = "manual";
 
         if (IsPersonalBestAvailable && _loadedBestLapTimeSeconds > 0)
         {
