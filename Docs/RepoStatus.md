@@ -1,3 +1,8 @@
+- 2026-05-04 Strategy Live Detect race-definition source fix landed:
+  - race-definition detection now prioritizes `CurrentSessionInfo` only when `CurrentSessionInfo.IsRace==true` and reads underscore session length authority first (`_SessionLaps`/`_SessionTime`), with non-underscore compatibility fallback after underscore attempts;
+  - `Sessions01..64` fallback applies only when current session race data is unavailable/non-race/lengthless, and helper text now reports `race found, no valid length` when a race is visible but unusable;
+  - bounded result-change logging now includes source/session/limit/raw-length fields with selected basis/reason for Live Detect diagnostics.
+
 - 2026-05-03 League Race CSV detected-classes editing layer landed:
   - added persisted user-editable class-definition layer (`LeagueClassDefinitions`) keyed by CSV class name, with editable `Enabled`, `ShortName`, `Rank`, and `ColourHex`;
   - detected-classes table now binds to settings-owned editable rows; CSV class name remains read-only while enabled/rank/short/colour fields are editable with live colour preview;

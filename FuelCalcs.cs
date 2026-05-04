@@ -5271,7 +5271,12 @@ namespace LaunchPlugin
             OnPropertyChanged(nameof(IsTimeLimitedRace));
             OnPropertyChanged(nameof(ShowEffectiveLapLimitedRace));
             OnPropertyChanged(nameof(ShowEffectiveTimeLimitedRace));
-            _liveDetectHelperText = "Live Detect: no declared race found";
+            _liveDetectHelperText = string.IsNullOrWhiteSpace(detectedSessionLabel)
+                ? "Live Detect: no declared race found"
+                : string.Format(
+                    CultureInfo.InvariantCulture,
+                    "Live Detect: {0}, race found, no valid length",
+                    detectedSessionLabel.Trim());
             OnPropertyChanged(nameof(LiveDetectHelperText));
         }
 
