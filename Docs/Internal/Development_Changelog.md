@@ -1,3 +1,12 @@
+
+## 2026-05-04 — League Race Final Behaviour: ClassLeader/ClassBest/PitExit effective-class cohort completion
+- Classification: **both** (dash-visible race-context class cohort behavior update + internal contract/docs alignment).
+- Applied existing League Class resolver seam to remaining race-context class outputs:
+  - `ClassLeader.*` leader resolution now uses the existing race-context match delegate seam when League Class is enabled and player effective class resolves valid; native class behavior remains fallback in disabled/unresolved-player paths.
+  - `ClassBest.*` session-best holder resolution now uses the same race-context match delegate seam with identical fallback behavior.
+  - `PitExit.*` same-class cohort scan now uses Opponents `IsRaceContextClassMatch` seam (effective class when enabled+valid, native class fallback otherwise).
+- Preserved invariants: no CarSA physical slot/order/filter changes, no `H2HTrack.*` selector changes, no H2H sector/delta math changes, no pit-loss/countdown/progress/gap formula changes beyond class-cohort inclusion.
+
 ### 2026-05-04 — StrategyDash phase compile-fix follow-up (PR #660)
 - Classification: **internal-only** (build fix; no fuel/planner/pit semantics redesign).
 - Fixed `LalaLaunch.UpdateStrategyDashAdvice(...)` phase detection to consume real call-path session booleans (`isRaceRunning`, `isGridOrFormation`) instead of removed/non-existent fields.
