@@ -312,3 +312,6 @@ Reset semantics are shared with the Fuel Model and documented centrally in:
 - Track Condition now has explicit `Auto` / `Dry` / `Wet` ownership states. Auto clears manual override and shows `Automatic (dry|wet)`; manual states show `Manual override: dry|wet`.
 - Race Type now includes persistent `Live Detect` ownership. While selected, race type/length consume declared race metadata (`SessionInfo.SessionsXX` where `IsRace==true`) and race-length controls are read-only.
 - Live Detect now shows helper text under Race Type (`session, basis, value` or `no declared race found`) and never silently defaults the UI to Lap-Limited when no valid declared race definition is available.
+
+- PreRace adapter semantics update: `LalaLaunch.PreRace.TotalFuelNeeded` now uses active contingency litres instead of the old hardcoded `+2 laps` reserve.
+- Added additive `StrategyDash.*` pre-green advice exports; planner ownership and runtime fuel ownership boundaries remain unchanged.

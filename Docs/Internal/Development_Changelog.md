@@ -1,3 +1,10 @@
+## 2026-05-04 — StrategyDash V2 pre-green advice seam + PreRace contingency basis correction
+- Classification: **both** (new additive dash-facing exports + pre-race fuel-needed basis correction).
+- Removed legacy hardcoded PreRace `+2 laps` reserve from `LalaLaunch.PreRace.TotalFuelNeeded`; total-needed now resolves as `base race fuel requirement + active contingency litres` using the existing active contingency seam.
+- Preserved ownership boundaries and runtime contracts: no changes to `Fuel.Delta.*`, `Fuel.RequiredBurnToEnd*`, `Fuel.Pit.*`, `Pit.FuelControl.*`, boxed refuel latch behavior, or PitFuelControlEngine behavior.
+- Added additive `StrategyDash.*` exports for pre-green advice (`Phase/PhaseText`, strategy classification, start-fuel advice/status, next-refuel advice/status, contingency text).
+- `StrategyDash.*` is publish-safe during race-running but documented as non-primary there; race-running dashboards should continue using existing runtime fuel/pit/control surfaces.
+
 - 2026-05-03 League Race CSV detected-classes editing layer landed:
   - Classification: **both** (user-facing League Class UI editability + resolver/settings persistence behavior alignment).
   - Added persisted class-definition layer `LeagueClassDefinitions` keyed by CSV class name with editable fields: `Enabled`, `ShortName`, `Rank`, `ColourHex` (CSV class name remains read-only in UI).
