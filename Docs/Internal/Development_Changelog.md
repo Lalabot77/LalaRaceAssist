@@ -170,6 +170,20 @@ The public user-facing release history is maintained in the root `CHANGELOG.md`.
 
 ## Post-v1.0 development
 
+## 2026-05-04 — StrategyDash one-stop burn-basis current-tick refresh fix
+- Classification: **internal-only** (pre-green advice seam timing correctness; no runtime fuel/pit/control contract changes).
+- Fixed `StrategyDash.NextRefuelTargetLitres` one-stop PUSH/SAVE selection path to use current-tick locally resolved burn values inside `UpdatePreRaceOutputs(...)` rather than shared `PushFuelPerLap` / `FuelSaveFuelPerLap` fields that may still hold prior-frame values at that execution point.
+- Preserved fallback and ownership boundaries: PUSH uses current-tick push burn when valid, SAVE uses current-tick save burn when valid, otherwise NORM (`preRaceFuelPerLap`); no PitFuelControlEngine behavior changes and no changes to `Fuel.Delta.*`, `Fuel.RequiredBurnToEnd*`, `Fuel.Pit.*`, boxed refuel latches, or `Pit.FuelControl.*` semantics.
+
+## 2026-05-04 — StrategyDash V2 pre-green advice seam + PreRace contingency basis correction
+- Classification: **both** (new additive dash-facing exports + pre-race fuel-needed basis correction).
+- Removed legacy hardcoded PreRace `+2 laps` reserve from `LalaLaunch.PreRace.TotalFuelNeeded`; total-needed now resolves as `base race fuel requirement + active contingency litres` using the existing active contingency seam.
+- Preserved ownership boundaries and runtime contracts: no changes to `Fuel.Delta.*`, `Fuel.RequiredBurnToEnd*`, `Fuel.Pit.*`, `Pit.FuelControl.*`, boxed refuel latch behavior, or PitFuelControlEngine behavior.
+- Added additive `StrategyDash.*` exports for pre-green advice (`Phase/PhaseText`, strategy classification, start-fuel advice/status, next-refuel advice/status, contingency text).
+- `StrategyDash.*` is publish-safe during race-running but documented as non-primary there; race-running dashboards should continue using existing runtime fuel/pit/control surfaces.
+
+
+
 ## 2026-05-04 — Setup fuel fallback export + litre-unit string validation follow-up
 - Classification: **both** (dash-facing setup-fuel export seam + parser safety correction + docs alignment).
 - Added `Fuel.Setup.FuelLevel`, `Fuel.Setup.FuelLevelValid`, and `Fuel.Setup.FuelLevelSource` in `LalaLaunch.cs`.
