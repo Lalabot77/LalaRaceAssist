@@ -1270,7 +1270,9 @@ namespace LaunchPlugin
             double plannedSingleStopRefuel,
             double effectiveMaxTank,
             double maxTankCapacity,
-            double contingencyLitres)
+            double contingencyLitres,
+            string contingencyText,
+            double oneStopNextRefuelTargetLitres)
         {
             bool isRaceRunning = string.Equals(_sessionState, "Racing", StringComparison.OrdinalIgnoreCase);
             bool isGridFormation = _isOnGrid || _isFormationLap || _isRaceStarting;
@@ -1290,8 +1292,7 @@ namespace LaunchPlugin
             double nextRefuelTarget = 0.0;
             if (requiredStrategy == RequiredPreRaceStrategy.OneStop)
             {
-                double secondStintNeed = Math.Max(0.0, PreRace_TotalFuelNeeded - currentFuel);
-                nextRefuelTarget = Math.Max(0.0, secondStintNeed);
+                nextRefuelTarget = Math.Max(0.0, oneStopNextRefuelTargetLitres);
             }
             else if (requiredStrategy == RequiredPreRaceStrategy.MultiStop)
             {
@@ -1315,10 +1316,9 @@ namespace LaunchPlugin
                 StrategyDash_NextRefuelStatus = refuelGap <= 0.5 ? 0 : (refuelGap <= 2.0 ? 1 : 2);
             }
 
-            if (Contingency_Laps > 0.0)
-                StrategyDash_ContingencyText = string.Format(CultureInfo.InvariantCulture, "CONT {0:F1} LAPS", Contingency_Laps);
-            else
-                StrategyDash_ContingencyText = string.Format(CultureInfo.InvariantCulture, "CONT {0:F1} L", Math.Max(0.0, contingencyLitres));
+            StrategyDash_ContingencyText = string.IsNullOrWhiteSpace(contingencyText)
+                ? string.Format(CultureInfo.InvariantCulture, "CONT {0:F1} L", Math.Max(0.0, contingencyLitres))
+                : contingencyText;
         }
 
         private void UpdatePreRaceOutputs(
@@ -1445,11 +1445,14 @@ namespace LaunchPlugin
                 forecastRaceLaps = stableLapsRemaining;
             }
 
-            double contingencyLitres = ResolveLivePitFuelControlContingencyLitres(preRaceFuelPerLap);
-            PreRace_TotalFuelNeeded =
+            var preRaceContingency = ResolveActiveContingency(preRaceFuelPerLap);
+            double contingencyLitres = Math.Max(0.0, preRaceContingency.Litres);
+            double baseRaceFuelLitres =
                 (forecastRaceLaps > 0.0 && preRaceFuelPerLap > 0.0)
-                    ? (forecastRaceLaps * preRaceFuelPerLap) + contingencyLitres
+                    ? forecastRaceLaps * preRaceFuelPerLap
                     : 0.0;
+            PreRace_TotalFuelNeeded =
+                baseRaceFuelLitres + contingencyLitres;
 
             PreRace_Stints = usableTank > 0.0
                 ? Math.Round(Math.Max(0.0, PreRace_TotalFuelNeeded / usableTank), 1)
@@ -1485,7 +1488,39 @@ namespace LaunchPlugin
                 contingencyLitres: contingencyLitres);
             PreRace_StatusText = status.Text;
             PreRace_StatusColour = status.Colour;
-            UpdateStrategyDashAdvice(selectedStrategy, requiredStrategy, currentFuel, plannedSingleStopRefuel, effectiveMaxTank, maxTankCapacity, contingencyLitres);
+
+            double oneStopNormTarget = Math.Max(0.0, PreRace_TotalFuelNeeded - currentFuel);
+            double oneStopTarget = oneStopNormTarget;
+            if (forecastRaceLaps > 0.0)
+            {
+                double selectedBurn = preRaceFuelPerLap;
+                var source = _pitFuelControlEngine?.Source ?? PitFuelControlSource.Stby;
+                if (source == PitFuelControlSource.Push && PushFuelPerLap > 0.0)
+                {
+                    selectedBurn = PushFuelPerLap;
+                }
+                else if (source == PitFuelControlSource.Save && FuelSaveFuelPerLap > 0.0)
+                {
+                    selectedBurn = FuelSaveFuelPerLap;
+                }
+
+                if (selectedBurn > 0.0)
+                {
+                    double selectedContingency = Math.Max(0.0, ResolveActiveContingency(selectedBurn).Litres);
+                    double selectedTotalNeeded = (forecastRaceLaps * selectedBurn) + selectedContingency;
+                    oneStopTarget = Math.Max(0.0, selectedTotalNeeded - currentFuel);
+                }
+            }
+
+            string contingencyText;
+            if (preRaceContingency.IsConfiguredInLaps && preRaceContingency.Laps > 0.0)
+                contingencyText = string.Format(CultureInfo.InvariantCulture, "CONT {0:F1} LAPS", preRaceContingency.Laps);
+            else if (contingencyLitres > 0.0)
+                contingencyText = string.Format(CultureInfo.InvariantCulture, "CONT {0:F1} L", contingencyLitres);
+            else
+                contingencyText = "CONT 0";
+
+            UpdateStrategyDashAdvice(selectedStrategy, requiredStrategy, currentFuel, plannedSingleStopRefuel, effectiveMaxTank, maxTankCapacity, contingencyLitres, contingencyText, oneStopTarget);
         }
 
         // Stable model inputs
