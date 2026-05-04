@@ -212,3 +212,6 @@ Dashboards should **not**:
 
 ## v1 documentation note
 The v1 GitHub docs now present dashboards as the presentation layer across all systems. This page is the canonical technical companion to the user-facing `Docs/Dashboards.md` page.
+
+- Added additive `StrategyDash.*` V2 seam for pre-green dashboards (planning + grid/formation).
+- `StrategyDash.*` remains publish-safe in race-running phase but is not the primary runtime contract; keep race-running widgets on existing `Fuel.*`, `Fuel.Pit.*`, `Fuel.Delta.*`, `Fuel.RequiredBurnToEnd*`, `Pit.FuelControl.*`, and boxed refuel latch seams.

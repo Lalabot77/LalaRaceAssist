@@ -4,6 +4,12 @@
 - Added plugin action `OfflineDataModule_Toggle` following existing debug-toggle behavior (flip persisted setting + log line).
 - Added dash-readable export `OfflineDataModule` (`0/1`) for visibility/control logic.
 - No plugin bindings-section UI addition; action/property are available via SimHub action/property surfaces only.
+- 2026-05-04 Strategy Live Detect effective-basis/runtime-refresh fix landed:
+  - strategy calculation now resolves an explicit effective race basis/length (manual or Live Detect) and no longer falls through to Lap-Limited/manual laps when Live Detect has no valid detected definition;
+  - Live Detect timed sessions now always run strategy/stint/first-stint/total-fuel paths from detected minutes, while detected lap-limited sessions use detected laps;
+  - Live Detect race-definition updates now cache helper/basis changes even before selection and force recalculation when selected basis/value/availability changes;
+  - session-context transitions now trigger an immediate Live Detect refresh when Live Detect is selected, avoiding stale initial-session detection until radio toggling.
+
 - 2026-05-04 Strategy Live Detect review fix-up 2 landed:
   - `CurrentSessionInfo` race-length detection now respects race limit flags (`IsLimitedSessionLaps`/`IsLimitedTime`) before accepting `_SessionLaps`/`_SessionTime`, with Sessions fallback still active when flagged current-session length is unusable;
   - hardened `SafeReadLong` decimal conversion with explicit `long` range guard to prevent overflow throw paths in telemetry updates.
@@ -169,6 +175,20 @@ The public user-facing release history is maintained in the root `CHANGELOG.md`.
 - Made track-scoped planning data more practical for venue-specific strategy setup.
 
 ## Post-v1.0 development
+
+## 2026-05-04 — StrategyDash one-stop burn-basis current-tick refresh fix
+- Classification: **internal-only** (pre-green advice seam timing correctness; no runtime fuel/pit/control contract changes).
+- Fixed `StrategyDash.NextRefuelTargetLitres` one-stop PUSH/SAVE selection path to use current-tick locally resolved burn values inside `UpdatePreRaceOutputs(...)` rather than shared `PushFuelPerLap` / `FuelSaveFuelPerLap` fields that may still hold prior-frame values at that execution point.
+- Preserved fallback and ownership boundaries: PUSH uses current-tick push burn when valid, SAVE uses current-tick save burn when valid, otherwise NORM (`preRaceFuelPerLap`); no PitFuelControlEngine behavior changes and no changes to `Fuel.Delta.*`, `Fuel.RequiredBurnToEnd*`, `Fuel.Pit.*`, boxed refuel latches, or `Pit.FuelControl.*` semantics.
+
+## 2026-05-04 — StrategyDash V2 pre-green advice seam + PreRace contingency basis correction
+- Classification: **both** (new additive dash-facing exports + pre-race fuel-needed basis correction).
+- Removed legacy hardcoded PreRace `+2 laps` reserve from `LalaLaunch.PreRace.TotalFuelNeeded`; total-needed now resolves as `base race fuel requirement + active contingency litres` using the existing active contingency seam.
+- Preserved ownership boundaries and runtime contracts: no changes to `Fuel.Delta.*`, `Fuel.RequiredBurnToEnd*`, `Fuel.Pit.*`, `Pit.FuelControl.*`, boxed refuel latch behavior, or PitFuelControlEngine behavior.
+- Added additive `StrategyDash.*` exports for pre-green advice (`Phase/PhaseText`, strategy classification, start-fuel advice/status, next-refuel advice/status, contingency text).
+- `StrategyDash.*` is publish-safe during race-running but documented as non-primary there; race-running dashboards should continue using existing runtime fuel/pit/control surfaces.
+
+
 
 ## 2026-05-04 — Setup fuel fallback export + litre-unit string validation follow-up
 - Classification: **both** (dash-facing setup-fuel export seam + parser safety correction + docs alignment).

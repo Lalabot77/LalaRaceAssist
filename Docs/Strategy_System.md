@@ -172,3 +172,6 @@ If Strategy looks repeatedly wrong, the usual causes are:
 - Fuel-per-lap source helper now sits under the input for narrow-width readability.
 - Track condition ownership is explicit: `Auto`, `Dry`, `Wet`.
 - Race type ownership now includes persistent `Live Detect`; detected race format/length are pulled from declared race metadata rather than current practice/qualifying session length.
+
+- PreRace fuel-needed basis now follows active contingency (`base race fuel + active contingency litres`) instead of the prior hardcoded `+2 laps` buffer.
+- StrategyDash V2 adds pre-green advice exports only; race-running fuel/pit/control contracts remain on existing runtime seams.
