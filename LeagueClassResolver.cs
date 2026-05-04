@@ -102,6 +102,10 @@ namespace LaunchPlugin
             var mode = (LeagueClassMode)settings.LeagueClassMode;
             bool csvMode = mode == LeagueClassMode.CsvOnly || mode == LeagueClassMode.CsvThenName;
             string path = settings.LeagueClassCsvPath ?? string.Empty;
+            var existingDefinitions = (settings.LeagueClassDefinitions ?? new List<LeagueClassDefinition>())
+                .Where(d => d != null && !string.IsNullOrWhiteSpace(d.CsvClassName))
+                .GroupBy(d => d.CsvClassName.Trim(), StringComparer.OrdinalIgnoreCase)
+                .ToDictionary(g => g.Key, g => g.First(), StringComparer.OrdinalIgnoreCase);
 
             string readError = string.Empty;
             if (csvMode && !string.IsNullOrWhiteSpace(path) && File.Exists(path))
@@ -308,7 +312,3 @@ namespace LaunchPlugin
         }
     }
 }
-            var existingDefinitions = (settings?.LeagueClassDefinitions ?? new List<LeagueClassDefinition>())
-                .Where(d => d != null && !string.IsNullOrWhiteSpace(d.CsvClassName))
-                .GroupBy(d => d.CsvClassName.Trim(), StringComparer.OrdinalIgnoreCase)
-                .ToDictionary(g => g.Key, g => g.First(), StringComparer.OrdinalIgnoreCase);
