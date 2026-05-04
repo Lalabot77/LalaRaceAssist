@@ -853,6 +853,9 @@ namespace LaunchPlugin
         public double Fuel_Delta_LitresCurrentSave { get; private set; }
         public double Fuel_Delta_LitresPlanSave { get; private set; }
         public double Fuel_Delta_LitresWillAddSave { get; private set; }
+        public double Fuel_Setup_FuelLevel { get; private set; }
+        public bool Fuel_Setup_FuelLevelValid { get; private set; }
+        public string Fuel_Setup_FuelLevelSource { get; private set; } = "none";
         public int PreRace_Selected { get; private set; } = 3;
         public string PreRace_SelectedText { get; private set; } = "Auto";
         public double PreRace_Stints { get; private set; }
@@ -5880,6 +5883,9 @@ namespace LaunchPlugin
             AttachCore("Fuel.Delta.LitresCurrentSave", () => Math.Round(Fuel_Delta_LitresCurrentSave, 1));
             AttachCore("Fuel.Delta.LitresPlanSave", () => Math.Round(Fuel_Delta_LitresPlanSave, 1));
             AttachCore("Fuel.Delta.LitresWillAddSave", () => Math.Round(Fuel_Delta_LitresWillAddSave, 1));
+            AttachCore("Fuel.Setup.FuelLevel", () => Fuel_Setup_FuelLevel);
+            AttachCore("Fuel.Setup.FuelLevelValid", () => Fuel_Setup_FuelLevelValid);
+            AttachCore("Fuel.Setup.FuelLevelSource", () => Fuel_Setup_FuelLevelSource ?? "none");
             AttachCore("Fuel.Pit.TotalNeededToEnd", () => Pit_TotalNeededToEnd);
             AttachCore("Fuel.Pit.TotalNeededToEnd_S", () => Pit_TotalNeededToEnd_S);
             AttachCore("Fuel.Pit.NeedToAdd", () => Pit_NeedToAdd);
@@ -17281,9 +17287,173 @@ namespace LaunchPlugin
             return false;
         }
 
+        private bool TryResolveSetupFuelLevelLitres(PluginManager pluginManager, out double litres, out string source)
+        {
+            litres = 0.0;
+            source = "none";
+
+            if (pluginManager == null)
+            {
+                return false;
+            }
+
+            if (TryReadSetupFuelCandidate(pluginManager, "DataCorePlugin.GameRawData.SessionData.CarSetup.BrakesDriveUnit.Fuel.FuelLevel", "brakesdriveunit", out litres, out source)) return true;
+            if (TryReadSetupFuelCandidate(pluginManager, "DataCorePlugin.GameRawData.SessionData.CarSetup.Chassis.Front.FuelLevel", "chassis.front", out litres, out source)) return true;
+            if (TryReadSetupFuelCandidate(pluginManager, "DataCorePlugin.GameRawData.SessionData.CarSetup.Chassis.Rear.FuelLevel", "chassis.rear", out litres, out source)) return true;
+            if (TryReadSetupFuelCandidate(pluginManager, "DataCorePlugin.GameRawData.SessionData.CarSetup.Suspension.Rear.FuelLevel", "suspension.rear", out litres, out source)) return true;
+
+            return false;
+        }
+
+        private static bool TryReadSetupFuelCandidate(PluginManager pluginManager, string propertyPath, string sourceToken, out double litres, out string source)
+        {
+            litres = 0.0;
+            source = "none";
+
+            object raw;
+            try
+            {
+                raw = pluginManager.GetPropertyValue(propertyPath);
+            }
+            catch
+            {
+                return false;
+            }
+
+            if (!TryParseSetupFuelLitres(raw, out litres))
+            {
+                return false;
+            }
+
+            source = sourceToken;
+            return true;
+        }
+
+        private static bool TryParseSetupFuelLitres(object raw, out double litres)
+        {
+            litres = 0.0;
+            if (raw == null) return false;
+
+            if (raw is double d)
+            {
+                if (double.IsNaN(d) || double.IsInfinity(d) || d <= 0.0) return false;
+                litres = d;
+                return true;
+            }
+
+            if (raw is float f)
+            {
+                if (float.IsNaN(f) || float.IsInfinity(f) || f <= 0f) return false;
+                litres = f;
+                return true;
+            }
+
+            if (raw is decimal m)
+            {
+                if (m <= 0m) return false;
+                litres = (double)m;
+                return !double.IsNaN(litres) && !double.IsInfinity(litres) && litres > 0.0;
+            }
+
+            if (raw is int i)
+            {
+                if (i <= 0) return false;
+                litres = i;
+                return true;
+            }
+
+            if (raw is long l)
+            {
+                if (l <= 0L) return false;
+                litres = l;
+                return !double.IsNaN(litres) && !double.IsInfinity(litres) && litres > 0.0;
+            }
+
+            if (raw is short s)
+            {
+                if (s <= 0) return false;
+                litres = s;
+                return true;
+            }
+
+            if (raw is uint ui)
+            {
+                if (ui == 0U) return false;
+                litres = ui;
+                return !double.IsNaN(litres) && !double.IsInfinity(litres) && litres > 0.0;
+            }
+
+            if (raw is ulong ul)
+            {
+                if (ul == 0UL) return false;
+                litres = ul;
+                return !double.IsNaN(litres) && !double.IsInfinity(litres) && litres > 0.0;
+            }
+
+            if (raw is ushort us)
+            {
+                if (us == 0) return false;
+                litres = us;
+                return true;
+            }
+
+            if (raw is byte b)
+            {
+                if (b == 0) return false;
+                litres = b;
+                return true;
+            }
+
+            if (raw is sbyte sb)
+            {
+                if (sb <= 0) return false;
+                litres = sb;
+                return true;
+            }
+
+            string text = Convert.ToString(raw, CultureInfo.InvariantCulture);
+            if (string.IsNullOrWhiteSpace(text)) return false;
+            text = text.Trim();
+
+            string lowered = text.ToLowerInvariant();
+            if (lowered.Contains("gal") || lowered.Contains("gallon"))
+            {
+                return false;
+            }
+
+            var match = System.Text.RegularExpressions.Regex.Match(text, @"^\s*([-+]?\d+(?:[.,]\d+)?)\s*([a-zA-Z]+)\s*$");
+            if (!match.Success) return false;
+
+            string unit = (match.Groups[2].Value ?? string.Empty).Trim().ToLowerInvariant();
+            bool isLitresUnit =
+                unit == "l" ||
+                unit == "litre" ||
+                unit == "litres" ||
+                unit == "liter" ||
+                unit == "liters";
+            if (!isLitresUnit) return false;
+
+            string numeric = match.Groups[1].Value.Replace(',', '.');
+            if (!double.TryParse(numeric, NumberStyles.Float, CultureInfo.InvariantCulture, out litres)) return false;
+            if (double.IsNaN(litres) || double.IsInfinity(litres) || litres <= 0.0) return false;
+            return true;
+        }
+
         /// Updates properties that need to be checked on every tick, like dash switching and anti-stall.
         private void UpdateLiveProperties(PluginManager pluginManager, ref GameData data)
         {
+            if (TryResolveSetupFuelLevelLitres(pluginManager, out double setupFuelLevelLitres, out string setupFuelSource))
+            {
+                Fuel_Setup_FuelLevel = setupFuelLevelLitres;
+                Fuel_Setup_FuelLevelValid = true;
+                Fuel_Setup_FuelLevelSource = setupFuelSource;
+            }
+            else
+            {
+                Fuel_Setup_FuelLevel = 0.0;
+                Fuel_Setup_FuelLevelValid = false;
+                Fuel_Setup_FuelLevelSource = "none";
+            }
 
             if (IsCompleted && (DateTime.Now - _launchEndTime).TotalSeconds > Settings.ResultsDisplayTime)
             {
