@@ -311,3 +311,4 @@ Reset semantics are shared with the Fuel Model and documented centrally in:
 - Fuel-per-lap source/helper text now renders below the input to avoid narrow-width clipping.
 - Track Condition now has explicit `Auto` / `Dry` / `Wet` ownership states. Auto clears manual override and shows `Automatic (dry|wet)`; manual states show `Manual override: dry|wet`.
 - Race Type now includes persistent `Live Detect` ownership. While selected, race type/length consume declared race metadata (`SessionInfo.SessionsXX` where `IsRace==true`) and race-length controls are read-only.
+- Live Detect now shows helper text under Race Type (`session, basis, value` or `no declared race found`) and never silently defaults the UI to Lap-Limited when no valid declared race definition is available.

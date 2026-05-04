@@ -873,6 +873,7 @@ namespace LaunchPlugin
         private double _lastLiveMaxHealthLoggedComputed = double.NaN;
         private double _lastLiveMaxHealthLoggedEffective = double.NaN;
         private string _lastLiveMaxHealthLoggedSource = string.Empty;
+        private string _lastLiveDetectLogSignature = string.Empty;
         private DateTime _lastFuelRuntimeRecoveryUtc = DateTime.MinValue;
         private DateTime _lastFuelRuntimeHealthCheckUtc = DateTime.MinValue;
         private int _fuelRuntimeUnhealthyStreak = 0;
@@ -3011,11 +3012,20 @@ namespace LaunchPlugin
             double? detectedRaceLaps = null;
             bool? detectedTimeLimited = null;
             double? detectedRaceMinutes = null;
+            int detectedSessionIndex = 0;
+            string detectedSessionName = string.Empty;
+            string unavailableReason = "no declared race found";
             for (int i = 1; i <= 64; i++)
             {
                 string idx = i.ToString("00", CultureInfo.InvariantCulture);
                 bool isRace = SafeReadBool(pluginManager, $"DataCorePlugin.GameRawData.SessionData.SessionInfo.Sessions{idx}.IsRace", false);
                 if (!isRace) continue;
+                if (detectedSessionIndex == 0)
+                {
+                    detectedSessionIndex = i;
+                    detectedSessionName = (pluginManager.GetPropertyValue($"DataCorePlugin.GameRawData.SessionData.SessionInfo.Sessions{idx}.SessionName") ?? string.Empty).ToString();
+                    unavailableReason = "declared race has no valid lap/time definition";
+                }
 
                 bool isLimitedLaps = SafeReadBool(pluginManager, $"DataCorePlugin.GameRawData.SessionData.SessionInfo.Sessions{idx}.IsLimitedSessionLaps", false);
                 object sessionLapsRaw = pluginManager.GetPropertyValue($"DataCorePlugin.GameRawData.SessionData.SessionInfo.Sessions{idx}.SessionLaps");
@@ -3032,8 +3042,11 @@ namespace LaunchPlugin
                     // Prefer any valid lap-limited race definition over timed definitions.
                     detectedLapLimited = true;
                     detectedRaceLaps = sessionLapsValue;
+                    detectedSessionIndex = i;
+                    detectedSessionName = (pluginManager.GetPropertyValue($"DataCorePlugin.GameRawData.SessionData.SessionInfo.Sessions{idx}.SessionName") ?? string.Empty).ToString();
                     detectedTimeLimited = null;
                     detectedRaceMinutes = null;
+                    unavailableReason = string.Empty;
                     break;
                 }
                 else if (isLimitedTime && sessionTimeSeconds > 0.0)
@@ -3043,10 +3056,40 @@ namespace LaunchPlugin
                     {
                         detectedTimeLimited = true;
                         detectedRaceMinutes = sessionTimeSeconds / 60.0;
+                        detectedSessionIndex = i;
+                        detectedSessionName = (pluginManager.GetPropertyValue($"DataCorePlugin.GameRawData.SessionData.SessionInfo.Sessions{idx}.SessionName") ?? string.Empty).ToString();
+                        unavailableReason = string.Empty;
                     }
                 }
             }
-            FuelCalculator?.UpdateLiveDetectedRaceDefinition(detectedLapLimited, detectedRaceLaps, detectedTimeLimited, detectedRaceMinutes);
+            FuelCalculator?.UpdateLiveDetectedRaceDefinition(detectedSessionName, detectedLapLimited, detectedRaceLaps, detectedTimeLimited, detectedRaceMinutes);
+
+            string liveDetectBasis = detectedLapLimited == true ? "lap" : (detectedTimeLimited == true ? "time" : "none");
+            double liveDetectValue = detectedLapLimited == true
+                ? detectedRaceLaps.GetValueOrDefault(0.0)
+                : (detectedTimeLimited == true ? detectedRaceMinutes.GetValueOrDefault(0.0) : 0.0);
+            string signature = string.Format(
+                CultureInfo.InvariantCulture,
+                "{0}|{1}|{2:0.###}|{3}",
+                detectedSessionIndex,
+                liveDetectBasis,
+                liveDetectValue,
+                unavailableReason ?? string.Empty);
+            if (!string.Equals(signature, _lastLiveDetectLogSignature, StringComparison.Ordinal))
+            {
+                _lastLiveDetectLogSignature = signature;
+                string sessionLabel = detectedSessionIndex > 0
+                    ? string.Format(CultureInfo.InvariantCulture, "Session{0:00} ({1})", detectedSessionIndex, string.IsNullOrWhiteSpace(detectedSessionName) ? "unnamed" : detectedSessionName.Trim())
+                    : "none";
+                SimHub.Logging.Current.Info(
+                    string.Format(
+                        CultureInfo.InvariantCulture,
+                        "[LalaPlugin:Strategy] Live Detect changed: session={0} basis={1} value={2:0.###} reason={3}",
+                        sessionLabel,
+                        liveDetectBasis,
+                        liveDetectValue,
+                        string.IsNullOrWhiteSpace(unavailableReason) ? "n/a" : unavailableReason));
+            }
 
             // --- 1) Gather required data ---
             UpdateLiveMaxFuel(pluginManager);

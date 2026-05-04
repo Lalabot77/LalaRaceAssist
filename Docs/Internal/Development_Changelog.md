@@ -1,4 +1,9 @@
 - 2026-05-03 Build triage follow-up (PR range #647-#652):
+- 2026-05-03 Strategy Live Detect functional follow-up (#633) landed:
+  - added Live Detect helper text under Race Type showing detected declared race session + basis + value, or explicit unavailable wording when no valid declared race exists;
+  - Live Detect effective-basis visibility now clears to none when unavailable (no silent Lap-Limited UI fallback), while ownership radio remains Live Detect;
+  - added bounded Strategy INFO log on Live Detect result-change only (`session/basis/value/reason`) for declared-race detection diagnostics.
+
   - fixed Fuel per Lap helper TextBlock XAML compile break by removing duplicate Style assignment in `FuelCalculatorView.xaml` while preserving existing source-text trigger behavior (`FuelPerLapSourceInfo` / Profile / Live);
   - confirmed `InvertBooleanConverter` and `LapTimeValidationRule` class/namespace wiring are valid in-project; reported lookup errors were downstream/designer fallout from the XAML parse failure;
   - fixed League Class race-context delegate accessibility seam by making `OpponentsEngine.NativeCarRow` publicly accessible to match the public delegate signature consumed by `LalaLaunch` (`IsRaceContextClassMatch`), with no opponent ordering/filtering logic changes.
