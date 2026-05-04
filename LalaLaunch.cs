@@ -5167,6 +5167,8 @@ namespace LaunchPlugin
         private DateTime _customMessageSaveDueUtc = DateTime.MinValue;
         private bool _friendsDirty = true;
         private LaunchPluginSettings _subscribedLeagueClassSettings;
+        private List<LeagueClassDefinition> _subscribedLeagueClassDefinitions;
+        private readonly HashSet<LeagueClassDefinition> _leagueClassDefinitionSubscriptions = new HashSet<LeagueClassDefinition>();
         private bool _isSavingSettings;
         private bool _carSaBestLapFallbackInfoLogged;
         private const double CarSaLapTimeUpdateVisibilitySeconds = 3.0;
@@ -11526,6 +11528,8 @@ namespace LaunchPlugin
                 _subscribedLeagueClassSettings.PropertyChanged -= OnLeagueClassSettingsPropertyChanged;
                 _subscribedLeagueClassSettings = null;
             }
+            UnsubscribeAllLeagueClassDefinitionEntries();
+            _subscribedLeagueClassDefinitions = null;
 
             if (settings == null)
             {
@@ -11535,11 +11539,20 @@ namespace LaunchPlugin
             _subscribedLeagueClassSettings = settings;
             _subscribedLeagueClassSettings.PropertyChanged += OnLeagueClassSettingsPropertyChanged;
             _leagueClassLastEnabledState = settings.LeagueClassEnabled;
+            HookLeagueClassDefinitions(settings.LeagueClassDefinitions);
         }
 
         private void OnLeagueClassSettingsPropertyChanged(object sender, PropertyChangedEventArgs e)
         {
             string propertyName = e?.PropertyName ?? string.Empty;
+            if (string.Equals(propertyName, nameof(LaunchPluginSettings.LeagueClassDefinitions), StringComparison.Ordinal))
+            {
+                HookLeagueClassDefinitions(_subscribedLeagueClassSettings?.LeagueClassDefinitions);
+                OnPropertyChanged(nameof(LeagueClassStatus));
+                OnPropertyChanged(nameof(LeagueClassPlayerPreviewText));
+                return;
+            }
+
             if (!string.Equals(propertyName, nameof(LaunchPluginSettings.LeagueClassEnabled), StringComparison.Ordinal) &&
                 !string.Equals(propertyName, nameof(LaunchPluginSettings.LeagueClassMode), StringComparison.Ordinal))
             {
@@ -11551,6 +11564,68 @@ namespace LaunchPlugin
             OnPropertyChanged(nameof(LeagueClassPlayerPreviewText));
             OnPropertyChanged(nameof(LeagueClassShowCsvSection));
             OnPropertyChanged(nameof(LeagueClassShowFallbackSection));
+        }
+
+        private void HookLeagueClassDefinitions(List<LeagueClassDefinition> definitions)
+        {
+            if (ReferenceEquals(_subscribedLeagueClassDefinitions, definitions))
+            {
+                return;
+            }
+
+            UnsubscribeAllLeagueClassDefinitionEntries();
+            _subscribedLeagueClassDefinitions = definitions;
+            SubscribeLeagueClassDefinitionEntries(definitions);
+        }
+
+        private void SubscribeLeagueClassDefinitionEntries(IList<LeagueClassDefinition> entries)
+        {
+            if (entries == null)
+            {
+                return;
+            }
+
+            for (int i = 0; i < entries.Count; i++)
+            {
+                SubscribeLeagueClassDefinitionEntry(entries[i]);
+            }
+        }
+
+        private void SubscribeLeagueClassDefinitionEntry(LeagueClassDefinition entry)
+        {
+            if (entry == null)
+            {
+                return;
+            }
+
+            if (_leagueClassDefinitionSubscriptions.Add(entry))
+            {
+                entry.PropertyChanged += OnLeagueClassDefinitionPropertyChanged;
+            }
+        }
+
+        private void UnsubscribeAllLeagueClassDefinitionEntries()
+        {
+            if (_leagueClassDefinitionSubscriptions.Count == 0)
+            {
+                return;
+            }
+
+            foreach (var entry in _leagueClassDefinitionSubscriptions)
+            {
+                if (entry != null)
+                {
+                    entry.PropertyChanged -= OnLeagueClassDefinitionPropertyChanged;
+                }
+            }
+
+            _leagueClassDefinitionSubscriptions.Clear();
+        }
+
+        private void OnLeagueClassDefinitionPropertyChanged(object sender, PropertyChangedEventArgs e)
+        {
+            OnPropertyChanged(nameof(LeagueClassPlayerPreviewText));
+            SaveSettings();
         }
 
         private void SubscribeCustomMessageEntries(IList<CustomMessageSlot> entries)
@@ -18203,7 +18278,18 @@ namespace LaunchPlugin
             new LeagueClassFallbackRule(),
             new LeagueClassFallbackRule()
         };
-        public List<LeagueClassDefinition> LeagueClassDefinitions { get; set; } = new List<LeagueClassDefinition>();
+        private List<LeagueClassDefinition> _leagueClassDefinitions = new List<LeagueClassDefinition>();
+        public List<LeagueClassDefinition> LeagueClassDefinitions
+        {
+            get { return _leagueClassDefinitions; }
+            set
+            {
+                var normalized = value ?? new List<LeagueClassDefinition>();
+                if (ReferenceEquals(_leagueClassDefinitions, normalized)) return;
+                _leagueClassDefinitions = normalized;
+                OnPropertyChanged(nameof(LeagueClassDefinitions));
+            }
+        }
         private int _darkModeMode = 1;
         public int DarkModeMode
         {

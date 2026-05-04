@@ -6,6 +6,13 @@
   - disabled detected classes now resolve invalid in League Class path and safely fall back to native class behavior; manual player override path remains independent;
   - CSV reload preserves edits by class-name key for existing rows, adds defaults for new class names, and drops removed class names (settings list mirrors currently detected CSV classes).
 
+- 2026-05-04 League Race detected-classes UI binding/notification fix landed:
+  - `LaunchPluginSettings.LeagueClassDefinitions` now raises `PropertyChanged` when CSV reload replaces the list, so WPF `ItemsControl` refreshes rows immediately;
+  - `LeagueClassDefinition` now implements `INotifyPropertyChanged` for `Enabled`, `ShortName`, `Rank`, and `ColourHex` so row edits update UI bindings/live preview consistently;
+  - plugin now subscribes to League Class definition row changes to save settings immediately and refresh resolver-consumer preview paths without restart;
+  - scope remains UI/settings/resolver-binding only (no Opponents/H2H/CarSA/PitExit/ClassLeader cohort ownership changes).
+
+
 - 2026-05-03 Build triage follow-up (PR range #647-#652):
   - fixed Fuel per Lap helper TextBlock XAML compile break by removing duplicate Style assignment in `FuelCalculatorView.xaml` while preserving existing source-text trigger behavior (`FuelPerLapSourceInfo` / Profile / Live);
   - confirmed `InvertBooleanConverter` and `LapTimeValidationRule` class/namespace wiring are valid in-project; reported lookup errors were downstream/designer fallout from the XAML parse failure;
