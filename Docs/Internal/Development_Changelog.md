@@ -1,3 +1,4 @@
+- Follow-up fix for StrategyDash phase gating: `StrategyDash.Phase` now requires `DataCorePlugin.GameRawData.Telemetry.IsOnTrackCar==true` before allowing Phase `2=GRID FORMATION`; race-running (`3=RACE`) authority remains unchanged, and non-race/non-on-track now defaults to `1=PLANNING` even if grid/formation helper flags are true.
 ### 2026-05-04 — StrategyDash phase compile-fix follow-up (PR #660)
 - Classification: **internal-only** (build fix; no fuel/planner/pit semantics redesign).
 - Fixed `LalaLaunch.UpdateStrategyDashAdvice(...)` phase detection to consume real call-path session booleans (`isRaceRunning`, `isGridOrFormation`) instead of removed/non-existent fields.

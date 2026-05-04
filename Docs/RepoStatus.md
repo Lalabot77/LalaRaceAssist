@@ -1,4 +1,9 @@
 ## Documentation sync status
+- 2026-05-04 StrategyDash IsOnTrackCar phase-gate follow-up landed:
+  - `StrategyDash.Phase` now hard-gates `2 = GRID FORMATION` on `DataCorePlugin.GameRawData.Telemetry.IsOnTrackCar==true` in addition to existing grid/formation session-state authority;
+  - `3 = RACE` authority remains unchanged;
+  - when not race-running and not on-track/in-car, phase now remains `1 = PLANNING` (grid/formation helper flags alone no longer promote phase 2).
+
 - 2026-05-04 StrategyDash phase compile-fix follow-up (PR #660) landed:
   - `UpdateStrategyDashAdvice(...)` phase detection now takes explicit real-state booleans from the existing pre-race call path (`isRaceRunning`, `isGridOrFormation`) instead of referencing removed non-existent fields;
   - StrategyDash phase contract is preserved (`1=PLANNING`, `2=GRID FORMATION`, `3=RACE`) with grid+formation still combined;
@@ -121,6 +126,11 @@ Branch: work
 - No Git remote is configured in this checkout (`git remote -v` returns empty).
 
 ## Documentation sync status
+- 2026-05-04 StrategyDash IsOnTrackCar phase-gate follow-up landed:
+  - `StrategyDash.Phase` now hard-gates `2 = GRID FORMATION` on `DataCorePlugin.GameRawData.Telemetry.IsOnTrackCar==true` in addition to existing grid/formation session-state authority;
+  - `3 = RACE` authority remains unchanged;
+  - when not race-running and not on-track/in-car, phase now remains `1 = PLANNING` (grid/formation helper flags alone no longer promote phase 2).
+
 - 2026-05-04 StrategyDash one-stop burn-basis current-tick refresh fix landed:
   - one-stop `StrategyDash.NextRefuelTargetLitres` PUSH/SAVE selection now uses current-tick locally resolved burns in `UpdatePreRaceOutputs(...)` (not shared prior-frame `PushFuelPerLap`/`FuelSaveFuelPerLap` fields at that stage);
   - fallback remains NORM when source is STBY/OFF/invalid or selected burn is unavailable;

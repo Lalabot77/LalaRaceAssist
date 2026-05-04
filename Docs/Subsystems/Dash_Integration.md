@@ -215,4 +215,5 @@ Dashboards should **not**:
 The v1 GitHub docs now present dashboards as the presentation layer across all systems. This page is the canonical technical companion to the user-facing `Docs/Dashboards.md` page.
 
 - Added additive `StrategyDash.*` V2 seam for pre-green dashboards (planning + grid/formation).
+- StrategyDash phase contract includes in-car gating for grid/formation: `2 = GRID FORMATION` is emitted only when session grid/formation authority is true **and** `DataCorePlugin.GameRawData.Telemetry.IsOnTrackCar==true`; otherwise pre-race defaults to `1 = PLANNING` until race-running (`3 = RACE`) starts.
 - `StrategyDash.*` remains publish-safe in race-running phase but is not the primary runtime contract; keep race-running widgets on existing `Fuel.*`, `Fuel.Pit.*`, `Fuel.Delta.*`, `Fuel.RequiredBurnToEnd*`, `Pit.FuelControl.*`, and boxed refuel latch seams.
