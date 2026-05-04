@@ -5250,6 +5250,8 @@ namespace LaunchPlugin
         if (previousRaceType == RaceType.LiveDetect)
         {
             _liveDetectedRaceType = null;
+            _lastLiveDetectedRaceLaps = 0.0;
+            _lastLiveDetectedRaceMinutes = 0.0;
             _selectedPreset = null;
             _appliedPreset = null;
             OnPropertyChanged(nameof(SelectedPreset));
@@ -5287,7 +5289,7 @@ namespace LaunchPlugin
                 shouldRecalculate = true;
             }
             _lastLiveDetectedRaceLaps = raceLaps.Value;
-            if (Math.Abs(RaceLaps - _lastLiveDetectedRaceLaps) > 0.001)
+            if (IsLiveDetectRace && Math.Abs(RaceLaps - _lastLiveDetectedRaceLaps) > 0.001)
             {
                 RaceLaps = _lastLiveDetectedRaceLaps;
                 shouldRecalculate = false; // RaceLaps setter already recalculates
@@ -5321,7 +5323,7 @@ namespace LaunchPlugin
                 shouldRecalculate = true;
             }
             _lastLiveDetectedRaceMinutes = raceMinutes.Value;
-            if (Math.Abs(RaceMinutes - _lastLiveDetectedRaceMinutes) > 0.001)
+            if (IsLiveDetectRace && Math.Abs(RaceMinutes - _lastLiveDetectedRaceMinutes) > 0.001)
             {
                 RaceMinutes = _lastLiveDetectedRaceMinutes;
                 shouldRecalculate = false; // RaceMinutes setter already recalculates
