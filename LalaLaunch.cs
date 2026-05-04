@@ -17310,6 +17310,55 @@ namespace LaunchPlugin
                 return true;
             }
 
+            if (raw is long l)
+            {
+                if (l <= 0L) return false;
+                litres = l;
+                return !double.IsNaN(litres) && !double.IsInfinity(litres) && litres > 0.0;
+            }
+
+            if (raw is short s)
+            {
+                if (s <= 0) return false;
+                litres = s;
+                return true;
+            }
+
+            if (raw is uint ui)
+            {
+                if (ui == 0U) return false;
+                litres = ui;
+                return !double.IsNaN(litres) && !double.IsInfinity(litres) && litres > 0.0;
+            }
+
+            if (raw is ulong ul)
+            {
+                if (ul == 0UL) return false;
+                litres = ul;
+                return !double.IsNaN(litres) && !double.IsInfinity(litres) && litres > 0.0;
+            }
+
+            if (raw is ushort us)
+            {
+                if (us == 0) return false;
+                litres = us;
+                return true;
+            }
+
+            if (raw is byte b)
+            {
+                if (b == 0) return false;
+                litres = b;
+                return true;
+            }
+
+            if (raw is sbyte sb)
+            {
+                if (sb <= 0) return false;
+                litres = sb;
+                return true;
+            }
+
             string text = Convert.ToString(raw, CultureInfo.InvariantCulture);
             if (string.IsNullOrWhiteSpace(text)) return false;
             text = text.Trim();

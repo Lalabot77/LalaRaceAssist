@@ -143,6 +143,7 @@ The public user-facing release history is maintained in the root `CHANGELOG.md`.
   - rejects known non-litre unit strings (`gal`, `gallon`, `gallons`) and other unknown units;
   - rejects bare numeric strings (string values require explicit litre units for this seam).
 - Numeric raw values remain accepted as litres.
+- Added boxed integral raw-type support in `TryParseSetupFuelLitres(...)` for `long`, `short`, `uint`, `ulong`, `ushort`, `byte`, and `sbyte` (existing `double`/`float`/`decimal`/`int` support preserved), with zero/non-positive and non-finite rejection retained.
 - Preserved invariants: no overwrite of `Telemetry.FuelLevel`; no changes to `Fuel.LiveFuelPerLap`, pit math, planner math, PreRace strategy logic, or max tank authority.
 
 ## 2026-05-01 — League Race Phase 2 debug/metadata exports only
