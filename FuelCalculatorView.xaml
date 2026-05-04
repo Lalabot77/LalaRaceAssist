@@ -535,7 +535,7 @@
                             ToolTip="Open the Preset Manager to create, rename, edit, or delete strategy presets."/>
                             </Grid>
 
-                            <StackPanel Orientation="Horizontal" Margin="0,5,0,10">
+                        <StackPanel Orientation="Horizontal" Margin="0,5,0,10">
                             <TextBlock Text="Race Type:" VerticalAlignment="Center" Margin="0,0,10,0"
                                        ToolTip="Choose whether the race is limited by laps or time."/>
                             <RadioButton Content="Lap-Limited" IsChecked="{Binding IsLapLimitedRace, Mode=TwoWay}" GroupName="RaceType"
@@ -545,6 +545,11 @@
                             <RadioButton Content="Live Detect" IsChecked="{Binding IsLiveDetectRace, Mode=TwoWay}" GroupName="RaceType" Margin="10,0,0,0"
                                          ToolTip="Use declared race session metadata as race type/length authority."/>
                         </StackPanel>
+                        <TextBlock Text="{Binding LiveDetectHelperText}"
+                                   Margin="0,-6,0,10"
+                                   FontSize="12"
+                                   Opacity="0.8"
+                                   Visibility="{Binding IsLiveDetectRace, Converter={StaticResource BooleanToVisibilityConverter}}"/>
 
                         <ui:TitledSlider Title="Race Laps:" Minimum="1" Maximum="500" Value="{Binding RaceLaps, Mode=TwoWay}" Visibility="{Binding ShowEffectiveLapLimitedRace, Converter={StaticResource BooleanToVisibilityConverter}, Mode=OneWay}" IsEnabled="{Binding IsRaceLengthEditable}"
                                          ToolTip="Total race distance in laps."/>

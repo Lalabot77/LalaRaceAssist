@@ -194,6 +194,7 @@ Scope: Info/Warn logs emitted via `SimHub.Logging.Current.Info(...)` and `SimHub
 - **`[LalaPlugin:Strategy] live-cap authority available=... source=... litres=...`** — Strategy live-cap resolver state from runtime-authoritative seam.
 - **`[LalaPlugin:Strategy] UpdateLiveDisplay: live max tank refresh ...`** — Strategy live snapshot max-tank display refresh event.
 - **`[LalaPlugin:Strategy] RefreshLiveSnapshot requested.`** — Explicit strategy-side live-snapshot refresh action invoked.
+- **`[LalaPlugin:Strategy] Live Detect changed: session=... basis=... value=... reason=...`** — Emitted only when Live Detect result changes (session/basis/value/reason), to bound diagnostic noise while validating declared-race detection.
 
 ## Message system v1
 - **`[LalaPlugin:MSGV1] <message>`** — General MSGV1 engine logs (e.g., stack outputs).【F:Messaging/MessageEngine.cs†L478-L560】

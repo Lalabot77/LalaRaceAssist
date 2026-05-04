@@ -122,6 +122,7 @@ namespace LaunchPlugin
     private string _selectedTrack;
     private RaceType _raceType;
     private RaceType? _liveDetectedRaceType;
+    private string _liveDetectHelperText = "Live Detect: no declared race found";
     private double _lastLiveDetectedRaceLaps;
     private double _lastLiveDetectedRaceMinutes;
     private double _raceLaps;
@@ -1128,6 +1129,7 @@ namespace LaunchPlugin
     }
     public bool ShowEffectiveLapLimitedRace => IsLapLimitedRace || (IsLiveDetectRace && _liveDetectedRaceType == RaceType.LapLimited);
     public bool ShowEffectiveTimeLimitedRace => IsTimeLimitedRace || (IsLiveDetectRace && _liveDetectedRaceType == RaceType.TimeLimited);
+    public string LiveDetectHelperText => _liveDetectHelperText;
 
     public double RaceLaps
     {
@@ -5189,7 +5191,7 @@ namespace LaunchPlugin
 
     public bool IsRaceLengthEditable => !IsLiveDetectRace;
 
-    public void UpdateLiveDetectedRaceDefinition(bool? isLapLimited, double? raceLaps, bool? isTimeLimited, double? raceMinutes)
+    public void UpdateLiveDetectedRaceDefinition(string detectedSessionLabel, bool? isLapLimited, double? raceLaps, bool? isTimeLimited, double? raceMinutes)
     {
         if (!IsLiveDetectRace)
         {
@@ -5222,6 +5224,12 @@ namespace LaunchPlugin
                 RaceLaps = _lastLiveDetectedRaceLaps;
                 shouldRecalculate = false; // RaceLaps setter already recalculates
             }
+            _liveDetectHelperText = string.Format(
+                CultureInfo.InvariantCulture,
+                "Live Detect: {0}, lap-limited, {1:0} laps",
+                string.IsNullOrWhiteSpace(detectedSessionLabel) ? "declared race" : detectedSessionLabel.Trim(),
+                _lastLiveDetectedRaceLaps);
+            OnPropertyChanged(nameof(LiveDetectHelperText));
         }
         else if (hasTime)
         {
@@ -5245,6 +5253,26 @@ namespace LaunchPlugin
                 RaceMinutes = _lastLiveDetectedRaceMinutes;
                 shouldRecalculate = false; // RaceMinutes setter already recalculates
             }
+            _liveDetectHelperText = string.Format(
+                CultureInfo.InvariantCulture,
+                "Live Detect: {0}, time-limited, {1:0} min",
+                string.IsNullOrWhiteSpace(detectedSessionLabel) ? "declared race" : detectedSessionLabel.Trim(),
+                _lastLiveDetectedRaceMinutes);
+            OnPropertyChanged(nameof(LiveDetectHelperText));
+        }
+        else
+        {
+            if (_liveDetectedRaceType.HasValue)
+            {
+                shouldRecalculate = true;
+            }
+            _liveDetectedRaceType = null;
+            OnPropertyChanged(nameof(IsLapLimitedRace));
+            OnPropertyChanged(nameof(IsTimeLimitedRace));
+            OnPropertyChanged(nameof(ShowEffectiveLapLimitedRace));
+            OnPropertyChanged(nameof(ShowEffectiveTimeLimitedRace));
+            _liveDetectHelperText = "Live Detect: no declared race found";
+            OnPropertyChanged(nameof(LiveDetectHelperText));
         }
 
         if (shouldRecalculate)
