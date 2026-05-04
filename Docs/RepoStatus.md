@@ -69,6 +69,11 @@ Branch: work
 - No Git remote is configured in this checkout (`git remote -v` returns empty).
 
 ## Documentation sync status
+- 2026-05-04 PreRace current-fuel setup-fallback follow-up landed:
+  - `UpdatePreRaceOutputs(...)` now resolves effective current fuel as live fuel when valid/positive, else setup fallback (`Fuel.Setup.FuelLevel` when valid), else `0`;
+  - PreRace delta/status/feasibility paths now consume that effective PreRace-only current-fuel basis (one-stop/no-stop/multi-stop checks);
+  - scope is PreRace-only: no overwrite of live telemetry fuel and no changes to live fuel learning, `Fuel.Pit.*` runtime math, planner calculations, or max-tank authority.
+
 - 2026-05-04 Setup fuel fallback export landed (with litre-unit string validation follow-up):
   - added new read-only fuel setup exports `Fuel.Setup.FuelLevel`, `Fuel.Setup.FuelLevelValid`, `Fuel.Setup.FuelLevelSource`;
   - setup resolver checks setup paths in strict priority (`BrakesDriveUnit` -> `Chassis.Front` -> `Chassis.Rear` -> `Suspension.Rear`), accepts numeric raw values as litres, and accepts string values only when explicitly litre-labelled (`77.0 L`, `77 L`, `77,0 L`, `litre/litres/liter/liters`);

@@ -25,8 +25,9 @@ This document is the canonical dash-facing contract layer. It does **not** redef
 - Treat `LalaLaunch.PreRace.*` as a separate on-grid/pre-race info layer, not a replacement for live `Fuel.*` or Strategy planner ownership.
 - Consume `LalaLaunch.PreRace.StatusText` together with `LalaLaunch.PreRace.StatusColour` (`green`/`orange`/`red`) for simple dash styling; do not recreate planner/live mismatch or multi-stop decision logic in dash scripts.
 - `LalaLaunch.PreRace.FuelDelta` is a live on-grid seam and should be expected to move immediately with fuel changes:
-  - required one-stop path uses `(current fuel + pit fuel request) - total fuel needed`,
-  - required no-stop/multi-stop paths use `current fuel - total fuel needed`.
+  - PreRace current-fuel basis uses live current fuel when valid/positive, else setup fallback (`Fuel.Setup.FuelLevel` when valid), else `0`,
+  - required one-stop path uses `(effective current fuel + pit fuel request) - total fuel needed`,
+  - required no-stop/multi-stop paths use `effective current fuel - total fuel needed`.
 - `LalaLaunch.PreRace.FuelSource` / `LapTimeSource` contract:
   - `FuelSource` accepted values are `live`, `profile`, `planner-profile`, `planner-manual`, `fallback` (`planner`/`simhub` are not emitted),
   - Auto uses runtime ownership labels only (`live`/`profile`/`fallback`) and does not publish planner-classified labels,

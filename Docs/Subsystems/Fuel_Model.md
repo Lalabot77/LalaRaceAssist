@@ -185,6 +185,7 @@ The full authoritative export list lives in `Docs/Internal/SimHubParameterInvent
 - `Fuel.StintBurnTarget*`
 - `Fuel.Live.ProjectedDriveSecondsRemaining`
 - `LalaLaunch.PreRace.*` as the separate pre-race/on-grid info layer (Auto uses live race-definition authority first: `_SessionTime` for timed races, `_SessionLaps` for lap-limited races)
+- `LalaLaunch.PreRace.*` current-fuel basis now uses a narrow fallback seam for pre-grid telemetry gaps: live current fuel when valid/positive, else setup fallback (`Fuel.Setup.FuelLevel` when valid), else `0`.
 
 Setup-fuel fallback export semantics:
 - `Fuel.Setup.FuelLevel` publishes setup-derived litres when a valid setup value is available, else `0`.

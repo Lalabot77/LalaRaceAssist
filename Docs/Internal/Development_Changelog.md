@@ -146,6 +146,15 @@ The public user-facing release history is maintained in the root `CHANGELOG.md`.
 - Added boxed integral raw-type support in `TryParseSetupFuelLitres(...)` for `long`, `short`, `uint`, `ulong`, `ushort`, `byte`, and `sbyte` (existing `double`/`float`/`decimal`/`int` support preserved), with zero/non-positive and non-finite rejection retained.
 - Preserved invariants: no overwrite of `Telemetry.FuelLevel`; no changes to `Fuel.LiveFuelPerLap`, pit math, planner math, PreRace strategy logic, or max tank authority.
 
+## 2026-05-04 — PreRace current-fuel basis setup-fallback integration
+- Classification: **both** (PreRace on-grid/status behavior improvement + docs alignment).
+- `UpdatePreRaceOutputs(...)` now resolves an effective PreRace current-fuel basis using:
+  1) live current fuel when valid/positive,
+  2) setup fallback (`Fuel.Setup.FuelLevel`) when live current fuel is unavailable/zero and setup fallback is valid,
+  3) existing zero/fallback behavior when neither is available.
+- PreRace one-stop/no-stop/multi-stop delta/status feasibility paths now use that effective PreRace-only current-fuel basis.
+- Preserved invariants: no overwrite of telemetry fuel, no live fuel-learning changes, no `Fuel.Pit.*` runtime math changes, no planner/max-tank authority changes.
+
 ## 2026-05-01 — League Race Phase 2 debug/metadata exports only
 - Classification: **both** (new dash-facing debug metadata exports + docs alignment).
 - Added League Class global/player export family in `LalaLaunch` using resolver-only authority: `LeagueClass.Enabled`, `LeagueClass.Mode`, `LeagueClass.ConfigStatusText`, `LeagueClass.LoadedCount`, `LeagueClass.ValidDriverCount`, `LeagueClass.InvalidRowCount`, `LeagueClass.DuplicateRowCount`, `LeagueClass.Player.*` (`Name/ShortName/Rank/ColourHex/Valid/Source/OverrideActive`).

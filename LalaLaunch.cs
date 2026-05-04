@@ -1110,6 +1110,24 @@ namespace LaunchPlugin
             return targetMax > 0.0 && currentFuel >= (targetMax - PreRaceMaxStartToleranceLitres);
         }
 
+        private double ResolvePreRaceCurrentFuelLitres(double liveCurrentFuel, out string source)
+        {
+            if (!double.IsNaN(liveCurrentFuel) && !double.IsInfinity(liveCurrentFuel) && liveCurrentFuel > 0.0)
+            {
+                source = "live";
+                return liveCurrentFuel;
+            }
+
+            if (Fuel_Setup_FuelLevelValid && Fuel_Setup_FuelLevel > 0.0 && !double.IsNaN(Fuel_Setup_FuelLevel) && !double.IsInfinity(Fuel_Setup_FuelLevel))
+            {
+                source = "setup";
+                return Fuel_Setup_FuelLevel;
+            }
+
+            source = "none";
+            return (!double.IsNaN(liveCurrentFuel) && !double.IsInfinity(liveCurrentFuel) && liveCurrentFuel > 0.0) ? liveCurrentFuel : 0.0;
+        }
+
         private static bool IsOneStopFeasibleForPreRace(
             double preRaceTotalFuelNeeded,
             double currentFuel,
@@ -1234,7 +1252,7 @@ namespace LaunchPlugin
 
         private void UpdatePreRaceOutputs(
             GameData data,
-            double currentFuel,
+            double liveCurrentFuel,
             double pitWindowRequestedAdd,
             double raceSessionDurationSeconds,
             long raceSessionLaps,
@@ -1246,6 +1264,7 @@ namespace LaunchPlugin
             int selectedStrategy = NormalizeStrategyMode(FuelCalculator?.SelectedPreRaceMode ?? 3);
             PreRace_Selected = selectedStrategy;
             PreRace_SelectedText = StrategyModeText(selectedStrategy);
+            double currentFuel = ResolvePreRaceCurrentFuelLitres(liveCurrentFuel, out _);
 
             double usableTank = effectiveMaxTank > 0.0 ? effectiveMaxTank : maxTankCapacity;
 
