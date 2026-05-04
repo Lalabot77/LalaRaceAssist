@@ -84,6 +84,7 @@ Branch: work
 - No Git remote is configured in this checkout (`git remote -v` returns empty).
 
 ## Documentation sync status
+- 2026-05-04 StrategyDash V2 seam + PreRace contingency-basis correction synced (legacy PreRace/Fuel/Pit/Pit.FuelControl exports retained).
 - 2026-05-04 PreRace current-fuel setup-fallback follow-up landed:
   - `UpdatePreRaceOutputs(...)` now resolves effective current fuel as live fuel when valid/positive, else setup fallback (`Fuel.Setup.FuelLevel` when valid), else `0`;
   - setup fallback is gated to pre-race/grid/formation only (SessionState `<4`); during active race-running (SessionState `==4`) setup fallback is disabled and live fuel remains authoritative even when live fuel is `0`;
