@@ -46,6 +46,15 @@ namespace LaunchPlugin
         public int Rank { get; set; }
     }
 
+    public sealed class LeagueClassDefinition
+    {
+        public string CsvClassName { get; set; } = string.Empty;
+        public bool Enabled { get; set; } = true;
+        public string ShortName { get; set; } = string.Empty;
+        public int Rank { get; set; }
+        public string ColourHex { get; set; } = string.Empty;
+    }
+
     public sealed class LeagueClassFallbackRule
     {
         public bool Enabled { get; set; }
@@ -64,7 +73,7 @@ namespace LaunchPlugin
         public int DuplicateRowCount { get; set; }
         public int ValidDriverCount { get; set; }
         public IReadOnlyList<string> DetectedClasses { get; set; } = Array.Empty<string>();
-        public IReadOnlyList<LeagueClassFallbackRule> DetectedClassRows { get; set; } = Array.Empty<LeagueClassFallbackRule>();
+        public IReadOnlyList<LeagueClassDefinition> DetectedClassRows { get; set; } = Array.Empty<LeagueClassDefinition>();
     }
 
     public sealed class LeagueClassResolver
@@ -164,6 +173,25 @@ namespace LaunchPlugin
                 }
             }
 
+            var mergedDefinitions = _detectedClassNames
+                .Select((name, index) =>
+                {
+                    existingDefinitions.TryGetValue(name, out var existing);
+                    var first = _csvByCustomerId.Values.FirstOrDefault(v => string.Equals(v.ClassName, name, StringComparison.OrdinalIgnoreCase));
+                    int defaultRank = first != null && first.Rank > 0 ? first.Rank : (index + 1);
+                    return new LeagueClassDefinition
+                    {
+                        CsvClassName = name,
+                        Enabled = existing?.Enabled ?? true,
+                        ShortName = string.IsNullOrWhiteSpace(existing?.ShortName) ? name : existing.ShortName,
+                        Rank = (existing?.Rank ?? 0) > 0 ? existing.Rank : defaultRank,
+                        ColourHex = !string.IsNullOrWhiteSpace(existing?.ColourHex) ? NormalizeHex(existing.ColourHex) : (first?.ColourHex ?? string.Empty)
+                    };
+                })
+                .ToList();
+
+            settings.LeagueClassDefinitions = mergedDefinitions;
+
             _status = new LeagueClassStatus
             {
                 ConfigStatusText = BuildStatusText(settings, path, csvMode, readError),
@@ -172,21 +200,7 @@ namespace LaunchPlugin
                 DuplicateRowCount = duplicate,
                 ValidDriverCount = _csvByCustomerId.Count,
                 DetectedClasses = _detectedClassNames.ToArray(),
-                DetectedClassRows = _detectedClassNames
-                    .Select(name =>
-                    {
-                        var first = _csvByCustomerId.Values.FirstOrDefault(v => string.Equals(v.ClassName, name, StringComparison.OrdinalIgnoreCase));
-                        return new LeagueClassFallbackRule
-                        {
-                            Enabled = true,
-                            MatchSuffix = string.Empty,
-                            ClassName = name,
-                            ShortName = name,
-                            Rank = first?.Rank ?? 0,
-                            ColourHex = first?.ColourHex ?? string.Empty
-                        };
-                    })
-                    .ToArray()
+                DetectedClassRows = mergedDefinitions.ToArray()
             };
         }
 
@@ -226,12 +240,19 @@ namespace LaunchPlugin
 
             if (checkCsvFirst && customerId.HasValue && _csvByCustomerId.TryGetValue(customerId.Value, out var csv))
             {
+                var classDef = (settings.LeagueClassDefinitions ?? new List<LeagueClassDefinition>())
+                    .FirstOrDefault(d => d != null && string.Equals(d.CsvClassName, csv.ClassName, StringComparison.OrdinalIgnoreCase));
+                if (classDef != null && !classDef.Enabled)
+                {
+                    return EffectiveRaceClassInfo.Invalid(LeagueClassSource.Native);
+                }
+
                 return new EffectiveRaceClassInfo
                 {
                     Name = csv.ClassName,
-                    ShortName = csv.ClassName,
-                    Rank = csv.Rank,
-                    ColourHex = csv.ColourHex,
+                    ShortName = !string.IsNullOrWhiteSpace(classDef?.ShortName) ? classDef.ShortName : csv.ClassName,
+                    Rank = (classDef?.Rank ?? 0) > 0 ? classDef.Rank : csv.Rank,
+                    ColourHex = !string.IsNullOrWhiteSpace(classDef?.ColourHex) ? NormalizeHex(classDef.ColourHex) : csv.ColourHex,
                     Source = LeagueClassSource.Csv,
                     Valid = true
                 };
@@ -287,3 +308,7 @@ namespace LaunchPlugin
         }
     }
 }
+            var existingDefinitions = (settings?.LeagueClassDefinitions ?? new List<LeagueClassDefinition>())
+                .Where(d => d != null && !string.IsNullOrWhiteSpace(d.CsvClassName))
+                .GroupBy(d => d.CsvClassName.Trim(), StringComparer.OrdinalIgnoreCase)
+                .ToDictionary(g => g.Key, g => g.First(), StringComparer.OrdinalIgnoreCase);

@@ -1,3 +1,11 @@
+- 2026-05-03 League Race CSV detected-classes editing layer landed:
+  - added persisted user-editable class-definition layer (`LeagueClassDefinitions`) keyed by CSV class name, with editable `Enabled`, `ShortName`, `Rank`, and `ColourHex`;
+  - detected-classes table now binds to settings-owned editable rows; CSV class name remains read-only while enabled/rank/short/colour fields are editable with live colour preview;
+  - resolver ownership remains split: CSV still maps `CustomerId -> raw CSV ClassName`; resolver then applies class-definition metadata for effective short name/rank/colour/valid;
+  - rank semantics are now explicit (`1 = fastest/highest`, no reverse ordering), and missing/invalid CSV rank defaults to stable detected-order ranks starting at `1`;
+  - disabled detected classes now resolve invalid in League Class path and safely fall back to native class behavior; manual player override path remains independent;
+  - CSV reload preserves edits by class-name key for existing rows, adds defaults for new class names, and drops removed class names (settings list mirrors currently detected CSV classes).
+
 - 2026-05-03 Build triage follow-up (PR range #647-#652):
   - fixed Fuel per Lap helper TextBlock XAML compile break by removing duplicate Style assignment in `FuelCalculatorView.xaml` while preserving existing source-text trigger behavior (`FuelPerLapSourceInfo` / Profile / Live);
   - confirmed `InvertBooleanConverter` and `LapTimeValidationRule` class/namespace wiring are valid in-project; reported lookup errors were downstream/designer fallout from the XAML parse failure;
