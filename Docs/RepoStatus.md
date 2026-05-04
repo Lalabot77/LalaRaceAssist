@@ -1,4 +1,8 @@
 ## Documentation sync status
+- 2026-05-04 League Race header alignment follow-up landed:
+  - fixed class-table header offset by reserving a fixed checkbox column width (`18`) in both header grids and row grids for Detected classes and Fallback rules;
+  - keeps existing bindings/tooltips/edit semantics unchanged (layout-only alignment correction).
+
 - 2026-05-04 League Race settings table alignment polish landed:
   - League Class settings now use fixed-column grid headers for Detected classes, Player race class, and Fallback rules to align headers directly above their input columns;
   - Enabled/Colour Preview header labels were removed while keeping the checkbox and colour-preview controls;

@@ -247,7 +247,7 @@
                         <TextBlock Margin="0,8,0,2" Text="Detected classes" FontWeight="SemiBold"/>
                         <Grid Margin="0,0,0,2">
                             <Grid.ColumnDefinitions>
-                                <ColumnDefinition Width="Auto"/>
+                                <ColumnDefinition Width="18"/>
                                 <ColumnDefinition Width="6"/>
                                 <ColumnDefinition Width="130"/>
                                 <ColumnDefinition Width="6"/>
@@ -269,7 +269,7 @@
                                 <DataTemplate>
                                     <Grid Margin="0,2,0,2">
                                         <Grid.ColumnDefinitions>
-                                            <ColumnDefinition Width="Auto"/>
+                                            <ColumnDefinition Width="18"/>
                                             <ColumnDefinition Width="6"/>
                                             <ColumnDefinition Width="130"/>
                                             <ColumnDefinition Width="6"/>
@@ -342,7 +342,7 @@
                     <TextBlock Margin="0,8,0,2" Text="Fallback rules (suffix)" FontWeight="SemiBold" Visibility="{Binding LeagueClassShowFallbackSection, Converter={StaticResource BooleanToVisibilityConverter}}"/>
                     <Grid Margin="0,0,0,2" Visibility="{Binding LeagueClassShowFallbackSection, Converter={StaticResource BooleanToVisibilityConverter}}">
                         <Grid.ColumnDefinitions>
-                            <ColumnDefinition Width="Auto"/>
+                            <ColumnDefinition Width="18"/>
                             <ColumnDefinition Width="6"/>
                             <ColumnDefinition Width="90"/>
                             <ColumnDefinition Width="6"/>
@@ -367,7 +367,7 @@
                             <DataTemplate>
                                 <Grid Margin="0,2,0,2">
                                     <Grid.ColumnDefinitions>
-                                        <ColumnDefinition Width="Auto"/>
+                                        <ColumnDefinition Width="18"/>
                                         <ColumnDefinition Width="6"/>
                                         <ColumnDefinition Width="90"/>
                                         <ColumnDefinition Width="6"/>
