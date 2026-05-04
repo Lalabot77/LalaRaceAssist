@@ -1,3 +1,9 @@
+
+## 2026-05-04 — Offline data module dash toggle export
+- Classification: **both** (new dash-facing action/property + internal docs alignment).
+- Added plugin action `OfflineDataModule_Toggle` following existing debug-toggle behavior (flip persisted setting + log line).
+- Added dash-readable export `OfflineDataModule` (`0/1`) for visibility/control logic.
+- No plugin bindings-section UI addition; action/property are available via SimHub action/property surfaces only.
 - 2026-05-04 Strategy Live Detect review fix-up 2 landed:
   - `CurrentSessionInfo` race-length detection now respects race limit flags (`IsLimitedSessionLaps`/`IsLimitedTime`) before accepting `_SessionLaps`/`_SessionTime`, with Sessions fallback still active when flagged current-session length is unusable;
   - hardened `SafeReadLong` decimal conversion with explicit `long` range guard to prevent overflow throw paths in telemetry updates.

@@ -1,3 +1,8 @@
+- 2026-05-04 Offline data module toggle landed:
+  - added plugin action `OfflineDataModule_Toggle` (debug-toggle style persisted flip) for dash control workflows;
+  - added exported property `OfflineDataModule` (`0/1`) so dashboards can gate visibility directly from plugin state;
+  - no plugin bindings-section UI row was added (action/property are surfaced via SimHub action/property surfaces).
+
 - 2026-05-04 Strategy Live Detect P1/P2 review follow-up landed:
   - current-session race definition acceptance now requires matching limit flags (`IsLimitedSessionLaps` for laps, `IsLimitedTime` for timed) in addition to positive values;
   - `SafeReadLong` now range-checks decimal values before casting, so out-of-range decimals safely return fallback instead of throwing.

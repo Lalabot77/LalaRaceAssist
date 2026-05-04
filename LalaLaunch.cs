@@ -5871,6 +5871,17 @@ namespace LaunchPlugin
                 SaveSettings();
                 SimHub.Logging.Current.Info($"[LalaPlugin:Debug] Debug_Hide_3_Toggle -> Hide={Settings.DebugHide3}");
             });
+            this.AddAction("OfflineDataModule_Toggle", (a, b) =>
+            {
+                if (Settings == null)
+                {
+                    return;
+                }
+
+                Settings.OfflineDataModule = !Settings.OfflineDataModule;
+                SaveSettings();
+                SimHub.Logging.Current.Info($"[LalaPlugin:Debug] OfflineDataModule_Toggle -> Enabled={Settings.OfflineDataModule}");
+            });
             this.AddAction("ShiftAssist_ResetDelayStats", (a, b) => ExecuteShiftAssistResetDelayStatsAction());
             this.AddAction("ShiftAssist_ToggleShiftAssist", (a, b) =>
             {
@@ -6139,6 +6150,7 @@ namespace LaunchPlugin
             AttachCore("Debug.Hide_1", () => Settings?.DebugHide1 == true ? 1 : 0);
             AttachCore("Debug.Hide_2", () => Settings?.DebugHide2 == true ? 1 : 0);
             AttachCore("Debug.Hide_3", () => Settings?.DebugHide3 == true ? 1 : 0);
+            AttachCore("OfflineDataModule", () => Settings?.OfflineDataModule == true ? 1 : 0);
             AttachCore("PitScreenActive", () => _pitScreenActive);
             AttachCore("PitScreenMode", () => _pitScreenMode);
             AttachCore("Pit.Command.DisplayText", () => _pitCommandEngine.DisplayText);
@@ -18323,6 +18335,7 @@ namespace LaunchPlugin
         public bool DebugHide1 { get; set; } = false;
         public bool DebugHide2 { get; set; } = false;
         public bool DebugHide3 { get; set; } = false;
+        public bool OfflineDataModule { get; set; } = false;
         public bool EnableDebugLogging { get; set; } = false;
         public bool EnableCarSADebugExport { get; set; } = false;
         public bool EnableOffTrackDebugCsv { get; set; } = false;
