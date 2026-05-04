@@ -17314,10 +17314,25 @@ namespace LaunchPlugin
             if (string.IsNullOrWhiteSpace(text)) return false;
             text = text.Trim();
 
-            var match = System.Text.RegularExpressions.Regex.Match(text, @"[-+]?\d+(?:[.,]\d+)?");
+            string lowered = text.ToLowerInvariant();
+            if (lowered.Contains("gal") || lowered.Contains("gallon"))
+            {
+                return false;
+            }
+
+            var match = System.Text.RegularExpressions.Regex.Match(text, @"^\s*([-+]?\d+(?:[.,]\d+)?)\s*([a-zA-Z]+)\s*$");
             if (!match.Success) return false;
 
-            string numeric = match.Value.Replace(',', '.');
+            string unit = (match.Groups[2].Value ?? string.Empty).Trim().ToLowerInvariant();
+            bool isLitresUnit =
+                unit == "l" ||
+                unit == "litre" ||
+                unit == "litres" ||
+                unit == "liter" ||
+                unit == "liters";
+            if (!isLitresUnit) return false;
+
+            string numeric = match.Groups[1].Value.Replace(',', '.');
             if (!double.TryParse(numeric, NumberStyles.Float, CultureInfo.InvariantCulture, out litres)) return false;
             if (double.IsNaN(litres) || double.IsInfinity(litres) || litres <= 0.0) return false;
             return true;

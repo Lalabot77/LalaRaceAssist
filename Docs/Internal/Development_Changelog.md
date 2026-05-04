@@ -1,14 +1,3 @@
-- 2026-05-04 Setup fuel fallback export landed:
-  - Classification: **both** (new dash-facing fuel setup exports + internal contract/docs alignment).
-  - Added `Fuel.Setup.FuelLevel`, `Fuel.Setup.FuelLevelValid`, and `Fuel.Setup.FuelLevelSource` in `LalaLaunch.cs`.
-  - Added setup fuel resolver seam with strict source priority:
-    1) `CarSetup.BrakesDriveUnit.Fuel.FuelLevel`
-    2) `CarSetup.Chassis.Front.FuelLevel`
-    3) `CarSetup.Chassis.Rear.FuelLevel`
-    4) `CarSetup.Suspension.Rear.FuelLevel`
-  - Resolver accepts numeric values and string values with litre units (`77.0 L`, `77 L`, `77,0 L`) and rejects null/blank/NaN/infinity/non-positive values.
-  - Preserved invariants: no overwrite of `Telemetry.FuelLevel`; no changes to `Fuel.LiveFuelPerLap`, pit math, planner math, PreRace strategy logic, or max tank authority.
-
 - 2026-05-03 Build triage follow-up (PR range #647-#652):
   - fixed Fuel per Lap helper TextBlock XAML compile break by removing duplicate Style assignment in `FuelCalculatorView.xaml` while preserving existing source-text trigger behavior (`FuelPerLapSourceInfo` / Profile / Live);
   - confirmed `InvertBooleanConverter` and `LapTimeValidationRule` class/namespace wiring are valid in-project; reported lookup errors were downstream/designer fallout from the XAML parse failure;
@@ -140,6 +129,21 @@ The public user-facing release history is maintained in the root `CHANGELOG.md`.
 - Made track-scoped planning data more practical for venue-specific strategy setup.
 
 ## Post-v1.0 development
+
+## 2026-05-04 — Setup fuel fallback export + litre-unit string validation follow-up
+- Classification: **both** (dash-facing setup-fuel export seam + parser safety correction + docs alignment).
+- Added `Fuel.Setup.FuelLevel`, `Fuel.Setup.FuelLevelValid`, and `Fuel.Setup.FuelLevelSource` in `LalaLaunch.cs`.
+- Setup resolver checks setup paths in strict priority and uses the first usable value only:
+  1) `CarSetup.BrakesDriveUnit.Fuel.FuelLevel`
+  2) `CarSetup.Chassis.Front.FuelLevel`
+  3) `CarSetup.Chassis.Rear.FuelLevel`
+  4) `CarSetup.Suspension.Rear.FuelLevel`
+- String parser safety follow-up:
+  - accepts litre-labelled strings (`77.0 L`, `77 L`, `77,0 L`, `litre/litres/liter/liters`);
+  - rejects known non-litre unit strings (`gal`, `gallon`, `gallons`) and other unknown units;
+  - rejects bare numeric strings (string values require explicit litre units for this seam).
+- Numeric raw values remain accepted as litres.
+- Preserved invariants: no overwrite of `Telemetry.FuelLevel`; no changes to `Fuel.LiveFuelPerLap`, pit math, planner math, PreRace strategy logic, or max tank authority.
 
 ## 2026-05-01 — League Race Phase 2 debug/metadata exports only
 - Classification: **both** (new dash-facing debug metadata exports + docs alignment).

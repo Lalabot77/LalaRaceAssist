@@ -190,6 +190,7 @@ Setup-fuel fallback export semantics:
 - `Fuel.Setup.FuelLevel` publishes setup-derived litres when a valid setup value is available, else `0`.
 - `Fuel.Setup.FuelLevelValid` is `true` only when setup-derived litres are valid and `>0`.
 - `Fuel.Setup.FuelLevelSource` publishes `brakesdriveunit`, `chassis.front`, `chassis.rear`, `suspension.rear`, or `none`.
+- String setup values must be explicitly litre-labelled (`L`, `litre/litres`, `liter/liters`); known non-litre units (for example `gal`, `gallon`) and bare numeric strings are rejected for safety.
 - This seam is read-only and does not overwrite `Telemetry.FuelLevel`, `Fuel.LiveFuelPerLap`, pit math, planner math, max tank, or PreRace strategy logic.
 
 Contingency-aware tactical contract:

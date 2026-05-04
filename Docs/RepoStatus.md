@@ -69,9 +69,10 @@ Branch: work
 - No Git remote is configured in this checkout (`git remote -v` returns empty).
 
 ## Documentation sync status
-- 2026-05-04 Setup fuel fallback export landed:
+- 2026-05-04 Setup fuel fallback export landed (with litre-unit string validation follow-up):
   - added new read-only fuel setup exports `Fuel.Setup.FuelLevel`, `Fuel.Setup.FuelLevelValid`, `Fuel.Setup.FuelLevelSource`;
-  - setup resolver checks setup paths in strict priority (`BrakesDriveUnit` -> `Chassis.Front` -> `Chassis.Rear` -> `Suspension.Rear`) and accepts numeric or unit-suffixed string values (for example `77.0 L`, `77 L`, `77,0 L`);
+  - setup resolver checks setup paths in strict priority (`BrakesDriveUnit` -> `Chassis.Front` -> `Chassis.Rear` -> `Suspension.Rear`), accepts numeric raw values as litres, and accepts string values only when explicitly litre-labelled (`77.0 L`, `77 L`, `77,0 L`, `litre/litres/liter/liters`);
+  - known non-litre/unsafe string units (for example `gal`/`gallon`) and bare numeric strings are rejected (no implicit conversion);
   - invalid/null/non-positive values now publish `Fuel.Setup.FuelLevel=0`, `Fuel.Setup.FuelLevelValid=false`, `Fuel.Setup.FuelLevelSource=none`;
   - preserved invariants: no overwrite of live telemetry fuel and no changes to live fuel model, pit math, planner math, PreRace strategy outputs, or max-tank authority.
 
