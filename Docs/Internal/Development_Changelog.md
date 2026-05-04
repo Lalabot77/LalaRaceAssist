@@ -1,3 +1,12 @@
+### 2026-05-04 — League Race header checkbox-column alignment follow-up
+- Classification: **internal-only** (UI layout correction; no runtime/resolver/settings semantic changes).
+- Fixed League Class table header misalignment by reserving a fixed checkbox column width (`18`) for both header and row grids in `Detected classes` and `Fallback rules` sections.
+- Preserved all existing bindings, editability, tooltips, and color-preview behavior.
+
+- 2026-05-04 League Race settings table alignment polish landed:
+  - replaced spaced header text rows with fixed-column Grid headers for Detected classes, Player race class, and Fallback rules so headers align exactly with input columns;
+  - removed visible header labels for Enabled and Colour Preview while preserving checkbox and colour-preview controls in all rows;
+  - added concise League Class tooltips for CSV Class Name, Match Suffix, Short Name, Rank, and Colour Hex; bindings and editability semantics are unchanged (CSV Class Name remains read-only).
 
 ## 2026-05-04 — Offline data module dash toggle export
 - Classification: **both** (new dash-facing action/property + internal docs alignment).

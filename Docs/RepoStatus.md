@@ -1,3 +1,12 @@
+## Documentation sync status
+- 2026-05-04 League Race header alignment follow-up landed:
+  - fixed class-table header offset by reserving a fixed checkbox column width (`18`) in both header grids and row grids for Detected classes and Fallback rules;
+  - keeps existing bindings/tooltips/edit semantics unchanged (layout-only alignment correction).
+
+- 2026-05-04 League Race settings table alignment polish landed:
+  - League Class settings now use fixed-column grid headers for Detected classes, Player race class, and Fallback rules to align headers directly above their input columns;
+  - Enabled/Colour Preview header labels were removed while keeping the checkbox and colour-preview controls;
+  - added concise UI tooltips for CSV Class Name, Match Suffix, Short Name, Rank, and Colour Hex without changing existing bindings or resolver/runtime behavior.
 - 2026-05-04 Offline data module toggle landed:
   - added plugin action `OfflineDataModule_Toggle` (debug-toggle style persisted flip) for dash control workflows;
   - added exported property `OfflineDataModule` (`0/1`) so dashboards can gate visibility directly from plugin state;
