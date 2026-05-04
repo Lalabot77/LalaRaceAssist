@@ -16645,6 +16645,11 @@ namespace LaunchPlugin
                 _finishTimingSessionType = sessionType;
                 _afterZeroResultLogged = false;
                 ResetFinishTimingState();
+
+                if (FuelCalculator != null && FuelCalculator.IsLiveDetectRace)
+                {
+                    UpdateLiveFuelCalcs(data, pluginManager);
+                }
             }
 
             if (!isRace)

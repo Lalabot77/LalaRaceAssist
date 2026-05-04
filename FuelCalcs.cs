@@ -41,6 +41,45 @@ namespace LaunchPlugin
         }
     }
 
+    private bool TryGetEffectiveRaceBasis(out bool isTimeLimited, out double raceLength)
+    {
+        isTimeLimited = false;
+        raceLength = 0.0;
+
+        if (SelectedRaceType == RaceType.TimeLimited)
+        {
+            isTimeLimited = true;
+            raceLength = Math.Max(0.0, RaceMinutes);
+            return true;
+        }
+
+        if (SelectedRaceType == RaceType.LapLimited)
+        {
+            isTimeLimited = false;
+            raceLength = Math.Max(0.0, RaceLaps);
+            return true;
+        }
+
+        if (SelectedRaceType == RaceType.LiveDetect && _liveDetectedRaceType.HasValue)
+        {
+            if (_liveDetectedRaceType.Value == RaceType.TimeLimited)
+            {
+                isTimeLimited = true;
+                raceLength = Math.Max(0.0, _lastLiveDetectedRaceMinutes);
+                return true;
+            }
+
+            if (_liveDetectedRaceType.Value == RaceType.LapLimited)
+            {
+                isTimeLimited = false;
+                raceLength = Math.Max(0.0, _lastLiveDetectedRaceLaps);
+                return true;
+            }
+        }
+
+        return false;
+    }
+
     internal PlannerLiveSessionMatchSnapshot GetPlannerSessionMatchSnapshot()
     {
         string plannerCar = (SelectedCarProfile?.ProfileName ?? string.Empty).Trim();
@@ -58,41 +97,7 @@ namespace LaunchPlugin
             plannerTrack = _lastLoadedTrackKey.Trim();
         }
 
-        bool hasComparableBasis = true;
-        bool plannerTimeLimited = false;
-        double plannerRaceLength = 0.0;
-
-        if (SelectedRaceType == RaceType.TimeLimited)
-        {
-            plannerTimeLimited = true;
-            plannerRaceLength = Math.Max(0.0, RaceMinutes);
-        }
-        else if (SelectedRaceType == RaceType.LapLimited)
-        {
-            plannerTimeLimited = false;
-            plannerRaceLength = Math.Max(0.0, RaceLaps);
-        }
-        else if (SelectedRaceType == RaceType.LiveDetect && _liveDetectedRaceType.HasValue)
-        {
-            if (_liveDetectedRaceType.Value == RaceType.TimeLimited)
-            {
-                plannerTimeLimited = true;
-                plannerRaceLength = Math.Max(0.0, RaceMinutes);
-            }
-            else if (_liveDetectedRaceType.Value == RaceType.LapLimited)
-            {
-                plannerTimeLimited = false;
-                plannerRaceLength = Math.Max(0.0, RaceLaps);
-            }
-            else
-            {
-                hasComparableBasis = false;
-            }
-        }
-        else
-        {
-            hasComparableBasis = false;
-        }
+        bool hasComparableBasis = TryGetEffectiveRaceBasis(out bool plannerTimeLimited, out double plannerRaceLength);
 
         return new PlannerLiveSessionMatchSnapshot
         {
@@ -4697,9 +4702,33 @@ namespace LaunchPlugin
             }
             // ------------------------------------------------------------------------
 
+            bool hasEffectiveRaceBasis = TryGetEffectiveRaceBasis(out bool effectiveRaceIsTimeLimited, out double effectiveRaceLength);
+            if (!hasEffectiveRaceBasis || effectiveRaceLength <= 0.0)
+            {
+                ValidationMessage = IsLiveDetectRace
+                    ? "Error: Live Detect race definition unavailable."
+                    : "Error: Race length must be greater than zero.";
+            }
+
+            if (IsValidationMessageVisible)
+            {
+                TotalFuelNeeded = 0.0;
+                RequiredPitStops = 0;
+                StintBreakdown = "";
+                StopsSaved = 0;
+                TotalTimeDifference = "N/A";
+                ExtraTimeAfterLeader = "N/A";
+                StrategyLeaderExtraSecondsAfterZero = 0.0;
+                StrategyDriverExtraSecondsAfterZero = 0.0;
+                FirstStintFuel = 0.0;
+                PlannerNextAddLitres = 0.0;
+                PlannerTankBasisLitres = 0.0;
+                return;
+            }
+
             double num6 = 0.0;
-            double baseSeconds = RaceMinutes * 60.0;
-            if (IsTimeLimitedRace)
+            double baseSeconds = effectiveRaceIsTimeLimited ? (effectiveRaceLength * 60.0) : 0.0;
+            if (effectiveRaceIsTimeLimited)
             {
                 double availableDriveSeconds = baseSeconds;
                 int num7 = 0;
@@ -4737,15 +4766,15 @@ namespace LaunchPlugin
                 int num20 = 0;
                 if (num3 - num2 > 0.0 && num3 > 0.0)
                 {
-                    num20 = (int)Math.Floor(RaceLaps / (num2 / (num3 - num2)));
+                    num20 = (int)Math.Floor(effectiveRaceLength / (num2 / (num3 - num2)));
                 }
-                num6 = Math.Max(0.0, RaceLaps - (double)num20);
+                num6 = Math.Max(0.0, effectiveRaceLength - (double)num20);
             }
 
             double driveSecondsAvailable = baseSeconds;
             StrategyResult strategyResult;
 
-            if (IsTimeLimitedRace)
+            if (effectiveRaceIsTimeLimited)
             {
                 var provisional = CalculateSingleStrategy(
                     num6, fuelPerLap, num3, num2, num, driveSecondsAvailable, maxFuelLimit);
@@ -4793,7 +4822,7 @@ namespace LaunchPlugin
             }
 
             StrategyResult strategyResult2 = CalculateSingleStrategy(
-                num6, num24, num3 + num4, num2, num, RaceMinutes * 60.0, maxFuelLimit);
+                num6, num24, num3 + num4, num2, num, baseSeconds, maxFuelLimit);
 
             StopsSaved = strategyResult.Stops - strategyResult2.Stops;
             double num25 = strategyResult2.TotalTime - strategyResult.TotalTime;
@@ -4804,7 +4833,9 @@ namespace LaunchPlugin
 
         private void ApplyStrategyDriveTimeAfterZero(double raceClockSeconds, double leaderPaceSeconds, double playerPaceSeconds, StrategyResult strategyResult)
         {
-            if (IsTimeLimitedRace && playerPaceSeconds > 0.0)
+            bool isTimeLimited = TryGetEffectiveRaceBasis(out bool effectiveRaceIsTimeLimited, out _)
+                && effectiveRaceIsTimeLimited;
+            if (isTimeLimited && playerPaceSeconds > 0.0)
             {
                 var (leaderExtraSeconds, driverExtraSeconds) = ComputeDriveTimeAfterZero(
                     raceClockSeconds,
@@ -5193,11 +5224,6 @@ namespace LaunchPlugin
 
     public void UpdateLiveDetectedRaceDefinition(string detectedSessionLabel, bool? isLapLimited, double? raceLaps, bool? isTimeLimited, double? raceMinutes)
     {
-        if (!IsLiveDetectRace)
-        {
-            return;
-        }
-
         bool hasLap = isLapLimited == true && raceLaps.HasValue && raceLaps.Value > 0.0;
         bool hasTime = isTimeLimited == true && raceMinutes.HasValue && raceMinutes.Value > 0.0;
         bool shouldRecalculate = false;
@@ -5224,12 +5250,17 @@ namespace LaunchPlugin
                 RaceLaps = _lastLiveDetectedRaceLaps;
                 shouldRecalculate = false; // RaceLaps setter already recalculates
             }
-            _liveDetectHelperText = string.Format(
+            string helperText = string.Format(
                 CultureInfo.InvariantCulture,
                 "Live Detect: {0}, lap-limited, {1:0} laps",
                 string.IsNullOrWhiteSpace(detectedSessionLabel) ? "declared race" : detectedSessionLabel.Trim(),
                 _lastLiveDetectedRaceLaps);
-            OnPropertyChanged(nameof(LiveDetectHelperText));
+            if (!string.Equals(_liveDetectHelperText, helperText, StringComparison.Ordinal))
+            {
+                _liveDetectHelperText = helperText;
+                shouldRecalculate = true;
+                OnPropertyChanged(nameof(LiveDetectHelperText));
+            }
         }
         else if (hasTime)
         {
@@ -5253,12 +5284,17 @@ namespace LaunchPlugin
                 RaceMinutes = _lastLiveDetectedRaceMinutes;
                 shouldRecalculate = false; // RaceMinutes setter already recalculates
             }
-            _liveDetectHelperText = string.Format(
+            string helperText = string.Format(
                 CultureInfo.InvariantCulture,
                 "Live Detect: {0}, time-limited, {1:0} min",
                 string.IsNullOrWhiteSpace(detectedSessionLabel) ? "declared race" : detectedSessionLabel.Trim(),
                 _lastLiveDetectedRaceMinutes);
-            OnPropertyChanged(nameof(LiveDetectHelperText));
+            if (!string.Equals(_liveDetectHelperText, helperText, StringComparison.Ordinal))
+            {
+                _liveDetectHelperText = helperText;
+                shouldRecalculate = true;
+                OnPropertyChanged(nameof(LiveDetectHelperText));
+            }
         }
         else
         {
@@ -5271,16 +5307,21 @@ namespace LaunchPlugin
             OnPropertyChanged(nameof(IsTimeLimitedRace));
             OnPropertyChanged(nameof(ShowEffectiveLapLimitedRace));
             OnPropertyChanged(nameof(ShowEffectiveTimeLimitedRace));
-            _liveDetectHelperText = string.IsNullOrWhiteSpace(detectedSessionLabel)
+            string helperText = string.IsNullOrWhiteSpace(detectedSessionLabel)
                 ? "Live Detect: no declared race found"
                 : string.Format(
                     CultureInfo.InvariantCulture,
                     "Live Detect: {0}, race found, no valid length",
                     detectedSessionLabel.Trim());
-            OnPropertyChanged(nameof(LiveDetectHelperText));
+            if (!string.Equals(_liveDetectHelperText, helperText, StringComparison.Ordinal))
+            {
+                _liveDetectHelperText = helperText;
+                shouldRecalculate = true;
+                OnPropertyChanged(nameof(LiveDetectHelperText));
+            }
         }
 
-        if (shouldRecalculate)
+        if (shouldRecalculate && IsLiveDetectRace)
         {
             CalculateStrategy();
             RaisePresetStateChanged();

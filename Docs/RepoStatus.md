@@ -1,3 +1,9 @@
+- 2026-05-04 Strategy Live Detect effective-basis/runtime-refresh fix landed:
+  - strategy planner now computes from an explicit effective race basis/length seam (manual or Live Detect) and never silently defaults Live Detect-null basis to Lap-Limited/manual laps;
+  - timed Live Detect strategy paths (fuel total/stints/first-stint/after-zero) now consistently use detected minutes, while lap-limited Live Detect uses detected laps;
+  - Live Detect definition updates now force strategy recalculation on basis/value/availability helper changes when Live Detect is selected;
+  - session-id/type transitions now perform an immediate Live Detect refresh when Live Detect is selected, reducing stale detection on initial load/context transitions.
+
 - 2026-05-04 Strategy Live Detect P1/P2 review follow-up landed:
   - current-session race definition acceptance now requires matching limit flags (`IsLimitedSessionLaps` for laps, `IsLimitedTime` for timed) in addition to positive values;
   - `SafeReadLong` now range-checks decimal values before casting, so out-of-range decimals safely return fallback instead of throwing.
