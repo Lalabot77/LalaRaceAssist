@@ -81,6 +81,7 @@ When a PB update includes real sector values, condition-specific PB sector field
 - `DryConditionsLocked` / `WetConditionsLocked` prevent automatic telemetry persistence for that condition.
 - Locks persist immediately on toggle.
 - Pit loss locking uses a separate `PitLaneLossLocked` flag and stores a blocked candidate record when auto-updates are rejected.
+- The `TrackLearning.Condition.Locked` export maps to the active condition lock (`DryConditionsLocked` when dry, `WetConditionsLocked` when wet) and therefore gates both condition avg-lap and fuel persistence.
 
 ---
 

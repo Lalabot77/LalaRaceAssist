@@ -73,6 +73,7 @@ Out of scope:
 - Wet mode follows tyre-compound telemetry for learning/persistence routing.
 - Track wetness is exported for UI use, but tyre mode remains the canonical routing choice for fuel learning.
 - Cross-condition fallback is allowed, but confidence is penalized when dry data is being used in wet mode or vice versa.
+- Track Learning dash condition exports (`TrackLearning.Condition.*`) consume this same active wet/dry routing and do not introduce a parallel condition authority seam.
 
 ### Persistence state
 - Dry and wet condition stats persist independently.
