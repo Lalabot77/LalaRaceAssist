@@ -144,6 +144,32 @@ The public user-facing release history is maintained in the root `CHANGELOG.md`.
 
 ## Post-v1.0 development
 
+## 2026-05-04 — Setup fuel fallback export + litre-unit string validation follow-up
+- Classification: **both** (dash-facing setup-fuel export seam + parser safety correction + docs alignment).
+- Added `Fuel.Setup.FuelLevel`, `Fuel.Setup.FuelLevelValid`, and `Fuel.Setup.FuelLevelSource` in `LalaLaunch.cs`.
+- Setup resolver checks setup paths in strict priority and uses the first usable value only:
+  1) `CarSetup.BrakesDriveUnit.Fuel.FuelLevel`
+  2) `CarSetup.Chassis.Front.FuelLevel`
+  3) `CarSetup.Chassis.Rear.FuelLevel`
+  4) `CarSetup.Suspension.Rear.FuelLevel`
+- String parser safety follow-up:
+  - accepts litre-labelled strings (`77.0 L`, `77 L`, `77,0 L`, `litre/litres/liter/liters`);
+  - rejects known non-litre unit strings (`gal`, `gallon`, `gallons`) and other unknown units;
+  - rejects bare numeric strings (string values require explicit litre units for this seam).
+- Numeric raw values remain accepted as litres.
+- Added boxed integral raw-type support in `TryParseSetupFuelLitres(...)` for `long`, `short`, `uint`, `ulong`, `ushort`, `byte`, and `sbyte` (existing `double`/`float`/`decimal`/`int` support preserved), with zero/non-positive and non-finite rejection retained.
+- Preserved invariants: no overwrite of `Telemetry.FuelLevel`; no changes to `Fuel.LiveFuelPerLap`, pit math, planner math, PreRace strategy logic, or max tank authority.
+
+## 2026-05-04 — PreRace current-fuel basis setup-fallback integration
+- Classification: **both** (PreRace on-grid/status behavior improvement + docs alignment).
+- `UpdatePreRaceOutputs(...)` now resolves an effective PreRace current-fuel basis using:
+  1) live current fuel when valid/positive,
+  2) setup fallback (`Fuel.Setup.FuelLevel`) when live current fuel is unavailable/zero and setup fallback is valid **during pre-race/grid/formation only** (SessionState `<4`),
+  3) existing zero/fallback behavior when neither is available.
+- Active race-running (SessionState `==4`) now keeps live fuel authoritative for PreRace outputs even when live fuel is `0` (setup fallback disabled in race-running phase).
+- PreRace one-stop/no-stop/multi-stop delta/status feasibility paths now use that effective PreRace-only current-fuel basis.
+- Preserved invariants: no overwrite of telemetry fuel, no live fuel-learning changes, no `Fuel.Pit.*` runtime math changes, no planner/max-tank authority changes.
+
 ## 2026-05-01 — League Race Phase 2 debug/metadata exports only
 - Classification: **both** (new dash-facing debug metadata exports + docs alignment).
 - Added League Class global/player export family in `LalaLaunch` using resolver-only authority: `LeagueClass.Enabled`, `LeagueClass.Mode`, `LeagueClass.ConfigStatusText`, `LeagueClass.LoadedCount`, `LeagueClass.ValidDriverCount`, `LeagueClass.InvalidRowCount`, `LeagueClass.DuplicateRowCount`, `LeagueClass.Player.*` (`Name/ShortName/Rank/ColourHex/Valid/Source/OverrideActive`).

@@ -181,9 +181,18 @@ The full authoritative export list lives in `Docs/Internal/SimHubParameterInvent
 - `Fuel.TargetFuelPerLap`
 - `Fuel.Delta*`
 - `Fuel.Pit.*`
+- `Fuel.Setup.*` (read-only setup-session fallback export family for pre-grid/pre-race when live tank telemetry is unavailable/zero)
 - `Fuel.StintBurnTarget*`
 - `Fuel.Live.ProjectedDriveSecondsRemaining`
 - `LalaLaunch.PreRace.*` as the separate pre-race/on-grid info layer (Auto uses live race-definition authority first: `_SessionTime` for timed races, `_SessionLaps` for lap-limited races)
+- `LalaLaunch.PreRace.*` current-fuel basis uses a narrow fallback seam for pre-grid telemetry gaps: live current fuel when valid/positive; setup fallback (`Fuel.Setup.FuelLevel` when valid) is allowed only during pre-race/grid/formation phases (SessionState `<4`); active race-running (SessionState `==4`) stays live-fuel authoritative even if live fuel is `0`; otherwise `0`.
+
+Setup-fuel fallback export semantics:
+- `Fuel.Setup.FuelLevel` publishes setup-derived litres when a valid setup value is available, else `0`.
+- `Fuel.Setup.FuelLevelValid` is `true` only when setup-derived litres are valid and `>0`.
+- `Fuel.Setup.FuelLevelSource` publishes `brakesdriveunit`, `chassis.front`, `chassis.rear`, `suspension.rear`, or `none`.
+- String setup values must be explicitly litre-labelled (`L`, `litre/litres`, `liter/liters`); known non-litre units (for example `gal`, `gallon`) and bare numeric strings are rejected for safety.
+- This seam is read-only and does not overwrite `Telemetry.FuelLevel`, `Fuel.LiveFuelPerLap`, pit math, planner math, max tank, or PreRace strategy logic.
 
 Contingency-aware tactical contract:
 - `Fuel.RequiredBurnToEnd*` provides driver-facing burn-to-end guidance while protecting active contingency reserve.

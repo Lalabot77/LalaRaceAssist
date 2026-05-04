@@ -25,8 +25,9 @@ This document is the canonical dash-facing contract layer. It does **not** redef
 - Treat `LalaLaunch.PreRace.*` as a separate on-grid/pre-race info layer, not a replacement for live `Fuel.*` or Strategy planner ownership.
 - Consume `LalaLaunch.PreRace.StatusText` together with `LalaLaunch.PreRace.StatusColour` (`green`/`orange`/`red`) for simple dash styling; do not recreate planner/live mismatch or multi-stop decision logic in dash scripts.
 - `LalaLaunch.PreRace.FuelDelta` is a live on-grid seam and should be expected to move immediately with fuel changes:
-  - required one-stop path uses `(current fuel + pit fuel request) - total fuel needed`,
-  - required no-stop/multi-stop paths use `current fuel - total fuel needed`.
+  - PreRace current-fuel basis uses live current fuel when valid/positive; setup fallback (`Fuel.Setup.FuelLevel`) is used only during pre-race/grid/formation phases, and active race-running stays live-fuel authoritative even when live fuel is `0`,
+  - required one-stop path uses `(effective current fuel + pit fuel request) - total fuel needed`,
+  - required no-stop/multi-stop paths use `effective current fuel - total fuel needed`.
 - `LalaLaunch.PreRace.FuelSource` / `LapTimeSource` contract:
   - `FuelSource` accepted values are `live`, `profile`, `planner-profile`, `planner-manual`, `fallback` (`planner`/`simhub` are not emitted),
   - Auto uses runtime ownership labels only (`live`/`profile`/`fallback`) and does not publish planner-classified labels,
@@ -46,6 +47,7 @@ This document is the canonical dash-facing contract layer. It does **not** redef
 - Do not rebuild burn-to-end with dash-side NCALC formula chains from raw fuel/time/pace properties; use plugin-owned `Fuel.RequiredBurnToEnd`.
 - Tactical delta exports are contingency-aware on the required-to-finish side only; `Fuel.Pit.WillAdd` remains clamp mirror and should not be treated as reserve-augmented request.
 - Runtime pit-space exports are live-cap authoritative when available: `Fuel.Pit.TankSpaceAvailable` reflects live remaining capacity and `Fuel.Pit.WillAdd`/`Fuel.Pit.FuelOnExit` consume that runtime cap seam (not Strategy/Profile max-fuel override when live cap exists).
+- Setup fallback seam for pre-grid/pre-race: dashboards may consume `Fuel.Setup.FuelLevel`/`Fuel.Setup.FuelLevelValid`/`Fuel.Setup.FuelLevelSource` when live tank telemetry is zero/unavailable. This setup seam is read-only and does not replace runtime `Fuel.*` telemetry once live fuel is available.
 
 ### Launch
 - Gate live launch widgets on `LaunchModeActive` and related launch-visible state.
