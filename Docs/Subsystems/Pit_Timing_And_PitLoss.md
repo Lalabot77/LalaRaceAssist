@@ -37,11 +37,11 @@ Out of scope:
 - **Learned/stored pit lane loss is drive-through baseline only** (clean limiter-speed pass through pit lane, no box stop).
 - Boxed-stop runtime predictions add stopped-box components separately:
   - boxed service model (`max(fuelTime, tireTime) + 1.0s` stationary service overhead, repair-aware),
-  - fixed pit-box transition allowance `+2.75s` (slow-in/settle/launch-out to limiter).
+  - fixed pit-box transition allowance `+2.00s` (slow-in/settle/launch-out to limiter).
 
 Canonical boxed-stop prediction contract:
 
-`boxed stop loss = learned drive-through baseline + boxed service model + 2.75s transition allowance`
+`boxed stop loss = learned drive-through baseline + boxed service model + 2.00s transition allowance`
 
 ---
 

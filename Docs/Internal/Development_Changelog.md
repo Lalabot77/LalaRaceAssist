@@ -155,6 +155,14 @@
 This file tracks internal development history between releases.
 The public user-facing release history is maintained in the root `CHANGELOG.md`.
 
+## 2026-05-04 — Pit-loss source-aware drive-through normalization + 2.00s transition allowance
+- Classification: **both** (driver-facing pit-loss display semantics + runtime total-stop-loss composition).
+- Added persisted per-track pit-loss learning mode (`PitLaneLossLearningMode`) so pit-loss save path records whether the accepted sample came from a boxed stop or drive-through cycle.
+- `Fuel.Live.PitLaneLoss_S` and `TrackLearning.PitLoss.ValueSec/Display` now publish a drive-through-equivalent value: when learned from boxed-stop cycles, they subtract the fixed transition allowance and clamp at `0`.
+- Shared boxed-stop seam now uses fixed transition allowance `+2.00s` (replacing temporary `1.50s`).
+- `Fuel.Live.TotalStopLoss` now composes from drive-through-equivalent pit-lane loss + modeled boxed service (+repair-aware) + fixed transition allowance so transition time is not double-counted while maintaining expected pit-stop totals.
+
+
 ## Pre-v1 public development history
 
 ### Initial release foundations
@@ -1507,8 +1515,8 @@ The public user-facing release history is maintained in the root `CHANGELOG.md`.
 
 ### Pit-loss baseline standardization (drive-through) + fixed pit-exit transition allowance
 - Standardized pit-loss semantics and guidance so learned/stored pit-lane loss is explicitly a **drive-through baseline** (clean limiter-speed lane travel, no box stop).
-- Added fixed `PitExitTransitionAllowanceSec = 2.75` in `LalaLaunch.cs` at the shared boxed-stop prediction seam (`CalculateTotalStopLossSeconds`), yielding:
-  - `TotalStopLoss = pit-lane baseline + boxed service model + 2.75s transition allowance`.
+- Added fixed `PitExitTransitionAllowanceSec = 2.00` in `LalaLaunch.cs` at the shared boxed-stop prediction seam (`CalculateTotalStopLossSeconds`), yielding:
+  - `TotalStopLoss = pit-lane baseline + boxed service model + 2.00s transition allowance`.
 - Kept pure lane-travel outputs unchanged (`Fuel.LastPitLaneTravelTime`, `PitExit.TimeS` remain travel-only).
 - Kept ownership boundaries intact: Pit timing remains pit-loss owner, Opponents continues consuming the shared stop-loss seam for race-scoped pit-exit countdown prediction.
 - Classification: **both** (runtime prediction semantics + user-facing learning guidance/docs).

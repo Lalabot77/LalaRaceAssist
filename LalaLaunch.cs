@@ -1794,6 +1794,22 @@ namespace LaunchPlugin
             return "-";
         }
 
+        private static string ResolvePitLossLearningMode(PitCycleLite pitLite)
+        {
+            if (pitLite == null) return "unknown";
+            return pitLite.Status == PitCycleLite.StatusKind.StopValid ? "boxed_stop" : "drive_through";
+        }
+
+        private static double NormalizeDriveThroughEquivalentSeconds(double storedSeconds, string learningMode)
+        {
+            string mode = (learningMode ?? string.Empty).Trim().ToLowerInvariant();
+            if (mode == "boxed_stop")
+            {
+                return Math.Max(0.0, storedSeconds - PitExitTransitionAllowanceSec);
+            }
+            return storedSeconds;
+        }
+
         private static bool IsFiniteNonNegative(double value)
         {
             return !double.IsNaN(value) && !double.IsInfinity(value) && value >= 0.0;
@@ -5500,7 +5516,7 @@ namespace LaunchPlugin
         private const double PitBoxTargetLatchSettleSeconds = 1.0;
         private const double PitBoxLastDeltaWindowSeconds = 5.0;
         private const double PitBoxModeledServiceOverheadSeconds = 1.0;
-        private const double PitExitTransitionAllowanceSec = 2.75;
+        private const double PitExitTransitionAllowanceSec = 2.00;
         private bool _pitRefuelEntryLatched = false;
         private bool _pitRefuelTargetLatched = false;
         private bool _pitRefuelWasBoxed = false;
@@ -6178,17 +6194,33 @@ namespace LaunchPlugin
             AttachCore("Fuel.Pit.StopsRequiredToEnd", () => Pit_StopsRequiredToEnd);
             AttachCore("Fuel.Live.RefuelRate_Lps", () => FuelCalculator?.EffectiveRefuelRateLps ?? 0.0);
             AttachCore("Fuel.Live.TireChangeTime_S", () => GetEffectiveTireChangeTimeSeconds());
-            AttachCore("Fuel.Live.PitLaneLoss_S", () => FuelCalculator?.PitLaneTimeLoss ?? 0.0);
+            AttachCore("Fuel.Live.PitLaneLoss_S", () =>
+            {
+                var ts = ResolveCurrentTrackStats();
+                if (ts?.PitLaneLossSeconds is double stored && stored > 0.0)
+                {
+                    return NormalizeDriveThroughEquivalentSeconds(stored, ts.PitLaneLossLearningMode);
+                }
+                return FuelCalculator?.PitLaneTimeLoss ?? 0.0;
+            });
             AttachCore("TrackLearning.PitLoss.ValueSec", () =>
             {
                 var ts = ResolveCurrentTrackStats();
-                return ts?.PitLaneLossSeconds ?? 0.0;
+                if (ts?.PitLaneLossSeconds is double stored && stored > 0.0)
+                {
+                    return NormalizeDriveThroughEquivalentSeconds(stored, ts.PitLaneLossLearningMode);
+                }
+                return 0.0;
             });
             AttachCore("TrackLearning.PitLoss.Display", () =>
             {
                 var ts = ResolveCurrentTrackStats();
-                var value = ts?.PitLaneLossSeconds;
-                return (value.HasValue && value.Value > 0.0) ? value.Value.ToString("0.0", CultureInfo.InvariantCulture) + "s" : "-";
+                if (ts?.PitLaneLossSeconds is double stored && stored > 0.0)
+                {
+                    double normalized = NormalizeDriveThroughEquivalentSeconds(stored, ts.PitLaneLossLearningMode);
+                    return normalized.ToString("0.0", CultureInfo.InvariantCulture) + "s";
+                }
+                return "-";
             });
             AttachCore("TrackLearning.PitLoss.SourceText", () =>
             {
@@ -7128,6 +7160,7 @@ namespace LaunchPlugin
             {
                 trackRecord.PitLaneLossSeconds = rounded;
                 trackRecord.PitLaneLossSource = src;                  // "dtl" or "direct"
+                trackRecord.PitLaneLossLearningMode = ResolvePitLossLearningMode(_pitLite);
                 trackRecord.PitLaneLossUpdatedUtc = now;              // DateTime.UtcNow above
                 ProfilesViewModel?.SaveProfiles();
                 SimHub.Logging.Current.Info(
@@ -7155,6 +7188,7 @@ namespace LaunchPlugin
             {
                 trackRecord.PitLaneLossSeconds = rounded;
                 trackRecord.PitLaneLossSource = src;                  // "dtl" or "direct"
+                trackRecord.PitLaneLossLearningMode = ResolvePitLossLearningMode(_pitLite);
                 trackRecord.PitLaneLossUpdatedUtc = now;              // DateTime.UtcNow above
                 ProfilesViewModel?.SaveProfiles();
                 SimHub.Logging.Current.Info(
@@ -15952,7 +15986,16 @@ namespace LaunchPlugin
 
         private double CalculateTotalStopLossSeconds()
         {
-            double pitLaneLoss = FuelCalculator?.PitLaneTimeLoss ?? 0.0;
+            double pitLaneLoss;
+            var trackStats = ResolveCurrentTrackStats();
+            if (trackStats?.PitLaneLossSeconds is double stored && stored > 0.0)
+            {
+                pitLaneLoss = NormalizeDriveThroughEquivalentSeconds(stored, trackStats.PitLaneLossLearningMode);
+            }
+            else
+            {
+                pitLaneLoss = FuelCalculator?.PitLaneTimeLoss ?? 0.0;
+            }
             if (pitLaneLoss < 0.0) pitLaneLoss = 0.0;
 
             double modeledBoxTargetSec = CalculatePitBoxModeledTargetSeconds();
