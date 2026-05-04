@@ -418,7 +418,16 @@ namespace LaunchPlugin
         {
             var key = GetCanonicalTrackKeyForMarkers();
             if (string.IsNullOrWhiteSpace(key) || _pit == null) return;
-            bool current = _pit.TrackMarkersStoredLocked;
+            double entryPct;
+            double exitPct;
+            DateTime updatedUtc;
+            bool current;
+            bool hasKeyedState = _pit.TryGetStoredTrackMarkers(key, out entryPct, out exitPct, out updatedUtc, out current);
+            if (!hasKeyedState)
+            {
+                // Safe fallback: default to unlocked baseline for unknown/missing keyed rows.
+                current = false;
+            }
             _pit.SetTrackMarkersLock(key, !current);
         }
 
