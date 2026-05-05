@@ -4,6 +4,7 @@
   - `ClassLeader.*` and `ClassBest.*` race-context class cohort matching now flows through the existing League Class resolver delegate seam (enabled+valid uses effective class; disabled/unresolved-player falls back to unchanged native class behavior).
   - `PitExit.PredictedPositionInClass`, `PitExit.CarsAheadAfterPitCount`, and `PitExit.Ahead/Behind.*` now use the same race-context class seam as Opponents cohort selection for enabled+valid League Class mode, with native fallback unchanged.
   - preserved invariants: no CarSA changes, no `H2HTrack` changes, no pit-exit countdown/loss/progress/gap formula changes.
+  - PR #669 follow-up: in enabled+valid League effective-class mode, class-leader selection now chooses the lowest positive `CarIdxPosition` across the full effective-class cohort (race order) instead of first matching array index; native class-position fallback remains when overall position data is unavailable.
 
 - 2026-05-04 StrategyDash phase compile-fix follow-up (PR #660) landed:
   - `UpdateStrategyDashAdvice(...)` phase detection now takes explicit real-state booleans from the existing pre-race call path (`isRaceRunning`, `isGridOrFormation`) instead of referencing removed non-existent fields;
@@ -132,6 +133,7 @@ Branch: work
   - `ClassLeader.*` and `ClassBest.*` race-context class cohort matching now flows through the existing League Class resolver delegate seam (enabled+valid uses effective class; disabled/unresolved-player falls back to unchanged native class behavior).
   - `PitExit.PredictedPositionInClass`, `PitExit.CarsAheadAfterPitCount`, and `PitExit.Ahead/Behind.*` now use the same race-context class seam as Opponents cohort selection for enabled+valid League Class mode, with native fallback unchanged.
   - preserved invariants: no CarSA changes, no `H2HTrack` changes, no pit-exit countdown/loss/progress/gap formula changes.
+  - PR #669 follow-up: in enabled+valid League effective-class mode, class-leader selection now chooses the lowest positive `CarIdxPosition` across the full effective-class cohort (race order) instead of first matching array index; native class-position fallback remains when overall position data is unavailable.
 
 - 2026-05-04 StrategyDash one-stop burn-basis current-tick refresh fix landed:
   - one-stop `StrategyDash.NextRefuelTargetLitres` PUSH/SAVE selection now uses current-tick locally resolved burns in `UpdatePreRaceOutputs(...)` (not shared prior-frame `PushFuelPerLap`/`FuelSaveFuelPerLap` fields at that stage);

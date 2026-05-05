@@ -15070,6 +15070,42 @@ namespace LaunchPlugin
                 return -1;
             }
 
+            if (raceContextMatch != null && overallPositions != null)
+            {
+                int bestCarIdx = -1;
+                int bestOverallPos = int.MaxValue;
+                int candidateCount = Math.Min(overallPositions.Length, CarSAEngine.MaxCars);
+                for (int i = 0; i < candidateCount; i++)
+                {
+                    int pos = overallPositions[i];
+                    if (pos <= 0)
+                    {
+                        continue;
+                    }
+
+                    if (!IsCarInWorld(trackSurfaces, i))
+                    {
+                        continue;
+                    }
+
+                    if (!IsRaceContextClassMatchForCarIdx(pluginManager, playerCarIdx, i, isMultiClassSession, playerClassShort, raceContextMatch))
+                    {
+                        continue;
+                    }
+
+                    if (pos < bestOverallPos)
+                    {
+                        bestOverallPos = pos;
+                        bestCarIdx = i;
+                    }
+                }
+
+                if (bestCarIdx >= 0)
+                {
+                    return bestCarIdx;
+                }
+            }
+
             int[] classPositions = SafeReadIntArray(pluginManager, "DataCorePlugin.GameRawData.Telemetry.CarIdxClassPosition");
             if (classPositions == null)
             {
