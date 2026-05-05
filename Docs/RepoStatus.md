@@ -1,3 +1,10 @@
+- 2026-05-05 Pit Fuel Control DATA/SOURCE simplification landed:
+  - retired `SOURCE=PLAN`; source cycle is now `STBY -> NORM -> PUSH -> SAVE -> STBY`;
+  - added `Pit.FuelControl.Data` / `DataText` and actions `SetDataLive`, `SetDataPlan`, `CycleData`;
+  - DATA defaults to `LIVE` on control/session reset, and changing DATA forces `SOURCE=STBY` with no fuel command send;
+  - legacy `SetPlan` remains for one release as `DATA=PLAN` + `SOURCE=STBY` feedback-only compatibility (`FUEL DATA PLAN`);
+  - StrategyDash next-refuel target and burn-plan text now follow the DATA/SOURCE model (`NORM` runtime/live; `PUSH`/`SAVE` live or planner/profile memory by DATA).
+
 - 2026-05-05 StrategyDash burn-basis alignment + no-stop burn-plan + refuel-delta landed:
   - Auto PreRace fuel-per-lap fallback order now stays live-stable first, then selected planner `FuelCalculator.FuelPerLap` when valid, then existing profile/generic fallback;
   - added `StrategyDash.BurnPlanText` as a concise pre-green helper for no-stop/grid guidance (`BURN PLAN: NORM/SAVE/PUSH` with optional source suffix);

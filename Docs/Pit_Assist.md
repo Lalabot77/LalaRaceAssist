@@ -61,6 +61,9 @@ Technical contract note: this page is driver-facing usage guidance. The canonica
 - `LalaLaunch.Pit.FuelControl.SetPush`
 - `LalaLaunch.Pit.FuelControl.SetNorm`
 - `LalaLaunch.Pit.FuelControl.SetSave`
+- `LalaLaunch.Pit.FuelControl.SetDataLive`
+- `LalaLaunch.Pit.FuelControl.SetDataPlan`
+- `LalaLaunch.Pit.FuelControl.CycleData`
 - `LalaLaunch.Pit.FuelControl.SetPlan`
 - `LalaLaunch.Pit.TyreControl.ModeCycle`
 - `LalaLaunch.Pit.TyreControl.SetOff`
@@ -79,14 +82,19 @@ Pit Fuel Control behavior notes for these bindings:
   - `AUTO -> OFF` attempts explicit `#-fuel$`; successful send exits AUTO, failed send leaves AUTO unchanged.
 - AUTO entry send behavior:
   - entering AUTO from `PUSH`/`NORM`/`SAVE` sends immediately and arms AUTO only on successful send,
-  - entering AUTO from `PLAN` does not send and enters `AUTO STBY` (PLAN inhibited in AUTO),
   - entering AUTO from `STBY` remains disarmed (`FUEL AUTO STBY`) until a live source is selected.
 - OFF hard guard:
-  - while effective mode is `OFF`, source actions (`SourceCycle`, `SetPush`, `SetNorm`, `SetSave`, `SetPlan`) do not send `#fuel` commands and remain `OFF STBY`.
+  - while effective mode is `OFF`, source actions (`SourceCycle`, `SetPush`, `SetNorm`, `SetSave`) do not send `#fuel` commands and remain `OFF STBY`.
+- DATA/SOURCE contract:
+  - `DATA` is `LIVE` or `PLAN`; it controls only the burn basis used by `PUSH`/`SAVE`,
+  - `SOURCE` is now `STBY`, `NORM`, `PUSH`, or `SAVE`; `SOURCE=PLAN` has been removed,
+  - changing DATA (`SetDataLive`, `SetDataPlan`, or `CycleData`) always forces `SOURCE=STBY` and sends no fuel command,
+  - `NORM` always uses runtime/live burn,
+  - `PUSH`/`SAVE` use live burn when DATA is `LIVE`, or planner/profile memory burn when DATA is `PLAN`.
 - Source cycle contract:
-  - in `AUTO`, `SourceCycle` is limited to `PUSH -> NORM -> SAVE -> PUSH` (PLAN excluded),
-  - in `MAN`, full cycle remains available including `PLAN`.
-- `SetPlan` is MAN-only direct PLAN send; PLAN is blocked in OFF/AUTO and blocked when planner/live validity mismatches.
+  - `SourceCycle` order is `STBY -> NORM -> PUSH -> SAVE -> STBY` in MAN and AUTO,
+  - landing on `STBY` is a parked no-send state.
+- `SetPlan` remains for one release so old dashboards do not break; it now sets `DATA=PLAN`, forces `SOURCE=STBY`, publishes `FUEL DATA PLAN`, and does not send a planner fuel amount.
 - AUTO cancel/ownership rules:
   - AUTO external MFD/off/on/fuel-change handling is mirror-only (no plugin send) and publishes `AUTO REFUEL CANCELLED BY MFD`,
   - AUTO cancels to `STBY` (with `AutoArmed=false`) when iRacing AutoFuel is active,

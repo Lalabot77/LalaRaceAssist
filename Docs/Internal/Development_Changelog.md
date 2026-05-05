@@ -1,3 +1,11 @@
+## 2026-05-05 — Pit Fuel Control DATA/SOURCE simplification
+- Classification: **both** (dash-facing action/export contract change + internal state-machine simplification).
+- Retired `SOURCE=PLAN`; Pit Fuel Control SOURCE is now `STBY`/`NORM`/`PUSH`/`SAVE`, with source cycling `STBY -> NORM -> PUSH -> SAVE -> STBY`.
+- Added Pit Fuel Control DATA (`LIVE`/`PLAN`) exports and actions (`SetDataLive`, `SetDataPlan`, `CycleData`). DATA defaults to `LIVE` on control/session reset, and every DATA change forces `SOURCE=STBY` with no fuel command send.
+- Compatibility: legacy `Pit.FuelControl.SetPlan` remains registered for one release but now maps to `DATA=PLAN` + `SOURCE=STBY` and publishes `FUEL DATA PLAN`; legacy `PushSaveModeCycle` remains as a DATA-cycle alias.
+- Removed PLAN validity/session-match enforcement from Pit Fuel Control because PLAN is no longer a command source. `NORM` always uses runtime/live burn; `PUSH`/`SAVE` use live burn under DATA LIVE or planner/profile memory burn under DATA PLAN.
+- Aligned StrategyDash pre-green next-refuel and burn-plan text with the DATA/SOURCE model: `NORM` uses runtime burn, `PUSH`/`SAVE` follow DATA, `/ LIVE` and `/ MEMORY` suffixes are emitted only when the basis is clear.
+
 ## 2026-05-05 — League Class ClassLeader native-gate bypass fix
 - Classification: **internal-only** (dash-visible correctness for an already-documented ClassLeader League Class contract; no new exports/UI/actions).
 - Root cause: `FindResolvedClassLeaderCarIdx(...)` still let native single-class detection and native player class-short resolution run before the League race-context matcher, so ClassLeader could return the native overall/class leader even while Opponents/H2HRace were already using the valid player effective-class cohort.

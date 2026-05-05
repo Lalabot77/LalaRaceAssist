@@ -7,7 +7,7 @@ Branch: work
 ## Purpose
 This subsystem owns plugin-driven pit-lane command dispatch and command-state surfaces used by dashboards and hardware bindings.
 
-UI/control surface note: Dash Control -> Global Dash Functions -> Fuel exposes `Push/Save Profile Mode` toggle (OFF=`LIVE`, ON=`PROFILE`) bound to `Settings.PitFuelControlPushSaveMode`, and Settings -> Pit Commands exposes `Push/Save Mode Cycle` binding for `LalaLaunch.Pit.FuelControl.PushSaveModeCycle`.
+UI/control surface note: Dash Control -> Global Dash Functions -> Fuel exposes `Fuel Data Plan Mode` (OFF=`LIVE`, ON=`PLAN`) for Pit Fuel Control DATA, and Settings -> Pit Commands exposes `Fuel Data Cycle` (`LalaLaunch.Pit.FuelControl.CycleData`) plus the one-release legacy `PushSaveModeCycle` binding alias.
 
 It combines:
 - built-in pit command actions (`LalaLaunch.Pit.*`),
@@ -72,11 +72,13 @@ This is the canonical technical document for the pit/custom command stack and re
 - Stateful-toggle before/after verification status (effect-confirmed vs attempted-only).
 
 ### Pit Fuel Control state
-- Source state (`STBY`/runtime modes) and AUTO arming semantics.
+- DATA state (`LIVE`/`PLAN`) that selects the burn-assumption basis for `PUSH`/`SAVE`.
+- Source state (`STBY`/`NORM`/`PUSH`/`SAVE`) and AUTO arming semantics.
 - Mode state where AUTO is plugin-owned; non-AUTO mode mirrors MFD truth (`OFF`/`MAN` from `dpFuelFill`).
 - Target litres and override-active semantics for command generation.
-- Push/Save burn-basis mode (`LIVE`/`PROFILE`) for internal PUSH/SAVE target composition only.
-- Toggling Push/Save mode while source is `PUSH`/`SAVE` refreshes current pit fuel request immediately in `MAN`/`AUTO` (no refresh send in `OFF`, `STBY`, `NORM`, or `PLAN`).
+- DATA defaults to `LIVE` on session/control reset. Changing DATA always forces `SOURCE=STBY`, disarms AUTO, and sends no fuel command.
+- `SOURCE=PLAN` has been retired. The one-release compatibility action `Pit.FuelControl.SetPlan` now maps to `DATA=PLAN` + `SOURCE=STBY` and publishes `FUEL DATA PLAN`.
+- `NORM` always uses the runtime/live burn target. `PUSH`/`SAVE` use DATA: `LIVE` selects live push/save targets; `PLAN` selects planner/profile memory push/save targets with the existing guarded fallback behavior.
 - Fault export state (`Pit.FuelControl.Fault`) for post-settle selector disagreement diagnostics only (`0/1/2/3` contract).
 
 ### Tyre Control state
@@ -121,7 +123,7 @@ This is the canonical technical document for the pit/custom command stack and re
 ## Outputs (exports + logs)
 Canonical export names live in `Docs/Internal/SimHubParameterInventory.md`; key families:
 - `Pit.Command.*` (display text, active, last action/raw, max-toggle state),
-- `Pit.FuelControl.*` (source, mode, target, override, fault, push/save mode),
+- `Pit.FuelControl.*` (data, source, mode, target, override, fault, compatibility push/save mode aliases),
 - `Pit.TyreControl.*` (mode text/state + fault).
 
 Fault export contract (diagnostic/visual only):
@@ -143,7 +145,7 @@ Canonical log wording and meaning live in `Docs/Internal/SimHubLogMessages.md`; 
 - Fuel Control action-path diagnostics:
   - `LalaLaunch` Fuel Control action entry logs are intentionally emitted (`PitFuelControl* action received`) to prove SimHub binding reached plugin action methods;
   - `PitFuelControlEngine` emits compact entry snapshots (`entry action=... mode=... source=... suppressReason=...`) for button paths and gated AUTO lap-cross paths;
-  - blocked/no-send branches emit explicit reasons (`snapshot-null`, `suppressed:<reason>`, `off-hard-guard`, `auto-plan-blocked`, `plan-invalid`, `source-stby`, `target-invalid`, `send-failed`, `auto-not-armed`, `lap-cross-no-material-delta`, `iracing-autofuel-ownership`, `external-mirror-change`, `owned-mirror-consumed`);
+  - blocked/no-send branches emit explicit reasons (`snapshot-null`, `suppressed:<reason>`, `off-hard-guard`, `source-stby`, `target-invalid`, `send-failed`, `auto-not-armed`, `lap-cross-no-material-delta`, `iracing-autofuel-ownership`, `external-mirror-change`, `owned-mirror-consumed`);
   - telemetry suppression diagnostics are transition/throttled only (no per-tick spam), with explicit suppression-clear transition logging.
 - tyre mode transitions, one-shot command sends, and truth-mirror / AUTO-cancel reasons.
 
@@ -168,12 +170,12 @@ Canonical log wording and meaning live in `Docs/Internal/SimHubLogMessages.md`; 
 - Fuel Control mode ownership is explicit-command only (no internal `Pit.ToggleFuel` use):
   - suppression gate is now reserved for truly invalid snapshot contexts (`no-plugin-manager`, `no-session`) and does not blanket-block active in-car/offline-testing pit-control button use;
   - `OFF -> MAN` explicitly sends MFD refuel ON (`#fuel$`) and then mirrors MAN truth (`Source=STBY`, AUTO disarmed);
-  - OFF is a hard guard: `SourceCycle`/`SetPush`/`SetNorm`/`SetSave`/`SetPlan` send nothing and hold `OFF STBY`;
-  - `MAN -> AUTO`: `PUSH`/`NORM`/`SAVE` send immediately and arm AUTO on success with `AUTO REFUEL SET <SRC> X L` feedback; `STBY` and `PLAN` both enter `AUTO STBY` with no send and `AUTO REFUEL STBY` feedback (PLAN is inhibited in AUTO switching);
+  - OFF is a hard guard: `SourceCycle`/`SetPush`/`SetNorm`/`SetSave` send nothing and hold `OFF STBY`;
+  - DATA actions (`SetDataLive`, `SetDataPlan`, `CycleData`, and legacy `SetPlan`) never send fuel commands; they publish `FUEL DATA <LIVE|PLAN>` and force `SOURCE=STBY`;
+  - `MAN -> AUTO`: `PUSH`/`NORM`/`SAVE` send immediately and arm AUTO on success with `AUTO REFUEL SET <SRC> X L` feedback; `STBY` enters `AUTO STBY` with no send and `AUTO REFUEL STBY` feedback;
   - `AUTO -> OFF` always attempts explicit raw OFF command `#-fuel$`; on send failure AUTO remains unchanged, on success exits AUTO and mirrors OFF truth with `REFUEL OFF` feedback;
-  - `SetPlan` is MAN-only direct send (`REFUEL SET PLAN X L` semantics). PLAN is blocked in OFF/AUTO and blocked when PLAN validity/session match is false (`Pit Cmd Fail` in MAN when PLAN validity fails);
   - AUTO source sends (`SourceCycle`/`SetPush`/`SetNorm`/`SetSave`) use AUTO feedback wording (`AUTO REFUEL SET <SRC> X L`) and AUTO over-space wording (`AUTO FUEL <requested>L >MAX`), while MAN over-space wording is `REFUEL <SRC> <requested>L >MAX`;
-  - impossible `AUTO + PLAN` state is guarded as no-send recovery (`AUTO STBY`, disarmed) and must not fall through to a PUSH send.
+  - Source cycle order is `STBY -> NORM -> PUSH -> SAVE -> STBY` in both MAN and AUTO; landing on `STBY` is a no-send parked state.
   - diagnostics-only instrumentation now logs every action-path early return reason before returning; command payload semantics remain unchanged.
   - External MFD/fuel-request changes are mirror-only:
     - while in AUTO, plugin sends nothing and publishes `AUTO REFUEL CANCELLED BY MFD`, then mirrors to `OFF STBY`/`MAN STBY` based on MFD truth;

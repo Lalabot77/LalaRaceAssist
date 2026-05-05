@@ -307,27 +307,80 @@ namespace LaunchPlugin
             _pitFuelControlEngine.SetSave();
         }
 
+        public void PitFuelControlSetDataLive()
+        {
+            SimHub.Logging.Current.Info("[LalaPlugin:PitFuelControl] PitFuelControlSetDataLive action received");
+            ApplyPitFuelControlData(PitFuelControlData.Live, "Pit.FuelControl.SetDataLive");
+        }
+
+        public void PitFuelControlSetDataPlan()
+        {
+            SimHub.Logging.Current.Info("[LalaPlugin:PitFuelControl] PitFuelControlSetDataPlan action received");
+            ApplyPitFuelControlData(PitFuelControlData.Plan, "Pit.FuelControl.SetDataPlan");
+        }
+
+        public void PitFuelControlCycleData()
+        {
+            SimHub.Logging.Current.Info("[LalaPlugin:PitFuelControl] PitFuelControlCycleData action received");
+            PitFuelControlData nextData = _pitFuelControlEngine.Data == PitFuelControlData.Live
+                ? PitFuelControlData.Plan
+                : PitFuelControlData.Live;
+            ApplyPitFuelControlData(nextData, "Pit.FuelControl.CycleData");
+        }
+
         public void PitFuelControlSetPlan()
         {
             SimHub.Logging.Current.Info("[LalaPlugin:PitFuelControl] PitFuelControlSetPlan action received");
-            _pitFuelControlEngine.SetPlan();
+            ApplyPitFuelControlData(PitFuelControlData.Plan, "Pit.FuelControl.SetPlan");
         }
 
         public void PitFuelControlPushSaveModeCycle()
         {
+            PitFuelControlData nextData = _pitFuelControlEngine.Data == PitFuelControlData.Live
+                ? PitFuelControlData.Plan
+                : PitFuelControlData.Live;
+            ApplyPitFuelControlData(nextData, "Pit.FuelControl.PushSaveModeCycle");
+            SimHub.Logging.Current.Info($"[LalaPlugin:PitFuelControl] PitFuelControlPushSaveModeCycle -> data={PitFuelControlDataToText(nextData)}");
+        }
+
+        private void ApplyPitFuelControlData(PitFuelControlData data, string actionName)
+        {
+            if (Settings != null)
+            {
+                _applyingPitFuelControlDataAction = true;
+                try
+                {
+                    Settings.PitFuelControlPushSaveMode = data == PitFuelControlData.Plan ? 1 : 0;
+                    Settings.RaisePitFuelControlPushSaveModeChanged();
+                    SaveSettings();
+                }
+                finally
+                {
+                    _applyingPitFuelControlDataAction = false;
+                }
+            }
+
+            _pitFuelControlEngine.SetData(data, actionName);
+        }
+
+        private void ResetPitFuelControlSessionDefaults()
+        {
+            _pitFuelControlEngine?.ResetToOffStby();
             if (Settings == null)
             {
                 return;
             }
 
-            int nextMode = (Settings.PitFuelControlPushSaveMode + 1) % 2;
-            Settings.PitFuelControlPushSaveMode = nextMode;
-            Settings.RaisePitFuelControlPushSaveModeChanged();
-            SaveSettings();
-            string modeText = nextMode == 1 ? "PROFILE" : "LIVE";
-            _pitCommandEngine.PublishInfoMessage($"PUSH/SAVE {modeText}");
-            _pitFuelControlEngine?.RefreshCurrentSourceTarget("Pit.FuelControl.PushSaveModeCycle");
-            SimHub.Logging.Current.Info($"[LalaPlugin:PitFuelControl] PitFuelControlPushSaveModeCycle -> mode={modeText}");
+            _applyingPitFuelControlDataAction = true;
+            try
+            {
+                Settings.PitFuelControlPushSaveMode = 0;
+                Settings.RaisePitFuelControlPushSaveModeChanged();
+            }
+            finally
+            {
+                _applyingPitFuelControlDataAction = false;
+            }
         }
         public void PitTyreControlModeCycle() => _pitTyreControlEngine.ModeCycle();
         public void PitTyreControlSetOff() => _pitTyreControlEngine.SetOff();
@@ -1330,7 +1383,7 @@ namespace LaunchPlugin
             double contingencyLitres,
             string contingencyText,
             double oneStopNextRefuelTargetLitres,
-            string preRaceFuelSource,
+            string strategyDashBurnSourceTag,
             bool isRaceRunning,
             bool isGridFormation,
             bool isOnTrackCar)
@@ -1386,10 +1439,8 @@ namespace LaunchPlugin
             var pitSource = _pitFuelControlEngine?.Source ?? PitFuelControlSource.Stby;
             if (pitSource == PitFuelControlSource.Push) burnPlan = "PUSH";
             else if (pitSource == PitFuelControlSource.Save) burnPlan = "SAVE";
-            if (string.Equals(preRaceFuelSource, "live", StringComparison.OrdinalIgnoreCase))
-                sourceTag = "LIVE";
-            else if (string.Equals(preRaceFuelSource, "profile", StringComparison.OrdinalIgnoreCase) || string.Equals(preRaceFuelSource, "planner-profile", StringComparison.OrdinalIgnoreCase))
-                sourceTag = "MEMORY";
+            if (!string.IsNullOrWhiteSpace(strategyDashBurnSourceTag))
+                sourceTag = strategyDashBurnSourceTag.Trim();
             StrategyDash_BurnPlanText = string.IsNullOrEmpty(sourceTag) ? $"BURN PLAN: {burnPlan}" : $"BURN PLAN: {burnPlan} / {sourceTag}";
             if (requiredStrategy == RequiredPreRaceStrategy.NoStop)
             {
@@ -1598,6 +1649,7 @@ namespace LaunchPlugin
 
             double oneStopNormTarget = Math.Max(0.0, PreRace_TotalFuelNeeded - currentFuel);
             double oneStopTarget = oneStopNormTarget;
+            string strategyDashBurnSourceTag = ClassifyStrategyDashBurnSourceTag(preRaceFuelSource);
             if (forecastRaceLaps > 0.0)
             {
                 double selectedBurn = preRaceFuelPerLap;
@@ -1611,13 +1663,34 @@ namespace LaunchPlugin
                 }
 
                 var source = _pitFuelControlEngine?.Source ?? PitFuelControlSource.Stby;
+                var dataMode = _pitFuelControlEngine?.Data ?? PitFuelControlData.Live;
                 if (source == PitFuelControlSource.Push && preRacePushBurn > 0.0)
                 {
-                    selectedBurn = preRacePushBurn;
+                    if (dataMode == PitFuelControlData.Plan &&
+                        TryResolveStrategyDashPlanPushSaveBurn(preRaceFuelPerLap, source, out double planPushBurn))
+                    {
+                        selectedBurn = planPushBurn;
+                        strategyDashBurnSourceTag = "MEMORY";
+                    }
+                    else
+                    {
+                        selectedBurn = preRacePushBurn;
+                        strategyDashBurnSourceTag = dataMode == PitFuelControlData.Live ? "LIVE" : string.Empty;
+                    }
                 }
                 else if (source == PitFuelControlSource.Save && preRaceSaveBurn > 0.0)
                 {
-                    selectedBurn = preRaceSaveBurn;
+                    if (dataMode == PitFuelControlData.Plan &&
+                        TryResolveStrategyDashPlanPushSaveBurn(preRaceFuelPerLap, source, out double planSaveBurn))
+                    {
+                        selectedBurn = planSaveBurn;
+                        strategyDashBurnSourceTag = "MEMORY";
+                    }
+                    else
+                    {
+                        selectedBurn = preRaceSaveBurn;
+                        strategyDashBurnSourceTag = dataMode == PitFuelControlData.Live ? "LIVE" : string.Empty;
+                    }
                 }
 
                 if (selectedBurn > 0.0)
@@ -1636,7 +1709,7 @@ namespace LaunchPlugin
             else
                 contingencyText = "CONT 0";
 
-            UpdateStrategyDashAdvice(selectedStrategy, requiredStrategy, currentFuel, plannedSingleStopRefuel, effectiveMaxTank, maxTankCapacity, contingencyLitres, contingencyText, oneStopTarget, preRaceFuelSource, isRaceRunning, isGridOrFormation, isOnTrackCar);
+            UpdateStrategyDashAdvice(selectedStrategy, requiredStrategy, currentFuel, plannedSingleStopRefuel, effectiveMaxTank, maxTankCapacity, contingencyLitres, contingencyText, oneStopTarget, strategyDashBurnSourceTag, isRaceRunning, isGridOrFormation, isOnTrackCar);
         }
 
         // Stable model inputs
@@ -5551,6 +5624,8 @@ namespace LaunchPlugin
         private DateTime _customMessageSaveDueUtc = DateTime.MinValue;
         private bool _friendsDirty = true;
         private LaunchPluginSettings _subscribedLeagueClassSettings;
+        private LaunchPluginSettings _subscribedPitFuelControlSettings;
+        private bool _applyingPitFuelControlDataAction;
         private List<LeagueClassDefinition> _subscribedLeagueClassDefinitions;
         private readonly HashSet<LeagueClassDefinition> _leagueClassDefinitionSubscriptions = new HashSet<LeagueClassDefinition>();
         private bool _isSavingSettings;
@@ -5939,6 +6014,7 @@ namespace LaunchPlugin
             HookFriendSettings(Settings);
             HookCustomMessageSettings(Settings);
             HookLeagueClassSettings(Settings);
+            HookPitFuelControlSettings(Settings);
             ReloadLeagueClassConfig();
             MarkFriendsDirty();
             _shiftAssistAudio = new ShiftAssistAudio(() => Settings);
@@ -6122,6 +6198,9 @@ namespace LaunchPlugin
             this.AddAction("Pit.FuelControl.SetPush", (a, b) => PitFuelControlSetPush());
             this.AddAction("Pit.FuelControl.SetNorm", (a, b) => PitFuelControlSetNorm());
             this.AddAction("Pit.FuelControl.SetSave", (a, b) => PitFuelControlSetSave());
+            this.AddAction("Pit.FuelControl.SetDataLive", (a, b) => PitFuelControlSetDataLive());
+            this.AddAction("Pit.FuelControl.SetDataPlan", (a, b) => PitFuelControlSetDataPlan());
+            this.AddAction("Pit.FuelControl.CycleData", (a, b) => PitFuelControlCycleData());
             this.AddAction("Pit.FuelControl.SetPlan", (a, b) => PitFuelControlSetPlan());
             this.AddAction("Pit.FuelControl.PushSaveModeCycle", (a, b) => PitFuelControlPushSaveModeCycle());
             this.AddAction("Pit.TyreControl.ModeCycle", (a, b) => PitTyreControlModeCycle());
@@ -6563,6 +6642,8 @@ namespace LaunchPlugin
             AttachCore("Pit.Command.LastAction", () => _pitCommandEngine.LastAction);
             AttachCore("Pit.Command.LastRaw", () => _pitCommandEngine.LastRaw);
             AttachCore("Pit.Command.FuelSetMaxToggleState", () => _pitCommandEngine.FuelSetMaxToggleState);
+            AttachCore("Pit.FuelControl.Data", () => (int)_pitFuelControlEngine.Data);
+            AttachCore("Pit.FuelControl.DataText", () => _pitFuelControlEngine.DataText);
             AttachCore("Pit.FuelControl.Source", () => (int)_pitFuelControlEngine.Source);
             AttachCore("Pit.FuelControl.SourceText", () => _pitFuelControlEngine.SourceText);
             AttachCore("Pit.FuelControl.Mode", () => (int)_pitFuelControlEngine.Mode);
@@ -7840,7 +7921,7 @@ namespace LaunchPlugin
             _lastPitWindowState = -1;
             _lastPitWindowLabel = string.Empty;
             _lastPitWindowLogUtc = DateTime.MinValue;
-            _pitFuelControlEngine?.ResetToOffStby();
+            ResetPitFuelControlSessionDefaults();
             _pitTyreControlEngine?.ResetToOff();
             _pitCommandEngine?.ResetFeedbackState();
             _opponentsEngine?.Reset();
@@ -8275,30 +8356,11 @@ namespace LaunchPlugin
                 PluginManager?.GetPropertyValue("DataCorePlugin.GameRawData.Telemetry.dpAutoFuel") ?? false);
             snapshot.TelemetryFuelFillEnabled = SafeReadBool(PluginManager, "DataCorePlugin.GameRawData.Telemetry.dpFuelFill", false);
 
-            long liveSessionLaps = Convert.ToInt64(PluginManager?.GetPropertyValue("DataCorePlugin.GameRawData.CurrentSessionInfo._SessionLaps") ?? 0L);
-            double liveSessionTimeSeconds = SafeReadDouble(PluginManager, "DataCorePlugin.GameRawData.CurrentSessionInfo._SessionTime", double.NaN);
-            var liveMatchSnapshot = BuildLiveSessionMatchSnapshot(liveSessionTimeSeconds, liveSessionLaps);
-            var plannerMatchSnapshot = FuelCalculator?.GetPlannerSessionMatchSnapshot() ?? new PlannerLiveSessionMatchSnapshot();
-
-            snapshot.LiveCar = liveMatchSnapshot.LiveCar;
-            snapshot.LiveTrack = liveMatchSnapshot.LiveTrack;
-            snapshot.HasLiveBasis = liveMatchSnapshot.HasLiveBasis;
-            snapshot.LiveBasisIsTimeLimited = liveMatchSnapshot.LiveBasisIsTimeLimited;
-            snapshot.HasLiveRaceLength = liveMatchSnapshot.HasLiveRaceLength;
-            snapshot.LiveRaceLengthValue = liveMatchSnapshot.LiveRaceLengthValue;
-
-            snapshot.PlannerCar = plannerMatchSnapshot.PlannerCar;
-            snapshot.PlannerTrack = plannerMatchSnapshot.PlannerTrack;
-            snapshot.HasPlannerBasis = plannerMatchSnapshot.HasPlannerBasis;
-            snapshot.PlannerBasisIsTimeLimited = plannerMatchSnapshot.PlannerBasisIsTimeLimited;
-            snapshot.HasPlannerRaceLength = plannerMatchSnapshot.HasPlannerRaceLength;
-            snapshot.PlannerRaceLengthValue = plannerMatchSnapshot.PlannerRaceLengthValue;
-
             double normNeedLitres = -Fuel_Delta_LitresCurrent;
             double pushNeedLitres = -Fuel_Delta_LitresCurrentPush;
             double saveNeedLitres = -Fuel_Delta_LitresCurrentSave;
 
-            if (GetPitFuelControlPushSaveMode() == 1)
+            if (_pitFuelControlEngine.Data == PitFuelControlData.Plan)
             {
                 double stableLapsRemaining = LiveLapsRemainingInRace_Stable;
                 double currentFuel = Math.Max(0.0, _lastFuelLevel);
@@ -8312,7 +8374,6 @@ namespace LaunchPlugin
             snapshot.TargetNormLitres = Math.Max(0.0, normNeedLitres);
             snapshot.TargetPushLitres = Math.Max(0.0, pushNeedLitres);
             snapshot.TargetSaveLitres = Math.Max(0.0, saveNeedLitres);
-            snapshot.TargetPlanLitres = Math.Max(0.0, FuelCalculator?.PlannerNextAddLitres ?? 0.0);
             snapshot.StopsRequiredToEnd = Pit_StopsRequiredToEnd;
             snapshot.CurrentFuelLitres = Math.Max(0.0, _lastFuelLevel);
             snapshot.TankSpaceLitres = Math.Max(0.0, Pit_TankSpaceAvailable);
@@ -8322,15 +8383,63 @@ namespace LaunchPlugin
 
         private int GetPitFuelControlPushSaveMode()
         {
-            int mode = Settings?.PitFuelControlPushSaveMode ?? 0;
-            if (mode < 0) return 0;
-            if (mode > 1) return 1;
-            return mode;
+            return _pitFuelControlEngine.Data == PitFuelControlData.Plan ? 1 : 0;
         }
 
         private string GetPitFuelControlPushSaveModeText()
         {
             return GetPitFuelControlPushSaveMode() == 1 ? "PROFILE" : "LIVE";
+        }
+
+        private static string PitFuelControlDataToText(PitFuelControlData data)
+        {
+            return data == PitFuelControlData.Plan ? "PLAN" : "LIVE";
+        }
+
+        private static string ClassifyStrategyDashBurnSourceTag(string source)
+        {
+            if (string.Equals(source, "live", StringComparison.OrdinalIgnoreCase))
+            {
+                return "LIVE";
+            }
+
+            if (string.Equals(source, "profile", StringComparison.OrdinalIgnoreCase) ||
+                string.Equals(source, "planner-profile", StringComparison.OrdinalIgnoreCase))
+            {
+                return "MEMORY";
+            }
+
+            return string.Empty;
+        }
+
+        private bool TryResolveStrategyDashPlanPushSaveBurn(double normBurn, PitFuelControlSource source, out double selectedBurn)
+        {
+            selectedBurn = 0.0;
+            if (source != PitFuelControlSource.Push && source != PitFuelControlSource.Save)
+            {
+                return false;
+            }
+
+            if (!TryGetProfilePushSaveBurnsForCurrentCondition(out double profilePushBurn, out double profileSaveBurn))
+            {
+                return false;
+            }
+
+            double guardPct = ClampToRange(Settings?.PitFuelPushSaveProfileGuardPct ?? 10.0, 0.0, 30.0, 10.0);
+            double guardFraction = guardPct / 100.0;
+            double stableNorm = IsFinitePositive(normBurn) ? normBurn : LiveFuelPerLap_Stable;
+            if (!IsFinitePositive(stableNorm))
+            {
+                return false;
+            }
+
+            double maxPush = stableNorm * (1.0 + guardFraction);
+            double minSave = stableNorm * (1.0 - guardFraction);
+            profilePushBurn = Math.Max(minSave, Math.Min(maxPush, profilePushBurn));
+            profileSaveBurn = Math.Max(minSave, Math.Min(maxPush, profileSaveBurn));
+
+            selectedBurn = source == PitFuelControlSource.Push ? profilePushBurn : profileSaveBurn;
+            return IsFinitePositive(selectedBurn);
         }
 
         private bool TryResolveProfileAssistedPushSaveNeeds(double stableLapsRemaining, double currentFuel, out double pushNeedLitres, out double saveNeedLitres)
@@ -8455,7 +8564,7 @@ namespace LaunchPlugin
         {
             if (_pitFuelControlHasIsOnTrackCarSample && _pitFuelControlLastIsOnTrackCar != isOnTrackCar)
             {
-                _pitFuelControlEngine.ResetToOffStby();
+                ResetPitFuelControlSessionDefaults();
                 _pitTyreControlEngine.ResetToOff();
             }
 
@@ -8595,7 +8704,7 @@ namespace LaunchPlugin
                 _lastSessionId = currentSessionId;
                 _lastSubSessionId = currentSubSessionId;
                 _lastSessionToken = currentSessionToken;
-                _pitFuelControlEngine.ResetToOffStby();
+                ResetPitFuelControlSessionDefaults();
                 ManualRecoveryReset("Session transition");
                 QueueFuelRuntimeHealthCheck("session token change");
 
@@ -12008,6 +12117,43 @@ namespace LaunchPlugin
             _customMessagesCollection = customMessages;
             _customMessagesCollection.CollectionChanged += OnCustomMessagesCollectionChanged;
             SubscribeCustomMessageEntries(_customMessagesCollection);
+        }
+
+        private void HookPitFuelControlSettings(LaunchPluginSettings settings)
+        {
+            if (_subscribedPitFuelControlSettings != null)
+            {
+                _subscribedPitFuelControlSettings.PropertyChanged -= OnPitFuelControlSettingsPropertyChanged;
+                _subscribedPitFuelControlSettings = null;
+            }
+
+            if (settings == null)
+            {
+                return;
+            }
+
+            _subscribedPitFuelControlSettings = settings;
+            _subscribedPitFuelControlSettings.PropertyChanged += OnPitFuelControlSettingsPropertyChanged;
+        }
+
+        private void OnPitFuelControlSettingsPropertyChanged(object sender, PropertyChangedEventArgs e)
+        {
+            if (_applyingPitFuelControlDataAction)
+            {
+                return;
+            }
+
+            string propertyName = e?.PropertyName ?? string.Empty;
+            if (!string.Equals(propertyName, nameof(LaunchPluginSettings.PitFuelControlPushSaveMode), StringComparison.Ordinal))
+            {
+                return;
+            }
+
+            PitFuelControlData data = (_subscribedPitFuelControlSettings?.PitFuelControlPushSaveMode ?? 0) == 1
+                ? PitFuelControlData.Plan
+                : PitFuelControlData.Live;
+            _pitFuelControlEngine.SetData(data, "Pit.FuelControl.DataSetting", publishFeedback: false);
+            SaveSettings();
         }
 
         private void HookLeagueClassSettings(LaunchPluginSettings settings)

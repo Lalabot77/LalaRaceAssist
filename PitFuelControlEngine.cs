@@ -7,8 +7,13 @@ namespace LaunchPlugin
         Push = 0,
         Norm = 1,
         Save = 2,
-        Plan = 3,
         Stby = 4
+    }
+
+    internal enum PitFuelControlData
+    {
+        Live = 0,
+        Plan = 1
     }
 
     internal enum PitFuelControlMode
@@ -24,24 +29,10 @@ namespace LaunchPlugin
         public string SuppressFuelControlReason = "none";
         public bool IracingAutoFuelEnabled;
         public bool TelemetryFuelFillEnabled;
-        public string LiveCar = string.Empty;
-        public string LiveTrack = string.Empty;
-        public bool HasLiveBasis;
-        public bool LiveBasisIsTimeLimited;
-        public bool HasLiveRaceLength;
-        public double LiveRaceLengthValue;
-
-        public string PlannerCar = string.Empty;
-        public string PlannerTrack = string.Empty;
-        public bool HasPlannerBasis;
-        public bool PlannerBasisIsTimeLimited;
-        public bool HasPlannerRaceLength;
-        public double PlannerRaceLengthValue;
 
         public double TargetPushLitres;
         public double TargetNormLitres;
         public double TargetSaveLitres;
-        public double TargetPlanLitres;
 
         public double CurrentFuelLitres;
         public double TankSpaceLitres;
@@ -74,7 +65,8 @@ namespace LaunchPlugin
         private string _lastTelemetrySuppressionReason = "none";
         private DateTime _lastTelemetrySuppressionLogUtc = DateTime.MinValue;
 
-        public PitFuelControlSource Source { get; private set; } = PitFuelControlSource.Push;
+        public PitFuelControlSource Source { get; private set; } = PitFuelControlSource.Stby;
+        public PitFuelControlData Data { get; private set; } = PitFuelControlData.Live;
         private bool IsAutoModeActive { get; set; }
         public PitFuelControlMode Mode => ResolveEffectiveMode();
         public bool AutoArmed { get; private set; }
@@ -82,8 +74,6 @@ namespace LaunchPlugin
         public double TargetLitres { get; private set; }
         public bool OverrideActive { get; private set; }
         public int Fault { get; private set; }
-
-        public bool PlanValid { get; private set; }
 
         public PitFuelControlEngine(
             Func<PitFuelControlSnapshot> snapshotProvider,
@@ -98,6 +88,7 @@ namespace LaunchPlugin
         public void ResetToOffStby()
         {
             Source = PitFuelControlSource.Stby;
+            Data = PitFuelControlData.Live;
             IsAutoModeActive = false;
             AutoArmed = false;
             LastSentFuelLitres = -1;
@@ -132,29 +123,23 @@ namespace LaunchPlugin
 
             if (effectiveMode == PitFuelControlMode.Auto)
             {
-                if (Source == PitFuelControlSource.Plan)
-                {
-                    Source = PitFuelControlSource.Stby;
-                    AutoArmed = false;
-                    LogActionBlockedInfo("SourceCycle", "auto-plan-blocked");
-                    return;
-                }
-
-                Source = NextAutoSource(Source);
+                Source = NextSource(Source);
             }
             else
             {
-                if (Source == PitFuelControlSource.Stby)
-                {
-                    Source = PitFuelControlSource.Push;
-                }
-                else
-                {
-                    Source = NextSource(Source);
-                }
+                Source = NextSource(Source);
             }
 
             RefreshDerivedState();
+
+            if (Source == PitFuelControlSource.Stby)
+            {
+                AutoArmed = false;
+                LastSentFuelLitres = -1;
+                ClearPendingOwnedMirrorExpectations();
+                PublishSelectionFeedback("Pit.FuelControl.SourceCycle", "FUEL SRC STBY");
+                return;
+            }
 
             bool sendAttempted = false;
             if (effectiveMode == PitFuelControlMode.Man || effectiveMode == PitFuelControlMode.Auto)
@@ -225,15 +210,6 @@ namespace LaunchPlugin
                     return;
                 }
 
-                if (Source == PitFuelControlSource.Plan)
-                {
-                    Source = PitFuelControlSource.Stby;
-                    AutoArmed = false;
-                    PublishSelectionFeedback("Pit.FuelControl.ModeCycle", "AUTO REFUEL STBY");
-                    LogActionBlockedInfo("ModeCycle", "auto-plan-blocked");
-                    return;
-                }
-
                 bool sent = SendCurrentTarget(isAutoUpdate: false, actionNameOverride: "Pit.FuelControl.ModeCycle");
                 if (sent)
                 {
@@ -247,14 +223,6 @@ namespace LaunchPlugin
                     LogActionBlockedInfo("ModeCycle", "send-failed");
                 }
 
-                return;
-            }
-
-            if (Source == PitFuelControlSource.Plan)
-            {
-                Source = PitFuelControlSource.Stby;
-                AutoArmed = false;
-                LogActionBlockedInfo("ModeCycle", "auto-plan-blocked");
                 return;
             }
 
@@ -279,49 +247,10 @@ namespace LaunchPlugin
         public void SetPush() => SetSource(PitFuelControlSource.Push, "Pit.FuelControl.SetPush");
         public void SetNorm() => SetSource(PitFuelControlSource.Norm, "Pit.FuelControl.SetNorm");
         public void SetSave() => SetSource(PitFuelControlSource.Save, "Pit.FuelControl.SetSave");
-        public void SetPlan() => SetPlanSource("Pit.FuelControl.SetPlan");
-
-        public void RefreshCurrentSourceTarget(string actionName = "Pit.FuelControl.PushSaveModeCycle")
-        {
-            LogActionEntry("RefreshCurrentSourceTarget");
-            if (TryApplySuppressedState())
-            {
-                LogActionBlockedSuppressed("RefreshCurrentSourceTarget");
-                return;
-            }
-
-            RefreshDerivedState();
-            PitFuelControlMode effectiveMode = ResolveEffectiveMode();
-            if (effectiveMode == PitFuelControlMode.Off)
-            {
-                LogActionBlockedInfo("RefreshCurrentSourceTarget", "off-hard-guard");
-                return;
-            }
-
-            if (Source != PitFuelControlSource.Push && Source != PitFuelControlSource.Save)
-            {
-                LogActionBlockedDebug("RefreshCurrentSourceTarget", "source-not-push-save");
-                return;
-            }
-
-            if (effectiveMode != PitFuelControlMode.Man && effectiveMode != PitFuelControlMode.Auto)
-            {
-                LogActionBlockedDebug("RefreshCurrentSourceTarget", "mode-not-man-auto");
-                return;
-            }
-
-            if (!SendCurrentTarget(isAutoUpdate: false, actionNameOverride: actionName))
-            {
-                Source = PitFuelControlSource.Stby;
-                if (effectiveMode == PitFuelControlMode.Auto)
-                {
-                    AutoArmed = false;
-                }
-
-                PublishSelectionFeedback(actionName, "PIT CMD FAIL");
-                LogActionBlockedInfo("RefreshCurrentSourceTarget", "send-failed");
-            }
-        }
+        public void SetDataLive() => SetData(PitFuelControlData.Live, "Pit.FuelControl.SetDataLive");
+        public void SetDataPlan() => SetData(PitFuelControlData.Plan, "Pit.FuelControl.SetDataPlan");
+        public void CycleData() => SetData(Data == PitFuelControlData.Live ? PitFuelControlData.Plan : PitFuelControlData.Live, "Pit.FuelControl.CycleData");
+        public void SetPlan() => SetData(PitFuelControlData.Plan, "Pit.FuelControl.SetPlan");
 
         public void OnLapCross()
         {
@@ -343,7 +272,7 @@ namespace LaunchPlugin
                 return;
             }
 
-            if (Source == PitFuelControlSource.Plan || Source == PitFuelControlSource.Stby)
+            if (Source == PitFuelControlSource.Stby)
             {
                 LogActionBlockedDebug("OnLapCross", "source-stby");
                 return;
@@ -455,6 +384,7 @@ namespace LaunchPlugin
         }
 
         public string SourceText => SourceToText(Source);
+        public string DataText => DataToText(Data);
         public string ModeText => ModeToText(Mode);
 
         private void SetSource(PitFuelControlSource requestedSource, string actionName)
@@ -474,12 +404,6 @@ namespace LaunchPlugin
                 AutoArmed = false;
                 IsAutoModeActive = false;
                 LogActionBlockedInfo(SourceToActionLabel(actionName), "off-hard-guard");
-                return;
-            }
-
-            if (requestedSource == PitFuelControlSource.Plan)
-            {
-                LogActionBlockedInfo(SourceToActionLabel(actionName), "auto-plan-blocked");
                 return;
             }
 
@@ -506,51 +430,22 @@ namespace LaunchPlugin
             }
         }
 
-        private void SetPlanSource(string actionName)
+        public void SetData(PitFuelControlData requestedData, string actionName, bool publishFeedback = true)
         {
-            LogActionEntry("SetPlan");
-            if (TryApplySuppressedState())
-            {
-                LogActionBlockedSuppressed("SetPlan");
-                return;
-            }
-
+            string label = DataToActionLabel(actionName);
+            LogActionEntry(label);
+            Data = requestedData;
+            Source = PitFuelControlSource.Stby;
+            AutoArmed = false;
+            LastSentFuelLitres = -1;
+            OverrideActive = false;
+            _maxOverrideArmed = false;
+            ClearPendingOwnedMirrorExpectations();
             RefreshDerivedState();
-            PitFuelControlMode effectiveMode = ResolveEffectiveMode();
-            if (effectiveMode == PitFuelControlMode.Off)
-            {
-                Source = PitFuelControlSource.Stby;
-                AutoArmed = false;
-                IsAutoModeActive = false;
-                LogActionBlockedInfo("SetPlan", "off-hard-guard");
-                return;
-            }
 
-            if (effectiveMode == PitFuelControlMode.Auto)
+            if (publishFeedback)
             {
-                LogActionBlockedInfo("SetPlan", "auto-plan-blocked");
-                return;
-            }
-
-            if (!PlanValid)
-            {
-                if (effectiveMode == PitFuelControlMode.Man)
-                {
-                    PublishSelectionFeedback(actionName, "PIT CMD FAIL");
-                }
-
-                LogActionBlockedInfo("SetPlan", "plan-invalid");
-                return;
-            }
-
-            Source = PitFuelControlSource.Plan;
-            RefreshDerivedState();
-            bool sent = SendCurrentTarget(isAutoUpdate: false, actionNameOverride: actionName);
-            if (!sent)
-            {
-                Source = PitFuelControlSource.Stby;
-                PublishSelectionFeedback(actionName, "PIT CMD FAIL");
-                LogActionBlockedInfo("SetPlan", "send-failed");
+                PublishSelectionFeedback(actionName, string.Format("FUEL DATA {0}", DataToText(Data)));
             }
         }
 
@@ -573,12 +468,6 @@ namespace LaunchPlugin
             if (roundedTarget < 0)
             {
                 LogActionBlockedInfo(actionNameOverride ?? "SendCurrentTarget", "target-invalid");
-                return false;
-            }
-
-            if (Source == PitFuelControlSource.Plan && !PlanValid)
-            {
-                LogActionBlockedInfo(actionNameOverride ?? "SendCurrentTarget", "plan-invalid");
                 return false;
             }
 
@@ -705,7 +594,6 @@ namespace LaunchPlugin
             var snapshot = _snapshotProvider();
             if (snapshot == null)
             {
-                PlanValid = false;
                 TargetLitres = 0.0;
                 OverrideActive = false;
                 return;
@@ -714,18 +602,9 @@ namespace LaunchPlugin
             if (snapshot.SuppressFuelControl)
             {
                 DisarmAutoAndForceStby(clearSuppressWindow: true);
-                PlanValid = false;
                 TargetLitres = 0.0;
                 OverrideActive = false;
                 return;
-            }
-
-            PlanValid = ComputePlanValidity(snapshot);
-
-            if (Source == PitFuelControlSource.Plan)
-            {
-                OverrideActive = false;
-                _maxOverrideArmed = false;
             }
 
             TargetLitres = ResolveSourceTarget(snapshot, Source);
@@ -740,7 +619,6 @@ namespace LaunchPlugin
             }
 
             DisarmAutoAndForceStby(clearSuppressWindow: true);
-            PlanValid = false;
             TargetLitres = 0.0;
             OverrideActive = false;
             return true;
@@ -805,12 +683,11 @@ namespace LaunchPlugin
         private void LogActionEntry(string actionName)
         {
             var snapshot = _snapshotProvider();
-            string planValidText = snapshot == null ? "n/a" : PlanValid.ToString();
             string targetText = snapshot == null ? "n/a" : TargetLitres.ToString("F2");
             string lastSentText = LastSentFuelLitres >= 0 ? LastSentFuelLitres.ToString() : "none";
             string suppressReason = ResolveSuppressionReason(snapshot);
             SimHub.Logging.Current.Info(
-                $"[LalaPlugin:PitFuelControl] entry action={actionName} mode={ModeToText(ResolveEffectiveMode())} source={SourceToText(Source)} autoArmed={AutoArmed} isAutoModeActive={IsAutoModeActive} suppressFuelControl={(snapshot != null && snapshot.SuppressFuelControl)} suppressReason={suppressReason} iracingAutoFuelEnabled={(snapshot != null && snapshot.IracingAutoFuelEnabled)} telemetryFuelFillEnabled={(snapshot != null && snapshot.TelemetryFuelFillEnabled)} planValid={planValidText} targetLitres={targetText} overrideActive={OverrideActive} lastSentFuelLitres={lastSentText}");
+                $"[LalaPlugin:PitFuelControl] entry action={actionName} mode={ModeToText(ResolveEffectiveMode())} source={SourceToText(Source)} data={DataToText(Data)} autoArmed={AutoArmed} isAutoModeActive={IsAutoModeActive} suppressFuelControl={(snapshot != null && snapshot.SuppressFuelControl)} suppressReason={suppressReason} iracingAutoFuelEnabled={(snapshot != null && snapshot.IracingAutoFuelEnabled)} telemetryFuelFillEnabled={(snapshot != null && snapshot.TelemetryFuelFillEnabled)} targetLitres={targetText} overrideActive={OverrideActive} lastSentFuelLitres={lastSentText}");
         }
 
         private void LogActionBlockedInfo(string actionName, string reason)
@@ -841,6 +718,31 @@ namespace LaunchPlugin
             }
 
             return actionName ?? "SetSource";
+        }
+
+        private static string DataToActionLabel(string actionName)
+        {
+            if (string.Equals(actionName, "Pit.FuelControl.SetDataLive", StringComparison.Ordinal))
+            {
+                return "SetDataLive";
+            }
+
+            if (string.Equals(actionName, "Pit.FuelControl.SetDataPlan", StringComparison.Ordinal))
+            {
+                return "SetDataPlan";
+            }
+
+            if (string.Equals(actionName, "Pit.FuelControl.CycleData", StringComparison.Ordinal))
+            {
+                return "CycleData";
+            }
+
+            if (string.Equals(actionName, "Pit.FuelControl.SetPlan", StringComparison.Ordinal))
+            {
+                return "SetPlan";
+            }
+
+            return actionName ?? "SetData";
         }
 
         private static string ResolveSuppressionReason(PitFuelControlSnapshot snapshot)
@@ -1027,27 +929,6 @@ namespace LaunchPlugin
             return value;
         }
 
-        private static bool ComputePlanValidity(PitFuelControlSnapshot snapshot)
-        {
-            var match = PlannerLiveSessionMatchHelper.Evaluate(new PlannerLiveSessionMatchSnapshot
-            {
-                LiveCar = snapshot?.LiveCar,
-                LiveTrack = snapshot?.LiveTrack,
-                HasLiveBasis = snapshot != null && snapshot.HasLiveBasis,
-                LiveBasisIsTimeLimited = snapshot != null && snapshot.LiveBasisIsTimeLimited,
-                HasLiveRaceLength = snapshot != null && snapshot.HasLiveRaceLength,
-                LiveRaceLengthValue = snapshot?.LiveRaceLengthValue ?? 0.0,
-                PlannerCar = snapshot?.PlannerCar,
-                PlannerTrack = snapshot?.PlannerTrack,
-                HasPlannerBasis = snapshot != null && snapshot.HasPlannerBasis,
-                PlannerBasisIsTimeLimited = snapshot != null && snapshot.PlannerBasisIsTimeLimited,
-                HasPlannerRaceLength = snapshot != null && snapshot.HasPlannerRaceLength,
-                PlannerRaceLengthValue = snapshot?.PlannerRaceLengthValue ?? 0.0
-            });
-
-            return match.IsMatch;
-        }
-
         private static double ResolveSourceTarget(PitFuelControlSnapshot snapshot, PitFuelControlSource source)
         {
             switch (source)
@@ -1058,8 +939,6 @@ namespace LaunchPlugin
                     return Math.Max(0.0, snapshot.TargetNormLitres);
                 case PitFuelControlSource.Save:
                     return Math.Max(0.0, snapshot.TargetSaveLitres);
-                case PitFuelControlSource.Plan:
-                    return Math.Max(0.0, snapshot.TargetPlanLitres);
                 default:
                     return 0.0;
             }
@@ -1093,33 +972,15 @@ namespace LaunchPlugin
         {
             switch (current)
             {
-                case PitFuelControlSource.Push:
-                    return PitFuelControlSource.Norm;
                 case PitFuelControlSource.Norm:
+                    return PitFuelControlSource.Push;
+                case PitFuelControlSource.Push:
                     return PitFuelControlSource.Save;
                 case PitFuelControlSource.Save:
-                    return PitFuelControlSource.Plan;
-                case PitFuelControlSource.Plan:
-                    return PitFuelControlSource.Push;
+                    return PitFuelControlSource.Stby;
                 case PitFuelControlSource.Stby:
                 default:
-                    return PitFuelControlSource.Push;
-            }
-        }
-
-        private static PitFuelControlSource NextAutoSource(PitFuelControlSource current)
-        {
-            switch (current)
-            {
-                case PitFuelControlSource.Push:
                     return PitFuelControlSource.Norm;
-                case PitFuelControlSource.Norm:
-                    return PitFuelControlSource.Save;
-                case PitFuelControlSource.Save:
-                case PitFuelControlSource.Plan:
-                case PitFuelControlSource.Stby:
-                default:
-                    return PitFuelControlSource.Push;
             }
         }
 
@@ -1130,10 +991,14 @@ namespace LaunchPlugin
                 case PitFuelControlSource.Push: return "PUSH";
                 case PitFuelControlSource.Norm: return "NORM";
                 case PitFuelControlSource.Save: return "SAVE";
-                case PitFuelControlSource.Plan: return "PLAN";
                 case PitFuelControlSource.Stby: return "STBY";
                 default: return "PUSH";
             }
+        }
+
+        private static string DataToText(PitFuelControlData data)
+        {
+            return data == PitFuelControlData.Plan ? "PLAN" : "LIVE";
         }
 
         private static string ModeToText(PitFuelControlMode mode)
