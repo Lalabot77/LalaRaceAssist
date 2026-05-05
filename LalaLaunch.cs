@@ -1799,6 +1799,22 @@ namespace LaunchPlugin
             return "-";
         }
 
+        private static string ResolvePitLossLearningMode(PitCycleLite pitLite)
+        {
+            if (pitLite == null) return "unknown";
+            return pitLite.Status == PitCycleLite.StatusKind.StopValid ? "boxed_stop" : "drive_through";
+        }
+
+        private static double NormalizeDriveThroughEquivalentSeconds(double storedSeconds, string learningMode)
+        {
+            string mode = (learningMode ?? string.Empty).Trim().ToLowerInvariant();
+            if (mode == "boxed_stop")
+            {
+                return Math.Max(0.0, storedSeconds - PitExitTransitionAllowanceSec);
+            }
+            return storedSeconds;
+        }
+
         private static bool IsFiniteNonNegative(double value)
         {
             return !double.IsNaN(value) && !double.IsInfinity(value) && value >= 0.0;
@@ -5205,6 +5221,28 @@ namespace LaunchPlugin
             };
         }
 
+        private bool IsRaceContextClassMatchForCarIdx(PluginManager pluginManager, int playerCarIdx, int candidateCarIdx, bool isMultiClassSession, string playerClassShort, OpponentsEngine.IsRaceContextClassMatch raceContextMatch)
+        {
+            if (raceContextMatch == null)
+            {
+                return IsCarInPlayerClass(pluginManager, candidateCarIdx, isMultiClassSession, playerClassShort);
+            }
+
+            if (!TryGetCarDriverInfo(pluginManager, playerCarIdx, out _, out _, out int playerUserId, out _, out _, out _, out _, out _, out string playerName, out _))
+            {
+                return IsCarInPlayerClass(pluginManager, candidateCarIdx, isMultiClassSession, playerClassShort);
+            }
+
+            if (!TryGetCarDriverInfo(pluginManager, candidateCarIdx, out _, out _, out int candidateUserId, out _, out _, out _, out _, out _, out string candidateName, out _))
+            {
+                return false;
+            }
+
+            var playerRow = new OpponentsEngine.NativeCarRow { CarIdx = playerCarIdx, IdentityKey = "car:" + playerCarIdx.ToString(CultureInfo.InvariantCulture), UserID = playerUserId, Name = playerName ?? string.Empty };
+            var candidateRow = new OpponentsEngine.NativeCarRow { CarIdx = candidateCarIdx, IdentityKey = "car:" + candidateCarIdx.ToString(CultureInfo.InvariantCulture), UserID = candidateUserId, Name = candidateName ?? string.Empty };
+            return raceContextMatch(playerRow, candidateRow);
+        }
+
         private EffectiveRaceClassInfo ResolveLivePlayerLeagueClassInfo()
         {
             int? customerId;
@@ -5512,7 +5550,7 @@ namespace LaunchPlugin
         private const double PitBoxTargetLatchSettleSeconds = 1.0;
         private const double PitBoxLastDeltaWindowSeconds = 5.0;
         private const double PitBoxModeledServiceOverheadSeconds = 1.0;
-        private const double PitExitTransitionAllowanceSec = 2.75;
+        private const double PitExitTransitionAllowanceSec = 2.00;
         private bool _pitRefuelEntryLatched = false;
         private bool _pitRefuelTargetLatched = false;
         private bool _pitRefuelWasBoxed = false;
@@ -6190,17 +6228,33 @@ namespace LaunchPlugin
             AttachCore("Fuel.Pit.StopsRequiredToEnd", () => Pit_StopsRequiredToEnd);
             AttachCore("Fuel.Live.RefuelRate_Lps", () => FuelCalculator?.EffectiveRefuelRateLps ?? 0.0);
             AttachCore("Fuel.Live.TireChangeTime_S", () => GetEffectiveTireChangeTimeSeconds());
-            AttachCore("Fuel.Live.PitLaneLoss_S", () => FuelCalculator?.PitLaneTimeLoss ?? 0.0);
+            AttachCore("Fuel.Live.PitLaneLoss_S", () =>
+            {
+                var ts = ResolveCurrentTrackStats();
+                if (ts?.PitLaneLossSeconds is double stored && stored > 0.0)
+                {
+                    return NormalizeDriveThroughEquivalentSeconds(stored, ts.PitLaneLossLearningMode);
+                }
+                return FuelCalculator?.PitLaneTimeLoss ?? 0.0;
+            });
             AttachCore("TrackLearning.PitLoss.ValueSec", () =>
             {
                 var ts = ResolveCurrentTrackStats();
-                return ts?.PitLaneLossSeconds ?? 0.0;
+                if (ts?.PitLaneLossSeconds is double stored && stored > 0.0)
+                {
+                    return NormalizeDriveThroughEquivalentSeconds(stored, ts.PitLaneLossLearningMode);
+                }
+                return 0.0;
             });
             AttachCore("TrackLearning.PitLoss.Display", () =>
             {
                 var ts = ResolveCurrentTrackStats();
-                var value = ts?.PitLaneLossSeconds;
-                return (value.HasValue && value.Value > 0.0) ? value.Value.ToString("0.0", CultureInfo.InvariantCulture) + "s" : "-";
+                if (ts?.PitLaneLossSeconds is double stored && stored > 0.0)
+                {
+                    double normalized = NormalizeDriveThroughEquivalentSeconds(stored, ts.PitLaneLossLearningMode);
+                    return normalized.ToString("0.0", CultureInfo.InvariantCulture) + "s";
+                }
+                return "-";
             });
             AttachCore("TrackLearning.PitLoss.SourceText", () =>
             {
@@ -7140,6 +7194,7 @@ namespace LaunchPlugin
             {
                 trackRecord.PitLaneLossSeconds = rounded;
                 trackRecord.PitLaneLossSource = src;                  // "dtl" or "direct"
+                trackRecord.PitLaneLossLearningMode = ResolvePitLossLearningMode(_pitLite);
                 trackRecord.PitLaneLossUpdatedUtc = now;              // DateTime.UtcNow above
                 ProfilesViewModel?.SaveProfiles();
                 SimHub.Logging.Current.Info(
@@ -7167,6 +7222,7 @@ namespace LaunchPlugin
             {
                 trackRecord.PitLaneLossSeconds = rounded;
                 trackRecord.PitLaneLossSource = src;                  // "dtl" or "direct"
+                trackRecord.PitLaneLossLearningMode = ResolvePitLossLearningMode(_pitLite);
                 trackRecord.PitLaneLossUpdatedUtc = now;              // DateTime.UtcNow above
                 ProfilesViewModel?.SaveProfiles();
                 SimHub.Logging.Current.Info(
@@ -14119,7 +14175,8 @@ namespace LaunchPlugin
                 sessionTimeSec,
                 sessionTimeRemainingSec,
                 verboseLogs,
-                checkpointGapReader);
+                checkpointGapReader,
+                BuildRaceContextLeagueClassMatchDelegate());
         }
 
         private static double SafeReadDouble(PluginManager pluginManager, string propertyName, double fallback)
@@ -15041,6 +15098,7 @@ namespace LaunchPlugin
 
         private int FindResolvedClassLeaderCarIdx(PluginManager pluginManager, int playerCarIdx, bool isMultiClassSession, int[] trackSurfaces)
         {
+            var raceContextMatch = BuildRaceContextLeagueClassMatchDelegate();
             int[] overallPositions = SafeReadIntArray(pluginManager, "DataCorePlugin.GameRawData.Telemetry.CarIdxPosition");
             if (!isMultiClassSession)
             {
@@ -15050,6 +15108,42 @@ namespace LaunchPlugin
             if (!TryResolvePlayerClassShortName(pluginManager, playerCarIdx, out string playerClassShort))
             {
                 return -1;
+            }
+
+            if (raceContextMatch != null && overallPositions != null)
+            {
+                int bestCarIdx = -1;
+                int bestOverallPos = int.MaxValue;
+                int candidateCount = Math.Min(overallPositions.Length, CarSAEngine.MaxCars);
+                for (int i = 0; i < candidateCount; i++)
+                {
+                    int pos = overallPositions[i];
+                    if (pos <= 0)
+                    {
+                        continue;
+                    }
+
+                    if (!IsCarInWorld(trackSurfaces, i))
+                    {
+                        continue;
+                    }
+
+                    if (!IsRaceContextClassMatchForCarIdx(pluginManager, playerCarIdx, i, isMultiClassSession, playerClassShort, raceContextMatch))
+                    {
+                        continue;
+                    }
+
+                    if (pos < bestOverallPos)
+                    {
+                        bestOverallPos = pos;
+                        bestCarIdx = i;
+                    }
+                }
+
+                if (bestCarIdx >= 0)
+                {
+                    return bestCarIdx;
+                }
             }
 
             int[] classPositions = SafeReadIntArray(pluginManager, "DataCorePlugin.GameRawData.Telemetry.CarIdxClassPosition");
@@ -15070,7 +15164,7 @@ namespace LaunchPlugin
                     continue;
                 }
 
-                if (IsCarInPlayerClass(pluginManager, i, isMultiClassSession, playerClassShort))
+                if (IsRaceContextClassMatchForCarIdx(pluginManager, playerCarIdx, i, isMultiClassSession, playerClassShort, raceContextMatch))
                 {
                     return i;
                 }
@@ -15139,6 +15233,7 @@ namespace LaunchPlugin
             }
 
             bool isMultiClassSession = IsMultiClassSession(pluginManager);
+            var raceContextMatch = BuildRaceContextLeagueClassMatchDelegate();
             string playerClassShort = string.Empty;
             if (isMultiClassSession && !TryResolvePlayerClassShortName(pluginManager, playerCarIdx, out playerClassShort))
             {
@@ -15151,7 +15246,7 @@ namespace LaunchPlugin
             bool matchedCandidate = false;
             for (int i = 0; i < CarSAEngine.MaxCars; i++)
             {
-                if (!IsCarInPlayerClass(pluginManager, i, isMultiClassSession, playerClassShort))
+                if (!IsRaceContextClassMatchForCarIdx(pluginManager, playerCarIdx, i, isMultiClassSession, playerClassShort, raceContextMatch))
                 {
                     continue;
                 }
@@ -15964,7 +16059,16 @@ namespace LaunchPlugin
 
         private double CalculateTotalStopLossSeconds()
         {
-            double pitLaneLoss = FuelCalculator?.PitLaneTimeLoss ?? 0.0;
+            double pitLaneLoss;
+            var trackStats = ResolveCurrentTrackStats();
+            if (trackStats?.PitLaneLossSeconds is double stored && stored > 0.0)
+            {
+                pitLaneLoss = NormalizeDriveThroughEquivalentSeconds(stored, trackStats.PitLaneLossLearningMode);
+            }
+            else
+            {
+                pitLaneLoss = FuelCalculator?.PitLaneTimeLoss ?? 0.0;
+            }
             if (pitLaneLoss < 0.0) pitLaneLoss = 0.0;
 
             double modeledBoxTargetSec = CalculatePitBoxModeledTargetSeconds();

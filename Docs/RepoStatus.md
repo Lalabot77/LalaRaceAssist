@@ -3,6 +3,37 @@
   - `StrategyDash.Phase` now hard-gates `2 = GRID FORMATION` on `DataCorePlugin.GameRawData.Telemetry.IsOnTrackCar==true` in addition to existing grid/formation session-state authority;
   - `3 = RACE` authority remains unchanged;
   - when not race-running and not on-track/in-car, phase now remains `1 = PLANNING` (grid/formation helper flags alone no longer promote phase 2).
+- 2026-05-05 Planner-save pit-loss learning-mode overwrite fix landed:
+  - `SavePlannerDataToProfile()` now updates `PitLaneLossSeconds` + `PitLaneLossSource/manual` + `PitLaneLossLearningMode/manual` only when the planner pit-loss value actually changes versus the stored track value;
+  - ordinary planner saves that do not edit pit loss now preserve existing learned mode metadata (including `boxed_stop`) and avoid accidental normalization drift.
+
+- 2026-05-05 Profiles manager pit-loss manual-edit consistency fix landed:
+  - Profiles-tab pit-loss text edits now stamp `PitLaneLossLearningMode="manual"` alongside `PitLaneLossSource="manual"`;
+  - prevents stale `boxed_stop` mode from persisting after manual pit-loss edits and incorrectly subtracting transition allowance in normalized pit-loss exports.
+
+- 2026-05-04 Pit-loss mode/source consistency fix landed:
+  - FuelCalcs track-save overwrite now also stamps `PitLaneLossSource="manual"` and `PitLaneLossLearningMode="manual"` when writing `PitLaneLossSeconds`;
+  - prevents stale `boxed_stop` mode from persisting across manual/planner pit-loss overwrites and incorrectly subtracting transition allowance in normalized pit-loss exports.
+
+- 2026-05-04 Pit-loss source-aware normalization follow-up landed:
+  - added persisted `PitLaneLossLearningMode` metadata (`drive_through` / `boxed_stop` / `manual`) on saved track pit-loss records;
+  - `Fuel.Live.PitLaneLoss_S` and `TrackLearning.PitLoss.ValueSec/Display` now expose drive-through-equivalent pit-lane loss (boxed-stop-learned values subtract fixed transition allowance and clamp at `0`);
+  - shared boxed-stop seam now uses fixed transition allowance `+2.00s`; `Fuel.Live.TotalStopLoss` composes from normalized drive-through-equivalent loss + boxed-service model (+repair-aware) + transition allowance without double-counting.
+
+- 2026-05-04 League Race Final Behaviour phase landed:
+  - `ClassLeader.*` and `ClassBest.*` race-context class cohort matching now flows through the existing League Class resolver delegate seam (enabled+valid uses effective class; disabled/unresolved-player falls back to unchanged native class behavior).
+  - `PitExit.PredictedPositionInClass`, `PitExit.CarsAheadAfterPitCount`, and `PitExit.Ahead/Behind.*` now use the same race-context class seam as Opponents cohort selection for enabled+valid League Class mode, with native fallback unchanged.
+  - preserved invariants: no CarSA changes, no `H2HTrack` changes, no pit-exit countdown/loss/progress/gap formula changes.
+  - PR #669 follow-up: in enabled+valid League effective-class mode, class-leader selection now chooses the lowest positive `CarIdxPosition` across the full effective-class cohort (race order) instead of first matching array index; native class-position fallback remains when overall position data is unavailable.
+- 2026-05-04 Strategy tab race-configuration ownership cleanup landed:
+  - Race Preset selector is now hidden during `Live Detect` ownership and preset modified UI is suppressed in that mode.
+  - Enter/exit `Live Detect` now clears selected/applied preset state to prevent stale hidden preset influence after mode changes.
+  - Exiting `Live Detect` resets manual race length fields to neutral manual defaults (`20 laps` / `40 min`) for explicit post-detect user intent.
+  - Strategy calculation ownership remains effective-basis-only; no fuel model/live detect detection logic changes and no Refresh Calcs ownership mutation.
+
+- 2026-05-04 Strategy race-ownership follow-up (P1 review) landed:
+  - Live Detect background refresh now updates cached detected race basis/helper state without mutating manual `RaceLaps`/`RaceMinutes` when Live Detect is not selected.
+  - Live Detect exit now also clears detected lap/minute cache values to prevent stale detected-length reuse across mode transitions.
 
 - 2026-05-04 StrategyDash phase compile-fix follow-up (PR #660) landed:
   - `UpdateStrategyDashAdvice(...)` phase detection now takes explicit real-state booleans from the existing pre-race call path (`isRaceRunning`, `isGridOrFormation`) instead of referencing removed non-existent fields;
@@ -130,6 +161,12 @@ Branch: work
   - `StrategyDash.Phase` now hard-gates `2 = GRID FORMATION` on `DataCorePlugin.GameRawData.Telemetry.IsOnTrackCar==true` in addition to existing grid/formation session-state authority;
   - `3 = RACE` authority remains unchanged;
   - when not race-running and not on-track/in-car, phase now remains `1 = PLANNING` (grid/formation helper flags alone no longer promote phase 2).
+
+- 2026-05-04 League Race Final Behaviour phase landed:
+  - `ClassLeader.*` and `ClassBest.*` race-context class cohort matching now flows through the existing League Class resolver delegate seam (enabled+valid uses effective class; disabled/unresolved-player falls back to unchanged native class behavior).
+  - `PitExit.PredictedPositionInClass`, `PitExit.CarsAheadAfterPitCount`, and `PitExit.Ahead/Behind.*` now use the same race-context class seam as Opponents cohort selection for enabled+valid League Class mode, with native fallback unchanged.
+  - preserved invariants: no CarSA changes, no `H2HTrack` changes, no pit-exit countdown/loss/progress/gap formula changes.
+  - PR #669 follow-up: in enabled+valid League effective-class mode, class-leader selection now chooses the lowest positive `CarIdxPosition` across the full effective-class cohort (race order) instead of first matching array index; native class-position fallback remains when overall position data is unavailable.
 
 - 2026-05-04 StrategyDash one-stop burn-basis current-tick refresh fix landed:
   - one-stop `StrategyDash.NextRefuelTargetLitres` PUSH/SAVE selection now uses current-tick locally resolved burns in `UpdatePreRaceOutputs(...)` (not shared prior-frame `PushFuelPerLap`/`FuelSaveFuelPerLap` fields at that stage);

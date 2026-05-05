@@ -1062,6 +1062,7 @@ namespace LaunchPlugin
                 {
                     PitLaneLossSeconds = rounded;
                     PitLaneLossSource = "manual";
+                    PitLaneLossLearningMode = "manual";
                     PitLaneLossUpdatedUtc = DateTime.UtcNow;
                     if (!_isHydrating)
                     {
@@ -1234,6 +1235,14 @@ namespace LaunchPlugin
         {
             get => _pitLaneLossSource;
             set { if (_pitLaneLossSource != value) { _pitLaneLossSource = value; OnPropertyChanged(); } }
+        }
+
+        private string _pitLaneLossLearningMode;
+        [JsonProperty]
+        public string PitLaneLossLearningMode
+        {
+            get => _pitLaneLossLearningMode;
+            set { if (_pitLaneLossLearningMode != value) { _pitLaneLossLearningMode = value; OnPropertyChanged(); } }
         }
 
         private DateTime? _pitLaneLossUpdatedUtc;
@@ -1535,6 +1544,7 @@ namespace LaunchPlugin
         {
             PitLaneLossSeconds = null;
             PitLaneLossSource = null;
+            PitLaneLossLearningMode = null;
             PitLaneLossUpdatedUtc = null;
             PitLaneLossBlockedCandidateSeconds = 0;
             PitLaneLossBlockedCandidateSource = null;
