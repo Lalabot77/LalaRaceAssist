@@ -1,4 +1,3 @@
-- Follow-up fix for StrategyDash phase gating: `StrategyDash.Phase` now requires `DataCorePlugin.GameRawData.Telemetry.IsOnTrackCar==true` before allowing Phase `2=GRID FORMATION`; race-running (`3=RACE`) authority remains unchanged, and non-race/non-on-track now defaults to `1=PLANNING` even if grid/formation helper flags are true.
 ### 2026-05-04 — StrategyDash phase compile-fix follow-up (PR #660)
 - Classification: **internal-only** (build fix; no fuel/planner/pit semantics redesign).
 - Fixed `LalaLaunch.UpdateStrategyDashAdvice(...)` phase detection to consume real call-path session booleans (`isRaceRunning`, `isGridOrFormation`) instead of removed/non-existent fields.
@@ -7,6 +6,7 @@
   - `2 = GRID FORMATION` (grid + formation combined)
   - `3 = RACE`
 - Scope bounded to StrategyDash phase input plumbing only; no changes to Fuel DATA/MODE/SOURCE behavior, `PitFuelControlEngine`, `Fuel.Delta.*`, `Fuel.RequiredBurnToEnd*`, `Fuel.Pit.*`, boxed refuel latch behavior, or `Pit.FuelControl.*` semantics.
+- Follow-up phase-gate correction: `StrategyDash.Phase` now requires `DataCorePlugin.GameRawData.Telemetry.IsOnTrackCar==true` before allowing `2 = GRID FORMATION`; race-running (`3 = RACE`) authority remains unchanged, and non-race/non-on-track remains `1 = PLANNING` even when grid/formation helper flags are true.
 
 ### 2026-05-04 — League Race header checkbox-column alignment follow-up
 - Classification: **internal-only** (UI layout correction; no runtime/resolver/settings semantic changes).

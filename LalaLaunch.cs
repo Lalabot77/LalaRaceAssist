@@ -3369,6 +3369,7 @@ namespace LaunchPlugin
             int sessionStateNumeric = ReadSessionStateInt(pluginManager);
             bool isGridOrFormation = sessionStateNumeric >= 1 && sessionStateNumeric < 4;
             bool isRaceRunning = sessionStateNumeric == 4;
+            bool isOnTrackCar = SafeReadBool(pluginManager, "DataCorePlugin.GameRawData.Telemetry.IsOnTrackCar", false);
 
             double projectionSessionTimeRemain = sessionTimeRemain;
             if (isGridOrFormation && raceSessionDurationSeconds > 0.0)
