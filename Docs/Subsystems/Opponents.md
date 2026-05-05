@@ -112,3 +112,4 @@ Opponents now reads from:
 - 2026-05-05 replay identity/gating follow-up:
   - ClassLeader/ClassBest race-context candidate rows built in `LalaLaunch` now require canonical identity (`ClassColor:CarNumber`) and no longer synthesize `car:{idx}` fallback identities;
   - multiclass class-best resolution no longer hard-gates on native class-short when League race-context matcher is active, so ClassLeader/ClassBest stay on the same effective-class delegate seam used by Opponents/PitExit.
+  - ClassLeader leader resolution now also bypasses native single-class and native player class-short gates whenever the League race-context matcher is active; enabled+valid League Class selects by lowest positive `CarIdxPosition` within the effective-class cohort, with direct player self-match for manual override/player-leading cases. Disabled or unresolved-player League Class still falls back to native behavior.

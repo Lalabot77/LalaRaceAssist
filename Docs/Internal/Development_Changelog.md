@@ -1,3 +1,9 @@
+## 2026-05-05 — League Class ClassLeader native-gate bypass fix
+- Classification: **internal-only** (dash-visible correctness for an already-documented ClassLeader League Class contract; no new exports/UI/actions).
+- Root cause: `FindResolvedClassLeaderCarIdx(...)` still let native single-class detection and native player class-short resolution run before the League race-context matcher, so ClassLeader could return the native overall/class leader even while Opponents/H2HRace were already using the valid player effective-class cohort.
+- Fix: when `BuildRaceContextLeagueClassMatchDelegate()` is active (League Class enabled + valid player effective class, including manual override), ClassLeader now scans the effective-class cohort by `CarIdxPosition` first, self-matches the player car directly, and does not fall back through native class membership because the player race-context row is incomplete.
+- Preserved fallbacks/invariants: League Class disabled or enabled with unresolved player effective class keeps native behavior; opponent/candidate rows still resolve through the existing driver resolver path; no Opponents slot selection changes, no H2HRace/H2HTrack sector/delta changes, no CarSA changes, and no PitExit timing/countdown/gap changes.
+
 ## 2026-05-05 — StrategyDash burn-basis alignment + no-stop burn-plan + next-refuel delta
 - Classification: **both** (new dash-facing exports/semantics + internal contract alignment).
 - Auto PreRace fuel-per-lap fallback order now resolves as: valid stable-live first, then selected planner `FuelCalculator.FuelPerLap` (if `>0`), then existing profile/generic fallback path.

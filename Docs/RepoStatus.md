@@ -9,6 +9,11 @@
   - PitExit remains on shared Opponents race-context matcher seam; no pit-exit math/countdown changes.
 
 ## Documentation sync status
+- 2026-05-05 League Class ClassLeader native-gate bypass fix landed:
+  - fixed `FindResolvedClassLeaderCarIdx(...)` so active League race-context matching (League Class enabled + valid player effective class, including manual player override) bypasses native single-class and native player class-short gates before selecting the leader;
+  - ClassLeader now chooses the lowest positive `CarIdxPosition` inside the effective-class cohort and self-matches the player car directly, so a player leading the forced/resolved League class publishes `ClassLeader.CarIdx == playerCarIdx`;
+  - disabled League Class and enabled-but-unresolved-player paths retain native fallback; no Opponents slot selection, H2HRace/H2HTrack sector/delta, CarSA, or PitExit timing/gap/countdown changes.
+
 - 2026-05-05 League Race final cohort integration follow-up landed (PR #669 replay fix):
   - fixed ClassLeader/ClassBest race-context candidate matching to build native race-context rows from the same session identity sources used by Opponents (`UserID` + `UserName`/`CarNumber`/`CarClassColor` identity key), instead of synthetic `car:{idx}` rows with blank names;
   - this restores League Class cohort matching when resolver paths depend on name fallback (e.g., suffix/manual flows where `UserID` may be absent) while preserving native class fallback when League Class is disabled/unresolved;

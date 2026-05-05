@@ -5291,9 +5291,20 @@ namespace LaunchPlugin
                 return IsCarInPlayerClass(pluginManager, candidateCarIdx, isMultiClassSession, playerClassShort);
             }
 
+            if (candidateCarIdx == playerCarIdx)
+            {
+                return true;
+            }
+
             if (!TryBuildRaceContextNativeCarRow(pluginManager, playerCarIdx, out var playerRow))
             {
-                return IsCarInPlayerClass(pluginManager, candidateCarIdx, isMultiClassSession, playerClassShort);
+                playerRow = new OpponentsEngine.NativeCarRow
+                {
+                    CarIdx = playerCarIdx,
+                    IdentityKey = string.Empty,
+                    UserID = 0,
+                    Name = string.Empty
+                };
             }
 
             if (!TryBuildRaceContextNativeCarRow(pluginManager, candidateCarIdx, out var candidateRow))
@@ -15192,14 +15203,19 @@ namespace LaunchPlugin
         {
             var raceContextMatch = BuildRaceContextLeagueClassMatchDelegate();
             int[] overallPositions = SafeReadIntArray(pluginManager, "DataCorePlugin.GameRawData.Telemetry.CarIdxPosition");
-            if (!isMultiClassSession)
+            if (raceContextMatch == null && !isMultiClassSession)
             {
                 return FindOverallLeaderCarIdx(overallPositions, trackSurfaces);
             }
 
-            if (!TryResolvePlayerClassShortName(pluginManager, playerCarIdx, out string playerClassShort))
+            string playerClassShort = string.Empty;
+            if (raceContextMatch == null && !TryResolvePlayerClassShortName(pluginManager, playerCarIdx, out playerClassShort))
             {
                 return -1;
+            }
+            else if (raceContextMatch != null)
+            {
+                TryResolvePlayerClassShortName(pluginManager, playerCarIdx, out playerClassShort);
             }
 
             if (raceContextMatch != null && overallPositions != null)
