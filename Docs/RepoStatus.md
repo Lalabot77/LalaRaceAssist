@@ -1,4 +1,9 @@
 ## Documentation sync status
+- 2026-05-05 Build-fix follow-up landed:
+  - fixed nullable pit-loss read in `FuelCalcs.SavePlannerDataToProfile()` (`PitLaneLossSeconds ?? 0.0`) to resolve CS0266;
+  - fixed race-context `TryGetCarDriverInfo(...)` call-site argument types in `LalaLaunch.IsRaceContextClassMatchForCarIdx(...)` (arg 11 stays `out int teamId`) to resolve CS1503;
+  - no intended runtime behavior change (compile restoration only).
+
 - 2026-05-04 StrategyDash IsOnTrackCar phase-gate follow-up landed:
   - `StrategyDash.Phase` now hard-gates `2 = GRID FORMATION` on `DataCorePlugin.GameRawData.Telemetry.IsOnTrackCar==true` in addition to existing grid/formation session-state authority;
   - `3 = RACE` authority remains unchanged;

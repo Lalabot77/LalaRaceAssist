@@ -5231,18 +5231,18 @@ namespace LaunchPlugin
                 return IsCarInPlayerClass(pluginManager, candidateCarIdx, isMultiClassSession, playerClassShort);
             }
 
-            if (!TryGetCarDriverInfo(pluginManager, playerCarIdx, out _, out _, out int playerUserId, out _, out _, out _, out _, out _, out string playerName, out _))
+            if (!TryGetCarDriverInfo(pluginManager, playerCarIdx, out _, out _, out int playerUserId, out _, out _, out _, out _, out _, out _, out _))
             {
                 return IsCarInPlayerClass(pluginManager, candidateCarIdx, isMultiClassSession, playerClassShort);
             }
 
-            if (!TryGetCarDriverInfo(pluginManager, candidateCarIdx, out _, out _, out int candidateUserId, out _, out _, out _, out _, out _, out string candidateName, out _))
+            if (!TryGetCarDriverInfo(pluginManager, candidateCarIdx, out _, out _, out int candidateUserId, out _, out _, out _, out _, out _, out _, out _))
             {
                 return false;
             }
 
-            var playerRow = new OpponentsEngine.NativeCarRow { CarIdx = playerCarIdx, IdentityKey = "car:" + playerCarIdx.ToString(CultureInfo.InvariantCulture), UserID = playerUserId, Name = playerName ?? string.Empty };
-            var candidateRow = new OpponentsEngine.NativeCarRow { CarIdx = candidateCarIdx, IdentityKey = "car:" + candidateCarIdx.ToString(CultureInfo.InvariantCulture), UserID = candidateUserId, Name = candidateName ?? string.Empty };
+            var playerRow = new OpponentsEngine.NativeCarRow { CarIdx = playerCarIdx, IdentityKey = "car:" + playerCarIdx.ToString(CultureInfo.InvariantCulture), UserID = playerUserId, Name = string.Empty };
+            var candidateRow = new OpponentsEngine.NativeCarRow { CarIdx = candidateCarIdx, IdentityKey = "car:" + candidateCarIdx.ToString(CultureInfo.InvariantCulture), UserID = candidateUserId, Name = string.Empty };
             return raceContextMatch(playerRow, candidateRow);
         }
 

@@ -2737,7 +2737,7 @@ namespace LaunchPlugin
             }
         }
 
-        double existingPitLossSec = trackRecord.PitLaneLossSeconds;
+        double existingPitLossSec = trackRecord.PitLaneLossSeconds ?? 0.0;
         bool pitLossChanged = Math.Abs(existingPitLossSec - this.PitLaneTimeLoss) > 0.0005;
         if (pitLossChanged)
         {
