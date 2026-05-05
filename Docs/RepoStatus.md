@@ -1,4 +1,9 @@
 ## Documentation sync status
+- 2026-05-05 League Race final cohort integration follow-up landed (PR #669 replay fix):
+  - fixed ClassLeader/ClassBest race-context candidate matching to build native race-context rows from the same session identity sources used by Opponents (`UserID` + `UserName`/`CarNumber`/`CarClassColor` identity key), instead of synthetic `car:{idx}` rows with blank names;
+  - this restores League Class cohort matching when resolver paths depend on name fallback (e.g., suffix/manual flows where `UserID` may be absent) while preserving native class fallback when League Class is disabled/unresolved;
+  - PitExit cohort path remains delegated via `BuildRaceContextLeagueClassMatchDelegate()` into `Opponents.Update(...)` unchanged; no pit-exit timing/gap math changes.
+
 - 2026-05-05 StrategyDash start-fuel advice decoupling follow-up landed (PR #660):
   - `StrategyDash.StartFuelAdviceText/StartFuelStatus` now come from a dedicated start-fuel comparison (live fuel first, setup fallback second, unknown otherwise) against `StrategyDash.StartFuelRequiredLitres` with `1.0 L` tolerance;
   - start-fuel text/status no longer map from `LalaLaunch.PreRace.StatusText/StatusColour`;
