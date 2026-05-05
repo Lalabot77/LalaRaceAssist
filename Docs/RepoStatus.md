@@ -1,4 +1,10 @@
 ## Documentation sync status
+
+- 2026-05-04 League Race Final Behaviour phase landed:
+  - `ClassLeader.*` and `ClassBest.*` race-context class cohort matching now flows through the existing League Class resolver delegate seam (enabled+valid uses effective class; disabled/unresolved-player falls back to unchanged native class behavior).
+  - `PitExit.PredictedPositionInClass`, `PitExit.CarsAheadAfterPitCount`, and `PitExit.Ahead/Behind.*` now use the same race-context class seam as Opponents cohort selection for enabled+valid League Class mode, with native fallback unchanged.
+  - preserved invariants: no CarSA changes, no `H2HTrack` changes, no pit-exit countdown/loss/progress/gap formula changes.
+  - PR #669 follow-up: in enabled+valid League effective-class mode, class-leader selection now chooses the lowest positive `CarIdxPosition` across the full effective-class cohort (race order) instead of first matching array index; native class-position fallback remains when overall position data is unavailable.
 - 2026-05-04 Strategy tab race-configuration ownership cleanup landed:
   - Race Preset selector is now hidden during `Live Detect` ownership and preset modified UI is suppressed in that mode.
   - Enter/exit `Live Detect` now clears selected/applied preset state to prevent stale hidden preset influence after mode changes.
@@ -131,6 +137,13 @@ Branch: work
 - No Git remote is configured in this checkout (`git remote -v` returns empty).
 
 ## Documentation sync status
+
+- 2026-05-04 League Race Final Behaviour phase landed:
+  - `ClassLeader.*` and `ClassBest.*` race-context class cohort matching now flows through the existing League Class resolver delegate seam (enabled+valid uses effective class; disabled/unresolved-player falls back to unchanged native class behavior).
+  - `PitExit.PredictedPositionInClass`, `PitExit.CarsAheadAfterPitCount`, and `PitExit.Ahead/Behind.*` now use the same race-context class seam as Opponents cohort selection for enabled+valid League Class mode, with native fallback unchanged.
+  - preserved invariants: no CarSA changes, no `H2HTrack` changes, no pit-exit countdown/loss/progress/gap formula changes.
+  - PR #669 follow-up: in enabled+valid League effective-class mode, class-leader selection now chooses the lowest positive `CarIdxPosition` across the full effective-class cohort (race order) instead of first matching array index; native class-position fallback remains when overall position data is unavailable.
+
 - 2026-05-04 StrategyDash one-stop burn-basis current-tick refresh fix landed:
   - one-stop `StrategyDash.NextRefuelTargetLitres` PUSH/SAVE selection now uses current-tick locally resolved burns in `UpdatePreRaceOutputs(...)` (not shared prior-frame `PushFuelPerLap`/`FuelSaveFuelPerLap` fields at that stage);
   - fallback remains NORM when source is STBY/OFF/invalid or selected burn is unavailable;

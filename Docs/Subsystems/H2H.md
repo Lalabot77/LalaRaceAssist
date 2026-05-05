@@ -89,3 +89,5 @@ Both `H2HRace.*` and `H2HTrack.*` expose the same flat shape:
   - `H2HRace.*` target identity can now change in enabled+valid League Class mode because its selector seam (`Opp.Ahead1` / `Opp.Behind1`) is now effective-class-cohort aware in Opponents;
   - `H2HTrack.*` selection remains unchanged and CarSA-native;
   - H2H lap/sector/delta calculation ownership and behavior remain unchanged.
+
+- 2026-05-04 League Race Final Behaviour phase: `H2HTrack.*` remains unchanged and CarSA-owned; no H2H sector/delta behavior changes.
