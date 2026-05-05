@@ -1,3 +1,10 @@
+## 2026-05-05 — League Class ClassLeader/PitExit replay identity gate fix
+- Classification: **internal-only** (race-context cohort seam correctness; no new exports/UI).
+- Root cause: `LalaLaunch.TryBuildRaceContextNativeCarRow(...)` required `TryGetCarDriverInfo(...)` success and synthesized `car:{idx}` identity fallback, so ClassLeader/ClassBest race-context matching could drop to native fallback in replay states where Opponents still had valid session identity.
+- Fix: race-context row build now prefers session identity (`UserName`/`CarNumber`/`CarClassColor`) and returns `false` when canonical identity key is unavailable (no synthetic `car:{idx}` fallback).
+- Fix: `TryResolveClassSessionBestLap(...)` now only hard-fails on missing native player class-short when League race-context matcher is inactive; with active League matcher it proceeds through the shared race-context delegate path.
+- Preserved invariants: Opp race-slot ordering/gap math unchanged, PitExit timing/gap/countdown formulas unchanged, CarSA unchanged, H2HTrack and H2H sector/delta logic unchanged.
+
 
 ## 2026-05-05 — League Race final cohort integration replay follow-up (ClassLeader/ClassBest identity fix)
 - Classification: **internal-only** (race-context cohort identity seam correction; no math/export contract additions).
