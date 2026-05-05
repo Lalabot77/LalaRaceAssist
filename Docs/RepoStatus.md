@@ -1,4 +1,8 @@
 ## Documentation sync status
+- 2026-05-04 StrategyDash IsOnTrackCar phase-gate follow-up landed:
+  - `StrategyDash.Phase` now hard-gates `2 = GRID FORMATION` on `DataCorePlugin.GameRawData.Telemetry.IsOnTrackCar==true` in addition to existing grid/formation session-state authority;
+  - `3 = RACE` authority remains unchanged;
+  - when not race-running and not on-track/in-car, phase now remains `1 = PLANNING` (grid/formation helper flags alone no longer promote phase 2).
 - 2026-05-05 Planner-save pit-loss learning-mode overwrite fix landed:
   - `SavePlannerDataToProfile()` now updates `PitLaneLossSeconds` + `PitLaneLossSource/manual` + `PitLaneLossLearningMode/manual` only when the planner pit-loss value actually changes versus the stored track value;
   - ordinary planner saves that do not edit pit loss now preserve existing learned mode metadata (including `boxed_stop`) and avoid accidental normalization drift.
@@ -153,6 +157,10 @@ Branch: work
 - No Git remote is configured in this checkout (`git remote -v` returns empty).
 
 ## Documentation sync status
+- 2026-05-04 StrategyDash IsOnTrackCar phase-gate follow-up landed:
+  - `StrategyDash.Phase` now hard-gates `2 = GRID FORMATION` on `DataCorePlugin.GameRawData.Telemetry.IsOnTrackCar==true` in addition to existing grid/formation session-state authority;
+  - `3 = RACE` authority remains unchanged;
+  - when not race-running and not on-track/in-car, phase now remains `1 = PLANNING` (grid/formation helper flags alone no longer promote phase 2).
 
 - 2026-05-04 League Race Final Behaviour phase landed:
   - `ClassLeader.*` and `ClassBest.*` race-context class cohort matching now flows through the existing League Class resolver delegate seam (enabled+valid uses effective class; disabled/unresolved-player falls back to unchanged native class behavior).
