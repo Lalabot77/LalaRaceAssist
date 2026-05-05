@@ -1,3 +1,8 @@
+- 2026-05-05 League Class replay-identity follow-up landed:
+  - fixed ClassLeader/ClassBest race-context cohort gating to avoid native fallback when League matcher is active but native class-short is unresolved in multiclass replay states;
+  - removed synthetic `car:{idx}` race-context identity fallback in `LalaLaunch` class leader/class best candidate rows so matching now relies on canonical Opponents-style identity (`ClassColor:CarNumber`) only;
+  - PitExit remains on shared Opponents race-context matcher seam; no pit-exit math/countdown changes.
+
 ## Documentation sync status
 - 2026-05-05 League Race final cohort integration follow-up landed (PR #669 replay fix):
   - fixed ClassLeader/ClassBest race-context candidate matching to build native race-context rows from the same session identity sources used by Opponents (`UserID` + `UserName`/`CarNumber`/`CarClassColor` identity key), instead of synthetic `car:{idx}` rows with blank names;

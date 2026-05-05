@@ -107,3 +107,8 @@ Opponents now reads from:
 - 2026-05-04 League Race Final Behaviour phase:
   - `PitExit.*` class-relative cohort selection now uses the same race-context class seam as Opp targets (`IsRaceContextClassMatch`) so enabled+valid League Class uses effective-class matching; disabled/enabled+unresolved-player paths fall back to native class-color matching unchanged.
   - Pit-exit countdown/loss/progress/gap math and active pit-cycle model are unchanged; only same-class cohort inclusion changed.
+
+
+- 2026-05-05 replay identity/gating follow-up:
+  - ClassLeader/ClassBest race-context candidate rows built in `LalaLaunch` now require canonical identity (`ClassColor:CarNumber`) and no longer synthesize `car:{idx}` fallback identities;
+  - multiclass class-best resolution no longer hard-gates on native class-short when League race-context matcher is active, so ClassLeader/ClassBest stay on the same effective-class delegate seam used by Opponents/PitExit.

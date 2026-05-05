@@ -5273,18 +5273,15 @@ namespace LaunchPlugin
                 return false;
             }
 
-            if (!TryGetCarDriverInfo(pluginManager, carIdx, out _, out string classColorHex, out _, out _, out _, out _, out string abbrevName, out _, out int userId, out _))
-            {
-                return false;
-            }
-
+            TryGetCarDriverInfo(pluginManager, carIdx, out _, out string classColorHex, out _, out _, out _, out _, out string abbrevName, out _, out int userId, out _);
             TryGetCarIdentityFromSessionInfo(pluginManager, carIdx, out string name, out string carNumber, out string identityClassColor);
+
             string resolvedName = !string.IsNullOrWhiteSpace(name) ? name : (abbrevName ?? string.Empty);
             string resolvedClassColor = !string.IsNullOrWhiteSpace(identityClassColor) ? identityClassColor : classColorHex;
             string identityKey = OpponentsEngine.MakeIdentityKey(resolvedClassColor, carNumber);
             if (string.IsNullOrWhiteSpace(identityKey))
             {
-                identityKey = "car:" + carIdx.ToString(CultureInfo.InvariantCulture);
+                return false;
             }
 
             row = new OpponentsEngine.NativeCarRow
@@ -15289,7 +15286,8 @@ namespace LaunchPlugin
             bool isMultiClassSession = IsMultiClassSession(pluginManager);
             var raceContextMatch = BuildRaceContextLeagueClassMatchDelegate();
             string playerClassShort = string.Empty;
-            if (isMultiClassSession && !TryResolvePlayerClassShortName(pluginManager, playerCarIdx, out playerClassShort))
+            bool hasPlayerClassShort = TryResolvePlayerClassShortName(pluginManager, playerCarIdx, out playerClassShort);
+            if (isMultiClassSession && raceContextMatch == null && !hasPlayerClassShort)
             {
                 failureReason = "blank_class_identity_multiclass";
                 return false;
