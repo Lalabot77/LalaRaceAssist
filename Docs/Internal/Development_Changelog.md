@@ -1,3 +1,9 @@
+
+## 2026-05-05 — League Race final cohort integration replay follow-up (ClassLeader/ClassBest identity fix)
+- Classification: **internal-only** (race-context cohort identity seam correction; no math/export contract additions).
+- Fixed `ClassLeader`/`ClassBest` race-context class matching path to construct `OpponentsEngine.NativeCarRow` candidates from session identity sources (`UserID`, `UserName` fallback, `CarNumber`, class-color identity key) rather than synthetic `car:{idx}` rows with blank names.
+- Root cause: when `UserID` is unavailable/zero, League Class resolver matching requires driver name fallback; blank candidate names caused false cohort mismatch, so class leader/best stayed on native class.
+- Preserved fallbacks/invariants: disabled or unresolved League Class still uses native class matching; no `PitExit`/Opponents gap-timing formula changes, no CarSA/H2HTrack ownership changes.
 ## 2026-05-05 — StrategyDash start-fuel advice decoupled from PreRace status (PR #660 follow-up)
 
 - Updated `StrategyDash.StartFuelAdviceText/StartFuelStatus` to use a dedicated start-fuel comparison instead of mapping from `LalaLaunch.PreRace.StatusText/StatusColour`.

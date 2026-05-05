@@ -5252,19 +5252,49 @@ namespace LaunchPlugin
                 return IsCarInPlayerClass(pluginManager, candidateCarIdx, isMultiClassSession, playerClassShort);
             }
 
-            if (!TryGetCarDriverInfo(pluginManager, playerCarIdx, out _, out _, out int playerUserId, out _, out _, out _, out _, out _, out _, out _))
+            if (!TryBuildRaceContextNativeCarRow(pluginManager, playerCarIdx, out var playerRow))
             {
                 return IsCarInPlayerClass(pluginManager, candidateCarIdx, isMultiClassSession, playerClassShort);
             }
 
-            if (!TryGetCarDriverInfo(pluginManager, candidateCarIdx, out _, out _, out int candidateUserId, out _, out _, out _, out _, out _, out _, out _))
+            if (!TryBuildRaceContextNativeCarRow(pluginManager, candidateCarIdx, out var candidateRow))
             {
                 return false;
             }
 
-            var playerRow = new OpponentsEngine.NativeCarRow { CarIdx = playerCarIdx, IdentityKey = "car:" + playerCarIdx.ToString(CultureInfo.InvariantCulture), UserID = playerUserId, Name = string.Empty };
-            var candidateRow = new OpponentsEngine.NativeCarRow { CarIdx = candidateCarIdx, IdentityKey = "car:" + candidateCarIdx.ToString(CultureInfo.InvariantCulture), UserID = candidateUserId, Name = string.Empty };
             return raceContextMatch(playerRow, candidateRow);
+        }
+
+        private bool TryBuildRaceContextNativeCarRow(PluginManager pluginManager, int carIdx, out OpponentsEngine.NativeCarRow row)
+        {
+            row = null;
+            if (pluginManager == null || carIdx < 0 || carIdx >= CarSAEngine.MaxCars)
+            {
+                return false;
+            }
+
+            if (!TryGetCarDriverInfo(pluginManager, carIdx, out _, out string classColorHex, out _, out _, out _, out _, out string abbrevName, out _, out int userId, out _))
+            {
+                return false;
+            }
+
+            TryGetCarIdentityFromSessionInfo(pluginManager, carIdx, out string name, out string carNumber, out string identityClassColor);
+            string resolvedName = !string.IsNullOrWhiteSpace(name) ? name : (abbrevName ?? string.Empty);
+            string resolvedClassColor = !string.IsNullOrWhiteSpace(identityClassColor) ? identityClassColor : classColorHex;
+            string identityKey = BuildIdentityKey(resolvedClassColor, carNumber);
+            if (string.IsNullOrWhiteSpace(identityKey))
+            {
+                identityKey = "car:" + carIdx.ToString(CultureInfo.InvariantCulture);
+            }
+
+            row = new OpponentsEngine.NativeCarRow
+            {
+                CarIdx = carIdx,
+                IdentityKey = identityKey,
+                UserID = userId,
+                Name = resolvedName ?? string.Empty
+            };
+            return true;
         }
 
         private EffectiveRaceClassInfo ResolveLivePlayerLeagueClassInfo()
