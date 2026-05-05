@@ -1,4 +1,14 @@
 ## Documentation sync status
+- 2026-05-04 Strategy tab race-configuration ownership cleanup landed:
+  - Race Preset selector is now hidden during `Live Detect` ownership and preset modified UI is suppressed in that mode.
+  - Enter/exit `Live Detect` now clears selected/applied preset state to prevent stale hidden preset influence after mode changes.
+  - Exiting `Live Detect` resets manual race length fields to neutral manual defaults (`20 laps` / `40 min`) for explicit post-detect user intent.
+  - Strategy calculation ownership remains effective-basis-only; no fuel model/live detect detection logic changes and no Refresh Calcs ownership mutation.
+
+- 2026-05-04 Strategy race-ownership follow-up (P1 review) landed:
+  - Live Detect background refresh now updates cached detected race basis/helper state without mutating manual `RaceLaps`/`RaceMinutes` when Live Detect is not selected.
+  - Live Detect exit now also clears detected lap/minute cache values to prevent stale detected-length reuse across mode transitions.
+
 - 2026-05-04 StrategyDash phase compile-fix follow-up (PR #660) landed:
   - `UpdateStrategyDashAdvice(...)` phase detection now takes explicit real-state booleans from the existing pre-race call path (`isRaceRunning`, `isGridOrFormation`) instead of referencing removed non-existent fields;
   - StrategyDash phase contract is preserved (`1=PLANNING`, `2=GRID FORMATION`, `3=RACE`) with grid+formation still combined;
