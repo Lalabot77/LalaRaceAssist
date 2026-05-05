@@ -1072,6 +1072,19 @@ namespace LaunchPlugin
             return "planner-profile";
         }
 
+        private string ClassifyAutoPreRaceFuelSourceFromPlanner()
+        {
+            string sourceInfo = (FuelCalculator?.FuelPerLapSourceInfo ?? string.Empty).Trim();
+
+            if (sourceInfo.StartsWith("Live", StringComparison.OrdinalIgnoreCase))
+                return "live";
+
+            if (sourceInfo.StartsWith("Profile", StringComparison.OrdinalIgnoreCase))
+                return "profile";
+
+            return "fallback";
+        }
+
         private double GetPreRaceFuelPerLap(double fallbackFuelPerLap, out string source)
         {
             double plannerFuel = FuelCalculator?.FuelPerLap ?? 0.0;
@@ -1460,7 +1473,7 @@ namespace LaunchPlugin
                 if (plannerFuel > 0.0)
                 {
                     preRaceFuelPerLap = plannerFuel;
-                    preRaceFuelSource = ClassifyManualPreRaceFuelSource(hasPlannerFuel: true, hasLiveFallbackFuel: fallbackFuelPerLap > 0.0);
+                    preRaceFuelSource = ClassifyAutoPreRaceFuelSourceFromPlanner();
                 }
                 else
                 {
