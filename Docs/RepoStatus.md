@@ -1,4 +1,9 @@
 ## Documentation sync status
+- 2026-05-05 StrategyDash start-fuel advice decoupling follow-up landed (PR #660):
+  - `StrategyDash.StartFuelAdviceText/StartFuelStatus` now come from a dedicated start-fuel comparison (live fuel first, setup fallback second, unknown otherwise) against `StrategyDash.StartFuelRequiredLitres` with `1.0 L` tolerance;
+  - start-fuel text/status no longer map from `LalaLaunch.PreRace.StatusText/StatusColour`;
+  - preserved invariants: `PreRace.StatusText` and `StrategyDash.NextRefuelAdviceText` unchanged; no changes to Fuel DATA/MODE/SOURCE, `PitFuelControlEngine`, `Fuel.Delta.*`, `Fuel.Pit.*`, or `Fuel.RequiredBurnToEnd*`.
+
 - 2026-05-05 Build-fix follow-up landed:
   - fixed nullable pit-loss read in `FuelCalcs.SavePlannerDataToProfile()` (`PitLaneLossSeconds ?? 0.0`) to resolve CS0266;
   - fixed race-context `TryGetCarDriverInfo(...)` call-site argument types in `LalaLaunch.IsRaceContextClassMatchForCarIdx(...)` (arg 11 stays `out int teamId`) to resolve CS1503;

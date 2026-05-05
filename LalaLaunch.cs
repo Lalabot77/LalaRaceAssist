@@ -1329,9 +1329,30 @@ namespace LaunchPlugin
 
             double cap = effectiveMaxTank > 0.0 ? effectiveMaxTank : maxTankCapacity;
             StrategyDash_StartFuelRequiredLitres = cap > 0.0 ? Math.Min(PreRace_TotalFuelNeeded, cap) : PreRace_TotalFuelNeeded;
-            StrategyDash_StartFuelAdviceText = PreRace_StatusText;
-            StrategyDash_StartFuelStatus = string.Equals(PreRace_StatusColour, "green", StringComparison.OrdinalIgnoreCase) ? 0
-                : (string.Equals(PreRace_StatusColour, "orange", StringComparison.OrdinalIgnoreCase) ? 1 : 2);
+
+            const double startFuelOkToleranceLitres = 1.0;
+            bool hasLiveStartFuel = currentFuel > 0.0 && !double.IsNaN(currentFuel) && !double.IsInfinity(currentFuel);
+            bool hasSetupStartFuel = Fuel_Setup_FuelLevelValid && Fuel_Setup_FuelLevel > 0.0 && !double.IsNaN(Fuel_Setup_FuelLevel) && !double.IsInfinity(Fuel_Setup_FuelLevel);
+            bool hasKnownStartFuel = hasLiveStartFuel || hasSetupStartFuel;
+            double effectiveStartFuelLitres = hasLiveStartFuel ? currentFuel : (hasSetupStartFuel ? Fuel_Setup_FuelLevel : 0.0);
+            bool startFuelShort = hasKnownStartFuel && (effectiveStartFuelLitres < (StrategyDash_StartFuelRequiredLitres - startFuelOkToleranceLitres));
+            bool startFuelAtMax = cap > 0.0 && hasKnownStartFuel && Math.Abs(cap - effectiveStartFuelLitres) <= startFuelOkToleranceLitres;
+
+            if (!hasKnownStartFuel)
+            {
+                StrategyDash_StartFuelAdviceText = "CHECK START FUEL";
+                StrategyDash_StartFuelStatus = 1;
+            }
+            else if (startFuelShort)
+            {
+                StrategyDash_StartFuelAdviceText = "ADD START FUEL";
+                StrategyDash_StartFuelStatus = 2;
+            }
+            else
+            {
+                StrategyDash_StartFuelAdviceText = startFuelAtMax ? "START FUEL MAX" : "START FUEL OK";
+                StrategyDash_StartFuelStatus = 0;
+            }
 
             double nextRefuelTarget = 0.0;
             if (requiredStrategy == RequiredPreRaceStrategy.OneStop)

@@ -1,3 +1,11 @@
+## 2026-05-05 — StrategyDash start-fuel advice decoupled from PreRace status (PR #660 follow-up)
+
+- Updated `StrategyDash.StartFuelAdviceText/StartFuelStatus` to use a dedicated start-fuel comparison instead of mapping from `LalaLaunch.PreRace.StatusText/StatusColour`.
+- Effective start-fuel basis now resolves in order: live/current fuel when `>0`, else setup fallback when `Fuel.Setup.FuelLevelValid==true`, else unknown.
+- Comparison uses `StrategyDash.StartFuelRequiredLitres` with `1.0 L` tolerance (`>= required - 1.0` => OK).
+- Status/text contract: unknown => `CHECK START FUEL`/`1`; short by more than tolerance => `ADD START FUEL`/`2`; otherwise `START FUEL OK` or `START FUEL MAX`/`0` (max text when within tolerance of cap).
+- Kept unchanged: `PreRace.StatusText`, `StrategyDash.NextRefuelAdviceText`, fuel DATA/MODE/SOURCE, `PitFuelControlEngine`, `Fuel.Delta.*`, `Fuel.Pit.*`, and `Fuel.RequiredBurnToEnd*` behavior.
+
 ## 2026-05-05 — Build-fix follow-up: nullable pit-loss read + race-context driver-info signature alignment
 - Classification: **internal-only** (compile correctness fix; no runtime feature/contract redesign).
 - `FuelCalcs.SavePlannerDataToProfile()` now reads existing `PitLaneLossSeconds` with nullable-safe fallback (`?? 0.0`) before diffing planner value.
