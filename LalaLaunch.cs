@@ -1311,10 +1311,10 @@ namespace LaunchPlugin
             double maxTankCapacity,
             double contingencyLitres,
             string contingencyText,
-            double oneStopNextRefuelTargetLitres)
+            double oneStopNextRefuelTargetLitres,
+            bool isRaceRunning,
+            bool isGridFormation)
         {
-            bool isRaceRunning = string.Equals(_sessionState, "Racing", StringComparison.OrdinalIgnoreCase);
-            bool isGridFormation = _isOnGrid || _isFormationLap || _isRaceStarting;
             StrategyDash_Phase = isRaceRunning ? 3 : (isGridFormation ? 2 : 1);
             StrategyDash_PhaseText = StrategyDash_Phase == 3 ? "RACE" : (StrategyDash_Phase == 2 ? "GRID FORMATION" : "PLANNING");
 
@@ -1370,7 +1370,9 @@ namespace LaunchPlugin
             double fallbackFuelPerLap,
             double effectiveMaxTank,
             double maxTankCapacity,
-            bool allowSetupFallback)
+            bool allowSetupFallback,
+            bool isRaceRunning,
+            bool isGridOrFormation)
         {
             int selectedStrategy = NormalizeStrategyMode(FuelCalculator?.SelectedPreRaceMode ?? 3);
             PreRace_Selected = selectedStrategy;
@@ -1568,7 +1570,7 @@ namespace LaunchPlugin
             else
                 contingencyText = "CONT 0";
 
-            UpdateStrategyDashAdvice(selectedStrategy, requiredStrategy, currentFuel, plannedSingleStopRefuel, effectiveMaxTank, maxTankCapacity, contingencyLitres, contingencyText, oneStopTarget);
+            UpdateStrategyDashAdvice(selectedStrategy, requiredStrategy, currentFuel, plannedSingleStopRefuel, effectiveMaxTank, maxTankCapacity, contingencyLitres, contingencyText, oneStopTarget, isRaceRunning, isGridOrFormation);
         }
 
         // Stable model inputs
@@ -4210,7 +4212,9 @@ namespace LaunchPlugin
                     fallbackFuelPerLap,
                     effectiveMaxTank,
                     maxTankCapacity,
-                    allowSetupFallback: isGridOrFormation);
+                    allowSetupFallback: isGridOrFormation,
+                    isRaceRunning: isRaceRunning,
+                    isGridOrFormation: isGridOrFormation);
 
                 Fuel_Delta_LitresCurrent = 0;
                 Fuel_Delta_LitresPlan = 0;
@@ -4401,7 +4405,9 @@ namespace LaunchPlugin
                     fallbackFuelPerLap,
                     effectiveMaxTank,
                     maxTankCapacity,
-                    allowSetupFallback: isGridOrFormation);
+                    allowSetupFallback: isGridOrFormation,
+                    isRaceRunning: isRaceRunning,
+                    isGridOrFormation: isGridOrFormation);
 
                 PitStopsRequiredByFuel = Math.Max(0, stopsRequiredByFuel);
                 PitStopsRequiredByPlan = plannedStops;
@@ -5207,6 +5213,28 @@ namespace LaunchPlugin
 
                 return string.Equals(normalizedPlayerClassName, candidateEffectiveClass.Name.Trim(), StringComparison.OrdinalIgnoreCase);
             };
+        }
+
+        private bool IsRaceContextClassMatchForCarIdx(PluginManager pluginManager, int playerCarIdx, int candidateCarIdx, bool isMultiClassSession, string playerClassShort, OpponentsEngine.IsRaceContextClassMatch raceContextMatch)
+        {
+            if (raceContextMatch == null)
+            {
+                return IsCarInPlayerClass(pluginManager, candidateCarIdx, isMultiClassSession, playerClassShort);
+            }
+
+            if (!TryGetCarDriverInfo(pluginManager, playerCarIdx, out _, out _, out int playerUserId, out _, out _, out _, out _, out _, out string playerName, out _))
+            {
+                return IsCarInPlayerClass(pluginManager, candidateCarIdx, isMultiClassSession, playerClassShort);
+            }
+
+            if (!TryGetCarDriverInfo(pluginManager, candidateCarIdx, out _, out _, out int candidateUserId, out _, out _, out _, out _, out _, out string candidateName, out _))
+            {
+                return false;
+            }
+
+            var playerRow = new OpponentsEngine.NativeCarRow { CarIdx = playerCarIdx, IdentityKey = "car:" + playerCarIdx.ToString(CultureInfo.InvariantCulture), UserID = playerUserId, Name = playerName ?? string.Empty };
+            var candidateRow = new OpponentsEngine.NativeCarRow { CarIdx = candidateCarIdx, IdentityKey = "car:" + candidateCarIdx.ToString(CultureInfo.InvariantCulture), UserID = candidateUserId, Name = candidateName ?? string.Empty };
+            return raceContextMatch(playerRow, candidateRow);
         }
 
         private EffectiveRaceClassInfo ResolveLivePlayerLeagueClassInfo()
@@ -14141,7 +14169,8 @@ namespace LaunchPlugin
                 sessionTimeSec,
                 sessionTimeRemainingSec,
                 verboseLogs,
-                checkpointGapReader);
+                checkpointGapReader,
+                BuildRaceContextLeagueClassMatchDelegate());
         }
 
         private static double SafeReadDouble(PluginManager pluginManager, string propertyName, double fallback)
@@ -15063,6 +15092,7 @@ namespace LaunchPlugin
 
         private int FindResolvedClassLeaderCarIdx(PluginManager pluginManager, int playerCarIdx, bool isMultiClassSession, int[] trackSurfaces)
         {
+            var raceContextMatch = BuildRaceContextLeagueClassMatchDelegate();
             int[] overallPositions = SafeReadIntArray(pluginManager, "DataCorePlugin.GameRawData.Telemetry.CarIdxPosition");
             if (!isMultiClassSession)
             {
@@ -15072,6 +15102,42 @@ namespace LaunchPlugin
             if (!TryResolvePlayerClassShortName(pluginManager, playerCarIdx, out string playerClassShort))
             {
                 return -1;
+            }
+
+            if (raceContextMatch != null && overallPositions != null)
+            {
+                int bestCarIdx = -1;
+                int bestOverallPos = int.MaxValue;
+                int candidateCount = Math.Min(overallPositions.Length, CarSAEngine.MaxCars);
+                for (int i = 0; i < candidateCount; i++)
+                {
+                    int pos = overallPositions[i];
+                    if (pos <= 0)
+                    {
+                        continue;
+                    }
+
+                    if (!IsCarInWorld(trackSurfaces, i))
+                    {
+                        continue;
+                    }
+
+                    if (!IsRaceContextClassMatchForCarIdx(pluginManager, playerCarIdx, i, isMultiClassSession, playerClassShort, raceContextMatch))
+                    {
+                        continue;
+                    }
+
+                    if (pos < bestOverallPos)
+                    {
+                        bestOverallPos = pos;
+                        bestCarIdx = i;
+                    }
+                }
+
+                if (bestCarIdx >= 0)
+                {
+                    return bestCarIdx;
+                }
             }
 
             int[] classPositions = SafeReadIntArray(pluginManager, "DataCorePlugin.GameRawData.Telemetry.CarIdxClassPosition");
@@ -15092,7 +15158,7 @@ namespace LaunchPlugin
                     continue;
                 }
 
-                if (IsCarInPlayerClass(pluginManager, i, isMultiClassSession, playerClassShort))
+                if (IsRaceContextClassMatchForCarIdx(pluginManager, playerCarIdx, i, isMultiClassSession, playerClassShort, raceContextMatch))
                 {
                     return i;
                 }
@@ -15161,6 +15227,7 @@ namespace LaunchPlugin
             }
 
             bool isMultiClassSession = IsMultiClassSession(pluginManager);
+            var raceContextMatch = BuildRaceContextLeagueClassMatchDelegate();
             string playerClassShort = string.Empty;
             if (isMultiClassSession && !TryResolvePlayerClassShortName(pluginManager, playerCarIdx, out playerClassShort))
             {
@@ -15173,7 +15240,7 @@ namespace LaunchPlugin
             bool matchedCandidate = false;
             for (int i = 0; i < CarSAEngine.MaxCars; i++)
             {
-                if (!IsCarInPlayerClass(pluginManager, i, isMultiClassSession, playerClassShort))
+                if (!IsRaceContextClassMatchForCarIdx(pluginManager, playerCarIdx, i, isMultiClassSession, playerClassShort, raceContextMatch))
                 {
                     continue;
                 }

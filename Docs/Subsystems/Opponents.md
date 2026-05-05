@@ -103,3 +103,7 @@ Opponents now reads from:
   - when League Class is enabled and the player effective class resolves valid, Opponents race-context cohort filtering (`Opp.Ahead1..5` / `Opp.Behind1..5`) switches from native class-color matching to resolver-backed effective-class-name matching (player effective class vs opponent effective class);
   - when League Class is disabled, or enabled with unresolved player effective class, Opponents keeps exact native class-color cohort behavior (fallback unchanged);
   - race-order ordering/gap/fight math remains unchanged; only the class cohort equality seam changed.
+
+- 2026-05-04 League Race Final Behaviour phase:
+  - `PitExit.*` class-relative cohort selection now uses the same race-context class seam as Opp targets (`IsRaceContextClassMatch`) so enabled+valid League Class uses effective-class matching; disabled/enabled+unresolved-player paths fall back to native class-color matching unchanged.
+  - Pit-exit countdown/loss/progress/gap math and active pit-cycle model are unchanged; only same-class cohort inclusion changed.

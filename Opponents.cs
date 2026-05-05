@@ -986,6 +986,11 @@ namespace LaunchPlugin
                 return player != null;
             }
 
+            public bool IsRaceContextClassMatch(NativeCarRow playerRow, NativeCarRow candidateRow)
+            {
+                return IsRaceContextClassMatch(playerRow, candidateRow, _raceContextClassMatchOverride);
+            }
+
             public double GetBlendedPaceForPosition(int positionInClass)
             {
                 if (positionInClass <= 0 || Player == null)
@@ -1217,7 +1222,7 @@ namespace LaunchPlugin
                     return;
                 }
 
-                var classRows = raceModel.Rows.Where(r => string.Equals(r.ClassColor, player.ClassColor, StringComparison.Ordinal) && r.IsConnected && r.HasValidLapDist).ToList();
+                var classRows = raceModel.Rows.Where(r => raceModel.IsRaceContextClassMatch(player, r) && r.IsConnected && r.HasValidLapDist).ToList();
                 if (classRows.Count == 0 || !player.HasValidLapDist)
                 {
                     SetInvalid(allowLogs);

@@ -490,7 +490,8 @@
                         <TextBlock Text="Race Strategy" FontWeight="Bold" Margin="0,5,0,5"/>
 
                             <!-- Race Preset selector (inline, auto-apply) -->
-                            <Grid Margin="0,10,0,10">
+                            <Grid Margin="0,10,0,10"
+                                  Visibility="{Binding ShowRacePresetControls, Converter={StaticResource BooleanToVisibilityConverter}}">
                                 <Grid.ColumnDefinitions>
                                     <ColumnDefinition Width="Auto"/>
                                     <ColumnDefinition Width="Auto"/>

@@ -3,6 +3,24 @@
 - Fixed `FuelCalcs.SavePlannerDataToProfile()` so `PitLaneLossSource`/`PitLaneLossLearningMode` are only forced to `manual` when planner save actually changes pit-loss seconds.
 - Prevents ordinary planner saves from silently rewriting learned `boxed_stop` metadata without value conversion, avoiding downstream normalized pit-loss inflation.
 
+## 2026-05-04 — League Race Final Behaviour: ClassLeader/ClassBest/PitExit effective-class cohort completion
+- Classification: **both** (dash-visible race-context class cohort behavior update + internal contract/docs alignment).
+- Applied existing League Class resolver seam to remaining race-context class outputs:
+  - `ClassLeader.*` leader resolution now uses the existing race-context match delegate seam when League Class is enabled and player effective class resolves valid; native class behavior remains fallback in disabled/unresolved-player paths.
+  - `ClassBest.*` session-best holder resolution now uses the same race-context match delegate seam with identical fallback behavior.
+  - `PitExit.*` same-class cohort scan now uses Opponents `IsRaceContextClassMatch` seam (effective class when enabled+valid, native class fallback otherwise).
+- Preserved invariants: no CarSA physical slot/order/filter changes, no `H2HTrack.*` selector changes, no H2H sector/delta math changes, no pit-loss/countdown/progress/gap formula changes beyond class-cohort inclusion.
+- PR #669 review follow-up: in League effective-class mode, `FindResolvedClassLeaderCarIdx(...)` now selects class leader by best race order (`CarIdxPosition` lowest positive) across the full effective-class cohort, instead of first matching array index; when `CarIdxPosition` is unavailable/unusable, existing native class-position fallback path is preserved.
+
+### 2026-05-04 — StrategyDash phase compile-fix follow-up (PR #660)
+- Classification: **internal-only** (build fix; no fuel/planner/pit semantics redesign).
+- Fixed `LalaLaunch.UpdateStrategyDashAdvice(...)` phase detection to consume real call-path session booleans (`isRaceRunning`, `isGridOrFormation`) instead of removed/non-existent fields.
+- Kept StrategyDash phase contract unchanged:
+  - `1 = PLANNING`
+  - `2 = GRID FORMATION` (grid + formation combined)
+  - `3 = RACE`
+- Scope bounded to StrategyDash phase input plumbing only; no changes to Fuel DATA/MODE/SOURCE behavior, `PitFuelControlEngine`, `Fuel.Delta.*`, `Fuel.RequiredBurnToEnd*`, `Fuel.Pit.*`, boxed refuel latch behavior, or `Pit.FuelControl.*` semantics.
+
 ### 2026-05-04 — League Race header checkbox-column alignment follow-up
 - Classification: **internal-only** (UI layout correction; no runtime/resolver/settings semantic changes).
 - Fixed League Class table header misalignment by reserving a fixed checkbox column width (`18`) for both header and row grids in `Detected classes` and `Fallback rules` sections.
@@ -1842,3 +1860,12 @@ The public user-facing release history is maintained in the root `CHANGELOG.md`.
 - Persistence behavior:
   - pit-loss and condition lock toggles persist immediately through existing `ProfilesViewModel.SaveProfiles()` convention,
   - marker toggle uses the existing marker-store lock seam (`SetTrackMarkersLock`) and keeps existing marker persistence conventions.
+- 2026-05-04 Strategy tab race-configuration ownership cleanup landed:
+  - Race Preset control now hides while `Live Detect` race type is selected, preventing mixed manual/preset/live ownership cues.
+  - Entering or leaving `Live Detect` now clears selected/applied preset state (and modified badge state) so hidden preset influence cannot persist.
+  - Leaving `Live Detect` resets manual race length fields to neutral defaults (`RaceLaps=20`, `RaceMinutes=40`) before manual Lap/Time planning continues.
+  - Refresh Calcs ownership remains unchanged (recalculation-only; no preset reapply/live-detect retrigger path added).
+### 2026-05-04 — Strategy race-ownership cleanup follow-up (P1 review)
+- Classification: **internal-only** (state-ownership correction; no fuel/detection formula changes).
+- `UpdateLiveDetectedRaceDefinition(...)` now updates manual `RaceLaps` / `RaceMinutes` only while `SelectedRaceType == LiveDetect`; outside Live Detect it still caches helper/basis state but does not mutate manual race-length ownership.
+- Exiting Live Detect now clears detected-length caches (`_lastLiveDetectedRaceLaps`, `_lastLiveDetectedRaceMinutes`) in addition to detected basis type, preventing stale basis reuse on later re-entry when fresh detection is unavailable.
