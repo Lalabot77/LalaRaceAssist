@@ -1,3 +1,10 @@
+## 2026-05-05 — StrategyDash burn-basis alignment + no-stop burn-plan + next-refuel delta
+- Classification: **both** (new dash-facing exports/semantics + internal contract alignment).
+- Auto PreRace fuel-per-lap fallback order now resolves as: valid stable-live first, then selected planner `FuelCalculator.FuelPerLap` (if `>0`), then existing profile/generic fallback path.
+- Added `StrategyDash.BurnPlanText` as a pre-green display helper for no-stop/grid usage (`BURN PLAN: NORM/SAVE/PUSH` with optional `/ LIVE` or `/ MEMORY` suffix when source basis is clear).
+- Added `StrategyDash.NextRefuelDeltaLitres` (`requested refuel - StrategyDash.NextRefuelTargetLitres`) and aligned `StrategyDash.NextRefuelStatus` derivation to `abs(delta)` thresholds (`<=0.5 OK`, `<=2.0 CHECK`, else ACTION) to keep status/delta basis locked.
+- Kept unchanged: Fuel DATA/MODE/SOURCE button behavior, `PitFuelControlEngine` behavior, `Pit.FuelControl.*` semantics, race-running fuel outputs (`Fuel.Delta.*`, `Fuel.Pit.*`, `Fuel.RequiredBurnToEnd*`), and boxed-refuel latch behavior.
+
 ## 2026-05-05 — League Class ClassLeader/PitExit replay identity gate fix
 - Classification: **internal-only** (race-context cohort seam correctness; no new exports/UI).
 - Root cause: `LalaLaunch.TryBuildRaceContextNativeCarRow(...)` required `TryGetCarDriverInfo(...)` success and synthesized `car:{idx}` identity fallback, so ClassLeader/ClassBest race-context matching could drop to native fallback in replay states where Opponents still had valid session identity.
