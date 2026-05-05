@@ -1,4 +1,20 @@
 ## Documentation sync status
+- 2026-05-05 Planner-save pit-loss learning-mode overwrite fix landed:
+  - `SavePlannerDataToProfile()` now updates `PitLaneLossSeconds` + `PitLaneLossSource/manual` + `PitLaneLossLearningMode/manual` only when the planner pit-loss value actually changes versus the stored track value;
+  - ordinary planner saves that do not edit pit loss now preserve existing learned mode metadata (including `boxed_stop`) and avoid accidental normalization drift.
+
+- 2026-05-05 Profiles manager pit-loss manual-edit consistency fix landed:
+  - Profiles-tab pit-loss text edits now stamp `PitLaneLossLearningMode="manual"` alongside `PitLaneLossSource="manual"`;
+  - prevents stale `boxed_stop` mode from persisting after manual pit-loss edits and incorrectly subtracting transition allowance in normalized pit-loss exports.
+
+- 2026-05-04 Pit-loss mode/source consistency fix landed:
+  - FuelCalcs track-save overwrite now also stamps `PitLaneLossSource="manual"` and `PitLaneLossLearningMode="manual"` when writing `PitLaneLossSeconds`;
+  - prevents stale `boxed_stop` mode from persisting across manual/planner pit-loss overwrites and incorrectly subtracting transition allowance in normalized pit-loss exports.
+
+- 2026-05-04 Pit-loss source-aware normalization follow-up landed:
+  - added persisted `PitLaneLossLearningMode` metadata (`drive_through` / `boxed_stop` / `manual`) on saved track pit-loss records;
+  - `Fuel.Live.PitLaneLoss_S` and `TrackLearning.PitLoss.ValueSec/Display` now expose drive-through-equivalent pit-lane loss (boxed-stop-learned values subtract fixed transition allowance and clamp at `0`);
+  - shared boxed-stop seam now uses fixed transition allowance `+2.00s`; `Fuel.Live.TotalStopLoss` composes from normalized drive-through-equivalent loss + boxed-service model (+repair-aware) + transition allowance without double-counting.
 
 - 2026-05-04 League Race Final Behaviour phase landed:
   - `ClassLeader.*` and `ClassBest.*` race-context class cohort matching now flows through the existing League Class resolver delegate seam (enabled+valid uses effective class; disabled/unresolved-player falls back to unchanged native class behavior).
