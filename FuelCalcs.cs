@@ -2728,9 +2728,14 @@ namespace LaunchPlugin
             }
         }
 
-        trackRecord.PitLaneLossSeconds = this.PitLaneTimeLoss;
-        trackRecord.PitLaneLossSource = "manual";
-        trackRecord.PitLaneLossLearningMode = "manual";
+        double existingPitLossSec = trackRecord.PitLaneLossSeconds;
+        bool pitLossChanged = Math.Abs(existingPitLossSec - this.PitLaneTimeLoss) > 0.0005;
+        if (pitLossChanged)
+        {
+            trackRecord.PitLaneLossSeconds = this.PitLaneTimeLoss;
+            trackRecord.PitLaneLossSource = "manual";
+            trackRecord.PitLaneLossLearningMode = "manual";
+        }
 
         if (IsPersonalBestAvailable && _loadedBestLapTimeSeconds > 0)
         {

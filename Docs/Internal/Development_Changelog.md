@@ -1,3 +1,8 @@
+## 2026-05-05 — PR #666 follow-up: planner-save pit-loss learning-mode preservation
+- Classification: **internal-only** (metadata persistence correctness; no UI/export contract changes).
+- Fixed `FuelCalcs.SavePlannerDataToProfile()` so `PitLaneLossSource`/`PitLaneLossLearningMode` are only forced to `manual` when planner save actually changes pit-loss seconds.
+- Prevents ordinary planner saves from silently rewriting learned `boxed_stop` metadata without value conversion, avoiding downstream normalized pit-loss inflation.
+
 ### 2026-05-04 — League Race header checkbox-column alignment follow-up
 - Classification: **internal-only** (UI layout correction; no runtime/resolver/settings semantic changes).
 - Fixed League Class table header misalignment by reserving a fixed checkbox column width (`18`) for both header and row grids in `Detected classes` and `Fallback rules` sections.

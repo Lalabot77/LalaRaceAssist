@@ -1,4 +1,8 @@
 ## Documentation sync status
+- 2026-05-05 Planner-save pit-loss learning-mode overwrite fix landed:
+  - `SavePlannerDataToProfile()` now updates `PitLaneLossSeconds` + `PitLaneLossSource/manual` + `PitLaneLossLearningMode/manual` only when the planner pit-loss value actually changes versus the stored track value;
+  - ordinary planner saves that do not edit pit loss now preserve existing learned mode metadata (including `boxed_stop`) and avoid accidental normalization drift.
+
 - 2026-05-05 Profiles manager pit-loss manual-edit consistency fix landed:
   - Profiles-tab pit-loss text edits now stamp `PitLaneLossLearningMode="manual"` alongside `PitLaneLossSource="manual"`;
   - prevents stale `boxed_stop` mode from persisting after manual pit-loss edits and incorrectly subtracting transition allowance in normalized pit-loss exports.
