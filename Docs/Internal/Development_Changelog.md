@@ -1,3 +1,9 @@
+## 2026-05-05 — Build-fix follow-up: nullable pit-loss read + race-context driver-info signature alignment
+- Classification: **internal-only** (compile correctness fix; no runtime feature/contract redesign).
+- `FuelCalcs.SavePlannerDataToProfile()` now reads existing `PitLaneLossSeconds` with nullable-safe fallback (`?? 0.0`) before diffing planner value.
+- `LalaLaunch.IsRaceContextClassMatchForCarIdx(...)` now calls `TryGetCarDriverInfo(...)` with correct out-parameter types/signature (arg 11 remains `out int teamId`), removing CS1503 argument-type failures.
+- Race-context matcher row names are now left empty in this seam; class-match behavior remains identity/class-driven and unchanged.
+
 ## 2026-05-05 — PR #666 follow-up: planner-save pit-loss learning-mode preservation
 - Classification: **internal-only** (metadata persistence correctness; no UI/export contract changes).
 - Fixed `FuelCalcs.SavePlannerDataToProfile()` so `PitLaneLossSource`/`PitLaneLossLearningMode` are only forced to `manual` when planner save actually changes pit-loss seconds.
