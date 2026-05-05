@@ -1838,3 +1838,12 @@ The public user-facing release history is maintained in the root `CHANGELOG.md`.
 - Persistence behavior:
   - pit-loss and condition lock toggles persist immediately through existing `ProfilesViewModel.SaveProfiles()` convention,
   - marker toggle uses the existing marker-store lock seam (`SetTrackMarkersLock`) and keeps existing marker persistence conventions.
+- 2026-05-04 Strategy tab race-configuration ownership cleanup landed:
+  - Race Preset control now hides while `Live Detect` race type is selected, preventing mixed manual/preset/live ownership cues.
+  - Entering or leaving `Live Detect` now clears selected/applied preset state (and modified badge state) so hidden preset influence cannot persist.
+  - Leaving `Live Detect` resets manual race length fields to neutral defaults (`RaceLaps=20`, `RaceMinutes=40`) before manual Lap/Time planning continues.
+  - Refresh Calcs ownership remains unchanged (recalculation-only; no preset reapply/live-detect retrigger path added).
+### 2026-05-04 — Strategy race-ownership cleanup follow-up (P1 review)
+- Classification: **internal-only** (state-ownership correction; no fuel/detection formula changes).
+- `UpdateLiveDetectedRaceDefinition(...)` now updates manual `RaceLaps` / `RaceMinutes` only while `SelectedRaceType == LiveDetect`; outside Live Detect it still caches helper/basis state but does not mutate manual race-length ownership.
+- Exiting Live Detect now clears detected-length caches (`_lastLiveDetectedRaceLaps`, `_lastLiveDetectedRaceMinutes`) in addition to detected basis type, preventing stale basis reuse on later re-entry when fresh detection is unavailable.

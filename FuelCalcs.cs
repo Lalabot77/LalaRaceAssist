@@ -793,6 +793,8 @@ namespace LaunchPlugin
 
     // Last applied preset (for badge + modified flag)
     private RacePreset _appliedPreset;
+    private const double ManualRaceLapsDefault = 20.0;
+    private const double ManualRaceMinutesDefault = 40.0;
 
     // Badge text shown under the selector
     public string PresetBadge
@@ -804,10 +806,12 @@ namespace LaunchPlugin
                                       : "Preset: " + _appliedPreset.Name;
         }
     }
-        public bool IsPresetModifiedFlag
+    public bool IsPresetModifiedFlag
     {
         get { return IsPresetModified(); }
     }
+
+    public bool ShowRacePresetControls => !IsLiveDetectRace;
 
     // Pit-lane live detection not implemented yet; hide the button for now
     public bool IsLivePitLaneLossAvailable => false;
@@ -1107,11 +1111,16 @@ namespace LaunchPlugin
         {
             if (_raceType != value)
             {
+                var previousRaceType = _raceType;
                 _raceType = value;
+
+                HandleRaceTypeOwnershipTransition(previousRaceType, _raceType);
+
                 OnPropertyChanged("SelectedRaceType");
                 OnPropertyChanged("IsLapLimitedRace");
                 OnPropertyChanged("IsTimeLimitedRace");
                 OnPropertyChanged(nameof(IsLiveDetectRace));
+                OnPropertyChanged(nameof(ShowRacePresetControls));
                 OnPropertyChanged(nameof(IsRaceLengthEditable));
                 OnPropertyChanged(nameof(ShowEffectiveLapLimitedRace));
                 OnPropertyChanged(nameof(ShowEffectiveTimeLimitedRace));
@@ -5222,6 +5231,41 @@ namespace LaunchPlugin
 
     public bool IsRaceLengthEditable => !IsLiveDetectRace;
 
+    private void HandleRaceTypeOwnershipTransition(RaceType previousRaceType, RaceType newRaceType)
+    {
+        if (previousRaceType == newRaceType)
+        {
+            return;
+        }
+
+        if (newRaceType == RaceType.LiveDetect)
+        {
+            _selectedPreset = null;
+            _appliedPreset = null;
+            OnPropertyChanged(nameof(SelectedPreset));
+            OnPropertyChanged(nameof(HasSelectedPreset));
+            return;
+        }
+
+        if (previousRaceType == RaceType.LiveDetect)
+        {
+            _liveDetectedRaceType = null;
+            _lastLiveDetectedRaceLaps = 0.0;
+            _lastLiveDetectedRaceMinutes = 0.0;
+            _selectedPreset = null;
+            _appliedPreset = null;
+            OnPropertyChanged(nameof(SelectedPreset));
+            OnPropertyChanged(nameof(HasSelectedPreset));
+            OnPropertyChanged(nameof(ShowEffectiveLapLimitedRace));
+            OnPropertyChanged(nameof(ShowEffectiveTimeLimitedRace));
+            _liveDetectHelperText = "Live Detect: waiting for race definition";
+            OnPropertyChanged(nameof(LiveDetectHelperText));
+
+            RaceLaps = ManualRaceLapsDefault;
+            RaceMinutes = ManualRaceMinutesDefault;
+        }
+    }
+
     public void UpdateLiveDetectedRaceDefinition(string detectedSessionLabel, bool? isLapLimited, double? raceLaps, bool? isTimeLimited, double? raceMinutes)
     {
         bool hasLap = isLapLimited == true && raceLaps.HasValue && raceLaps.Value > 0.0;
@@ -5245,7 +5289,7 @@ namespace LaunchPlugin
                 shouldRecalculate = true;
             }
             _lastLiveDetectedRaceLaps = raceLaps.Value;
-            if (Math.Abs(RaceLaps - _lastLiveDetectedRaceLaps) > 0.001)
+            if (IsLiveDetectRace && Math.Abs(RaceLaps - _lastLiveDetectedRaceLaps) > 0.001)
             {
                 RaceLaps = _lastLiveDetectedRaceLaps;
                 shouldRecalculate = false; // RaceLaps setter already recalculates
@@ -5279,7 +5323,7 @@ namespace LaunchPlugin
                 shouldRecalculate = true;
             }
             _lastLiveDetectedRaceMinutes = raceMinutes.Value;
-            if (Math.Abs(RaceMinutes - _lastLiveDetectedRaceMinutes) > 0.001)
+            if (IsLiveDetectRace && Math.Abs(RaceMinutes - _lastLiveDetectedRaceMinutes) > 0.001)
             {
                 RaceMinutes = _lastLiveDetectedRaceMinutes;
                 shouldRecalculate = false; // RaceMinutes setter already recalculates
