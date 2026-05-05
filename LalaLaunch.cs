@@ -5281,7 +5281,7 @@ namespace LaunchPlugin
             TryGetCarIdentityFromSessionInfo(pluginManager, carIdx, out string name, out string carNumber, out string identityClassColor);
             string resolvedName = !string.IsNullOrWhiteSpace(name) ? name : (abbrevName ?? string.Empty);
             string resolvedClassColor = !string.IsNullOrWhiteSpace(identityClassColor) ? identityClassColor : classColorHex;
-            string identityKey = BuildIdentityKey(resolvedClassColor, carNumber);
+            string identityKey = OpponentsEngine.MakeIdentityKey(resolvedClassColor, carNumber);
             if (string.IsNullOrWhiteSpace(identityKey))
             {
                 identityKey = "car:" + carIdx.ToString(CultureInfo.InvariantCulture);
