@@ -916,8 +916,10 @@ namespace LaunchPlugin
         public string StrategyDash_StartFuelAdviceText { get; private set; } = "N/A";
         public int StrategyDash_StartFuelStatus { get; private set; }
         public double StrategyDash_NextRefuelTargetLitres { get; private set; }
+        public double StrategyDash_NextRefuelDeltaLitres { get; private set; }
         public string StrategyDash_NextRefuelAdviceText { get; private set; } = "N/A";
         public int StrategyDash_NextRefuelStatus { get; private set; }
+        public string StrategyDash_BurnPlanText { get; private set; } = "BURN PLAN: NORM";
         public string StrategyDash_ContingencyText { get; private set; } = "CONT 0";
         private bool _isRefuelSelected = true;
         private bool _isTireChangeSelected = true;
@@ -1315,6 +1317,7 @@ namespace LaunchPlugin
             double contingencyLitres,
             string contingencyText,
             double oneStopNextRefuelTargetLitres,
+            string preRaceFuelSource,
             bool isRaceRunning,
             bool isGridFormation,
             bool isOnTrackCar)
@@ -1364,6 +1367,17 @@ namespace LaunchPlugin
                 nextRefuelTarget = Math.Max(0.0, cap);
             }
             StrategyDash_NextRefuelTargetLitres = nextRefuelTarget;
+            StrategyDash_NextRefuelDeltaLitres = 0.0;
+            string burnPlan = "NORM";
+            string sourceTag = string.Empty;
+            var pitSource = _pitFuelControlEngine?.Source ?? PitFuelControlSource.Stby;
+            if (pitSource == PitFuelControlSource.Push) burnPlan = "PUSH";
+            else if (pitSource == PitFuelControlSource.Save) burnPlan = "SAVE";
+            if (string.Equals(preRaceFuelSource, "live", StringComparison.OrdinalIgnoreCase))
+                sourceTag = "LIVE";
+            else if (string.Equals(preRaceFuelSource, "profile", StringComparison.OrdinalIgnoreCase) || string.Equals(preRaceFuelSource, "planner-profile", StringComparison.OrdinalIgnoreCase))
+                sourceTag = "MEMORY";
+            StrategyDash_BurnPlanText = string.IsNullOrEmpty(sourceTag) ? $"BURN PLAN: {burnPlan}" : $"BURN PLAN: {burnPlan} / {sourceTag}";
             if (requiredStrategy == RequiredPreRaceStrategy.NoStop)
             {
                 StrategyDash_NextRefuelAdviceText = "N/A";
@@ -1372,12 +1386,15 @@ namespace LaunchPlugin
             else if (requiredStrategy == RequiredPreRaceStrategy.MultiStop)
             {
                 StrategyDash_NextRefuelAdviceText = "REFUEL MAX";
-                StrategyDash_NextRefuelStatus = cap > 0.0 && plannedSingleStopRefuel >= (cap - 0.5) ? 0 : 1;
+                StrategyDash_NextRefuelDeltaLitres = plannedSingleStopRefuel - StrategyDash_NextRefuelTargetLitres;
+                double refuelGap = Math.Abs(StrategyDash_NextRefuelDeltaLitres);
+                StrategyDash_NextRefuelStatus = refuelGap <= 0.5 ? 0 : (refuelGap <= 2.0 ? 1 : 2);
             }
             else
             {
                 StrategyDash_NextRefuelAdviceText = string.Format(CultureInfo.InvariantCulture, "SET {0:F1} L", StrategyDash_NextRefuelTargetLitres);
-                double refuelGap = Math.Abs(plannedSingleStopRefuel - StrategyDash_NextRefuelTargetLitres);
+                StrategyDash_NextRefuelDeltaLitres = plannedSingleStopRefuel - StrategyDash_NextRefuelTargetLitres;
+                double refuelGap = Math.Abs(StrategyDash_NextRefuelDeltaLitres);
                 StrategyDash_NextRefuelStatus = refuelGap <= 0.5 ? 0 : (refuelGap <= 2.0 ? 1 : 2);
             }
 
@@ -1439,6 +1456,14 @@ namespace LaunchPlugin
             }
             else if (selectedStrategy == 3)
             {
+                double plannerFuel = FuelCalculator?.FuelPerLap ?? 0.0;
+                if (plannerFuel > 0.0)
+                {
+                    preRaceFuelPerLap = plannerFuel;
+                    preRaceFuelSource = ClassifyManualPreRaceFuelSource(hasPlannerFuel: true, hasLiveFallbackFuel: fallbackFuelPerLap > 0.0);
+                }
+                else
+                {
                 var (profileDry, profileWet) = GetProfileFuelBaselines();
                 double profileFuel = _isWetMode ? profileWet : profileDry;
                 if (profileFuel > 0.0)
@@ -1455,6 +1480,7 @@ namespace LaunchPlugin
                 {
                     preRaceFuelPerLap = PreRaceFallbackFuelPerLapLiters;
                     preRaceFuelSource = "fallback";
+                }
                 }
             }
             else
@@ -1597,7 +1623,7 @@ namespace LaunchPlugin
             else
                 contingencyText = "CONT 0";
 
-            UpdateStrategyDashAdvice(selectedStrategy, requiredStrategy, currentFuel, plannedSingleStopRefuel, effectiveMaxTank, maxTankCapacity, contingencyLitres, contingencyText, oneStopTarget, isRaceRunning, isGridOrFormation, isOnTrackCar);
+            UpdateStrategyDashAdvice(selectedStrategy, requiredStrategy, currentFuel, plannedSingleStopRefuel, effectiveMaxTank, maxTankCapacity, contingencyLitres, contingencyText, oneStopTarget, preRaceFuelSource, isRaceRunning, isGridOrFormation, isOnTrackCar);
         }
 
         // Stable model inputs
@@ -6377,8 +6403,10 @@ namespace LaunchPlugin
             AttachCore("StrategyDash.StartFuelAdviceText", () => StrategyDash_StartFuelAdviceText);
             AttachCore("StrategyDash.StartFuelStatus", () => StrategyDash_StartFuelStatus);
             AttachCore("StrategyDash.NextRefuelTargetLitres", () => Math.Round(StrategyDash_NextRefuelTargetLitres, 1));
+            AttachCore("StrategyDash.NextRefuelDeltaLitres", () => Math.Round(StrategyDash_NextRefuelDeltaLitres, 1));
             AttachCore("StrategyDash.NextRefuelAdviceText", () => StrategyDash_NextRefuelAdviceText);
             AttachCore("StrategyDash.NextRefuelStatus", () => StrategyDash_NextRefuelStatus);
+            AttachCore("StrategyDash.BurnPlanText", () => StrategyDash_BurnPlanText);
             AttachCore("StrategyDash.ContingencyText", () => StrategyDash_ContingencyText);
             AttachCore("Fuel.ProjectionLapTime_Stable", () => ProjectionLapTime_Stable);
             AttachCore("Fuel.ProjectionLapTime_StableSource", () => ProjectionLapTime_StableSource);
@@ -16467,8 +16495,10 @@ namespace LaunchPlugin
             StrategyDash_StartFuelAdviceText = "N/A";
             StrategyDash_StartFuelStatus = 0;
             StrategyDash_NextRefuelTargetLitres = 0;
+            StrategyDash_NextRefuelDeltaLitres = 0;
             StrategyDash_NextRefuelAdviceText = "N/A";
             StrategyDash_NextRefuelStatus = 0;
+            StrategyDash_BurnPlanText = "BURN PLAN: NORM";
             StrategyDash_ContingencyText = "CONT 0";
 
             // --- Additional dashboard-facing fuel/projection outputs that must not latch across resets ---

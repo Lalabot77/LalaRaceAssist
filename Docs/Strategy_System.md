@@ -120,6 +120,7 @@ PreRace status contract (dash-facing):
 - `StatusText` now reports explicit outcomes (`NO STOP OKAY`, `SINGLE STOP OKAY`, `MAX FUEL REQUIRED`, `STRATEGY MISMATCH`, etc.).
 - `StatusColour` publishes `green` / `orange` / `red` so dashboards can style the state without re-implementing logic.
 - In `Auto`, PreRace first classifies the required strategy from stints (`<=1.0 no-stop`, `<=2.0 one-stop`, `>2.0 multi-stop`) and then evaluates status as that required strategy; Auto does not inherit manual mismatch warnings.
+- In `Auto`, fuel-per-lap selection is live-stable first; when stable live fuel is unavailable it now falls back to selected planner fuel (`FuelCalculator.FuelPerLap`) before profile/generic fallback.
 - In non-Auto modes, planner/live combo or race-definition mismatches are shown as an **orange caution** (`STRATEGY MISMATCH`) only when planner/live inputs are comparable; transient unknown values do not trigger mismatch.
 - `FuelDelta` is now live for grid workflow:
   - required one-stop path uses `(current fuel + requested add) - total fuel needed`,

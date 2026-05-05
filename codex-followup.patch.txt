@@ -1,0 +1,812 @@
+ (cd "$(git rev-parse --show-toplevel)" && git apply --3way <<'EOF' 
+diff --git a/Docs/Internal/Development_Changelog.md b/Docs/Internal/Development_Changelog.md
+index 5f23184a05b5c775564cbc5149d873d5ee8acefa..47ac192320ea647ec0653de8c5206197254676a4 100644
+--- a/Docs/Internal/Development_Changelog.md
++++ b/Docs/Internal/Development_Changelog.md
+@@ -232,50 +232,58 @@ The public user-facing release history is maintained in the root `CHANGELOG.md`.
+ - Landed early launch support, fuel tooling, and dashboard package foundations.
+ 
+ ### v0.1
+ - Early user-facing launch workflow and launch dashboards.
+ - Basic fuel and race-support features for live use.
+ - Initial profile-based setup flow for repeatable car settings.
+ 
+ ### v0.2
+ - Expanded profile-driven workflow and saved-data usage.
+ - Improved dashboard package structure for live driving support.
+ - Added stronger race-session support around planning and dash presentation.
+ 
+ ### v0.3
+ - Added fuller quick-start and user-guide material for testers.
+ - Strengthened learning/store/lock workflow around fuel and track data.
+ - Expanded practical dash usage guidance for race sessions.
+ 
+ ### v0.4
+ - Matured pit entry and pit-loss workflows, including learned markers and cleaner pit-cycle guidance.
+ - Improved dry/wet data separation and condition-aware storage.
+ - Expanded opponent and race-context tooling, including stronger same-class race support.
+ - Made track-scoped planning data more practical for venue-specific strategy setup.
+ 
+ ## Post-v1.0 development
+ 
++## 2026-05-05 — StrategyDash burn-basis alignment + no-stop burn-plan + next-refuel delta
++- Classification: **both** (new dash-facing exports/semantics + internal contract alignment).
++- Auto PreRace fuel-per-lap fallback order resolves as: valid stable-live first, then selected planner `FuelCalculator.FuelPerLap` (if `>0`), then existing profile/generic fallback path.
++- Auto PreRace source-label contract remains runtime-only (`live`/`profile`/`fallback`): planner fallback usage is now normalized to runtime labels (`Live* => live`, `Profile* => profile`, manual/unclassified => fallback).
++- Added `StrategyDash.BurnPlanText` as a pre-green display helper for no-stop/grid usage (`BURN PLAN: NORM/SAVE/PUSH` with optional `/ LIVE` or `/ MEMORY` suffix when source basis is clear).
++- Added `StrategyDash.NextRefuelDeltaLitres` (`requested refuel - StrategyDash.NextRefuelTargetLitres`) and aligned `StrategyDash.NextRefuelStatus` derivation to `abs(delta)` thresholds (`<=0.5 OK`, `<=2.0 CHECK`, else ACTION) to keep status/delta basis locked.
++- Kept unchanged: Fuel DATA/MODE/SOURCE button behavior, `PitFuelControlEngine` behavior, `Pit.FuelControl.*` semantics, race-running fuel outputs (`Fuel.Delta.*`, `Fuel.Pit.*`, `Fuel.RequiredBurnToEnd*`), and boxed-refuel latch behavior.
++
+ ## 2026-05-04 — StrategyDash one-stop burn-basis current-tick refresh fix
+ - Classification: **internal-only** (pre-green advice seam timing correctness; no runtime fuel/pit/control contract changes).
+ - Fixed `StrategyDash.NextRefuelTargetLitres` one-stop PUSH/SAVE selection path to use current-tick locally resolved burn values inside `UpdatePreRaceOutputs(...)` rather than shared `PushFuelPerLap` / `FuelSaveFuelPerLap` fields that may still hold prior-frame values at that execution point.
+ - Preserved fallback and ownership boundaries: PUSH uses current-tick push burn when valid, SAVE uses current-tick save burn when valid, otherwise NORM (`preRaceFuelPerLap`); no PitFuelControlEngine behavior changes and no changes to `Fuel.Delta.*`, `Fuel.RequiredBurnToEnd*`, `Fuel.Pit.*`, boxed refuel latches, or `Pit.FuelControl.*` semantics.
+ 
+ ## 2026-05-04 — StrategyDash V2 pre-green advice seam + PreRace contingency basis correction
+ - Classification: **both** (new additive dash-facing exports + pre-race fuel-needed basis correction).
+ - Removed legacy hardcoded PreRace `+2 laps` reserve from `LalaLaunch.PreRace.TotalFuelNeeded`; total-needed now resolves as `base race fuel requirement + active contingency litres` using the existing active contingency seam.
+ - Preserved ownership boundaries and runtime contracts: no changes to `Fuel.Delta.*`, `Fuel.RequiredBurnToEnd*`, `Fuel.Pit.*`, `Pit.FuelControl.*`, boxed refuel latch behavior, or PitFuelControlEngine behavior.
+ - Added additive `StrategyDash.*` exports for pre-green advice (`Phase/PhaseText`, strategy classification, start-fuel advice/status, next-refuel advice/status, contingency text).
+ - `StrategyDash.*` is publish-safe during race-running but documented as non-primary there; race-running dashboards should continue using existing runtime fuel/pit/control surfaces.
+ 
+ 
+ 
+ ## 2026-05-04 — Setup fuel fallback export + litre-unit string validation follow-up
+ - Classification: **both** (dash-facing setup-fuel export seam + parser safety correction + docs alignment).
+ - Added `Fuel.Setup.FuelLevel`, `Fuel.Setup.FuelLevelValid`, and `Fuel.Setup.FuelLevelSource` in `LalaLaunch.cs`.
+ - Setup resolver checks setup paths in strict priority and uses the first usable value only:
+   1) `CarSetup.BrakesDriveUnit.Fuel.FuelLevel`
+   2) `CarSetup.Chassis.Front.FuelLevel`
+   3) `CarSetup.Chassis.Rear.FuelLevel`
+   4) `CarSetup.Suspension.Rear.FuelLevel`
+ - String parser safety follow-up:
+   - accepts litre-labelled strings (`77.0 L`, `77 L`, `77,0 L`, `litre/litres/liter/liters`);
+   - rejects known non-litre unit strings (`gal`, `gallon`, `gallons`) and other unknown units;
+diff --git a/Docs/Internal/SimHubParameterInventory.md b/Docs/Internal/SimHubParameterInventory.md
+index 086bfa8a5f4a7b2ae4eae941cd4cac283f7e5545..f7705cda0cada8c55f003cc2bd07a4abb6063a98 100644
+--- a/Docs/Internal/SimHubParameterInventory.md
++++ b/Docs/Internal/SimHubParameterInventory.md
+@@ -48,58 +48,59 @@ Branch: work
+ | Fuel.Pit.Box.WillAddLatched | double | Stable boxed UI target add amount. While `Pit.Box.Active`, it latches immediately from current `Fuel.Pit.WillAdd` when refuel is selected (before flow latch), then stays fixed for that boxed selected-refuel phase. Clears to `0` immediately if refuel is deselected in-box, and resets to `0` when boxed phase ends. | Per tick. | `LalaLaunch.cs` — `UpdatePitRefuelGaugeValues` + `AttachCore`. |
+ | Fuel.Pit.AddedSoFar | double | In-stop liters already added (`max(0, Fuel - Fuel.Pit.Box.EntryFuel)`) once boxed refuel phase is latched; otherwise `0`. | Per tick. | `LalaLaunch.cs` — `UpdatePitRefuelGaugeValues` + `AttachCore`. |
+ | Fuel.Pit.WillAddRemaining | double | UI-facing boxed countdown: `max(0, Fuel.Pit.Box.WillAddLatched - Fuel.Pit.AddedSoFar)`. Before flow latch, this equals the full early-latched target (with `AddedSoFar=0`). Clears to `0` immediately when refuel is deselected in-box and resets to `0` when boxed phase ends. | Per tick. | `LalaLaunch.cs` — `UpdatePitRefuelGaugeValues` + `AttachCore`. |
+ | Fuel.Pit.FuelOnExit | double | Current fuel + clamped add. | 500 ms poll. | `LalaLaunch.cs` — `UpdateLiveFuelCalcs` + `AttachCore`【F:LalaLaunch.cs†L1895-L2143】【F:LalaLaunch.cs†L2712-L2716】 |
+ | Fuel.Pit.DeltaAfterStop / _S | double | Lap surplus after the planned stop at stable burn (`_S` smoothed). | 500 ms poll. | `LalaLaunch.cs` — `UpdateLiveFuelCalcs`, `UpdateSmoothedFuelOutputs`, `AttachCore`【F:LalaLaunch.cs†L1895-L2143】【F:LalaLaunch.cs†L2711-L2714】【F:LalaLaunch.cs†L4243-L4306】 |
+ | Fuel.Pit.FuelSaveDeltaAfterStop / _S | double | Surplus after stop using fuel-save burn (`_S` smoothed). | 500 ms poll. | `LalaLaunch.cs` — `UpdateLiveFuelCalcs`, `UpdateSmoothedFuelOutputs`, `AttachCore`【F:LalaLaunch.cs†L1895-L2143】【F:LalaLaunch.cs†L2710-L2712】【F:LalaLaunch.cs†L4243-L4306】 |
+ | Fuel.Pit.PushDeltaAfterStop / _S | double | Surplus after stop assuming push burn (`_S` smoothed). | 500 ms poll. | `LalaLaunch.cs` — `UpdateLiveFuelCalcs`, `UpdateSmoothedFuelOutputs`, `AttachCore`【F:LalaLaunch.cs†L1895-L2143】【F:LalaLaunch.cs†L2711-L2713】【F:LalaLaunch.cs†L4243-L4306】 |
+ | Fuel.PitStopsRequiredByFuel / Fuel.PitStopsRequiredByPlan / Fuel.Pit.StopsRequiredToEnd | int | Capacity-based stop count, strategy-required stops, and published stop requirement (plan-first). | 500 ms poll. | `LalaLaunch.cs` — `UpdateLiveFuelCalcs` + `AttachCore`【F:LalaLaunch.cs†L1895-L2143】【F:LalaLaunch.cs†L2714-L2718】 |
+ | Fuel.Live.RefuelRate_Lps | double | Effective runtime refuel rate used by strategy timing for the active profile. Locked profiles with a usable stored value keep publishing that stored value (learned overwrite candidates are blocked). Locked profiles with no usable stored rate allow a one-time first-fill from the first valid learned candidate. | 500 ms poll. | `LalaLaunch.cs` — refuel learning in `UpdateLiveFuelCalcs` + lock-gated save/runtime apply path + `AttachCore`. |
+ | Fuel.Live.TireChangeTime_S | double | Estimated tyre change seconds for current selection. | 500 ms poll. | `LalaLaunch.cs` — `GetEffectiveTireChangeTimeSeconds` + `AttachCore`【F:LalaLaunch.cs†L1911-L1950】【F:LalaLaunch.cs†L2717-L2720】 |
+ | Fuel.Live.PitLaneLoss_S | double | Pit-lane-loss baseline from profile/learned value used by strategy. Canonical meaning is drive-through baseline lane travel (no box stop). | 500 ms poll. | `LalaLaunch.cs` — `_pit.LastTotalPitCycleTimeLoss` persistence + `AttachCore`【F:LalaLaunch.cs†L1408-L1462】【F:LalaLaunch.cs†L2717-L2721】 |
+ | TrackLearning.PitLoss.Display / ValueSec / SourceText / Locked | string / double / string / bool | Offline Testing Track Learning pit-loss review seams from active profile+track: formatted display (`"23.0s"` or `"-"`), stored seconds, source text (`DTL`/`DIRECT`/`MANUAL`/`-`), and lock state. | Per tick. | `LalaLaunch.cs` — active track stats resolver + `AttachCore`. |
+ | TrackLearning.Markers.EntryPct / ExitPct / Locked | double / double / bool | Offline Testing Track Learning marker review seams using stored marker values and current marker lock state. | Per tick. | `LalaLaunch.cs` — marker store seam + `AttachCore`. |
+ | TrackLearning.Condition.IsWet / ModeText / AvgLapDisplay / AvgLapSamples / FuelSave / FuelAvg / FuelMax / FuelSamples / Locked | bool / string / string / int / double / double / double / int / bool | Active-condition (dry/wet) Track Learning review seams. Condition lock maps to active condition (`DryConditionsLocked` or `WetConditionsLocked`) and is shared by avg-lap + fuel persistence ownership. | Per tick. | `LalaLaunch.cs` — `_isWetMode` routing + active `TrackStats` seam + `AttachCore`. |
+ | Fuel.Live.TotalStopLoss | double | Boxed-stop composite for strategy/pit-exit prediction seams: `pit lane loss baseline + boxed service + fixed transition allowance`. Boxed service uses modeled boxed target (`max(fuelTime, tireTime) + 1.0s` fixed boxed-service overhead), repair-aware via `max(modeledBoxTarget, repairRemainingSec)`, then adds fixed pit-box transition allowance `+2.00s` for slow-in/settle/launch-out overhead. | 500 ms poll. | `LalaLaunch.cs` — `CalculateTotalStopLossSeconds` + `AttachCore`【F:LalaLaunch.cs†L1911-L1950】【F:LalaLaunch.cs†L2719-L2722】 |
+ | Pit.Box.Active | bool | Driver box-service countdown active flag. `true` only while in valid in-box service state (`in pit lane && in pit stall && PitPhase.InBox`). | Per tick. | `LalaLaunch.cs` — `UpdatePitBoxCountdownValues` + `AttachCore`. |
+ | Pit.Box.ElapsedSec | double | In-box elapsed seconds for countdown. Reuses existing `PitEngine.PitStopElapsedSec` timer (no separate timer). | Per tick while active; else `0`. | `LalaLaunch.cs` — `UpdatePitBoxCountdownValues` + `AttachCore`. |
+ | Pit.Box.TargetSec | double | Box-service target seconds used by the countdown. During the first short settle period of a boxed stop (1.0s elapsed), live effective target is `max(modeledTargetSec, repairRemainingSec)` where `modeledTargetSec = (max(fuelTime, tireTime) + 1.0s fixed boxed-service overhead)` and `repairRemainingSec` is boxed native repair-left authority. The fixed `+1.0s` is stationary box-service allowance only (not pit-lane travel). Once settled, that effective target is latched/frozen for the stop and no longer follows late drift. | Per tick while active; else `0`. | `LalaLaunch.cs` — `CalculatePitBoxModeledTargetSeconds` + `CalculatePitBoxRepairRemainingSeconds` + `UpdatePitBoxCountdownValues` + `AttachCore`. |
+ | Pit.Box.RemainingSec | double | Countdown seconds remaining in box service, computed each tick as `max(max(0, Pit.Box.TargetSec - Pit.Box.ElapsedSec), repairRemainingSec)` where `repairRemainingSec` is the boxed native repair-left authority (`PitRepairLeft`, plus `PitOptRepairLeft` when optional repairs are enabled). This keeps remaining repair-aware while `Pit.Box.TargetSec` stays frozen once latched. | Per tick while active; else `0`. | `LalaLaunch.cs` — `CalculatePitBoxRepairRemainingSeconds` + `UpdatePitBoxCountdownValues` + `AttachCore`. |
+ | Pit.Box.LastDeltaSec | double | Short-lived post-stop delta published on box release as `Pit.Box.TargetSec(latched effective target) - final Pit.Box.ElapsedSec`; positive means quicker than target, negative means slower. Because the latched target now includes repair authority seen during settle, repair stops get meaningful post-stop delta. Export is non-zero for 5 seconds after stop end, then auto-resets to `0`. | Per tick (5-second visibility window after stop; otherwise `0`). | `LalaLaunch.cs` — `UpdatePitBoxCountdownValues` + `AttachCore`. |
+ | Fuel.Live.DriveTimeAfterZero | double | Extra drive seconds after timer zero (planner/live observed). | 500 ms poll. | `LalaLaunch.cs` — `UpdateLiveFuelCalcs` after-zero model + `AttachCore`【F:LalaLaunch.cs†L1911-L1993】【F:LalaLaunch.cs†L2721-L2724】 |
+ | Fuel.After0.PlannerSeconds / Fuel.After0.LiveEstimateSeconds / Fuel.After0.Source | double/double/string | Planner-configured after-zero allowance, live observed estimate, and source label (“planner”/“live”). | 500 ms poll. | `LalaLaunch.cs` — `UpdateLiveFuelCalcs` + `AttachCore`【F:LalaLaunch.cs†L1911-L1993】【F:LalaLaunch.cs†L2722-L2726】 |
+ | LalaLaunch.PreRace.Selected / LalaLaunch.PreRace.SelectedText | int/string | Driver-selected pre-race info mode (0 No Stop, 1 Single Stop, 2 Multi Stop, 3 Auto) and display label. Selection is persisted via a dedicated PreRace-only mode field (`SelectedPreRaceMode` / persisted `PreRaceMode`) and only affects the PreRace outputs (not planner/live fuel engines). | 500 ms poll. | `LalaLaunch.cs` — pre-race block in `UpdateLiveFuelCalcs` + `AttachCore`. |
+ | LalaLaunch.PreRace.Stints | double | Pre-race stints threshold signal computed as `total fuel needed / usable tank`, rounded 1dp. This is total stints needed (not current-fuel shortfall) and replaces separate stop outputs for dash use. | 500 ms poll. | `LalaLaunch.cs` — pre-race block in `UpdateLiveFuelCalcs` + `AttachCore`. |
+ | LalaLaunch.PreRace.TotalFuelNeeded / LalaLaunch.PreRace.FuelDelta | double/double | Unified pre-race fuel requirement and delta. `Auto` uses live race-definition authority first (`CurrentSessionInfo._SessionTime` timed, `CurrentSessionInfo._SessionLaps` lap-limited) plus runtime after-zero seam; planner race sliders are not Auto race-length authority. PreRace current-fuel basis is `live current fuel` when valid/positive. Setup fallback (`Fuel.Setup.FuelLevel` when `Fuel.Setup.FuelLevelValid=true`) is used only during pre-race phases (grid/formation, SessionState `<4`) when live current fuel is non-positive; during active race-running (SessionState `==4`), setup fallback is not used and live current fuel remains authoritative. `FuelDelta` is strategy-aware: one-stop path uses `(effective current fuel + requested add) - total fuel needed`, while no-stop/multi-stop paths use `effective current fuel - total fuel needed`. `TotalFuelNeeded` now uses `base race fuel requirement + active contingency litres` (active contingency seam), replacing the legacy hardcoded +2-lap reserve. | 500 ms poll. | `LalaLaunch.cs` — pre-race block in `UpdateLiveFuelCalcs` + `AttachCore`. |
+-| LalaLaunch.PreRace.FuelSource / LalaLaunch.PreRace.LapTimeSource | string/string | Short source labels for pre-race fuel/lap inputs. `FuelSource` accepted values are `live`, `profile`, `planner-profile`, `planner-manual`, `fallback` (`planner`/`simhub` removed). `Auto` publishes only runtime labels (`live`/`profile`/`fallback`). Manual PreRace selections publish planner-classified labels (`planner-profile` / `planner-manual`) when planner fuel drives pre-race math, with `live` allowed when planner mode uses live snapshot fuel. | 500 ms poll. | `LalaLaunch.cs` — pre-race source classification helpers + source selection + `AttachCore`. |
++| LalaLaunch.PreRace.FuelSource / LalaLaunch.PreRace.LapTimeSource | string/string | Short source labels for pre-race fuel/lap inputs. `FuelSource` accepted values are `live`, `profile`, `planner-profile`, `planner-manual`, `fallback` (`planner`/`simhub` removed). `Auto` publishes only runtime labels (`live`/`profile`/`fallback`). In Auto when stable live fuel is unavailable, fallback order is now: selected planner `FuelCalculator.FuelPerLap` (if `>0`) before profile/generic fallback. Manual PreRace selections publish planner-classified labels (`planner-profile` / `planner-manual`) when planner fuel drives pre-race math, with `live` allowed when planner mode uses live snapshot fuel. | 500 ms poll. | `LalaLaunch.cs` — pre-race source classification helpers + source selection + `AttachCore`. |
+ | LalaLaunch.PreRace.StatusText / LalaLaunch.PreRace.StatusColour | string/string | Dash-facing pre-race decision output and colour (`green`, `orange`, `red`) evaluated scenario-first (`required strategy` from stints, then `selected strategy`). Status set includes: `NO STOP OKAY`, `SINGLE STOP OKAY`, `MAX FUEL IN / MULTI STOP CONFIRMED`, `STRATEGY MISMATCH`, `MAX FUEL REQUIRED`, `OVERFUELLED`, `ADD FUEL FOR NO STOP`, `NO STOP POSSIBLE`, `SINGLE STOP POSSIBLE`, `NO STOP NOT POSSIBLE`, `SINGLE STOP NOT POSSIBLE`, `SINGLE STINT NOT POSSIBLE`, `ONE STOP REQUIRES MORE FUEL`, `ONE STOP NOT POSSIBLE`, `CHECK NEXT STINT FUEL`. `STRATEGY MISMATCH` remains non-Auto-only and only when planner/live inputs are comparable and mismatched (`HasComparableInputs && !IsMatch`). | 500 ms poll. | `LalaLaunch.cs` — pre-race status decision seam + `AttachCore`. |
+ 
+ | StrategyDash.Phase / StrategyDash.PhaseText | int/string | Additive StrategyDash V2 pre-green advice phase seam (`0=HIDDEN`, `1=PLANNING`, `2=GRID FORMATION`, `3=RACE`). Intended primary use is pre-green; race-running dashboards should continue to use existing runtime `Fuel.*`/`Pit.*`/`Pit.FuelControl.*` surfaces. | 500 ms poll. | `LalaLaunch.cs` — pre-race strategy-dash adapter + `AttachCore`. |
+ | StrategyDash.IsAutoStrategy | bool | `true` when existing PreRace selected mode is Auto (`LalaLaunch.PreRace.Selected==3`). | 500 ms poll. | `LalaLaunch.cs` — pre-race strategy-dash adapter + `AttachCore`. |
+ | StrategyDash.RequiredStopsPreGreen / StrategyDash.StrategyText | int/string | Required pre-green strategy class derived from existing pre-race stints classification (`0=no stop`, `1=one stop`, `2=multi stop`) and text (`NO STOP`/`ONE STOP`/`MULTI STOP`). | 500 ms poll. | `LalaLaunch.cs` — pre-race strategy-dash adapter + `AttachCore`. |
+ | StrategyDash.StartFuelRequiredLitres / StartFuelAdviceText / StartFuelStatus | double/string/int | Start-fuel advice seam for pre-green dashboards. `StartFuelRequiredLitres` uses corrected `LalaLaunch.PreRace.TotalFuelNeeded` basis and is capped for display by effective max tank when available. Advice/status are evaluated from a dedicated start-fuel comparison (`current fuel` when >0, else setup fallback when `Fuel.Setup.FuelLevelValid`, else unknown) against required using a `1.0 L` OK tolerance (`0=OK`, `1=CHECK`, `2=ACTION`); text is `START FUEL OK`/`START FUEL MAX`/`CHECK START FUEL`/`ADD START FUEL` and does not map from `LalaLaunch.PreRace.StatusText`. | 500 ms poll. | `LalaLaunch.cs` — pre-race strategy-dash adapter + `AttachCore`. |
+-| StrategyDash.NextRefuelTargetLitres / NextRefuelAdviceText / NextRefuelStatus | double/string/int | Pre-green next-stop advice seam. No-stop => `0` + `N/A`; one-stop => second-stint target (`SET X L`); multi-stop => max-cap target (`REFUEL MAX`). Status is an advice-level check (`0=OK`, `1=CHECK`, `2=ACTION`) and does not duplicate Pit Fuel Control DATA/MODE/SOURCE ownership. | 500 ms poll. | `LalaLaunch.cs` — pre-race strategy-dash adapter + `AttachCore`. |
++| StrategyDash.NextRefuelTargetLitres / NextRefuelDeltaLitres / NextRefuelAdviceText / NextRefuelStatus | double/double/string/int | Pre-green next-stop advice seam. No-stop => target `0` + advice `N/A`; one-stop => second-stint target (`SET X L`); multi-stop => max-cap target (`REFUEL MAX`). `NextRefuelDeltaLitres` is `requested refuel - target` (negative means add more, positive means above target) and always uses the same burn/source basis as `NextRefuelTargetLitres` (including PUSH/SAVE selection). Status is derived from `abs(delta)` (`<=0.5 OK`, `<=2.0 CHECK`, otherwise `ACTION`) and does not duplicate Pit Fuel Control DATA/MODE/SOURCE ownership. | 500 ms poll. | `LalaLaunch.cs` — pre-race strategy-dash adapter + `AttachCore`. |
++| StrategyDash.BurnPlanText | string | Pre-green display helper for main dash row, especially when `RequiredStopsPreGreen==0` and next-refuel advice is `N/A`. Publishes concise burn-plan text from effective StrategyDash burn basis (`BURN PLAN: NORM/SAVE/PUSH`, with optional `/ LIVE` or `/ MEMORY` suffix when basis source is clear). | 500 ms poll. | `LalaLaunch.cs` — pre-race strategy-dash adapter + `AttachCore`. |
+ | StrategyDash.ContingencyText | string | Human-readable active contingency context (`CONT x.x LAPS` / `CONT x.x L`) from active contingency seam for pre-green display/debug. | 500 ms poll. | `LalaLaunch.cs` — pre-race strategy-dash adapter + `AttachCore`. |
+ | Fuel.Live.ProjectedDriveSecondsRemaining | double | Projected wall-time remaining (includes after-zero). | 500 ms poll. | `LalaLaunch.cs` — `ComputeProjectedLapsRemaining` + `AttachCore`【F:LalaLaunch.cs†L4396-L4404】【F:LalaLaunch.cs†L2726-L2729】 |
+ | Fuel.ProjectionLapTime_Stable / _StableSource | double/string | Selected projection lap time and provenance (stint/last5/profile/fallback). | 500 ms poll. | `LalaLaunch.cs` — `GetProjectionLapSeconds` + `AttachCore`【F:LalaLaunch.cs†L4306-L4394】【F:LalaLaunch.cs†L2725-L2727】 |
+ | Fuel.Live.IsFuelReady | bool | True when stable confidence meets the readiness threshold. | 500 ms poll. | `LalaLaunch.cs` — `IsFuelReady` property + `AttachCore`【F:LalaLaunch.cs†L500-L506】【F:LalaLaunch.cs†L2727-L2729】 |
+ | Fuel.PitWindowState / Fuel.PitWindowLabel / Fuel.IsPitWindowOpen / Fuel.PitWindowOpeningLap / Fuel.PitWindowClosingLap | int/string/bool/int/int | Pit window state machine (open ECO/STD/PUSH, SET FUEL, NO DATA YET, N/A, TANK SPACE/ERROR). Opening/closing lap markers mirror the state machine. | 500 ms poll. | `LalaLaunch.cs` — `UpdateLiveFuelCalcs` pit window block + `AttachCore`【F:LalaLaunch.cs†L2145-L2335】【F:LalaLaunch.cs†L2682-L2687】 |
+ | Fuel.LastPitLaneTravelTime | double | Last direct pit-lane travel time saved from pit cycle. | On save; surfaced each poll. | `LalaLaunch.cs` — `Pit_OnValidPitStopTimeLossCalculated` + `AttachCore`【F:LalaLaunch.cs†L2950-L3004】【F:LalaLaunch.cs†L2672-L2955】 |
+ 
+ Implementation note (no new export):
+ - Strategy live-cap validation now consumes the same runtime-authoritative live-cap seam used by fuel runtime (`raw -> live cached -> bounded last-valid fallback`) instead of maintaining a separate direct-only raw read path.
+ 
+ ## Pace / Projection
+ | Exported name | Type | Units / meaning | Update cadence | Defined in |
+ | --- | --- | --- | --- | --- |
+ | Pace.StintAvgLapTimeSec | double | Rolling average of accepted clean laps. | Per lap (on crossing). | `LalaLaunch.cs` — `DetectLapCrossing` & pace acceptance + `AttachCore`【F:LalaLaunch.cs†L1080-L1405】【F:LalaLaunch.cs†L2732-L2737】 |
+ | Pace.Last5LapAvgSec | double | Average of last up-to-five clean laps. | Per lap. | `LalaLaunch.cs` — pace window update + `AttachCore`【F:LalaLaunch.cs†L1080-L1405】【F:LalaLaunch.cs†L2732-L2737】 |
+ | Pace.LeaderAvgLapTimeSec | double | Rolling leader pace (cleared when feed drops). | Per lap. | `LalaLaunch.cs` — leader lap processing + `AttachCore`【F:LalaLaunch.cs†L1336-L1375】【F:LalaLaunch.cs†L2733-L2736】 |
+ | Pace.LeaderDeltaToPlayerSec | double | Leader pace minus player pace. | Per lap. | `LalaLaunch.cs` — `UpdateLeaderDelta` + `AttachCore`【F:LalaLaunch.cs†L1080-L1405】【F:LalaLaunch.cs†L2734-L2737】 |
+ | Pace.PaceConfidence | int | Confidence derived from clean pace window size/outlier rejection. | Per lap. | `LalaLaunch.cs` — `ComputePaceConfidence` + `AttachCore`【F:LalaLaunch.cs†L1080-L1405】【F:LalaLaunch.cs†L2735-L2737】 |
+ | Pace.OverallConfidence | int | Combined fuel/pace confidence (probabilistic product). | Per lap / poll. | `LalaLaunch.cs` — `OverallConfidence` getter + `AttachCore`【F:LalaLaunch.cs†L468-L491】【F:LalaLaunch.cs†L2736-L2737】 |
+ | Pace.PacePredictor / Pace.PacePredictorSource | double/string | Predictor lap time: projection lap time until 5 clean laps, then rolling 3-lap average. Source labels: SIMHUB/PLUGIN/STINT/AVG5/AVG3. | Per lap / poll. | `LalaLaunch.cs` — predictor outputs + `AttachCore`【F:LalaLaunch.cs†L5364-L5427】【F:LalaLaunch.cs†L3073-L3081】 |
+ 
+ ## Opponents & Pit Exit
+ | Exported name | Type | Units / meaning | Update cadence | Defined in |
+ | --- | --- | --- | --- | --- |
+ | Opp.Ahead1..5.* / Opp.Behind1..5.* | mixed | Race-order same-class neighbors from the native RaceProgress-first ordering model (up to five each side). Backward compatibility is preserved for existing `Opp.Ahead1/2.*` and `Opp.Behind1/2.*`. | Per tick in eligible live sessions. | `Opponents.cs` + `AttachCore`. |
+diff --git a/Docs/RepoStatus.md b/Docs/RepoStatus.md
+index 3deffa72ac01a62317c31703d99280e2ea03b956..0171185235853420a8c71ad71f11098b76417c0e 100644
+--- a/Docs/RepoStatus.md
++++ b/Docs/RepoStatus.md
+@@ -1,25 +1,30 @@
++- 2026-05-05 StrategyDash burn-basis alignment + no-stop burn-plan + refuel-delta landed:
++  - Auto PreRace fuel-per-lap fallback order now stays live-stable first, then selected planner `FuelCalculator.FuelPerLap` when valid, then existing profile/generic fallback;
++  - added `StrategyDash.BurnPlanText` as a concise pre-green helper for no-stop/grid guidance (`BURN PLAN: NORM/SAVE/PUSH` with optional source suffix);
++  - added `StrategyDash.NextRefuelDeltaLitres` (`requested - target`) and aligned `StrategyDash.NextRefuelStatus` to `abs(delta)` thresholds (`<=0.5 OK`, `<=2.0 CHECK`, else ACTION) across one-stop/multi-stop paths.
++
+ - 2026-05-05 League Class replay-identity follow-up landed:
+   - fixed ClassLeader/ClassBest race-context cohort gating to avoid native fallback when League matcher is active but native class-short is unresolved in multiclass replay states;
+   - removed synthetic `car:{idx}` race-context identity fallback in `LalaLaunch` class leader/class best candidate rows so matching now relies on canonical Opponents-style identity (`ClassColor:CarNumber`) only;
+   - PitExit remains on shared Opponents race-context matcher seam; no pit-exit math/countdown changes.
+ 
+ ## Documentation sync status
+ - 2026-05-05 League Race final cohort integration follow-up landed (PR #669 replay fix):
+   - fixed ClassLeader/ClassBest race-context candidate matching to build native race-context rows from the same session identity sources used by Opponents (`UserID` + `UserName`/`CarNumber`/`CarClassColor` identity key), instead of synthetic `car:{idx}` rows with blank names;
+   - this restores League Class cohort matching when resolver paths depend on name fallback (e.g., suffix/manual flows where `UserID` may be absent) while preserving native class fallback when League Class is disabled/unresolved;
+   - PitExit cohort path remains delegated via `BuildRaceContextLeagueClassMatchDelegate()` into `Opponents.Update(...)` unchanged; no pit-exit timing/gap math changes.
+ 
+ - 2026-05-05 StrategyDash start-fuel advice decoupling follow-up landed (PR #660):
+   - `StrategyDash.StartFuelAdviceText/StartFuelStatus` now come from a dedicated start-fuel comparison (live fuel first, setup fallback second, unknown otherwise) against `StrategyDash.StartFuelRequiredLitres` with `1.0 L` tolerance;
+   - start-fuel text/status no longer map from `LalaLaunch.PreRace.StatusText/StatusColour`;
+   - preserved invariants: `PreRace.StatusText` and `StrategyDash.NextRefuelAdviceText` unchanged; no changes to Fuel DATA/MODE/SOURCE, `PitFuelControlEngine`, `Fuel.Delta.*`, `Fuel.Pit.*`, or `Fuel.RequiredBurnToEnd*`.
+ 
+ - 2026-05-05 Build-fix follow-up landed:
+   - fixed nullable pit-loss read in `FuelCalcs.SavePlannerDataToProfile()` (`PitLaneLossSeconds ?? 0.0`) to resolve CS0266;
+   - fixed race-context `TryGetCarDriverInfo(...)` call-site argument types in `LalaLaunch.IsRaceContextClassMatchForCarIdx(...)` (arg 11 stays `out int teamId`) to resolve CS1503;
+   - no intended runtime behavior change (compile restoration only).
+ 
+ - 2026-05-04 StrategyDash IsOnTrackCar phase-gate follow-up landed:
+   - `StrategyDash.Phase` now hard-gates `2 = GRID FORMATION` on `DataCorePlugin.GameRawData.Telemetry.IsOnTrackCar==true` in addition to existing grid/formation session-state authority;
+   - `3 = RACE` authority remains unchanged;
+   - when not race-running and not on-track/in-car, phase now remains `1 = PLANNING` (grid/formation helper flags alone no longer promote phase 2).
+diff --git a/Docs/Strategy_System.md b/Docs/Strategy_System.md
+index 78bc8c8c8c698c47a9305a45f1c07739873a10eb..9f889e9a35e8c3900dc23edb96df57c31ea688c4 100644
+--- a/Docs/Strategy_System.md
++++ b/Docs/Strategy_System.md
+@@ -98,50 +98,51 @@ Use presets for repeatable race assumptions such as:
+ ## 7. Track-scoped planning values
+ 
+ Some planning values belong to the current track/layout record rather than the whole car profile.
+ 
+ That helps prevent carrying the wrong assumptions between venues. Examples include:
+ 
+ - wet multiplier,
+ - pace delta to leader,
+ - fuel contingency settings.
+ 
+ ## 8. PreRace
+ 
+ PreRace belongs under the Strategy story because it helps the driver understand the planned situation before the start.
+ 
+ Its role is intentionally limited:
+ 
+ - it is **display-oriented**,
+ - it is for **on-grid/pre-start guidance**,
+ - it does **not** replace Strategy calculations,
+ - it does **not** change the live fuel model.
+ 
+ PreRace status contract (dash-facing):
+ - `StatusText` now reports explicit outcomes (`NO STOP OKAY`, `SINGLE STOP OKAY`, `MAX FUEL REQUIRED`, `STRATEGY MISMATCH`, etc.).
+ - `StatusColour` publishes `green` / `orange` / `red` so dashboards can style the state without re-implementing logic.
+ - In `Auto`, PreRace first classifies the required strategy from stints (`<=1.0 no-stop`, `<=2.0 one-stop`, `>2.0 multi-stop`) and then evaluates status as that required strategy; Auto does not inherit manual mismatch warnings.
++- In `Auto`, fuel-per-lap selection is live-stable first; when stable live fuel is unavailable it now falls back to selected planner fuel (`FuelCalculator.FuelPerLap`) before profile/generic fallback.
+ - In non-Auto modes, planner/live combo or race-definition mismatches are shown as an **orange caution** (`STRATEGY MISMATCH`) only when planner/live inputs are comparable; transient unknown values do not trigger mismatch.
+ - `FuelDelta` is now live for grid workflow:
+   - required one-stop path uses `(current fuel + requested add) - total fuel needed`,
+   - no-stop/multi-stop paths use `current fuel - total fuel needed`.
+ - One-stop feasibility now uses pit-stop refill capacity (`fuel still needed > effective stop-fill capacity` => red `ONE STOP NOT POSSIBLE`) before normal underfuel/overfuel checks.
+ 
+ ## 9. What users should trust
+ 
+ Once the system has enough clean data, users should usually trust:
+ 
+ - the Strategy outputs,
+ - the stable fuel basis,
+ - the saved track data they have validated and locked,
+ - the profile data that has been learned and reviewed.
+ 
+ If Strategy looks repeatedly wrong, the usual causes are:
+ 
+ - poor live confidence,
+ - stale or bad saved track data,
+ - a profile value locked too early,
+ - a mismatch between live observation mode and stable planning intent.
+ 
+ ## 10. Practical workflow
+ 
+ ### Before the race
+diff --git a/Docs/Subsystems/Dash_Integration.md b/Docs/Subsystems/Dash_Integration.md
+index c6219f4b86013dd69f8e81721015691f1d2de568..2ac65b022e6e9d0bb793b0bdf407e3a5b794776f 100644
+--- a/Docs/Subsystems/Dash_Integration.md
++++ b/Docs/Subsystems/Dash_Integration.md
+@@ -9,50 +9,51 @@ Define how Lala Race Assist Plugin exports should be consumed by dashboards.
+ 
+ This document is the canonical dash-facing contract layer. It does **not** redefine subsystem behavior; it explains:
+ - which plugin outputs are meant for dash consumption,
+ - how dashboards should gate and render them,
+ - where the plugin ends and dashboard presentation begins.
+ 
+ ## Core principles
+ - **The plugin owns logic; dashboards own presentation.**
+ - **Prefer stable exports** when both raw/live and stable variants exist.
+ - **Use explicit visibility gates** instead of guessing from text/value presence.
+ - **Do not renormalize plugin units** unless the dash needs purely visual scaling.
+ - **Clear state aggressively on session transitions** so stale visuals do not linger.
+ 
+ ## High-level dash ownership map
+ ### Strategy / fuel / pace
+ - Use stable strategy/fuel exports for labels and decision widgets.
+ - Treat `LalaLaunch.PreRace.*` as a separate on-grid/pre-race info layer, not a replacement for live `Fuel.*` or Strategy planner ownership.
+ - Consume `LalaLaunch.PreRace.StatusText` together with `LalaLaunch.PreRace.StatusColour` (`green`/`orange`/`red`) for simple dash styling; do not recreate planner/live mismatch or multi-stop decision logic in dash scripts.
+ - `LalaLaunch.PreRace.FuelDelta` is a live on-grid seam and should be expected to move immediately with fuel changes:
+   - PreRace current-fuel basis uses live current fuel when valid/positive; setup fallback (`Fuel.Setup.FuelLevel`) is used only during pre-race/grid/formation phases, and active race-running stays live-fuel authoritative even when live fuel is `0`,
+   - required one-stop path uses `(effective current fuel + pit fuel request) - total fuel needed`,
+   - required no-stop/multi-stop paths use `effective current fuel - total fuel needed`.
+ - `LalaLaunch.PreRace.FuelSource` / `LapTimeSource` contract:
+   - `FuelSource` accepted values are `live`, `profile`, `planner-profile`, `planner-manual`, `fallback` (`planner`/`simhub` are not emitted),
+   - Auto uses runtime ownership labels only (`live`/`profile`/`fallback`) and does not publish planner-classified labels,
++  - Auto fuel-per-lap fallback order is live-stable first, then selected planner `FuelCalculator.FuelPerLap` (if valid), then profile/generic fallback,
+   - when Auto consumes `LiveFuelPerLap_Stable`, `FuelSource` mirrors the selected stable-source label only (`Live => live`, `Profile => profile`, otherwise `fallback`) instead of inferring from profile availability,
+   - manual PreRace selections (`No Stop`/`Single Stop`/`Multi Stop`) classify planner ownership using existing planner state (`planner-manual` when manual override is active, `planner-profile` when planner/profile-loaded value is active),
+   - manual PreRace selections may still emit `live` when planner fuel value is active from live snapshot/runtime source labeling.
+ - PreRace status is scenario-first (`required strategy` vs `selected strategy`) and fully partitioned:
+   - required `No Stop` => `NO STOP OKAY` or `ADD FUEL FOR NO STOP`; selecting stop strategies shows `NO STOP POSSIBLE`,
+   - required `One Stop` => no-stop `SINGLE STINT NOT POSSIBLE`, one-stop feasibility (pit-stop refill-capacity gate, then `ONE STOP REQUIRES MORE FUEL` / `OVERFUELLED` / `SINGLE STOP OKAY`), multi-stop `SINGLE STOP POSSIBLE`,
+   - required `Multi Stop` => no-stop `NO STOP NOT POSSIBLE`, single-stop `SINGLE STOP NOT POSSIBLE`, multi-stop `MAX FUEL IN / MULTI STOP CONFIRMED` or `MAX FUEL REQUIRED`.
+ - If a widget is meant to represent runtime truth, prefer stable `Fuel.*` / pace outputs over UI-only text from elsewhere.
+ - Race-end dash gating should consume plugin-owned finish-phase exports directly: `Race.EndPhase` / `Race.EndPhaseText` / `Race.EndPhaseConfidence` plus `Race.LastLapLikely`; dashboards must not infer leader finish from player white/checkered flags or track-disappearance heuristics.
+ - Strategy fuel guidance should consume plugin-owned tactical exports directly:
+   - `Fuel.RequiredBurnToEnd*` for burn-to-end guidance/state/source,
+   - `Fuel.Contingency.*` for active reserve display/debug,
+   - `Fuel.Delta.LitresCurrent/Plan/WillAdd` + Push/Save variants for tactical deltas.
+ - Do not rebuild burn-to-end with dash-side NCALC formula chains from raw fuel/time/pace properties; use plugin-owned `Fuel.RequiredBurnToEnd`.
+ - Tactical delta exports are contingency-aware on the required-to-finish side only; `Fuel.Pit.WillAdd` remains clamp mirror and should not be treated as reserve-augmented request.
+ - Runtime pit-space exports are live-cap authoritative when available: `Fuel.Pit.TankSpaceAvailable` reflects live remaining capacity and `Fuel.Pit.WillAdd`/`Fuel.Pit.FuelOnExit` consume that runtime cap seam (not Strategy/Profile max-fuel override when live cap exists).
+ - Setup fallback seam for pre-grid/pre-race: dashboards may consume `Fuel.Setup.FuelLevel`/`Fuel.Setup.FuelLevelValid`/`Fuel.Setup.FuelLevelSource` when live tank telemetry is zero/unavailable. This setup seam is read-only and does not replace runtime `Fuel.*` telemetry once live fuel is available.
+ 
+ ### Launch
+ - Gate live launch widgets on `LaunchModeActive` and related launch-visible state.
+ - Keep **Launch Analysis** concepts separate from live launch widgets; dashboards can show results, but trace review belongs to the plugin review surface.
+ 
+ ### Rejoin / pit / messages
+ - Rejoin widgets should respect the explicit rejoin exports rather than infer active state from message text alone.
+ - Pit-screen / pit-entry widgets should combine pit visibility toggles with pit-specific active flags.
+@@ -196,25 +197,29 @@ The subsystem docs own message-system behavior; dashboards should remain consume
+ - Avoid dash-side smoothing that masks the plugin’s own stable-vs-live contract.
+ 
+ ## Logging alignment
+ Dash developers/support work can cross-check live visuals against plugin logs for:
+ - launch state changes,
+ - pit-entry assist activation / line / end events,
+ - message engine behavior,
+ - projection source changes,
+ - rejoin state transitions.
+ 
+ ## Non-goals
+ Dashboards should **not**:
+ - recreate strategy math,
+ - own H2H selector logic,
+ - own launch or rejoin logic,
+ - bypass plugin visibility toggles,
+ - depend on undocumented internal state when a canonical export already exists.
+ 
+ ## v1 documentation note
+ The v1 GitHub docs now present dashboards as the presentation layer across all systems. This page is the canonical technical companion to the user-facing `Docs/Dashboards.md` page.
+ 
+ - Added additive `StrategyDash.*` V2 seam for pre-green dashboards (planning + grid/formation).
+ - StrategyDash phase contract includes in-car gating for grid/formation: `2 = GRID FORMATION` is emitted only when session grid/formation authority is true **and** `DataCorePlugin.GameRawData.Telemetry.IsOnTrackCar==true`; otherwise pre-race defaults to `1 = PLANNING` until race-running (`3 = RACE`) starts.
+ - `StrategyDash.*` remains publish-safe in race-running phase but is not the primary runtime contract; keep race-running widgets on existing `Fuel.*`, `Fuel.Pit.*`, `Fuel.Delta.*`, `Fuel.RequiredBurnToEnd*`, `Pit.FuelControl.*`, and boxed refuel latch seams.
+ - `StrategyDash.StartFuelAdviceText/StartFuelStatus` are owned by a dedicated start-fuel check (live fuel, then setup fallback, else unknown) against `StrategyDash.StartFuelRequiredLitres` with a `1.0 L` tolerance; they are intentionally not mapped from `LalaLaunch.PreRace.StatusText`.
++- StrategyDash pre-green helpers:
++  - `StrategyDash.BurnPlanText` is a concise no-stop/grid helper (`BURN PLAN: NORM/SAVE/PUSH`, optional `/ LIVE` or `/ MEMORY`) so dashes can show useful burn intent when next-refuel is not applicable,
++  - `StrategyDash.NextRefuelDeltaLitres` is `requested refuel - StrategyDash.NextRefuelTargetLitres`, using the exact same burn/source basis as the target (including PUSH/SAVE basis selection),
++  - `StrategyDash.NextRefuelStatus` aligns to absolute delta (`<=0.5 OK`, `<=2.0 CHECK`, else ACTION).
+diff --git a/LalaLaunch.cs b/LalaLaunch.cs
+index 63bd146322288752fdadf258c2769263bf0adab6..886e096bf1ffe577313535516e69019f9a3b05fb 100644
+--- a/LalaLaunch.cs
++++ b/LalaLaunch.cs
+@@ -894,52 +894,54 @@ namespace LaunchPlugin
+         public double Fuel_Delta_LitresWillAddPush { get; private set; }
+         public double Fuel_Delta_LitresCurrentSave { get; private set; }
+         public double Fuel_Delta_LitresPlanSave { get; private set; }
+         public double Fuel_Delta_LitresWillAddSave { get; private set; }
+         public double Fuel_Setup_FuelLevel { get; private set; }
+         public bool Fuel_Setup_FuelLevelValid { get; private set; }
+         public string Fuel_Setup_FuelLevelSource { get; private set; } = "none";
+         public int PreRace_Selected { get; private set; } = 3;
+         public string PreRace_SelectedText { get; private set; } = "Auto";
+         public double PreRace_Stints { get; private set; }
+         public double PreRace_TotalFuelNeeded { get; private set; }
+         public double PreRace_FuelDelta { get; private set; }
+         public string PreRace_FuelSource { get; private set; } = "fallback";
+         public string PreRace_LapTimeSource { get; private set; } = "fallback";
+         public string PreRace_StatusText { get; private set; } = "STRATEGY OKAY";
+         public string PreRace_StatusColour { get; private set; } = "green";
+         public int StrategyDash_Phase { get; private set; }
+         public string StrategyDash_PhaseText { get; private set; } = "HIDDEN";
+         public bool StrategyDash_IsAutoStrategy { get; private set; }
+         public int StrategyDash_RequiredStopsPreGreen { get; private set; }
+         public string StrategyDash_StrategyText { get; private set; } = "NO STOP";
+         public double StrategyDash_StartFuelRequiredLitres { get; private set; }
+         public string StrategyDash_StartFuelAdviceText { get; private set; } = "N/A";
+         public int StrategyDash_StartFuelStatus { get; private set; }
+         public double StrategyDash_NextRefuelTargetLitres { get; private set; }
++        public double StrategyDash_NextRefuelDeltaLitres { get; private set; }
+         public string StrategyDash_NextRefuelAdviceText { get; private set; } = "N/A";
+         public int StrategyDash_NextRefuelStatus { get; private set; }
++        public string StrategyDash_BurnPlanText { get; private set; } = "BURN PLAN: NORM";
+         public string StrategyDash_ContingencyText { get; private set; } = "CONT 0";
+         private bool _isRefuelSelected = true;
+         private bool _isTireChangeSelected = true;
+         public double LiveCarMaxFuel { get; private set; }
+         public double EffectiveLiveMaxTank { get; private set; }
+         private double _lastValidLiveMaxFuel = 0.0;
+         private DateTime _lastValidLiveMaxFuelUtc = DateTime.MinValue;
+         private const double LiveMaxFuelFallbackWindowSeconds = 30.0;
+         private DateTime _lastLiveMaxHealthLogUtc = DateTime.MinValue;
+         private double _lastLiveMaxHealthLoggedComputed = double.NaN;
+         private double _lastLiveMaxHealthLoggedEffective = double.NaN;
+         private string _lastLiveMaxHealthLoggedSource = string.Empty;
+         private string _lastLiveDetectLogSignature = string.Empty;
+         private DateTime _lastFuelRuntimeRecoveryUtc = DateTime.MinValue;
+         private DateTime _lastFuelRuntimeHealthCheckUtc = DateTime.MinValue;
+         private int _fuelRuntimeUnhealthyStreak = 0;
+         private bool _fuelRuntimeHealthCheckPending;
+         private string _fuelRuntimeHealthPendingReason = string.Empty;
+         private bool _lastFuelRuntimeEngineStarted;
+         private bool _lastFuelRuntimeIgnitionOn;
+         private bool _lastFuelRuntimeActiveDriving;
+ 
+         public double FuelSaveFuelPerLap { get; private set; }
+         public double StintBurnTarget { get; private set; }
+         public string StintBurnTargetBand { get; private set; } = "current";
+@@ -1048,50 +1050,71 @@ namespace LaunchPlugin
+ 
+             if (FuelCalculator?.IsFuelPerLapManual == true)
+             {
+                 return "planner-manual";
+             }
+ 
+             string sourceInfo = (FuelCalculator?.FuelPerLapSourceInfo ?? string.Empty).Trim();
+             if (sourceInfo.StartsWith("Live", StringComparison.OrdinalIgnoreCase))
+             {
+                 return "live";
+             }
+ 
+             if (sourceInfo.StartsWith("Profile", StringComparison.OrdinalIgnoreCase))
+             {
+                 return "planner-profile";
+             }
+ 
+             if (sourceInfo.StartsWith("Manual", StringComparison.OrdinalIgnoreCase))
+             {
+                 return "planner-manual";
+             }
+ 
+             return "planner-profile";
+         }
+ 
++        private string ClassifyAutoPreRaceFuelSourceFromPlanner(bool hasLiveFallbackFuel)
++        {
++            string sourceInfo = (FuelCalculator?.FuelPerLapSourceInfo ?? string.Empty).Trim();
++            if (sourceInfo.StartsWith("Live", StringComparison.OrdinalIgnoreCase))
++            {
++                return "live";
++            }
++
++            if (sourceInfo.StartsWith("Profile", StringComparison.OrdinalIgnoreCase))
++            {
++                return "profile";
++            }
++
++            if (sourceInfo.StartsWith("Manual", StringComparison.OrdinalIgnoreCase))
++            {
++                return "fallback";
++            }
++
++            return hasLiveFallbackFuel ? "fallback" : "fallback";
++        }
++
+         private double GetPreRaceFuelPerLap(double fallbackFuelPerLap, out string source)
+         {
+             double plannerFuel = FuelCalculator?.FuelPerLap ?? 0.0;
+             if (plannerFuel > 0.0)
+             {
+                 source = ClassifyManualPreRaceFuelSource(hasPlannerFuel: true, hasLiveFallbackFuel: fallbackFuelPerLap > 0.0);
+                 return plannerFuel;
+             }
+ 
+             if (fallbackFuelPerLap > 0.0)
+             {
+                 source = ClassifyManualPreRaceFuelSource(hasPlannerFuel: false, hasLiveFallbackFuel: true);
+                 return fallbackFuelPerLap;
+             }
+ 
+             source = ClassifyManualPreRaceFuelSource(hasPlannerFuel: false, hasLiveFallbackFuel: false);
+             return PreRaceFallbackFuelPerLapLiters;
+         }
+ 
+         private const double PreRaceFallbackFuelPerLapLiters = 3.0;
+         private const double PreRaceFallbackLapSeconds = 120.0;
+ 
+         private double GetPreRaceLapSeconds(GameData data, out string source)
+         {
+             double plannerLapSeconds = FuelCalculator?.ParseLapTime(FuelCalculator?.EstimatedLapTime) ?? 0.0;
+@@ -1293,113 +1316,128 @@ namespace LaunchPlugin
+                 {
+                     return new PreRaceStatusDecision { Text = "MAX FUEL IN / MULTI STOP CONFIRMED", Colour = "green" };
+                 }
+ 
+                 return new PreRaceStatusDecision { Text = "MAX FUEL REQUIRED", Colour = "orange" };
+             }
+ 
+             if (effectiveSelectedStrategy == 1)
+             {
+                 return new PreRaceStatusDecision { Text = "SINGLE STOP NOT POSSIBLE", Colour = "red" };
+             }
+ 
+             return new PreRaceStatusDecision { Text = "NO STOP NOT POSSIBLE", Colour = "red" };
+         }
+ 
+         private void UpdateStrategyDashAdvice(
+             int selectedStrategy,
+             RequiredPreRaceStrategy requiredStrategy,
+             double currentFuel,
+             double plannedSingleStopRefuel,
+             double effectiveMaxTank,
+             double maxTankCapacity,
+             double contingencyLitres,
+             string contingencyText,
+             double oneStopNextRefuelTargetLitres,
++            string preRaceFuelSource,
+             bool isRaceRunning,
+             bool isGridFormation,
+             bool isOnTrackCar)
+         {
+             bool isGridFormationPhase = isOnTrackCar && isGridFormation;
+             StrategyDash_Phase = isRaceRunning ? 3 : (isGridFormationPhase ? 2 : 1);
+             StrategyDash_PhaseText = StrategyDash_Phase == 3 ? "RACE" : (StrategyDash_Phase == 2 ? "GRID FORMATION" : "PLANNING");
+ 
+             StrategyDash_IsAutoStrategy = selectedStrategy == 3;
+             StrategyDash_RequiredStopsPreGreen = requiredStrategy == RequiredPreRaceStrategy.NoStop ? 0 : (requiredStrategy == RequiredPreRaceStrategy.OneStop ? 1 : 2);
+             StrategyDash_StrategyText = requiredStrategy == RequiredPreRaceStrategy.NoStop ? "NO STOP" : (requiredStrategy == RequiredPreRaceStrategy.OneStop ? "ONE STOP" : "MULTI STOP");
+ 
+             double cap = effectiveMaxTank > 0.0 ? effectiveMaxTank : maxTankCapacity;
+             StrategyDash_StartFuelRequiredLitres = cap > 0.0 ? Math.Min(PreRace_TotalFuelNeeded, cap) : PreRace_TotalFuelNeeded;
+ 
+             const double startFuelOkToleranceLitres = 1.0;
+             bool hasLiveStartFuel = currentFuel > 0.0 && !double.IsNaN(currentFuel) && !double.IsInfinity(currentFuel);
+             bool hasSetupStartFuel = Fuel_Setup_FuelLevelValid && Fuel_Setup_FuelLevel > 0.0 && !double.IsNaN(Fuel_Setup_FuelLevel) && !double.IsInfinity(Fuel_Setup_FuelLevel);
+             bool hasKnownStartFuel = hasLiveStartFuel || hasSetupStartFuel;
+             double effectiveStartFuelLitres = hasLiveStartFuel ? currentFuel : (hasSetupStartFuel ? Fuel_Setup_FuelLevel : 0.0);
+             bool startFuelShort = hasKnownStartFuel && (effectiveStartFuelLitres < (StrategyDash_StartFuelRequiredLitres - startFuelOkToleranceLitres));
+             bool startFuelAtMax = cap > 0.0 && hasKnownStartFuel && Math.Abs(cap - effectiveStartFuelLitres) <= startFuelOkToleranceLitres;
+ 
+             if (!hasKnownStartFuel)
+             {
+                 StrategyDash_StartFuelAdviceText = "CHECK START FUEL";
+                 StrategyDash_StartFuelStatus = 1;
+             }
+             else if (startFuelShort)
+             {
+                 StrategyDash_StartFuelAdviceText = "ADD START FUEL";
+                 StrategyDash_StartFuelStatus = 2;
+             }
+             else
+             {
+                 StrategyDash_StartFuelAdviceText = startFuelAtMax ? "START FUEL MAX" : "START FUEL OK";
+                 StrategyDash_StartFuelStatus = 0;
+             }
+ 
+             double nextRefuelTarget = 0.0;
+             if (requiredStrategy == RequiredPreRaceStrategy.OneStop)
+             {
+                 nextRefuelTarget = Math.Max(0.0, oneStopNextRefuelTargetLitres);
+             }
+             else if (requiredStrategy == RequiredPreRaceStrategy.MultiStop)
+             {
+                 nextRefuelTarget = Math.Max(0.0, cap);
+             }
+             StrategyDash_NextRefuelTargetLitres = nextRefuelTarget;
++            StrategyDash_NextRefuelDeltaLitres = 0.0;
++            string burnPlan = "NORM";
++            string sourceTag = string.Empty;
++            var pitSource = _pitFuelControlEngine?.Source ?? PitFuelControlSource.Stby;
++            if (pitSource == PitFuelControlSource.Push) burnPlan = "PUSH";
++            else if (pitSource == PitFuelControlSource.Save) burnPlan = "SAVE";
++            if (string.Equals(preRaceFuelSource, "live", StringComparison.OrdinalIgnoreCase))
++                sourceTag = "LIVE";
++            else if (string.Equals(preRaceFuelSource, "profile", StringComparison.OrdinalIgnoreCase) || string.Equals(preRaceFuelSource, "planner-profile", StringComparison.OrdinalIgnoreCase))
++                sourceTag = "MEMORY";
++            StrategyDash_BurnPlanText = string.IsNullOrEmpty(sourceTag) ? $"BURN PLAN: {burnPlan}" : $"BURN PLAN: {burnPlan} / {sourceTag}";
+             if (requiredStrategy == RequiredPreRaceStrategy.NoStop)
+             {
+                 StrategyDash_NextRefuelAdviceText = "N/A";
+                 StrategyDash_NextRefuelStatus = 0;
+             }
+             else if (requiredStrategy == RequiredPreRaceStrategy.MultiStop)
+             {
+                 StrategyDash_NextRefuelAdviceText = "REFUEL MAX";
+-                StrategyDash_NextRefuelStatus = cap > 0.0 && plannedSingleStopRefuel >= (cap - 0.5) ? 0 : 1;
++                StrategyDash_NextRefuelDeltaLitres = plannedSingleStopRefuel - StrategyDash_NextRefuelTargetLitres;
++                double refuelGap = Math.Abs(StrategyDash_NextRefuelDeltaLitres);
++                StrategyDash_NextRefuelStatus = refuelGap <= 0.5 ? 0 : (refuelGap <= 2.0 ? 1 : 2);
+             }
+             else
+             {
+                 StrategyDash_NextRefuelAdviceText = string.Format(CultureInfo.InvariantCulture, "SET {0:F1} L", StrategyDash_NextRefuelTargetLitres);
+-                double refuelGap = Math.Abs(plannedSingleStopRefuel - StrategyDash_NextRefuelTargetLitres);
++                StrategyDash_NextRefuelDeltaLitres = plannedSingleStopRefuel - StrategyDash_NextRefuelTargetLitres;
++                double refuelGap = Math.Abs(StrategyDash_NextRefuelDeltaLitres);
+                 StrategyDash_NextRefuelStatus = refuelGap <= 0.5 ? 0 : (refuelGap <= 2.0 ? 1 : 2);
+             }
+ 
+             StrategyDash_ContingencyText = string.IsNullOrWhiteSpace(contingencyText)
+                 ? string.Format(CultureInfo.InvariantCulture, "CONT {0:F1} L", Math.Max(0.0, contingencyLitres))
+                 : contingencyText;
+         }
+ 
+         private void UpdatePreRaceOutputs(
+             GameData data,
+             double liveCurrentFuel,
+             double pitWindowRequestedAdd,
+             double raceSessionDurationSeconds,
+             long raceSessionLaps,
+             double stableLapsRemaining,
+             double fallbackFuelPerLap,
+             double effectiveMaxTank,
+             double maxTankCapacity,
+             bool allowSetupFallback,
+             bool isRaceRunning,
+             bool isGridOrFormation,
+             bool isOnTrackCar)
+         {
+             int selectedStrategy = NormalizeStrategyMode(FuelCalculator?.SelectedPreRaceMode ?? 3);
+             PreRace_Selected = selectedStrategy;
+@@ -1417,67 +1455,76 @@ namespace LaunchPlugin
+             plannerMatchSnapshot.LiveBasisIsTimeLimited = liveMatchSnapshot.LiveBasisIsTimeLimited;
+             plannerMatchSnapshot.HasLiveRaceLength = liveMatchSnapshot.HasLiveRaceLength;
+             plannerMatchSnapshot.LiveRaceLengthValue = liveMatchSnapshot.LiveRaceLengthValue;
+             var plannerMatchResult = PlannerLiveSessionMatchHelper.Evaluate(plannerMatchSnapshot);
+ 
+             string preRaceFuelSource = "fallback";
+             double preRaceFuelPerLap;
+             if (selectedStrategy == 3 && LiveFuelPerLap_Stable > 0.0)
+             {
+                 preRaceFuelPerLap = LiveFuelPerLap_Stable;
+                 if (string.Equals(LiveFuelPerLap_StableSource, "Live", StringComparison.OrdinalIgnoreCase))
+                 {
+                     preRaceFuelSource = "live";
+                 }
+                 else if (string.Equals(LiveFuelPerLap_StableSource, "Profile", StringComparison.OrdinalIgnoreCase))
+                 {
+                     preRaceFuelSource = "profile";
+                 }
+                 else
+                 {
+                     preRaceFuelSource = "fallback";
+                 }
+             }
+             else if (selectedStrategy == 3)
+             {
++                double plannerFuel = FuelCalculator?.FuelPerLap ?? 0.0;
++                if (plannerFuel > 0.0)
++                {
++                    preRaceFuelPerLap = plannerFuel;
++                    preRaceFuelSource = ClassifyAutoPreRaceFuelSourceFromPlanner(hasLiveFallbackFuel: fallbackFuelPerLap > 0.0);
++                }
++                else
++                {
+                 var (profileDry, profileWet) = GetProfileFuelBaselines();
+                 double profileFuel = _isWetMode ? profileWet : profileDry;
+                 if (profileFuel > 0.0)
+                 {
+                     preRaceFuelPerLap = profileFuel;
+                     preRaceFuelSource = "profile";
+                 }
+                 else if (fallbackFuelPerLap > 0.0)
+                 {
+                     preRaceFuelPerLap = fallbackFuelPerLap;
+                     preRaceFuelSource = "live";
+                 }
+                 else
+                 {
+                     preRaceFuelPerLap = PreRaceFallbackFuelPerLapLiters;
+                     preRaceFuelSource = "fallback";
+                 }
++                }
+             }
+             else
+             {
+                 preRaceFuelPerLap = GetPreRaceFuelPerLap(fallbackFuelPerLap, out preRaceFuelSource);
+             }
+ 
+             string preRaceLapSource = "fallback";
+             double preRaceProjectionLapSeconds;
+             if (selectedStrategy == 3 && ProjectionLapTime_Stable > 0.0)
+             {
+                 preRaceProjectionLapSeconds = ProjectionLapTime_Stable;
+                 preRaceLapSource = ProjectionLapTime_StableSource.StartsWith("pace.", StringComparison.OrdinalIgnoreCase)
+                     ? "live"
+                     : (ProjectionLapTime_StableSource.StartsWith("profile.", StringComparison.OrdinalIgnoreCase) ? "profile" : "fallback");
+             }
+             else if (selectedStrategy == 3)
+             {
+                 double profileAvgSeconds = GetProfileAvgLapSeconds();
+                 if (profileAvgSeconds > 0.0)
+                 {
+                     preRaceProjectionLapSeconds = profileAvgSeconds;
+                     preRaceLapSource = "profile";
+                 }
+                 else
+                 {
+@@ -1575,51 +1622,51 @@ namespace LaunchPlugin
+                 if (source == PitFuelControlSource.Push && preRacePushBurn > 0.0)
+                 {
+                     selectedBurn = preRacePushBurn;
+                 }
+                 else if (source == PitFuelControlSource.Save && preRaceSaveBurn > 0.0)
+                 {
+                     selectedBurn = preRaceSaveBurn;
+                 }
+ 
+                 if (selectedBurn > 0.0)
+                 {
+                     double selectedContingency = Math.Max(0.0, ResolveActiveContingency(selectedBurn).Litres);
+                     double selectedTotalNeeded = (forecastRaceLaps * selectedBurn) + selectedContingency;
+                     oneStopTarget = Math.Max(0.0, selectedTotalNeeded - currentFuel);
+                 }
+             }
+ 
+             string contingencyText;
+             if (preRaceContingency.IsConfiguredInLaps && preRaceContingency.Laps > 0.0)
+                 contingencyText = string.Format(CultureInfo.InvariantCulture, "CONT {0:F1} LAPS", preRaceContingency.Laps);
+             else if (contingencyLitres > 0.0)
+                 contingencyText = string.Format(CultureInfo.InvariantCulture, "CONT {0:F1} L", contingencyLitres);
+             else
+                 contingencyText = "CONT 0";
+ 
+-            UpdateStrategyDashAdvice(selectedStrategy, requiredStrategy, currentFuel, plannedSingleStopRefuel, effectiveMaxTank, maxTankCapacity, contingencyLitres, contingencyText, oneStopTarget, isRaceRunning, isGridOrFormation, isOnTrackCar);
++            UpdateStrategyDashAdvice(selectedStrategy, requiredStrategy, currentFuel, plannedSingleStopRefuel, effectiveMaxTank, maxTankCapacity, contingencyLitres, contingencyText, oneStopTarget, preRaceFuelSource, isRaceRunning, isGridOrFormation, isOnTrackCar);
+         }
+ 
+         // Stable model inputs
+         private double _stableFuelPerLap = 0.0;
+         private string _stableFuelPerLapSource = "None";
+         private double _stableFuelPerLapConfidence = 0.0;
+         private double _stableProjectionLapTime = 0.0;
+         private string _stableProjectionLapTimeSource = "fallback.none";
+ 
+         // --- Stint / Pace tracking ---
+         public double Pace_StintAvgLapTimeSec { get; private set; }
+         public double Pace_Last5LapAvgSec { get; private set; }
+         public int PaceConfidence { get; private set; }
+         public double PacePredictor { get; private set; }
+         public string PacePredictorSource { get; private set; } = "SIMHUB";
+         private bool _lastOnPitRoadForOpponents = false;
+ 
+         public double ProjectionLapTime_Stable { get; private set; }
+         public string ProjectionLapTime_StableSource { get; private set; } = "fallback.none";
+         private readonly DecelCapture _decelCapture = new DecelCapture();
+ 
+         // Combined view of fuel & pace reliability (for dash use)
+         public int OverallConfidence
+         {
+             get
+@@ -6355,52 +6402,54 @@ namespace LaunchPlugin
+                 return _isWetMode ? (ts?.WetConditionsLocked ?? false) : (ts?.DryConditionsLocked ?? false);
+             });
+             AttachCore("Fuel.Live.TotalStopLoss", () => CalculateTotalStopLossSeconds());
+             AttachCore("Fuel.Live.DriveTimeAfterZero", () => LiveProjectedDriveTimeAfterZero);
+             AttachCore("Fuel.After0.PlannerSeconds", () => AfterZeroPlannerSeconds);
+             AttachCore("Fuel.After0.LiveEstimateSeconds", () => AfterZeroLiveEstimateSeconds);
+             AttachCore("Fuel.After0.Source", () => AfterZeroSource);
+             AttachCore("LalaLaunch.PreRace.Selected", () => PreRace_Selected);
+             AttachCore("LalaLaunch.PreRace.SelectedText", () => PreRace_SelectedText);
+             AttachCore("LalaLaunch.PreRace.Stints", () => PreRace_Stints);
+             AttachCore("LalaLaunch.PreRace.TotalFuelNeeded", () => PreRace_TotalFuelNeeded);
+             AttachCore("LalaLaunch.PreRace.FuelDelta", () => PreRace_FuelDelta);
+             AttachCore("LalaLaunch.PreRace.FuelSource", () => PreRace_FuelSource);
+             AttachCore("LalaLaunch.PreRace.LapTimeSource", () => PreRace_LapTimeSource);
+             AttachCore("LalaLaunch.PreRace.StatusText", () => PreRace_StatusText);
+             AttachCore("LalaLaunch.PreRace.StatusColour", () => PreRace_StatusColour);
+             AttachCore("StrategyDash.Phase", () => StrategyDash_Phase);
+             AttachCore("StrategyDash.PhaseText", () => StrategyDash_PhaseText);
+             AttachCore("StrategyDash.IsAutoStrategy", () => StrategyDash_IsAutoStrategy);
+             AttachCore("StrategyDash.RequiredStopsPreGreen", () => StrategyDash_RequiredStopsPreGreen);
+             AttachCore("StrategyDash.StrategyText", () => StrategyDash_StrategyText);
+             AttachCore("StrategyDash.StartFuelRequiredLitres", () => Math.Round(StrategyDash_StartFuelRequiredLitres, 1));
+             AttachCore("StrategyDash.StartFuelAdviceText", () => StrategyDash_StartFuelAdviceText);
+             AttachCore("StrategyDash.StartFuelStatus", () => StrategyDash_StartFuelStatus);
+             AttachCore("StrategyDash.NextRefuelTargetLitres", () => Math.Round(StrategyDash_NextRefuelTargetLitres, 1));
++            AttachCore("StrategyDash.NextRefuelDeltaLitres", () => Math.Round(StrategyDash_NextRefuelDeltaLitres, 1));
+             AttachCore("StrategyDash.NextRefuelAdviceText", () => StrategyDash_NextRefuelAdviceText);
+             AttachCore("StrategyDash.NextRefuelStatus", () => StrategyDash_NextRefuelStatus);
++            AttachCore("StrategyDash.BurnPlanText", () => StrategyDash_BurnPlanText);
+             AttachCore("StrategyDash.ContingencyText", () => StrategyDash_ContingencyText);
+             AttachCore("Fuel.ProjectionLapTime_Stable", () => ProjectionLapTime_Stable);
+             AttachCore("Fuel.ProjectionLapTime_StableSource", () => ProjectionLapTime_StableSource);
+             AttachCore("Fuel.Live.ProjectedDriveSecondsRemaining", () => LiveProjectedDriveSecondsRemaining);
+             AttachCore("Fuel.Live.IsFuelReady", () => IsFuelReady);
+ 
+             // --- Pace metrics (CORE) ---
+             AttachCore("Pace.StintAvgLapTimeSec", () => Pace_StintAvgLapTimeSec);
+             AttachCore("Pace.Last5LapAvgSec", () => Pace_Last5LapAvgSec);
+             AttachCore("Pace.LeaderAvgLapTimeSec", () => LiveLeaderAvgPaceSeconds);
+             AttachCore("Pace.LeaderDeltaToPlayerSec", () => Pace_LeaderDeltaToPlayerSec);
+             AttachCore("Pace.PaceConfidence", () => PaceConfidence);
+             AttachCore("Pace.OverallConfidence", () => OverallConfidence);
+             AttachCore("Pace.PacePredictor", () => PacePredictor);
+             AttachCore("Pace.PacePredictorSource", () => PacePredictorSource);
+             AttachCore("Reset.LastSession", () => _lastSessionToken);
+             AttachCore("Reset.ThisSession", () => _currentSessionToken);
+             AttachCore("Reset.ThisSessionType", () => _finishTimingSessionType);
+             AttachCore("car.player.LapInvalid", () => _playerLapInvalid);
+ 
+             // --- Pit time-loss (finals kept CORE; raw & debug VERBOSE) ---
+             AttachCore("Pit.LastDirectTravelTime", () => _pit.LastDirectTravelTime);
+             AttachCore("Pit.LastTotalPitCycleTimeLoss", () => _pit.LastTotalPitCycleTimeLoss);
+             AttachCore("Pit.LastPaceDeltaNetLoss", () => _pit.LastPaceDeltaNetLoss);
+             AttachVerbose("Pit.Debug.TimeOnPitRoad", () => _pit.TimeOnPitRoad.TotalSeconds);
+@@ -16445,52 +16494,54 @@ namespace LaunchPlugin
+             RequiredBurnToEnd_State = 0;
+             RequiredBurnToEnd_StateText = "CRITICAL";
+             RequiredBurnToEnd_Source = "invalid";
+             Contingency_Litres = 0;
+             Contingency_Laps = 0;
+             Contingency_Source = "none";
+ 
+             PreRace_Selected = 3;
+             PreRace_SelectedText = "Auto";
+             PreRace_Stints = 0;
+             PreRace_TotalFuelNeeded = 0;
+             PreRace_FuelDelta = 0;
+             PreRace_FuelSource = "fallback";
+             PreRace_LapTimeSource = "fallback";
+             PreRace_StatusText = "STRATEGY OKAY";
+             PreRace_StatusColour = "green";
+             StrategyDash_Phase = 0;
+             StrategyDash_PhaseText = "HIDDEN";
+             StrategyDash_IsAutoStrategy = false;
+             StrategyDash_RequiredStopsPreGreen = 0;
+             StrategyDash_StrategyText = "NO STOP";
+             StrategyDash_StartFuelRequiredLitres = 0;
+             StrategyDash_StartFuelAdviceText = "N/A";
+             StrategyDash_StartFuelStatus = 0;
+             StrategyDash_NextRefuelTargetLitres = 0;
++            StrategyDash_NextRefuelDeltaLitres = 0;
+             StrategyDash_NextRefuelAdviceText = "N/A";
+             StrategyDash_NextRefuelStatus = 0;
++            StrategyDash_BurnPlanText = "BURN PLAN: NORM";
+             StrategyDash_ContingencyText = "CONT 0";
+ 
+             // --- Additional dashboard-facing fuel/projection outputs that must not latch across resets ---
+             // (These were listed in SessionResetIssues.docx)
+             DeltaLaps = 0;
+             DeltaLapsIfPush = 0;
+             FuelSaveFuelPerLap = 0;
+             PushFuelPerLap = 0;
+ 
+             LapsRemainingInTank = 0;
+ 
+             LiveProjectedDriveTimeAfterZero = 0;
+             LiveProjectedDriveSecondsRemaining = 0;
+ 
+             LiveLapsRemainingInRace = 0;
+             LiveLapsRemainingInRace_Stable = 0;
+ 
+             // Smoothed versions are cleared here too for determinism
+             LiveLapsRemainingInRace_S = 0;
+             Pit_DeltaAfterStop_S = 0;
+             Pit_PushDeltaAfterStop_S = 0;
+             Pit_TotalNeededToEnd_S = 0;
+         }
+ 
+         private static double ApplyEma(double alpha, double raw, double previous)
+ 
+EOF
+)

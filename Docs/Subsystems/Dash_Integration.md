@@ -31,6 +31,7 @@ This document is the canonical dash-facing contract layer. It does **not** redef
 - `LalaLaunch.PreRace.FuelSource` / `LapTimeSource` contract:
   - `FuelSource` accepted values are `live`, `profile`, `planner-profile`, `planner-manual`, `fallback` (`planner`/`simhub` are not emitted),
   - Auto uses runtime ownership labels only (`live`/`profile`/`fallback`) and does not publish planner-classified labels,
+  - Auto fuel-per-lap fallback order is live-stable first, then selected planner `FuelCalculator.FuelPerLap` (if valid), then profile/generic fallback,
   - when Auto consumes `LiveFuelPerLap_Stable`, `FuelSource` mirrors the selected stable-source label only (`Live => live`, `Profile => profile`, otherwise `fallback`) instead of inferring from profile availability,
   - manual PreRace selections (`No Stop`/`Single Stop`/`Multi Stop`) classify planner ownership using existing planner state (`planner-manual` when manual override is active, `planner-profile` when planner/profile-loaded value is active),
   - manual PreRace selections may still emit `live` when planner fuel value is active from live snapshot/runtime source labeling.
@@ -218,3 +219,7 @@ The v1 GitHub docs now present dashboards as the presentation layer across all s
 - StrategyDash phase contract includes in-car gating for grid/formation: `2 = GRID FORMATION` is emitted only when session grid/formation authority is true **and** `DataCorePlugin.GameRawData.Telemetry.IsOnTrackCar==true`; otherwise pre-race defaults to `1 = PLANNING` until race-running (`3 = RACE`) starts.
 - `StrategyDash.*` remains publish-safe in race-running phase but is not the primary runtime contract; keep race-running widgets on existing `Fuel.*`, `Fuel.Pit.*`, `Fuel.Delta.*`, `Fuel.RequiredBurnToEnd*`, `Pit.FuelControl.*`, and boxed refuel latch seams.
 - `StrategyDash.StartFuelAdviceText/StartFuelStatus` are owned by a dedicated start-fuel check (live fuel, then setup fallback, else unknown) against `StrategyDash.StartFuelRequiredLitres` with a `1.0 L` tolerance; they are intentionally not mapped from `LalaLaunch.PreRace.StatusText`.
+- StrategyDash pre-green helpers:
+  - `StrategyDash.BurnPlanText` is a concise no-stop/grid helper (`BURN PLAN: NORM/SAVE/PUSH`, optional `/ LIVE` or `/ MEMORY`) so dashes can show useful burn intent when next-refuel is not applicable,
+  - `StrategyDash.NextRefuelDeltaLitres` is `requested refuel - StrategyDash.NextRefuelTargetLitres`, using the exact same burn/source basis as the target (including PUSH/SAVE basis selection),
+  - `StrategyDash.NextRefuelStatus` aligns to absolute delta (`<=0.5 OK`, `<=2.0 CHECK`, else ACTION).
