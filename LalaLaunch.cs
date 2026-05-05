@@ -404,6 +404,7 @@ namespace LaunchPlugin
         {
             var key = GetCanonicalTrackKeyForMarkers();
             _pit?.SetTrackMarkersLock(key, locked);
+            ProfilesViewModel?.RefreshTrackMarkersSnapshotForSelectedTrack();
         }
 
         public void ToggleTrackLearningPitLossLock()
@@ -428,6 +429,7 @@ namespace LaunchPlugin
                 // Keep the store-provided default lock baseline for missing keyed rows.
             }
             _pit.SetTrackMarkersLock(key, !current);
+            ProfilesViewModel?.RefreshTrackMarkersSnapshotForSelectedTrack();
         }
 
         public void ToggleTrackLearningConditionLock()
@@ -479,6 +481,7 @@ namespace LaunchPlugin
         {
             if (string.IsNullOrWhiteSpace(trackKey)) return;
             _pit?.SetTrackMarkersLock(trackKey, locked);
+            ProfilesViewModel?.RefreshTrackMarkersSnapshotForSelectedTrack();
         }
 
         public void ReloadTrackMarkersFromDisk()
