@@ -168,6 +168,11 @@ The public user-facing release history is maintained in the root `CHANGELOG.md`.
 - Fixed FuelCalcs track-save path to set `PitLaneLossSource="manual"` and `PitLaneLossLearningMode="manual"` whenever it overwrites `PitLaneLossSeconds`, preventing stale `boxed_stop` mode from incorrectly subtracting transition allowance on edited/manual pit-loss values.
 - Scope is narrow and write-path only; no pit-cycle classification, transition allowance constant, or boxed-stop service math changes were made.
 
+## 2026-05-05 — Profiles manager pit-loss manual-edit mode consistency fix
+- Classification: **both** (manual pit-loss edit correctness + normalized export consistency).
+- `ProfilesManagerViewModel.PitLaneLossSecondsText` now also stamps `PitLaneLossLearningMode="manual"` whenever manual pit-loss edits overwrite `PitLaneLossSeconds`/`PitLaneLossSource`.
+- Prevents stale `boxed_stop` learning-mode metadata from surviving Profiles-tab manual edits and causing unintended transition subtraction in normalized pit-loss outputs.
+
 ## Pre-v1 public development history
 
 ### Initial release foundations

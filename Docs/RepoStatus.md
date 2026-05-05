@@ -1,4 +1,8 @@
 ## Documentation sync status
+- 2026-05-05 Profiles manager pit-loss manual-edit consistency fix landed:
+  - Profiles-tab pit-loss text edits now stamp `PitLaneLossLearningMode="manual"` alongside `PitLaneLossSource="manual"`;
+  - prevents stale `boxed_stop` mode from persisting after manual pit-loss edits and incorrectly subtracting transition allowance in normalized pit-loss exports.
+
 - 2026-05-04 Pit-loss mode/source consistency fix landed:
   - FuelCalcs track-save overwrite now also stamps `PitLaneLossSource="manual"` and `PitLaneLossLearningMode="manual"` when writing `PitLaneLossSeconds`;
   - prevents stale `boxed_stop` mode from persisting across manual/planner pit-loss overwrites and incorrectly subtracting transition allowance in normalized pit-loss exports.

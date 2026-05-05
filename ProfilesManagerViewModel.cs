@@ -544,6 +544,7 @@ namespace LaunchPlugin
                 {
                     SelectedTrack.PitLaneLossSeconds = rounded;
                     SelectedTrack.PitLaneLossSource = "manual";
+                    SelectedTrack.PitLaneLossLearningMode = "manual";
                     SelectedTrack.PitLaneLossUpdatedUtc = DateTime.UtcNow;
                     SaveProfiles();
                 }
