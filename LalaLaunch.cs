@@ -1189,6 +1189,50 @@ namespace LaunchPlugin
             return PreRaceFallbackLapSeconds;
         }
 
+
+        private void ResolveDataGovernedBurnAndPaceBasis(GameData data, double fallbackFuelPerLap, out double fuelPerLap, out double lapSeconds, out string fuelSource, out string lapSource)
+        {
+            var dataMode = _pitFuelControlEngine?.Data ?? PitFuelControlData.Live;
+            fuelPerLap = 0.0;
+            lapSeconds = 0.0;
+            fuelSource = "fallback";
+            lapSource = "fallback";
+
+            double plannerFuel = FuelCalculator?.FuelPerLap ?? 0.0;
+            double plannerLap = FuelCalculator?.ParseLapTime(FuelCalculator?.EstimatedLapTime) ?? 0.0;
+            double profileLap = GetProfileAvgLapSeconds();
+            var (profileDry, profileWet) = GetProfileFuelBaselines();
+            double profileFuel = _isWetMode ? profileWet : profileDry;
+            double liveLap = ProjectionLapTime_Stable > 0.0 ? ProjectionLapTime_Stable : (data.NewData?.LastLapTime ?? TimeSpan.Zero).TotalSeconds;
+
+            if (dataMode == PitFuelControlData.Live)
+            {
+                if (LiveFuelPerLap_Stable > 0.0) { fuelPerLap = LiveFuelPerLap_Stable; fuelSource = "live"; }
+                else if (fallbackFuelPerLap > 0.0) { fuelPerLap = fallbackFuelPerLap; fuelSource = "fallback"; }
+                else if (plannerFuel > 0.0) { fuelPerLap = plannerFuel; fuelSource = "plan-fallback"; }
+                else if (profileFuel > 0.0) { fuelPerLap = profileFuel; fuelSource = "plan-fallback"; }
+
+                if (ProjectionLapTime_Stable > 0.0) { lapSeconds = ProjectionLapTime_Stable; lapSource = "live"; }
+                else if (liveLap > 0.0) { lapSeconds = liveLap; lapSource = "fallback"; }
+                else if (plannerLap > 0.0) { lapSeconds = plannerLap; lapSource = "plan-fallback"; }
+                else if (profileLap > 0.0) { lapSeconds = profileLap; lapSource = "plan-fallback"; }
+            }
+            else
+            {
+                if (plannerFuel > 0.0) { fuelPerLap = plannerFuel; fuelSource = "plan"; }
+                else if (profileFuel > 0.0) { fuelPerLap = profileFuel; fuelSource = "plan"; }
+                else if (LiveFuelPerLap_Stable > 0.0) { fuelPerLap = LiveFuelPerLap_Stable; fuelSource = "live-fallback"; }
+
+                if (plannerLap > 0.0) { lapSeconds = plannerLap; lapSource = "plan"; }
+                else if (profileLap > 0.0) { lapSeconds = profileLap; lapSource = "plan"; }
+                else if (ProjectionLapTime_Stable > 0.0) { lapSeconds = ProjectionLapTime_Stable; lapSource = "live-fallback"; }
+                else if (liveLap > 0.0) { lapSeconds = liveLap; lapSource = "live-fallback"; }
+            }
+
+            if (fuelPerLap <= 0.0) { fuelPerLap = PreRaceFallbackFuelPerLapLiters; fuelSource = "fallback"; }
+            if (lapSeconds <= 0.0) { lapSeconds = PreRaceFallbackLapSeconds; lapSource = "fallback"; }
+        }
+
         private PlannerLiveSessionMatchSnapshot BuildLiveSessionMatchSnapshot(double raceSessionDurationSeconds, long raceSessionLaps)
         {
             string liveCarIdentity = !string.IsNullOrWhiteSpace(CurrentCarModel) && !CurrentCarModel.Equals("Unknown", StringComparison.OrdinalIgnoreCase)
@@ -1502,94 +1546,11 @@ namespace LaunchPlugin
             plannerMatchSnapshot.LiveRaceLengthValue = liveMatchSnapshot.LiveRaceLengthValue;
             var plannerMatchResult = PlannerLiveSessionMatchHelper.Evaluate(plannerMatchSnapshot);
 
-            string preRaceFuelSource = "fallback";
+            string preRaceFuelSource;
+            string preRaceLapSource;
             double preRaceFuelPerLap;
-            if (false && LiveFuelPerLap_Stable > 0.0)
-            {
-                preRaceFuelPerLap = LiveFuelPerLap_Stable;
-                if (string.Equals(LiveFuelPerLap_StableSource, "Live", StringComparison.OrdinalIgnoreCase))
-                {
-                    preRaceFuelSource = "live";
-                }
-                else if (string.Equals(LiveFuelPerLap_StableSource, "Profile", StringComparison.OrdinalIgnoreCase))
-                {
-                    preRaceFuelSource = "profile";
-                }
-                else
-                {
-                    preRaceFuelSource = "fallback";
-                }
-            }
-            else if (false)
-            {
-                double plannerFuel = FuelCalculator?.FuelPerLap ?? 0.0;
-                if (plannerFuel > 0.0)
-                {
-                    preRaceFuelPerLap = plannerFuel;
-                    preRaceFuelSource = "planner-profile";
-                }
-                else
-                {
-                var (profileDry, profileWet) = GetProfileFuelBaselines();
-                double profileFuel = _isWetMode ? profileWet : profileDry;
-                if (profileFuel > 0.0)
-                {
-                    preRaceFuelPerLap = profileFuel;
-                    preRaceFuelSource = "profile";
-                }
-                else if (fallbackFuelPerLap > 0.0)
-                {
-                    preRaceFuelPerLap = fallbackFuelPerLap;
-                    preRaceFuelSource = "live";
-                }
-                else
-                {
-                    preRaceFuelPerLap = PreRaceFallbackFuelPerLapLiters;
-                    preRaceFuelSource = "fallback";
-                }
-                }
-            }
-            else
-            {
-                preRaceFuelPerLap = GetPreRaceFuelPerLap(fallbackFuelPerLap, out preRaceFuelSource);
-            }
-
-            string preRaceLapSource = "fallback";
             double preRaceProjectionLapSeconds;
-            if (false && ProjectionLapTime_Stable > 0.0)
-            {
-                preRaceProjectionLapSeconds = ProjectionLapTime_Stable;
-                preRaceLapSource = ProjectionLapTime_StableSource.StartsWith("pace.", StringComparison.OrdinalIgnoreCase)
-                    ? "live"
-                    : (ProjectionLapTime_StableSource.StartsWith("profile.", StringComparison.OrdinalIgnoreCase) ? "profile" : "fallback");
-            }
-            else if (false)
-            {
-                double profileAvgSeconds = GetProfileAvgLapSeconds();
-                if (profileAvgSeconds > 0.0)
-                {
-                    preRaceProjectionLapSeconds = profileAvgSeconds;
-                    preRaceLapSource = "profile";
-                }
-                else
-                {
-                    double lastLapSeconds = (data.NewData?.LastLapTime ?? TimeSpan.Zero).TotalSeconds;
-                    if (lastLapSeconds > 0.0)
-                    {
-                        preRaceProjectionLapSeconds = lastLapSeconds;
-                        preRaceLapSource = "live";
-                    }
-                    else
-                    {
-                        preRaceProjectionLapSeconds = PreRaceFallbackLapSeconds;
-                        preRaceLapSource = "fallback";
-                    }
-                }
-            }
-            else
-            {
-                preRaceProjectionLapSeconds = GetPreRaceLapSeconds(data, out preRaceLapSource);
-            }
+            ResolveDataGovernedBurnAndPaceBasis(data, fallbackFuelPerLap, out preRaceFuelPerLap, out preRaceProjectionLapSeconds, out preRaceFuelSource, out preRaceLapSource);
 
             double forecastRaceLaps = 0.0;
             if (raceSessionDurationSeconds > 0.0 && preRaceProjectionLapSeconds > 0.0)
@@ -16658,7 +16619,7 @@ namespace LaunchPlugin
             Contingency_Laps = 0;
             Contingency_Source = "none";
 
-            PreRace_Selected = 3;
+            PreRace_Selected = 2;
             PreRace_SelectedText = "Multi Stop";
             PreRace_Stints = 0;
             PreRace_TotalFuelNeeded = 0;
