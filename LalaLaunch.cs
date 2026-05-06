@@ -5443,6 +5443,44 @@ namespace LaunchPlugin
             }
         }
 
+
+        private bool IsLeagueRaceContextClassPresentationActive()
+        {
+            var player = ResolveLivePlayerLeagueClassInfo();
+            return (Settings?.LeagueClassEnabled == true) && player.Valid && !string.IsNullOrWhiteSpace(player.Name);
+        }
+
+        private string ResolveRaceContextClassName(int? userId, string driverName, string fallback)
+        {
+            if (!IsLeagueRaceContextClassPresentationActive()) return fallback ?? string.Empty;
+            var info = ResolveLeagueClassDriverInfo(userId, driverName);
+            return info.Valid && !string.IsNullOrWhiteSpace(info.Name) ? info.Name : (fallback ?? string.Empty);
+        }
+
+        private string ResolveRaceContextClassColorHex(int? userId, string driverName, string fallback)
+        {
+            if (!IsLeagueRaceContextClassPresentationActive()) return fallback ?? string.Empty;
+            var info = ResolveLeagueClassDriverInfo(userId, driverName);
+            return info.Valid && !string.IsNullOrWhiteSpace(info.ColourHex) ? info.ColourHex : (fallback ?? string.Empty);
+        }
+
+        private string ResolveRaceContextClassColor(int? userId, string driverName, string fallback)
+        {
+            if (!IsLeagueRaceContextClassPresentationActive()) return fallback ?? string.Empty;
+            var hex = ResolveRaceContextClassColorHex(userId, driverName, fallback);
+            return string.IsNullOrWhiteSpace(hex) ? (fallback ?? string.Empty) : hex;
+        }
+
+        private int GetLeagueClassPlayerDriverCount()
+        {
+            var player = ResolveLivePlayerLeagueClassInfo();
+            if ((Settings?.LeagueClassEnabled == true) && player.Valid && !string.IsNullOrWhiteSpace(player.Name))
+            {
+                return LeagueClassStatus?.ValidDriverCount ?? 0;
+            }
+
+            return 0;
+        }
         public void ReloadLeagueClassConfig()
         {
             try
@@ -5924,7 +5962,7 @@ namespace LaunchPlugin
             AttachCore(baseName + ".IdentityKey", () => participantGetter()?.IdentityKey ?? string.Empty);
             AttachCore(baseName + ".Name", () => participantGetter()?.Name ?? string.Empty);
             AttachCore(baseName + ".CarNumber", () => participantGetter()?.CarNumber ?? string.Empty);
-            AttachCore(baseName + ".ClassColor", () => participantGetter()?.ClassColor ?? string.Empty);
+            AttachCore(baseName + ".ClassColor", () => ResolveRaceContextClassColor(null, participantGetter()?.Name, participantGetter()?.ClassColor));
             AttachCore(baseName + ".PositionInClass", () => participantGetter()?.PositionInClass ?? 0);
             AttachCore(baseName + ".LastLapSec", () => participantGetter()?.LastLapSec ?? 0.0);
             AttachCore(baseName + ".BestLapSec", () => participantGetter()?.BestLapSec ?? 0.0);
@@ -6934,6 +6972,7 @@ namespace LaunchPlugin
             AttachCore("LeagueClass.Player.Valid", () => ResolveLivePlayerLeagueClassInfo().Valid);
             AttachCore("LeagueClass.Player.Source", () => LeagueClassSourceToExportText(ResolveLivePlayerLeagueClassInfo().Source));
             AttachCore("LeagueClass.Player.OverrideActive", () => (Settings?.LeagueClassPlayerOverrideMode ?? 0) == 1);
+            AttachCore("LeagueClass.Player.DriverCount", () => GetLeagueClassPlayerDriverCount());
 
             double SafeOppValue(double v) => (double.IsNaN(v) || double.IsInfinity(v)) ? 0.0 : v;
             Func<int, OpponentsEngine.OpponentTargetOutput> getAheadSlot = i => _opponentsEngine?.Outputs?.GetAheadSlot(i);
@@ -6948,9 +6987,9 @@ namespace LaunchPlugin
                 AttachCore(aheadPrefix + ".Name", () => getAheadSlot(slotIndex)?.Name ?? string.Empty);
                 AttachCore(aheadPrefix + ".AbbrevName", () => getAheadSlot(slotIndex)?.AbbrevName ?? string.Empty);
                 AttachCore(aheadPrefix + ".CarNumber", () => getAheadSlot(slotIndex)?.CarNumber ?? string.Empty);
-                AttachCore(aheadPrefix + ".ClassName", () => getAheadSlot(slotIndex)?.ClassName ?? string.Empty);
-                AttachCore(aheadPrefix + ".ClassColor", () => getAheadSlot(slotIndex)?.ClassColor ?? string.Empty);
-                AttachCore(aheadPrefix + ".ClassColorHex", () => getAheadSlot(slotIndex)?.ClassColorHex ?? string.Empty);
+                AttachCore(aheadPrefix + ".ClassName", () => ResolveRaceContextClassName(getAheadSlot(slotIndex)?.UserID, getAheadSlot(slotIndex)?.Name, getAheadSlot(slotIndex)?.ClassName));
+                AttachCore(aheadPrefix + ".ClassColor", () => ResolveRaceContextClassColor(getAheadSlot(slotIndex)?.UserID, getAheadSlot(slotIndex)?.Name, getAheadSlot(slotIndex)?.ClassColor));
+                AttachCore(aheadPrefix + ".ClassColorHex", () => ResolveRaceContextClassColorHex(getAheadSlot(slotIndex)?.UserID, getAheadSlot(slotIndex)?.Name, getAheadSlot(slotIndex)?.ClassColorHex));
                 AttachCore(aheadPrefix + ".IsValid", () => getAheadSlot(slotIndex)?.IsValid ?? false);
                 AttachCore(aheadPrefix + ".IsOnTrack", () => getAheadSlot(slotIndex)?.IsOnTrack ?? false);
                 AttachCore(aheadPrefix + ".IsOnPitRoad", () => getAheadSlot(slotIndex)?.IsOnPitRoad ?? false);
@@ -6998,9 +7037,9 @@ namespace LaunchPlugin
                 AttachCore(behindPrefix + ".Name", () => getBehindSlot(slotIndex)?.Name ?? string.Empty);
                 AttachCore(behindPrefix + ".AbbrevName", () => getBehindSlot(slotIndex)?.AbbrevName ?? string.Empty);
                 AttachCore(behindPrefix + ".CarNumber", () => getBehindSlot(slotIndex)?.CarNumber ?? string.Empty);
-                AttachCore(behindPrefix + ".ClassName", () => getBehindSlot(slotIndex)?.ClassName ?? string.Empty);
-                AttachCore(behindPrefix + ".ClassColor", () => getBehindSlot(slotIndex)?.ClassColor ?? string.Empty);
-                AttachCore(behindPrefix + ".ClassColorHex", () => getBehindSlot(slotIndex)?.ClassColorHex ?? string.Empty);
+                AttachCore(behindPrefix + ".ClassName", () => ResolveRaceContextClassName(getBehindSlot(slotIndex)?.UserID, getBehindSlot(slotIndex)?.Name, getBehindSlot(slotIndex)?.ClassName));
+                AttachCore(behindPrefix + ".ClassColor", () => ResolveRaceContextClassColor(getBehindSlot(slotIndex)?.UserID, getBehindSlot(slotIndex)?.Name, getBehindSlot(slotIndex)?.ClassColor));
+                AttachCore(behindPrefix + ".ClassColorHex", () => ResolveRaceContextClassColorHex(getBehindSlot(slotIndex)?.UserID, getBehindSlot(slotIndex)?.Name, getBehindSlot(slotIndex)?.ClassColorHex));
                 AttachCore(behindPrefix + ".IsValid", () => getBehindSlot(slotIndex)?.IsValid ?? false);
                 AttachCore(behindPrefix + ".IsOnTrack", () => getBehindSlot(slotIndex)?.IsOnTrack ?? false);
                 AttachCore(behindPrefix + ".IsOnPitRoad", () => getBehindSlot(slotIndex)?.IsOnPitRoad ?? false);

@@ -1,3 +1,10 @@
+
+## 2026-05-06 — League Class race-context class presentation alignment
+- Classification: **both** (dash-facing class-presentation export behavior + internal contract alignment).
+- `Opp.Ahead1..5` / `Opp.Behind1..5` now publish class presentation fields (`ClassName`, `ClassColor`, `ClassColorHex`) from resolved effective League Class when League Class is enabled and player effective class is valid; otherwise native behavior remains.
+- `H2HRace.Player/Ahead/Behind` class color presentation now follows the same League Class presentation gate while preserving selected-driver identity and existing selector/gap/timing behavior.
+- Added `LeagueClass.Player.DriverCount` export for dashboards (`Pxx of xx` support).
+
 ## 2026-05-06 — PreRace live-facing lap/burn basis helper export
 - Classification: **both** (new dash-facing helper export + internal contract docs alignment).
 - Added `LalaLaunch.PreRace.LiveFacingBasisText` as a concise combined readout of active pre-race source authority: `LAP <source> / BURN <source>`.
