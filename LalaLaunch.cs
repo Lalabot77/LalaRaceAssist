@@ -5438,10 +5438,10 @@ namespace LaunchPlugin
             return idx >= 0 ? idx : -1;
         }
 
-        
+
         private int SafeReadIntProperty(string propertyName, int invalidValue = 0)
         {
-            object value = GetPropertyValue(propertyName);
+            object value = PluginManager?.GetPropertyValue(propertyName);
             if (value == null) return invalidValue;
             try { return Convert.ToInt32(value, CultureInfo.InvariantCulture); } catch { }
             int parsed;
@@ -5450,7 +5450,7 @@ namespace LaunchPlugin
 
         private string SafeReadStringProperty(string propertyName)
         {
-            object value = GetPropertyValue(propertyName);
+            object value = PluginManager?.GetPropertyValue(propertyName);
             return value == null ? string.Empty : (value.ToString() ?? string.Empty);
         }
 
