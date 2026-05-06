@@ -1,3 +1,8 @@
+## 2026-05-06 — League Class presentation follow-up review fixes
+- Classification: **both** (dash-facing export-correctness fixes + contract docs alignment).
+- Fixed `LeagueClass.Player.DriverCount` to count the player’s effective class cohort membership (not total valid CSV rows), with native same-class fallback where available and `0` when unavailable.
+- Fixed H2HRace class presentation resolver wiring to pass participant `UserID` when available, restoring CSV-only resolver behavior for class presentation outputs.
+
 
 ## 2026-05-06 — League Class race-context class presentation alignment
 - Classification: **both** (dash-facing class-presentation export behavior + internal contract alignment).

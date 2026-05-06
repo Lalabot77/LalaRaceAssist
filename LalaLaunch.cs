@@ -5476,12 +5476,65 @@ namespace LaunchPlugin
             var player = ResolveLivePlayerLeagueClassInfo();
             if ((Settings?.LeagueClassEnabled == true) && player.Valid && !string.IsNullOrWhiteSpace(player.Name))
             {
-                return LeagueClassStatus?.ValidDriverCount ?? 0;
+                int count = 0;
+                for (int i = 0; i < 64; i++)
+                {
+                    string basePath = $"DataCorePlugin.GameRawData.SessionData.DriverInfo.CompetingDrivers[{i}]";
+                    int userId = SafeReadIntProperty(basePath + ".UserID");
+                    string name = SafeReadStringProperty(basePath + ".UserName");
+                    if (userId <= 0 && string.IsNullOrWhiteSpace(name)) continue;
+                    var info = ResolveLeagueClassDriverInfo(userId > 0 ? (int?)userId : null, name);
+                    if (!info.Valid || string.IsNullOrWhiteSpace(info.Name)) continue;
+                    if (string.Equals(info.Name, player.Name, StringComparison.OrdinalIgnoreCase)) count++;
+                }
+                return count > 0 ? count : 0;
             }
 
-            return 0;
+            return GetNativePlayerClassDriverCount();
         }
-        public void ReloadLeagueClassConfig()
+
+        private int GetNativePlayerClassDriverCount()
+        {
+            string playerClass = SafeReadStringProperty("DataCorePlugin.GameRawData.Telemetry.PlayerCarClass");
+            if (string.IsNullOrWhiteSpace(playerClass))
+            {
+                playerClass = SafeReadStringProperty("DataCorePlugin.GameRawData.SessionData.DriverInfo.DriverCarClass");
+            }
+            if (string.IsNullOrWhiteSpace(playerClass)) return 0;
+
+            int count = 0;
+            for (int i = 0; i < 64; i++)
+            {
+                string cls = SafeReadStringProperty($"DataCorePlugin.GameRawData.SessionData.DriverInfo.CompetingDrivers[{i}].CarClassShortName");
+                if (string.IsNullOrWhiteSpace(cls))
+                {
+                    cls = SafeReadStringProperty($"DataCorePlugin.GameRawData.SessionData.DriverInfo.CompetingDrivers[{i}].CarClassName");
+                }
+                if (!string.IsNullOrWhiteSpace(cls) && string.Equals(cls, playerClass, StringComparison.OrdinalIgnoreCase))
+                {
+                    count++;
+                }
+            }
+            return count > 0 ? count : 0;
+        }
+
+        
+        private int SafeReadIntProperty(string propertyName)
+        {
+            object value = GetPropertyValue(propertyName);
+            if (value == null) return 0;
+            try { return Convert.ToInt32(value, CultureInfo.InvariantCulture); } catch { }
+            int parsed;
+            return int.TryParse(value.ToString(), NumberStyles.Integer, CultureInfo.InvariantCulture, out parsed) ? parsed : 0;
+        }
+
+        private string SafeReadStringProperty(string propertyName)
+        {
+            object value = GetPropertyValue(propertyName);
+            return value == null ? string.Empty : (value.ToString() ?? string.Empty);
+        }
+
+public void ReloadLeagueClassConfig()
         {
             try
             {
@@ -5962,7 +6015,7 @@ namespace LaunchPlugin
             AttachCore(baseName + ".IdentityKey", () => participantGetter()?.IdentityKey ?? string.Empty);
             AttachCore(baseName + ".Name", () => participantGetter()?.Name ?? string.Empty);
             AttachCore(baseName + ".CarNumber", () => participantGetter()?.CarNumber ?? string.Empty);
-            AttachCore(baseName + ".ClassColor", () => ResolveRaceContextClassColor(null, participantGetter()?.Name, participantGetter()?.ClassColor));
+            AttachCore(baseName + ".ClassColor", () => ResolveRaceContextClassColor((participantGetter()?.UserID ?? 0) > 0 ? (int?)participantGetter()?.UserID : null, participantGetter()?.Name, participantGetter()?.ClassColor));
             AttachCore(baseName + ".PositionInClass", () => participantGetter()?.PositionInClass ?? 0);
             AttachCore(baseName + ".LastLapSec", () => participantGetter()?.LastLapSec ?? 0.0);
             AttachCore(baseName + ".BestLapSec", () => participantGetter()?.BestLapSec ?? 0.0);
@@ -13422,6 +13475,7 @@ namespace LaunchPlugin
             string carNumber = current?.CarNumber ?? string.Empty;
             string classColor = NormalizeH2HClassColor(current?.ClassColor);
             int positionInClass = current != null ? current.PositionInClass : 0;
+            int userId = current != null ? current.UserID : 0;
             bool sameIdentityAsPrevious = previousOutput != null
                 && !string.IsNullOrWhiteSpace(previousOutput.IdentityKey)
                 && string.Equals(previousOutput.IdentityKey, identityKey, StringComparison.Ordinal);
@@ -13449,6 +13503,11 @@ namespace LaunchPlugin
             if (positionInClass <= 0 && previousOutput != null && string.Equals(previousOutput.IdentityKey, identityKey, StringComparison.Ordinal))
             {
                 positionInClass = previousOutput.PositionInClass;
+            }
+
+            if (userId <= 0 && previousOutput != null && string.Equals(previousOutput.IdentityKey, identityKey, StringComparison.Ordinal))
+            {
+                userId = previousOutput.UserID;
             }
 
             int carIdx = -1;
@@ -13492,6 +13551,7 @@ namespace LaunchPlugin
                 Name = name,
                 CarNumber = carNumber,
                 ClassColor = NormalizeH2HClassColor(classColor),
+                UserID = userId > 0 ? userId : 0,
                 PositionInClass = positionInClass > 0 ? positionInClass : 0
             };
         }

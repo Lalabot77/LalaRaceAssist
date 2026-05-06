@@ -1,3 +1,7 @@
+- 2026-05-06 League Class presentation follow-up review fixes landed:
+  - `LeagueClass.Player.DriverCount` now counts drivers in the selected player effective class cohort (not total CSV-valid rows), with native fallback or `0` when unavailable;
+  - H2HRace class presentation resolution now passes participant `UserID` when available so CSV-only mode resolves class presentation correctly.
+
 
 - 2026-05-06 League Class race-context class presentation alignment landed:
   - Opp race-context slots (`Opp.Ahead1..5` / `Opp.Behind1..5`) now publish class presentation fields from effective League Class while preserving original slot identity and native fallback when League Class is disabled/unresolved;
