@@ -973,7 +973,7 @@ namespace LaunchPlugin
         public double StrategyDash_NextRefuelDeltaLitres { get; private set; }
         public string StrategyDash_NextRefuelAdviceText { get; private set; } = "N/A";
         public int StrategyDash_NextRefuelStatus { get; private set; }
-        public string StrategyDash_BurnPlanText { get; private set; } = "BURN PLAN: NORM";
+        public string StrategyDash_BurnPlanText { get; private set; } = "NORM";
         public string StrategyDash_ContingencyText { get; private set; } = "CONT 0";
         private bool _isRefuelSelected = true;
         private bool _isTireChangeSelected = true;
@@ -1407,7 +1407,7 @@ namespace LaunchPlugin
             else if (pitSource == PitFuelControlSource.Save) burnPlan = "SAVE";
             if (!string.IsNullOrWhiteSpace(strategyDashBurnSourceTag))
                 sourceTag = strategyDashBurnSourceTag.Trim();
-            StrategyDash_BurnPlanText = string.IsNullOrEmpty(sourceTag) ? $"BURN PLAN: {burnPlan}" : $"BURN PLAN: {burnPlan} / {sourceTag}";
+            StrategyDash_BurnPlanText = string.IsNullOrEmpty(sourceTag) ? $"{burnPlan}" : $"{burnPlan} / {sourceTag}";
             if (requiredStrategy == RequiredPreRaceStrategy.NoStop)
             {
                 StrategyDash_NextRefuelAdviceText = "N/A";
@@ -16816,7 +16816,7 @@ namespace LaunchPlugin
             StrategyDash_NextRefuelDeltaLitres = 0;
             StrategyDash_NextRefuelAdviceText = "N/A";
             StrategyDash_NextRefuelStatus = 0;
-            StrategyDash_BurnPlanText = "BURN PLAN: NORM";
+            StrategyDash_BurnPlanText = "NORM";
             StrategyDash_ContingencyText = "CONT 0";
 
             // --- Additional dashboard-facing fuel/projection outputs that must not latch across resets ---
