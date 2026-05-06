@@ -1,3 +1,8 @@
+- 2026-05-06 League Class follow-up landed:
+  - `Opp.Ahead/Behind*.ClassColor` keeps canonical `0xRRGGBB` format under League-aware presentation; `ClassColorHex` remains `#RRGGBB`;
+  - DriverCount player-car identity reads now use CarIdx invalid sentinel `-1` to avoid missing-value car-0 misclassification;
+  - authorised H2HTrack class-color presentation now follows League-aware path via shared H2H attach wiring only (no selector/sector/delta/gap/timing changes).
+
 - 2026-05-06 League Class follow-up fix landed:
   - `LeagueClass.Player.DriverCount` now includes player row under manual override/effective-player-class semantics while counting non-player rows via driver resolver semantics;
   - League class-color presentation override in shared H2H export attach path is now restricted to H2HRace; H2HTrack class color remains native.

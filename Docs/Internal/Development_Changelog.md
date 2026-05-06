@@ -1,3 +1,9 @@
+## 2026-05-06 — League Class follow-up: Opp ClassColor format + CarIdx sentinel + H2HTrack presentation alignment
+- Classification: **both** (export-format correction + identity read hardening + authorised H2HTrack presentation alignment).
+- Fixed `Opp.*.ClassColor` League-aware path to preserve canonical `0xRRGGBB` output while `Opp.*.ClassColorHex` remains `#RRGGBB`.
+- Hardened DriverCount player-car identity reads by using `-1` sentinel for missing/unparseable CarIdx properties (no implicit car `0` fallback).
+- Enabled League-aware class-color presentation wiring for both `H2HRace` and `H2HTrack` attach paths without changing H2H selection, sector, delta, gap, or timing logic.
+
 ## 2026-05-06 — League Class follow-up: manual-override player count + H2HRace-only class-color override
 - Classification: **both** (dash-facing export correctness fixes + scope-guarded H2H presentation wiring).
 - `LeagueClass.Player.DriverCount` now includes the player row using player resolver semantics in League-active counting (manual override included), while non-player rows continue using driver resolver semantics.
