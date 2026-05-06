@@ -1977,3 +1977,8 @@ The public user-facing release history is maintained in the root `CHANGELOG.md`.
 - Classification: **internal-only** (state-ownership correction; no fuel/detection formula changes).
 - `UpdateLiveDetectedRaceDefinition(...)` now updates manual `RaceLaps` / `RaceMinutes` only while `SelectedRaceType == LiveDetect`; outside Live Detect it still caches helper/basis state but does not mutate manual race-length ownership.
 - Exiting Live Detect now clears detected-length caches (`_lastLiveDetectedRaceLaps`, `_lastLiveDetectedRaceMinutes`) in addition to detected basis type, preventing stale basis reuse on later re-entry when fresh detection is unavailable.
+
+## 2026-05-06 — H2HTrack selected-target League identity handoff fix
+- Classification: **both** (H2HTrack class presentation correctness + internal contract/docs alignment).
+- `BuildH2HTrackSelector(...)` now carries selected CarSA slot `UserID` into `H2HEngine.TargetSelector` so `H2HTrack.Ahead/Behind.ClassColor` and `ClassColorHex` can resolve League Class via the same CSV-first identity seam as CarSA/H2HRace when enabled.
+- Kept H2HTrack physical target selection and all sector/delta/timing logic unchanged; unresolved/disabled paths still fall back to native class colour behavior.

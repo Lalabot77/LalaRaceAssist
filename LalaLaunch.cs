@@ -13533,6 +13533,7 @@ namespace LaunchPlugin
                     Name = slot.Name ?? string.Empty,
                     CarNumber = slot.CarNumber ?? string.Empty,
                     ClassColor = NormalizeH2HClassColor(slotClassColor),
+                    UserID = slot.UserID > 0 ? slot.UserID : 0,
                     PositionInClass = GetEffectivePositionInClassForPublishedContext(slot.CarIdx, slot.PositionInClass)
                 };
             }
