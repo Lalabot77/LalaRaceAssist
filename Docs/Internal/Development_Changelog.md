@@ -1,3 +1,8 @@
+## 2026-05-06 — PreRace live-facing lap/burn basis helper export
+- Classification: **both** (new dash-facing helper export + internal contract docs alignment).
+- Added `LalaLaunch.PreRace.LiveFacingBasisText` as a concise combined readout of active pre-race source authority: `LAP <source> / BURN <source>`.
+- The new property mirrors existing `LalaLaunch.PreRace.LapTimeSource` and `LalaLaunch.PreRace.FuelSource` values only; no fuel math, strategy ownership, or Pit Fuel Control DATA/SOURCE behavior changed.
+
 ## 2026-05-05 — Pit Fuel Control DATA/SOURCE simplification
 - Classification: **both** (dash-facing action/export contract change + internal state-machine simplification).
 - Retired `SOURCE=PLAN`; Pit Fuel Control SOURCE is now `STBY`/`NORM`/`PUSH`/`SAVE`, with source cycling `STBY -> NORM -> PUSH -> SAVE -> STBY`.

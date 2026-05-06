@@ -958,6 +958,7 @@ namespace LaunchPlugin
         public double PreRace_FuelDelta { get; private set; }
         public string PreRace_FuelSource { get; private set; } = "fallback";
         public string PreRace_LapTimeSource { get; private set; } = "fallback";
+        public string PreRace_LiveFacingBasisText { get; private set; } = "LAP fallback / BURN fallback";
         public string PreRace_StatusText { get; private set; } = "STRATEGY OKAY";
         public string PreRace_StatusColour { get; private set; } = "green";
         public int StrategyDash_Phase { get; private set; }
@@ -1633,6 +1634,11 @@ namespace LaunchPlugin
 
             PreRace_FuelSource = preRaceFuelSource;
             PreRace_LapTimeSource = preRaceLapSource;
+            PreRace_LiveFacingBasisText = string.Format(
+                CultureInfo.InvariantCulture,
+                "LAP {0} / BURN {1}",
+                string.IsNullOrWhiteSpace(preRaceLapSource) ? "fallback" : preRaceLapSource.Trim().ToLowerInvariant(),
+                string.IsNullOrWhiteSpace(preRaceFuelSource) ? "fallback" : preRaceFuelSource.Trim().ToLowerInvariant());
             var status = EvaluatePreRaceStatus(
                 selectedStrategy,
                 plannerMismatch: plannerMatchResult.HasComparableInputs && !plannerMatchResult.IsMatch,
@@ -6495,6 +6501,7 @@ namespace LaunchPlugin
             AttachCore("LalaLaunch.PreRace.FuelDelta", () => PreRace_FuelDelta);
             AttachCore("LalaLaunch.PreRace.FuelSource", () => PreRace_FuelSource);
             AttachCore("LalaLaunch.PreRace.LapTimeSource", () => PreRace_LapTimeSource);
+            AttachCore("LalaLaunch.PreRace.LiveFacingBasisText", () => PreRace_LiveFacingBasisText);
             AttachCore("LalaLaunch.PreRace.StatusText", () => PreRace_StatusText);
             AttachCore("LalaLaunch.PreRace.StatusColour", () => PreRace_StatusColour);
             AttachCore("StrategyDash.Phase", () => StrategyDash_Phase);
@@ -16659,6 +16666,7 @@ namespace LaunchPlugin
             PreRace_FuelDelta = 0;
             PreRace_FuelSource = "fallback";
             PreRace_LapTimeSource = "fallback";
+            PreRace_LiveFacingBasisText = "LAP fallback / BURN fallback";
             PreRace_StatusText = "STRATEGY OKAY";
             PreRace_StatusColour = "green";
             StrategyDash_Phase = 0;
