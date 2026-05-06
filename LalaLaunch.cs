@@ -5477,13 +5477,28 @@ namespace LaunchPlugin
             if ((Settings?.LeagueClassEnabled == true) && player.Valid && !string.IsNullOrWhiteSpace(player.Name))
             {
                 int count = 0;
+                int playerCarIdx = ResolveLivePlayerCarIdxForLeagueCount();
                 for (int i = 0; i < 64; i++)
                 {
                     string basePath = $"DataCorePlugin.GameRawData.SessionData.DriverInfo.CompetingDrivers[{i}]";
+                    int carIdx = SafeReadIntProperty(basePath + ".CarIdx");
                     int userId = SafeReadIntProperty(basePath + ".UserID");
                     string name = SafeReadStringProperty(basePath + ".UserName");
                     if (userId <= 0 && string.IsNullOrWhiteSpace(name)) continue;
-                    var info = ResolveLeagueClassDriverInfo(userId > 0 ? (int?)userId : null, name);
+
+                    bool isPlayerRow = playerCarIdx >= 0 && carIdx == playerCarIdx;
+                    if (!isPlayerRow && userId > 0)
+                    {
+                        int? playerUserId;
+                        string playerName;
+                        TryGetLivePlayerIdentityPreview(out playerUserId, out playerName);
+                        isPlayerRow = playerUserId.HasValue && playerUserId.Value > 0 && playerUserId.Value == userId;
+                    }
+
+                    EffectiveRaceClassInfo info = isPlayerRow
+                        ? ResolveLivePlayerLeagueClassInfo()
+                        : ResolveLeagueClassDriverInfo(userId > 0 ? (int?)userId : null, name);
+
                     if (!info.Valid || string.IsNullOrWhiteSpace(info.Name)) continue;
                     if (string.Equals(info.Name, player.Name, StringComparison.OrdinalIgnoreCase)) count++;
                 }
@@ -5518,6 +5533,18 @@ namespace LaunchPlugin
             return count > 0 ? count : 0;
         }
 
+        private int ResolveLivePlayerCarIdxForLeagueCount()
+        {
+            int idx = SafeReadIntProperty("DataCorePlugin.GameRawData.Telemetry.PlayerCarIdx");
+            if (idx >= 0)
+            {
+                return idx;
+            }
+
+            idx = SafeReadIntProperty("DataCorePlugin.GameRawData.SessionData.DriverInfo.DriverCarIdx");
+            return idx >= 0 ? idx : -1;
+        }
+
         
         private int SafeReadIntProperty(string propertyName)
         {
@@ -5534,7 +5561,7 @@ namespace LaunchPlugin
             return value == null ? string.Empty : (value.ToString() ?? string.Empty);
         }
 
-public void ReloadLeagueClassConfig()
+        public void ReloadLeagueClassConfig()
         {
             try
             {
@@ -5977,11 +6004,11 @@ public void ReloadLeagueClassConfig()
 
         private void AttachH2HExports()
         {
-            AttachH2HFamilyExports("H2HRace", () => _h2hEngine?.Outputs?.Race);
-            AttachH2HFamilyExports("H2HTrack", () => _h2hEngine?.Outputs?.Track);
+            AttachH2HFamilyExports("H2HRace", () => _h2hEngine?.Outputs?.Race, true);
+            AttachH2HFamilyExports("H2HTrack", () => _h2hEngine?.Outputs?.Track, false);
         }
 
-        private void AttachH2HFamilyExports(string prefix, Func<H2HEngine.H2HFamilyOutput> familyGetter)
+        private void AttachH2HFamilyExports(string prefix, Func<H2HEngine.H2HFamilyOutput> familyGetter, bool useLeagueRaceContextPresentation)
         {
             if (string.IsNullOrWhiteSpace(prefix) || familyGetter == null)
             {
@@ -5998,11 +6025,11 @@ public void ReloadLeagueClassConfig()
             AttachCore(prefix + ".Player.ActiveSegment", () => familyGetter()?.Player.ActiveSegment ?? 0);
             AttachCore(prefix + ".Player.LapRef", () => familyGetter()?.Player.LapRef ?? 0);
 
-            AttachH2HTargetExports(prefix, "Ahead", () => familyGetter()?.Ahead);
-            AttachH2HTargetExports(prefix, "Behind", () => familyGetter()?.Behind);
+            AttachH2HTargetExports(prefix, "Ahead", () => familyGetter()?.Ahead, useLeagueRaceContextPresentation);
+            AttachH2HTargetExports(prefix, "Behind", () => familyGetter()?.Behind, useLeagueRaceContextPresentation);
         }
 
-        private void AttachH2HTargetExports(string prefix, string side, Func<H2HEngine.H2HParticipantOutput> participantGetter)
+        private void AttachH2HTargetExports(string prefix, string side, Func<H2HEngine.H2HParticipantOutput> participantGetter, bool useLeagueRaceContextPresentation)
         {
             if (string.IsNullOrWhiteSpace(prefix) || string.IsNullOrWhiteSpace(side) || participantGetter == null)
             {
@@ -6015,7 +6042,9 @@ public void ReloadLeagueClassConfig()
             AttachCore(baseName + ".IdentityKey", () => participantGetter()?.IdentityKey ?? string.Empty);
             AttachCore(baseName + ".Name", () => participantGetter()?.Name ?? string.Empty);
             AttachCore(baseName + ".CarNumber", () => participantGetter()?.CarNumber ?? string.Empty);
-            AttachCore(baseName + ".ClassColor", () => ResolveRaceContextClassColor((participantGetter()?.UserID ?? 0) > 0 ? (int?)participantGetter()?.UserID : null, participantGetter()?.Name, participantGetter()?.ClassColor));
+            AttachCore(baseName + ".ClassColor", () => useLeagueRaceContextPresentation
+                ? ResolveRaceContextClassColor((participantGetter()?.UserID ?? 0) > 0 ? (int?)participantGetter()?.UserID : null, participantGetter()?.Name, participantGetter()?.ClassColor)
+                : (participantGetter()?.ClassColor ?? string.Empty));
             AttachCore(baseName + ".PositionInClass", () => participantGetter()?.PositionInClass ?? 0);
             AttachCore(baseName + ".LastLapSec", () => participantGetter()?.LastLapSec ?? 0.0);
             AttachCore(baseName + ".BestLapSec", () => participantGetter()?.BestLapSec ?? 0.0);

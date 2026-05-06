@@ -1,3 +1,7 @@
+- 2026-05-06 League Class follow-up fix landed:
+  - `LeagueClass.Player.DriverCount` now includes player row under manual override/effective-player-class semantics while counting non-player rows via driver resolver semantics;
+  - League class-color presentation override in shared H2H export attach path is now restricted to H2HRace; H2HTrack class color remains native.
+
 - 2026-05-06 League Class presentation follow-up review fixes landed:
   - `LeagueClass.Player.DriverCount` now counts drivers in the selected player effective class cohort (not total CSV-valid rows), with native fallback or `0` when unavailable;
   - H2HRace class presentation resolution now passes participant `UserID` when available so CSV-only mode resolves class presentation correctly.
