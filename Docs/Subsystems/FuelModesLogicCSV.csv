@@ -1,45 +1,42 @@
-Current state (shown on button),Internal source state (before press),Push action,Expected Mode / Source Action,Cmd Message,Severity,Result on Chat Window,Result on MFD,Expected next shown state,Guards and error checks,Fallback or reversion,Andy Comment
-OFF,any,ModeCycle,switch to MAN / STBY,FUEL MAN STBY,Advisory,Sends #fuel$,Refuel ON,MAN STBY,None required for MFD or chat interaction. Just check internal mode now MAN,Match MFD and STBY,
-OFF,any,SourceCycle,do nothing,None,,No command sent,No change,OFF STBY,OFF hard guard blocks all source sends but MODE change still works,Match MFD and STBY,
-OFF,any,SetPush/Norm/Save,do nothing,None,,No command sent,No change,OFF STBY,OFF hard guard blocks all source sends but MODE change still works,Match MFD and STBY,
-OFF,any,SetPlan,do nothing,None,,No command sent,No change,OFF STBY,OFF hard guard blocks all source sends but MODE change still works,Match MFD and STBY,
-MAN,PUSH/NORM/SAVE,ModeCycle,select AUTO with same SRC(column B) as previous MAN,"AUTO REFUEL SET PUSH X L
-AUTO REFUEL SET NORM X L
-AUTO REFUEL SET SAVE X L",Advisory,Sends fuel amount (#fuel X$) immediately,Refuel ON X L set,AUTO with same SRC(column B) as previous MAN,If send fails -> PIT CMD FAIL,AUTO STBY,
-MAN,STBY,ModeCycle,select AUTO and STBY,AUTO REFUEL STBY,Advisory,No send,No change,AUTO (disarmed),STBY blocks send,AUTO STBY,
-MAN,PLAN,ModeCycle,"select AUTO and STBY
-inhibit PLAN",AUTO REFUEL STBY,Advisory,No send - PLAN does not send with AUTO because it is a fixed amount,No change,AUTO (disarmed),PLAN blocked in AUTO,AUTO STBY,
-MAN,any,SourceCycle,select next SRC in order which fires command,REFUEL SET <SRC> X L,Advisory,Sends new fuel amount,Refuel ON X L set,MAN with SRC that was just sent,Invalid target -> PIT CMD FAIL,MAN STBY,plugin-owned MAN sends must not be mirrored back as external MFD changes
-MAN,any,SetPush/Norm/Save,direct SRC send plugin action,REFUEL SET <SRC> X L,Advisory,Sends fuel amount,Refuel ON X L set,MAN with SRC that was just sent,Invalid target -> PIT CMD FAIL,MAN STBY,plugin-owned MAN sends must not be mirrored back as external MFD changes
-MAN,PLAN,SetPlan,direct PLAN send plugin action,REFUEL SET PLAN X L,Advisory,Sends Planner fuel amount,Refuel ON X L set,MAN,"Invalid target -> PIT CMD FAIL
-invalid PLAN -> PIT CMD FAIL",MAN STBY,PLAN send only when planner/live match is valid
-AUTO,PUSH/NORM/SAVE,ModeCycle,select OFF and STBY,REFUEL OFF,Advisory,Sends #-fuel$,Refuel OFF,OFF,If send fails -> PIT CMD FAIL,AUTO STBY,
-AUTO,STBY,ModeCycle,select OFF and STBY,REFUEL OFF,Advisory,Sends #-fuel$,Refuel OFF,OFF,If send fails -> PIT CMD FAIL,AUTO STBY,
-AUTO,PLAN,ModeCycle,recover impossible state to AUTO STBY (disarmed),None,,No command sent,No change,AUTO STBY,PLAN blocked in AUTO and must not send PUSH fallback,None (safe no-send recovery),PLAN in AUTO Should never be possible
-AUTO,PUSH/NORM/SAVE,SourceCycle,select next SRC in order which fires command,AUTO REFUEL SET <SRC> X L,Advisory,Sends new fuel amount,Refuel ON X L set,AUTOwith SRC that was just sent,Immediate send,AUTO STBY,
-AUTO,STBY,SourceCycle,select next SRC in order which fires command,AUTO REFUEL SET <SRC> X L,Advisory,Sends new fuel amount,Refuel ON X L set,AUTOwith SRC that was just sent,STBY cleared on send,AUTO STBY,
-AUTO,PLAN,none,none,none,,none,no change,AUTO STBY,PLAN blocked in AUTO,AUTO STBY,PLAN in AUTO Should never be possible
-MAN,PUSH/NORM/SAVE,SourceCycle or SetPush/SetNorm/SetSave,send request above current tank space,REFUEL <SRC> <requested>L >MAX,Advisory,Sends original requested fuel command (or MAX override command) without clamping payload,Request accepted by iRacing while physical fill remains capped by tank space,MAN with requested SRC,Feedback must not imply requested litres can physically fit now,No send-model change; feedback-only max wording contract,
-AUTO,PUSH/NORM/SAVE,AUTO update or AUTO source send,request above current tank space,AUTO FUEL <requested>L >MAX,Advisory,Sends original requested fuel command (or MAX override command) without clamping payload,Request accepted by iRacing while physical fill remains capped by tank space,AUTO with requested SRC,Feedback must use >MAX wording when request exceeds current tank space,No send-model change; feedback-only max wording contract,
-Outside actions,,,,,,,,,,,
-AUTO,any,External MFD OFF action,none(monitor and mirror only),AUTO REFUEL CANCELLED BY MFD,Caution,No plugin send,Refuel OFF,OFF STBY,"Mirror MFD State, OFF or MAN and STBY",OFF  to match MFD,
-AUTO,any,External MFD ON action,none(monitor and mirror only),AUTO REFUEL CANCELLED BY MFD,Caution,No plugin send,Refuel ON,MAN STBY,"Mirror MFD State, OFF or MAN and STBY",MAN to match MFD,
-AUTO,any,External fuel change,none(monitor and mirror only),AUTO REFUEL CANCELLED BY MFD,Caution,No plugin send,Refuel ON X L set,MAN STBY,"Mirror MFD State, OFF or MAN and STBY",MAN to match MFD,
-MAN,any,External MFD OFF action,none(monitor and mirror only),REFUEL SET OFF BY MFD,Advisory,No plugin send,Refuel OFF,OFF STBY,"Mirror MFD State, OFF or MAN and STBY",OFF  to match MFD,
-MAN,any,External MFD ON action,none(monitor and mirror only),REFUEL SET ON BY MFD,Advisory,No plugin send,Refuel ON,MAN STBY,"Mirror MFD State, OFF or MAN and STBY",MAN to match MFD,
-MAN,any,External fuel change,none(monitor and mirror only),FUEL CHANGED BY MFD,Advisory,No plugin send,Refuel ON X L set,MAN STBY,"Mirror MFD State, OFF or MAN and STBY",MAN to match MFD,
-OFF,any,External MFD OFF action,none(monitor and mirror only),REFUEL SET OFF BY MFD,Advisory,No plugin send,Refuel OFF,OFF STBY,"Mirror MFD State, OFF or MAN and STBY",OFF  to match MFD,
-OFF,any,External MFD ON action,none(monitor and mirror only),REFUEL SET ON BY MFD,Advisory,No plugin send,Refuel ON,MAN STBY,"Mirror MFD State, OFF or MAN and STBY",MAN to match MFD,
-OFF,any,External fuel change,none(monitor and mirror only),FUEL CHANGED BY MFD,Advisory,No plugin send,Refuel ON X L set,MAN STBY,"Mirror MFD State, OFF or MAN and STBY",MAN to match MFD,
-any,any,Fault export evaluation,diagnostic only (no send),Pit.FuelControl.Fault (0/1/2/3),Info,No command sent,No change,No state change,Suppress fault evaluation during post-send settle/suppression windows. Clear to 0 when telemetry/snapshot truth is unavailable or intentionally mirrored.,No command correction/retry paths from fault detection,
-,,,,,,,,,,,
-,,,,,,,,,,,
-,,,,,,,,,,,
-,,,,,,,,,,,
-,,,,,,,,,,,
-,,,,,,,,,,,
-,,,,,,,,,,,
-,,,,,,,,,,,
-,,,,,,,,,,,
-,,,,,,,,,,,
-,,,,,,,,,,,
+Current mode,Current data,Current source,Action,Expected result,Feedback,Command send,Target basis,Notes
+OFF,any,any,ModeCycle,MAN / STBY,FUEL MAN STBY,Sends #fuel$,n/a,MODE behavior unchanged; DATA is not changed by ModeCycle.
+OFF,LIVE/PLAN,any,SourceCycle,OFF / STBY,None,No send,n/a,OFF hard guard blocks source sends.
+OFF,LIVE/PLAN,any,SetPush/SetNorm/SetSave,OFF / STBY,None,No send,n/a,OFF hard guard blocks direct source sends.
+OFF,any,any,SetDataLive,OFF / LIVE / STBY,FUEL DATA LIVE,No send,n/a,DATA change forces SOURCE STBY.
+OFF,any,any,SetDataPlan,OFF / PLAN / STBY,FUEL DATA PLAN,No send,n/a,DATA change forces SOURCE STBY.
+OFF,any,any,CycleData,OFF / toggled DATA / STBY,FUEL DATA <LIVE|PLAN>,No send,n/a,DATA change forces SOURCE STBY.
+OFF,any,any,SetPlan compatibility,OFF / PLAN / STBY,FUEL DATA PLAN,No send,n/a,Compatibility shim; no SOURCE PLAN and no planner target send.
+MAN,LIVE,STBY,SourceCycle,MAN / LIVE / NORM,REFUEL SET NORM X L,Sends #fuel X$,Runtime/live NORM,NORM always uses runtime/live burn.
+MAN,LIVE,NORM,SourceCycle,MAN / LIVE / PUSH,REFUEL SET PUSH X L,Sends #fuel X$,Runtime/live PUSH,SOURCE cycle order is STBY -> NORM -> PUSH -> SAVE -> STBY.
+MAN,LIVE,PUSH,SourceCycle,MAN / LIVE / SAVE,REFUEL SET SAVE X L,Sends #fuel X$,Runtime/live SAVE,Uses live save target.
+MAN,LIVE,SAVE,SourceCycle,MAN / LIVE / STBY,FUEL SRC STBY,No send,n/a,STBY is a parked no-send source.
+MAN,PLAN,STBY,SourceCycle,MAN / PLAN / NORM,REFUEL SET NORM X L,Sends #fuel X$,Runtime/live NORM,NORM ignores DATA and always uses runtime/live burn.
+MAN,PLAN,NORM,SourceCycle,MAN / PLAN / PUSH,REFUEL SET PUSH X L,Sends #fuel X$,Planner/profile PUSH,DATA PLAN chooses planner/profile basis for PUSH.
+MAN,PLAN,PUSH,SourceCycle,MAN / PLAN / SAVE,REFUEL SET SAVE X L,Sends #fuel X$,Planner/profile SAVE,DATA PLAN chooses planner/profile basis for SAVE.
+MAN,PLAN,SAVE,SourceCycle,MAN / PLAN / STBY,FUEL SRC STBY,No send,n/a,STBY is a parked no-send source.
+MAN,LIVE/PLAN,any,SetNorm,MAN / same DATA / NORM,REFUEL SET NORM X L,Sends #fuel X$,Runtime/live NORM,NORM always runtime/live regardless of DATA.
+MAN,LIVE,any,SetPush/SetSave,MAN / LIVE / PUSH or SAVE,REFUEL SET <SRC> X L,Sends #fuel X$,Runtime/live PUSH/SAVE,DATA LIVE chooses live push/save.
+MAN,PLAN,any,SetPush/SetSave,MAN / PLAN / PUSH or SAVE,REFUEL SET <SRC> X L,Sends #fuel X$,Planner/profile PUSH/SAVE,DATA PLAN chooses planner/profile push/save with existing fallback.
+MAN,any,any,SetDataLive/SetDataPlan/CycleData,MAN / selected DATA / STBY,FUEL DATA <LIVE|PLAN>,No send,n/a,Changing DATA always parks SOURCE at STBY.
+MAN,any,any,SetPlan compatibility,MAN / PLAN / STBY,FUEL DATA PLAN,No send,n/a,Old dashboards keep working but must migrate from SOURCE PLAN to DATA PLAN plus explicit source.
+MAN,LIVE/PLAN,STBY,ModeCycle,AUTO / same DATA / STBY,AUTO REFUEL STBY,No send,n/a,AUTO mode entry unchanged for STBY.
+MAN,LIVE,NORM/PUSH/SAVE,ModeCycle,AUTO / LIVE / same SOURCE,AUTO REFUEL SET <SRC> X L,Sends #fuel X$,Runtime/live for NORM/PUSH/SAVE,AUTO arms on successful send.
+MAN,PLAN,NORM,ModeCycle,AUTO / PLAN / NORM,AUTO REFUEL SET NORM X L,Sends #fuel X$,Runtime/live NORM,NORM ignores DATA.
+MAN,PLAN,PUSH/SAVE,ModeCycle,AUTO / PLAN / same SOURCE,AUTO REFUEL SET <SRC> X L,Sends #fuel X$,Planner/profile PUSH/SAVE,AUTO arms on successful send.
+AUTO,LIVE/PLAN,STBY,ModeCycle,OFF / same DATA / STBY,REFUEL OFF,Sends #-fuel$,n/a,MODE behavior unchanged.
+AUTO,LIVE/PLAN,NORM/PUSH/SAVE,ModeCycle,OFF / same DATA / STBY,REFUEL OFF,Sends #-fuel$,n/a,MODE behavior unchanged.
+AUTO,LIVE/PLAN,STBY,SourceCycle,AUTO / same DATA / NORM,AUTO REFUEL SET NORM X L,Sends #fuel X$,Runtime/live NORM,STBY clears by selecting NORM.
+AUTO,LIVE,NORM,SourceCycle,AUTO / LIVE / PUSH,AUTO REFUEL SET PUSH X L,Sends #fuel X$,Runtime/live PUSH,AUTO remains armed on successful send.
+AUTO,LIVE,PUSH,SourceCycle,AUTO / LIVE / SAVE,AUTO REFUEL SET SAVE X L,Sends #fuel X$,Runtime/live SAVE,AUTO remains armed on successful send.
+AUTO,LIVE,SAVE,SourceCycle,AUTO / LIVE / STBY,FUEL SRC STBY,No send,n/a,AUTO disarms when SOURCE becomes STBY.
+AUTO,PLAN,NORM,SourceCycle,AUTO / PLAN / PUSH,AUTO REFUEL SET PUSH X L,Sends #fuel X$,Planner/profile PUSH,DATA PLAN chooses planner/profile push/save.
+AUTO,PLAN,PUSH,SourceCycle,AUTO / PLAN / SAVE,AUTO REFUEL SET SAVE X L,Sends #fuel X$,Planner/profile SAVE,DATA PLAN chooses planner/profile push/save.
+AUTO,PLAN,SAVE,SourceCycle,AUTO / PLAN / STBY,FUEL SRC STBY,No send,n/a,AUTO disarms when SOURCE becomes STBY.
+AUTO,any,any,SetDataLive/SetDataPlan/CycleData,AUTO / selected DATA / STBY,FUEL DATA <LIVE|PLAN>,No send,n/a,Changing DATA parks SOURCE at STBY and disarms AUTO.
+AUTO,any,any,SetPlan compatibility,AUTO / PLAN / STBY,FUEL DATA PLAN,No send,n/a,No AUTO+PLAN impossible state remains because PLAN is not a SOURCE.
+AUTO,LIVE,NORM/PUSH/SAVE,OnLapCross,AUTO / LIVE / same SOURCE,AUTO FUEL X L when material delta,Sends #fuel X$ only on material target change,Runtime/live target,AUTO lap-cross flow unchanged except no PLAN block.
+AUTO,PLAN,NORM,OnLapCross,AUTO / PLAN / NORM,AUTO FUEL X L when material delta,Sends #fuel X$ only on material target change,Runtime/live NORM,NORM ignores DATA.
+AUTO,PLAN,PUSH/SAVE,OnLapCross,AUTO / PLAN / same SOURCE,AUTO FUEL X L when material delta,Sends #fuel X$ only on material target change,Planner/profile PUSH/SAVE,DATA PLAN chooses planner/profile push/save.
+AUTO,any,any,External MFD OFF/ON/fuel change,OFF or MAN / same DATA / STBY,AUTO REFUEL CANCELLED BY MFD,No plugin send,n/a,External mirror/cancel behavior unchanged.
+MAN/OFF,any,any,External MFD OFF/ON/fuel change,OFF or MAN / same DATA / STBY,REFUEL SET OFF BY MFD / REFUEL SET ON BY MFD / FUEL CHANGED BY MFD,No plugin send,n/a,External mirror behavior unchanged.
+any,any,any,Fault export evaluation,No state change,Pit.FuelControl.Fault,No command sent,n/a,Diagnostic only; no retries or corrections.

@@ -1,3 +1,38 @@
+- 2026-05-06 H2H ClassColorHex coverage follow-up landed:
+  - added H2H target `ClassColorHex` exports (`H2HRace.Ahead/Behind`, `H2HTrack.Ahead/Behind`) and aligned them to the existing League-aware presentation gate with `#RRGGBB` format.
+
+- 2026-05-06 League Class follow-up landed:
+  - `Opp.Ahead/Behind*.ClassColor` keeps canonical `0xRRGGBB` format under League-aware presentation; `ClassColorHex` remains `#RRGGBB`;
+  - DriverCount player-car identity reads now use CarIdx invalid sentinel `-1` to avoid missing-value car-0 misclassification;
+  - authorised H2HTrack class-color presentation now follows League-aware path via shared H2H attach wiring only (no selector/sector/delta/gap/timing changes).
+
+- 2026-05-06 League Class follow-up fix landed:
+  - `LeagueClass.Player.DriverCount` now includes player row under manual override/effective-player-class semantics while counting non-player rows via driver resolver semantics;
+  - League class-color presentation override in shared H2H export attach path is now restricted to H2HRace; H2HTrack class color remains native.
+
+- 2026-05-06 League Class presentation follow-up review fixes landed:
+  - `LeagueClass.Player.DriverCount` now counts drivers in the selected player effective class cohort (not total CSV-valid rows), with native fallback or `0` when unavailable;
+  - H2HRace class presentation resolution now passes participant `UserID` when available so CSV-only mode resolves class presentation correctly.
+
+
+- 2026-05-06 League Class race-context class presentation alignment landed:
+  - Opp race-context slots (`Opp.Ahead1..5` / `Opp.Behind1..5`) now publish class presentation fields from effective League Class while preserving original slot identity and native fallback when League Class is disabled/unresolved;
+  - H2HRace player/ahead/behind class presentation follows the same League Class gate for class-facing dash fields only (no H2HTrack or sector/delta changes);
+  - added dash export `LeagueClass.Player.DriverCount` for selected player effective-class cohort count display intent.
+- 2026-05-06 PR #679 build-fix landed:
+  - restored missing `ResolveDataGovernedBurnAndPaceBasis(...)` helper in `LalaLaunch` (PreRace helper region) so `UpdatePreRaceOutputs(...)` compile path is valid again;
+  - hierarchy/source contracts preserved exactly:
+    - DATA LIVE burn: `LIVE -> PLAN -> PROFILE -> DEFAULT`; lap: `LIVE -> PLAN -> PROFILE -> SIM -> DEFAULT`;
+    - DATA PLAN burn: `PLAN -> PROFILE -> DEFAULT`; lap: `PLAN -> PROFILE -> DEFAULT`;
+  - protected runtime domains untouched (`Fuel.Delta.*`, `Fuel.Pit.*`, `Fuel.RequiredBurnToEnd*`, boxed refuel latches, `PitFuelControlEngine` target/send behavior).
+
+- 2026-05-05 Pit Fuel Control DATA/SOURCE simplification landed:
+  - retired `SOURCE=PLAN`; source cycle is now `STBY -> NORM -> PUSH -> SAVE -> STBY`;
+  - added `Pit.FuelControl.Data` / `DataText` and actions `SetDataLive`, `SetDataPlan`, `CycleData`;
+  - DATA defaults to `LIVE` on control/session reset, and changing DATA forces `SOURCE=STBY` with no fuel command send;
+  - legacy `SetPlan` remains for one release as `DATA=PLAN` + `SOURCE=STBY` feedback-only compatibility (`FUEL DATA PLAN`);
+  - StrategyDash next-refuel target and burn-plan text now follow the DATA/SOURCE model (`NORM` runtime/live; `PUSH`/`SAVE` live or planner/profile memory by DATA).
+
 - 2026-05-05 StrategyDash burn-basis alignment + no-stop burn-plan + refuel-delta landed:
   - Auto PreRace fuel-per-lap fallback order now stays live-stable first, then selected planner `FuelCalculator.FuelPerLap` when valid, then existing profile/generic fallback;
   - added `StrategyDash.BurnPlanText` as a concise pre-green helper for no-stop/grid guidance (`BURN PLAN: NORM/SAVE/PUSH` with optional source suffix);

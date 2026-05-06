@@ -114,23 +114,23 @@
                                      Maximum="30"
                                      Value="{Binding Settings.StintFuelMarginPct, Mode=TwoWay}"
                                      ToolTip="Reserve fuel as a percentage of one lap (based on stable fuel burn) when calculating stint burn targets." />
-                    <styles:SHToggleCheckbox Content="Push/Save Profile Mode"
+                    <styles:SHToggleCheckbox Content="Fuel Data Plan Mode"
                                              Margin="0,8,0,0"
                                              IsChecked="{Binding Settings.PitFuelControlPushSaveProfileModeEnabled, Mode=TwoWay}"
-                                             ToolTip="Toggle Pit Fuel Control Push/Save basis. OFF = LIVE (0), ON = PROFILE (1). This setting is shared with PushSaveModeCycle action and reflects action changes immediately." />
-                    <TextBlock Text="OFF = LIVE, ON = PROFILE"
+                                             ToolTip="Toggle Pit Fuel Control DATA. OFF = LIVE runtime burn assumptions, ON = PLAN memory/profile assumptions for PUSH/SAVE. Changing DATA parks SOURCE at STBY." />
+                    <TextBlock Text="OFF = LIVE, ON = PLAN"
                                FontSize="11"
                                Opacity="0.7"
                                TextWrapping="Wrap"
                                Margin="0,2,0,0"/>
-                    <ui:TitledSlider Title="Pit Fuel Push/Save Profile Guard (%): "
+                    <ui:TitledSlider Title="Pit Fuel DATA PLAN Guard (%): "
                                      Margin="0,8,0,0"
                                      Minimum="0"
                                      Maximum="30"
                                      TickFrequency="1"
                                      IsSnapToTickEnabled="True"
                                      Value="{Binding Settings.PitFuelPushSaveProfileGuardPct, Mode=TwoWay}"
-                                     ToolTip="When Push/Save mode is PROFILE, caps profile push/save burn around live stable NORM burn by this guard percentage." />
+                                     ToolTip="When DATA is PLAN, caps memory/profile push/save burn around live stable NORM burn by this guard percentage." />
                     
                     <styles:SHToggleCheckbox Content="Pit.Box: include optional repairs in service countdown"
                          Margin="0,0,0,10"

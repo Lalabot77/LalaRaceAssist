@@ -165,6 +165,7 @@ namespace LaunchPlugin
             output.Name = selector.Name ?? string.Empty;
             output.CarNumber = selector.CarNumber ?? string.Empty;
             output.ClassColor = selector.ClassColor ?? string.Empty;
+            output.UserID = selector.UserID;
             output.CarIdx = selector.CarIdx;
 
             int selectorPosClass = selector.PositionInClass;
@@ -599,6 +600,7 @@ namespace LaunchPlugin
             public string Name { get; set; } = string.Empty;
             public string CarNumber { get; set; } = string.Empty;
             public string ClassColor { get; set; } = string.Empty;
+            public int UserID { get; set; }
             public int PositionInClass { get; set; }
             public double LastLapSec { get; set; }
             public double BestLapSec { get; set; }
@@ -639,6 +641,7 @@ namespace LaunchPlugin
                 Name = string.Empty;
                 CarNumber = string.Empty;
                 ClassColor = string.Empty;
+                UserID = 0;
                 PositionInClass = 0;
                 LastLapSec = 0.0;
                 BestLapSec = 0.0;
@@ -674,6 +677,7 @@ namespace LaunchPlugin
             public string Name;
             public string CarNumber;
             public string ClassColor;
+            public int UserID;
             public int PositionInClass;
         }
     }

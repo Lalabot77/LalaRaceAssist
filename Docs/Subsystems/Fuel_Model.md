@@ -38,7 +38,7 @@ Out of scope:
 - Strategy-tab input ownership and preset behavior,
 - user-facing planner workflow,
 - dashboard artwork/layout decisions,
-- Pit Fuel Control source-selection mode behavior (for example profile-assisted Push/Save mode), which is owned by the Pit Commands/Fuel Control subsystem.
+- Pit Fuel Control DATA/SOURCE/MODE behavior (for example DATA PLAN assisted Push/Save target selection), which is owned by the Pit Commands/Fuel Control subsystem.
 
 ## Inputs (source + cadence)
 ### Runtime telemetry

@@ -1,3 +1,51 @@
+## 2026-05-06 — H2H ClassColorHex coverage follow-up
+- Classification: **both** (dash-facing class-colour contract completeness + League presentation alignment).
+- Added `H2HRace.Ahead/Behind.ClassColorHex` and `H2HTrack.Ahead/Behind.ClassColorHex` exports alongside existing `ClassColor` exports in shared H2H target attach wiring.
+- `ClassColorHex` now follows the same League-aware presentation gate as `ClassColor` and always publishes `#RRGGBB` format.
+
+## 2026-05-06 — League Class follow-up: Opp ClassColor format + CarIdx sentinel + H2HTrack presentation alignment
+- Classification: **both** (export-format correction + identity read hardening + authorised H2HTrack presentation alignment).
+- Fixed `Opp.*.ClassColor` League-aware path to preserve canonical `0xRRGGBB` output while `Opp.*.ClassColorHex` remains `#RRGGBB`.
+- Hardened DriverCount player-car identity reads by using `-1` sentinel for missing/unparseable CarIdx properties (no implicit car `0` fallback).
+- Enabled League-aware class-color presentation wiring for both `H2HRace` and `H2HTrack` attach paths without changing H2H selection, sector, delta, gap, or timing logic.
+
+## 2026-05-06 — League Class follow-up: manual-override player count + H2HRace-only class-color override
+- Classification: **both** (dash-facing export correctness fixes + scope-guarded H2H presentation wiring).
+- `LeagueClass.Player.DriverCount` now includes the player row using player resolver semantics in League-active counting (manual override included), while non-player rows continue using driver resolver semantics.
+- `AttachH2H*` class-color League override is now enabled for `H2HRace` only; `H2HTrack.*.ClassColor` remains native.
+
+## 2026-05-06 — League Class presentation follow-up review fixes
+- Classification: **both** (dash-facing export-correctness fixes + contract docs alignment).
+- Fixed `LeagueClass.Player.DriverCount` to count the player’s effective class cohort membership (not total valid CSV rows), with native same-class fallback where available and `0` when unavailable.
+- Fixed H2HRace class presentation resolver wiring to pass participant `UserID` when available, restoring CSV-only resolver behavior for class presentation outputs.
+
+
+## 2026-05-06 — League Class race-context class presentation alignment
+- Classification: **both** (dash-facing class-presentation export behavior + internal contract alignment).
+- `Opp.Ahead1..5` / `Opp.Behind1..5` now publish class presentation fields (`ClassName`, `ClassColor`, `ClassColorHex`) from resolved effective League Class when League Class is enabled and player effective class is valid; otherwise native behavior remains.
+- `H2HRace.Player/Ahead/Behind` class color presentation now follows the same League Class presentation gate while preserving selected-driver identity and existing selector/gap/timing behavior.
+- Added `LeagueClass.Player.DriverCount` export for dashboards (`Pxx of xx` support).
+## 2026-05-06 — PR #679 build fix: restore PreRace data-governed burn/pace helper
+- Classification: **internal-only** (compile restoration + intended source-hierarchy reattachment; no protected runtime-domain changes).
+- Restored `ResolveDataGovernedBurnAndPaceBasis(...)` inside `LalaLaunch` near PreRace helpers so `UpdatePreRaceOutputs(...)` compiles and resolves source authority in one place again.
+- Preserved approved hierarchy and source tokens:
+  - DATA LIVE: BURN `LIVE -> PLAN -> PROFILE -> DEFAULT`; LAP `LIVE -> PLAN -> PROFILE -> SIM -> DEFAULT`.
+  - DATA PLAN: BURN `PLAN -> PROFILE -> DEFAULT`; LAP `PLAN -> PROFILE -> DEFAULT`.
+- Explicitly kept untouched protected domains: `Fuel.Delta.*`, `Fuel.Pit.*`, `Fuel.RequiredBurnToEnd*`, boxed refuel latches, and `PitFuelControlEngine` target/send behavior.
+
+## 2026-05-06 — PreRace live-facing lap/burn basis helper export
+- Classification: **both** (new dash-facing helper export + internal contract docs alignment).
+- Added `LalaLaunch.PreRace.LiveFacingBasisText` as a concise combined readout of active pre-race source authority: `LAP <source> / BURN <source>`.
+- The new property mirrors existing `LalaLaunch.PreRace.LapTimeSource` and `LalaLaunch.PreRace.FuelSource` values only; no fuel math, strategy ownership, or Pit Fuel Control DATA/SOURCE behavior changed.
+
+## 2026-05-05 — Pit Fuel Control DATA/SOURCE simplification
+- Classification: **both** (dash-facing action/export contract change + internal state-machine simplification).
+- Retired `SOURCE=PLAN`; Pit Fuel Control SOURCE is now `STBY`/`NORM`/`PUSH`/`SAVE`, with source cycling `STBY -> NORM -> PUSH -> SAVE -> STBY`.
+- Added Pit Fuel Control DATA (`LIVE`/`PLAN`) exports and actions (`SetDataLive`, `SetDataPlan`, `CycleData`). DATA defaults to `LIVE` on control/session reset, and every DATA change forces `SOURCE=STBY` with no fuel command send.
+- Compatibility: legacy `Pit.FuelControl.SetPlan` remains registered for one release but now maps to `DATA=PLAN` + `SOURCE=STBY` and publishes `FUEL DATA PLAN`; legacy `PushSaveModeCycle` remains as a DATA-cycle alias.
+- Removed PLAN validity/session-match enforcement from Pit Fuel Control because PLAN is no longer a command source. `NORM` always uses runtime/live burn; `PUSH`/`SAVE` use live burn under DATA LIVE or planner/profile memory burn under DATA PLAN.
+- Aligned StrategyDash pre-green next-refuel and burn-plan text with the DATA/SOURCE model: `NORM` uses runtime burn, `PUSH`/`SAVE` follow DATA, `/ LIVE` and `/ MEMORY` suffixes are emitted only when the basis is clear.
+
 ## 2026-05-05 — League Class ClassLeader native-gate bypass fix
 - Classification: **internal-only** (dash-visible correctness for an already-documented ClassLeader League Class contract; no new exports/UI/actions).
 - Root cause: `FindResolvedClassLeaderCarIdx(...)` still let native single-class detection and native player class-short resolution run before the League race-context matcher, so ClassLeader could return the native overall/class leader even while Opponents/H2HRace were already using the valid player effective-class cohort.
