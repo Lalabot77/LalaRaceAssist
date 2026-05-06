@@ -1,3 +1,30 @@
+## 2026-05-06 — H2H ClassColorHex coverage follow-up
+- Classification: **both** (dash-facing class-colour contract completeness + League presentation alignment).
+- Added `H2HRace.Ahead/Behind.ClassColorHex` and `H2HTrack.Ahead/Behind.ClassColorHex` exports alongside existing `ClassColor` exports in shared H2H target attach wiring.
+- `ClassColorHex` now follows the same League-aware presentation gate as `ClassColor` and always publishes `#RRGGBB` format.
+
+## 2026-05-06 — League Class follow-up: Opp ClassColor format + CarIdx sentinel + H2HTrack presentation alignment
+- Classification: **both** (export-format correction + identity read hardening + authorised H2HTrack presentation alignment).
+- Fixed `Opp.*.ClassColor` League-aware path to preserve canonical `0xRRGGBB` output while `Opp.*.ClassColorHex` remains `#RRGGBB`.
+- Hardened DriverCount player-car identity reads by using `-1` sentinel for missing/unparseable CarIdx properties (no implicit car `0` fallback).
+- Enabled League-aware class-color presentation wiring for both `H2HRace` and `H2HTrack` attach paths without changing H2H selection, sector, delta, gap, or timing logic.
+
+## 2026-05-06 — League Class follow-up: manual-override player count + H2HRace-only class-color override
+- Classification: **both** (dash-facing export correctness fixes + scope-guarded H2H presentation wiring).
+- `LeagueClass.Player.DriverCount` now includes the player row using player resolver semantics in League-active counting (manual override included), while non-player rows continue using driver resolver semantics.
+- `AttachH2H*` class-color League override is now enabled for `H2HRace` only; `H2HTrack.*.ClassColor` remains native.
+
+## 2026-05-06 — League Class presentation follow-up review fixes
+- Classification: **both** (dash-facing export-correctness fixes + contract docs alignment).
+- Fixed `LeagueClass.Player.DriverCount` to count the player’s effective class cohort membership (not total valid CSV rows), with native same-class fallback where available and `0` when unavailable.
+- Fixed H2HRace class presentation resolver wiring to pass participant `UserID` when available, restoring CSV-only resolver behavior for class presentation outputs.
+
+
+## 2026-05-06 — League Class race-context class presentation alignment
+- Classification: **both** (dash-facing class-presentation export behavior + internal contract alignment).
+- `Opp.Ahead1..5` / `Opp.Behind1..5` now publish class presentation fields (`ClassName`, `ClassColor`, `ClassColorHex`) from resolved effective League Class when League Class is enabled and player effective class is valid; otherwise native behavior remains.
+- `H2HRace.Player/Ahead/Behind` class color presentation now follows the same League Class presentation gate while preserving selected-driver identity and existing selector/gap/timing behavior.
+- Added `LeagueClass.Player.DriverCount` export for dashboards (`Pxx of xx` support).
 ## 2026-05-06 — PR #679 build fix: restore PreRace data-governed burn/pace helper
 - Classification: **internal-only** (compile restoration + intended source-hierarchy reattachment; no protected runtime-domain changes).
 - Restored `ResolveDataGovernedBurnAndPaceBasis(...)` inside `LalaLaunch` near PreRace helpers so `UpdatePreRaceOutputs(...)` compiles and resolves source authority in one place again.

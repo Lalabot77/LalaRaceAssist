@@ -5324,6 +5324,136 @@ namespace LaunchPlugin
             }
         }
 
+
+        private bool IsLeagueRaceContextClassPresentationActive()
+        {
+            var player = ResolveLivePlayerLeagueClassInfo();
+            return (Settings?.LeagueClassEnabled == true) && player.Valid && !string.IsNullOrWhiteSpace(player.Name);
+        }
+
+        private string ResolveRaceContextClassName(int? userId, string driverName, string fallback)
+        {
+            if (!IsLeagueRaceContextClassPresentationActive()) return fallback ?? string.Empty;
+            var info = ResolveLeagueClassDriverInfo(userId, driverName);
+            return info.Valid && !string.IsNullOrWhiteSpace(info.Name) ? info.Name : (fallback ?? string.Empty);
+        }
+
+        private string ResolveRaceContextClassColorHex(int? userId, string driverName, string fallback)
+        {
+            if (!IsLeagueRaceContextClassPresentationActive()) return fallback ?? string.Empty;
+            var info = ResolveLeagueClassDriverInfo(userId, driverName);
+            return info.Valid && !string.IsNullOrWhiteSpace(info.ColourHex) ? info.ColourHex : (fallback ?? string.Empty);
+        }
+
+        private string ResolveRaceContextClassColor(int? userId, string driverName, string fallback)
+        {
+            if (!IsLeagueRaceContextClassPresentationActive()) return fallback ?? string.Empty;
+            var hex = ResolveRaceContextClassColorHex(userId, driverName, fallback);
+            return string.IsNullOrWhiteSpace(hex) ? (fallback ?? string.Empty) : hex;
+        }
+
+        private string ResolveRaceContextClassColorNativeFormat(int? userId, string driverName, string fallback)
+        {
+            string resolved = ResolveRaceContextClassColor(userId, driverName, fallback);
+            string normalizedHex = NormalizeClassColorHex(resolved);
+            if (string.IsNullOrWhiteSpace(normalizedHex))
+            {
+                return fallback ?? string.Empty;
+            }
+
+            return "0x" + normalizedHex.TrimStart('#');
+        }
+
+        private int GetLeagueClassPlayerDriverCount()
+        {
+            var player = ResolveLivePlayerLeagueClassInfo();
+            if ((Settings?.LeagueClassEnabled == true) && player.Valid && !string.IsNullOrWhiteSpace(player.Name))
+            {
+                int count = 0;
+                int playerCarIdx = ResolveLivePlayerCarIdxForLeagueCount();
+                for (int i = 0; i < 64; i++)
+                {
+                    string basePath = $"DataCorePlugin.GameRawData.SessionData.DriverInfo.CompetingDrivers[{i}]";
+                    int carIdx = SafeReadIntProperty(basePath + ".CarIdx", -1);
+                    int userId = SafeReadIntProperty(basePath + ".UserID");
+                    string name = SafeReadStringProperty(basePath + ".UserName");
+                    if (userId <= 0 && string.IsNullOrWhiteSpace(name)) continue;
+
+                    bool isPlayerRow = playerCarIdx >= 0 && carIdx == playerCarIdx;
+                    if (!isPlayerRow && userId > 0)
+                    {
+                        int? playerUserId;
+                        string playerName;
+                        TryGetLivePlayerIdentityPreview(out playerUserId, out playerName);
+                        isPlayerRow = playerUserId.HasValue && playerUserId.Value > 0 && playerUserId.Value == userId;
+                    }
+
+                    EffectiveRaceClassInfo info = isPlayerRow
+                        ? ResolveLivePlayerLeagueClassInfo()
+                        : ResolveLeagueClassDriverInfo(userId > 0 ? (int?)userId : null, name);
+
+                    if (!info.Valid || string.IsNullOrWhiteSpace(info.Name)) continue;
+                    if (string.Equals(info.Name, player.Name, StringComparison.OrdinalIgnoreCase)) count++;
+                }
+                return count > 0 ? count : 0;
+            }
+
+            return GetNativePlayerClassDriverCount();
+        }
+
+        private int GetNativePlayerClassDriverCount()
+        {
+            string playerClass = SafeReadStringProperty("DataCorePlugin.GameRawData.Telemetry.PlayerCarClass");
+            if (string.IsNullOrWhiteSpace(playerClass))
+            {
+                playerClass = SafeReadStringProperty("DataCorePlugin.GameRawData.SessionData.DriverInfo.DriverCarClass");
+            }
+            if (string.IsNullOrWhiteSpace(playerClass)) return 0;
+
+            int count = 0;
+            for (int i = 0; i < 64; i++)
+            {
+                string cls = SafeReadStringProperty($"DataCorePlugin.GameRawData.SessionData.DriverInfo.CompetingDrivers[{i}].CarClassShortName");
+                if (string.IsNullOrWhiteSpace(cls))
+                {
+                    cls = SafeReadStringProperty($"DataCorePlugin.GameRawData.SessionData.DriverInfo.CompetingDrivers[{i}].CarClassName");
+                }
+                if (!string.IsNullOrWhiteSpace(cls) && string.Equals(cls, playerClass, StringComparison.OrdinalIgnoreCase))
+                {
+                    count++;
+                }
+            }
+            return count > 0 ? count : 0;
+        }
+
+        private int ResolveLivePlayerCarIdxForLeagueCount()
+        {
+            int idx = SafeReadIntProperty("DataCorePlugin.GameRawData.Telemetry.PlayerCarIdx", -1);
+            if (idx >= 0)
+            {
+                return idx;
+            }
+
+            idx = SafeReadIntProperty("DataCorePlugin.GameRawData.SessionData.DriverInfo.DriverCarIdx", -1);
+            return idx >= 0 ? idx : -1;
+        }
+
+        
+        private int SafeReadIntProperty(string propertyName, int invalidValue = 0)
+        {
+            object value = GetPropertyValue(propertyName);
+            if (value == null) return invalidValue;
+            try { return Convert.ToInt32(value, CultureInfo.InvariantCulture); } catch { }
+            int parsed;
+            return int.TryParse(value.ToString(), NumberStyles.Integer, CultureInfo.InvariantCulture, out parsed) ? parsed : invalidValue;
+        }
+
+        private string SafeReadStringProperty(string propertyName)
+        {
+            object value = GetPropertyValue(propertyName);
+            return value == null ? string.Empty : (value.ToString() ?? string.Empty);
+        }
+
         public void ReloadLeagueClassConfig()
         {
             try
@@ -5767,11 +5897,11 @@ namespace LaunchPlugin
 
         private void AttachH2HExports()
         {
-            AttachH2HFamilyExports("H2HRace", () => _h2hEngine?.Outputs?.Race);
-            AttachH2HFamilyExports("H2HTrack", () => _h2hEngine?.Outputs?.Track);
+            AttachH2HFamilyExports("H2HRace", () => _h2hEngine?.Outputs?.Race, true);
+            AttachH2HFamilyExports("H2HTrack", () => _h2hEngine?.Outputs?.Track, true);
         }
 
-        private void AttachH2HFamilyExports(string prefix, Func<H2HEngine.H2HFamilyOutput> familyGetter)
+        private void AttachH2HFamilyExports(string prefix, Func<H2HEngine.H2HFamilyOutput> familyGetter, bool useLeagueRaceContextPresentation)
         {
             if (string.IsNullOrWhiteSpace(prefix) || familyGetter == null)
             {
@@ -5788,11 +5918,11 @@ namespace LaunchPlugin
             AttachCore(prefix + ".Player.ActiveSegment", () => familyGetter()?.Player.ActiveSegment ?? 0);
             AttachCore(prefix + ".Player.LapRef", () => familyGetter()?.Player.LapRef ?? 0);
 
-            AttachH2HTargetExports(prefix, "Ahead", () => familyGetter()?.Ahead);
-            AttachH2HTargetExports(prefix, "Behind", () => familyGetter()?.Behind);
+            AttachH2HTargetExports(prefix, "Ahead", () => familyGetter()?.Ahead, useLeagueRaceContextPresentation);
+            AttachH2HTargetExports(prefix, "Behind", () => familyGetter()?.Behind, useLeagueRaceContextPresentation);
         }
 
-        private void AttachH2HTargetExports(string prefix, string side, Func<H2HEngine.H2HParticipantOutput> participantGetter)
+        private void AttachH2HTargetExports(string prefix, string side, Func<H2HEngine.H2HParticipantOutput> participantGetter, bool useLeagueRaceContextPresentation)
         {
             if (string.IsNullOrWhiteSpace(prefix) || string.IsNullOrWhiteSpace(side) || participantGetter == null)
             {
@@ -5805,7 +5935,12 @@ namespace LaunchPlugin
             AttachCore(baseName + ".IdentityKey", () => participantGetter()?.IdentityKey ?? string.Empty);
             AttachCore(baseName + ".Name", () => participantGetter()?.Name ?? string.Empty);
             AttachCore(baseName + ".CarNumber", () => participantGetter()?.CarNumber ?? string.Empty);
-            AttachCore(baseName + ".ClassColor", () => participantGetter()?.ClassColor ?? string.Empty);
+            AttachCore(baseName + ".ClassColor", () => useLeagueRaceContextPresentation
+                ? ResolveRaceContextClassColor((participantGetter()?.UserID ?? 0) > 0 ? (int?)participantGetter()?.UserID : null, participantGetter()?.Name, participantGetter()?.ClassColor)
+                : (participantGetter()?.ClassColor ?? string.Empty));
+            AttachCore(baseName + ".ClassColorHex", () => useLeagueRaceContextPresentation
+                ? ResolveRaceContextClassColorHex((participantGetter()?.UserID ?? 0) > 0 ? (int?)participantGetter()?.UserID : null, participantGetter()?.Name, participantGetter()?.ClassColor)
+                : (NormalizeClassColorHex(participantGetter()?.ClassColor) ?? string.Empty));
             AttachCore(baseName + ".PositionInClass", () => participantGetter()?.PositionInClass ?? 0);
             AttachCore(baseName + ".LastLapSec", () => participantGetter()?.LastLapSec ?? 0.0);
             AttachCore(baseName + ".BestLapSec", () => participantGetter()?.BestLapSec ?? 0.0);
@@ -6815,6 +6950,7 @@ namespace LaunchPlugin
             AttachCore("LeagueClass.Player.Valid", () => ResolveLivePlayerLeagueClassInfo().Valid);
             AttachCore("LeagueClass.Player.Source", () => LeagueClassSourceToExportText(ResolveLivePlayerLeagueClassInfo().Source));
             AttachCore("LeagueClass.Player.OverrideActive", () => (Settings?.LeagueClassPlayerOverrideMode ?? 0) == 1);
+            AttachCore("LeagueClass.Player.DriverCount", () => GetLeagueClassPlayerDriverCount());
 
             double SafeOppValue(double v) => (double.IsNaN(v) || double.IsInfinity(v)) ? 0.0 : v;
             Func<int, OpponentsEngine.OpponentTargetOutput> getAheadSlot = i => _opponentsEngine?.Outputs?.GetAheadSlot(i);
@@ -6829,9 +6965,9 @@ namespace LaunchPlugin
                 AttachCore(aheadPrefix + ".Name", () => getAheadSlot(slotIndex)?.Name ?? string.Empty);
                 AttachCore(aheadPrefix + ".AbbrevName", () => getAheadSlot(slotIndex)?.AbbrevName ?? string.Empty);
                 AttachCore(aheadPrefix + ".CarNumber", () => getAheadSlot(slotIndex)?.CarNumber ?? string.Empty);
-                AttachCore(aheadPrefix + ".ClassName", () => getAheadSlot(slotIndex)?.ClassName ?? string.Empty);
-                AttachCore(aheadPrefix + ".ClassColor", () => getAheadSlot(slotIndex)?.ClassColor ?? string.Empty);
-                AttachCore(aheadPrefix + ".ClassColorHex", () => getAheadSlot(slotIndex)?.ClassColorHex ?? string.Empty);
+                AttachCore(aheadPrefix + ".ClassName", () => ResolveRaceContextClassName(getAheadSlot(slotIndex)?.UserID, getAheadSlot(slotIndex)?.Name, getAheadSlot(slotIndex)?.ClassName));
+                AttachCore(aheadPrefix + ".ClassColor", () => ResolveRaceContextClassColorNativeFormat(getAheadSlot(slotIndex)?.UserID, getAheadSlot(slotIndex)?.Name, getAheadSlot(slotIndex)?.ClassColor));
+                AttachCore(aheadPrefix + ".ClassColorHex", () => ResolveRaceContextClassColorHex(getAheadSlot(slotIndex)?.UserID, getAheadSlot(slotIndex)?.Name, getAheadSlot(slotIndex)?.ClassColorHex));
                 AttachCore(aheadPrefix + ".IsValid", () => getAheadSlot(slotIndex)?.IsValid ?? false);
                 AttachCore(aheadPrefix + ".IsOnTrack", () => getAheadSlot(slotIndex)?.IsOnTrack ?? false);
                 AttachCore(aheadPrefix + ".IsOnPitRoad", () => getAheadSlot(slotIndex)?.IsOnPitRoad ?? false);
@@ -6879,9 +7015,9 @@ namespace LaunchPlugin
                 AttachCore(behindPrefix + ".Name", () => getBehindSlot(slotIndex)?.Name ?? string.Empty);
                 AttachCore(behindPrefix + ".AbbrevName", () => getBehindSlot(slotIndex)?.AbbrevName ?? string.Empty);
                 AttachCore(behindPrefix + ".CarNumber", () => getBehindSlot(slotIndex)?.CarNumber ?? string.Empty);
-                AttachCore(behindPrefix + ".ClassName", () => getBehindSlot(slotIndex)?.ClassName ?? string.Empty);
-                AttachCore(behindPrefix + ".ClassColor", () => getBehindSlot(slotIndex)?.ClassColor ?? string.Empty);
-                AttachCore(behindPrefix + ".ClassColorHex", () => getBehindSlot(slotIndex)?.ClassColorHex ?? string.Empty);
+                AttachCore(behindPrefix + ".ClassName", () => ResolveRaceContextClassName(getBehindSlot(slotIndex)?.UserID, getBehindSlot(slotIndex)?.Name, getBehindSlot(slotIndex)?.ClassName));
+                AttachCore(behindPrefix + ".ClassColor", () => ResolveRaceContextClassColorNativeFormat(getBehindSlot(slotIndex)?.UserID, getBehindSlot(slotIndex)?.Name, getBehindSlot(slotIndex)?.ClassColor));
+                AttachCore(behindPrefix + ".ClassColorHex", () => ResolveRaceContextClassColorHex(getBehindSlot(slotIndex)?.UserID, getBehindSlot(slotIndex)?.Name, getBehindSlot(slotIndex)?.ClassColorHex));
                 AttachCore(behindPrefix + ".IsValid", () => getBehindSlot(slotIndex)?.IsValid ?? false);
                 AttachCore(behindPrefix + ".IsOnTrack", () => getBehindSlot(slotIndex)?.IsOnTrack ?? false);
                 AttachCore(behindPrefix + ".IsOnPitRoad", () => getBehindSlot(slotIndex)?.IsOnPitRoad ?? false);
@@ -13255,6 +13391,7 @@ namespace LaunchPlugin
             string carNumber = current?.CarNumber ?? string.Empty;
             string classColor = NormalizeH2HClassColor(current?.ClassColor);
             int positionInClass = current != null ? current.PositionInClass : 0;
+            int userId = current != null ? current.UserID : 0;
             bool sameIdentityAsPrevious = previousOutput != null
                 && !string.IsNullOrWhiteSpace(previousOutput.IdentityKey)
                 && string.Equals(previousOutput.IdentityKey, identityKey, StringComparison.Ordinal);
@@ -13282,6 +13419,11 @@ namespace LaunchPlugin
             if (positionInClass <= 0 && previousOutput != null && string.Equals(previousOutput.IdentityKey, identityKey, StringComparison.Ordinal))
             {
                 positionInClass = previousOutput.PositionInClass;
+            }
+
+            if (userId <= 0 && previousOutput != null && string.Equals(previousOutput.IdentityKey, identityKey, StringComparison.Ordinal))
+            {
+                userId = previousOutput.UserID;
             }
 
             int carIdx = -1;
@@ -13325,6 +13467,7 @@ namespace LaunchPlugin
                 Name = name,
                 CarNumber = carNumber,
                 ClassColor = NormalizeH2HClassColor(classColor),
+                UserID = userId > 0 ? userId : 0,
                 PositionInClass = positionInClass > 0 ? positionInClass : 0
             };
         }
