@@ -1,3 +1,9 @@
+## 2026-05-06 — Car.Player class presentation uses player effective-class resolver
+- Classification: **internal-only** (targeted export-resolution fix for existing class presentation contract; no new exports/UI/actions).
+- Fixed `Car.Player.ClassName`, `Car.Player.ClassColor`, and `Car.Player.ClassColorHex` to resolve through the player effective-class path (`ResolveLivePlayerLeagueClassInfo`) instead of the generic race-context driver resolver path.
+- Preserved expected fallback behavior: League Class disabled or unresolved still publishes native CarSA class values; enabled + no manual override still follows current CSV/name effective-class resolution; enabled + manual player override now reliably publishes manual override presentation for player exports.
+- Out-of-scope invariants preserved: no CarSA sorting/filtering/cache ownership changes, no H2H target/timing changes, and no `Car.Ahead*/Behind*` resolver behavior changes.
+
 ## 2026-05-06 — League Class presentation alignment for Car.* and H2HTrack class-facing outputs
 - Classification: **both** (dash-facing class presentation behavior update + contract docs alignment).
 - `Car.Player.ClassName/ClassColor/ClassColorHex` now publish effective League Class presentation when League Class is enabled and resolved (manual player override included), with native CarSA fallback unchanged when disabled/unresolved.

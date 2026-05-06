@@ -5399,6 +5399,55 @@ namespace LaunchPlugin
             return resolvedHex;
         }
 
+        private string ResolvePlayerClassPresentationName(string nativeClassName)
+        {
+            var player = ResolveLivePlayerLeagueClassInfo();
+            if ((Settings?.LeagueClassEnabled == true) && player.Valid && !string.IsNullOrWhiteSpace(player.Name))
+            {
+                return player.Name;
+            }
+
+            return nativeClassName ?? string.Empty;
+        }
+
+        private string ResolvePlayerClassPresentationColorHex(string nativeClassColorHex)
+        {
+            string fallbackHex = NormalizeClassColorHex(nativeClassColorHex);
+            if (string.IsNullOrWhiteSpace(fallbackHex))
+            {
+                fallbackHex = nativeClassColorHex ?? string.Empty;
+            }
+
+            var player = ResolveLivePlayerLeagueClassInfo();
+            if ((Settings?.LeagueClassEnabled == true) && player.Valid && !string.IsNullOrWhiteSpace(player.Name))
+            {
+                string resolvedHex = NormalizeClassColorHex(player.ColourHex);
+                if (!string.IsNullOrWhiteSpace(resolvedHex))
+                {
+                    return resolvedHex;
+                }
+            }
+
+            return fallbackHex;
+        }
+
+        private string ResolvePlayerClassPresentationColor(string nativeClassColor, string nativeClassColorHex)
+        {
+            string resolvedHex = ResolvePlayerClassPresentationColorHex(nativeClassColorHex);
+            string fallback = nativeClassColor ?? string.Empty;
+            if (string.IsNullOrWhiteSpace(resolvedHex))
+            {
+                return fallback;
+            }
+
+            if (!string.IsNullOrWhiteSpace(fallback) && fallback.StartsWith("0x", StringComparison.OrdinalIgnoreCase))
+            {
+                return "0x" + resolvedHex.TrimStart('#');
+            }
+
+            return resolvedHex;
+        }
+
         private int GetLeagueClassPlayerDriverCount()
         {
             var player = ResolveLivePlayerLeagueClassInfo();
@@ -7171,17 +7220,17 @@ namespace LaunchPlugin
             AttachCore("Car.Player.ClassName", () =>
             {
                 var playerSlot = _carSaEngine?.Outputs.PlayerSlot;
-                return ResolveClassPresentationName(playerSlot?.UserID, playerSlot?.Name, playerSlot?.ClassName ?? string.Empty);
+                return ResolvePlayerClassPresentationName(playerSlot?.ClassName ?? string.Empty);
             });
             AttachCore("Car.Player.ClassColor", () =>
             {
                 var playerSlot = _carSaEngine?.Outputs.PlayerSlot;
-                return ResolveClassPresentationColor(playerSlot?.UserID, playerSlot?.Name, playerSlot?.ClassColor ?? string.Empty, playerSlot?.ClassColorHex ?? string.Empty);
+                return ResolvePlayerClassPresentationColor(playerSlot?.ClassColor ?? string.Empty, playerSlot?.ClassColorHex ?? string.Empty);
             });
             AttachCore("Car.Player.ClassColorHex", () =>
             {
                 var playerSlot = _carSaEngine?.Outputs.PlayerSlot;
-                return ResolveClassPresentationColorHex(playerSlot?.UserID, playerSlot?.Name, playerSlot?.ClassColorHex ?? string.Empty);
+                return ResolvePlayerClassPresentationColorHex(playerSlot?.ClassColorHex ?? string.Empty);
             });
             AttachCore("Car.Player.IRating", () => _carSaEngine?.Outputs.PlayerSlot.IRating ?? 0);
             AttachCore("Car.Player.Licence", () => _carSaEngine?.Outputs.PlayerSlot.Licence ?? string.Empty);
