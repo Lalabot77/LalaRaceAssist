@@ -951,8 +951,8 @@ namespace LaunchPlugin
         public double Fuel_Setup_FuelLevel { get; private set; }
         public bool Fuel_Setup_FuelLevelValid { get; private set; }
         public string Fuel_Setup_FuelLevelSource { get; private set; } = "none";
-        public int PreRace_Selected { get; private set; } = 3;
-        public string PreRace_SelectedText { get; private set; } = "Auto";
+        public int PreRace_Selected { get; private set; } = 2;
+        public string PreRace_SelectedText { get; private set; } = "Multi Stop";
         public double PreRace_Stints { get; private set; }
         public double PreRace_TotalFuelNeeded { get; private set; }
         public double PreRace_FuelDelta { get; private set; }
@@ -1049,7 +1049,8 @@ namespace LaunchPlugin
 
         private static int NormalizeStrategyMode(int raw)
         {
-            return (raw >= 0 && raw <= 3) ? raw : 3;
+            if (raw == 3) return 2;
+            return (raw >= 0 && raw <= 2) ? raw : 2;
         }
 
         private static string StrategyModeText(int mode)
@@ -1059,7 +1060,7 @@ namespace LaunchPlugin
                 case 0: return "No Stop";
                 case 1: return "Single Stop";
                 case 2: return "Multi Stop";
-                default: return "Auto";
+                default: return "Multi Stop";
             }
         }
 
@@ -1126,7 +1127,7 @@ namespace LaunchPlugin
             return "planner-profile";
         }
 
-        private string ClassifyAutoPreRaceFuelSourceFromPlanner()
+        private string ClassifyAutoPreRaceFuelSourceFromPlanner_Deprecated()
         {
             string sourceInfo = (FuelCalculator?.FuelPerLapSourceInfo ?? string.Empty).Trim();
 
@@ -1278,7 +1279,7 @@ namespace LaunchPlugin
             double contingencyLitres)
         {
             int normalizedStrategy = NormalizeStrategyMode(selectedStrategy);
-            bool selectedIsAuto = normalizedStrategy == 3;
+            bool selectedIsAuto = false;
             RequiredPreRaceStrategy requiredStrategy = ClassifyRequiredPreRaceStrategy(preRaceStints);
             bool isAtMaxStart = IsAtEffectiveMaxStartFuel(currentFuel, effectiveMaxTank, maxTankCapacity);
             double secondStintFuelNeeded = Math.Max(0.0, preRaceTotalFuelNeeded - currentFuel);
@@ -1393,7 +1394,7 @@ namespace LaunchPlugin
             StrategyDash_Phase = isRaceRunning ? 3 : (isGridFormationPhase ? 2 : 1);
             StrategyDash_PhaseText = StrategyDash_Phase == 3 ? "RACE" : (StrategyDash_Phase == 2 ? "GRID FORMATION" : "PLANNING");
 
-            StrategyDash_IsAutoStrategy = selectedStrategy == 3;
+            StrategyDash_IsAutoStrategy = false;
             StrategyDash_RequiredStopsPreGreen = requiredStrategy == RequiredPreRaceStrategy.NoStop ? 0 : (requiredStrategy == RequiredPreRaceStrategy.OneStop ? 1 : 2);
             StrategyDash_StrategyText = requiredStrategy == RequiredPreRaceStrategy.NoStop ? "NO STOP" : (requiredStrategy == RequiredPreRaceStrategy.OneStop ? "ONE STOP" : "MULTI STOP");
 
@@ -1483,7 +1484,7 @@ namespace LaunchPlugin
             bool isGridOrFormation,
             bool isOnTrackCar)
         {
-            int selectedStrategy = NormalizeStrategyMode(FuelCalculator?.SelectedPreRaceMode ?? 3);
+            int selectedStrategy = NormalizeStrategyMode(FuelCalculator?.SelectedPreRaceMode ?? 2);
             PreRace_Selected = selectedStrategy;
             PreRace_SelectedText = StrategyModeText(selectedStrategy);
             double currentFuel = ResolvePreRaceCurrentFuelLitres(liveCurrentFuel, allowSetupFallback, out _);
@@ -1503,7 +1504,7 @@ namespace LaunchPlugin
 
             string preRaceFuelSource = "fallback";
             double preRaceFuelPerLap;
-            if (selectedStrategy == 3 && LiveFuelPerLap_Stable > 0.0)
+            if (false && LiveFuelPerLap_Stable > 0.0)
             {
                 preRaceFuelPerLap = LiveFuelPerLap_Stable;
                 if (string.Equals(LiveFuelPerLap_StableSource, "Live", StringComparison.OrdinalIgnoreCase))
@@ -1519,13 +1520,13 @@ namespace LaunchPlugin
                     preRaceFuelSource = "fallback";
                 }
             }
-            else if (selectedStrategy == 3)
+            else if (false)
             {
                 double plannerFuel = FuelCalculator?.FuelPerLap ?? 0.0;
                 if (plannerFuel > 0.0)
                 {
                     preRaceFuelPerLap = plannerFuel;
-                    preRaceFuelSource = ClassifyAutoPreRaceFuelSourceFromPlanner();
+                    preRaceFuelSource = "planner-profile";
                 }
                 else
                 {
@@ -1555,14 +1556,14 @@ namespace LaunchPlugin
 
             string preRaceLapSource = "fallback";
             double preRaceProjectionLapSeconds;
-            if (selectedStrategy == 3 && ProjectionLapTime_Stable > 0.0)
+            if (false && ProjectionLapTime_Stable > 0.0)
             {
                 preRaceProjectionLapSeconds = ProjectionLapTime_Stable;
                 preRaceLapSource = ProjectionLapTime_StableSource.StartsWith("pace.", StringComparison.OrdinalIgnoreCase)
                     ? "live"
                     : (ProjectionLapTime_StableSource.StartsWith("profile.", StringComparison.OrdinalIgnoreCase) ? "profile" : "fallback");
             }
-            else if (selectedStrategy == 3)
+            else if (false)
             {
                 double profileAvgSeconds = GetProfileAvgLapSeconds();
                 if (profileAvgSeconds > 0.0)
@@ -1618,9 +1619,7 @@ namespace LaunchPlugin
                 : 0.0;
 
             RequiredPreRaceStrategy requiredStrategy = ClassifyRequiredPreRaceStrategy(PreRace_Stints);
-            int deltaStrategy = selectedStrategy == 3
-                ? (requiredStrategy == RequiredPreRaceStrategy.NoStop ? 0 : (requiredStrategy == RequiredPreRaceStrategy.OneStop ? 1 : 2))
-                : selectedStrategy;
+            int deltaStrategy = selectedStrategy;
 
             switch (deltaStrategy)
             {
@@ -16660,7 +16659,7 @@ namespace LaunchPlugin
             Contingency_Source = "none";
 
             PreRace_Selected = 3;
-            PreRace_SelectedText = "Auto";
+            PreRace_SelectedText = "Multi Stop";
             PreRace_Stints = 0;
             PreRace_TotalFuelNeeded = 0;
             PreRace_FuelDelta = 0;
