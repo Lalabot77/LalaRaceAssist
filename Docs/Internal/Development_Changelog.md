@@ -1,3 +1,8 @@
+
+- 2026-05-06 CarSA slot PositionInClass publish-seam alignment landed:
+  - `Car.Ahead01..05.PositionInClass` and `Car.Behind01..05.PositionInClass` now publish via `GetEffectivePositionInClassForPublishedContext(slot.CarIdx, slot.PositionInClass)` at attach time;
+  - enabled+resolved League Class paths now surface Opponents effective cohort rank where available, with unchanged native slot fallback when unavailable/disabled;
+  - no CarSA slot ordering/filtering/selection or Opponents ranking logic changes.
 ## 2026-05-06 — PreRace status catalogue rename + StrategyDash phase rebrand + max-fuel split
 - Classification: **both** (dash-facing message/phase contract changes + docs/catalog alignment).
 - Reworked `LalaLaunch.PreRace.StatusText` literals to the approved stint-focused catalogue wording (`SINGLE STINT...`, `2 STINT PLAN...`, `MULTI STINTS REQUIRED`, etc.) while keeping colour severity semantics unchanged.
