@@ -1,3 +1,10 @@
+## 2026-05-06 — DATA LIVE provenance labels fix + StrategyDash.IsAutoStrategy retirement
+- Classification: **both** (dash-facing source-label correctness + export removal/docs alignment).
+- Updated `ResolveDataGovernedBurnAndPaceBasis(...)` so DATA `LIVE` burn/lap source labels now report true selected provenance (`LIVE` only when stable source is genuinely live), with hierarchy preserved exactly.
+- DATA `PLAN` behavior remains strict (`PLAN -> PROFILE -> DEFAULT`) and cannot emit `LIVE`/`SIM` labels.
+- Removed retired `StrategyDash.IsAutoStrategy` export/backing/reset wiring.
+
+- PR #684 P1 follow-up: `fuelcalc.estimated` stable projection source is now explicitly classified as `PLAN` in `ResolveDataGovernedBurnAndPaceBasis(...)`, so DATA LIVE lap provenance preserves `LIVE -> PLAN -> PROFILE -> SIM -> DEFAULT` even when stable projection is planner-estimate held.
 ## 2026-05-06 — Car.Player class presentation uses player effective-class resolver
 - Classification: **internal-only** (targeted export-resolution fix for existing class presentation contract; no new exports/UI/actions).
 - Fixed `Car.Player.ClassName`, `Car.Player.ClassColor`, and `Car.Player.ClassColorHex` to resolve through the player effective-class path (`ResolveLivePlayerLeagueClassInfo`) instead of the generic race-context driver resolver path.

@@ -963,7 +963,6 @@ namespace LaunchPlugin
         public string PreRace_StatusColour { get; private set; } = "green";
         public int StrategyDash_Phase { get; private set; }
         public string StrategyDash_PhaseText { get; private set; } = "HIDDEN";
-        public bool StrategyDash_IsAutoStrategy { get; private set; }
         public int StrategyDash_RequiredStopsPreGreen { get; private set; }
         public string StrategyDash_StrategyText { get; private set; } = "NO STOP";
         public double StrategyDash_StartFuelRequiredLitres { get; private set; }
@@ -1097,6 +1096,36 @@ namespace LaunchPlugin
         }
 
 
+        private static bool IsFuelStableSourceLive(string stableSource)
+        {
+            return string.Equals(stableSource, "Live", StringComparison.OrdinalIgnoreCase);
+        }
+
+        private static bool IsFuelStableSourceProfile(string stableSource)
+        {
+            return string.Equals(stableSource, "Profile", StringComparison.OrdinalIgnoreCase);
+        }
+
+        private static bool IsProjectionStableSourceLive(string stableSource)
+        {
+            return !string.IsNullOrWhiteSpace(stableSource) && stableSource.StartsWith("pace.", StringComparison.OrdinalIgnoreCase);
+        }
+
+        private static bool IsProjectionStableSourceProfile(string stableSource)
+        {
+            return string.Equals(stableSource, "profile.avg", StringComparison.OrdinalIgnoreCase);
+        }
+
+        private static bool IsProjectionStableSourcePlan(string stableSource)
+        {
+            return string.Equals(stableSource, "fuelcalc.estimated", StringComparison.OrdinalIgnoreCase);
+        }
+
+        private static bool IsProjectionStableSourceSim(string stableSource)
+        {
+            return string.Equals(stableSource, "telemetry.lastlap", StringComparison.OrdinalIgnoreCase);
+        }
+
         private void ResolveDataGovernedBurnAndPaceBasis(
             GameData data,
             double fallbackFuelPerLap,
@@ -1105,8 +1134,12 @@ namespace LaunchPlugin
             out string fuelSource,
             out string lapSource)
         {
-            double liveFuel = LiveFuelPerLap_Stable > 0.0 ? LiveFuelPerLap_Stable : LiveFuelPerLap;
-            double liveLap = GetProjectionLapSeconds(data);
+            double stableFuel = LiveFuelPerLap_Stable;
+            double runtimeFuel = LiveFuelPerLap;
+            string stableFuelSource = LiveFuelPerLap_StableSource ?? string.Empty;
+
+            double stableLap = GetProjectionLapSeconds(data);
+            string stableLapSource = ProjectionLapTime_StableSource ?? string.Empty;
 
             double planFuel = FuelCalculator?.FuelPerLap ?? 0.0;
             double planLap = 0.0;
@@ -1130,14 +1163,19 @@ namespace LaunchPlugin
 
             if (!usePlanData)
             {
-                if (liveFuel > 0.0) { fuelPerLap = liveFuel; fuelSource = "LIVE"; }
+                if (stableFuel > 0.0 && IsFuelStableSourceLive(stableFuelSource)) { fuelPerLap = stableFuel; fuelSource = "LIVE"; }
                 else if (planFuel > 0.0) { fuelPerLap = planFuel; fuelSource = "PLAN"; }
+                else if (stableFuel > 0.0 && IsFuelStableSourceProfile(stableFuelSource)) { fuelPerLap = stableFuel; fuelSource = "PROFILE"; }
+                else if (runtimeFuel > 0.0 && IsFuelStableSourceLive(stableFuelSource)) { fuelPerLap = runtimeFuel; fuelSource = "LIVE"; }
                 else if (profileFuel > 0.0) { fuelPerLap = profileFuel; fuelSource = "PROFILE"; }
                 else if (fallbackFuelPerLap > 0.0) { fuelPerLap = fallbackFuelPerLap; fuelSource = "DEFAULT"; }
 
-                if (liveLap > 0.0) { lapSeconds = liveLap; lapSource = "LIVE"; }
+                if (stableLap > 0.0 && IsProjectionStableSourceLive(stableLapSource)) { lapSeconds = stableLap; lapSource = "LIVE"; }
+                else if (stableLap > 0.0 && IsProjectionStableSourcePlan(stableLapSource)) { lapSeconds = stableLap; lapSource = "PLAN"; }
                 else if (planLap > 0.0) { lapSeconds = planLap; lapSource = "PLAN"; }
+                else if (stableLap > 0.0 && IsProjectionStableSourceProfile(stableLapSource)) { lapSeconds = stableLap; lapSource = "PROFILE"; }
                 else if (profileLap > 0.0) { lapSeconds = profileLap; lapSource = "PROFILE"; }
+                else if (stableLap > 0.0 && IsProjectionStableSourceSim(stableLapSource)) { lapSeconds = stableLap; lapSource = "SIM"; }
                 else if (simLap > 0.0) { lapSeconds = simLap; lapSource = "SIM"; }
                 else { lapSource = "DEFAULT"; }
             }
@@ -1358,7 +1396,6 @@ namespace LaunchPlugin
             StrategyDash_Phase = isRaceRunning ? 3 : (isGridFormationPhase ? 2 : 1);
             StrategyDash_PhaseText = StrategyDash_Phase == 3 ? "RACE" : (StrategyDash_Phase == 2 ? "GRID FORMATION" : "PLANNING");
 
-            StrategyDash_IsAutoStrategy = false;
             StrategyDash_RequiredStopsPreGreen = requiredStrategy == RequiredPreRaceStrategy.NoStop ? 0 : (requiredStrategy == RequiredPreRaceStrategy.OneStop ? 1 : 2);
             StrategyDash_StrategyText = requiredStrategy == RequiredPreRaceStrategy.NoStop ? "NO STOP" : (requiredStrategy == RequiredPreRaceStrategy.OneStop ? "ONE STOP" : "MULTI STOP");
 
@@ -6606,7 +6643,6 @@ namespace LaunchPlugin
             AttachCore("LalaLaunch.PreRace.StatusColour", () => PreRace_StatusColour);
             AttachCore("StrategyDash.Phase", () => StrategyDash_Phase);
             AttachCore("StrategyDash.PhaseText", () => StrategyDash_PhaseText);
-            AttachCore("StrategyDash.IsAutoStrategy", () => StrategyDash_IsAutoStrategy);
             AttachCore("StrategyDash.RequiredStopsPreGreen", () => StrategyDash_RequiredStopsPreGreen);
             AttachCore("StrategyDash.StrategyText", () => StrategyDash_StrategyText);
             AttachCore("StrategyDash.StartFuelRequiredLitres", () => Math.Round(StrategyDash_StartFuelRequiredLitres, 1));
@@ -16806,7 +16842,6 @@ namespace LaunchPlugin
             PreRace_StatusColour = "green";
             StrategyDash_Phase = 0;
             StrategyDash_PhaseText = "HIDDEN";
-            StrategyDash_IsAutoStrategy = false;
             StrategyDash_RequiredStopsPreGreen = 0;
             StrategyDash_StrategyText = "NO STOP";
             StrategyDash_StartFuelRequiredLitres = 0;
