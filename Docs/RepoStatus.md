@@ -1186,3 +1186,7 @@ Branch: work
   - `TrackLearning.Condition.Locked` is active-condition mapped (`DryConditionsLocked` vs `WetConditionsLocked`) and therefore shared by condition avg-lap + fuel persistence ownership,
   - pit-loss and condition toggles use existing immediate profile-save behavior,
   - marker toggle uses the existing marker-store lock seam.
+
+- 2026-05-06 H2HTrack selected-target League identity handoff fix landed:
+  - `BuildH2HTrackSelector(...)` now forwards selected-slot `UserID` into H2H target selector identity so `H2HTrack.Ahead/Behind.ClassColor` and `ClassColorHex` resolve through CSV-first League Class semantics when available;
+  - fallback behavior unchanged when League Class is disabled/unresolved, and no H2HTrack physical target-selection or sector/delta/timing ownership was changed.
