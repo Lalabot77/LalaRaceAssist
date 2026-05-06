@@ -1,3 +1,9 @@
+## 2026-05-06 — League Class presentation alignment for Car.* and H2HTrack class-facing outputs
+- Classification: **both** (dash-facing class presentation behavior update + contract docs alignment).
+- `Car.Player.ClassName/ClassColor/ClassColorHex` now publish effective League Class presentation when League Class is enabled and resolved (manual player override included), with native CarSA fallback unchanged when disabled/unresolved.
+- `Car.Ahead01..05.*` and `Car.Behind01..05.*` class-facing fields (`ClassName`, `ClassColor`, `ClassColorHex`) now apply publish-time League Class presentation per selected physical slot driver; CarSA slot selection/order/filter/cache ownership remains unchanged.
+- `H2HTrack.Ahead/Behind.ClassColor` and `ClassColorHex` now follow the global League Class presentation gate while preserving existing H2HTrack target acquisition, sector/delta/timing, and CarSA-owned physical selection semantics.
+
 ## 2026-05-06 — H2H ClassColorHex coverage follow-up
 - Classification: **both** (dash-facing class-colour contract completeness + League presentation alignment).
 - Added `H2HRace.Ahead/Behind.ClassColorHex` and `H2HTrack.Ahead/Behind.ClassColorHex` exports alongside existing `ClassColor` exports in shared H2H target attach wiring.

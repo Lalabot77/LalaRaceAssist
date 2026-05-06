@@ -5364,6 +5364,41 @@ namespace LaunchPlugin
             return "0x" + normalizedHex.TrimStart('#');
         }
 
+        private string ResolveClassPresentationName(int? userId, string driverName, string nativeClassName)
+        {
+            return ResolveRaceContextClassName(userId, driverName, nativeClassName ?? string.Empty);
+        }
+
+        private string ResolveClassPresentationColorHex(int? userId, string driverName, string nativeClassColorHex)
+        {
+            string fallbackHex = NormalizeClassColorHex(nativeClassColorHex);
+            if (string.IsNullOrWhiteSpace(fallbackHex))
+            {
+                fallbackHex = nativeClassColorHex ?? string.Empty;
+            }
+
+            string resolvedHex = ResolveRaceContextClassColorHex(userId, driverName, fallbackHex);
+            string normalizedResolved = NormalizeClassColorHex(resolvedHex);
+            return !string.IsNullOrWhiteSpace(normalizedResolved) ? normalizedResolved : fallbackHex;
+        }
+
+        private string ResolveClassPresentationColor(int? userId, string driverName, string nativeClassColor, string nativeClassColorHex)
+        {
+            string resolvedHex = ResolveClassPresentationColorHex(userId, driverName, nativeClassColorHex);
+            string fallback = nativeClassColor ?? string.Empty;
+            if (string.IsNullOrWhiteSpace(resolvedHex))
+            {
+                return fallback;
+            }
+
+            if (!string.IsNullOrWhiteSpace(fallback) && fallback.StartsWith("0x", StringComparison.OrdinalIgnoreCase))
+            {
+                return "0x" + resolvedHex.TrimStart('#');
+            }
+
+            return resolvedHex;
+        }
+
         private int GetLeagueClassPlayerDriverCount()
         {
             var player = ResolveLivePlayerLeagueClassInfo();
@@ -7133,9 +7168,21 @@ namespace LaunchPlugin
             AttachCore("Car.Player.CarIdx", () => _carSaEngine?.Outputs.PlayerSlot.CarIdx ?? -1);
             AttachCore("Car.Player.TrackPct", () => _carPlayerTrackPct);
             AttachCore("Car.Player.PositionInClass", () => _carSaEngine?.Outputs.PlayerSlot.PositionInClass ?? 0);
-            AttachCore("Car.Player.ClassName", () => _carSaEngine?.Outputs.PlayerSlot.ClassName ?? string.Empty);
-            AttachCore("Car.Player.ClassColor", () => _carSaEngine?.Outputs.PlayerSlot.ClassColor ?? string.Empty);
-            AttachCore("Car.Player.ClassColorHex", () => _carSaEngine?.Outputs.PlayerSlot.ClassColorHex ?? string.Empty);
+            AttachCore("Car.Player.ClassName", () =>
+            {
+                var playerSlot = _carSaEngine?.Outputs.PlayerSlot;
+                return ResolveClassPresentationName(playerSlot?.UserID, playerSlot?.Name, playerSlot?.ClassName ?? string.Empty);
+            });
+            AttachCore("Car.Player.ClassColor", () =>
+            {
+                var playerSlot = _carSaEngine?.Outputs.PlayerSlot;
+                return ResolveClassPresentationColor(playerSlot?.UserID, playerSlot?.Name, playerSlot?.ClassColor ?? string.Empty, playerSlot?.ClassColorHex ?? string.Empty);
+            });
+            AttachCore("Car.Player.ClassColorHex", () =>
+            {
+                var playerSlot = _carSaEngine?.Outputs.PlayerSlot;
+                return ResolveClassPresentationColorHex(playerSlot?.UserID, playerSlot?.Name, playerSlot?.ClassColorHex ?? string.Empty);
+            });
             AttachCore("Car.Player.IRating", () => _carSaEngine?.Outputs.PlayerSlot.IRating ?? 0);
             AttachCore("Car.Player.Licence", () => _carSaEngine?.Outputs.PlayerSlot.Licence ?? string.Empty);
             AttachCore("Car.Player.SafetyRating", () => _carSaEngine?.Outputs.PlayerSlot.SafetyRating ?? double.NaN);
@@ -7163,7 +7210,11 @@ namespace LaunchPlugin
                 AttachCore($"Car.Ahead{label}.CarIdx", () => _carSaEngine?.Outputs.AheadSlots[slotIndex].CarIdx ?? -1);
                 AttachCore($"Car.Ahead{label}.Name", () => _carSaEngine?.Outputs.AheadSlots[slotIndex].Name ?? string.Empty);
                 AttachCore($"Car.Ahead{label}.CarNumber", () => _carSaEngine?.Outputs.AheadSlots[slotIndex].CarNumber ?? string.Empty);
-                AttachCore($"Car.Ahead{label}.ClassColor", () => _carSaEngine?.Outputs.AheadSlots[slotIndex].ClassColor ?? string.Empty);
+                AttachCore($"Car.Ahead{label}.ClassColor", () =>
+                {
+                    var slot = _carSaEngine?.Outputs.AheadSlots[slotIndex];
+                    return ResolveClassPresentationColor(slot?.UserID, slot?.Name, slot?.ClassColor ?? string.Empty, slot?.ClassColorHex ?? string.Empty);
+                });
                 AttachCore($"Car.Ahead{label}.IsOnTrack", () => _carSaEngine?.Outputs.AheadSlots[slotIndex].IsOnTrack ?? false);
                 AttachCore($"Car.Ahead{label}.IsOnPitRoad", () => _carSaEngine?.Outputs.AheadSlots[slotIndex].IsOnPitRoad ?? false);
                 AttachCore($"Car.Ahead{label}.IsValid", () => _carSaEngine?.Outputs.AheadSlots[slotIndex].IsValid ?? false);
@@ -7191,8 +7242,16 @@ namespace LaunchPlugin
                 AttachCore($"Car.Ahead{label}.SessionFlagsRaw", () => _carSaEngine?.Outputs.AheadSlots[slotIndex].SessionFlagsRaw ?? -1);
                 AttachCore($"Car.Ahead{label}.TrackSurfaceMaterialRaw", () => _carSaEngine?.Outputs.AheadSlots[slotIndex].TrackSurfaceMaterialRaw ?? -1);
                 AttachCore($"Car.Ahead{label}.PositionInClass", () => _carSaEngine?.Outputs.AheadSlots[slotIndex].PositionInClass ?? 0);
-                AttachCore($"Car.Ahead{label}.ClassName", () => _carSaEngine?.Outputs.AheadSlots[slotIndex].ClassName ?? string.Empty);
-                AttachCore($"Car.Ahead{label}.ClassColorHex", () => _carSaEngine?.Outputs.AheadSlots[slotIndex].ClassColorHex ?? string.Empty);
+                AttachCore($"Car.Ahead{label}.ClassName", () =>
+                {
+                    var slot = _carSaEngine?.Outputs.AheadSlots[slotIndex];
+                    return ResolveClassPresentationName(slot?.UserID, slot?.Name, slot?.ClassName ?? string.Empty);
+                });
+                AttachCore($"Car.Ahead{label}.ClassColorHex", () =>
+                {
+                    var slot = _carSaEngine?.Outputs.AheadSlots[slotIndex];
+                    return ResolveClassPresentationColorHex(slot?.UserID, slot?.Name, slot?.ClassColorHex ?? string.Empty);
+                });
                 AttachCore($"Car.Ahead{label}.CarClassShortName", () => _carSaEngine?.Outputs.AheadSlots[slotIndex].CarClassShortName ?? string.Empty);
                 AttachCore($"Car.Ahead{label}.Initials", () => _carSaEngine?.Outputs.AheadSlots[slotIndex].Initials ?? string.Empty);
                 AttachCore($"Car.Ahead{label}.AbbrevName", () => _carSaEngine?.Outputs.AheadSlots[slotIndex].AbbrevName ?? string.Empty);
@@ -7233,7 +7292,11 @@ namespace LaunchPlugin
                 AttachCore($"Car.Behind{label}.CarIdx", () => _carSaEngine?.Outputs.BehindSlots[slotIndex].CarIdx ?? -1);
                 AttachCore($"Car.Behind{label}.Name", () => _carSaEngine?.Outputs.BehindSlots[slotIndex].Name ?? string.Empty);
                 AttachCore($"Car.Behind{label}.CarNumber", () => _carSaEngine?.Outputs.BehindSlots[slotIndex].CarNumber ?? string.Empty);
-                AttachCore($"Car.Behind{label}.ClassColor", () => _carSaEngine?.Outputs.BehindSlots[slotIndex].ClassColor ?? string.Empty);
+                AttachCore($"Car.Behind{label}.ClassColor", () =>
+                {
+                    var slot = _carSaEngine?.Outputs.BehindSlots[slotIndex];
+                    return ResolveClassPresentationColor(slot?.UserID, slot?.Name, slot?.ClassColor ?? string.Empty, slot?.ClassColorHex ?? string.Empty);
+                });
                 AttachCore($"Car.Behind{label}.IsOnTrack", () => _carSaEngine?.Outputs.BehindSlots[slotIndex].IsOnTrack ?? false);
                 AttachCore($"Car.Behind{label}.IsOnPitRoad", () => _carSaEngine?.Outputs.BehindSlots[slotIndex].IsOnPitRoad ?? false);
                 AttachCore($"Car.Behind{label}.IsValid", () => _carSaEngine?.Outputs.BehindSlots[slotIndex].IsValid ?? false);
@@ -7261,8 +7324,16 @@ namespace LaunchPlugin
                 AttachCore($"Car.Behind{label}.SessionFlagsRaw", () => _carSaEngine?.Outputs.BehindSlots[slotIndex].SessionFlagsRaw ?? -1);
                 AttachCore($"Car.Behind{label}.TrackSurfaceMaterialRaw", () => _carSaEngine?.Outputs.BehindSlots[slotIndex].TrackSurfaceMaterialRaw ?? -1);
                 AttachCore($"Car.Behind{label}.PositionInClass", () => _carSaEngine?.Outputs.BehindSlots[slotIndex].PositionInClass ?? 0);
-                AttachCore($"Car.Behind{label}.ClassName", () => _carSaEngine?.Outputs.BehindSlots[slotIndex].ClassName ?? string.Empty);
-                AttachCore($"Car.Behind{label}.ClassColorHex", () => _carSaEngine?.Outputs.BehindSlots[slotIndex].ClassColorHex ?? string.Empty);
+                AttachCore($"Car.Behind{label}.ClassName", () =>
+                {
+                    var slot = _carSaEngine?.Outputs.BehindSlots[slotIndex];
+                    return ResolveClassPresentationName(slot?.UserID, slot?.Name, slot?.ClassName ?? string.Empty);
+                });
+                AttachCore($"Car.Behind{label}.ClassColorHex", () =>
+                {
+                    var slot = _carSaEngine?.Outputs.BehindSlots[slotIndex];
+                    return ResolveClassPresentationColorHex(slot?.UserID, slot?.Name, slot?.ClassColorHex ?? string.Empty);
+                });
                 AttachCore($"Car.Behind{label}.CarClassShortName", () => _carSaEngine?.Outputs.BehindSlots[slotIndex].CarClassShortName ?? string.Empty);
                 AttachCore($"Car.Behind{label}.Initials", () => _carSaEngine?.Outputs.BehindSlots[slotIndex].Initials ?? string.Empty);
                 AttachCore($"Car.Behind{label}.AbbrevName", () => _carSaEngine?.Outputs.BehindSlots[slotIndex].AbbrevName ?? string.Empty);
