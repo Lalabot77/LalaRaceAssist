@@ -1116,6 +1116,11 @@ namespace LaunchPlugin
             return string.Equals(stableSource, "profile.avg", StringComparison.OrdinalIgnoreCase);
         }
 
+        private static bool IsProjectionStableSourcePlan(string stableSource)
+        {
+            return string.Equals(stableSource, "fuelcalc.estimated", StringComparison.OrdinalIgnoreCase);
+        }
+
         private static bool IsProjectionStableSourceSim(string stableSource)
         {
             return string.Equals(stableSource, "telemetry.lastlap", StringComparison.OrdinalIgnoreCase);
@@ -1166,6 +1171,7 @@ namespace LaunchPlugin
                 else if (fallbackFuelPerLap > 0.0) { fuelPerLap = fallbackFuelPerLap; fuelSource = "DEFAULT"; }
 
                 if (stableLap > 0.0 && IsProjectionStableSourceLive(stableLapSource)) { lapSeconds = stableLap; lapSource = "LIVE"; }
+                else if (stableLap > 0.0 && IsProjectionStableSourcePlan(stableLapSource)) { lapSeconds = stableLap; lapSource = "PLAN"; }
                 else if (planLap > 0.0) { lapSeconds = planLap; lapSource = "PLAN"; }
                 else if (stableLap > 0.0 && IsProjectionStableSourceProfile(stableLapSource)) { lapSeconds = stableLap; lapSource = "PROFILE"; }
                 else if (profileLap > 0.0) { lapSeconds = profileLap; lapSource = "PROFILE"; }

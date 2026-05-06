@@ -4,6 +4,8 @@
 - DATA `PLAN` behavior remains strict (`PLAN -> PROFILE -> DEFAULT`) and cannot emit `LIVE`/`SIM` labels.
 - Removed retired `StrategyDash.IsAutoStrategy` export/backing/reset wiring.
 
+- PR #684 P1 follow-up: `fuelcalc.estimated` stable projection source is now explicitly classified as `PLAN` in `ResolveDataGovernedBurnAndPaceBasis(...)`, so DATA LIVE lap provenance preserves `LIVE -> PLAN -> PROFILE -> SIM -> DEFAULT` even when stable projection is planner-estimate held.
+
 ## 2026-05-06 — H2H ClassColorHex coverage follow-up
 - Classification: **both** (dash-facing class-colour contract completeness + League presentation alignment).
 - Added `H2HRace.Ahead/Behind.ClassColorHex` and `H2HTrack.Ahead/Behind.ClassColorHex` exports alongside existing `ClassColor` exports in shared H2H target attach wiring.
