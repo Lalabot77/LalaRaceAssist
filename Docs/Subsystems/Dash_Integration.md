@@ -28,12 +28,11 @@ This document is the canonical dash-facing contract layer. It does **not** redef
   - PreRace current-fuel basis uses live current fuel when valid/positive; setup fallback (`Fuel.Setup.FuelLevel`) is used only during pre-race/grid/formation phases, and active race-running stays live-fuel authoritative even when live fuel is `0`,
   - required one-stop path uses `(effective current fuel + pit fuel request) - total fuel needed`,
   - required no-stop/multi-stop paths use `effective current fuel - total fuel needed`.
-- `LalaLaunch.PreRace.FuelSource` / `LapTimeSource` contract:
-  - `FuelSource` accepted values are `live`, `profile`, `planner-profile`, `planner-manual`, `fallback` (`planner`/`simhub` are not emitted),
-  - Auto uses runtime ownership labels only (`live`/`profile`/`fallback`) and does not publish planner-classified labels,
-  - Auto fuel-per-lap fallback order is live-stable first, then selected planner `FuelCalculator.FuelPerLap` (if valid), then profile/generic fallback,
-  - when Auto consumes `LiveFuelPerLap_Stable`, `FuelSource` mirrors the selected stable-source label only (`Live => live`, `Profile => profile`, otherwise `fallback`) instead of inferring from profile availability,
-  - manual PreRace selections (`No Stop`/`Single Stop`/`Multi Stop`) classify planner ownership using existing planner state (`planner-manual` when manual override is active, `planner-profile` when planner/profile-loaded value is active),
+- `LalaLaunch.PreRace.FuelSource` / `LapTimeSource` / `LiveFacingBasisText` contract:
+  - `LiveFacingBasisText` format is `DATA <LIVE|PLAN> | LAP <LIVE|PLAN|PROFILE|SIM|DEFAULT> / BURN <LIVE|PLAN|PROFILE|DEFAULT>`,
+  - only approved tokens are emitted by the DATA-governed resolver: `LIVE`, `PLAN`, `PROFILE`, `SIM`, `DEFAULT`,
+  - DATA `LIVE` labels now reflect the true selected provenance (not just positive runtime values): burn/lap report `LIVE` only when selected stable source is truly live-accepted runtime data,
+  - DATA `PLAN` never emits `LIVE` or `SIM`; it remains `PLAN -> PROFILE -> DEFAULT` for both burn and lap.
   - manual PreRace selections may still emit `live` when planner fuel value is active from live snapshot/runtime source labeling.
 - PreRace status is scenario-first (`required strategy` vs `selected strategy`) and fully partitioned:
   - required `No Stop` => `NO STOP OKAY` or `ADD FUEL FOR NO STOP`; selecting stop strategies shows `NO STOP POSSIBLE`,

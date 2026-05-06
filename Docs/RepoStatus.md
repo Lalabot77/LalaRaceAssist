@@ -1,3 +1,5 @@
+- 2026-05-06 DATA LIVE provenance follow-up landed: PreRace DATA basis labels now emit true selected provenance tokens (`LIVE|PLAN|PROFILE|SIM|DEFAULT`) with DATA PLAN never emitting LIVE/SIM; retired `StrategyDash.IsAutoStrategy` export/wiring.
+
 - 2026-05-06 H2H ClassColorHex coverage follow-up landed:
   - added H2H target `ClassColorHex` exports (`H2HRace.Ahead/Behind`, `H2HTrack.Ahead/Behind`) and aligned them to the existing League-aware presentation gate with `#RRGGBB` format.
 

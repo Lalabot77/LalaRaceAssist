@@ -1,3 +1,9 @@
+## 2026-05-06 — DATA LIVE provenance labels fix + StrategyDash.IsAutoStrategy retirement
+- Classification: **both** (dash-facing source-label correctness + export removal/docs alignment).
+- Updated `ResolveDataGovernedBurnAndPaceBasis(...)` so DATA `LIVE` burn/lap source labels now report true selected provenance (`LIVE` only when stable source is genuinely live), with hierarchy preserved exactly.
+- DATA `PLAN` behavior remains strict (`PLAN -> PROFILE -> DEFAULT`) and cannot emit `LIVE`/`SIM` labels.
+- Removed retired `StrategyDash.IsAutoStrategy` export/backing/reset wiring.
+
 ## 2026-05-06 — H2H ClassColorHex coverage follow-up
 - Classification: **both** (dash-facing class-colour contract completeness + League presentation alignment).
 - Added `H2HRace.Ahead/Behind.ClassColorHex` and `H2HTrack.Ahead/Behind.ClassColorHex` exports alongside existing `ClassColor` exports in shared H2H target attach wiring.
