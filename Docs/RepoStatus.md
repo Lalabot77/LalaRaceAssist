@@ -19,6 +19,12 @@
   - Opp race-context slots (`Opp.Ahead1..5` / `Opp.Behind1..5`) now publish class presentation fields from effective League Class while preserving original slot identity and native fallback when League Class is disabled/unresolved;
   - H2HRace player/ahead/behind class presentation follows the same League Class gate for class-facing dash fields only (no H2HTrack or sector/delta changes);
   - added dash export `LeagueClass.Player.DriverCount` for selected player effective-class cohort count display intent.
+- 2026-05-06 PR #679 build-fix landed:
+  - restored missing `ResolveDataGovernedBurnAndPaceBasis(...)` helper in `LalaLaunch` (PreRace helper region) so `UpdatePreRaceOutputs(...)` compile path is valid again;
+  - hierarchy/source contracts preserved exactly:
+    - DATA LIVE burn: `LIVE -> PLAN -> PROFILE -> DEFAULT`; lap: `LIVE -> PLAN -> PROFILE -> SIM -> DEFAULT`;
+    - DATA PLAN burn: `PLAN -> PROFILE -> DEFAULT`; lap: `PLAN -> PROFILE -> DEFAULT`;
+  - protected runtime domains untouched (`Fuel.Delta.*`, `Fuel.Pit.*`, `Fuel.RequiredBurnToEnd*`, boxed refuel latches, `PitFuelControlEngine` target/send behavior).
 
 - 2026-05-05 Pit Fuel Control DATA/SOURCE simplification landed:
   - retired `SOURCE=PLAN`; source cycle is now `STBY -> NORM -> PUSH -> SAVE -> STBY`;

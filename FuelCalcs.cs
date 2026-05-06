@@ -25,7 +25,7 @@ namespace LaunchPlugin
             NoStop = 0,
             SingleStop = 1,
             MultiStop = 2,
-            Auto = 3
+            Auto = 3 // legacy persisted alias (normalized to MultiStop)
         }
     public readonly struct FuelTimingSnapshot
     {
@@ -2427,7 +2427,7 @@ namespace LaunchPlugin
         set { IsContingencyInLaps = !value; }
     }
 
-    private int _selectedPreRaceMode = (int)PreRaceMode.Auto;
+    private int _selectedPreRaceMode = (int)PreRaceMode.MultiStop;
     public int SelectedPreRaceMode
     {
         get => _selectedPreRaceMode;
@@ -2453,14 +2453,15 @@ namespace LaunchPlugin
                 case PreRaceMode.NoStop: return "No Stop";
                 case PreRaceMode.SingleStop: return "Single Stop";
                 case PreRaceMode.MultiStop: return "Multi Stop";
-                default: return "Auto";
+                default: return "Multi Stop";
             }
         }
     }
 
     private static int NormalizePitStrategyValue(int raw)
     {
-        return (raw >= 0 && raw <= 3) ? raw : (int)PreRaceMode.Auto;
+        if (raw == 3) return (int)PreRaceMode.MultiStop;
+        return (raw >= 0 && raw <= 2) ? raw : (int)PreRaceMode.MultiStop;
     }
 
     private void RebuildAvailableCarProfiles()
@@ -2601,7 +2602,7 @@ namespace LaunchPlugin
             this.RaceLaps = 20;
             this.RaceMinutes = 40;
         }
-        this.SelectedPreRaceMode = (int)PreRaceMode.Auto;
+        this.SelectedPreRaceMode = (int)PreRaceMode.MultiStop;
 
         // Smartly default Max Fuel: use the profile base tank (or default).
         if (!preserveMaxFuel)
@@ -2999,7 +3000,7 @@ namespace LaunchPlugin
             Type = RacePresetType.TimeLimited,
             RaceLaps = null,
             RaceMinutes = 40,
-            PreRaceMode = (int)PreRaceMode.Auto,
+            PreRaceMode = (int)PreRaceMode.MultiStop,
             TireChangeTimeSec = 23,
             MaxFuelPercent = 100,
             LegacyMaxFuelLitres = null,
