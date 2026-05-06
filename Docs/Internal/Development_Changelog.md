@@ -1,3 +1,12 @@
+## 2026-05-06 — PreRace status catalogue rename + StrategyDash phase rebrand + max-fuel split
+- Classification: **both** (dash-facing message/phase contract changes + docs/catalog alignment).
+- Reworked `LalaLaunch.PreRace.StatusText` literals to the approved stint-focused catalogue wording (`SINGLE STINT...`, `2 STINT PLAN...`, `MULTI STINTS REQUIRED`, etc.) while keeping colour severity semantics unchanged.
+- Split former max-fuel warning path into:
+  - `MAX START FUEL REQUIRED` for pre-start start-fuel guidance;
+  - phase-routed `SET MAX FUEL NEXT STINT` when StrategyDash phase is `START READY` or `RACE`.
+- Rebranded StrategyDash phase contract to `0=IDLE`, `1=PRE GRID`, `2=GRIDDING`, `3=START READY`, `5=RACE` (no backward compatibility bridge requested).
+- Updated internal contract docs and added a text authority companion (`Docs/Internal/FuelSystemMessages_Catalog.csv`) for PR-safe review of the approved catalogue and split-message behavior (binary spreadsheet update deferred to manual/local conversion workflow).
+
 ## 2026-05-06 — DATA LIVE provenance labels fix + StrategyDash.IsAutoStrategy retirement
 - Classification: **both** (dash-facing source-label correctness + export removal/docs alignment).
 - Updated `ResolveDataGovernedBurnAndPaceBasis(...)` so DATA `LIVE` burn/lap source labels now report true selected provenance (`LIVE` only when stable source is genuinely live), with hierarchy preserved exactly.

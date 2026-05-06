@@ -35,9 +35,9 @@ This document is the canonical dash-facing contract layer. It does **not** redef
   - DATA `PLAN` never emits `LIVE` or `SIM`; it remains `PLAN -> PROFILE -> DEFAULT` for both burn and lap.
   - manual PreRace selections may still emit `live` when planner fuel value is active from live snapshot/runtime source labeling.
 - PreRace status is scenario-first (`required strategy` vs `selected strategy`) and fully partitioned:
-  - required `No Stop` => `NO STOP OKAY` or `ADD FUEL FOR NO STOP`; selecting stop strategies shows `NO STOP POSSIBLE`,
-  - required `One Stop` => no-stop `SINGLE STINT NOT POSSIBLE`, one-stop feasibility (pit-stop refill-capacity gate, then `ONE STOP REQUIRES MORE FUEL` / `OVERFUELLED` / `SINGLE STOP OKAY`), multi-stop `SINGLE STOP POSSIBLE`,
-  - required `Multi Stop` => no-stop `NO STOP NOT POSSIBLE`, single-stop `SINGLE STOP NOT POSSIBLE`, multi-stop `MAX FUEL IN / MULTI STOP CONFIRMED` or `MAX FUEL REQUIRED`.
+  - required `No Stop` => `SINGLE STINT OKAY` or `ADD START FUEL FOR SINGLE STINT`; selecting stop strategies shows `SINGLE STINT POSSIBLE`,
+  - required `One Stop` => no-stop `SINGLE STINT NOT POSSIBLE`, one-stop feasibility (pit-stop refill-capacity gate, then `2 STINT PLAN REQUIRES MORE FUEL` / `OVERFUELLED` / `SINGLE STOP OKAY`), multi-stop `SINGLE STOP POSSIBLE`,
+  - required `Multi Stop` => non-multi selections publish `MULTI STINTS REQUIRED`; multi-stop publishes `MAX FUEL SET FOR MULTI STOP` or max-fuel-required guidance.
 - If a widget is meant to represent runtime truth, prefer stable `Fuel.*` / pace outputs over UI-only text from elsewhere.
 - Race-end dash gating should consume plugin-owned finish-phase exports directly: `Race.EndPhase` / `Race.EndPhaseText` / `Race.EndPhaseConfidence` plus `Race.LastLapLikely`; dashboards must not infer leader finish from player white/checkered flags or track-disappearance heuristics.
 - Strategy fuel guidance should consume plugin-owned tactical exports directly:
@@ -220,7 +220,7 @@ Dashboards should **not**:
 The v1 GitHub docs now present dashboards as the presentation layer across all systems. This page is the canonical technical companion to the user-facing `Docs/Dashboards.md` page.
 
 - Added additive `StrategyDash.*` V2 seam for pre-green dashboards (planning + grid/formation).
-- StrategyDash phase contract includes in-car gating for grid/formation: `2 = GRID FORMATION` is emitted only when session grid/formation authority is true **and** `DataCorePlugin.GameRawData.Telemetry.IsOnTrackCar==true`; otherwise pre-race defaults to `1 = PLANNING` until race-running (`3 = RACE`) starts.
+- StrategyDash phase contract is `0=IDLE`, `1=PRE GRID`, `2=GRIDDING`, `3=START READY`, `5=RACE`.
 - `StrategyDash.*` remains publish-safe in race-running phase but is not the primary runtime contract; keep race-running widgets on existing `Fuel.*`, `Fuel.Pit.*`, `Fuel.Delta.*`, `Fuel.RequiredBurnToEnd*`, `Pit.FuelControl.*`, and boxed refuel latch seams.
 - `StrategyDash.StartFuelAdviceText/StartFuelStatus` are owned by a dedicated start-fuel check (live fuel, then setup fallback, else unknown) against `StrategyDash.StartFuelRequiredLitres` with a `1.0 L` tolerance; they are intentionally not mapped from `LalaLaunch.PreRace.StatusText`.
 - StrategyDash pre-green helpers:
