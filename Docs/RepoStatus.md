@@ -1,3 +1,4 @@
+- 2026-05-06: PR #687 follow-up fixed a compile blocker in `LalaLaunch` by removing invalid nullable coalescing from CarSA Ahead/Behind `PositionInClass` publish lambdas; effective-position seam behavior unchanged.
 - 2026-05-06 CarSA PositionInClass publish-seam alignment landed:
   - `Car.Ahead01..05.PositionInClass` / `Car.Behind01..05.PositionInClass` now publish through the shared effective-position seam (`GetEffectivePositionInClassForPublishedContext`), using Opponents effective race-context rank when available and native slot fallback otherwise;
   - no CarSA selection/order/filter/cache changes and no Opponents/H2H/PitExit logic changes.

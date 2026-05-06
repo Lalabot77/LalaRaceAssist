@@ -1,3 +1,8 @@
+## 2026-05-06 — PR #687 follow-up build fix: CarSA PositionInClass null-coalescing removal
+- Classification: **internal-only** (compile blocker fix only; no runtime contract change).
+- Removed invalid null-coalescing on non-nullable `CarSASlot.PositionInClass` in `Car.Ahead01..05.PositionInClass` and `Car.Behind01..05.PositionInClass` publish-time attach lambdas.
+- Preserved effective-position seam behavior by continuing to call `GetEffectivePositionInClassForPublishedContext(slot.CarIdx, slot.PositionInClass)` with unchanged fallback-to-`0` only when slot is absent.
+
 
 - 2026-05-06 CarSA slot PositionInClass publish-seam alignment landed:
   - `Car.Ahead01..05.PositionInClass` and `Car.Behind01..05.PositionInClass` now publish via `GetEffectivePositionInClassForPublishedContext(slot.CarIdx, slot.PositionInClass)` at attach time;

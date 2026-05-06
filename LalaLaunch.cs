@@ -7348,7 +7348,7 @@ namespace LaunchPlugin
                 AttachCore($"Car.Ahead{label}.PositionInClass", () =>
                 {
                     var slot = _carSaEngine?.Outputs.AheadSlots[slotIndex];
-                    return slot != null ? GetEffectivePositionInClassForPublishedContext(slot.CarIdx, slot.PositionInClass ?? 0) : 0;
+                    return slot != null ? GetEffectivePositionInClassForPublishedContext(slot.CarIdx, slot.PositionInClass) : 0;
                 });
                 AttachCore($"Car.Ahead{label}.ClassName", () =>
                 {
@@ -7434,7 +7434,7 @@ namespace LaunchPlugin
                 AttachCore($"Car.Behind{label}.PositionInClass", () =>
                 {
                     var slot = _carSaEngine?.Outputs.BehindSlots[slotIndex];
-                    return slot != null ? GetEffectivePositionInClassForPublishedContext(slot.CarIdx, slot.PositionInClass ?? 0) : 0;
+                    return slot != null ? GetEffectivePositionInClassForPublishedContext(slot.CarIdx, slot.PositionInClass) : 0;
                 });
                 AttachCore($"Car.Behind{label}.ClassName", () =>
                 {
