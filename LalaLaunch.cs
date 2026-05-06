@@ -962,7 +962,7 @@ namespace LaunchPlugin
         public string PreRace_StatusText { get; private set; } = "STRATEGY OKAY";
         public string PreRace_StatusColour { get; private set; } = "green";
         public int StrategyDash_Phase { get; private set; }
-        public string StrategyDash_PhaseText { get; private set; } = "HIDDEN";
+        public string StrategyDash_PhaseText { get; private set; } = "IDLE";
         public int StrategyDash_RequiredStopsPreGreen { get; private set; }
         public string StrategyDash_StrategyText { get; private set; } = "NO STOP";
         public double StrategyDash_StartFuelRequiredLitres { get; private set; }
@@ -1315,13 +1315,13 @@ namespace LaunchPlugin
                 {
                     if (preRaceFuelDelta < -PreRaceFuelToleranceLitres)
                     {
-                        return new PreRaceStatusDecision { Text = "ADD FUEL FOR NO STOP", Colour = "red" };
+                        return new PreRaceStatusDecision { Text = "ADD START FUEL FOR SINGLE STINT", Colour = "red" };
                     }
 
-                    return new PreRaceStatusDecision { Text = "NO STOP OKAY", Colour = "green" };
+                    return new PreRaceStatusDecision { Text = "SINGLE STINT OKAY", Colour = "green" };
                 }
 
-                return new PreRaceStatusDecision { Text = "NO STOP POSSIBLE", Colour = "orange" };
+                return new PreRaceStatusDecision { Text = "SINGLE STINT POSSIBLE", Colour = "orange" };
             }
 
             if (requiredStrategy == RequiredPreRaceStrategy.OneStop)
@@ -1335,12 +1335,12 @@ namespace LaunchPlugin
                 {
                     if (!oneStopFeasible)
                     {
-                        return new PreRaceStatusDecision { Text = "ONE STOP NOT POSSIBLE", Colour = "red" };
+                        return new PreRaceStatusDecision { Text = "2 STINT PLAN NOT POSSIBLE", Colour = "red" };
                     }
 
                     if (oneStopUnderFuel)
                     {
-                        return new PreRaceStatusDecision { Text = "ONE STOP REQUIRES MORE FUEL", Colour = "red" };
+                        return new PreRaceStatusDecision { Text = "2 STINT PLAN REQUIRES MORE FUEL", Colour = "red" };
                     }
 
                     if (oneStopOverFuel)
@@ -1363,18 +1363,26 @@ namespace LaunchPlugin
             {
                 if (isAtMaxStart)
                 {
-                    return new PreRaceStatusDecision { Text = "MAX FUEL IN / MULTI STOP CONFIRMED", Colour = "green" };
+                    return new PreRaceStatusDecision { Text = "MAX FUEL SET FOR MULTI STOP", Colour = "green" };
                 }
 
-                return new PreRaceStatusDecision { Text = "MAX FUEL REQUIRED", Colour = "orange" };
+                return new PreRaceStatusDecision { Text = "MAX START FUEL REQUIRED", Colour = "orange" };
             }
 
             if (effectiveSelectedStrategy == 1)
             {
-                return new PreRaceStatusDecision { Text = "SINGLE STOP NOT POSSIBLE", Colour = "red" };
+                return new PreRaceStatusDecision { Text = "MULTI STINTS REQUIRED", Colour = "red" };
             }
 
-            return new PreRaceStatusDecision { Text = "NO STOP NOT POSSIBLE", Colour = "red" };
+            return new PreRaceStatusDecision { Text = "MULTI STINTS REQUIRED", Colour = "red" };
+        }
+
+        private static int ResolveStrategyDashPhase(bool isRaceRunning, bool isGridFormation, bool isOnTrackCar)
+        {
+            if (isRaceRunning) return 5; // Race
+            if (!isOnTrackCar) return 1; // Pre Grid
+            if (isGridFormation) return 2; // Gridding
+            return 3; // Start Ready
         }
 
         private void UpdateStrategyDashAdvice(
@@ -1392,9 +1400,13 @@ namespace LaunchPlugin
             bool isGridFormation,
             bool isOnTrackCar)
         {
-            bool isGridFormationPhase = isOnTrackCar && isGridFormation;
-            StrategyDash_Phase = isRaceRunning ? 3 : (isGridFormationPhase ? 2 : 1);
-            StrategyDash_PhaseText = StrategyDash_Phase == 3 ? "RACE" : (StrategyDash_Phase == 2 ? "GRID FORMATION" : "PLANNING");
+            StrategyDash_Phase = ResolveStrategyDashPhase(isRaceRunning, isGridFormation, isOnTrackCar);
+            StrategyDash_PhaseText =
+                StrategyDash_Phase == 0 ? "IDLE" :
+                StrategyDash_Phase == 1 ? "PRE GRID" :
+                StrategyDash_Phase == 2 ? "GRIDDING" :
+                StrategyDash_Phase == 3 ? "START READY" :
+                StrategyDash_Phase == 5 ? "RACE" : "IDLE";
 
             StrategyDash_RequiredStopsPreGreen = requiredStrategy == RequiredPreRaceStrategy.NoStop ? 0 : (requiredStrategy == RequiredPreRaceStrategy.OneStop ? 1 : 2);
             StrategyDash_StrategyText = requiredStrategy == RequiredPreRaceStrategy.NoStop ? "NO STOP" : (requiredStrategy == RequiredPreRaceStrategy.OneStop ? "ONE STOP" : "MULTI STOP");
@@ -1568,7 +1580,14 @@ namespace LaunchPlugin
                 effectiveMaxTank: effectiveMaxTank,
                 maxTankCapacity: maxTankCapacity,
                 contingencyLitres: contingencyLitres);
-            PreRace_StatusText = status.Text;
+            int strategyDashPhase = ResolveStrategyDashPhase(isRaceRunning, isGridOrFormation, isOnTrackCar);
+            string preRaceStatusText = status.Text;
+            if (string.Equals(preRaceStatusText, "MAX START FUEL REQUIRED", StringComparison.Ordinal) &&
+                (strategyDashPhase == 3 || strategyDashPhase == 5))
+            {
+                preRaceStatusText = "SET MAX FUEL NEXT STINT";
+            }
+            PreRace_StatusText = preRaceStatusText;
             PreRace_StatusColour = status.Colour;
 
             double oneStopNormTarget = Math.Max(0.0, PreRace_TotalFuelNeeded - currentFuel);
@@ -16842,7 +16861,7 @@ namespace LaunchPlugin
             PreRace_StatusText = "STRATEGY OKAY";
             PreRace_StatusColour = "green";
             StrategyDash_Phase = 0;
-            StrategyDash_PhaseText = "HIDDEN";
+            StrategyDash_PhaseText = "IDLE";
             StrategyDash_RequiredStopsPreGreen = 0;
             StrategyDash_StrategyText = "NO STOP";
             StrategyDash_StartFuelRequiredLitres = 0;

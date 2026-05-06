@@ -1,3 +1,9 @@
+- 2026-05-06 PreRace status catalogue/phase update landed:
+  - `LalaLaunch.PreRace.StatusText` now uses approved stint-focused catalogue wording (`ADD START FUEL FOR SINGLE STINT`, `SINGLE STINT OKAY/POSSIBLE`, `2 STINT PLAN ...`, `MULTI STINTS REQUIRED`, etc.);
+  - max-fuel warning split is active: `MAX START FUEL REQUIRED` (start fuel) and phase-routed `SET MAX FUEL NEXT STINT` in StrategyDash `START READY` / `RACE`;
+  - StrategyDash phase contract is now `0=IDLE`, `1=PRE GRID`, `2=GRIDDING`, `3=START READY`, `5=RACE`;
+  - added `Docs/Internal/FuelSystemMessages_Catalog.csv` as PR-safe text authority for the catalogue/split update; binary spreadsheet sync is deferred to manual/local conversion.
+
 - 2026-05-06 DATA LIVE provenance follow-up landed: PreRace DATA basis labels now emit true selected provenance tokens (`LIVE|PLAN|PROFILE|SIM|DEFAULT`) with DATA PLAN never emitting LIVE/SIM; retired `StrategyDash.IsAutoStrategy` export/wiring.
 
   - PR #684 P1 follow-up: stable projection source `fuelcalc.estimated` now maps to LAP `PLAN` in the DATA resolver (prevents temporary `DEFAULT` regression when planner estimate is the held stable lap).
