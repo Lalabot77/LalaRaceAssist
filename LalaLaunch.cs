@@ -1096,6 +1096,63 @@ namespace LaunchPlugin
             return RequiredPreRaceStrategy.MultiStop;
         }
 
+
+        private void ResolveDataGovernedBurnAndPaceBasis(
+            GameData data,
+            double fallbackFuelPerLap,
+            out double fuelPerLap,
+            out double lapSeconds,
+            out string fuelSource,
+            out string lapSource)
+        {
+            double liveFuel = LiveFuelPerLap_Stable > 0.0 ? LiveFuelPerLap_Stable : LiveFuelPerLap;
+            double liveLap = GetProjectionLapSeconds(data);
+
+            double planFuel = FuelCalculator?.FuelPerLap ?? 0.0;
+            double planLap = 0.0;
+            string planLapText = FuelCalculator?.EstimatedLapTime ?? string.Empty;
+            if (TimeSpan.TryParse(planLapText, out var planLapSpan) && planLapSpan.TotalSeconds > 0.0)
+            {
+                planLap = planLapSpan.TotalSeconds;
+            }
+
+            var (profileFuelDry, profileFuelWet) = GetProfileFuelBaselines();
+            double profileFuel = _isWetMode ? profileFuelWet : profileFuelDry;
+            double profileLap = GetProfileAvgLapSeconds();
+
+            double simLap = (data.NewData?.LastLapTime ?? TimeSpan.Zero).TotalSeconds;
+            bool usePlanData = (_pitFuelControlEngine?.Data ?? PitFuelControlData.Live) == PitFuelControlData.Plan;
+
+            fuelPerLap = 0.0;
+            lapSeconds = 0.0;
+            fuelSource = "DEFAULT";
+            lapSource = "DEFAULT";
+
+            if (!usePlanData)
+            {
+                if (liveFuel > 0.0) { fuelPerLap = liveFuel; fuelSource = "LIVE"; }
+                else if (planFuel > 0.0) { fuelPerLap = planFuel; fuelSource = "PLAN"; }
+                else if (profileFuel > 0.0) { fuelPerLap = profileFuel; fuelSource = "PROFILE"; }
+                else if (fallbackFuelPerLap > 0.0) { fuelPerLap = fallbackFuelPerLap; fuelSource = "DEFAULT"; }
+
+                if (liveLap > 0.0) { lapSeconds = liveLap; lapSource = "LIVE"; }
+                else if (planLap > 0.0) { lapSeconds = planLap; lapSource = "PLAN"; }
+                else if (profileLap > 0.0) { lapSeconds = profileLap; lapSource = "PROFILE"; }
+                else if (simLap > 0.0) { lapSeconds = simLap; lapSource = "SIM"; }
+                else { lapSource = "DEFAULT"; }
+            }
+            else
+            {
+                if (planFuel > 0.0) { fuelPerLap = planFuel; fuelSource = "PLAN"; }
+                else if (profileFuel > 0.0) { fuelPerLap = profileFuel; fuelSource = "PROFILE"; }
+                else if (fallbackFuelPerLap > 0.0) { fuelPerLap = fallbackFuelPerLap; fuelSource = "DEFAULT"; }
+
+                if (planLap > 0.0) { lapSeconds = planLap; lapSource = "PLAN"; }
+                else if (profileLap > 0.0) { lapSeconds = profileLap; lapSource = "PROFILE"; }
+                else { lapSource = "DEFAULT"; }
+            }
+        }
+
         private PlannerLiveSessionMatchSnapshot BuildLiveSessionMatchSnapshot(double raceSessionDurationSeconds, long raceSessionLaps)
         {
             string liveCarIdentity = !string.IsNullOrWhiteSpace(CurrentCarModel) && !CurrentCarModel.Equals("Unknown", StringComparison.OrdinalIgnoreCase)

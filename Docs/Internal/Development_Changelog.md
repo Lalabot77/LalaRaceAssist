@@ -1,3 +1,11 @@
+## 2026-05-06 — PR #679 build fix: restore PreRace data-governed burn/pace helper
+- Classification: **internal-only** (compile restoration + intended source-hierarchy reattachment; no protected runtime-domain changes).
+- Restored `ResolveDataGovernedBurnAndPaceBasis(...)` inside `LalaLaunch` near PreRace helpers so `UpdatePreRaceOutputs(...)` compiles and resolves source authority in one place again.
+- Preserved approved hierarchy and source tokens:
+  - DATA LIVE: BURN `LIVE -> PLAN -> PROFILE -> DEFAULT`; LAP `LIVE -> PLAN -> PROFILE -> SIM -> DEFAULT`.
+  - DATA PLAN: BURN `PLAN -> PROFILE -> DEFAULT`; LAP `PLAN -> PROFILE -> DEFAULT`.
+- Explicitly kept untouched protected domains: `Fuel.Delta.*`, `Fuel.Pit.*`, `Fuel.RequiredBurnToEnd*`, boxed refuel latches, and `PitFuelControlEngine` target/send behavior.
+
 ## 2026-05-06 — PreRace live-facing lap/burn basis helper export
 - Classification: **both** (new dash-facing helper export + internal contract docs alignment).
 - Added `LalaLaunch.PreRace.LiveFacingBasisText` as a concise combined readout of active pre-race source authority: `LAP <source> / BURN <source>`.
