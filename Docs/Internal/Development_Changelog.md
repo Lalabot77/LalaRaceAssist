@@ -1,3 +1,8 @@
+## 2026-05-06 — H2H ClassColorHex coverage follow-up
+- Classification: **both** (dash-facing class-colour contract completeness + League presentation alignment).
+- Added `H2HRace.Ahead/Behind.ClassColorHex` and `H2HTrack.Ahead/Behind.ClassColorHex` exports alongside existing `ClassColor` exports in shared H2H target attach wiring.
+- `ClassColorHex` now follows the same League-aware presentation gate as `ClassColor` and always publishes `#RRGGBB` format.
+
 ## 2026-05-06 — League Class follow-up: Opp ClassColor format + CarIdx sentinel + H2HTrack presentation alignment
 - Classification: **both** (export-format correction + identity read hardening + authorised H2HTrack presentation alignment).
 - Fixed `Opp.*.ClassColor` League-aware path to preserve canonical `0xRRGGBB` output while `Opp.*.ClassColorHex` remains `#RRGGBB`.

@@ -1,3 +1,6 @@
+- 2026-05-06 H2H ClassColorHex coverage follow-up landed:
+  - added H2H target `ClassColorHex` exports (`H2HRace.Ahead/Behind`, `H2HTrack.Ahead/Behind`) and aligned them to the existing League-aware presentation gate with `#RRGGBB` format.
+
 - 2026-05-06 League Class follow-up landed:
   - `Opp.Ahead/Behind*.ClassColor` keeps canonical `0xRRGGBB` format under League-aware presentation; `ClassColorHex` remains `#RRGGBB`;
   - DriverCount player-car identity reads now use CarIdx invalid sentinel `-1` to avoid missing-value car-0 misclassification;

@@ -6057,6 +6057,9 @@ namespace LaunchPlugin
             AttachCore(baseName + ".ClassColor", () => useLeagueRaceContextPresentation
                 ? ResolveRaceContextClassColor((participantGetter()?.UserID ?? 0) > 0 ? (int?)participantGetter()?.UserID : null, participantGetter()?.Name, participantGetter()?.ClassColor)
                 : (participantGetter()?.ClassColor ?? string.Empty));
+            AttachCore(baseName + ".ClassColorHex", () => useLeagueRaceContextPresentation
+                ? ResolveRaceContextClassColorHex((participantGetter()?.UserID ?? 0) > 0 ? (int?)participantGetter()?.UserID : null, participantGetter()?.Name, participantGetter()?.ClassColor)
+                : (NormalizeClassColorHex(participantGetter()?.ClassColor) ?? string.Empty));
             AttachCore(baseName + ".PositionInClass", () => participantGetter()?.PositionInClass ?? 0);
             AttachCore(baseName + ".LastLapSec", () => participantGetter()?.LastLapSec ?? 0.0);
             AttachCore(baseName + ".BestLapSec", () => participantGetter()?.BestLapSec ?? 0.0);
