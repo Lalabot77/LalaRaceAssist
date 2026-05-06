@@ -41,13 +41,14 @@ namespace LaunchPlugin
         public double AntiStallThreshold { get => _antiStallThreshold; set { if (_antiStallThreshold != value) { _antiStallThreshold = value; OnPropertyChanged(); } } }
 
         // --- Fuel & Pit Properties ---
-        private int _pitStrategyMode = 3;
+        private int _pitStrategyMode = 2;
         public int PreRaceMode
         {
-            get => (_pitStrategyMode >= 0 && _pitStrategyMode <= 3) ? _pitStrategyMode : 3;
+            get => (_pitStrategyMode >= 0 && _pitStrategyMode <= 3) ? (_pitStrategyMode==3?2:_pitStrategyMode) : 2;
             set
             {
-                int normalized = (value >= 0 && value <= 3) ? value : 3;
+                int normalized = (value >= 0 && value <= 3) ? value : 2;
+                if (normalized == 3) normalized = 2;
                 if (_pitStrategyMode != normalized)
                 {
                     _pitStrategyMode = normalized;
@@ -70,7 +71,7 @@ namespace LaunchPlugin
         public bool MandatoryStopRequired
         {
             get => PreRaceMode == 1;
-            set => PreRaceMode = value ? 1 : 3;
+            set => PreRaceMode = value ? 1 : 2;
         }
 
         private double? _legacyFuelContingencyValue;

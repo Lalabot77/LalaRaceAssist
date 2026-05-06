@@ -247,7 +247,7 @@
           BorderBrush="{StaticResource PresetManagerInputBorderBrush}"
           SelectedValuePath="Tag"
           SelectedValue="{Binding PreRaceMode, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
-          ToolTip="Auto mirrors planner-derived assumptions for PreRace outputs. No Stop uses current fuel only; Single Stop uses current + pit-menu add intent; Multi Stop remains informational via PreRace stints context.">
+          ToolTip="PreRace Mode is strategy intent only. Use No Stop / Single Stop / Multi Stop for pre-green strategy intent; fuel/pace authority is controlled by Pit.FuelControl.DATA.">
 
                             <ComboBox.Resources>
                                 <SolidColorBrush x:Key="{x:Static SystemColors.WindowBrushKey}" Color="#171A20"/>
@@ -257,12 +257,6 @@
                                 <SolidColorBrush x:Key="{x:Static SystemColors.ControlTextBrushKey}" Color="#F2F4F8"/>
                                 <SolidColorBrush x:Key="{x:Static SystemColors.WindowTextBrushKey}" Color="#F2F4F8"/>
                             </ComboBox.Resources>
-
-                            <ComboBoxItem Content="Auto">
-                                <ComboBoxItem.Tag>
-                                    <sys:Int32>3</sys:Int32>
-                                </ComboBoxItem.Tag>
-                            </ComboBoxItem>
                             <ComboBoxItem Content="No Stop">
                                 <ComboBoxItem.Tag>
                                     <sys:Int32>0</sys:Int32>
