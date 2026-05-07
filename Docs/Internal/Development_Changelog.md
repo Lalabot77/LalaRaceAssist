@@ -1,3 +1,13 @@
+## 2026-05-07 — League Race settings UI polish + LeagueClass toggle action self-check
+- Classification: **both** (settings UX clarity + existing action behavior polish + docs alignment).
+- Compacted CSV status helper into a single summary line while preserving full status counts (`status/rows/valid/invalid/duplicates`).
+- Added warning-state helper coloring (yellow) for League Race section issue states (CSV path missing/file missing, CSV load failure/no valid rows, invalid/duplicate rows, unresolved/invalid player effective class while enabled).
+- Updated Player race class row behavior:
+  - Auto-detect now shows read-only resolved preview fields (`Class Name`, `Short Name`, `Rank`, `Colour Hex` + swatch).
+  - Manual override keeps editable persisted fields and unchanged save behavior.
+- Kept existing plugin action `LeagueClass.ToggleEnabled` and polished enable behavior with a quiet CSV self-check reload: when toggled ON in CSV-capable modes and CSV file exists but valid rows are not loaded, it now calls the existing reload seam; missing/empty path does not block enable.
+- Preserved invariants: no resolver algorithm ownership changes, no Opponents/CarSA/H2H/PitExit/Fuel logic changes, no dashboard JSON changes.
+
 ## 2026-05-06 — PR #687 follow-up build fix: CarSA PositionInClass null-coalescing removal
 - Classification: **internal-only** (compile blocker fix only; no runtime contract change).
 - Removed invalid null-coalescing on non-nullable `CarSASlot.PositionInClass` in `Car.Ahead01..05.PositionInClass` and `Car.Behind01..05.PositionInClass` publish-time attach lambdas.

@@ -240,11 +240,7 @@
                         <styles:SHButtonPrimary Content="Reload" Margin="8,0,0,0" Click="ReloadLeagueClassCsv_Click"/>
                     </StackPanel>
                     <StackPanel Visibility="{Binding LeagueClassShowCsvSection, Converter={StaticResource BooleanToVisibilityConverter}}">
-                        <TextBlock Margin="0,6,0,0" Foreground="LightGray" Text="{Binding LeagueClassStatus.ConfigStatusText, StringFormat='Status: {0}'}"/>
-                        <TextBlock Foreground="LightGray" Text="{Binding LeagueClassStatus.LoadedCount, StringFormat='Loaded rows: {0}'}"/>
-                        <TextBlock Foreground="LightGray" Text="{Binding LeagueClassStatus.ValidDriverCount, StringFormat='Valid drivers: {0}'}"/>
-                        <TextBlock Foreground="LightGray" Text="{Binding LeagueClassStatus.InvalidRowCount, StringFormat='Invalid rows: {0}'}"/>
-                        <TextBlock Foreground="LightGray" Text="{Binding LeagueClassStatus.DuplicateRowCount, StringFormat='Duplicate rows: {0}'}"/>
+                        <TextBlock Margin="0,6,0,0" Foreground="{Binding LeagueClassHelperForeground}" Text="{Binding LeagueClassCsvStatusSummaryText}"/>
                         <TextBlock Margin="0,8,0,2" Text="Detected classes" FontWeight="SemiBold"/>
                         <Grid Margin="0,0,0,2">
                             <Grid.ColumnDefinitions>
@@ -332,13 +328,13 @@
                             <ComboBoxItem Content="Auto-detect" Tag="0"/>
                             <ComboBoxItem Content="Manual override" Tag="1"/>
                         </ComboBox>
-                        <TextBox Grid.Column="2" Width="120" Text="{Binding Settings.LeagueClassPlayerOverrideClassName, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" ToolTip="Class name"/>
-                        <TextBox Grid.Column="4" Width="90" Text="{Binding Settings.LeagueClassPlayerOverrideShortName, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" ToolTip="Short"/>
-                        <TextBox Grid.Column="6" Width="50" Text="{Binding Settings.LeagueClassPlayerOverrideRank, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" ToolTip="Rank"/>
-                        <TextBox x:Name="LeagueClassPlayerOverrideColourHexTextBox" Grid.Column="8" Width="90" Text="{Binding Settings.LeagueClassPlayerOverrideColourHex, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" ToolTip="#RRGGBB"/>
-                        <Border Grid.Column="10" Width="18" Height="18" Margin="0,2,0,0" BorderBrush="#777" BorderThickness="1" Background="{Binding Text, ElementName=LeagueClassPlayerOverrideColourHexTextBox, Converter={StaticResource HexToBrushConverter}}"/>
+                        <TextBox Grid.Column="2" Width="120" Text="{Binding LeagueClassPlayerClassNameEditorText, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" ToolTip="Class name" IsReadOnly="{Binding LeagueClassPlayerOverrideIsAutoDetect}"/>
+                        <TextBox Grid.Column="4" Width="90" Text="{Binding LeagueClassPlayerShortNameEditorText, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" ToolTip="Short" IsReadOnly="{Binding LeagueClassPlayerOverrideIsAutoDetect}"/>
+                        <TextBox Grid.Column="6" Width="50" Text="{Binding LeagueClassPlayerRankEditorText, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" ToolTip="Rank" IsReadOnly="{Binding LeagueClassPlayerOverrideIsAutoDetect}"/>
+                        <TextBox x:Name="LeagueClassPlayerOverrideColourHexTextBox" Grid.Column="8" Width="90" Text="{Binding LeagueClassPlayerColourHexEditorText, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" ToolTip="#RRGGBB" IsReadOnly="{Binding LeagueClassPlayerOverrideIsAutoDetect}"/>
+                        <Border Grid.Column="10" Width="18" Height="18" Margin="0,2,0,0" BorderBrush="#777" BorderThickness="1" Background="{Binding LeagueClassPlayerColourHexEditorText, Converter={StaticResource HexToBrushConverter}}"/>
                     </Grid>
-                    <TextBlock Margin="0,6,0,0" Foreground="LightGray" Text="{Binding LeagueClassPlayerPreviewText}"/>
+                    <TextBlock Margin="0,6,0,0" Foreground="{Binding LeagueClassHelperForeground}" Text="{Binding LeagueClassPlayerPreviewText}"/>
 
                     <TextBlock Margin="0,8,0,2" Text="Fallback rules (suffix)" FontWeight="SemiBold" Visibility="{Binding LeagueClassShowFallbackSection, Converter={StaticResource BooleanToVisibilityConverter}}"/>
                     <Grid Margin="0,0,0,2" Visibility="{Binding LeagueClassShowFallbackSection, Converter={StaticResource BooleanToVisibilityConverter}}">

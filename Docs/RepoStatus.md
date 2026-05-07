@@ -59,6 +59,12 @@
   - PitExit remains on shared Opponents race-context matcher seam; no pit-exit math/countdown changes.
 
 ## Documentation sync status
+- 2026-05-07 League Race settings UI polish + toggle-action self-check landed:
+  - CSV status helper is now compact (`Status | Rows | Valid | Invalid | Duplicates`) with full count preservation.
+  - League Race helper/status text now switches to yellow only for warning/problem states (CSV path/file issues, load/no-valid-row issues, invalid/duplicate row counts, unresolved/invalid player effective class while enabled).
+  - Player race class row now uses mode-aware presentation: Auto-detect read-only resolved preview vs Manual override editable fields.
+  - `LeagueClass.ToggleEnabled` now performs quiet CSV self-check reload on enable in CSV-capable modes when file exists but valid rows are not loaded; missing/empty path does not block enable.
+
 - 2026-05-05 League Class ClassLeader native-gate bypass fix landed:
   - fixed `FindResolvedClassLeaderCarIdx(...)` so active League race-context matching (League Class enabled + valid player effective class, including manual player override) bypasses native single-class and native player class-short gates before selecting the leader;
   - ClassLeader now chooses the lowest positive `CarIdxPosition` inside the effective-class cohort and self-matches the player car directly, so a player leading the forced/resolved League class publishes `ClassLeader.CarIdx == playerCarIdx`;
@@ -229,7 +235,7 @@
 # Repository status
 
 Validated against commit: HEAD
-Last updated: 2026-04-28
+Last updated: 2026-05-07
 Branch: work
 
 ## Current repo/link status
