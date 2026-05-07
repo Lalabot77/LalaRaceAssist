@@ -1340,7 +1340,7 @@ namespace LaunchPlugin
 
                     if (oneStopUnderFuel)
                     {
-                        return new PreRaceStatusDecision { Text = "2 STINT PLAN REQUIRES MORE FUEL", Colour = "red" };
+                        return new PreRaceStatusDecision { Text = "2 STINT PLAN REQUIRES MORE FUEL", Colour = "orange" };
                     }
 
                     if (oneStopOverFuel)
@@ -5977,7 +5977,7 @@ namespace LaunchPlugin
         private double _pitBoxLastDeltaSec = 0.0;
         private DateTime _pitBoxLastDeltaExpiresUtc = DateTime.MinValue;
         private const double PitBoxTargetLatchSettleSeconds = 1.0;
-        private const double PitBoxLastDeltaWindowSeconds = 5.0;
+        private const double PitBoxLastDeltaWindowSeconds = 20.0;
         private const double PitBoxModeledServiceOverheadSeconds = 1.0;
         private const double PitExitTransitionAllowanceSec = 2.00;
         private bool _pitRefuelEntryLatched = false;
