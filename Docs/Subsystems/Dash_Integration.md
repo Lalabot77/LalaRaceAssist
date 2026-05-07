@@ -43,7 +43,9 @@ This document is the canonical dash-facing contract layer. It does **not** redef
 - Strategy fuel guidance should consume plugin-owned tactical exports directly:
   - `Fuel.RequiredBurnToEnd*` for burn-to-end guidance/state/source,
   - `Fuel.Contingency.*` for active reserve display/debug,
+  - `Fuel.Refuel.*` for race-running next-stop refuel guidance (`NextLitres`, `NextLitresCeil`, `NextText`, `Valid`, and basis context),
   - `Fuel.Delta.LitresCurrent/Plan/WillAdd` + Push/Save variants for tactical deltas.
+- `Fuel.Refuel.*` is runtime tactical guidance and should be preferred over `StrategyDash.NextRefuel*` during race-running usage; StrategyDash next-refuel helpers remain pre-green/planning oriented.
 - Do not rebuild burn-to-end with dash-side NCALC formula chains from raw fuel/time/pace properties; use plugin-owned `Fuel.RequiredBurnToEnd`.
 - Tactical delta exports are contingency-aware on the required-to-finish side only; `Fuel.Pit.WillAdd` remains clamp mirror and should not be treated as reserve-augmented request.
 - Runtime pit-space exports are live-cap authoritative when available: `Fuel.Pit.TankSpaceAvailable` reflects live remaining capacity and `Fuel.Pit.WillAdd`/`Fuel.Pit.FuelOnExit` consume that runtime cap seam (not Strategy/Profile max-fuel override when live cap exists).

@@ -1,3 +1,9 @@
+- 2026-05-07 Fuel.Refuel runtime tactical export family landed:
+  - added `Fuel.Refuel.*` runtime exports (`NextLitres`, `NextLitresCeil`, `NextText`, `Valid`, `BurnSource`, `LapSource`, `DataMode`, `BurnMode`) as canonical race-running next-stop guidance surface;
+  - `NextLitres` now uses final-stop vs multi-stop threshold semantics (`FinalStopNeed` vs usable next-stop add capacity) with contingency included once on final-stop guidance and not repeatedly stacked on non-final max-fill guidance;
+  - STBY now publishes truthful mode context while computing advisory NORM guidance when runtime math is valid (no command/send implication);
+  - command transport/send behavior and protected runtime domains (`Fuel.Delta.*`, `Fuel.Pit.*`, `Fuel.RequiredBurnToEnd*`, boxed refuel latches, StrategyDash next-refuel helpers) remain unchanged.
+
 - 2026-05-06: PR #687 follow-up fixed a compile blocker in `LalaLaunch` by removing invalid nullable coalescing from CarSA Ahead/Behind `PositionInClass` publish lambdas; effective-position seam behavior unchanged.
 - 2026-05-06 CarSA PositionInClass publish-seam alignment landed:
   - `Car.Ahead01..05.PositionInClass` / `Car.Behind01..05.PositionInClass` now publish through the shared effective-position seam (`GetEffectivePositionInClassForPublishedContext`), using Opponents effective race-context rank when available and native slot fallback otherwise;
