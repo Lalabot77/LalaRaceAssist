@@ -1,3 +1,7 @@
+- 2026-05-07 Fuel.Refuel DATA projection follow-up landed:
+  - removed the incorrect `simLapsRemaining > 0` reprojection gate so DATA PLAN timed-race paths can remain valid when time context + selected lap-seconds are sufficient;
+  - contingency configured in laps is now converted using the selected Fuel.Refuel burn basis (`selectedBurn`) used by `Fuel.Refuel.NextLitres` (including PUSH/SAVE and STBY advisory NORM), not stable/NORM-only contingency litres.
+
 - 2026-05-07 Fuel.Refuel DATA-governed projected-laps alignment landed:
   - runtime `Fuel.Refuel.*` guidance now resolves projected remaining laps from the same selected DATA-governed lap basis exported by `Fuel.Refuel.LapSource` (instead of always using live stable laps);
   - DATA LIVE keeps LIVE-first usage when `LapSource=LIVE` with valid live projection, while non-live lap sources (`PLAN/PROFILE/DEFAULT`) now reproject from selected lap seconds using existing race projection semantics;

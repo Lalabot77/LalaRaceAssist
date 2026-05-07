@@ -1,3 +1,9 @@
+## 2026-05-07 — Fuel.Refuel DATA projection follow-up: timed reprojection gate + selected-burn contingency conversion
+- Classification: **both** (runtime tactical refuel correctness follow-up + docs alignment).
+- Removed the overly strict reprojection pre-gate requiring `simLapsRemaining > 0`; DATA-governed Fuel.Refuel reprojection now attempts whenever selected lap seconds are valid and relies on `FuelProjectionMath.ProjectLapsRemaining(...)` to decide if session context is sufficient.
+- `Fuel.Refuel` contingency-in-laps conversion now uses the selected runtime refuel burn basis (`selectedBurn`) inside `ComputeRuntimeRefuelOutputs(...)`, ensuring PUSH/SAVE/STBY(NORM advisory)/NORM all convert laps-to-litres against the burn basis actually used by `Fuel.Refuel.NextLitres`.
+- Invalid-context reset behavior remains deterministic (`Valid=false`, `NextText=CHECK FUEL`, stale source context cleared).
+
 ## 2026-05-07 — Fuel.Refuel DATA-governed projected-laps alignment
 - Classification: **both** (runtime tactical refuel correctness alignment + docs sync).
 - `Fuel.Refuel.NextLitres` projection basis now follows the same DATA-governed lap basis selected by `ResolveRuntimeRefuelBasis(...)`/`Fuel.Refuel.LapSource` instead of always consuming live stable projected laps.

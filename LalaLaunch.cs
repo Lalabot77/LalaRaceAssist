@@ -8813,10 +8813,7 @@ namespace LaunchPlugin
             }
 
             bool canReproject =
-                selectedLapSeconds > 0.0 &&
-                simLapsRemaining > 0.0 &&
-                !double.IsNaN(simLapsRemaining) &&
-                !double.IsInfinity(simLapsRemaining);
+                selectedLapSeconds > 0.0;
             if (!canReproject)
             {
                 return false;
@@ -9009,20 +9006,29 @@ namespace LaunchPlugin
             bool hasCurrentFuel = currentFuel >= 0.0 && !double.IsNaN(currentFuel) && !double.IsInfinity(currentFuel);
             bool hasDecisionCap = nextStopDecisionCapacityLitres >= 0.0 && !double.IsNaN(nextStopDecisionCapacityLitres) && !double.IsInfinity(nextStopDecisionCapacityLitres);
             bool hasDisplayAddCap = multiStopDisplayAddCapLitres >= 0.0 && !double.IsNaN(multiStopDisplayAddCapLitres) && !double.IsInfinity(multiStopDisplayAddCapLitres);
-            bool hasContingency =
+            bool hasContingencyContext =
                 contingency != null &&
                 !double.IsNaN(contingency.Litres) &&
                 !double.IsInfinity(contingency.Litres) &&
                 contingency.Litres >= 0.0 &&
                 !string.IsNullOrWhiteSpace(contingency.Source);
 
-            if (!hasBasis || !hasCurrentFuel || !hasProjection || !hasDecisionCap || !hasDisplayAddCap || !hasContingency)
+            if (!hasBasis || !hasCurrentFuel || !hasProjection || !hasDecisionCap || !hasDisplayAddCap || !hasContingencyContext)
             {
                 ResetRuntimeRefuelOutputsInvalid();
                 return;
             }
 
-            double contingencyLitres = Math.Max(0.0, contingency.Litres);
+            double contingencyLitres = contingency.IsConfiguredInLaps
+                ? Math.Max(0.0, contingency.Laps) * selectedBurn
+                : Math.Max(0.0, contingency.Litres);
+            bool hasContingency = !double.IsNaN(contingencyLitres) && !double.IsInfinity(contingencyLitres);
+            if (!hasContingency)
+            {
+                ResetRuntimeRefuelOutputsInvalid();
+                return;
+            }
+
             RuntimeRefuelEvaluation eval = EvaluateRuntimeRefuelNeed(
                 projectedLapsRemaining,
                 selectedBurn,
