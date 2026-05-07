@@ -16,7 +16,7 @@ Branch: work
 
 ## DashesTabView.xaml
 - Dash Control now uses three expander-based main sections: `Bindings`, `Global Dash Functions`, and `Dash Visibility`; all default to expanded so the existing content remains immediately visible while matching the Settings-tab tidy-up pattern.
-- `Bindings` contains only the true dash bindings for `Cancel Msg Button`, `Toggle Pit Screen Popup`, `Change Primary Dash Mode`, and `Cycle Declutter Mode`.
+- `Bindings` contains only the true dash bindings for `Cancel Msg Button`, `Toggle Pit Screen Popup`, `Change Primary Dash Mode`, `Cycle Declutter Mode`, plus `League Class Toggle` (existing plugin action `LalaLaunch.LeagueClass.ToggleEnabled`).
 - `Change Primary Dash Mode` binding is currently repurposed as a manual plugin recovery trigger (runtime re-arm/reset seam) while preserving the existing binding/action name for compatibility.
 - `Global Dash Functions` -> General: `Auto screen selection at session start` automatically switches dash screens when a session starts based on context.
 - `Global Dash Functions` -> Dark Mode: `Dark Mode` selector uses Off / Manual / Auto, `Dark Mode Brightness` sets base brightness, `Use Lovely True Dark` follows Lovely when available, and `Toggle Dark Mode` remains here as the dark-mode-specific binding row.
