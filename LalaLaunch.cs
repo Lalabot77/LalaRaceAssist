@@ -7345,7 +7345,11 @@ namespace LaunchPlugin
                 AttachCore($"Car.Ahead{label}.BorderHex", () => _carSaEngine?.Outputs.AheadSlots[slotIndex].BorderHex ?? "#A9A9A9");
                 AttachCore($"Car.Ahead{label}.SessionFlagsRaw", () => _carSaEngine?.Outputs.AheadSlots[slotIndex].SessionFlagsRaw ?? -1);
                 AttachCore($"Car.Ahead{label}.TrackSurfaceMaterialRaw", () => _carSaEngine?.Outputs.AheadSlots[slotIndex].TrackSurfaceMaterialRaw ?? -1);
-                AttachCore($"Car.Ahead{label}.PositionInClass", () => _carSaEngine?.Outputs.AheadSlots[slotIndex].PositionInClass ?? 0);
+                AttachCore($"Car.Ahead{label}.PositionInClass", () =>
+                {
+                    var slot = _carSaEngine?.Outputs.AheadSlots[slotIndex];
+                    return slot != null ? GetEffectivePositionInClassForPublishedContext(slot.CarIdx, slot.PositionInClass) : 0;
+                });
                 AttachCore($"Car.Ahead{label}.ClassName", () =>
                 {
                     var slot = _carSaEngine?.Outputs.AheadSlots[slotIndex];
@@ -7427,7 +7431,11 @@ namespace LaunchPlugin
                 AttachCore($"Car.Behind{label}.BorderHex", () => _carSaEngine?.Outputs.BehindSlots[slotIndex].BorderHex ?? "#A9A9A9");
                 AttachCore($"Car.Behind{label}.SessionFlagsRaw", () => _carSaEngine?.Outputs.BehindSlots[slotIndex].SessionFlagsRaw ?? -1);
                 AttachCore($"Car.Behind{label}.TrackSurfaceMaterialRaw", () => _carSaEngine?.Outputs.BehindSlots[slotIndex].TrackSurfaceMaterialRaw ?? -1);
-                AttachCore($"Car.Behind{label}.PositionInClass", () => _carSaEngine?.Outputs.BehindSlots[slotIndex].PositionInClass ?? 0);
+                AttachCore($"Car.Behind{label}.PositionInClass", () =>
+                {
+                    var slot = _carSaEngine?.Outputs.BehindSlots[slotIndex];
+                    return slot != null ? GetEffectivePositionInClassForPublishedContext(slot.CarIdx, slot.PositionInClass) : 0;
+                });
                 AttachCore($"Car.Behind{label}.ClassName", () =>
                 {
                     var slot = _carSaEngine?.Outputs.BehindSlots[slotIndex];
