@@ -1,3 +1,11 @@
+## 2026-05-07 — Fuel.Refuel NextStopCap follow-up (runtime live-cap decision seam)
+- Classification: **both** (runtime tactical refuel correctness adjustment + docs alignment).
+- Corrected `Fuel.Refuel.NextLitres` capacity semantics:
+  - final-stop vs multi-stop threshold now uses runtime effective restricted tank capacity seam (`ResolveRuntimeLiveMaxTankCapacity`, live-cap first with planner/profile fallback only when live cap is unavailable),
+  - multi-stop displayed litres remain add-oriented guidance using runtime add-cap seam (`Fuel.Pit.TankSpaceAvailable`) so export values are not overstated as full tank size add amounts while on track.
+- Tightened validity: unresolved/invalid capacity context now fails `Fuel.Refuel.Valid`; zero decision capacity with positive requirement no longer silently resolves as valid `NO REFUEL`.
+- Protected domains unchanged: no changes to `Fuel.Pit.TankSpaceAvailable` or `Fuel.Pit.WillAdd` semantics, command send/transport, StrategyDash helpers, boxed latches, or existing fuel delta/burn-to-end outputs.
+
 ## 2026-05-07 — Fuel.Refuel.* runtime tactical refuel export family
 - Classification: **both** (new dash-facing runtime fuel exports + internal contract/docs alignment).
 - Added new runtime `Fuel.Refuel.*` exports in `LalaLaunch`:

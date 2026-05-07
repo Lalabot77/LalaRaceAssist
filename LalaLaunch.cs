@@ -4561,6 +4561,7 @@ namespace LaunchPlugin
                     fallbackFuelPerLap,
                     currentFuel,
                     LiveLapsRemainingInRace_Stable,
+                    maxTankCapacity,
                     Pit_TankSpaceAvailable,
                     refuelContingency);
 
@@ -8661,23 +8662,33 @@ namespace LaunchPlugin
             public bool IsFinalStopGuidance;
             public double BaseToFinish;
             public double FinalStopNeed;
-            public double NextStopCap;
+            public double DecisionCapacity;
+            public double MultiStopDisplayAddCap;
             public int StopsRemainingEstimate;
+            public bool HasCapacityForNeed;
         }
 
-        private static RuntimeRefuelEvaluation EvaluateRuntimeRefuelNeed(double projectedLapsRemaining, double selectedBurn, double currentFuel, double contingencyLitres, double nextStopCapLitres)
+        private static RuntimeRefuelEvaluation EvaluateRuntimeRefuelNeed(
+            double projectedLapsRemaining,
+            double selectedBurn,
+            double currentFuel,
+            double contingencyLitres,
+            double decisionCapacityLitres,
+            double multiStopDisplayAddCapLitres)
         {
             var eval = new RuntimeRefuelEvaluation();
             eval.BaseToFinish = (projectedLapsRemaining * selectedBurn) - currentFuel;
             eval.FinalStopNeed = eval.BaseToFinish + contingencyLitres;
-            eval.NextStopCap = Math.Max(0.0, nextStopCapLitres);
-            eval.IsFinalStopGuidance = eval.FinalStopNeed <= eval.NextStopCap;
-            eval.StopsRemainingEstimate = eval.NextStopCap > 0.0
-                ? Math.Max(0, (int)Math.Ceiling(Math.Max(0.0, eval.FinalStopNeed) / eval.NextStopCap))
+            eval.DecisionCapacity = Math.Max(0.0, decisionCapacityLitres);
+            eval.MultiStopDisplayAddCap = Math.Max(0.0, multiStopDisplayAddCapLitres);
+            eval.IsFinalStopGuidance = eval.FinalStopNeed <= eval.DecisionCapacity;
+            eval.HasCapacityForNeed = eval.DecisionCapacity > 0.0 || eval.FinalStopNeed <= 0.0;
+            eval.StopsRemainingEstimate = eval.DecisionCapacity > 0.0
+                ? Math.Max(0, (int)Math.Ceiling(Math.Max(0.0, eval.FinalStopNeed) / eval.DecisionCapacity))
                 : 0;
             eval.NextLitres = eval.IsFinalStopGuidance
                 ? Math.Max(0.0, eval.FinalStopNeed)
-                : eval.NextStopCap;
+                : eval.MultiStopDisplayAddCap;
             return eval;
         }
 
@@ -8816,7 +8827,8 @@ namespace LaunchPlugin
             double fallbackFuelPerLap,
             double currentFuel,
             double projectedLapsRemaining,
-            double nextStopCapLitres,
+            double nextStopDecisionCapacityLitres,
+            double multiStopDisplayAddCapLitres,
             ResolvedContingency contingency)
         {
             Fuel_Refuel_DataMode = (_pitFuelControlEngine?.Data ?? PitFuelControlData.Live) == PitFuelControlData.Plan ? "PLAN" : "LIVE";
@@ -8833,7 +8845,8 @@ namespace LaunchPlugin
 
             bool hasCurrentFuel = currentFuel >= 0.0 && !double.IsNaN(currentFuel) && !double.IsInfinity(currentFuel);
             bool hasProjection = projectedLapsRemaining > 0.0 && !double.IsNaN(projectedLapsRemaining) && !double.IsInfinity(projectedLapsRemaining);
-            bool hasCap = nextStopCapLitres >= 0.0 && !double.IsNaN(nextStopCapLitres) && !double.IsInfinity(nextStopCapLitres);
+            bool hasDecisionCap = nextStopDecisionCapacityLitres >= 0.0 && !double.IsNaN(nextStopDecisionCapacityLitres) && !double.IsInfinity(nextStopDecisionCapacityLitres);
+            bool hasDisplayAddCap = multiStopDisplayAddCapLitres >= 0.0 && !double.IsNaN(multiStopDisplayAddCapLitres) && !double.IsInfinity(multiStopDisplayAddCapLitres);
             bool hasContingency =
                 contingency != null &&
                 !double.IsNaN(contingency.Litres) &&
@@ -8841,7 +8854,7 @@ namespace LaunchPlugin
                 contingency.Litres >= 0.0 &&
                 !string.IsNullOrWhiteSpace(contingency.Source);
 
-            if (!hasBasis || !hasCurrentFuel || !hasProjection || !hasCap || !hasContingency)
+            if (!hasBasis || !hasCurrentFuel || !hasProjection || !hasDecisionCap || !hasDisplayAddCap || !hasContingency)
             {
                 ResetRuntimeRefuelOutputsInvalid();
                 return;
@@ -8853,7 +8866,14 @@ namespace LaunchPlugin
                 selectedBurn,
                 currentFuel,
                 contingencyLitres,
-                nextStopCapLitres);
+                nextStopDecisionCapacityLitres,
+                multiStopDisplayAddCapLitres);
+
+            if (!eval.HasCapacityForNeed)
+            {
+                ResetRuntimeRefuelOutputsInvalid();
+                return;
+            }
 
             Fuel_Refuel_NextLitres = eval.NextLitres;
             Fuel_Refuel_NextLitresCeil = Math.Ceiling(Math.Max(0.0, eval.NextLitres));

@@ -1,3 +1,8 @@
+- 2026-05-07 Fuel.Refuel NextStopCap follow-up landed:
+  - final-stop vs multi-stop decision threshold now uses runtime effective restricted tank-cap authority seam (`ResolveRuntimeLiveMaxTankCapacity`) instead of current on-track tank-space;
+  - multi-stop displayed litres remain add-guidance from runtime add-cap seam (`Fuel.Pit.TankSpaceAvailable`) to avoid overstating a full-tank-size add amount while still indicating max-fill intent;
+  - `Fuel.Refuel.Valid` now fails when capacity context is unusable, including zero decision capacity with positive requirement.
+
 - 2026-05-07 Fuel.Refuel runtime tactical export family landed:
   - added `Fuel.Refuel.*` runtime exports (`NextLitres`, `NextLitresCeil`, `NextText`, `Valid`, `BurnSource`, `LapSource`, `DataMode`, `BurnMode`) as canonical race-running next-stop guidance surface;
   - `NextLitres` now uses final-stop vs multi-stop threshold semantics (`FinalStopNeed` vs usable next-stop add capacity) with contingency included once on final-stop guidance and not repeatedly stacked on non-final max-fill guidance;
