@@ -26,6 +26,26 @@
   - SOURCE mirrors `NORM/PUSH/SAVE/STBY`; STBY computes advisory NORM basis and remains command-neutral,
   - DATA PLAN paths do not select LIVE/SIM source tokens.
 - Protected domains preserved: no command-send transport/state-machine behavior changes and no semantic changes to `Fuel.Delta.*`, `Fuel.Pit.*`, `Fuel.RequiredBurnToEnd*`, boxed refuel latches, or StrategyDash next-refuel helpers.
+## 2026-05-07 — League Race UI polish pre-merge cleanup
+- Classification: **internal-only** (targeted UX-noise/perf cleanup; no new feature-surface changes).
+- Refined League Race helper warning gate so duplicate CSV rows alone do not force yellow status text.
+- Added shared player preview resolution helper to avoid repeated resolver calls across preview text/preview fields/warning checks.
+- Removed redundant double-reload path in `ToggleLeagueClassEnabled()` by guarding the post-self-check reload call.
+
+## 2026-05-07 — League Race settings UI polish + LeagueClass toggle action self-check
+- Classification: **both** (settings UX clarity + existing action behavior polish + docs alignment).
+- Compacted CSV status helper into a single summary line while preserving full status counts (`status/rows/valid/invalid/duplicates`).
+- Added warning-state helper coloring (yellow) for League Race section issue states (CSV path missing/file missing, CSV load failure/no valid rows, invalid/duplicate rows, unresolved/invalid player effective class while enabled).
+- Updated Player race class row behavior:
+  - Auto-detect now shows read-only resolved preview fields (`Class Name`, `Short Name`, `Rank`, `Colour Hex` + swatch).
+  - Manual override keeps editable persisted fields and unchanged save behavior.
+- Kept existing plugin action `LeagueClass.ToggleEnabled` and polished enable behavior with a quiet CSV self-check reload: when toggled ON in CSV-capable modes and CSV file exists but valid rows are not loaded, it now calls the existing reload seam; missing/empty path does not block enable.
+- Preserved invariants: no resolver algorithm ownership changes, no Opponents/CarSA/H2H/PitExit/Fuel logic changes, no dashboard JSON changes.
+## 2026-05-07 — PreRace one-stop under-fuel severity reclassification (ref #7)
+- Classification: **both** (dash-facing status colour/priority intent change + catalog/docs alignment).
+- Reclassified `2 STINT PLAN REQUIRES MORE FUEL` from red to orange in `LalaLaunch.PreRace.StatusText/StatusColour` for the one-stop under-fuel path when one-stop remains feasible.
+- Rationale: this state is advisory (next-stop refuel-settable) rather than a hard invalid strategy fault; hard-stop red remains `2 STINT PLAN NOT POSSIBLE`.
+- Updated `Docs/Internal/FuelSystemMessages_Catalog.csv` ref #7 to orange high-priority advisory semantics aligned near `CHECK NEXT STINT FUEL` behavior intent.
 
 ## 2026-05-06 — PR #687 follow-up build fix: CarSA PositionInClass null-coalescing removal
 - Classification: **internal-only** (compile blocker fix only; no runtime contract change).

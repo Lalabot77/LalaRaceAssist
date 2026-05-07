@@ -5,7 +5,7 @@ Ref,PreRace message,Colour,Priority,Meaning (short),Phase 1 (Pre Grid),Phase 2 (
 4,SINGLE STINT POSSIBLE,orange,O4,Required no-stop but another strategy selected,✅,✅,X,X,Planning choice guidance; lower value once gridding.
 5,SINGLE STINT NOT POSSIBLE,red,R2,Required one-stop but no-stop selected,✅,✅,X,X,Important hard constraint warning in both phases.
 6,2 STINT PLAN NOT POSSIBLE,red,R3,One-stop selected but not feasible,✅,✅,X,X,Critical strategy invalidity; still important on grid.
-7,2 STINT PLAN REQUIRES MORE FUEL,red,R6,One-stop feasible but under-fuelled plan,✅,✅,X,X,Actionable and urgent until race start.
+7,2 STINT PLAN REQUIRES MORE FUEL,orange,O3A,One-stop feasible but under-fuelled plan (refuel-settable),✅,✅,✅,✅,Advisory to verify next-stint refuel; high-priority orange, not hard-stop red when next-stop target fits tank space.
 8,OVERFUELLED,orange,O6,One-stop selected with significant extra fuel,X,✅,✅,X,Mostly optimization; less critical once on grid.
 9,CHECK NEXT STINT FUEL,orange,O3,Refuel target likely too low / needs review,X,✅,✅,✅,Still useful on grid because refuel plan is phase-relevant.
 10,SINGLE STOP OKAY,green,G2,One-stop selected and checks pass,✅,X,X,X,Good planning confidence cue; can be de-prioritized on grid.
