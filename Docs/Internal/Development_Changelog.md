@@ -1,3 +1,9 @@
+## 2026-05-07 — PreRace one-stop under-fuel severity reclassification (ref #7)
+- Classification: **both** (dash-facing status colour/priority intent change + catalog/docs alignment).
+- Reclassified `2 STINT PLAN REQUIRES MORE FUEL` from red to orange in `LalaLaunch.PreRace.StatusText/StatusColour` for the one-stop under-fuel path when one-stop remains feasible.
+- Rationale: this state is advisory (next-stop refuel-settable) rather than a hard invalid strategy fault; hard-stop red remains `2 STINT PLAN NOT POSSIBLE`.
+- Updated `Docs/Internal/FuelSystemMessages_Catalog.csv` ref #7 to orange high-priority advisory semantics aligned near `CHECK NEXT STINT FUEL` behavior intent.
+
 ## 2026-05-06 — PR #687 follow-up build fix: CarSA PositionInClass null-coalescing removal
 - Classification: **internal-only** (compile blocker fix only; no runtime contract change).
 - Removed invalid null-coalescing on non-nullable `CarSASlot.PositionInClass` in `Car.Ahead01..05.PositionInClass` and `Car.Behind01..05.PositionInClass` publish-time attach lambdas.
