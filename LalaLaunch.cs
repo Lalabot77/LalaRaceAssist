@@ -5607,6 +5607,14 @@ namespace LaunchPlugin
 
             OnPropertyChanged(nameof(LeagueClassStatus));
             OnPropertyChanged(nameof(LeagueClassPlayerPreviewText));
+            OnPropertyChanged(nameof(LeagueClassCsvStatusSummaryText));
+            OnPropertyChanged(nameof(LeagueClassPlayerOverrideIsAutoDetect));
+            OnPropertyChanged(nameof(LeagueClassPlayerClassNameEditorText));
+            OnPropertyChanged(nameof(LeagueClassPlayerShortNameEditorText));
+            OnPropertyChanged(nameof(LeagueClassPlayerRankEditorText));
+            OnPropertyChanged(nameof(LeagueClassPlayerColourHexEditorText));
+            OnPropertyChanged(nameof(LeagueClassHelperHasWarning));
+            OnPropertyChanged(nameof(LeagueClassHelperForeground));
             OnPropertyChanged(nameof(LeagueClassShowCsvSection));
             OnPropertyChanged(nameof(LeagueClassShowFallbackSection));
         }
@@ -5620,23 +5628,42 @@ namespace LaunchPlugin
 
             Settings.LeagueClassEnabled = !Settings.LeagueClassEnabled;
             ApplyLeagueClassEnableModeGuard();
-            ReloadLeagueClassConfig();
+            bool reloadedDuringEnableSelfCheck = false;
+            if (Settings.LeagueClassEnabled && LeagueClassShowCsvSection)
+            {
+                bool hasCsvPath = !string.IsNullOrWhiteSpace(Settings.LeagueClassCsvPath);
+                bool csvExists = hasCsvPath && File.Exists(Settings.LeagueClassCsvPath);
+                bool hasValidRows = (LeagueClassStatus?.ValidDriverCount ?? 0) > 0;
+                if (csvExists && !hasValidRows)
+                {
+                    // quiet self-check reload path (same seam as Reload button)
+                    ReloadLeagueClassConfig();
+                    reloadedDuringEnableSelfCheck = true;
+                }
+            }
+            if (!reloadedDuringEnableSelfCheck)
+            {
+                ReloadLeagueClassConfig();
+            }
             SaveSettings();
+            OnPropertyChanged(nameof(Settings));
+            OnPropertyChanged(nameof(LeagueClassHelperHasWarning));
+            OnPropertyChanged(nameof(LeagueClassHelperForeground));
         }
 
         public string LeagueClassPlayerPreviewText
         {
             get
             {
-                int? playerCustomerId = null;
-                string playerName = string.Empty;
-                bool hasLiveIdentity = TryGetLivePlayerIdentityPreview(out playerCustomerId, out playerName);
-
-                var info = _leagueClassResolver.ResolvePlayerEffectiveClass(Settings, playerCustomerId, playerName);
+                var preview = GetLeagueClassPlayerPreviewResolution();
+                bool hasLiveIdentity = preview.HasLiveIdentity;
+                string playerName = preview.DriverName;
+                var info = preview.Info;
                 if (info.Valid)
                 {
                     string livePlayerText = !string.IsNullOrWhiteSpace(playerName) ? playerName : "(name unavailable)";
-                    return $"Player: {livePlayerText} | Source: {info.Source} | Resolved class: {info.Name}";
+                    string mode = (Settings != null && Settings.LeagueClassPlayerOverrideMode == 1) ? "Manual override active" : "Auto-detect preview";
+                    return $"Player: {livePlayerText} | Source: {info.Source} | {mode}: {info.Name} ({info.ShortName}) Rank {info.Rank} {info.ColourHex}";
                 }
 
                 if (Settings != null && Settings.LeagueClassPlayerOverrideMode == 1)
@@ -5651,6 +5678,68 @@ namespace LaunchPlugin
 
                 return $"Player: {playerName} | Source: NONE | Resolved class: unresolved";
             }
+        }
+
+        public string LeagueClassCsvStatusSummaryText
+        {
+            get
+            {
+                var status = LeagueClassStatus;
+                if (status == null) return "Status unavailable";
+                return $"{status.ConfigStatusText} | Rows {status.LoadedCount} | Valid {status.ValidDriverCount} | Invalid {status.InvalidRowCount} | Duplicates {status.DuplicateRowCount}";
+            }
+        }
+
+        public bool LeagueClassPlayerOverrideIsAutoDetect => Settings == null || Settings.LeagueClassPlayerOverrideMode != 1;
+        public string LeagueClassPlayerClassNameEditorText { get => LeagueClassPlayerOverrideIsAutoDetect ? LeagueClassPlayerPreviewClassName : (Settings?.LeagueClassPlayerOverrideClassName ?? string.Empty); set { if (!LeagueClassPlayerOverrideIsAutoDetect && Settings != null) Settings.LeagueClassPlayerOverrideClassName = value; } }
+        public string LeagueClassPlayerShortNameEditorText { get => LeagueClassPlayerOverrideIsAutoDetect ? LeagueClassPlayerPreviewShortName : (Settings?.LeagueClassPlayerOverrideShortName ?? string.Empty); set { if (!LeagueClassPlayerOverrideIsAutoDetect && Settings != null) Settings.LeagueClassPlayerOverrideShortName = value; } }
+        public string LeagueClassPlayerRankEditorText { get => LeagueClassPlayerOverrideIsAutoDetect ? LeagueClassPlayerPreviewRank.ToString(CultureInfo.InvariantCulture) : (Settings?.LeagueClassPlayerOverrideRank.ToString(CultureInfo.InvariantCulture) ?? "0"); set { if (!LeagueClassPlayerOverrideIsAutoDetect && Settings != null && int.TryParse(value, NumberStyles.Integer, CultureInfo.InvariantCulture, out int parsed)) Settings.LeagueClassPlayerOverrideRank = parsed; } }
+        public string LeagueClassPlayerColourHexEditorText { get => LeagueClassPlayerOverrideIsAutoDetect ? LeagueClassPlayerPreviewColourHex : (Settings?.LeagueClassPlayerOverrideColourHex ?? string.Empty); set { if (!LeagueClassPlayerOverrideIsAutoDetect && Settings != null) Settings.LeagueClassPlayerOverrideColourHex = value; } }
+        public string LeagueClassPlayerPreviewClassName => GetLeagueClassPlayerPreviewResolution().Info.Name ?? string.Empty;
+        public string LeagueClassPlayerPreviewShortName => GetLeagueClassPlayerPreviewResolution().Info.ShortName ?? string.Empty;
+        public int LeagueClassPlayerPreviewRank => GetLeagueClassPlayerPreviewResolution().Info.Rank;
+        public string LeagueClassPlayerPreviewColourHex => GetLeagueClassPlayerPreviewResolution().Info.ColourHex ?? string.Empty;
+
+        public bool LeagueClassHelperHasWarning
+        {
+            get
+            {
+                if (Settings == null || !Settings.LeagueClassEnabled) return false;
+                var s = LeagueClassStatus;
+                bool csvMode = LeagueClassShowCsvSection;
+                bool csvPathMissing = csvMode && string.IsNullOrWhiteSpace(Settings.LeagueClassCsvPath);
+                bool csvMissingFile = csvMode && !string.IsNullOrWhiteSpace(Settings.LeagueClassCsvPath) && !File.Exists(Settings.LeagueClassCsvPath);
+                bool invalidRowsHigh = (s?.InvalidRowCount ?? 0) >= 10;
+                bool noValidRows = csvMode && (s?.ValidDriverCount ?? 0) <= 0;
+                bool loadFailed = !string.IsNullOrWhiteSpace(s?.ConfigStatusText) && s.ConfigStatusText.IndexOf("fail", StringComparison.OrdinalIgnoreCase) >= 0;
+                var preview = GetLeagueClassPlayerPreviewResolution();
+                bool unresolvedPlayer = !preview.Info.Valid;
+                return csvPathMissing || csvMissingFile || invalidRowsHigh || noValidRows || loadFailed || unresolvedPlayer;
+            }
+        }
+        public Brush LeagueClassHelperForeground => LeagueClassHelperHasWarning ? Brushes.Yellow : Brushes.LightGray;
+
+        private sealed class LeagueClassPlayerPreviewResolution
+        {
+            public bool HasLiveIdentity;
+            public int? CustomerId;
+            public string DriverName;
+            public EffectiveRaceClassInfo Info;
+        }
+
+        private LeagueClassPlayerPreviewResolution GetLeagueClassPlayerPreviewResolution()
+        {
+            int? customerId;
+            string driverName;
+            bool hasLiveIdentity = TryGetLivePlayerIdentityPreview(out customerId, out driverName);
+            var info = _leagueClassResolver.ResolvePlayerEffectiveClass(Settings, hasLiveIdentity ? customerId : null, driverName);
+            return new LeagueClassPlayerPreviewResolution
+            {
+                HasLiveIdentity = hasLiveIdentity,
+                CustomerId = customerId,
+                DriverName = driverName ?? string.Empty,
+                Info = info
+            };
         }
 
         public bool LeagueClassShowCsvSection => Settings != null &&
@@ -5708,6 +5797,13 @@ namespace LaunchPlugin
             _leagueClassPreviewIdentitySnapshot = identitySnapshot;
             _leagueClassPreviewSettingsSnapshot = settingsSnapshot;
             OnPropertyChanged(nameof(LeagueClassPlayerPreviewText));
+            OnPropertyChanged(nameof(LeagueClassPlayerOverrideIsAutoDetect));
+            OnPropertyChanged(nameof(LeagueClassPlayerClassNameEditorText));
+            OnPropertyChanged(nameof(LeagueClassPlayerShortNameEditorText));
+            OnPropertyChanged(nameof(LeagueClassPlayerRankEditorText));
+            OnPropertyChanged(nameof(LeagueClassPlayerColourHexEditorText));
+            OnPropertyChanged(nameof(LeagueClassHelperHasWarning));
+            OnPropertyChanged(nameof(LeagueClassHelperForeground));
             OnPropertyChanged(nameof(LeagueClassShowCsvSection));
             OnPropertyChanged(nameof(LeagueClassShowFallbackSection));
         }
