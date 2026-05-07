@@ -4561,6 +4561,9 @@ namespace LaunchPlugin
                     fallbackFuelPerLap,
                     currentFuel,
                     LiveLapsRemainingInRace_Stable,
+                    simLapsRemaining,
+                    projectionSessionTimeRemain,
+                    _afterZeroUsedSeconds,
                     maxTankCapacity,
                     Pit_TankSpaceAvailable,
                     refuelContingency);
@@ -8788,6 +8791,54 @@ namespace LaunchPlugin
             return eval;
         }
 
+        private static bool TryResolveDataGovernedProjectedLapsRemaining(
+            string lapSource,
+            double selectedLapSeconds,
+            double liveProjectedLapsRemaining,
+            double simLapsRemaining,
+            double projectionSessionTimeRemain,
+            double driveTimeAfterZero,
+            out double projectedLapsRemaining)
+        {
+            projectedLapsRemaining = 0.0;
+
+            bool liveProjectionValid =
+                liveProjectedLapsRemaining > 0.0 &&
+                !double.IsNaN(liveProjectedLapsRemaining) &&
+                !double.IsInfinity(liveProjectedLapsRemaining);
+            if (string.Equals(lapSource, "LIVE", StringComparison.Ordinal) && liveProjectionValid)
+            {
+                projectedLapsRemaining = liveProjectedLapsRemaining;
+                return true;
+            }
+
+            bool canReproject =
+                selectedLapSeconds > 0.0 &&
+                simLapsRemaining > 0.0 &&
+                !double.IsNaN(simLapsRemaining) &&
+                !double.IsInfinity(simLapsRemaining);
+            if (!canReproject)
+            {
+                return false;
+            }
+
+            double projectedSeconds;
+            double reprojected = FuelProjectionMath.ProjectLapsRemaining(
+                selectedLapSeconds,
+                projectionSessionTimeRemain,
+                driveTimeAfterZero,
+                simLapsRemaining,
+                out projectedSeconds);
+
+            if (reprojected > 0.0 && !double.IsNaN(reprojected) && !double.IsInfinity(reprojected))
+            {
+                projectedLapsRemaining = reprojected;
+                return true;
+            }
+
+            return false;
+        }
+
         private bool ResolveRuntimeRefuelBasis(
             GameData data,
             double fallbackFuelPerLap,
@@ -8926,7 +8977,10 @@ namespace LaunchPlugin
             GameData data,
             double fallbackFuelPerLap,
             double currentFuel,
-            double projectedLapsRemaining,
+            double liveProjectedLapsRemaining,
+            double simLapsRemaining,
+            double projectionSessionTimeRemain,
+            double driveTimeAfterZero,
             double nextStopDecisionCapacityLitres,
             double multiStopDisplayAddCapLitres,
             ResolvedContingency contingency)
@@ -8942,9 +8996,17 @@ namespace LaunchPlugin
             bool hasBasis = ResolveRuntimeRefuelBasis(data, fallbackFuelPerLap, out selectedBurn, out lapSeconds, out burnSource, out lapSource);
             Fuel_Refuel_BurnSource = ClassifyRefuelSourceToken(burnSource);
             Fuel_Refuel_LapSource = ClassifyRefuelSourceToken(lapSource);
+            double projectedLapsRemaining;
+            bool hasProjection = TryResolveDataGovernedProjectedLapsRemaining(
+                Fuel_Refuel_LapSource,
+                lapSeconds,
+                liveProjectedLapsRemaining,
+                simLapsRemaining,
+                projectionSessionTimeRemain,
+                driveTimeAfterZero,
+                out projectedLapsRemaining);
 
             bool hasCurrentFuel = currentFuel >= 0.0 && !double.IsNaN(currentFuel) && !double.IsInfinity(currentFuel);
-            bool hasProjection = projectedLapsRemaining > 0.0 && !double.IsNaN(projectedLapsRemaining) && !double.IsInfinity(projectedLapsRemaining);
             bool hasDecisionCap = nextStopDecisionCapacityLitres >= 0.0 && !double.IsNaN(nextStopDecisionCapacityLitres) && !double.IsInfinity(nextStopDecisionCapacityLitres);
             bool hasDisplayAddCap = multiStopDisplayAddCapLitres >= 0.0 && !double.IsNaN(multiStopDisplayAddCapLitres) && !double.IsInfinity(multiStopDisplayAddCapLitres);
             bool hasContingency =

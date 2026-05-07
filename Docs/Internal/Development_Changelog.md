@@ -1,3 +1,10 @@
+## 2026-05-07 — Fuel.Refuel DATA-governed projected-laps alignment
+- Classification: **both** (runtime tactical refuel correctness alignment + docs sync).
+- `Fuel.Refuel.NextLitres` projection basis now follows the same DATA-governed lap basis selected by `ResolveRuntimeRefuelBasis(...)`/`Fuel.Refuel.LapSource` instead of always consuming live stable projected laps.
+- DATA LIVE keeps LIVE-first behavior when `LapSource=LIVE` and live projection is valid; non-live selected lap sources (`PLAN/PROFILE/DEFAULT`) now reproject remaining laps from selected lap seconds with existing race projection semantics.
+- If a safe DATA-governed projected laps value cannot be resolved, runtime refuel outputs now deterministically fail invalid (`Fuel.Refuel.Valid=false`, `Fuel.Refuel.NextText=CHECK FUEL`).
+- Protected domains unchanged: no command transport/send changes and no behavior changes to `Fuel.Pit.*`, `Fuel.Delta.*`, `Fuel.RequiredBurnToEnd*`, boxed latches, or StrategyDash next-refuel helpers.
+
 ## 2026-05-07 — Fuel.Refuel review follow-up: invalid-context reset + PLAN-derived PUSH/SAVE source labels
 - Classification: **internal-only** (runtime export correctness/labeling fixes with unchanged public export set).
 - Fixed `Fuel.Refuel` invalid reset staleness: invalid paths now also reset `BurnSource/LapSource` to `DEFAULT` and refresh context exports (`DataMode`, `BurnMode`) from current Pit Fuel Control state (with safe `LIVE`/`STBY` fallback) so invalid ticks cannot publish stale prior valid context.

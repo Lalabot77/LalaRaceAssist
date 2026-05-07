@@ -1,3 +1,8 @@
+- 2026-05-07 Fuel.Refuel DATA-governed projected-laps alignment landed:
+  - runtime `Fuel.Refuel.*` guidance now resolves projected remaining laps from the same selected DATA-governed lap basis exported by `Fuel.Refuel.LapSource` (instead of always using live stable laps);
+  - DATA LIVE keeps LIVE-first usage when `LapSource=LIVE` with valid live projection, while non-live lap sources (`PLAN/PROFILE/DEFAULT`) now reproject from selected lap seconds using existing race projection semantics;
+  - unresolved DATA-governed projected-laps context now deterministically invalidates runtime refuel guidance (`Fuel.Refuel.Valid=false`, `Fuel.Refuel.NextText=CHECK FUEL`).
+
 - 2026-05-07 Fuel.Refuel review follow-up landed:
   - invalid Fuel.Refuel reset paths now clear stale source/basis context (`BurnSource/LapSource=DEFAULT`) and refresh `DataMode/BurnMode` from current Pit Fuel Control state (safe fallback `LIVE`/`STBY`);
   - DATA PLAN + PUSH/SAVE fallback source labelling now reflects actual derivation from selected normal basis (`PLAN`/`PROFILE`/`LIVE`) instead of always reporting `DEFAULT`.
