@@ -1,3 +1,9 @@
+## 2026-05-07 — League Race UI polish pre-merge cleanup
+- Classification: **internal-only** (targeted UX-noise/perf cleanup; no new feature-surface changes).
+- Refined League Race helper warning gate so duplicate CSV rows alone do not force yellow status text.
+- Added shared player preview resolution helper to avoid repeated resolver calls across preview text/preview fields/warning checks.
+- Removed redundant double-reload path in `ToggleLeagueClassEnabled()` by guarding the post-self-check reload call.
+
 ## 2026-05-07 — League Race settings UI polish + LeagueClass toggle action self-check
 - Classification: **both** (settings UX clarity + existing action behavior polish + docs alignment).
 - Compacted CSV status helper into a single summary line while preserving full status counts (`status/rows/valid/invalid/duplicates`).

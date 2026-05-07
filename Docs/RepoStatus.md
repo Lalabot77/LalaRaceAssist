@@ -59,6 +59,11 @@
   - PitExit remains on shared Opponents race-context matcher seam; no pit-exit math/countdown changes.
 
 ## Documentation sync status
+- 2026-05-07 pre-merge cleanup landed for League Race UI polish:
+  - duplicate CSV rows alone no longer trigger yellow helper warning state;
+  - player preview resolution now uses a shared helper (single resolver call path per property evaluation);
+  - enable-toggle quiet self-check no longer performs redundant double reload.
+
 - 2026-05-07 League Race settings UI polish + toggle-action self-check landed:
   - CSV status helper is now compact (`Status | Rows | Valid | Invalid | Duplicates`) with full count preservation.
   - League Race helper/status text now switches to yellow only for warning/problem states (CSV path/file issues, load/no-valid-row issues, invalid/duplicate row counts, unresolved/invalid player effective class while enabled).

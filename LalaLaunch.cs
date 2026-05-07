@@ -5628,6 +5628,7 @@ namespace LaunchPlugin
 
             Settings.LeagueClassEnabled = !Settings.LeagueClassEnabled;
             ApplyLeagueClassEnableModeGuard();
+            bool reloadedDuringEnableSelfCheck = false;
             if (Settings.LeagueClassEnabled && LeagueClassShowCsvSection)
             {
                 bool hasCsvPath = !string.IsNullOrWhiteSpace(Settings.LeagueClassCsvPath);
@@ -5637,9 +5638,13 @@ namespace LaunchPlugin
                 {
                     // quiet self-check reload path (same seam as Reload button)
                     ReloadLeagueClassConfig();
+                    reloadedDuringEnableSelfCheck = true;
                 }
             }
-            ReloadLeagueClassConfig();
+            if (!reloadedDuringEnableSelfCheck)
+            {
+                ReloadLeagueClassConfig();
+            }
             SaveSettings();
             OnPropertyChanged(nameof(Settings));
             OnPropertyChanged(nameof(LeagueClassHelperHasWarning));
@@ -5650,11 +5655,10 @@ namespace LaunchPlugin
         {
             get
             {
-                int? playerCustomerId = null;
-                string playerName = string.Empty;
-                bool hasLiveIdentity = TryGetLivePlayerIdentityPreview(out playerCustomerId, out playerName);
-
-                var info = _leagueClassResolver.ResolvePlayerEffectiveClass(Settings, playerCustomerId, playerName);
+                var preview = GetLeagueClassPlayerPreviewResolution();
+                bool hasLiveIdentity = preview.HasLiveIdentity;
+                string playerName = preview.DriverName;
+                var info = preview.Info;
                 if (info.Valid)
                 {
                     string livePlayerText = !string.IsNullOrWhiteSpace(playerName) ? playerName : "(name unavailable)";
@@ -5691,10 +5695,10 @@ namespace LaunchPlugin
         public string LeagueClassPlayerShortNameEditorText { get => LeagueClassPlayerOverrideIsAutoDetect ? LeagueClassPlayerPreviewShortName : (Settings?.LeagueClassPlayerOverrideShortName ?? string.Empty); set { if (!LeagueClassPlayerOverrideIsAutoDetect && Settings != null) Settings.LeagueClassPlayerOverrideShortName = value; } }
         public string LeagueClassPlayerRankEditorText { get => LeagueClassPlayerOverrideIsAutoDetect ? LeagueClassPlayerPreviewRank.ToString(CultureInfo.InvariantCulture) : (Settings?.LeagueClassPlayerOverrideRank.ToString(CultureInfo.InvariantCulture) ?? "0"); set { if (!LeagueClassPlayerOverrideIsAutoDetect && Settings != null && int.TryParse(value, NumberStyles.Integer, CultureInfo.InvariantCulture, out int parsed)) Settings.LeagueClassPlayerOverrideRank = parsed; } }
         public string LeagueClassPlayerColourHexEditorText { get => LeagueClassPlayerOverrideIsAutoDetect ? LeagueClassPlayerPreviewColourHex : (Settings?.LeagueClassPlayerOverrideColourHex ?? string.Empty); set { if (!LeagueClassPlayerOverrideIsAutoDetect && Settings != null) Settings.LeagueClassPlayerOverrideColourHex = value; } }
-        public string LeagueClassPlayerPreviewClassName => _leagueClassResolver.ResolvePlayerEffectiveClass(Settings, TryGetLivePlayerIdentityPreview(out int? c, out string n) ? c : null, n).Name ?? string.Empty;
-        public string LeagueClassPlayerPreviewShortName => _leagueClassResolver.ResolvePlayerEffectiveClass(Settings, TryGetLivePlayerIdentityPreview(out int? c, out string n) ? c : null, n).ShortName ?? string.Empty;
-        public int LeagueClassPlayerPreviewRank => _leagueClassResolver.ResolvePlayerEffectiveClass(Settings, TryGetLivePlayerIdentityPreview(out int? c, out string n) ? c : null, n).Rank;
-        public string LeagueClassPlayerPreviewColourHex => _leagueClassResolver.ResolvePlayerEffectiveClass(Settings, TryGetLivePlayerIdentityPreview(out int? c, out string n) ? c : null, n).ColourHex ?? string.Empty;
+        public string LeagueClassPlayerPreviewClassName => GetLeagueClassPlayerPreviewResolution().Info.Name ?? string.Empty;
+        public string LeagueClassPlayerPreviewShortName => GetLeagueClassPlayerPreviewResolution().Info.ShortName ?? string.Empty;
+        public int LeagueClassPlayerPreviewRank => GetLeagueClassPlayerPreviewResolution().Info.Rank;
+        public string LeagueClassPlayerPreviewColourHex => GetLeagueClassPlayerPreviewResolution().Info.ColourHex ?? string.Empty;
 
         public bool LeagueClassHelperHasWarning
         {
@@ -5705,14 +5709,38 @@ namespace LaunchPlugin
                 bool csvMode = LeagueClassShowCsvSection;
                 bool csvPathMissing = csvMode && string.IsNullOrWhiteSpace(Settings.LeagueClassCsvPath);
                 bool csvMissingFile = csvMode && !string.IsNullOrWhiteSpace(Settings.LeagueClassCsvPath) && !File.Exists(Settings.LeagueClassCsvPath);
-                bool badCounts = (s?.InvalidRowCount ?? 0) > 0 || (s?.DuplicateRowCount ?? 0) > 0;
+                bool invalidRowsHigh = (s?.InvalidRowCount ?? 0) >= 10;
                 bool noValidRows = csvMode && (s?.ValidDriverCount ?? 0) <= 0;
                 bool loadFailed = !string.IsNullOrWhiteSpace(s?.ConfigStatusText) && s.ConfigStatusText.IndexOf("fail", StringComparison.OrdinalIgnoreCase) >= 0;
-                bool unresolvedPlayer = LeagueClassPlayerPreviewText.IndexOf("unresolved", StringComparison.OrdinalIgnoreCase) >= 0 || LeagueClassPlayerPreviewText.IndexOf("invalid", StringComparison.OrdinalIgnoreCase) >= 0;
-                return csvPathMissing || csvMissingFile || badCounts || noValidRows || loadFailed || unresolvedPlayer;
+                var preview = GetLeagueClassPlayerPreviewResolution();
+                bool unresolvedPlayer = !preview.Info.Valid;
+                return csvPathMissing || csvMissingFile || invalidRowsHigh || noValidRows || loadFailed || unresolvedPlayer;
             }
         }
         public Brush LeagueClassHelperForeground => LeagueClassHelperHasWarning ? Brushes.Yellow : Brushes.LightGray;
+
+        private sealed class LeagueClassPlayerPreviewResolution
+        {
+            public bool HasLiveIdentity;
+            public int? CustomerId;
+            public string DriverName;
+            public EffectiveRaceClassInfo Info;
+        }
+
+        private LeagueClassPlayerPreviewResolution GetLeagueClassPlayerPreviewResolution()
+        {
+            int? customerId;
+            string driverName;
+            bool hasLiveIdentity = TryGetLivePlayerIdentityPreview(out customerId, out driverName);
+            var info = _leagueClassResolver.ResolvePlayerEffectiveClass(Settings, hasLiveIdentity ? customerId : null, driverName);
+            return new LeagueClassPlayerPreviewResolution
+            {
+                HasLiveIdentity = hasLiveIdentity,
+                CustomerId = customerId,
+                DriverName = driverName ?? string.Empty,
+                Info = info
+            };
+        }
 
         public bool LeagueClassShowCsvSection => Settings != null &&
             ((LeagueClassMode)Settings.LeagueClassMode == LeagueClassMode.CsvOnly ||
