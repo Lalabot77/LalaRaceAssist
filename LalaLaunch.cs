@@ -8655,6 +8655,28 @@ namespace LaunchPlugin
             }
         }
 
+        private struct RuntimeRefuelEvaluation
+        {
+            public double NextLitres;
+            public bool IsFinalStopGuidance;
+            public double BaseToFinish;
+            public double FinalStopNeed;
+            public double NextStopCap;
+        }
+
+        private static RuntimeRefuelEvaluation EvaluateRuntimeRefuelNeed(double projectedLapsRemaining, double selectedBurn, double currentFuel, double contingencyLitres, double nextStopCapLitres)
+        {
+            var eval = new RuntimeRefuelEvaluation();
+            eval.BaseToFinish = (projectedLapsRemaining * selectedBurn) - currentFuel;
+            eval.FinalStopNeed = eval.BaseToFinish + contingencyLitres;
+            eval.NextStopCap = Math.Max(0.0, nextStopCapLitres);
+            eval.IsFinalStopGuidance = eval.FinalStopNeed <= eval.NextStopCap;
+            eval.NextLitres = eval.IsFinalStopGuidance
+                ? Math.Max(0.0, eval.FinalStopNeed)
+                : eval.NextStopCap;
+            return eval;
+        }
+
         private bool ResolveRuntimeRefuelBasis(
             GameData data,
             double fallbackFuelPerLap,
@@ -8791,7 +8813,7 @@ namespace LaunchPlugin
             double currentFuel,
             double projectedLapsRemaining,
             double nextStopCapLitres,
-            FuelContingencyResult contingency)
+            ResolvedContingency contingency)
         {
             Fuel_Refuel_DataMode = (_pitFuelControlEngine?.Data ?? PitFuelControlData.Live) == PitFuelControlData.Plan ? "PLAN" : "LIVE";
             var sourceMode = _pitFuelControlEngine?.Source ?? PitFuelControlSource.Stby;
@@ -8822,15 +8844,15 @@ namespace LaunchPlugin
             }
 
             double contingencyLitres = Math.Max(0.0, contingency.Litres);
-            double baseToFinish = (projectedLapsRemaining * selectedBurn) - currentFuel;
-            double finalStopNeed = baseToFinish + contingencyLitres;
-            double cap = Math.Max(0.0, nextStopCapLitres);
-            double nextLitres = finalStopNeed <= cap
-                ? Math.Max(0.0, finalStopNeed)
-                : cap;
+            RuntimeRefuelEvaluation eval = EvaluateRuntimeRefuelNeed(
+                projectedLapsRemaining,
+                selectedBurn,
+                currentFuel,
+                contingencyLitres,
+                nextStopCapLitres);
 
-            Fuel_Refuel_NextLitres = nextLitres;
-            Fuel_Refuel_NextLitresCeil = Math.Ceiling(Math.Max(0.0, nextLitres));
+            Fuel_Refuel_NextLitres = eval.NextLitres;
+            Fuel_Refuel_NextLitresCeil = Math.Ceiling(Math.Max(0.0, eval.NextLitres));
             Fuel_Refuel_Valid = true;
             Fuel_Refuel_NextText = Fuel_Refuel_NextLitresCeil <= 0.0
                 ? "NO REFUEL"
