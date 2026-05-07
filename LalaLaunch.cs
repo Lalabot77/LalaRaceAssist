@@ -8754,7 +8754,7 @@ namespace LaunchPlugin
                 else
                 {
                     selectedBurn = defaultPushBurn;
-                    burnSource = selectedBurn > 0.0 ? "DEFAULT" : "DEFAULT";
+                    burnSource = selectedBurn > 0.0 ? normFuelSource : "DEFAULT";
                 }
             }
             else if (sourceMode == PitFuelControlSource.Save)
@@ -8777,7 +8777,7 @@ namespace LaunchPlugin
                 else
                 {
                     selectedBurn = defaultSaveBurn;
-                    burnSource = selectedBurn > 0.0 ? "DEFAULT" : "DEFAULT";
+                    burnSource = selectedBurn > 0.0 ? normFuelSource : "DEFAULT";
                 }
             }
 
@@ -8820,6 +8820,10 @@ namespace LaunchPlugin
             Fuel_Refuel_NextLitresCeil = 0.0;
             Fuel_Refuel_Valid = false;
             Fuel_Refuel_NextText = "CHECK FUEL";
+            Fuel_Refuel_BurnSource = "DEFAULT";
+            Fuel_Refuel_LapSource = "DEFAULT";
+            Fuel_Refuel_DataMode = (_pitFuelControlEngine?.Data ?? PitFuelControlData.Live) == PitFuelControlData.Plan ? "PLAN" : "LIVE";
+            Fuel_Refuel_BurnMode = GetRefuelBurnModeText(_pitFuelControlEngine?.Source ?? PitFuelControlSource.Stby);
         }
 
         private void ComputeRuntimeRefuelOutputs(

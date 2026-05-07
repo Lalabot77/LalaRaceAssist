@@ -1,3 +1,9 @@
+## 2026-05-07 — Fuel.Refuel review follow-up: invalid-context reset + PLAN-derived PUSH/SAVE source labels
+- Classification: **internal-only** (runtime export correctness/labeling fixes with unchanged public export set).
+- Fixed `Fuel.Refuel` invalid reset staleness: invalid paths now also reset `BurnSource/LapSource` to `DEFAULT` and refresh context exports (`DataMode`, `BurnMode`) from current Pit Fuel Control state (with safe `LIVE`/`STBY` fallback) so invalid ticks cannot publish stale prior valid context.
+- Refined DATA PLAN + PUSH/SAVE fallback source labelling: when fallback burn is derived from selected NORM basis, `Fuel.Refuel.BurnSource` now mirrors actual derivation (`PLAN`/`PROFILE`/`LIVE`) instead of always forcing `DEFAULT`; `DEFAULT` is now reserved for true generic fallback derivation.
+- Preserved scope: no command send/transport changes and no behavior changes to `Fuel.Pit.*`, `Fuel.Delta.*`, `Fuel.RequiredBurnToEnd*`, boxed refuel latches, or StrategyDash next-refuel helpers.
+
 ## 2026-05-07 — Fuel.Refuel NextStopCap follow-up (runtime live-cap decision seam)
 - Classification: **both** (runtime tactical refuel correctness adjustment + docs alignment).
 - Corrected `Fuel.Refuel.NextLitres` capacity semantics:

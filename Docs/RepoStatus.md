@@ -1,3 +1,7 @@
+- 2026-05-07 Fuel.Refuel review follow-up landed:
+  - invalid Fuel.Refuel reset paths now clear stale source/basis context (`BurnSource/LapSource=DEFAULT`) and refresh `DataMode/BurnMode` from current Pit Fuel Control state (safe fallback `LIVE`/`STBY`);
+  - DATA PLAN + PUSH/SAVE fallback source labelling now reflects actual derivation from selected normal basis (`PLAN`/`PROFILE`/`LIVE`) instead of always reporting `DEFAULT`.
+
 - 2026-05-07 Fuel.Refuel NextStopCap follow-up landed:
   - final-stop vs multi-stop decision threshold now uses runtime effective restricted tank-cap authority seam (`ResolveRuntimeLiveMaxTankCapacity`) instead of current on-track tank-space;
   - multi-stop displayed litres remain add-guidance from runtime add-cap seam (`Fuel.Pit.TankSpaceAvailable`) to avoid overstating a full-tank-size add amount while still indicating max-fill intent;
