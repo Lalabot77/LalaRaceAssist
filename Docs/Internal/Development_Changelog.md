@@ -1,3 +1,18 @@
+## 2026-05-07 — Fuel.Refuel.* runtime tactical refuel export family
+- Classification: **both** (new dash-facing runtime fuel exports + internal contract/docs alignment).
+- Added new runtime `Fuel.Refuel.*` exports in `LalaLaunch`:
+  - `Fuel.Refuel.NextLitres`, `Fuel.Refuel.NextLitresCeil`, `Fuel.Refuel.NextText`, `Fuel.Refuel.Valid`,
+  - `Fuel.Refuel.BurnSource`, `Fuel.Refuel.LapSource`, `Fuel.Refuel.DataMode`, `Fuel.Refuel.BurnMode`.
+- Contract:
+  - next-stop actionable guidance (not always raw finish-from-here deficit),
+  - deterministic final-stop vs multi-stop rule using `FinalStopNeed` vs usable next-stop add capacity,
+  - contingency included once on final-stop guidance and not repeatedly stacked on non-final max-fill guidance.
+- DATA/SOURCE basis behavior:
+  - DATA mirrors Pit Fuel Control `LIVE/PLAN`,
+  - SOURCE mirrors `NORM/PUSH/SAVE/STBY`; STBY computes advisory NORM basis and remains command-neutral,
+  - DATA PLAN paths do not select LIVE/SIM source tokens.
+- Protected domains preserved: no command-send transport/state-machine behavior changes and no semantic changes to `Fuel.Delta.*`, `Fuel.Pit.*`, `Fuel.RequiredBurnToEnd*`, boxed refuel latches, or StrategyDash next-refuel helpers.
+
 ## 2026-05-06 — PR #687 follow-up build fix: CarSA PositionInClass null-coalescing removal
 - Classification: **internal-only** (compile blocker fix only; no runtime contract change).
 - Removed invalid null-coalescing on non-nullable `CarSASlot.PositionInClass` in `Car.Ahead01..05.PositionInClass` and `Car.Behind01..05.PositionInClass` publish-time attach lambdas.
