@@ -972,6 +972,14 @@ namespace LaunchPlugin
         public double StrategyDash_NextRefuelDeltaLitres { get; private set; }
         public string StrategyDash_NextRefuelAdviceText { get; private set; } = "N/A";
         public int StrategyDash_NextRefuelStatus { get; private set; }
+        public double Fuel_Refuel_NextLitres { get; private set; }
+        public double Fuel_Refuel_NextLitresCeil { get; private set; }
+        public string Fuel_Refuel_NextText { get; private set; } = "CHECK FUEL";
+        public bool Fuel_Refuel_Valid { get; private set; }
+        public string Fuel_Refuel_BurnSource { get; private set; } = "DEFAULT";
+        public string Fuel_Refuel_LapSource { get; private set; } = "DEFAULT";
+        public string Fuel_Refuel_DataMode { get; private set; } = "LIVE";
+        public string Fuel_Refuel_BurnMode { get; private set; } = "STBY";
         public string StrategyDash_BurnPlanText { get; private set; } = "NORM";
         public string StrategyDash_ContingencyText { get; private set; } = "CONT 0";
         private bool _isRefuelSelected = true;
@@ -4327,6 +4335,7 @@ namespace LaunchPlugin
                 Contingency_Litres = 0;
                 Contingency_Laps = 0;
                 Contingency_Source = "none";
+                ResetRuntimeRefuelOutputsInvalid();
                 LiveProjectedDriveTimeAfterZero = 0;
                 LiveProjectedDriveSecondsRemaining = 0;
 
@@ -4544,6 +4553,17 @@ namespace LaunchPlugin
                     contingencyLitresPush = Math.Max(0.0, ResolveActiveContingency(PushFuelPerLap).Litres);
                     contingencyLitresSave = Math.Max(0.0, ResolveActiveContingency(FuelSaveFuelPerLap).Litres);
                 }
+
+                double advisoryContingencyBasis = stableFuelPerLap > 0.0 ? stableFuelPerLap : fuelPerLapForCalc;
+                var refuelContingency = ResolveActiveContingency(advisoryContingencyBasis);
+                ComputeRuntimeRefuelOutputs(
+                    data,
+                    fallbackFuelPerLap,
+                    currentFuel,
+                    LiveLapsRemainingInRace_Stable,
+                    maxTankCapacity,
+                    Pit_TankSpaceAvailable,
+                    refuelContingency);
 
                 bool hasBurnToEndBasis =
                     LiveLapsRemainingInRace_Stable > 0.0 &&
@@ -6633,6 +6653,14 @@ namespace LaunchPlugin
             AttachCore("Fuel.Contingency.Litres", () => Contingency_Litres);
             AttachCore("Fuel.Contingency.Laps", () => Contingency_Laps);
             AttachCore("Fuel.Contingency.Source", () => Contingency_Source);
+            AttachCore("Fuel.Refuel.NextLitres", () => Math.Round(Fuel_Refuel_NextLitres, 1));
+            AttachCore("Fuel.Refuel.NextLitresCeil", () => Fuel_Refuel_NextLitresCeil);
+            AttachCore("Fuel.Refuel.NextText", () => Fuel_Refuel_NextText ?? "CHECK FUEL");
+            AttachCore("Fuel.Refuel.Valid", () => Fuel_Refuel_Valid);
+            AttachCore("Fuel.Refuel.BurnSource", () => Fuel_Refuel_BurnSource ?? "DEFAULT");
+            AttachCore("Fuel.Refuel.LapSource", () => Fuel_Refuel_LapSource ?? "DEFAULT");
+            AttachCore("Fuel.Refuel.DataMode", () => Fuel_Refuel_DataMode ?? "LIVE");
+            AttachCore("Fuel.Refuel.BurnMode", () => Fuel_Refuel_BurnMode ?? "STBY");
             AttachCore("Fuel.Delta.LitresCurrent", () => Math.Round(Fuel_Delta_LitresCurrent, 1));
             AttachCore("Fuel.Delta.LitresPlan", () => Math.Round(Fuel_Delta_LitresPlan, 1));
             AttachCore("Fuel.Delta.LitresWillAdd", () => Math.Round(Fuel_Delta_LitresWillAdd, 1));
@@ -8704,6 +8732,255 @@ namespace LaunchPlugin
             if (string.IsNullOrWhiteSpace(source)) return string.Empty;
             string token = source.Trim().ToUpperInvariant();
             return token == "LIVE" || token == "PLAN" || token == "PROFILE" || token == "SIM" || token == "DEFAULT" ? token : string.Empty;
+        }
+
+        private static string ClassifyRefuelSourceToken(string source)
+        {
+            if (string.IsNullOrWhiteSpace(source)) return "DEFAULT";
+            string token = source.Trim().ToUpperInvariant();
+            return token == "LIVE" || token == "PLAN" || token == "PROFILE" || token == "SIM" || token == "DEFAULT" ? token : "DEFAULT";
+        }
+
+        private static string GetRefuelBurnModeText(PitFuelControlSource source)
+        {
+            switch (source)
+            {
+                case PitFuelControlSource.Norm: return "NORM";
+                case PitFuelControlSource.Push: return "PUSH";
+                case PitFuelControlSource.Save: return "SAVE";
+                default: return "STBY";
+            }
+        }
+
+        private struct RuntimeRefuelEvaluation
+        {
+            public double NextLitres;
+            public bool IsFinalStopGuidance;
+            public double BaseToFinish;
+            public double FinalStopNeed;
+            public double DecisionCapacity;
+            public double MultiStopDisplayAddCap;
+            public int StopsRemainingEstimate;
+            public bool HasCapacityForNeed;
+        }
+
+        private static RuntimeRefuelEvaluation EvaluateRuntimeRefuelNeed(
+            double projectedLapsRemaining,
+            double selectedBurn,
+            double currentFuel,
+            double contingencyLitres,
+            double decisionCapacityLitres,
+            double multiStopDisplayAddCapLitres)
+        {
+            var eval = new RuntimeRefuelEvaluation();
+            eval.BaseToFinish = (projectedLapsRemaining * selectedBurn) - currentFuel;
+            eval.FinalStopNeed = eval.BaseToFinish + contingencyLitres;
+            eval.DecisionCapacity = Math.Max(0.0, decisionCapacityLitres);
+            eval.MultiStopDisplayAddCap = Math.Max(0.0, multiStopDisplayAddCapLitres);
+            eval.IsFinalStopGuidance = eval.FinalStopNeed <= eval.DecisionCapacity;
+            eval.HasCapacityForNeed = eval.DecisionCapacity > 0.0 || eval.FinalStopNeed <= 0.0;
+            eval.StopsRemainingEstimate = eval.DecisionCapacity > 0.0
+                ? Math.Max(0, (int)Math.Ceiling(Math.Max(0.0, eval.FinalStopNeed) / eval.DecisionCapacity))
+                : 0;
+            eval.NextLitres = eval.IsFinalStopGuidance
+                ? Math.Max(0.0, eval.FinalStopNeed)
+                : eval.MultiStopDisplayAddCap;
+            return eval;
+        }
+
+        private bool ResolveRuntimeRefuelBasis(
+            GameData data,
+            double fallbackFuelPerLap,
+            out double selectedBurn,
+            out double projectionLapSeconds,
+            out string burnSource,
+            out string lapSource)
+        {
+            selectedBurn = 0.0;
+            projectionLapSeconds = 0.0;
+            burnSource = "DEFAULT";
+            lapSource = "DEFAULT";
+
+            var dataMode = _pitFuelControlEngine?.Data ?? PitFuelControlData.Live;
+            var sourceMode = _pitFuelControlEngine?.Source ?? PitFuelControlSource.Stby;
+
+            double normFuelPerLap;
+            double resolvedLapSeconds;
+            string normFuelSourceRaw;
+            string lapSourceRaw;
+            ResolveDataGovernedBurnAndPaceBasis(data, fallbackFuelPerLap, out normFuelPerLap, out resolvedLapSeconds, out normFuelSourceRaw, out lapSourceRaw);
+
+            string normFuelSource = ClassifyRefuelSourceToken(normFuelSourceRaw);
+            string resolvedLapSource = ClassifyRefuelSourceToken(lapSourceRaw);
+
+            projectionLapSeconds = resolvedLapSeconds;
+            lapSource = resolvedLapSource;
+
+            bool useNormBasis = sourceMode == PitFuelControlSource.Norm || sourceMode == PitFuelControlSource.Stby;
+            if (useNormBasis)
+            {
+                selectedBurn = normFuelPerLap;
+                burnSource = normFuelSource;
+                return selectedBurn > 0.0;
+            }
+
+            double profilePushBurn;
+            double profileSaveBurn;
+            bool hasProfilePushSave = TryGetProfilePushSaveBurnsForCurrentCondition(out profilePushBurn, out profileSaveBurn);
+            double defaultPushBurn = normFuelPerLap > 0.0 ? normFuelPerLap * 1.02 : 0.0;
+            double defaultSaveBurn = normFuelPerLap > 0.0 ? normFuelPerLap * 0.97 : 0.0;
+
+            if (sourceMode == PitFuelControlSource.Push)
+            {
+                if (dataMode == PitFuelControlData.Live && PushFuelPerLap > 0.0)
+                {
+                    selectedBurn = PushFuelPerLap;
+                    burnSource = "LIVE";
+                }
+                else if (normFuelSource == "PLAN" && FuelCalculator != null && FuelCalculator.FuelPerLap > 0.0 && hasProfilePushSave && profilePushBurn > 0.0)
+                {
+                    selectedBurn = profilePushBurn;
+                    burnSource = "PLAN";
+                }
+                else if (hasProfilePushSave && profilePushBurn > 0.0)
+                {
+                    selectedBurn = profilePushBurn;
+                    burnSource = "PROFILE";
+                }
+                else
+                {
+                    selectedBurn = defaultPushBurn;
+                    burnSource = selectedBurn > 0.0 ? normFuelSource : "DEFAULT";
+                }
+            }
+            else if (sourceMode == PitFuelControlSource.Save)
+            {
+                if (dataMode == PitFuelControlData.Live && FuelSaveFuelPerLap > 0.0)
+                {
+                    selectedBurn = FuelSaveFuelPerLap;
+                    burnSource = "LIVE";
+                }
+                else if (normFuelSource == "PLAN" && FuelCalculator != null && FuelCalculator.FuelPerLap > 0.0 && hasProfilePushSave && profileSaveBurn > 0.0)
+                {
+                    selectedBurn = profileSaveBurn;
+                    burnSource = "PLAN";
+                }
+                else if (hasProfilePushSave && profileSaveBurn > 0.0)
+                {
+                    selectedBurn = profileSaveBurn;
+                    burnSource = "PROFILE";
+                }
+                else
+                {
+                    selectedBurn = defaultSaveBurn;
+                    burnSource = selectedBurn > 0.0 ? normFuelSource : "DEFAULT";
+                }
+            }
+
+            if (dataMode == PitFuelControlData.Plan && burnSource == "LIVE")
+            {
+                if (sourceMode == PitFuelControlSource.Push)
+                {
+                    if (hasProfilePushSave && profilePushBurn > 0.0)
+                    {
+                        selectedBurn = profilePushBurn;
+                        burnSource = "PROFILE";
+                    }
+                    else
+                    {
+                        selectedBurn = defaultPushBurn;
+                        burnSource = selectedBurn > 0.0 ? "DEFAULT" : "DEFAULT";
+                    }
+                }
+                else if (sourceMode == PitFuelControlSource.Save)
+                {
+                    if (hasProfilePushSave && profileSaveBurn > 0.0)
+                    {
+                        selectedBurn = profileSaveBurn;
+                        burnSource = "PROFILE";
+                    }
+                    else
+                    {
+                        selectedBurn = defaultSaveBurn;
+                        burnSource = selectedBurn > 0.0 ? "DEFAULT" : "DEFAULT";
+                    }
+                }
+            }
+
+            return selectedBurn > 0.0;
+        }
+
+        private void ResetRuntimeRefuelOutputsInvalid()
+        {
+            Fuel_Refuel_NextLitres = 0.0;
+            Fuel_Refuel_NextLitresCeil = 0.0;
+            Fuel_Refuel_Valid = false;
+            Fuel_Refuel_NextText = "CHECK FUEL";
+            Fuel_Refuel_BurnSource = "DEFAULT";
+            Fuel_Refuel_LapSource = "DEFAULT";
+            Fuel_Refuel_DataMode = (_pitFuelControlEngine?.Data ?? PitFuelControlData.Live) == PitFuelControlData.Plan ? "PLAN" : "LIVE";
+            Fuel_Refuel_BurnMode = GetRefuelBurnModeText(_pitFuelControlEngine?.Source ?? PitFuelControlSource.Stby);
+        }
+
+        private void ComputeRuntimeRefuelOutputs(
+            GameData data,
+            double fallbackFuelPerLap,
+            double currentFuel,
+            double projectedLapsRemaining,
+            double nextStopDecisionCapacityLitres,
+            double multiStopDisplayAddCapLitres,
+            ResolvedContingency contingency)
+        {
+            Fuel_Refuel_DataMode = (_pitFuelControlEngine?.Data ?? PitFuelControlData.Live) == PitFuelControlData.Plan ? "PLAN" : "LIVE";
+            var sourceMode = _pitFuelControlEngine?.Source ?? PitFuelControlSource.Stby;
+            Fuel_Refuel_BurnMode = GetRefuelBurnModeText(sourceMode);
+
+            double selectedBurn;
+            double lapSeconds;
+            string burnSource;
+            string lapSource;
+            bool hasBasis = ResolveRuntimeRefuelBasis(data, fallbackFuelPerLap, out selectedBurn, out lapSeconds, out burnSource, out lapSource);
+            Fuel_Refuel_BurnSource = ClassifyRefuelSourceToken(burnSource);
+            Fuel_Refuel_LapSource = ClassifyRefuelSourceToken(lapSource);
+
+            bool hasCurrentFuel = currentFuel >= 0.0 && !double.IsNaN(currentFuel) && !double.IsInfinity(currentFuel);
+            bool hasProjection = projectedLapsRemaining > 0.0 && !double.IsNaN(projectedLapsRemaining) && !double.IsInfinity(projectedLapsRemaining);
+            bool hasDecisionCap = nextStopDecisionCapacityLitres >= 0.0 && !double.IsNaN(nextStopDecisionCapacityLitres) && !double.IsInfinity(nextStopDecisionCapacityLitres);
+            bool hasDisplayAddCap = multiStopDisplayAddCapLitres >= 0.0 && !double.IsNaN(multiStopDisplayAddCapLitres) && !double.IsInfinity(multiStopDisplayAddCapLitres);
+            bool hasContingency =
+                contingency != null &&
+                !double.IsNaN(contingency.Litres) &&
+                !double.IsInfinity(contingency.Litres) &&
+                contingency.Litres >= 0.0 &&
+                !string.IsNullOrWhiteSpace(contingency.Source);
+
+            if (!hasBasis || !hasCurrentFuel || !hasProjection || !hasDecisionCap || !hasDisplayAddCap || !hasContingency)
+            {
+                ResetRuntimeRefuelOutputsInvalid();
+                return;
+            }
+
+            double contingencyLitres = Math.Max(0.0, contingency.Litres);
+            RuntimeRefuelEvaluation eval = EvaluateRuntimeRefuelNeed(
+                projectedLapsRemaining,
+                selectedBurn,
+                currentFuel,
+                contingencyLitres,
+                nextStopDecisionCapacityLitres,
+                multiStopDisplayAddCapLitres);
+
+            if (!eval.HasCapacityForNeed)
+            {
+                ResetRuntimeRefuelOutputsInvalid();
+                return;
+            }
+
+            Fuel_Refuel_NextLitres = eval.NextLitres;
+            Fuel_Refuel_NextLitresCeil = Math.Ceiling(Math.Max(0.0, eval.NextLitres));
+            Fuel_Refuel_Valid = true;
+            Fuel_Refuel_NextText = Fuel_Refuel_NextLitresCeil <= 0.0
+                ? "NO REFUEL"
+                : string.Format(CultureInfo.InvariantCulture, "REFUEL {0}L", (int)Fuel_Refuel_NextLitresCeil);
         }
 
         private bool TryResolveStrategyDashPlanPushSaveBurn(double normBurn, PitFuelControlSource source, out double selectedBurn)
@@ -16975,6 +17252,14 @@ namespace LaunchPlugin
             StrategyDash_NextRefuelDeltaLitres = 0;
             StrategyDash_NextRefuelAdviceText = "N/A";
             StrategyDash_NextRefuelStatus = 0;
+            Fuel_Refuel_NextLitres = 0;
+            Fuel_Refuel_NextLitresCeil = 0;
+            Fuel_Refuel_NextText = "CHECK FUEL";
+            Fuel_Refuel_Valid = false;
+            Fuel_Refuel_BurnSource = "DEFAULT";
+            Fuel_Refuel_LapSource = "DEFAULT";
+            Fuel_Refuel_DataMode = "LIVE";
+            Fuel_Refuel_BurnMode = "STBY";
             StrategyDash_BurnPlanText = "NORM";
             StrategyDash_ContingencyText = "CONT 0";
 

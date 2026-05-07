@@ -201,6 +201,13 @@ Contingency-aware tactical contract:
 - `Fuel.Delta.LitresCurrent/Plan/WillAdd` and Push/Save variants protect active contingency on the **required-to-finish side only**; when contingency is configured in laps, contingency litres are resolved per burn basis (stable for Normal, push burn for Push, save burn for Save).
 - race-end phase classification is finish-detection owned; dash-side stability behavior near finish should consume `Race.EndPhase` / `Race.EndPhaseText` / `Race.EndPhaseConfidence` and `Race.LastLapLikely` rather than player-scoped flag inference.
 - `Fuel.Pit.WillAdd` remains pure clamp mirror (`min(requestedAdd, tankSpaceAvailable)`) and does not add contingency directly.
+- `Fuel.Refuel.*` is the canonical runtime next-stop refuel guidance family:
+  - `Fuel.Refuel.NextLitres` is next-stop actionable guidance (not always raw finish-from-here deficit),
+  - runtime computes `BaseToFinish=(projectedLaps*selectedBurn)-currentFuel`, `FinalStopNeed=BaseToFinish+contingency`, and compares against runtime effective restricted tank capacity from the live-cap authority seam (`ResolveRuntimeLiveMaxTankCapacity`: live restricted cap first, planner/profile fallback only when live cap is unavailable),
+  - if `FinalStopNeed <= decision capacity`, publish `max(0, FinalStopNeed)` (final-stop guidance; contingency included once),
+  - if `FinalStopNeed > decision capacity`, publish conservative multi-stop add guidance from runtime add-cap seam (`Fuel.Pit.TankSpaceAvailable`) rather than reporting full tank size as an add amount; contingency is not repeatedly stacked on non-final max-fill stops,
+  - `Fuel.Refuel.NextLitresCeil` is `ceil(max(0, NextLitres))` and `Fuel.Refuel.NextText` is short dash-safe (`CHECK FUEL`, `NO REFUEL`, `REFUEL {N}L`),
+  - Pit Fuel Control DATA/SOURCE (`LIVE/PLAN`, `NORM/PUSH/SAVE/STBY`) informs basis selection read-only; command send ownership remains unchanged in Pit Fuel Control.
 
 ### Logging expectations
 The subsystem logs:

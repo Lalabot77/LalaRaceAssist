@@ -153,6 +153,7 @@ Canonical log wording and meaning live in `Docs/Internal/SimHubLogMessages.md`; 
 - This subsystem owns transport + command dispatch and must remain the only authority for pit/custom command sends.
 - Dashboards are consumers only; they should bind plugin actions and read exports, not reimplement command logic.
 - Fuel planner/runtime fuel math remains outside this subsystem; pit command/fuel-control uses those outputs but does not redefine fuel model behavior.
+- `Fuel.Refuel.*` runtime exports are owned by Fuel Model runtime logic; this subsystem provides DATA/SOURCE state inputs (`LIVE/PLAN`, `NORM/PUSH/SAVE/STBY`) as read-only selectors only. Pit command transport/send behavior does not own or mutate `Fuel.Refuel.*` semantics.
 
 ## Reset rules
 - `Telemetry.IsOnTrackCar` edge transitions reset Pit Fuel Control ownership state and Tyre Control mode to safe defaults.

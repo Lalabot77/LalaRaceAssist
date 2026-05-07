@@ -1,3 +1,31 @@
+## 2026-05-07 — Fuel.Refuel review follow-up: invalid-context reset + PLAN-derived PUSH/SAVE source labels
+- Classification: **internal-only** (runtime export correctness/labeling fixes with unchanged public export set).
+- Fixed `Fuel.Refuel` invalid reset staleness: invalid paths now also reset `BurnSource/LapSource` to `DEFAULT` and refresh context exports (`DataMode`, `BurnMode`) from current Pit Fuel Control state (with safe `LIVE`/`STBY` fallback) so invalid ticks cannot publish stale prior valid context.
+- Refined DATA PLAN + PUSH/SAVE fallback source labelling: when fallback burn is derived from selected NORM basis, `Fuel.Refuel.BurnSource` now mirrors actual derivation (`PLAN`/`PROFILE`/`LIVE`) instead of always forcing `DEFAULT`; `DEFAULT` is now reserved for true generic fallback derivation.
+- Preserved scope: no command send/transport changes and no behavior changes to `Fuel.Pit.*`, `Fuel.Delta.*`, `Fuel.RequiredBurnToEnd*`, boxed refuel latches, or StrategyDash next-refuel helpers.
+
+## 2026-05-07 — Fuel.Refuel NextStopCap follow-up (runtime live-cap decision seam)
+- Classification: **both** (runtime tactical refuel correctness adjustment + docs alignment).
+- Corrected `Fuel.Refuel.NextLitres` capacity semantics:
+  - final-stop vs multi-stop threshold now uses runtime effective restricted tank capacity seam (`ResolveRuntimeLiveMaxTankCapacity`, live-cap first with planner/profile fallback only when live cap is unavailable),
+  - multi-stop displayed litres remain add-oriented guidance using runtime add-cap seam (`Fuel.Pit.TankSpaceAvailable`) so export values are not overstated as full tank size add amounts while on track.
+- Tightened validity: unresolved/invalid capacity context now fails `Fuel.Refuel.Valid`; zero decision capacity with positive requirement no longer silently resolves as valid `NO REFUEL`.
+- Protected domains unchanged: no changes to `Fuel.Pit.TankSpaceAvailable` or `Fuel.Pit.WillAdd` semantics, command send/transport, StrategyDash helpers, boxed latches, or existing fuel delta/burn-to-end outputs.
+
+## 2026-05-07 — Fuel.Refuel.* runtime tactical refuel export family
+- Classification: **both** (new dash-facing runtime fuel exports + internal contract/docs alignment).
+- Added new runtime `Fuel.Refuel.*` exports in `LalaLaunch`:
+  - `Fuel.Refuel.NextLitres`, `Fuel.Refuel.NextLitresCeil`, `Fuel.Refuel.NextText`, `Fuel.Refuel.Valid`,
+  - `Fuel.Refuel.BurnSource`, `Fuel.Refuel.LapSource`, `Fuel.Refuel.DataMode`, `Fuel.Refuel.BurnMode`.
+- Contract:
+  - next-stop actionable guidance (not always raw finish-from-here deficit),
+  - deterministic final-stop vs multi-stop rule using `FinalStopNeed` vs usable next-stop add capacity,
+  - contingency included once on final-stop guidance and not repeatedly stacked on non-final max-fill guidance.
+- DATA/SOURCE basis behavior:
+  - DATA mirrors Pit Fuel Control `LIVE/PLAN`,
+  - SOURCE mirrors `NORM/PUSH/SAVE/STBY`; STBY computes advisory NORM basis and remains command-neutral,
+  - DATA PLAN paths do not select LIVE/SIM source tokens.
+- Protected domains preserved: no command-send transport/state-machine behavior changes and no semantic changes to `Fuel.Delta.*`, `Fuel.Pit.*`, `Fuel.RequiredBurnToEnd*`, boxed refuel latches, or StrategyDash next-refuel helpers.
 ## 2026-05-07 — League Race UI polish pre-merge cleanup
 - Classification: **internal-only** (targeted UX-noise/perf cleanup; no new feature-surface changes).
 - Refined League Race helper warning gate so duplicate CSV rows alone do not force yellow status text.
