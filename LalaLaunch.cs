@@ -9704,6 +9704,11 @@ namespace LaunchPlugin
                     myPaceSec,
                     playerBestLapTimeSec,
                     playerLastLapTimeSec);
+                if (_raceFinishSnapshotCaptured && sessionState < 5)
+                {
+                    ResetRaceFinishSnapshot("session_state_left_post_finish");
+                }
+                TryCaptureRaceFinishSnapshot(pluginManager, sessionState, playerCarIdx);
                 if (_h2hEngine != null)
                 {
                     var previousRaceAhead = _h2hEngine.Outputs?.Race?.Ahead;
@@ -18071,11 +18076,6 @@ namespace LaunchPlugin
             int sessionStateNumeric = ReadSessionStateInt(pluginManager);
             bool hasSessionState = sessionStateNumeric > 0;
             int playerCarIdx = GetInt(pluginManager, "DataCorePlugin.GameRawData.Telemetry.PlayerCarIdx", -1);
-            if (_raceFinishSnapshotCaptured && hasSessionState && sessionStateNumeric < 5)
-            {
-                ResetRaceFinishSnapshot("session_state_left_post_finish");
-            }
-            TryCaptureRaceFinishSnapshot(pluginManager, sessionStateNumeric, playerCarIdx);
 
             // Detect first genuine crossing to zero
             bool crossedToZero =

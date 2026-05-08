@@ -1,3 +1,9 @@
+## 2026-05-08 — RaceFinish snapshot capture ordering fix (PR #695 follow-up)
+- Classification: **internal-only** (ordering fix for existing `RaceFinish.*` contract; no export list change).
+- Moved `RaceFinish` one-shot capture trigger out of `UpdateFinishTiming(...)` and into the `DataUpdate` flow **after** `UpdateClassLeaderExports(...)` and `UpdateClassBestExports(...)` refresh.
+- Prevents first `SessionState 5/6` capture from freezing pre-refresh class winner/class best/gap/class-position values during finish-transition ordering churn.
+- Reset semantics remain unchanged (`session_state_left_post_finish` and finish/session reset paths).
+
 ## 2026-05-08 — RaceFinish frozen snapshot exports v1
 - Classification: **both** (new dash-facing finish exports + runtime latch/docs alignment).
 - Added plugin-owned `RaceFinish.*` post-race snapshot latch in `LalaLaunch`: capture once on first observed race `SessionState==5` (fallback `==6`), hold frozen values through `SessionState 5/6`, reset when leaving post-finish lifecycle into next session/race cycle.
