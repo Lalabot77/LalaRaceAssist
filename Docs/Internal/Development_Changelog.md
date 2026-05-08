@@ -1,3 +1,11 @@
+## 2026-05-08 — RaceFinish frozen snapshot exports v1
+- Classification: **both** (new dash-facing finish exports + runtime latch/docs alignment).
+- Added plugin-owned `RaceFinish.*` post-race snapshot latch in `LalaLaunch`: capture once on first observed race `SessionState==5` (fallback `==6`), hold frozen values through `SessionState 5/6`, reset when leaving post-finish lifecycle into next session/race cycle.
+- Added exports: `RaceFinish.Active`, `RaceFinish.PlayerOverallPosition`, `RaceFinish.PlayerClassPosition`, `RaceFinish.PlayerFuelLeft`, `RaceFinish.PlayerBestLap`, `RaceFinish.PlayerBestLapSec`, `RaceFinish.ClassWinnerName`, `RaceFinish.ClassWinnerAbbrevName`, `RaceFinish.ClassWinnerGapSec`, `RaceFinish.ClassBestLap`, `RaceFinish.ClassBestLapSec`.
+- Class winner + finish gap snapshot from existing class-leader seams; class best lap snapshot from existing effective-class-aware `ClassBest.*` seam so class winner and class-best holder can differ by design.
+- Added bounded one-shot info logs on snapshot capture and reset; no per-tick race-finish logging added.
+- Explicitly deferred from v1: `RaceFinish.PitStops`, `RaceFinish.LastPitTime`, `RaceFinish.LastPitTimeSec`.
+
 ## 2026-05-08 — Fuel projection stable-source text companion export
 - Classification: **both** (new dash-facing helper export + docs alignment).
 - Added `Fuel.ProjectionLapTime_StableSourceText` as a presentation-only companion to raw `Fuel.ProjectionLapTime_StableSource`.

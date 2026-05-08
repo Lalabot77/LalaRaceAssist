@@ -40,6 +40,8 @@ This document is the canonical dash-facing contract layer. It does **not** redef
   - required `Multi Stop` => non-multi selections publish `MULTI STINTS REQUIRED`; multi-stop publishes `MAX FUEL SET FOR MULTI STOP` or max-fuel-required guidance.
 - If a widget is meant to represent runtime truth, prefer stable `Fuel.*` / pace outputs over UI-only text from elsewhere.
 - Race-end dash gating should consume plugin-owned finish-phase exports directly: `Race.EndPhase` / `Race.EndPhaseText` / `Race.EndPhaseConfidence` plus `Race.LastLapLikely`; dashboards must not infer leader finish from player white/checkered flags or track-disappearance heuristics.
+- For finish/post-race summary widgets, use frozen `RaceFinish.*` exports instead of live `ClassLeader.*`/`ClassBest.*` values. `RaceFinish` captures once on first `SessionState==5` (fallback `==6`), stays frozen through states `5/6`, and resets when the session leaves post-finish lifecycle.
+- `RaceFinish` v1 contract: `Active`, `PlayerOverallPosition`, `PlayerClassPosition`, `PlayerFuelLeft`, `PlayerBestLap`, `PlayerBestLapSec`, `ClassWinnerName`, `ClassWinnerAbbrevName`, `ClassWinnerGapSec`, `ClassBestLap`, `ClassBestLapSec`.
 - Strategy fuel guidance should consume plugin-owned tactical exports directly:
   - `Fuel.RequiredBurnToEnd*` for burn-to-end guidance/state/source,
   - `Fuel.Contingency.*` for active reserve display/debug,
