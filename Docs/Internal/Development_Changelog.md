@@ -1,3 +1,16 @@
+## 2026-05-08 — Fuel projection stable-source text companion export
+- Classification: **both** (new dash-facing helper export + docs alignment).
+- Added `Fuel.ProjectionLapTime_StableSourceText` as a presentation-only companion to raw `Fuel.ProjectionLapTime_StableSource`.
+- Raw token export remains unchanged/canonical for diagnostics/contracts; no projection math, precedence, stable deadband, or source selection behavior changed.
+- Mapping contract: `pace.stint→LIVE STINT`, `pace.last5→LIVE AVG5`, `profile.avg→PROFILE`, `fuelcalc.estimated→PLANNER EST`, `telemetry.lastlap→LAST LAP`, `fallback.none→NO DATA`.
+- Unknown/unmapped non-blank values pass through unchanged; blank/null defensively resolves to `NO DATA`.
+
+## 2026-05-08 — Projection stable-source token audit docs update
+- Classification: **internal-only** (documentation accuracy only; no runtime behavior change).
+- Documented the full code-derived raw token set for `Fuel.ProjectionLapTime_StableSource`: `pace.stint`, `pace.last5`, `profile.avg`, `fuelcalc.estimated`, `telemetry.lastlap`, `fallback.none`.
+- Added stable hold/deadband semantics note so consumers treat the token as provenance of the currently published stable value.
+- Corrected `SimHubParameterInventory` wording that previously implied only stint/last5/profile/fallback provenance.
+
 ## 2026-05-07 — League Class final polish: Dash binding + ShortName-first ClassName presentation
 - Classification: **both** (dash control binding UX completion + class-name presentation contract polish).
 - Added Dash Control `Bindings` row `League Class Toggle` bound to existing plugin action `LalaLaunch.LeagueClass.ToggleEnabled` (no duplicate action surface introduced).

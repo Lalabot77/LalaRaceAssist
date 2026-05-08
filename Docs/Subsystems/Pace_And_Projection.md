@@ -110,6 +110,35 @@ Representative outputs include:
 - `ProjectionLapTime_StableSource`
 - overall/live pace confidence values used elsewhere in the plugin
 
+### `Fuel.ProjectionLapTime_StableSource` raw token catalogue (code-derived)
+The stable-source export is owned by `GetProjectionLapSeconds(...)` and is populated from projection candidate selection + stable deadband/hold behavior.
+
+| Raw token | Assigned where | Condition that produces it | Suggested driver-facing label |
+| --- | --- | --- | --- |
+| `pace.stint` | `LalaLaunch.cs` (`GetProjectionLapSeconds`) | Pace confidence is at/above switch threshold and `Pace_StintAvgLapTimeSec > 0`; live candidate resolves to stint average. | `LIVE STINT` |
+| `pace.last5` | `LalaLaunch.cs` (`GetProjectionLapSeconds`) | Pace confidence is at/above switch threshold, stint average is unavailable/non-positive, and `Pace_Last5LapAvgSec > 0`; live candidate resolves to last-5 average. | `LIVE AVG5` |
+| `profile.avg` | `LalaLaunch.cs` (`GetProjectionLapSeconds`) | Live-pace candidate is not eligible and `GetProfileAvgLapSeconds() > 0`. | `PROFILE` |
+| `fuelcalc.estimated` | `LalaLaunch.cs` (`GetProjectionLapSeconds`) | Live and profile candidates are unavailable, and `FuelCalculator.EstimatedLapTime` parses to a positive duration. | `PLANNER EST` |
+| `telemetry.lastlap` | `LalaLaunch.cs` (`GetProjectionLapSeconds`) | Estimator was not available/valid, and telemetry last-lap time is positive. | `LAST LAP` |
+| `fallback.none` | `LalaLaunch.cs` (`GetProjectionLapSeconds`) + reset path | No valid live/profile/estimator candidate exists and there is no prior stable value to hold; also set on reset/initialization. | `NO DATA` |
+
+Hold behavior notes (still from code, not extra tokens):
+- If current candidate is invalid (`<=0`) but previous stable value exists, stable value and its previous source token are held.
+- If current candidate is valid but inside stable deadband, stable value is held and source token can remain previous stable source.
+- Therefore dash consumers should treat the token as the provenance of the *currently published stable value*, not strictly “this tick’s fresh candidate”.
+
+### Dash-facing source text companion export
+- `Fuel.ProjectionLapTime_StableSource` remains the canonical diagnostic provenance token.
+- `Fuel.ProjectionLapTime_StableSourceText` is a plugin-owned presentation helper for dashboards.
+- Mapping contract:
+  - `pace.stint` → `LIVE STINT`
+  - `pace.last5` → `LIVE AVG5`
+  - `profile.avg` → `PROFILE`
+  - `fuelcalc.estimated` → `PLANNER EST`
+  - `telemetry.lastlap` → `LAST LAP`
+  - `fallback.none` → `NO DATA`
+- Unknown/unmapped non-blank values pass through unchanged; blank/null defensively resolves to `NO DATA`.
+
 See `Docs/Internal/SimHubParameterInventory.md` for the authoritative inventory.
 
 ### Logs

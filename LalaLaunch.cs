@@ -6820,6 +6820,7 @@ namespace LaunchPlugin
             AttachCore("StrategyDash.ContingencyText", () => StrategyDash_ContingencyText);
             AttachCore("Fuel.ProjectionLapTime_Stable", () => ProjectionLapTime_Stable);
             AttachCore("Fuel.ProjectionLapTime_StableSource", () => ProjectionLapTime_StableSource);
+            AttachCore("Fuel.ProjectionLapTime_StableSourceText", () => GetProjectionLapTimeStableSourceText(ProjectionLapTime_StableSource));
             AttachCore("Fuel.Live.ProjectedDriveSecondsRemaining", () => LiveProjectedDriveSecondsRemaining);
             AttachCore("Fuel.Live.IsFuelReady", () => IsFuelReady);
 
@@ -17493,6 +17494,18 @@ namespace LaunchPlugin
             if (string.Equals(projectionSource, "fuelcalc.estimated", StringComparison.OrdinalIgnoreCase)) return "SIMHUB";
             if (string.Equals(projectionSource, "telemetry.lastlap", StringComparison.OrdinalIgnoreCase)) return "SIMHUB";
             return "SIMHUB";
+        }
+
+        private static string GetProjectionLapTimeStableSourceText(string rawSource)
+        {
+            string source = (rawSource ?? string.Empty).Trim();
+            if (string.Equals(source, "pace.stint", StringComparison.OrdinalIgnoreCase)) return "LIVE STINT";
+            if (string.Equals(source, "pace.last5", StringComparison.OrdinalIgnoreCase)) return "LIVE AVG5";
+            if (string.Equals(source, "profile.avg", StringComparison.OrdinalIgnoreCase)) return "PROFILE";
+            if (string.Equals(source, "fuelcalc.estimated", StringComparison.OrdinalIgnoreCase)) return "PLANNER EST";
+            if (string.Equals(source, "telemetry.lastlap", StringComparison.OrdinalIgnoreCase)) return "LAST LAP";
+            if (string.Equals(source, "fallback.none", StringComparison.OrdinalIgnoreCase)) return "NO DATA";
+            return string.IsNullOrEmpty(source) ? "NO DATA" : source;
         }
 
         private void UpdatePredictorOutputs()
