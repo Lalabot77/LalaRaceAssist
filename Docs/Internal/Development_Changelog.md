@@ -1,3 +1,9 @@
+- 2026-05-08 Phase 2B fuel export audit documentation sync landed:
+  - marked `Fuel.Refuel.*` as canonical race-running next-stop refuel guidance surface across inventory/subsystem dash docs, while preserving `StrategyDash.NextRefuel*` as pre-green/planning (not obsolete);
+  - reinforced dashboard guidance to prefer plugin-owned `Fuel.Refuel.*`, `Fuel.RequiredBurnToEnd*`, `Fuel.Contingency.*`, and `Fuel.Delta.*` for runtime fuel widgets instead of dash-side NCALC chains;
+  - added cleanup caution: do not remove/rename fuel-facing exports until both dashboard JSON usage audit and internal C# consumer audit are complete;
+  - clarified compatibility notes (`Pit.FuelControl.PushSaveMode*` alias surface, legacy one-release `SetPlan` mapping to DATA PLAN + SOURCE STBY) and reaffirmed protected runtime families/command-send behavior unchanged.
+
 
 ## 2026-05-08 — League Class canonical subsystem documentation sweep
 - Added canonical subsystem doc `Docs/Subsystems/League_Class_System.md` covering purpose, concepts, resolver precedence/fallback, boundaries, exports, effective PositionInClass semantics, UI workflow, dash guidance, non-goals, and troubleshooting.

@@ -196,6 +196,9 @@ Setup-fuel fallback export semantics:
 - This seam is read-only and does not overwrite `Telemetry.FuelLevel`, `Fuel.LiveFuelPerLap`, pit math, planner math, max tank, or PreRace strategy logic.
 
 Contingency-aware tactical contract:
+- Runtime race-running next-stop guidance is canonical on `Fuel.Refuel.*` (`NextLitres`, `NextLitresCeil`, `NextText`, `Valid`, `BurnSource`, `LapSource`, `DataMode`, `BurnMode`).
+- `StrategyDash.NextRefuel*` remains supported for pre-green/planning pages and is not obsolete, but new race-running dash work should prefer `Fuel.Refuel.*`.
+- Export cleanup caution: do not remove/rename exports until both checks are complete: dashboard JSON usage audit and internal C# reference/consumer audit.
 - `Fuel.RequiredBurnToEnd*` provides driver-facing burn-to-end guidance while protecting active contingency reserve.
 - Active contingency authority is planner-first, then profile track fallback, then default fallback.
 - `Fuel.Delta.LitresCurrent/Plan/WillAdd` and Push/Save variants protect active contingency on the **required-to-finish side only**; when contingency is configured in laps, contingency litres are resolved per burn basis (stable for Normal, push burn for Push, save burn for Save).
@@ -207,7 +210,7 @@ Contingency-aware tactical contract:
   - if `FinalStopNeed <= decision capacity`, publish `max(0, FinalStopNeed)` (final-stop guidance; contingency included once),
   - if `FinalStopNeed > decision capacity`, publish conservative multi-stop add guidance from runtime add-cap seam (`Fuel.Pit.TankSpaceAvailable`) rather than reporting full tank size as an add amount; contingency is not repeatedly stacked on non-final max-fill stops,
   - `Fuel.Refuel.NextLitresCeil` is `ceil(max(0, NextLitres))` and `Fuel.Refuel.NextText` is short dash-safe (`CHECK FUEL`, `NO REFUEL`, `REFUEL {N}L`),
-  - Pit Fuel Control DATA/SOURCE (`LIVE/PLAN`, `NORM/PUSH/SAVE/STBY`) informs basis selection read-only; command send ownership remains unchanged in Pit Fuel Control.
+  - Pit Fuel Control DATA/SOURCE (`DATA=LIVE/PLAN`, `SOURCE=STBY/NORM/PUSH/SAVE`) informs basis selection read-only; PLAN is DATA (not SOURCE), and command-send ownership remains unchanged in Pit Fuel Control.
 
 ### Logging expectations
 The subsystem logs:

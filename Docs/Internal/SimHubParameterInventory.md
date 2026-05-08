@@ -17,6 +17,8 @@ Branch: work
 | Brake.PreviousPeakPct | double | Peak brake input from the most recently completed braking event (normalized 0–1). Event begins when brake exceeds 5% while throttle is below 20%; while active, peak tracks `max(peak, brake)`. Event ends when brake falls to 2% or below, or throttle rises to 20% or above; on end, the event peak is latched to this export and capture enters a short re-arm lock that requires at least three consecutive release ticks where either `brake <= 0.02` or `throttle >= 0.20` before a new event can start. Manual/session recovery resets clear active + latched state/counters and set the export to `0.0` so stale prior-session peaks cannot leak forward. | Per tick. | `LalaLaunch.cs` — runtime `DataUpdate` brake event detector + `AttachCore`. |
 
 ## Fuel
+> Export cleanup caution: do not remove/rename fuel exports until both audits are complete: (1) dashboard JSON usage audit, and (2) internal C# reference/consumer audit.
+
 | Exported name | Type | Units / meaning | Update cadence | Defined in |
 | --- | --- | --- | --- | --- |
 | Fuel.LiveFuelPerLap | double | Rolling average burn per accepted lap (wet/dry windows, rejects pit/warmup/off-track/outliers). | 500 ms poll (`UpdateLiveFuelCalcs`). | `LalaLaunch.cs` — `UpdateLiveFuelCalcs` + `AttachCore`【F:LalaLaunch.cs†L1895-L2143】【F:LalaLaunch.cs†L2672-L2955】 |
