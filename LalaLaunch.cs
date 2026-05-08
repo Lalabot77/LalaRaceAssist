@@ -16372,12 +16372,15 @@ namespace LaunchPlugin
             ClassLeaderBestLapTimeSec = IsValidCarSaLapTimeSec(classLeaderBestLapSec) ? classLeaderBestLapSec : 0.0;
             ClassLeaderBestLapTime = IsValidCarSaLapTimeSec(classLeaderBestLapSec) ? FormatLapTime(classLeaderBestLapSec) : "-";
 
+            ClassLeaderName = string.Empty;
+            ClassLeaderCarNumber = string.Empty;
             if (TryGetCarIdentityFromSessionInfo(pluginManager, classLeaderCarIdx, out string name, out string carNumber, out _))
             {
                 ClassLeaderName = name ?? string.Empty;
                 ClassLeaderCarNumber = carNumber ?? string.Empty;
             }
 
+            ClassLeaderAbbrevName = string.Empty;
             if (TryGetCarDriverInfo(pluginManager, classLeaderCarIdx, out _, out _, out _, out _, out _, out _, out string abbrevName, out _, out _, out _))
             {
                 ClassLeaderAbbrevName = abbrevName ?? string.Empty;

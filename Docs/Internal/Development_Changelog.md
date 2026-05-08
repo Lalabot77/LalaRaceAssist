@@ -1,3 +1,8 @@
+## 2026-05-08 — ClassLeader transient-hold follow-up: identity stale-field guard
+- Classification: **internal-only** (consistency fix within existing `ClassLeader.*` contract).
+- When class-leader identity lookups miss for a valid resolved `ClassLeaderCarIdx`, `ClassLeader.Name` / `ClassLeader.CarNumber` / `ClassLeader.AbbrevName` now clear to empty before lookup attempts, preventing stale identity text from prior leader frames while current leader index/lap/gap are updated.
+- No change to class leader selection semantics, hold window semantics, or finish/race snapshot contracts.
+
 ## 2026-05-08 — ClassLeader transient-miss hold stabilization + duplicate leader-finished export cleanup
 - Classification: **both** (live class-leader dash stability improvement + export surface cleanup).
 - `ClassLeader.*` publication now tolerates short transient unresolved frames: when class-leader resolution misses briefly, the last valid class-leader payload is held for a bounded short window instead of hard-clearing on first miss.
