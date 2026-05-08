@@ -5414,7 +5414,17 @@ namespace LaunchPlugin
         {
             if (!IsLeagueRaceContextClassPresentationActive()) return fallback ?? string.Empty;
             var info = ResolveLeagueClassDriverInfo(userId, driverName);
-            return info.Valid && !string.IsNullOrWhiteSpace(info.Name) ? info.Name : (fallback ?? string.Empty);
+            if (!info.Valid)
+            {
+                return fallback ?? string.Empty;
+            }
+
+            if (!string.IsNullOrWhiteSpace(info.ShortName))
+            {
+                return info.ShortName;
+            }
+
+            return !string.IsNullOrWhiteSpace(info.Name) ? info.Name : (fallback ?? string.Empty);
         }
 
         private string ResolveRaceContextClassColorHex(int? userId, string driverName, string fallback)
@@ -5481,9 +5491,17 @@ namespace LaunchPlugin
         private string ResolvePlayerClassPresentationName(string nativeClassName)
         {
             var player = ResolveLivePlayerLeagueClassInfo();
-            if ((Settings?.LeagueClassEnabled == true) && player.Valid && !string.IsNullOrWhiteSpace(player.Name))
+            if ((Settings?.LeagueClassEnabled == true) && player.Valid)
             {
-                return player.Name;
+                if (!string.IsNullOrWhiteSpace(player.ShortName))
+                {
+                    return player.ShortName;
+                }
+
+                if (!string.IsNullOrWhiteSpace(player.Name))
+                {
+                    return player.Name;
+                }
             }
 
             return nativeClassName ?? string.Empty;

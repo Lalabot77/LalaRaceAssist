@@ -1,3 +1,8 @@
+- 2026-05-07 League Class final polish landed:
+  - added Dash Control `Bindings` row `League Class Toggle` wired to existing plugin action `LalaLaunch.LeagueClass.ToggleEnabled` (no duplicate action added);
+  - League-aware dash class-name presentation now uses effective League `ShortName` when available and falls back to effective League `Name` only when `ShortName` is blank;
+  - disabled/unresolved League behavior remains native fallback; no changes to class color, effective position, CarSA/Opponents/H2H selection-ordering logic, or manual-override scope.
+
 - 2026-05-07 Fuel.Refuel DATA projection follow-up landed:
   - removed the incorrect `simLapsRemaining > 0` reprojection gate so DATA PLAN timed-race paths can remain valid when time context + selected lap-seconds are sufficient;
   - contingency configured in laps is now converted using the selected Fuel.Refuel burn basis (`selectedBurn`) used by `Fuel.Refuel.NextLitres` (including PUSH/SAVE and STBY advisory NORM), not stable/NORM-only contingency litres.

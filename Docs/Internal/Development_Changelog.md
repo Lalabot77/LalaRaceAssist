@@ -1,3 +1,10 @@
+## 2026-05-07 — League Class final polish: Dash binding + ShortName-first ClassName presentation
+- Classification: **both** (dash control binding UX completion + class-name presentation contract polish).
+- Added Dash Control `Bindings` row `League Class Toggle` bound to existing plugin action `LalaLaunch.LeagueClass.ToggleEnabled` (no duplicate action surface introduced).
+- Kept existing toggle runtime semantics unchanged (enable guard, resolver reload, and quiet CSV self-check behavior on enable in CSV-capable modes).
+- Updated League-aware class-name presentation helper behavior so dash-facing `ClassName` exports use effective League `ShortName` when present, with fallback to effective League `Name` when `ShortName` is blank.
+- Preserved existing fallback and protected domains: when League is disabled/unresolved, native class name behavior is unchanged; no changes to class color, position-in-class, selector/order/filter/timing logic, or manual-override scope.
+
 ## 2026-05-07 — Fuel.Refuel DATA projection follow-up: timed reprojection gate + selected-burn contingency conversion
 - Classification: **both** (runtime tactical refuel correctness follow-up + docs alignment).
 - Removed the overly strict reprojection pre-gate requiring `simLapsRemaining > 0`; DATA-governed Fuel.Refuel reprojection now attempts whenever selected lap seconds are valid and relies on `FuelProjectionMath.ProjectLapsRemaining(...)` to decide if session context is sufficient.

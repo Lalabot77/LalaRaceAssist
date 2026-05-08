@@ -39,6 +39,10 @@
                                        FriendlyName="Toggle Dark Mode"
                                        Margin="0,8,0,0"
                                        ToolTip="Assign a button to cycle LalaLaunch Dark Mode mode (Off → Manual → Auto). Warning: don’t bind this to the same button as Lovely’s True Dark toggle. If ‘Use Lovely True Dark’ is enabled and Lovely is available, LalaLaunch toggle is ignored." />
+                    <ui:ControlsEditor ActionName="LalaLaunch.LeagueClass.ToggleEnabled"
+                                       FriendlyName="League Class Toggle"
+                                       Margin="0,8,0,0"
+                                       ToolTip="Assign a button to toggle League Class mode ON/OFF using the existing League Class enable guard and resolver reload behavior." />
                 </StackPanel>
             </Expander>
 
