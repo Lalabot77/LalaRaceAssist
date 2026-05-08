@@ -16737,6 +16737,44 @@ namespace LaunchPlugin
             return trackSurfaces[index] >= 0;
         }
 
+        private static bool HasSessionFlagBit(int flags, int mask)
+        {
+            return (flags & mask) != 0;
+        }
+
+        private static bool IsFinishLikeSessionFlag(int flags)
+        {
+            const int Checkered = 0x00000001;
+            const int Crossed = 0x00000080;
+            return HasSessionFlagBit(flags, Checkered) || HasSessionFlagBit(flags, Crossed);
+        }
+
+        private int FindTrueOverallLeaderCarIdx(int[] overallPositions, int[] classPositions, int[] trackSurfaces)
+        {
+            if (overallPositions == null || classPositions == null)
+            {
+                return -1;
+            }
+
+            int count = Math.Min(overallPositions.Length, classPositions.Length);
+            for (int i = 0; i < count; i++)
+            {
+                if (overallPositions[i] != 1 || classPositions[i] != 1)
+                {
+                    continue;
+                }
+
+                if (!IsCarInWorld(trackSurfaces, i))
+                {
+                    continue;
+                }
+
+                return i;
+            }
+
+            return -1;
+        }
+
         private void MaybeLatchLeaderFinished(bool isClassLeader, int leaderIdx, double[] lapPct, int[] trackSurfaces, double sessionTime, int sessionStateNumeric)
         {
             if (leaderIdx < 0 || lapPct == null || leaderIdx >= lapPct.Length) return;
@@ -18203,18 +18241,48 @@ namespace LaunchPlugin
             var trackSurfaces = GetIntArray(pluginManager, "DataCorePlugin.GameRawData.Telemetry.CarIdxTrackSurface");
             var lapDistPct = GetDoubleArray(pluginManager, "DataCorePlugin.GameRawData.Telemetry.CarIdxLapDistPct");
             var overallPositions = GetIntArray(pluginManager, "DataCorePlugin.GameRawData.Telemetry.CarIdxPosition");
+            var classPositions = GetIntArray(pluginManager, "DataCorePlugin.GameRawData.Telemetry.CarIdxClassPosition");
+            var carIdxSessionFlags = GetIntArray(pluginManager, "DataCorePlugin.GameRawData.Telemetry.CarIdxSessionFlags");
 
             int classLeaderIdx = FindResolvedClassLeaderCarIdx(pluginManager, playerCarIdx, isMultiClassSession, trackSurfaces);
             ClassLeaderHasFinishedValid = classLeaderIdx >= 0;
 
-            int overallLeaderIdx = FindOverallLeaderCarIdx(overallPositions, trackSurfaces);
+            int overallLeaderIdx = FindTrueOverallLeaderCarIdx(overallPositions, classPositions, trackSurfaces);
+            if (overallLeaderIdx < 0)
+            {
+                overallLeaderIdx = FindOverallLeaderCarIdx(overallPositions, trackSurfaces);
+            }
             OverallLeaderHasFinishedValid = overallLeaderIdx >= 0;
 
-            if (!OverallLeaderHasFinished && hasSessionState && sessionStateNumeric >= 5)
+            bool classLeaderFinishByFlags = classLeaderIdx >= 0
+                && carIdxSessionFlags != null
+                && classLeaderIdx < carIdxSessionFlags.Length
+                && IsFinishLikeSessionFlag(carIdxSessionFlags[classLeaderIdx]);
+
+            if (classLeaderFinishByFlags && !ClassLeaderHasFinished)
+            {
+                ClassLeaderHasFinished = true;
+                SimHub.Logging.Current.Info(
+                    $"[LalaPlugin:Finish] class_finish trigger=caridx_flags carIdx={classLeaderIdx} flags={carIdxSessionFlags[classLeaderIdx]}");
+            }
+
+            bool overallLeaderFinishByFlags = overallLeaderIdx >= 0
+                && carIdxSessionFlags != null
+                && overallLeaderIdx < carIdxSessionFlags.Length
+                && IsFinishLikeSessionFlag(carIdxSessionFlags[overallLeaderIdx]);
+
+            if (!OverallLeaderHasFinished && overallLeaderFinishByFlags)
             {
                 OverallLeaderHasFinished = true;
                 SimHub.Logging.Current.Info(
-                    $"[LalaPlugin:Finish] overall_finish trigger=state state={sessionStateNumeric} phase={RaceEndPhaseText} conf={RaceEndPhaseConfidence}");
+                    $"[LalaPlugin:Finish] overall_finish trigger=caridx_flags carIdx={overallLeaderIdx} flags={carIdxSessionFlags[overallLeaderIdx]}");
+            }
+
+            if (!OverallLeaderHasFinished && !isMultiClassSession && hasSessionState && sessionStateNumeric >= 5)
+            {
+                OverallLeaderHasFinished = true;
+                SimHub.Logging.Current.Info(
+                    $"[LalaPlugin:Finish] overall_finish trigger=state_backup state={sessionStateNumeric} phase={RaceEndPhaseText} conf={RaceEndPhaseConfidence}");
             }
 
             bool canRunClassFinishHeuristic = isTimedRace && _timerZeroSeen && classLeaderIdx >= 0;

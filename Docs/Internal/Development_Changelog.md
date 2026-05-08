@@ -1,3 +1,9 @@
+## 2026-05-08 — Finish detection phase 1: per-car session-flag authority for class/overall leader finish latches
+- Classification: **both** (runtime finish-latch semantic correction + docs alignment).
+- `UpdateFinishTiming(...)` now prefers per-car `CarIdxSessionFlags` finish-like bits (`checkered`/`crossed`) to latch `Race.ClassLeaderHasFinished` and `Race.OverallLeaderHasFinished`.
+- Overall leader resolution now prefers the true overall leader identity seam (`CarIdxPosition==1 && CarIdxClassPosition==1`) with existing fallback to position-only leader idx when needed.
+- SessionState remains lifecycle authority and is retained only as single-class backup for `Race.OverallLeaderHasFinished` when per-car flags are unavailable.
+
 ## 2026-05-08 — ClassLeader transient-hold follow-up: identity stale-field guard
 - Classification: **internal-only** (consistency fix within existing `ClassLeader.*` contract).
 - When class-leader identity lookups miss for a valid resolved `ClassLeaderCarIdx`, `ClassLeader.Name` / `ClassLeader.CarNumber` / `ClassLeader.AbbrevName` now clear to empty before lookup attempts, preventing stale identity text from prior leader frames while current leader index/lap/gap are updated.
