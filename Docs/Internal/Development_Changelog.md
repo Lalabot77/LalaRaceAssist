@@ -1,3 +1,10 @@
+## 2026-05-08 — ClassLeader transient-miss hold stabilization + duplicate leader-finished export cleanup
+- Classification: **both** (live class-leader dash stability improvement + export surface cleanup).
+- `ClassLeader.*` publication now tolerates short transient unresolved frames: when class-leader resolution misses briefly, the last valid class-leader payload is held for a bounded short window instead of hard-clearing on first miss.
+- Sustained unresolved or ineligible-session conditions still clear `ClassLeader.*` to invalid defaults; genuine leader changes still publish immediately when resolution is valid.
+- Added bounded state-transition logs for class-leader hold activation/clear (no per-tick log loop).
+- Removed duplicate/derived export attach `Race.LeaderHasFinished` from the core finish export surface; retained authoritative `Race.OverallLeaderHasFinished` and `Race.ClassLeaderHasFinished`.
+
 ## 2026-05-08 — RaceFinish snapshot capture ordering fix (PR #695 follow-up)
 - Classification: **internal-only** (ordering fix for existing `RaceFinish.*` contract; no export list change).
 - Moved `RaceFinish` one-shot capture trigger out of `UpdateFinishTiming(...)` and into the `DataUpdate` flow **after** `UpdateClassLeaderExports(...)` and `UpdateClassBestExports(...)` refresh.

@@ -795,6 +795,9 @@ namespace LaunchPlugin
         public double ClassLeaderBestLapTimeSec { get; private set; }
         public string ClassLeaderBestLapTime { get; private set; } = "-";
         public double ClassLeaderGapToPlayerSec { get; private set; }
+        private double _classLeaderLastValidSessionTimeSec = double.NaN;
+        private int _classLeaderTransientMissStreak;
+        private bool _classLeaderHoldActive;
         public bool ClassBestValid { get; private set; }
         public int ClassBestCarIdx { get; private set; } = -1;
         public string ClassBestName { get; private set; } = string.Empty;
@@ -6942,7 +6945,6 @@ namespace LaunchPlugin
             AttachCore("Race.OverallLeaderHasFinishedValid", () => OverallLeaderHasFinishedValid);
             AttachCore("Race.ClassLeaderHasFinished", () => ClassLeaderHasFinished);
             AttachCore("Race.ClassLeaderHasFinishedValid", () => ClassLeaderHasFinishedValid);
-            AttachCore("Race.LeaderHasFinished", () => LeaderHasFinished);
             AttachCore("Race.EndPhase", () => RaceEndPhase);
             AttachCore("Race.EndPhaseText", () => RaceEndPhaseText);
             AttachCore("Race.EndPhaseConfidence", () => RaceEndPhaseConfidence);
@@ -9689,6 +9691,7 @@ namespace LaunchPlugin
                 UpdateClassLeaderExports(
                     pluginManager,
                     sessionTypeName,
+                    sessionTimeSec,
                     playerCarIdx,
                     carIdxLap,
                     carIdxLapDistPct,
@@ -16293,6 +16296,9 @@ namespace LaunchPlugin
             ClassLeaderBestLapTimeSec = 0.0;
             ClassLeaderBestLapTime = "-";
             ClassLeaderGapToPlayerSec = 0.0;
+            _classLeaderLastValidSessionTimeSec = double.NaN;
+            _classLeaderTransientMissStreak = 0;
+            _classLeaderHoldActive = false;
         }
 
         private void ResetClassBestExports()
@@ -16310,6 +16316,7 @@ namespace LaunchPlugin
         private void UpdateClassLeaderExports(
             PluginManager pluginManager,
             string sessionTypeName,
+            double sessionTimeSec,
             int playerCarIdx,
             int[] carIdxLap,
             float[] carIdxLapDistPct,
@@ -16317,10 +16324,12 @@ namespace LaunchPlugin
             double playerBestLapSec,
             double playerLastLapSec)
         {
-            ResetClassLeaderExports();
-
             if (!IsOpponentsEligibleSession(sessionTypeName))
             {
+                if (ClassLeaderValid || _classLeaderHoldActive)
+                {
+                    ResetClassLeaderExports();
+                }
                 return;
             }
 
@@ -16329,9 +16338,33 @@ namespace LaunchPlugin
             int classLeaderCarIdx = FindResolvedClassLeaderCarIdx(pluginManager, playerCarIdx, isMultiClassSession, trackSurfaces);
             if (classLeaderCarIdx < 0)
             {
+                _classLeaderTransientMissStreak++;
+                bool canHoldPrevious = ClassLeaderValid && _classLeaderTransientMissStreak <= 3;
+                if (canHoldPrevious && !double.IsNaN(sessionTimeSec) && !double.IsNaN(_classLeaderLastValidSessionTimeSec))
+                {
+                    double heldAgeSec = Math.Max(0.0, sessionTimeSec - _classLeaderLastValidSessionTimeSec);
+                    if (heldAgeSec <= 1.0)
+                    {
+                        if (!_classLeaderHoldActive)
+                        {
+                            _classLeaderHoldActive = true;
+                            SimHub.Logging.Current.Info($"[LalaPlugin:ClassLeader] transient hold active (streak={_classLeaderTransientMissStreak}, age={heldAgeSec:F2}s)");
+                        }
+
+                        return;
+                    }
+                }
+
+                if (ClassLeaderValid || _classLeaderHoldActive)
+                {
+                    SimHub.Logging.Current.Info($"[LalaPlugin:ClassLeader] hold cleared after sustained unresolved state (streak={_classLeaderTransientMissStreak})");
+                }
+                ResetClassLeaderExports();
                 return;
             }
 
+            _classLeaderTransientMissStreak = 0;
+            _classLeaderHoldActive = false;
             ClassLeaderCarIdx = classLeaderCarIdx;
             double classLeaderBestLapSec = (classLeaderCarIdx >= 0 && classLeaderCarIdx < _carSaBestLapTimeSecByIdx.Length)
                 ? _carSaBestLapTimeSecByIdx[classLeaderCarIdx]
@@ -16364,6 +16397,7 @@ namespace LaunchPlugin
                 resolvedPaceReferenceSec);
 
             ClassLeaderValid = true;
+            _classLeaderLastValidSessionTimeSec = sessionTimeSec;
         }
 
         private int FindResolvedClassBestCarIdx(PluginManager pluginManager, int playerCarIdx)
