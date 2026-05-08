@@ -1,3 +1,8 @@
+
+## 2026-05-08 — League Class canonical subsystem documentation sweep
+- Added canonical subsystem doc `Docs/Subsystems/League_Class_System.md` covering purpose, concepts, resolver precedence/fallback, boundaries, exports, effective PositionInClass semantics, UI workflow, dash guidance, non-goals, and troubleshooting.
+- Updated cross-references in `Project_Index`, `Subsystems/H2H.md`, `Subsystems/Dash_Integration.md`, `Internal/SimHubParameterInventory.md`, `Internal/Plugin_UI_Tooltips.md`, `RepoStatus.md`, and `CHANGELOG.md` to point to canonical League Class documentation and reduce duplicated explanations.
+- Scope explicitly limited to analysis + documentation; runtime code, dashboard JSON, exports/actions, and resolver logic unchanged.
 ## 2026-05-08 — Fuel projection stable-source text companion export
 - Classification: **both** (new dash-facing helper export + docs alignment).
 - Added `Fuel.ProjectionLapTime_StableSourceText` as a presentation-only companion to raw `Fuel.ProjectionLapTime_StableSource`.

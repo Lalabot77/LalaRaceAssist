@@ -1,3 +1,7 @@
+- 2026-05-08 docs sweep landed:
+  - added canonical subsystem documentation `Docs/Subsystems/League_Class_System.md` covering resolver precedence, fallback hierarchy, UI workflow, export contract, and ownership boundaries;
+  - aligned subsystem/internal cross-references (`Project_Index`, `H2H`, `Dash_Integration`, `SimHubParameterInventory`, `Plugin_UI_Tooltips`) to point to the canonical League Class doc and reduce duplication/stale drift.
+
 - 2026-05-07 League Class final polish landed:
   - added Dash Control `Bindings` row `League Class Toggle` wired to existing plugin action `LalaLaunch.LeagueClass.ToggleEnabled` (no duplicate action added);
   - League-aware dash class-name presentation now uses effective League `ShortName` when available and falls back to effective League `Name` only when `ShortName` is blank;

@@ -115,7 +115,7 @@ This document is the canonical dash-facing contract layer. It does **not** redef
 
 ### H2H / traffic
 - `H2HRace.*` and `H2HTrack.*` are already flattened for dashboard binding; dashboards should not try to recreate selector logic.
-- League Class presentation contract: `H2HTrack.*` keeps CarSA-owned physical selection, but class-facing outputs (`ClassColor`/`ClassColorHex`) follow the same League-aware presentation gate as other class-facing exports when enabled+resolved, with native fallback preserved when disabled/unresolved.
+- League Class presentation/cohort contract (including `H2HRace.*`, `H2HTrack.*`, CarSA/Opp/H2H class-facing exports, and effective `PositionInClass` semantics) is canonicalized in `Docs/Subsystems/League_Class_System.md`; dashboards should consume plugin exports directly and not recreate resolver logic.
 - CarSA / Opponents data that is not part of a published dash contract should stay a technical dependency, not a dashboard-owned truth source.
 
 ## Visibility and gating
