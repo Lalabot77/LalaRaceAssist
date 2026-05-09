@@ -5041,8 +5041,9 @@ namespace LaunchPlugin
         private bool _isTimingZeroTo100 = false;
         private bool _launchSuccessful = false;
         private bool _eventMarkerPressed = false;
-        private bool _propertySnapshotLastMarkerState = false;
         private bool _propertySnapshotWriteFailed = false;
+        private int _eventMarkerPressCount = 0;
+        private int _propertySnapshotLastProcessedPressCount = 0;
         private bool _msgCxPressed = false;
         private bool _pitScreenActive = false;
         private bool _pitScreenDismissed = false;
@@ -5102,6 +5103,7 @@ namespace LaunchPlugin
         private void RegisterEventMarkerPress()
         {
             _eventMarkerPressed = true;
+            unchecked { _eventMarkerPressCount++; }
             _eventMarkerCooldownTimer.Restart();
         }
 
@@ -8756,8 +8758,9 @@ namespace LaunchPlugin
             _msgCxPressed = false;
             _eventMarkerCooldownTimer.Reset();
             _eventMarkerPressed = false;
-            _propertySnapshotLastMarkerState = false;
             _propertySnapshotWriteFailed = false;
+            _eventMarkerPressCount = 0;
+            _propertySnapshotLastProcessedPressCount = 0;
             _propertySnapshotPreviousValues.Clear();
 
             _shiftAssistAudio?.HardStop();
@@ -12589,14 +12592,13 @@ namespace LaunchPlugin
         {
             bool enabled = SoftDebugEnabled && Settings?.EnablePropertySnapshot == true;
             if (_propertySnapshotWriteFailed) return;
-            bool markerNow = _eventMarkerPressed;
-            bool risingEdge = markerNow && !_propertySnapshotLastMarkerState;
-            _propertySnapshotLastMarkerState = markerNow;
-            if (!enabled || !risingEdge) return;
+            int pressCount = _eventMarkerPressCount;
+            if (!enabled || pressCount == _propertySnapshotLastProcessedPressCount) return;
 
             try
             {
                 WritePropertySnapshotCsv(sessionTimeSec);
+                _propertySnapshotLastProcessedPressCount = pressCount;
             }
             catch (Exception ex)
             {
@@ -12710,13 +12712,14 @@ namespace LaunchPlugin
 
         private static string ResolvePropertySnapshotGroup(string propertyName)
         {
+            if (propertyName.StartsWith("Car.Debug.", StringComparison.Ordinal)) return "RawDebug";
             if (propertyName.StartsWith("Fuel.", StringComparison.Ordinal) || propertyName.StartsWith("Strategy", StringComparison.Ordinal)) return "FuelStrategy";
             if (propertyName.StartsWith("Car.", StringComparison.Ordinal) || propertyName.StartsWith("Opp.", StringComparison.Ordinal) || propertyName.StartsWith("H2H", StringComparison.Ordinal) || propertyName.StartsWith("LapRef.", StringComparison.Ordinal)) return "CarOppH2H";
             if (propertyName.StartsWith("Pit.", StringComparison.Ordinal) || propertyName.StartsWith("PitExit.", StringComparison.Ordinal)) return "PitPitExit";
             if (propertyName.StartsWith("ShiftAssist.", StringComparison.Ordinal)) return "ShiftAssist";
             if (propertyName.StartsWith("MSG", StringComparison.Ordinal) || propertyName.StartsWith("Message", StringComparison.Ordinal)) return "MessageSystem";
             if (propertyName.StartsWith("LeagueClass.", StringComparison.Ordinal)) return "LeagueClass";
-            if (propertyName.StartsWith("Debug.", StringComparison.Ordinal) || propertyName.StartsWith("Car.Debug.", StringComparison.Ordinal)) return "RawDebug";
+            if (propertyName.StartsWith("Debug.", StringComparison.Ordinal)) return "RawDebug";
             return "RawDebug";
         }
 

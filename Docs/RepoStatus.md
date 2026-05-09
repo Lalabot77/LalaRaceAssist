@@ -1,3 +1,7 @@
+- 2026-05-09 per-press trigger + Car.Debug bucket fix for Property Snapshot:
+  - `Car.Debug.*` now routes to `RawDebug` classification bucket;
+  - snapshot trigger now processes each Event Marker action press (counter-based), including repeated presses during the event pulse window.
+
 - 2026-05-09 missing sanitizer helper fix for Property Snapshot:
   - added concrete CSV sanitize/value-string helpers used by snapshot writer to restore compile validity and safe CSV quoting.
 
