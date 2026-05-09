@@ -282,6 +282,13 @@ namespace LaunchPlugin
                 return 0;
             }
 
+            var mode = (LeagueClassMode)settings.LeagueClassMode;
+            bool allowCsvResolution = mode == LeagueClassMode.CsvOnly || mode == LeagueClassMode.CsvThenName;
+            if (!allowCsvResolution)
+            {
+                return 0;
+            }
+
             var classDef = (settings.LeagueClassDefinitions ?? new List<LeagueClassDefinition>())
                 .FirstOrDefault(d => d != null && string.Equals(d.CsvClassName, className, StringComparison.OrdinalIgnoreCase));
             if (classDef != null && !classDef.Enabled)

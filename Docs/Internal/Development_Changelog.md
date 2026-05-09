@@ -1,3 +1,5 @@
+- 2026-05-09 follow-up: gated LeagueClass.Player.DriverCount CSV fallback by active League Class mode.
+  - CSV fallback cohort count now runs only in CSV-capable modes (`CsvOnly` / `CsvThenName`), preventing stale in-memory CSV counts from leaking into `NameOnly` semantics during live-row outages.
 - 2026-05-09 follow-up: LeagueClass.Player.DriverCount CSV fallback now applies class-definition enablement gate.
   - CSV fallback cohort count now returns `0` for disabled class definitions, matching resolver behavior (`Source=NATIVE` invalid path) and avoiding fallback/live semantic drift.
 
