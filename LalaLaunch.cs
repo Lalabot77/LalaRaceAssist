@@ -5044,7 +5044,6 @@ namespace LaunchPlugin
         private bool _isTimingZeroTo100 = false;
         private bool _launchSuccessful = false;
         private bool _eventMarkerPressed = false;
-        private bool _propertySnapshotWriteFailed = false;
         private int _eventMarkerPressCount = 0;
         private int _propertySnapshotLastProcessedPressCount = 0;
         private bool _msgCxPressed = false;
@@ -5107,6 +5106,7 @@ namespace LaunchPlugin
         {
             _eventMarkerPressed = true;
             unchecked { _eventMarkerPressCount++; }
+            SimHub.Logging.Current.Info($"[LalaPlugin:Debug] Event Marker press registered (count={_eventMarkerPressCount}).");
             _eventMarkerCooldownTimer.Restart();
         }
 
@@ -8882,7 +8882,6 @@ namespace LaunchPlugin
             _msgCxPressed = false;
             _eventMarkerCooldownTimer.Reset();
             _eventMarkerPressed = false;
-            _propertySnapshotWriteFailed = false;
             _eventMarkerPressCount = 0;
             _propertySnapshotLastProcessedPressCount = 0;
             _propertySnapshotPreviousValues.Clear();
@@ -12716,7 +12715,6 @@ namespace LaunchPlugin
         private void MaybeWritePropertySnapshot(double sessionTimeSec)
         {
             bool enabled = SoftDebugEnabled && Settings?.EnablePropertySnapshot == true;
-            if (_propertySnapshotWriteFailed) return;
             int pressCount = _eventMarkerPressCount;
             if (!enabled)
             {
@@ -12733,8 +12731,7 @@ namespace LaunchPlugin
             }
             catch (Exception ex)
             {
-                _propertySnapshotWriteFailed = true;
-                SimHub.Logging.Current.Warn($"[LalaPlugin:Debug] Property snapshot export disabled after IO failure: {ex.Message}");
+                SimHub.Logging.Current.Warn($"[LalaPlugin:Debug] Property snapshot export failed for marker count {pressCount}: {ex.Message}");
             }
         }
 
@@ -12757,8 +12754,7 @@ namespace LaunchPlugin
             }
 
             rows.Sort((a, b) => string.CompareOrdinal(a.Item1, b.Item1));
-            string folder = ResolvePropertySnapshotLogsFolder();
-            Directory.CreateDirectory(folder);
+            string folder = ResolvePropertySnapshotPrimaryLogsFolder();
             string utcStamp = DateTime.UtcNow.ToString("yyyy-MM-dd_HH-mm-ss-fff", CultureInfo.InvariantCulture);
             string sessStamp = double.IsNaN(sessionTimeSec) || double.IsInfinity(sessionTimeSec)
                 ? "NA"
@@ -12789,18 +12785,13 @@ namespace LaunchPlugin
                 }
                 buffer.AppendLine();
             }
-            File.WriteAllText(filePath, buffer.ToString());
+            WriteSnapshotWithFallback(filePath, buffer.ToString());
 
             if (Settings?.PropertySnapshotRollingCombinedCsv == true)
             {
                 string rollingPath = Path.Combine(folder, "PropertySnapshot_Rolling.csv");
-                bool newFile = !File.Exists(rollingPath);
+                const string rollingHeader = "SnapshotUtc,SessionTimeSec,SimHubProperty,InternalSource,Value,GroupType,ChangedVsPrevious";
                 var rolling = new StringBuilder(8192);
-                if (newFile)
-                {
-                    rolling.Append("SnapshotUtc,SessionTimeSec,SimHubProperty,InternalSource,Value,GroupType,ChangedVsPrevious");
-                    rolling.AppendLine();
-                }
                 foreach (var row in rows)
                 {
                     rolling.Append(SanitizeCsvValue(utcStamp)).Append(',')
@@ -12818,13 +12809,13 @@ namespace LaunchPlugin
                     rolling.Append(',').Append(changedText);
                     rolling.AppendLine();
                 }
-                File.AppendAllText(rollingPath, rolling.ToString());
+                AppendSnapshotRollingWithFallback(rollingPath, rolling.ToString(), rollingHeader);
             }
 
             _propertySnapshotPreviousValues = currentValues;
         }
 
-        private static string ResolvePropertySnapshotLogsFolder()
+        private static string ResolvePropertySnapshotPrimaryLogsFolder()
         {
             string programFilesX86 = Environment.GetFolderPath(Environment.SpecialFolder.ProgramFilesX86);
             if (!string.IsNullOrWhiteSpace(programFilesX86))
@@ -12832,7 +12823,56 @@ namespace LaunchPlugin
                 return Path.Combine(programFilesX86, "SimHub", "Logs", "LalaPluginData");
             }
 
+            return ResolvePropertySnapshotFallbackLogsFolder();
+        }
+
+        private static string ResolvePropertySnapshotFallbackLogsFolder()
+        {
             return Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.MyDocuments), "SimHub", "Logs", "LalaPluginData");
+        }
+
+        private void WriteSnapshotWithFallback(string primaryFilePath, string content)
+        {
+            try
+            {
+                Directory.CreateDirectory(Path.GetDirectoryName(primaryFilePath));
+                File.WriteAllText(primaryFilePath, content);
+                SimHub.Logging.Current.Info($"[LalaPlugin:Debug] Property snapshot write success: {primaryFilePath}");
+            }
+            catch (Exception primaryEx)
+            {
+                string fallbackFilePath = Path.Combine(ResolvePropertySnapshotFallbackLogsFolder(), Path.GetFileName(primaryFilePath));
+                Directory.CreateDirectory(Path.GetDirectoryName(fallbackFilePath));
+                File.WriteAllText(fallbackFilePath, content);
+                SimHub.Logging.Current.Warn($"[LalaPlugin:Debug] Property snapshot primary write failed; fallback path used: {fallbackFilePath}. Primary error: {primaryEx.Message}");
+            }
+        }
+
+        private void AppendSnapshotRollingWithFallback(string primaryFilePath, string content, string header)
+        {
+            try
+            {
+                Directory.CreateDirectory(Path.GetDirectoryName(primaryFilePath));
+                bool newFile = !File.Exists(primaryFilePath);
+                if (newFile)
+                {
+                    File.AppendAllText(primaryFilePath, header + Environment.NewLine);
+                }
+                File.AppendAllText(primaryFilePath, content);
+                SimHub.Logging.Current.Info($"[LalaPlugin:Debug] Property snapshot rolling append success: {primaryFilePath}");
+            }
+            catch (Exception primaryEx)
+            {
+                string fallbackFilePath = Path.Combine(ResolvePropertySnapshotFallbackLogsFolder(), Path.GetFileName(primaryFilePath));
+                Directory.CreateDirectory(Path.GetDirectoryName(fallbackFilePath));
+                bool fallbackNewFile = !File.Exists(fallbackFilePath);
+                if (fallbackNewFile)
+                {
+                    File.AppendAllText(fallbackFilePath, header + Environment.NewLine);
+                }
+                File.AppendAllText(fallbackFilePath, content);
+                SimHub.Logging.Current.Warn($"[LalaPlugin:Debug] Property snapshot rolling primary append failed; fallback path used: {fallbackFilePath}. Primary error: {primaryEx.Message}");
+            }
         }
 
         private bool IsPropertySnapshotGroupEnabled(string group)

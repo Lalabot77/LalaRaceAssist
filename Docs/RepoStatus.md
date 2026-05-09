@@ -1,3 +1,8 @@
+- 2026-05-09 property snapshot write-path hardening follow-up:
+  - snapshot one-shot and rolling writes now retry to Documents fallback when Program Files primary path fails during file write/append (including ACL-denied existing-folder cases);
+  - snapshot export no longer permanently disables after a single primary IO failure;
+  - added action-bounded diagnostics for marker press registration, snapshot write success, rolling append success, and fallback-path usage.
+
 - 2026-05-09 snapshot path alignment fix for Property Snapshot:
   - snapshot files now target `Program Files (x86)/SimHub/Logs/LalaPluginData` with Documents fallback when Program Files x86 path is unavailable.
 
