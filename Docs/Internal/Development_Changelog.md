@@ -10,6 +10,33 @@
 - Added checkbox-scoped group filtering (`Select All`, Fuel/Strategy, Car/Opp/H2H, Pit/PitExit, Shift Assist, Message System, League Class, Raw Debug) and optional rolling append output (`PropertySnapshot_Rolling.csv`).
 - Added core export `Debug.PropertySnapshotEnabled` (`1`/`0`) for dash/debug visibility.
 
+## 2026-05-09 — RaceFinish live-then-freeze player fields + frozen denominator exports
+- Classification: **both** (dash-facing RaceFinish behavior refinement + new exports + docs alignment).
+- Kept finish detection ownership unchanged (`Race.EndPhase` / class/player snapshot triggers remain the same seams); changes are constrained to `RaceFinish` display behavior.
+- Player-facing RaceFinish fields now publish neutral defaults before class snapshot, live values while class snapshot is active and player snapshot is pending, then freeze at player snapshot:
+  - `RaceFinish.PlayerOverallPosition`, `RaceFinish.PlayerClassPosition`,
+  - `RaceFinish.PlayerFuelLeft`,
+  - `RaceFinish.PlayerBestLap`, `RaceFinish.PlayerBestLapSec`.
+- Added frozen denominator exports for clean `Pxx / yy` finish rendering:
+  - `RaceFinish.PlayerOverallFieldSize`,
+  - `RaceFinish.PlayerClassFieldSize`.
+- Denominator exports now freeze at class snapshot activation (not player snapshot) to prevent dropout/quitter denominator shrink between leader finish and player finish.
+- `RaceFinish.PlayerOverallPosition` remains strict overall-rank semantics only (`PlayerLeaderboardPosition` source); no class-position fallback is used.
+- `RaceFinish.PlayerFinishGapSec` remains canonical gap-to-leader timer (`class-winner-finish -> player-finish` elapsed), and `RaceFinish.ClassWinnerGapSec` remains compatibility mirror only.
+
+- 2026-05-09 follow-up: CSV fallback player `+1` is now mode-gated.
+  - player-included increment no longer runs in non-CSV modes (`NameOnly`/`Disabled`) during live-row outages; this keeps outage behavior aligned with active mode semantics.
+- 2026-05-09 follow-up: preserved player-included cohort semantics in LeagueClass.Player.DriverCount CSV fallback.
+  - when live competing-driver rows are unavailable, CSV fallback now adds the player into cohort count unless the player already has a valid CSV membership in the same effective class.
+- 2026-05-09 follow-up: gated LeagueClass.Player.DriverCount CSV fallback by active League Class mode.
+  - CSV fallback cohort count now runs only in CSV-capable modes (`CsvOnly` / `CsvThenName`), preventing stale in-memory CSV counts from leaking into `NameOnly` semantics during live-row outages.
+- 2026-05-09 follow-up: LeagueClass.Player.DriverCount CSV fallback now applies class-definition enablement gate.
+  - CSV fallback cohort count now returns `0` for disabled class definitions, matching resolver behavior (`Source=NATIVE` invalid path) and avoiding fallback/live semantic drift.
+
+- 2026-05-09 LeagueClass.Player.DriverCount cohort-count reliability fix:
+  - fixed enabled+resolved League Class cases where `LeagueClass.Player.DriverCount` could publish `0` despite valid player class resolution and loaded CSV mappings.
+  - added live-row name fallback probes (`UserNameRaw`, `UserNameProcessed`) in the competing-driver scan path.
+  - added fallback to CSV cohort count for the resolved player class when live competing-driver identity rows are temporarily unavailable; native-class fallback behavior when League Class is disabled/unresolved remains unchanged.
 ## 2026-05-08 — RaceFinish split snapshots + player finish gap timer
 - Classification: **both** (RaceFinish contract refinement + dash-facing behavior update).
 - Refactored RaceFinish from single-shot capture to split stages:
