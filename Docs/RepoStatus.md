@@ -1,3 +1,6 @@
+- 2026-05-09 post-lifecycle sample anchoring follow-up landed:
+  - class-leader dynamic-reference crossing/wrap fallback now requires prior sample captured after lifecycle start (`SessionState>=5`);
+  - pre-transition sample evidence remains scoped to guarded already-crossed-on-transition path only.
 - 2026-05-09 pre-merge finish follow-up landed:
   - solo-class denominator behavior restored (`OpponentsInClassCount=0` now correctly freezes class field size as `1`);
   - dynamic finish-reference class-cross latch now requires true prior->current crossing evidence (wrap/already-crossed guards retained).

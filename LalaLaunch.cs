@@ -866,6 +866,7 @@ namespace LaunchPlugin
         private int _lastClassLeaderCarIdx = -1;
         private int _lastOverallLeaderCarIdx = -1;
         private int _lastClassLeaderLap = -1;
+        private bool _lastClassLeaderSampleFromPostLifecycle;
         private int _finishTimingLastSessionState = 0;
         private double _finishLifecycleReferencePct = double.NaN;
         private string _classBestResolveLastLogReason = string.Empty;
@@ -8448,6 +8449,7 @@ namespace LaunchPlugin
             _lastClassLeaderCarIdx = -1;
             _lastOverallLeaderCarIdx = -1;
             _lastClassLeaderLap = -1;
+            _lastClassLeaderSampleFromPostLifecycle = false;
             _finishTimingLastSessionState = 0;
             _finishLifecycleReferencePct = double.NaN;
             _lastCompletedLapForFinish = -1;
@@ -18579,11 +18581,13 @@ namespace LaunchPlugin
 
                     bool reachedDynamicFinishReference =
                         hasRef &&
+                        _lastClassLeaderSampleFromPostLifecycle &&
                         _lastClassLeaderCarIdx == classLeaderIdx &&
                         !double.IsNaN(_lastClassLeaderLapPct) &&
                         _lastClassLeaderLapPct < _finishLifecycleReferencePct &&
                         classLeaderPct >= _finishLifecycleReferencePct;
                     bool wrapAfterLifecycleStart =
+                        _lastClassLeaderSampleFromPostLifecycle &&
                         _lastClassLeaderCarIdx == classLeaderIdx &&
                         _lastClassLeaderLap >= 0 &&
                         (_lastClassLeaderLap < classLeaderLap ||
@@ -18626,6 +18630,7 @@ namespace LaunchPlugin
                 _lastClassLeaderLapPct = lapDistPct[classLeaderIdx];
                 _lastClassLeaderCarIdx = classLeaderIdx;
                 _lastClassLeaderLap = (carIdxLap != null && classLeaderIdx < carIdxLap.Length) ? carIdxLap[classLeaderIdx] : -1;
+                _lastClassLeaderSampleFromPostLifecycle = sessionStateNumeric >= 5;
             }
 
             if (canRunOverallFinishHeuristic)
