@@ -1,3 +1,5 @@
+- 2026-05-09 follow-up: CSV fallback player `+1` is now mode-gated.
+  - player-included increment no longer runs in non-CSV modes (`NameOnly`/`Disabled`) during live-row outages; this keeps outage behavior aligned with active mode semantics.
 - 2026-05-09 follow-up: preserved player-included cohort semantics in LeagueClass.Player.DriverCount CSV fallback.
   - when live competing-driver rows are unavailable, CSV fallback now adds the player into cohort count unless the player already has a valid CSV membership in the same effective class.
 - 2026-05-09 follow-up: gated LeagueClass.Player.DriverCount CSV fallback by active League Class mode.

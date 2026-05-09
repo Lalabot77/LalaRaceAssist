@@ -5592,6 +5592,13 @@ namespace LaunchPlugin
 
                 // Fallback path: when live competing-driver identity rows are unavailable,
                 // still provide player effective-class cohort size from valid CSV mappings.
+                var mode = (LeagueClassMode)(Settings?.LeagueClassMode ?? (int)LeagueClassMode.Disabled);
+                bool allowCsvFallback = mode == LeagueClassMode.CsvOnly || mode == LeagueClassMode.CsvThenName;
+                if (!allowCsvFallback)
+                {
+                    return 0;
+                }
+
                 int csvClassCount = _leagueClassResolver != null
                     ? _leagueClassResolver.CountValidCsvDriversInClass(Settings, player.Name)
                     : 0;
@@ -5602,7 +5609,8 @@ namespace LaunchPlugin
                 bool playerAlreadyRepresentedInCsv = _leagueClassResolver != null
                     && _leagueClassResolver.HasValidCsvMembership(Settings, playerUserId, player.Name);
 
-                // Preserve live-path cohort semantics: player is part of their own effective cohort.
+                // Preserve live-path cohort semantics: player is part of their own effective cohort,
+                // but only when CSV fallback semantics are active for the current mode.
                 if (!playerAlreadyRepresentedInCsv)
                 {
                     csvClassCount += 1;
