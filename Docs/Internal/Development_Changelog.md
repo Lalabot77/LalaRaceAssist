@@ -11,6 +11,7 @@
   - now captures dynamic finish reference pct from overall leader at `SessionState 4->5`,
   - class-finish fallback now uses class-leader own crossing/wrap evidence against that dynamic reference,
   - includes guarded already-crossed-on-transition path requiring credible prior sampled class-leader pct evidence.
+- 2026-05-09 pre-merge follow-up: restored valid solo-class denominator behavior (`OpponentsInClassCount>=0 => +1`) and tightened dynamic finish-reference latch to require true prior->current crossing evidence (wrap/already-crossed guards unchanged).
 
 ## 2026-05-09 — RaceFinish replay player-cross fallback + class field-size freeze reliability fix
 

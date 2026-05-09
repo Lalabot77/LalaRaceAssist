@@ -8642,7 +8642,7 @@ namespace LaunchPlugin
         private int ResolveRaceFinishLiveClassFieldSize(PluginManager pluginManager, int playerCarIdx)
         {
             int classOpponentsCount = SafeReadInt(pluginManager, "DataCorePlugin.GameRawData.Telemetry.OpponentsInClassCount", int.MinValue);
-            if (classOpponentsCount > 0)
+            if (classOpponentsCount >= 0)
             {
                 return classOpponentsCount + 1;
             }
@@ -18577,7 +18577,12 @@ namespace LaunchPlugin
                                   _finishLifecycleReferencePct >= 0.0 &&
                                   _finishLifecycleReferencePct <= 1.0;
 
-                    bool reachedDynamicFinishReference = hasRef && classLeaderPct >= _finishLifecycleReferencePct;
+                    bool reachedDynamicFinishReference =
+                        hasRef &&
+                        _lastClassLeaderCarIdx == classLeaderIdx &&
+                        !double.IsNaN(_lastClassLeaderLapPct) &&
+                        _lastClassLeaderLapPct < _finishLifecycleReferencePct &&
+                        classLeaderPct >= _finishLifecycleReferencePct;
                     bool wrapAfterLifecycleStart =
                         _lastClassLeaderCarIdx == classLeaderIdx &&
                         _lastClassLeaderLap >= 0 &&

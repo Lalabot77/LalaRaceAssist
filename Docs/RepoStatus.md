@@ -1,3 +1,6 @@
+- 2026-05-09 pre-merge finish follow-up landed:
+  - solo-class denominator behavior restored (`OpponentsInClassCount=0` now correctly freezes class field size as `1`);
+  - dynamic finish-reference class-cross latch now requires true prior->current crossing evidence (wrap/already-crossed guards retained).
 - 2026-05-09 finish-semantics correction landed:
   - SessionState `4->5` is now documented/treated as overall race lifecycle/overall-leader finish phase (not unconditional class-leader finish in multiclass);
   - class-leader finish remains independently resolved; multiclass lifecycle fallback now uses dynamic finish-reference pct capture at `SessionState 4->5` plus class-leader own crossing/wrap evidence (no class-vs-overall lap-count comparison);
