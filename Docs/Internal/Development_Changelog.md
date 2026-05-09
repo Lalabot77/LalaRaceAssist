@@ -1,3 +1,11 @@
+## 2026-05-09 — Finish semantics correction: SessionState 5 is overall lifecycle, class finish remains independently resolved
+
+- Corrected finish model: `SessionState 4->5` is treated as overall race lifecycle / overall-leader finish phase, not an unconditional player-class-leader finish signal in multiclass.
+- `Race.ClassLeaderHasFinished` remains primarily driven by resolved class-leader per-car finish-like flags, with multiclass lifecycle-equivalence fallback only when class/overall identities are provably equivalent (`same car`) or class leader is already on a higher lap than overall leader once session enters `state>=5`.
+- `RaceFinish.ClassSnapshotActive` continues to key from `Race.ClassLeaderHasFinished` (plus `SessionState==6` safety fallback), preventing blind SessionState-only class snapshot capture in multiclass.
+- `RaceFinish.PlayerSnapshotActive` remains player-perspective: per-car finish-like flags and robust player-checkered seams (`GameData.Flag_Checkered` / `SessionFlagsDetails.IsCheckered*`) before `SessionState==6` safety fallback.
+- Preserved split-stage snapshot architecture and Race.EndPhase semantics; no dashboard ownership changes.
+
 ## 2026-05-09 — RaceFinish replay player-cross fallback + class field-size freeze reliability fix
 
 - Behavior change: `RaceFinish.PlayerSnapshotActive` can now trigger before `SessionState==6` fallback when replay/fast-forward misses player finish-like `CarIdxSessionFlags` bits.

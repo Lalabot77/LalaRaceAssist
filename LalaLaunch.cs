@@ -18541,6 +18541,32 @@ namespace LaunchPlugin
                     $"[LalaPlugin:Finish] overall_finish trigger=state_backup state={sessionStateNumeric} phase={RaceEndPhaseText} conf={RaceEndPhaseConfidence}");
             }
 
+            bool classLeaderFinishByOverallLifecycleEquivalence = false;
+            if (isMultiClassSession && hasSessionState && sessionStateNumeric >= 5 &&
+                classLeaderIdx >= 0 && overallLeaderIdx >= 0 &&
+                lapDistPct != null && carIdxLap != null &&
+                classLeaderIdx < lapDistPct.Length && overallLeaderIdx < lapDistPct.Length &&
+                classLeaderIdx < carIdxLap.Length && overallLeaderIdx < carIdxLap.Length)
+            {
+                if (classLeaderIdx == overallLeaderIdx)
+                {
+                    classLeaderFinishByOverallLifecycleEquivalence = true;
+                }
+                else
+                {
+                    int classLeaderLap = carIdxLap[classLeaderIdx];
+                    int overallLeaderLap = carIdxLap[overallLeaderIdx];
+                    classLeaderFinishByOverallLifecycleEquivalence = classLeaderLap > overallLeaderLap;
+                }
+            }
+
+            if (!ClassLeaderHasFinished && classLeaderFinishByOverallLifecycleEquivalence)
+            {
+                ClassLeaderHasFinished = true;
+                SimHub.Logging.Current.Info(
+                    $"[LalaPlugin:Finish] class_finish trigger=overall_lifecycle_equivalence classIdx={classLeaderIdx} overallIdx={overallLeaderIdx}");
+            }
+
             bool canRunClassFinishHeuristic = isTimedRace && _timerZeroSeen && classLeaderIdx >= 0;
             bool canRunOverallFinishHeuristic = isTimedRace && _timerZeroSeen && !hasSessionState && overallLeaderIdx >= 0;
 
