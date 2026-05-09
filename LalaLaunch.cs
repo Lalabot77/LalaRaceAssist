@@ -8601,7 +8601,7 @@ namespace LaunchPlugin
 
             if (playerCarIdx >= 0)
             {
-                int driverCount = ComputeEffectiveClassDriverCount(pluginManager, playerCarIdx);
+                int driverCount = GetLeagueClassPlayerDriverCount();
                 if (driverCount > 0)
                 {
                     return driverCount;
