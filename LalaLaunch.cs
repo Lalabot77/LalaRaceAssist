@@ -18565,13 +18565,13 @@ namespace LaunchPlugin
         private string _finishTimingSessionType = string.Empty;
 
         private void UpdateFinishTiming(
-        PluginManager pluginManager,
-        GameData data,
-        double sessionTime,
-        double sessionTimeRemain,
-        int completedLaps,
-        long sessionId,
-        string sessionType)
+     PluginManager pluginManager,
+     GameData data,
+     double sessionTime,
+     double sessionTimeRemain,
+     int completedLaps,
+     long sessionId,
+     string sessionType)
         {
             bool isRace = IsRaceSession(sessionType);
 
@@ -18615,7 +18615,6 @@ namespace LaunchPlugin
             bool enteredOverallFinishLifecycle = hasSessionState && sessionStateNumeric >= 5 && _finishTimingLastSessionState < 5;
             int playerCarIdx = GetInt(pluginManager, "DataCorePlugin.GameRawData.Telemetry.PlayerCarIdx", -1);
 
-            // Detect first genuine crossing to zero
             bool crossedToZero =
                 hasRemain &&
                 !double.IsNaN(_prevSessionTimeRemain) &&
@@ -18703,6 +18702,7 @@ namespace LaunchPlugin
             bool isMultiClassSession = IsMultiClassSession(pluginManager);
             var trackSurfaces = GetIntArray(pluginManager, "DataCorePlugin.GameRawData.Telemetry.CarIdxTrackSurface");
             var lapDistPct = GetDoubleArray(pluginManager, "DataCorePlugin.GameRawData.Telemetry.CarIdxLapDistPct");
+            var carIdxLap = GetIntArray(pluginManager, "DataCorePlugin.GameRawData.Telemetry.CarIdxLap");
             var overallPositions = GetIntArray(pluginManager, "DataCorePlugin.GameRawData.Telemetry.CarIdxPosition");
             var classPositions = GetIntArray(pluginManager, "DataCorePlugin.GameRawData.Telemetry.CarIdxClassPosition");
             var carIdxSessionFlags = GetIntArray(pluginManager, "DataCorePlugin.GameRawData.Telemetry.CarIdxSessionFlags");
@@ -18785,12 +18785,17 @@ namespace LaunchPlugin
                         !double.IsNaN(_lastClassLeaderLapPct) &&
                         _lastClassLeaderLapPct < _finishLifecycleReferencePct &&
                         classLeaderPct >= _finishLifecycleReferencePct;
+
                     bool wrapAfterLifecycleStart =
                         _lastClassLeaderSampleFromPostLifecycle &&
                         _lastClassLeaderCarIdx == classLeaderIdx &&
                         _lastClassLeaderLap >= 0 &&
                         (_lastClassLeaderLap < classLeaderLap ||
-                         (!double.IsNaN(_lastClassLeaderLapPct) && hasRef && _lastClassLeaderLapPct >= _finishLifecycleReferencePct && classLeaderPct < _finishLifecycleReferencePct));
+                         (!double.IsNaN(_lastClassLeaderLapPct) &&
+                          hasRef &&
+                          _lastClassLeaderLapPct >= _finishLifecycleReferencePct &&
+                          classLeaderPct < _finishLifecycleReferencePct));
+
                     bool likelyAlreadyCrossedOnTransition =
                         enteredOverallFinishLifecycle &&
                         _lastClassLeaderCarIdx == classLeaderIdx &&
