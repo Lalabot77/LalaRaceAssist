@@ -8633,8 +8633,8 @@ namespace LaunchPlugin
 
         private int ResolveRaceFinishLiveClassFieldSize(PluginManager pluginManager, int playerCarIdx)
         {
-            int classOpponentsCount = SafeReadInt(pluginManager, "DataCorePlugin.GameRawData.Telemetry.OpponentsInClassCount", 0);
-            if (classOpponentsCount > 0)
+            int classOpponentsCount = SafeReadInt(pluginManager, "DataCorePlugin.GameRawData.Telemetry.OpponentsInClassCount", int.MinValue);
+            if (classOpponentsCount >= 0)
             {
                 return classOpponentsCount + 1;
             }
