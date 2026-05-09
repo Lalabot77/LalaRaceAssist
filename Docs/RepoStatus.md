@@ -1,6 +1,7 @@
 - 2026-05-09 RaceFinish live-then-freeze follow-up landed:
-  - player-facing RaceFinish fields (`PlayerOverallPosition`, `PlayerClassPosition`, `PlayerFuelLeft`, `PlayerBestLap*`) now publish live values while player snapshot is pending and freeze at player snapshot;
-  - added `RaceFinish.PlayerOverallFieldSize` and `RaceFinish.PlayerClassFieldSize` for stable `Pxx / yy` dash rendering at finish;
+  - player-facing RaceFinish fields (`PlayerOverallPosition`, `PlayerClassPosition`, `PlayerFuelLeft`, `PlayerBestLap*`) now remain neutral before class snapshot, publish live values while class snapshot is active and player snapshot pending, then freeze at player snapshot;
+  - `RaceFinish.PlayerOverallFieldSize` and `RaceFinish.PlayerClassFieldSize` now freeze at class snapshot for stable `Pxx / yy` dash denominators through player finish/session end;
+  - overall position fallback was tightened to preserve strict overall-rank semantics only (no class-position fallback when overall source is unavailable);
   - `RaceFinish.PlayerFinishGapSec` remains canonical gap timer and `ClassWinnerGapSec` remains compatibility mirror.
 
 - 2026-05-08 docs sweep landed:

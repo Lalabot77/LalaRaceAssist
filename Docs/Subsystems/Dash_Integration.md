@@ -44,7 +44,8 @@ This document is the canonical dash-facing contract layer. It does **not** redef
 - For finish/post-race summary widgets, use frozen `RaceFinish.*` exports instead of live `ClassLeader.*`/`ClassBest.*` values. `RaceFinish` is split-stage: class snapshot and player snapshot, and resets when session leaves post-finish lifecycle.
 - `RaceFinish.Active` means either stage is active (`ClassSnapshotActive || PlayerSnapshotActive`).
 - Class stage captures class-winner identity when class winner finishes; player stage captures player fields (position/fuel/player best/class best) when player finishes.
-- While class snapshot is active and player snapshot is still pending, player-facing `RaceFinish` fields publish live values (position, field sizes, fuel, best lap) so finish widgets can populate immediately; these fields freeze once player snapshot activates.
+- Before class snapshot, player-facing `RaceFinish` fields stay neutral defaults for finish widgets (`0` / `"-"`). While class snapshot is active and player snapshot is still pending, player-facing fields publish live values (position, fuel, best lap), then freeze once player snapshot activates.
+- `RaceFinish.PlayerOverallFieldSize` / `RaceFinish.PlayerClassFieldSize` freeze at class snapshot (not player snapshot) so `Pxx / yy` denominators do not drift when drivers quit before player finish.
 - `RaceFinish.PlayerFinishGapSec` (and compatibility mirror `ClassWinnerGapSec`) is a live timer after class snapshot and freezes at player snapshot.
 - Strategy fuel guidance should consume plugin-owned tactical exports directly:
   - `Fuel.RequiredBurnToEnd*` for burn-to-end guidance/state/source,
