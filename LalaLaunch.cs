@@ -12632,7 +12632,7 @@ namespace LaunchPlugin
             }
 
             rows.Sort((a, b) => string.CompareOrdinal(a.Item1, b.Item1));
-            string folder = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.MyDocuments), "SimHub", "Logs", "LalapluginData");
+            string folder = ResolvePropertySnapshotLogsFolder();
             Directory.CreateDirectory(folder);
             string utcStamp = DateTime.UtcNow.ToString("yyyy-MM-dd_HH-mm-ss-fff", CultureInfo.InvariantCulture);
             string sessStamp = double.IsNaN(sessionTimeSec) || double.IsInfinity(sessionTimeSec)
@@ -12697,6 +12697,17 @@ namespace LaunchPlugin
             }
 
             _propertySnapshotPreviousValues = currentValues;
+        }
+
+        private static string ResolvePropertySnapshotLogsFolder()
+        {
+            string programFilesX86 = Environment.GetFolderPath(Environment.SpecialFolder.ProgramFilesX86);
+            if (!string.IsNullOrWhiteSpace(programFilesX86))
+            {
+                return Path.Combine(programFilesX86, "SimHub", "Logs", "LalaPluginData");
+            }
+
+            return Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.MyDocuments), "SimHub", "Logs", "LalaPluginData");
         }
 
         private bool IsPropertySnapshotGroupEnabled(string group)

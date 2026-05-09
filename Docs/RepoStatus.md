@@ -1,3 +1,6 @@
+- 2026-05-09 snapshot path alignment fix for Property Snapshot:
+  - snapshot files now target `Program Files (x86)/SimHub/Logs/LalaPluginData` with Documents fallback when Program Files x86 path is unavailable.
+
 - 2026-05-09 stale disabled-window marker presses fix for Property Snapshot:
   - while snapshot mode is disabled, marker press counter is now consumed so old presses do not trigger captures on later re-enable in the same session.
 
