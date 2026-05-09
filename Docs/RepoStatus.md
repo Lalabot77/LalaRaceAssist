@@ -1,3 +1,9 @@
+- 2026-05-09 RaceFinish live-then-freeze follow-up landed:
+  - player-facing RaceFinish fields (`PlayerOverallPosition`, `PlayerClassPosition`, `PlayerFuelLeft`, `PlayerBestLap*`) now remain neutral before class snapshot, publish live values while class snapshot is active and player snapshot pending, then freeze at player snapshot;
+  - `RaceFinish.PlayerOverallFieldSize` and `RaceFinish.PlayerClassFieldSize` now freeze at class snapshot for stable `Pxx / yy` dash denominators through player finish/session end;
+  - overall position fallback was tightened to preserve strict overall-rank semantics only (no class-position fallback when overall source is unavailable);
+  - `RaceFinish.PlayerFinishGapSec` remains canonical gap timer and `ClassWinnerGapSec` remains compatibility mirror.
+
 - 2026-05-08 docs sweep landed:
   - added canonical subsystem documentation `Docs/Subsystems/League_Class_System.md` covering resolver precedence, fallback hierarchy, UI workflow, export contract, and ownership boundaries;
   - aligned subsystem/internal cross-references (`Project_Index`, `H2H`, `Dash_Integration`, `SimHubParameterInventory`, `Plugin_UI_Tooltips`) to point to the canonical League Class doc and reduce duplication/stale drift.

@@ -1,3 +1,17 @@
+## 2026-05-09 — RaceFinish live-then-freeze player fields + frozen denominator exports
+- Classification: **both** (dash-facing RaceFinish behavior refinement + new exports + docs alignment).
+- Kept finish detection ownership unchanged (`Race.EndPhase` / class/player snapshot triggers remain the same seams); changes are constrained to `RaceFinish` display behavior.
+- Player-facing RaceFinish fields now publish neutral defaults before class snapshot, live values while class snapshot is active and player snapshot is pending, then freeze at player snapshot:
+  - `RaceFinish.PlayerOverallPosition`, `RaceFinish.PlayerClassPosition`,
+  - `RaceFinish.PlayerFuelLeft`,
+  - `RaceFinish.PlayerBestLap`, `RaceFinish.PlayerBestLapSec`.
+- Added frozen denominator exports for clean `Pxx / yy` finish rendering:
+  - `RaceFinish.PlayerOverallFieldSize`,
+  - `RaceFinish.PlayerClassFieldSize`.
+- Denominator exports now freeze at class snapshot activation (not player snapshot) to prevent dropout/quitter denominator shrink between leader finish and player finish.
+- `RaceFinish.PlayerOverallPosition` remains strict overall-rank semantics only (`PlayerLeaderboardPosition` source); no class-position fallback is used.
+- `RaceFinish.PlayerFinishGapSec` remains canonical gap-to-leader timer (`class-winner-finish -> player-finish` elapsed), and `RaceFinish.ClassWinnerGapSec` remains compatibility mirror only.
+
 - 2026-05-09 follow-up: CSV fallback player `+1` is now mode-gated.
   - player-included increment no longer runs in non-CSV modes (`NameOnly`/`Disabled`) during live-row outages; this keeps outage behavior aligned with active mode semantics.
 - 2026-05-09 follow-up: preserved player-included cohort semantics in LeagueClass.Player.DriverCount CSV fallback.
