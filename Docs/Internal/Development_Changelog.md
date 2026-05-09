@@ -1,4 +1,5 @@
 ## 2026-05-09 — Debug Property Snapshot CSV system (Event Marker-triggered)
+- Follow-up review fixes: property snapshot writes are now guarded by failure handling (one-time disable + warning on IO exceptions), and rolling CSV schema is now stable with always-present `ChangedVsPrevious` column (`NA` when changed-comparison is disabled for that capture).
 - Classification: **both** (new debug settings/workflow + internal docs alignment).
 - Added Debug `Enable Property Snapshot` flow: when enabled and Event Marker is pressed, plugin writes `PropertySnapshot_<UTC>_Sess<SessionTimeSec>.csv` under `SimHub/Logs/LalapluginData/`.
 - Snapshot rows include `SimHubProperty`, `InternalSource`, `Value`, `GroupType`; optional `ChangedVsPrevious` column compares values against the prior marker snapshot (`NA` when no baseline exists).

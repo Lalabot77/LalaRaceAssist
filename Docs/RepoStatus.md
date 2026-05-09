@@ -1,3 +1,7 @@
+- 2026-05-09 follow-up review bugfixes for Property Snapshot:
+  - guarded snapshot file writes against IO exceptions with one-time self-disable + warning;
+  - stabilized rolling CSV schema by always keeping `ChangedVsPrevious` column present (`NA` when compare mode is off).
+
 - 2026-05-09 debug snapshot system landed:
   - added Event Marker-triggered `PropertySnapshot_<UTC>_Sess<SessionTimeSec>.csv` debug export (group-filtered property snapshot with `SimHubProperty/InternalSource/Value/GroupType`);
   - optional `ChangedVsPrevious` column compares against prior snapshot (`NA` when no baseline);

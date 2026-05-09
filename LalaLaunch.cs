@@ -5042,6 +5042,7 @@ namespace LaunchPlugin
         private bool _launchSuccessful = false;
         private bool _eventMarkerPressed = false;
         private bool _propertySnapshotLastMarkerState = false;
+        private bool _propertySnapshotWriteFailed = false;
         private bool _msgCxPressed = false;
         private bool _pitScreenActive = false;
         private bool _pitScreenDismissed = false;
@@ -8756,6 +8757,7 @@ namespace LaunchPlugin
             _eventMarkerCooldownTimer.Reset();
             _eventMarkerPressed = false;
             _propertySnapshotLastMarkerState = false;
+            _propertySnapshotWriteFailed = false;
             _propertySnapshotPreviousValues.Clear();
 
             _shiftAssistAudio?.HardStop();
@@ -12586,12 +12588,21 @@ namespace LaunchPlugin
         private void MaybeWritePropertySnapshot(double sessionTimeSec)
         {
             bool enabled = SoftDebugEnabled && Settings?.EnablePropertySnapshot == true;
+            if (_propertySnapshotWriteFailed) return;
             bool markerNow = _eventMarkerPressed;
             bool risingEdge = markerNow && !_propertySnapshotLastMarkerState;
             _propertySnapshotLastMarkerState = markerNow;
             if (!enabled || !risingEdge) return;
 
-            WritePropertySnapshotCsv(sessionTimeSec);
+            try
+            {
+                WritePropertySnapshotCsv(sessionTimeSec);
+            }
+            catch (Exception ex)
+            {
+                _propertySnapshotWriteFailed = true;
+                SimHub.Logging.Current.Warn($"[LalaPlugin:Debug] Property snapshot export disabled after IO failure: {ex.Message}");
+            }
         }
 
         private void WritePropertySnapshotCsv(double sessionTimeSec)
@@ -12622,8 +12633,9 @@ namespace LaunchPlugin
             string filePath = Path.Combine(folder, $"PropertySnapshot_{utcStamp}_Sess{sessStamp}.csv");
 
             var buffer = new StringBuilder(8192);
+            bool includeChanged = Settings?.PropertySnapshotIncludeChangedValues == true;
             buffer.Append("SimHubProperty,InternalSource,Value,GroupType");
-            if (Settings?.PropertySnapshotIncludeChangedValues == true) buffer.Append(",ChangedVsPrevious");
+            if (includeChanged) buffer.Append(",ChangedVsPrevious");
             buffer.AppendLine();
             foreach (var row in rows)
             {
@@ -12631,7 +12643,7 @@ namespace LaunchPlugin
                     .Append(SanitizeCsvValue(row.Item2)).Append(',')
                     .Append(SanitizeCsvValue(row.Item3)).Append(',')
                     .Append(SanitizeCsvValue(row.Item4));
-                if (Settings?.PropertySnapshotIncludeChangedValues == true)
+                if (includeChanged)
                 {
                     if (_propertySnapshotPreviousValues.TryGetValue(row.Item1, out var prev))
                     {
@@ -12653,8 +12665,7 @@ namespace LaunchPlugin
                 var rolling = new StringBuilder(8192);
                 if (newFile)
                 {
-                    rolling.Append("SnapshotUtc,SessionTimeSec,SimHubProperty,InternalSource,Value,GroupType");
-                    if (Settings?.PropertySnapshotIncludeChangedValues == true) rolling.Append(",ChangedVsPrevious");
+                    rolling.Append("SnapshotUtc,SessionTimeSec,SimHubProperty,InternalSource,Value,GroupType,ChangedVsPrevious");
                     rolling.AppendLine();
                 }
                 foreach (var row in rows)
@@ -12665,17 +12676,13 @@ namespace LaunchPlugin
                         .Append(SanitizeCsvValue(row.Item2)).Append(',')
                         .Append(SanitizeCsvValue(row.Item3)).Append(',')
                         .Append(SanitizeCsvValue(row.Item4));
-                    if (Settings?.PropertySnapshotIncludeChangedValues == true)
+                    string changedText = "NA";
+                    if (_propertySnapshotPreviousValues.TryGetValue(row.Item1, out var prev))
                     {
-                        if (_propertySnapshotPreviousValues.TryGetValue(row.Item1, out var prev))
-                        {
-                            rolling.Append(',').Append(string.Equals(prev, row.Item3, StringComparison.Ordinal) ? "0" : "1");
-                        }
-                        else
-                        {
-                            rolling.Append(",NA");
-                        }
+                        changedText = string.Equals(prev, row.Item3, StringComparison.Ordinal) ? "0" : "1";
                     }
+                    if (!includeChanged) changedText = "NA";
+                    rolling.Append(',').Append(changedText);
                     rolling.AppendLine();
                 }
                 File.AppendAllText(rollingPath, rolling.ToString());
