@@ -1,3 +1,6 @@
+- 2026-05-09 missing sanitizer helper fix for Property Snapshot:
+  - added concrete CSV sanitize/value-string helpers used by snapshot writer to restore compile validity and safe CSV quoting.
+
 - 2026-05-09 follow-up review bugfixes for Property Snapshot:
   - guarded snapshot file writes against IO exceptions with one-time self-disable + warning;
   - stabilized rolling CSV schema by always keeping `ChangedVsPrevious` column present (`NA` when compare mode is off).

@@ -12617,7 +12617,7 @@ namespace LaunchPlugin
 
                 object rawValue = null;
                 try { rawValue = kvp.Value(); } catch { rawValue = null; }
-                string valueText = SanitizeCsvValue(rawValue);
+                string valueText = SnapshotValueToString(rawValue);
                 string source = propertyName;
                 currentValues[propertyName] = valueText;
                 rows.Add(Tuple.Create(propertyName, source, valueText, group));
@@ -12718,6 +12718,35 @@ namespace LaunchPlugin
             if (propertyName.StartsWith("LeagueClass.", StringComparison.Ordinal)) return "LeagueClass";
             if (propertyName.StartsWith("Debug.", StringComparison.Ordinal) || propertyName.StartsWith("Car.Debug.", StringComparison.Ordinal)) return "RawDebug";
             return "RawDebug";
+        }
+
+        private static string SnapshotValueToString(object value)
+        {
+            if (value == null) return string.Empty;
+            if (value is string s) return s;
+            if (value is bool b) return b ? "true" : "false";
+            if (value is IFormattable f) return f.ToString(null, CultureInfo.InvariantCulture) ?? string.Empty;
+            return Convert.ToString(value, CultureInfo.InvariantCulture) ?? string.Empty;
+        }
+
+        private static string SanitizeCsvValue(object value)
+        {
+            string text = SnapshotValueToString(value);
+            if (string.IsNullOrEmpty(text)) return string.Empty;
+
+            bool needsQuotes = false;
+            for (int i = 0; i < text.Length; i++)
+            {
+                char c = text[i];
+                if (c == ',' || c == '"' || c == '\n' || c == '\r')
+                {
+                    needsQuotes = true;
+                    break;
+                }
+            }
+
+            if (!needsQuotes) return text;
+            return "\"" + text.Replace("\"", "\"\"") + "\"";
         }
 
         private static void AppendCarSaDebugHeaderColumn(StringBuilder buffer, string columnName)
