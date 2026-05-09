@@ -430,6 +430,27 @@
                         <styles:SHToggleCheckbox Content="PitExit Verbose Logging" Margin="0,10,0,0"
                                                  IsChecked="{Binding Settings.PitExitVerboseLogging, Mode=TwoWay}"
                                                  ToolTip="Adds PitExit math audit details to pit-in snapshots for troubleshooting."/>
+                        <StackPanel Orientation="Vertical" Margin="0,10,0,0">
+                            <styles:SHToggleCheckbox x:Name="PropertySnapshotToggle"
+                                                     Content="Enable Property Snapshot"
+                                                     IsChecked="{Binding Settings.EnablePropertySnapshot, Mode=TwoWay}"
+                                                     ToolTip="When enabled, pressing Event Marker writes a CSV snapshot of plugin properties."/>
+                            <WrapPanel Margin="22,6,0,0"
+                                       IsEnabled="{Binding ElementName=PropertySnapshotToggle, Path=IsChecked}">
+                                <CheckBox Content="Select All"
+                                          Margin="0,0,12,6"
+                                          IsChecked="{Binding Settings.PropertySnapshotSelectAllGroups, Mode=TwoWay}"/>
+                                <CheckBox Content="Fuel/Strategy" Margin="0,0,12,6" IsChecked="{Binding Settings.PropertySnapshotGroupFuelStrategy, Mode=TwoWay}"/>
+                                <CheckBox Content="Car/Opp/H2H" Margin="0,0,12,6" IsChecked="{Binding Settings.PropertySnapshotGroupCarOppH2H, Mode=TwoWay}"/>
+                                <CheckBox Content="Pit/PitExit" Margin="0,0,12,6" IsChecked="{Binding Settings.PropertySnapshotGroupPitPitExit, Mode=TwoWay}"/>
+                                <CheckBox Content="Shift Assist" Margin="0,0,12,6" IsChecked="{Binding Settings.PropertySnapshotGroupShiftAssist, Mode=TwoWay}"/>
+                                <CheckBox Content="Message System" Margin="0,0,12,6" IsChecked="{Binding Settings.PropertySnapshotGroupMessageSystem, Mode=TwoWay}"/>
+                                <CheckBox Content="League Class" Margin="0,0,12,6" IsChecked="{Binding Settings.PropertySnapshotGroupLeagueClass, Mode=TwoWay}"/>
+                                <CheckBox Content="Raw Debug" Margin="0,0,12,6" IsChecked="{Binding Settings.PropertySnapshotGroupRawDebug, Mode=TwoWay}"/>
+                                <CheckBox Content="Include changed vs previous" Margin="0,0,12,6" IsChecked="{Binding Settings.PropertySnapshotIncludeChangedValues, Mode=TwoWay}"/>
+                                <CheckBox Content="Write rolling combined CSV" Margin="0,0,12,6" IsChecked="{Binding Settings.PropertySnapshotRollingCombinedCsv, Mode=TwoWay}"/>
+                            </WrapPanel>
+                        </StackPanel>
                         <StackPanel Orientation="Horizontal" Margin="0,10,0,0">
                             <styles:SHToggleCheckbox Content="OffTrack Debug CSV" Margin="0,0,15,0"
                                                      IsChecked="{Binding Settings.EnableOffTrackDebugCsv, Mode=TwoWay}"

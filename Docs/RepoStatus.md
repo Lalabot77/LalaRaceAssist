@@ -1,3 +1,25 @@
+- 2026-05-09 snapshot path alignment fix for Property Snapshot:
+  - snapshot files now target `Program Files (x86)/SimHub/Logs/LalaPluginData` with Documents fallback when Program Files x86 path is unavailable.
+
+- 2026-05-09 stale disabled-window marker presses fix for Property Snapshot:
+  - while snapshot mode is disabled, marker press counter is now consumed so old presses do not trigger captures on later re-enable in the same session.
+
+- 2026-05-09 per-press trigger + Car.Debug bucket fix for Property Snapshot:
+  - `Car.Debug.*` now routes to `RawDebug` classification bucket;
+  - snapshot trigger now processes each Event Marker action press (counter-based), including repeated presses during the event pulse window.
+
+- 2026-05-09 missing sanitizer helper fix for Property Snapshot:
+  - added concrete CSV sanitize/value-string helpers used by snapshot writer to restore compile validity and safe CSV quoting.
+
+- 2026-05-09 follow-up review bugfixes for Property Snapshot:
+  - guarded snapshot file writes against IO exceptions with one-time self-disable + warning;
+  - stabilized rolling CSV schema by always keeping `ChangedVsPrevious` column present (`NA` when compare mode is off).
+
+- 2026-05-09 debug snapshot system landed:
+  - added Event Marker-triggered `PropertySnapshot_<UTC>_Sess<SessionTimeSec>.csv` debug export (group-filtered property snapshot with `SimHubProperty/InternalSource/Value/GroupType`);
+  - optional `ChangedVsPrevious` column compares against prior snapshot (`NA` when no baseline);
+  - optional rolling append output `PropertySnapshot_Rolling.csv`;
+  - added core visibility export `Debug.PropertySnapshotEnabled`.
 - 2026-05-09 RaceFinish live-then-freeze follow-up landed:
   - player-facing RaceFinish fields (`PlayerOverallPosition`, `PlayerClassPosition`, `PlayerFuelLeft`, `PlayerBestLap*`) now remain neutral before class snapshot, publish live values while class snapshot is active and player snapshot pending, then freeze at player snapshot;
   - `RaceFinish.PlayerOverallFieldSize` and `RaceFinish.PlayerClassFieldSize` now freeze at class snapshot for stable `Pxx / yy` dash denominators through player finish/session end;
