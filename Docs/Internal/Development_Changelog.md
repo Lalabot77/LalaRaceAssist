@@ -10,6 +10,8 @@
   - frozen final value when player snapshot activates.
 - `RaceFinish.ClassWinnerGapSec` now mirrors `PlayerFinishGapSec` for compatibility.
 - Primary triggers use per-car finish-like flags; SessionState `6` remains fallback-only for missing captures.
+- Class snapshot now gates activation on usable class-winner identity (`ClassLeaderValid` + leader idx + non-blank identity fields), with held-last-valid identity fallback; if identity is still unavailable, capture retries until valid identity appears or SessionState `6` forces last-resort fallback.
+- `PlayerFinishGapSec` timer start now requires an identity-backed class snapshot; SessionState `6` fallback with missing identity does not start a live class-finish timer.
 
 ## 2026-05-08 — Finish detection phase 1: per-car session-flag authority for class/overall leader finish latches
 - Classification: **both** (runtime finish-latch semantic correction + docs alignment).

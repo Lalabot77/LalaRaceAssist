@@ -844,6 +844,10 @@ namespace LaunchPlugin
         private int _raceFinishPlayerCaptureSessionState;
         private double _raceFinishClassFinishSessionTimeSec = double.NaN;
         private double _raceFinishPlayerFinishGapSec;
+        private int _raceFinishLastValidClassLeaderCarIdx = -1;
+        private string _raceFinishLastValidClassLeaderName = string.Empty;
+        private string _raceFinishLastValidClassLeaderAbbrevName = string.Empty;
+        private string _raceFinishLastValidClassLeaderCarNumber = string.Empty;
         private int _raceFinishPlayerOverallPosition;
         private int _raceFinishPlayerClassPosition;
         private double _raceFinishPlayerFuelLeft;
@@ -8416,6 +8420,10 @@ namespace LaunchPlugin
             _raceFinishPlayerCaptureSessionState = 0;
             _raceFinishClassFinishSessionTimeSec = double.NaN;
             _raceFinishPlayerFinishGapSec = 0.0;
+            _raceFinishLastValidClassLeaderCarIdx = -1;
+            _raceFinishLastValidClassLeaderName = string.Empty;
+            _raceFinishLastValidClassLeaderAbbrevName = string.Empty;
+            _raceFinishLastValidClassLeaderCarNumber = string.Empty;
             _raceFinishPlayerOverallPosition = 0;
             _raceFinishPlayerClassPosition = 0;
             _raceFinishPlayerFuelLeft = 0.0;
@@ -8441,15 +8449,58 @@ namespace LaunchPlugin
                 return;
             }
 
+            bool hasCurrentLeaderIdentity =
+                ClassLeaderValid &&
+                ClassLeaderCarIdx >= 0 &&
+                (!string.IsNullOrWhiteSpace(ClassLeaderName)
+                 || !string.IsNullOrWhiteSpace(ClassLeaderAbbrevName)
+                 || !string.IsNullOrWhiteSpace(ClassLeaderCarNumber));
+
+            if (hasCurrentLeaderIdentity)
+            {
+                _raceFinishLastValidClassLeaderCarIdx = ClassLeaderCarIdx;
+                _raceFinishLastValidClassLeaderName = ClassLeaderName ?? string.Empty;
+                _raceFinishLastValidClassLeaderAbbrevName = ClassLeaderAbbrevName ?? string.Empty;
+                _raceFinishLastValidClassLeaderCarNumber = ClassLeaderCarNumber ?? string.Empty;
+            }
+
+            bool hasHeldLeaderIdentity =
+                _raceFinishLastValidClassLeaderCarIdx >= 0 &&
+                (!string.IsNullOrWhiteSpace(_raceFinishLastValidClassLeaderName)
+                 || !string.IsNullOrWhiteSpace(_raceFinishLastValidClassLeaderAbbrevName)
+                 || !string.IsNullOrWhiteSpace(_raceFinishLastValidClassLeaderCarNumber));
+
+            if (!hasCurrentLeaderIdentity && !hasHeldLeaderIdentity && sessionStateNumeric != 6)
+            {
+                return;
+            }
+
             _raceFinishClassSnapshotActive = true;
             _raceFinishClassCaptureSessionState = sessionStateNumeric;
-            _raceFinishClassFinishSessionTimeSec = sessionTimeSec;
             _raceFinishPlayerFinishGapSec = 0.0;
-            _raceFinishClassWinnerName = ClassLeaderName ?? string.Empty;
-            _raceFinishClassWinnerAbbrevName = ClassLeaderAbbrevName ?? string.Empty;
+            if (hasCurrentLeaderIdentity)
+            {
+                _raceFinishClassWinnerName = ClassLeaderName ?? string.Empty;
+                _raceFinishClassWinnerAbbrevName = ClassLeaderAbbrevName ?? string.Empty;
+                _raceFinishClassFinishSessionTimeSec = sessionTimeSec;
+            }
+            else if (hasHeldLeaderIdentity)
+            {
+                _raceFinishClassWinnerName = _raceFinishLastValidClassLeaderName ?? string.Empty;
+                _raceFinishClassWinnerAbbrevName = _raceFinishLastValidClassLeaderAbbrevName ?? string.Empty;
+                _raceFinishClassFinishSessionTimeSec = sessionTimeSec;
+            }
+            else
+            {
+                _raceFinishClassWinnerName = string.Empty;
+                _raceFinishClassWinnerAbbrevName = string.Empty;
+                _raceFinishClassFinishSessionTimeSec = double.NaN;
+            }
 
-            SimHub.Logging.Current.Info(
-                $"[LalaPlugin:RaceFinish] class snapshot captured state={sessionStateNumeric} winner='{_raceFinishClassWinnerName}'");
+            string source = hasCurrentLeaderIdentity
+                ? "live"
+                : (hasHeldLeaderIdentity ? "held" : "fallback_missing_identity");
+            SimHub.Logging.Current.Info($"[LalaPlugin:RaceFinish] class snapshot captured state={sessionStateNumeric} source={source} winner='{_raceFinishClassWinnerName}'");
         }
 
         private void TryCaptureRaceFinishPlayerSnapshot(PluginManager pluginManager, int sessionStateNumeric, int playerCarIdx, bool playerFinishedByFlags, double sessionTimeSec)
@@ -9763,6 +9814,17 @@ namespace LaunchPlugin
                     playerCarIdx >= 0 &&
                     playerCarIdx < carIdxSessionFlags.Length &&
                     IsFinishLikeSessionFlag(carIdxSessionFlags[playerCarIdx]);
+                if (ClassLeaderValid
+                    && ClassLeaderCarIdx >= 0
+                    && (!string.IsNullOrWhiteSpace(ClassLeaderName)
+                        || !string.IsNullOrWhiteSpace(ClassLeaderAbbrevName)
+                        || !string.IsNullOrWhiteSpace(ClassLeaderCarNumber)))
+                {
+                    _raceFinishLastValidClassLeaderCarIdx = ClassLeaderCarIdx;
+                    _raceFinishLastValidClassLeaderName = ClassLeaderName ?? string.Empty;
+                    _raceFinishLastValidClassLeaderAbbrevName = ClassLeaderAbbrevName ?? string.Empty;
+                    _raceFinishLastValidClassLeaderCarNumber = ClassLeaderCarNumber ?? string.Empty;
+                }
                 TryCaptureRaceFinishClassSnapshot(sessionState, sessionTimeSec, ClassLeaderHasFinished);
                 if (_raceFinishClassSnapshotActive && !_raceFinishPlayerSnapshotActive && !double.IsNaN(_raceFinishClassFinishSessionTimeSec))
                 {
