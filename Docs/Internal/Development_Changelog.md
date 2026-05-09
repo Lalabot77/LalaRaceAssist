@@ -1,3 +1,11 @@
+## 2026-05-09 — RaceFinish replay player-cross fallback + class field-size freeze reliability fix
+
+- Behavior change: `RaceFinish.PlayerSnapshotActive` can now trigger before `SessionState==6` fallback when replay/fast-forward misses player finish-like `CarIdxSessionFlags` bits.
+- Refined player snapshot trigger for replay reliability to use robust player-checkered seams (`DataCorePlugin.GameData.Flag_Checkered` and `SessionFlagsDetails.IsCheckered*`) as primary player-finish evidence when class snapshot is active and player snapshot is pending.
+- Preserved priority hierarchy and invariants: per-car finish-like flags + player checkered seams trigger player capture before fallback; `SessionState==6` remains last-resort safety fallback.
+- Fixed `RaceFinish.PlayerClassFieldSize` freeze reliability by avoiding zero-opponent telemetry lock-in at class snapshot and using existing effective class cohort fallback when available.
+- Result: player-facing frozen `RaceFinish` values now freeze at actual player finish crossing in replay paths instead of drifting until session complete fallback.
+
 ## 2026-05-09 — RaceFinish live-then-freeze player fields + frozen denominator exports
 - Classification: **both** (dash-facing RaceFinish behavior refinement + new exports + docs alignment).
 - Kept finish detection ownership unchanged (`Race.EndPhase` / class/player snapshot triggers remain the same seams); changes are constrained to `RaceFinish` display behavior.

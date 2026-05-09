@@ -1,3 +1,7 @@
+- 2026-05-09 RaceFinish replay fallback + class field-size freeze reliability follow-up landed:
+  - player snapshot replay reliability now uses robust player-checkered seams (`GameData.Flag_Checkered` / `SessionFlagsDetails.IsCheckered*`) alongside per-car finish-like bits;
+  - fallback ordering preserved (`flags/checkered -> SessionState==6` safety only);
+  - class field-size freeze avoids zero-opponent lock-in and now reuses effective class cohort fallback when class telemetry count is unavailable/zero.
 - 2026-05-09 RaceFinish live-then-freeze follow-up landed:
   - player-facing RaceFinish fields (`PlayerOverallPosition`, `PlayerClassPosition`, `PlayerFuelLeft`, `PlayerBestLap*`) now remain neutral before class snapshot, publish live values while class snapshot is active and player snapshot pending, then freeze at player snapshot;
   - `RaceFinish.PlayerOverallFieldSize` and `RaceFinish.PlayerClassFieldSize` now freeze at class snapshot for stable `Pxx / yy` dash denominators through player finish/session end;

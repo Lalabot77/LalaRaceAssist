@@ -8636,7 +8636,7 @@ namespace LaunchPlugin
         private int ResolveRaceFinishLiveClassFieldSize(PluginManager pluginManager, int playerCarIdx)
         {
             int classOpponentsCount = SafeReadInt(pluginManager, "DataCorePlugin.GameRawData.Telemetry.OpponentsInClassCount", int.MinValue);
-            if (classOpponentsCount >= 0)
+            if (classOpponentsCount > 0)
             {
                 return classOpponentsCount + 1;
             }
@@ -9939,6 +9939,12 @@ namespace LaunchPlugin
                     playerCarIdx >= 0 &&
                     playerCarIdx < carIdxSessionFlags.Length &&
                     IsFinishLikeSessionFlag(carIdxSessionFlags[playerCarIdx]);
+                bool playerCheckeredBySessionFlags = ReadFlagBool(
+                    pluginManager,
+                    "DataCorePlugin.GameRawData.Telemetry.SessionFlagsDetails.IsCheckeredFlag",
+                    "DataCorePlugin.GameRawData.Telemetry.SessionFlagsDetails.IsCheckered");
+                bool playerCheckeredByGameData = Convert.ToBoolean(pluginManager.GetPropertyValue("DataCorePlugin.GameData.Flag_Checkered") ?? false);
+                bool playerFinishedByCheckered = playerCheckeredBySessionFlags || playerCheckeredByGameData;
                 if (ClassLeaderValid
                     && ClassLeaderCarIdx >= 0
                     && (!string.IsNullOrWhiteSpace(ClassLeaderName)
@@ -9956,7 +9962,12 @@ namespace LaunchPlugin
                     _raceFinishPlayerFinishGapSec = Math.Max(0.0, sessionTimeSec - _raceFinishClassFinishSessionTimeSec);
                     _raceFinishClassWinnerGapSec = _raceFinishPlayerFinishGapSec;
                 }
-                TryCaptureRaceFinishPlayerSnapshot(pluginManager, sessionState, playerCarIdx, playerFinishedByFlags, sessionTimeSec);
+                TryCaptureRaceFinishPlayerSnapshot(
+                    pluginManager,
+                    sessionState,
+                    playerCarIdx,
+                    playerFinishedByFlags || playerFinishedByCheckered,
+                    sessionTimeSec);
                 if (_h2hEngine != null)
                 {
                     var previousRaceAhead = _h2hEngine.Outputs?.Race?.Ahead;
