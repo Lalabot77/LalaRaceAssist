@@ -41,12 +41,14 @@ This document is the canonical dash-facing contract layer. It does **not** redef
 - If a widget is meant to represent runtime truth, prefer stable `Fuel.*` / pace outputs over UI-only text from elsewhere.
 - Race-end dash gating should consume plugin-owned finish-phase exports directly: `Race.EndPhase` / `Race.EndPhaseText` / `Race.EndPhaseConfidence` plus `Race.LastLapLikely`; dashboards must not infer leader finish from player white/checkered flags or track-disappearance heuristics.
 - Finish leader-finished booleans for dashboards are `Race.OverallLeaderHasFinished` and `Race.ClassLeaderHasFinished`; legacy/duplicate derived `Race.LeaderHasFinished` is no longer part of the core dash export surface.
+- `SessionState 4 -> 5` should be interpreted as overall race lifecycle/overall leader finish phase. Dashboards must not interpret that transition as player-class-leader finished in multiclass; class finish is plugin-resolved independently.
 - For finish/post-race summary widgets, use frozen `RaceFinish.*` exports instead of live `ClassLeader.*`/`ClassBest.*` values. `RaceFinish` is split-stage: class snapshot and player snapshot, and resets when session leaves post-finish lifecycle.
 - `RaceFinish.Active` means either stage is active (`ClassSnapshotActive || PlayerSnapshotActive`).
 - Class stage captures class-winner identity when class winner finishes; player stage captures player fields (position/fuel/player best/class best) when player finishes.
 - Before class snapshot, player-facing `RaceFinish` fields stay neutral defaults for finish widgets (`0` / `"-"`). While class snapshot is active and player snapshot is still pending, player-facing fields publish live values (position, fuel, best lap), then freeze once player snapshot activates.
 - `RaceFinish.PlayerOverallFieldSize` / `RaceFinish.PlayerClassFieldSize` freeze at class snapshot (not player snapshot) so `Pxx / yy` denominators do not drift when drivers quit before player finish.
 - `RaceFinish.PlayerFinishGapSec` (and compatibility mirror `ClassWinnerGapSec`) is a live timer after class snapshot and freezes at player snapshot.
+- Player snapshot trigger hierarchy is plugin-owned: per-car finish-like flags and robust player-checkered seams (`GameData.Flag_Checkered` / `SessionFlagsDetails.IsCheckered*`) are used before `SessionState==6` safety fallback. Dashboards must consume exported snapshot flags and must not reimplement finish crossing heuristics.
 - Strategy fuel guidance should consume plugin-owned tactical exports directly:
   - `Fuel.RequiredBurnToEnd*` for burn-to-end guidance/state/source,
   - `Fuel.Contingency.*` for active reserve display/debug,
