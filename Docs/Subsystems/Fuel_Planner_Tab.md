@@ -171,6 +171,8 @@ Using planner-selected lap time + fuel per lap:
 - Number of stops required by plan from the planner-feasible strategy result.
 - Planner stop count and planner outputs are fully independent from the PreRace mode selector. PreRace Auto mirrors planner totals/stints when planner values are available, with runtime fallback only if planner values are unavailable. Auto delta only applies live pit-menu refuel intent when planner-required next add is greater than zero; otherwise it reuses the planner fuel-basis fallback so arbitrary pit-menu add does not mask Auto deficit.
 - Dash-facing pre-race visibility uses `LalaLaunch.PreRace.Stints` instead of separate stop-count exports.
+
+- Dashboard guidance boundary: pre-grid/planning pages may keep using `StrategyDash.*` and `LalaLaunch.PreRace.*`; runtime race pages should use `Fuel.Refuel.*` for next-stop refuel guidance, `Fuel.RequiredBurnToEnd*` for burn-to-end widgets, `Fuel.Contingency.*` for reserve visibility, and `Fuel.Delta.*` for tactical finish deltas.
 - Pit add requirement.
 
 These values are **planner-only** and intentionally decoupled from live volatility.

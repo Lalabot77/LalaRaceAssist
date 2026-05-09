@@ -45,6 +45,17 @@
 - Added bounded one-shot info logs on snapshot capture and reset; no per-tick race-finish logging added.
 - Explicitly deferred from v1: `RaceFinish.PitStops`, `RaceFinish.LastPitTime`, `RaceFinish.LastPitTimeSec`.
 
+- 2026-05-08 Phase 2B fuel export audit documentation sync landed:
+  - marked `Fuel.Refuel.*` as canonical race-running next-stop refuel guidance surface across inventory/subsystem dash docs, while preserving `StrategyDash.NextRefuel*` as pre-green/planning (not obsolete);
+  - reinforced dashboard guidance to prefer plugin-owned `Fuel.Refuel.*`, `Fuel.RequiredBurnToEnd*`, `Fuel.Contingency.*`, and `Fuel.Delta.*` for runtime fuel widgets instead of dash-side NCALC chains;
+  - added cleanup caution: do not remove/rename fuel-facing exports until both dashboard JSON usage audit and internal C# consumer audit are complete;
+  - clarified compatibility notes (`Pit.FuelControl.PushSaveMode*` alias surface, legacy one-release `SetPlan` mapping to DATA PLAN + SOURCE STBY) and reaffirmed protected runtime families/command-send behavior unchanged.
+
+
+## 2026-05-08 — League Class canonical subsystem documentation sweep
+- Added canonical subsystem doc `Docs/Subsystems/League_Class_System.md` covering purpose, concepts, resolver precedence/fallback, boundaries, exports, effective PositionInClass semantics, UI workflow, dash guidance, non-goals, and troubleshooting.
+- Updated cross-references in `Project_Index`, `Subsystems/H2H.md`, `Subsystems/Dash_Integration.md`, `Internal/SimHubParameterInventory.md`, `Internal/Plugin_UI_Tooltips.md`, `RepoStatus.md`, and `CHANGELOG.md` to point to canonical League Class documentation and reduce duplicated explanations.
+- Scope explicitly limited to analysis + documentation; runtime code, dashboard JSON, exports/actions, and resolver logic unchanged.
 ## 2026-05-08 — Fuel projection stable-source text companion export
 - Classification: **both** (new dash-facing helper export + docs alignment).
 - Added `Fuel.ProjectionLapTime_StableSourceText` as a presentation-only companion to raw `Fuel.ProjectionLapTime_StableSource`.

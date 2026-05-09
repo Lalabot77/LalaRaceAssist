@@ -78,6 +78,7 @@ This is the canonical technical document for the pit/custom command stack and re
 - Target litres and override-active semantics for command generation.
 - DATA defaults to `LIVE` on session/control reset. Changing DATA always forces `SOURCE=STBY`, disarms AUTO, and sends no fuel command.
 - `SOURCE=PLAN` has been retired. The one-release compatibility action `Pit.FuelControl.SetPlan` now maps to `DATA=PLAN` + `SOURCE=STBY` and publishes `FUEL DATA PLAN`.
+- `Pit.FuelControl.PushSaveMode*` is a compatibility/alias surface after the DATA model cutover and should not be treated as a new source family.
 - `NORM` always uses the runtime/live burn target. `PUSH`/`SAVE` use DATA: `LIVE` selects live push/save targets; `PLAN` selects planner/profile memory push/save targets with the existing guarded fallback behavior.
 - Fault export state (`Pit.FuelControl.Fault`) for post-settle selector disagreement diagnostics only (`0/1/2/3` contract).
 
