@@ -6,6 +6,12 @@
 - `RaceFinish.PlayerSnapshotActive` remains player-perspective: per-car finish-like flags and robust player-checkered seams (`GameData.Flag_Checkered` / `SessionFlagsDetails.IsCheckered*`) before `SessionState==6` safety fallback.
 - Preserved split-stage snapshot architecture and Race.EndPhase semantics; no dashboard ownership changes.
 
+- 2026-05-09 follow-up: corrected multiclass class-finish lifecycle fallback reference model.
+  - removed invalid `class leader lap > overall leader lap` assumption,
+  - now captures dynamic finish reference pct from overall leader at `SessionState 4->5`,
+  - class-finish fallback now uses class-leader own crossing/wrap evidence against that dynamic reference,
+  - includes guarded already-crossed-on-transition path requiring credible prior sampled class-leader pct evidence.
+
 ## 2026-05-09 — RaceFinish replay player-cross fallback + class field-size freeze reliability fix
 
 - Behavior change: `RaceFinish.PlayerSnapshotActive` can now trigger before `SessionState==6` fallback when replay/fast-forward misses player finish-like `CarIdxSessionFlags` bits.

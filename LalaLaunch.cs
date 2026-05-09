@@ -865,6 +865,9 @@ namespace LaunchPlugin
         private double _lastOverallLeaderLapPct = double.NaN;
         private int _lastClassLeaderCarIdx = -1;
         private int _lastOverallLeaderCarIdx = -1;
+        private int _lastClassLeaderLap = -1;
+        private int _finishTimingLastSessionState = 0;
+        private double _finishLifecycleReferencePct = double.NaN;
         private string _classBestResolveLastLogReason = string.Empty;
         private int _lastCompletedLapForFinish = -1;
         private bool _leaderFinishLatchedByFlag;
@@ -8444,6 +8447,9 @@ namespace LaunchPlugin
             _lastOverallLeaderLapPct = double.NaN;
             _lastClassLeaderCarIdx = -1;
             _lastOverallLeaderCarIdx = -1;
+            _lastClassLeaderLap = -1;
+            _finishTimingLastSessionState = 0;
+            _finishLifecycleReferencePct = double.NaN;
             _lastCompletedLapForFinish = -1;
             LeaderHasFinished = false;
             _leaderFinishLatchedByFlag = false;
@@ -18406,6 +18412,7 @@ namespace LaunchPlugin
             bool isTimedRace = hasRemain;
             int sessionStateNumeric = ReadSessionStateInt(pluginManager);
             bool hasSessionState = sessionStateNumeric > 0;
+            bool enteredOverallFinishLifecycle = hasSessionState && sessionStateNumeric >= 5 && _finishTimingLastSessionState < 5;
             int playerCarIdx = GetInt(pluginManager, "DataCorePlugin.GameRawData.Telemetry.PlayerCarIdx", -1);
 
             // Detect first genuine crossing to zero
@@ -18510,6 +18517,16 @@ namespace LaunchPlugin
             }
             OverallLeaderHasFinishedValid = overallLeaderIdx >= 0;
 
+            if (enteredOverallFinishLifecycle &&
+                lapDistPct != null &&
+                overallLeaderIdx >= 0 &&
+                overallLeaderIdx < lapDistPct.Length &&
+                lapDistPct[overallLeaderIdx] >= 0.0 &&
+                lapDistPct[overallLeaderIdx] <= 1.0)
+            {
+                _finishLifecycleReferencePct = lapDistPct[overallLeaderIdx];
+            }
+
             bool classLeaderFinishByFlags = classLeaderIdx >= 0
                 && carIdxSessionFlags != null
                 && classLeaderIdx < carIdxSessionFlags.Length
@@ -18555,8 +18572,27 @@ namespace LaunchPlugin
                 else
                 {
                     int classLeaderLap = carIdxLap[classLeaderIdx];
-                    int overallLeaderLap = carIdxLap[overallLeaderIdx];
-                    classLeaderFinishByOverallLifecycleEquivalence = classLeaderLap > overallLeaderLap;
+                    double classLeaderPct = lapDistPct[classLeaderIdx];
+                    bool hasRef = !double.IsNaN(_finishLifecycleReferencePct) &&
+                                  _finishLifecycleReferencePct >= 0.0 &&
+                                  _finishLifecycleReferencePct <= 1.0;
+
+                    bool reachedDynamicFinishReference = hasRef && classLeaderPct >= _finishLifecycleReferencePct;
+                    bool wrapAfterLifecycleStart =
+                        _lastClassLeaderCarIdx == classLeaderIdx &&
+                        _lastClassLeaderLap >= 0 &&
+                        (_lastClassLeaderLap < classLeaderLap ||
+                         (!double.IsNaN(_lastClassLeaderLapPct) && hasRef && _lastClassLeaderLapPct >= _finishLifecycleReferencePct && classLeaderPct < _finishLifecycleReferencePct));
+                    bool likelyAlreadyCrossedOnTransition =
+                        enteredOverallFinishLifecycle &&
+                        _lastClassLeaderCarIdx == classLeaderIdx &&
+                        hasRef &&
+                        !double.IsNaN(_lastClassLeaderLapPct) &&
+                        _lastClassLeaderLapPct >= _finishLifecycleReferencePct &&
+                        classLeaderPct < (_finishLifecycleReferencePct * 0.5);
+
+                    classLeaderFinishByOverallLifecycleEquivalence =
+                        reachedDynamicFinishReference || wrapAfterLifecycleStart || likelyAlreadyCrossedOnTransition;
                 }
             }
 
@@ -18584,6 +18620,7 @@ namespace LaunchPlugin
             {
                 _lastClassLeaderLapPct = lapDistPct[classLeaderIdx];
                 _lastClassLeaderCarIdx = classLeaderIdx;
+                _lastClassLeaderLap = (carIdxLap != null && classLeaderIdx < carIdxLap.Length) ? carIdxLap[classLeaderIdx] : -1;
             }
 
             if (canRunOverallFinishHeuristic)
@@ -18601,6 +18638,7 @@ namespace LaunchPlugin
                 _lastOverallLeaderLapPct = lapDistPct[overallLeaderIdx];
                 _lastOverallLeaderCarIdx = overallLeaderIdx;
             }
+            _finishTimingLastSessionState = sessionStateNumeric;
 
             if (!isMultiClassSession && OverallLeaderHasFinished && !ClassLeaderHasFinished)
             {

@@ -1,6 +1,6 @@
 - 2026-05-09 finish-semantics correction landed:
   - SessionState `4->5` is now documented/treated as overall race lifecycle/overall-leader finish phase (not unconditional class-leader finish in multiclass);
-  - class-leader finish remains independently resolved; multiclass lifecycle fallback is guarded to provable equivalence only (same car or class leader lap > overall leader lap at `state>=5`);
+  - class-leader finish remains independently resolved; multiclass lifecycle fallback now uses dynamic finish-reference pct capture at `SessionState 4->5` plus class-leader own crossing/wrap evidence (no class-vs-overall lap-count comparison);
   - RaceFinish class/player split-stage behavior preserved with `SessionState==6` as safety fallback only.
 - 2026-05-09 RaceFinish replay fallback + class field-size freeze reliability follow-up landed:
   - player snapshot replay reliability now uses robust player-checkered seams (`GameData.Flag_Checkered` / `SessionFlagsDetails.IsCheckered*`) alongside per-car finish-like bits;
