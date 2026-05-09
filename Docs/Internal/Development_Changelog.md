@@ -1,3 +1,16 @@
+## 2026-05-08 — RaceFinish split snapshots + player finish gap timer
+- Classification: **both** (RaceFinish contract refinement + dash-facing behavior update).
+- Refactored RaceFinish from single-shot capture to split stages:
+  - class snapshot (`RaceFinish.ClassSnapshotActive`) captures class winner identity when class winner finishes;
+  - player snapshot (`RaceFinish.PlayerSnapshotActive`) captures player fields and class-best lap when player finishes.
+- `RaceFinish.Active` now means either stage is active (`ClassSnapshotActive || PlayerSnapshotActive`).
+- Added `RaceFinish.PlayerFinishGapSec` as class-winner-to-player elapsed finish timer:
+  - `0` before class snapshot,
+  - live increasing while class snapshot active and player snapshot pending,
+  - frozen final value when player snapshot activates.
+- `RaceFinish.ClassWinnerGapSec` now mirrors `PlayerFinishGapSec` for compatibility.
+- Primary triggers use per-car finish-like flags; SessionState `6` remains fallback-only for missing captures.
+
 ## 2026-05-08 — Finish detection phase 1: per-car session-flag authority for class/overall leader finish latches
 - Classification: **both** (runtime finish-latch semantic correction + docs alignment).
 - `UpdateFinishTiming(...)` now prefers per-car `CarIdxSessionFlags` finish-like bits (`checkered`/`crossed`) to latch `Race.ClassLeaderHasFinished` and `Race.OverallLeaderHasFinished`.
