@@ -5597,10 +5597,12 @@ namespace LaunchPlugin
                     bool isPlayerRow = playerCarIdx >= 0 && carIdx == playerCarIdx;
                     if (!isPlayerRow && userId > 0)
                     {
-                        int? playerUserId;
-                        string playerName;
-                        TryGetLivePlayerIdentityPreview(out playerUserId, out playerName);
-                        isPlayerRow = playerUserId.HasValue && playerUserId.Value > 0 && playerUserId.Value == userId;
+                        int? fallbackPlayerUserId;
+                        TryGetLivePlayerIdentityPreview(out fallbackPlayerUserId, out _);
+
+                        isPlayerRow = fallbackPlayerUserId.HasValue
+                            && fallbackPlayerUserId.Value > 0
+                            && fallbackPlayerUserId.Value == userId;
                     }
 
                     EffectiveRaceClassInfo info = isPlayerRow
