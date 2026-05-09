@@ -11,6 +11,53 @@
   - fixed enabled+resolved League Class cases where `LeagueClass.Player.DriverCount` could publish `0` despite valid player class resolution and loaded CSV mappings.
   - added live-row name fallback probes (`UserNameRaw`, `UserNameProcessed`) in the competing-driver scan path.
   - added fallback to CSV cohort count for the resolved player class when live competing-driver identity rows are temporarily unavailable; native-class fallback behavior when League Class is disabled/unresolved remains unchanged.
+## 2026-05-08 — RaceFinish split snapshots + player finish gap timer
+- Classification: **both** (RaceFinish contract refinement + dash-facing behavior update).
+- Refactored RaceFinish from single-shot capture to split stages:
+  - class snapshot (`RaceFinish.ClassSnapshotActive`) captures class winner identity when class winner finishes;
+  - player snapshot (`RaceFinish.PlayerSnapshotActive`) captures player fields and class-best lap when player finishes.
+- `RaceFinish.Active` now means either stage is active (`ClassSnapshotActive || PlayerSnapshotActive`).
+- Added `RaceFinish.PlayerFinishGapSec` as class-winner-to-player elapsed finish timer:
+  - `0` before class snapshot,
+  - live increasing while class snapshot active and player snapshot pending,
+  - frozen final value when player snapshot activates.
+- `RaceFinish.ClassWinnerGapSec` now mirrors `PlayerFinishGapSec` for compatibility.
+- Primary triggers use per-car finish-like flags; SessionState `6` remains fallback-only for missing captures.
+- Class snapshot now gates activation on usable class-winner identity (`ClassLeaderValid` + leader idx + non-blank identity fields), with held-last-valid identity fallback; if identity is still unavailable, capture retries until valid identity appears or SessionState `6` forces last-resort fallback.
+- `PlayerFinishGapSec` timer start now requires an identity-backed class snapshot; SessionState `6` fallback with missing identity does not start a live class-finish timer.
+
+## 2026-05-08 — Finish detection phase 1: per-car session-flag authority for class/overall leader finish latches
+- Classification: **both** (runtime finish-latch semantic correction + docs alignment).
+- `UpdateFinishTiming(...)` now prefers per-car `CarIdxSessionFlags` finish-like bits (`checkered`/`crossed`) to latch `Race.ClassLeaderHasFinished` and `Race.OverallLeaderHasFinished`.
+- Overall leader resolution now prefers the true overall leader identity seam (`CarIdxPosition==1 && CarIdxClassPosition==1`) with existing fallback to position-only leader idx when needed.
+- SessionState remains lifecycle authority and is retained only as single-class backup for `Race.OverallLeaderHasFinished` when per-car flags are unavailable.
+
+## 2026-05-08 — ClassLeader transient-hold follow-up: identity stale-field guard
+- Classification: **internal-only** (consistency fix within existing `ClassLeader.*` contract).
+- When class-leader identity lookups miss for a valid resolved `ClassLeaderCarIdx`, `ClassLeader.Name` / `ClassLeader.CarNumber` / `ClassLeader.AbbrevName` now clear to empty before lookup attempts, preventing stale identity text from prior leader frames while current leader index/lap/gap are updated.
+- No change to class leader selection semantics, hold window semantics, or finish/race snapshot contracts.
+
+## 2026-05-08 — ClassLeader transient-miss hold stabilization + duplicate leader-finished export cleanup
+- Classification: **both** (live class-leader dash stability improvement + export surface cleanup).
+- `ClassLeader.*` publication now tolerates short transient unresolved frames: when class-leader resolution misses briefly, the last valid class-leader payload is held for a bounded short window instead of hard-clearing on first miss.
+- Sustained unresolved or ineligible-session conditions still clear `ClassLeader.*` to invalid defaults; genuine leader changes still publish immediately when resolution is valid.
+- Added bounded state-transition logs for class-leader hold activation/clear (no per-tick log loop).
+- Removed duplicate/derived export attach `Race.LeaderHasFinished` from the core finish export surface; retained authoritative `Race.OverallLeaderHasFinished` and `Race.ClassLeaderHasFinished`.
+
+## 2026-05-08 — RaceFinish snapshot capture ordering fix (PR #695 follow-up)
+- Classification: **internal-only** (ordering fix for existing `RaceFinish.*` contract; no export list change).
+- Moved `RaceFinish` one-shot capture trigger out of `UpdateFinishTiming(...)` and into the `DataUpdate` flow **after** `UpdateClassLeaderExports(...)` and `UpdateClassBestExports(...)` refresh.
+- Prevents first `SessionState 5/6` capture from freezing pre-refresh class winner/class best/gap/class-position values during finish-transition ordering churn.
+- Reset semantics remain unchanged (`session_state_left_post_finish` and finish/session reset paths).
+
+## 2026-05-08 — RaceFinish frozen snapshot exports v1
+- Classification: **both** (new dash-facing finish exports + runtime latch/docs alignment).
+- Added plugin-owned `RaceFinish.*` post-race snapshot latch in `LalaLaunch`: capture once on first observed race `SessionState==5` (fallback `==6`), hold frozen values through `SessionState 5/6`, reset when leaving post-finish lifecycle into next session/race cycle.
+- Added exports: `RaceFinish.Active`, `RaceFinish.PlayerOverallPosition`, `RaceFinish.PlayerClassPosition`, `RaceFinish.PlayerFuelLeft`, `RaceFinish.PlayerBestLap`, `RaceFinish.PlayerBestLapSec`, `RaceFinish.ClassWinnerName`, `RaceFinish.ClassWinnerAbbrevName`, `RaceFinish.ClassWinnerGapSec`, `RaceFinish.ClassBestLap`, `RaceFinish.ClassBestLapSec`.
+- Class winner + finish gap snapshot from existing class-leader seams; class best lap snapshot from existing effective-class-aware `ClassBest.*` seam so class winner and class-best holder can differ by design.
+- Added bounded one-shot info logs on snapshot capture and reset; no per-tick race-finish logging added.
+- Explicitly deferred from v1: `RaceFinish.PitStops`, `RaceFinish.LastPitTime`, `RaceFinish.LastPitTimeSec`.
+
 - 2026-05-08 Phase 2B fuel export audit documentation sync landed:
   - marked `Fuel.Refuel.*` as canonical race-running next-stop refuel guidance surface across inventory/subsystem dash docs, while preserving `StrategyDash.NextRefuel*` as pre-green/planning (not obsolete);
   - reinforced dashboard guidance to prefer plugin-owned `Fuel.Refuel.*`, `Fuel.RequiredBurnToEnd*`, `Fuel.Contingency.*`, and `Fuel.Delta.*` for runtime fuel widgets instead of dash-side NCALC chains;
@@ -2107,3 +2154,8 @@ The public user-facing release history is maintained in the root `CHANGELOG.md`.
 - Classification: **both** (H2HTrack class presentation correctness + internal contract/docs alignment).
 - `BuildH2HTrackSelector(...)` now carries selected CarSA slot `UserID` into `H2HEngine.TargetSelector` so `H2HTrack.Ahead/Behind.ClassColor` and `ClassColorHex` can resolve League Class via the same CSV-first identity seam as CarSA/H2HRace when enabled.
 - Kept H2HTrack physical target selection and all sector/delta/timing logic unchanged; unresolved/disabled paths still fall back to native class colour behavior.
+
+## 2026-05-09 — PR follow-up: finish-like flag wording clarification
+- Classification: **internal-only** (documentation wording clarification only; no runtime/code changes).
+- Clarified finish-latch wording to describe checkered as the practical finish-like source in this telemetry path, while noting crossed is not relied on as required line-crossing proof.
+- Kept existing RaceFinish/leader-finished latch behavior unchanged.
