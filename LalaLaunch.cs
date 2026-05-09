@@ -18519,7 +18519,8 @@ namespace LaunchPlugin
             }
             OverallLeaderHasFinishedValid = overallLeaderIdx >= 0;
 
-            if (enteredOverallFinishLifecycle &&
+            if (hasSessionState && sessionStateNumeric >= 5 &&
+                double.IsNaN(_finishLifecycleReferencePct) &&
                 lapDistPct != null &&
                 overallLeaderIdx >= 0 &&
                 overallLeaderIdx < lapDistPct.Length &&

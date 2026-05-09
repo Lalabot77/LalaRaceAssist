@@ -1,3 +1,6 @@
+- 2026-05-09 finish-reference-retry follow-up landed:
+  - when SS5 transition tick lacks valid overall-leader lap-pct sample, finish-reference capture now retries on later `SessionState>=5` ticks until captured;
+  - once captured, the reference remains latched until finish-timing reset.
 - 2026-05-09 post-lifecycle sample anchoring follow-up landed:
   - class-leader dynamic-reference crossing/wrap fallback now requires prior sample captured after lifecycle start (`SessionState>=5`);
   - pre-transition sample evidence remains scoped to guarded already-crossed-on-transition path only.

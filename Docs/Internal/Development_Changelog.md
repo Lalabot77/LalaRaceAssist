@@ -13,6 +13,7 @@
   - includes guarded already-crossed-on-transition path requiring credible prior sampled class-leader pct evidence.
 - 2026-05-09 pre-merge follow-up: restored valid solo-class denominator behavior (`OpponentsInClassCount>=0 => +1`) and tightened dynamic finish-reference latch to require true prior->current crossing evidence (wrap/already-crossed guards unchanged).
 - 2026-05-09 follow-up: anchored class-leader post-lifecycle crossing/wrap detection to post-`SessionState>=5` samples only; pre-transition sample evidence is now limited to guarded already-crossed-on-transition detection.
+- 2026-05-09 follow-up: finish-reference pct capture now retries on post-transition `SessionState>=5` ticks while reference is unset, so a missing first SS5 sample no longer leaves multiclass fallback unarmed for the full lifecycle.
 
 ## 2026-05-09 — RaceFinish replay player-cross fallback + class field-size freeze reliability fix
 
