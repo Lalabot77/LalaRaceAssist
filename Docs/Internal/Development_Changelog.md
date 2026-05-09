@@ -1,3 +1,15 @@
+## 2026-05-09 — RaceFinish live-then-freeze player fields + frozen denominator exports
+- Classification: **both** (dash-facing RaceFinish behavior refinement + new exports + docs alignment).
+- Kept finish detection ownership unchanged (`Race.EndPhase` / class/player snapshot triggers remain the same seams); changes are constrained to `RaceFinish` display behavior.
+- Player-facing RaceFinish fields now publish useful live values while class snapshot is active and player snapshot is pending, then freeze at player snapshot:
+  - `RaceFinish.PlayerOverallPosition`, `RaceFinish.PlayerClassPosition`,
+  - `RaceFinish.PlayerFuelLeft`,
+  - `RaceFinish.PlayerBestLap`, `RaceFinish.PlayerBestLapSec`.
+- Added frozen denominator exports for clean `Pxx / yy` finish rendering:
+  - `RaceFinish.PlayerOverallFieldSize`,
+  - `RaceFinish.PlayerClassFieldSize`.
+- `RaceFinish.PlayerFinishGapSec` remains canonical gap-to-leader timer (`class-winner-finish -> player-finish` elapsed), and `RaceFinish.ClassWinnerGapSec` remains compatibility mirror only.
+
 ## 2026-05-08 — RaceFinish split snapshots + player finish gap timer
 - Classification: **both** (RaceFinish contract refinement + dash-facing behavior update).
 - Refactored RaceFinish from single-shot capture to split stages:

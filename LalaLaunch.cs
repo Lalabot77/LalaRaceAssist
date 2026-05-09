@@ -858,6 +858,9 @@ namespace LaunchPlugin
         private double _raceFinishClassWinnerGapSec;
         private double _raceFinishClassBestLapSec;
         private string _raceFinishClassBestLap = "-";
+        private int _raceFinishPlayerOverallFieldSize;
+        private int _raceFinishPlayerClassFieldSize;
+        private int _playerCarIdxLastTick = -1;
         private double _lastClassLeaderLapPct = double.NaN;
         private double _lastOverallLeaderLapPct = double.NaN;
         private int _lastClassLeaderCarIdx = -1;
@@ -5826,6 +5829,7 @@ namespace LaunchPlugin
             }
 
             int playerCarIdx = SafeReadInt(pluginManager, "DataCorePlugin.GameRawData.Telemetry.PlayerCarIdx", -1);
+            _playerCarIdxLastTick = playerCarIdx;
             if (playerCarIdx < 0)
             {
                 return false;
@@ -6960,11 +6964,13 @@ namespace LaunchPlugin
             AttachCore("RaceFinish.ClassSnapshotActive", () => _raceFinishClassSnapshotActive);
             AttachCore("RaceFinish.PlayerSnapshotActive", () => _raceFinishPlayerSnapshotActive);
             AttachCore("RaceFinish.Active", () => _raceFinishClassSnapshotActive || _raceFinishPlayerSnapshotActive);
-            AttachCore("RaceFinish.PlayerOverallPosition", () => _raceFinishPlayerOverallPosition);
-            AttachCore("RaceFinish.PlayerClassPosition", () => _raceFinishPlayerClassPosition);
-            AttachCore("RaceFinish.PlayerFuelLeft", () => _raceFinishPlayerFuelLeft);
-            AttachCore("RaceFinish.PlayerBestLap", () => _raceFinishPlayerBestLap ?? "-");
-            AttachCore("RaceFinish.PlayerBestLapSec", () => _raceFinishPlayerBestLapSec);
+            AttachCore("RaceFinish.PlayerOverallPosition", () => _raceFinishPlayerSnapshotActive ? _raceFinishPlayerOverallPosition : ResolveRaceFinishLiveOverallPosition(this.PluginManager, _playerCarIdxLastTick));
+            AttachCore("RaceFinish.PlayerOverallFieldSize", () => _raceFinishPlayerSnapshotActive ? _raceFinishPlayerOverallFieldSize : ResolveRaceFinishLiveOverallFieldSize(this.PluginManager));
+            AttachCore("RaceFinish.PlayerClassPosition", () => _raceFinishPlayerSnapshotActive ? _raceFinishPlayerClassPosition : ResolveRaceFinishLiveClassPosition(this.PluginManager, _playerCarIdxLastTick));
+            AttachCore("RaceFinish.PlayerClassFieldSize", () => _raceFinishPlayerSnapshotActive ? _raceFinishPlayerClassFieldSize : ResolveRaceFinishLiveClassFieldSize(this.PluginManager, _playerCarIdxLastTick));
+            AttachCore("RaceFinish.PlayerFuelLeft", () => _raceFinishPlayerSnapshotActive ? _raceFinishPlayerFuelLeft : ResolveRaceFinishLiveFuelLeft(this.PluginManager));
+            AttachCore("RaceFinish.PlayerBestLap", () => _raceFinishPlayerSnapshotActive ? (_raceFinishPlayerBestLap ?? "-") : (FormatBestLapLiveOrDash(_playerCarIdxLastTick)));
+            AttachCore("RaceFinish.PlayerBestLapSec", () => _raceFinishPlayerSnapshotActive ? _raceFinishPlayerBestLapSec : ResolveBestLapLiveSeconds(_playerCarIdxLastTick));
             AttachCore("RaceFinish.ClassWinnerName", () => _raceFinishClassWinnerName ?? string.Empty);
             AttachCore("RaceFinish.ClassWinnerAbbrevName", () => _raceFinishClassWinnerAbbrevName ?? string.Empty);
             AttachCore("RaceFinish.ClassWinnerGapSec", () => _raceFinishClassWinnerGapSec);
@@ -8426,6 +8432,8 @@ namespace LaunchPlugin
             _raceFinishLastValidClassLeaderCarNumber = string.Empty;
             _raceFinishPlayerOverallPosition = 0;
             _raceFinishPlayerClassPosition = 0;
+            _raceFinishPlayerOverallFieldSize = 0;
+            _raceFinishPlayerClassFieldSize = 0;
             _raceFinishPlayerFuelLeft = 0.0;
             _raceFinishPlayerBestLapSec = 0.0;
             _raceFinishPlayerBestLap = "-";
@@ -8518,11 +8526,11 @@ namespace LaunchPlugin
 
             _raceFinishPlayerSnapshotActive = true;
             _raceFinishPlayerCaptureSessionState = sessionStateNumeric;
-            _raceFinishPlayerOverallPosition = SafeReadInt(pluginManager, "DataCorePlugin.GameData.PlayerLeaderboardPosition", 0);
-            _raceFinishPlayerClassPosition = GetEffectivePositionInClassForPublishedContext(
-                playerCarIdx,
-                (playerCarIdx >= 0 && playerCarIdx < _carSaClassPositionByIdx.Length) ? _carSaClassPositionByIdx[playerCarIdx] : 0);
-            _raceFinishPlayerFuelLeft = Math.Max(0.0, SafeReadDouble(pluginManager, "DataCorePlugin.GameRawData.Telemetry.FuelLevel", 0.0));
+            _raceFinishPlayerOverallPosition = ResolveRaceFinishLiveOverallPosition(pluginManager, playerCarIdx);
+            _raceFinishPlayerClassPosition = ResolveRaceFinishLiveClassPosition(pluginManager, playerCarIdx);
+            _raceFinishPlayerOverallFieldSize = ResolveRaceFinishLiveOverallFieldSize(pluginManager);
+            _raceFinishPlayerClassFieldSize = ResolveRaceFinishLiveClassFieldSize(pluginManager, playerCarIdx);
+            _raceFinishPlayerFuelLeft = ResolveRaceFinishLiveFuelLeft(pluginManager);
 
             double playerBestLapSec = _lastSeenBestLap > TimeSpan.Zero
                 ? _lastSeenBestLap.TotalSeconds
@@ -8546,6 +8554,82 @@ namespace LaunchPlugin
             SimHub.Logging.Current.Info(
                 $"[LalaPlugin:RaceFinish] player snapshot captured state={sessionStateNumeric} overall={_raceFinishPlayerOverallPosition} class={_raceFinishPlayerClassPosition} " +
                 $"finishGap={_raceFinishPlayerFinishGapSec:F2}s classBest={_raceFinishClassBestLapSec:F3}s");
+        }
+
+        private int ResolveRaceFinishLiveOverallPosition(PluginManager pluginManager, int playerCarIdx)
+        {
+            int liveOverallPosition = SafeReadInt(pluginManager, "DataCorePlugin.GameData.PlayerLeaderboardPosition", 0);
+            if (liveOverallPosition > 0)
+            {
+                return liveOverallPosition;
+            }
+
+            int nativeClassPos = (playerCarIdx >= 0 && playerCarIdx < _carSaClassPositionByIdx.Length) ? _carSaClassPositionByIdx[playerCarIdx] : 0;
+            int effectiveClassPos = GetEffectivePositionInClassForPublishedContext(playerCarIdx, nativeClassPos);
+            return Math.Max(0, effectiveClassPos);
+        }
+
+        private int ResolveRaceFinishLiveClassPosition(PluginManager pluginManager, int playerCarIdx)
+        {
+            int nativeTelemetryClassPosition = SafeReadInt(pluginManager, "DataCorePlugin.GameRawData.Telemetry.PlayerCarClassPosition", 0);
+            if (nativeTelemetryClassPosition > 0)
+            {
+                return nativeTelemetryClassPosition;
+            }
+
+            int nativeClassPos = (playerCarIdx >= 0 && playerCarIdx < _carSaClassPositionByIdx.Length) ? _carSaClassPositionByIdx[playerCarIdx] : 0;
+            int effectiveClassPos = GetEffectivePositionInClassForPublishedContext(playerCarIdx, nativeClassPos);
+            return Math.Max(0, effectiveClassPos);
+        }
+
+        private int ResolveRaceFinishLiveOverallFieldSize(PluginManager pluginManager)
+        {
+            int opponentsCount = SafeReadInt(pluginManager, "DataCorePlugin.GameData.OpponentsCount", 0);
+            if (opponentsCount > 0)
+            {
+                return opponentsCount + 1;
+            }
+
+            return 0;
+        }
+
+        private int ResolveRaceFinishLiveClassFieldSize(PluginManager pluginManager, int playerCarIdx)
+        {
+            int classOpponentsCount = SafeReadInt(pluginManager, "DataCorePlugin.GameRawData.Telemetry.OpponentsInClassCount", 0);
+            if (classOpponentsCount > 0)
+            {
+                return classOpponentsCount + 1;
+            }
+
+            if (playerCarIdx >= 0)
+            {
+                int driverCount = ComputeEffectiveClassDriverCount(pluginManager, playerCarIdx);
+                if (driverCount > 0)
+                {
+                    return driverCount;
+                }
+            }
+
+            return 0;
+        }
+
+        private double ResolveRaceFinishLiveFuelLeft(PluginManager pluginManager)
+        {
+            return Math.Max(0.0, SafeReadDouble(pluginManager, "DataCorePlugin.GameRawData.Telemetry.FuelLevel", 0.0));
+        }
+
+        private double ResolveBestLapLiveSeconds(int playerCarIdx)
+        {
+            double playerBestLapSec = _lastSeenBestLap > TimeSpan.Zero
+                ? _lastSeenBestLap.TotalSeconds
+                : ((playerCarIdx >= 0 && playerCarIdx < _carSaBestLapTimeSecByIdx.Length) ? _carSaBestLapTimeSecByIdx[playerCarIdx] : double.NaN);
+            return IsValidCarSaLapTimeSec(playerBestLapSec) ? playerBestLapSec : 0.0;
+        }
+
+        private string FormatBestLapLiveOrDash(int playerCarIdx)
+        {
+            double bestLapSec = ResolveBestLapLiveSeconds(playerCarIdx);
+            return IsValidCarSaLapTimeSec(bestLapSec) ? FormatLapTime(bestLapSec) : "-";
         }
 
         private void ResetPitScreenToAuto(string reason)
