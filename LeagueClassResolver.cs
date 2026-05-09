@@ -309,6 +309,41 @@ namespace LaunchPlugin
             return count;
         }
 
+
+        public bool HasValidCsvMembership(LaunchPluginSettings settings, int? customerId, string className)
+        {
+            if (settings == null || !customerId.HasValue || customerId.Value <= 0 || string.IsNullOrWhiteSpace(className))
+            {
+                return false;
+            }
+
+            var mode = (LeagueClassMode)settings.LeagueClassMode;
+            bool allowCsvResolution = mode == LeagueClassMode.CsvOnly || mode == LeagueClassMode.CsvThenName;
+            if (!allowCsvResolution)
+            {
+                return false;
+            }
+
+            if (!_csvByCustomerId.TryGetValue(customerId.Value, out var entry) || entry == null || string.IsNullOrWhiteSpace(entry.ClassName))
+            {
+                return false;
+            }
+
+            if (!string.Equals(entry.ClassName, className, StringComparison.OrdinalIgnoreCase))
+            {
+                return false;
+            }
+
+            var classDef = (settings.LeagueClassDefinitions ?? new List<LeagueClassDefinition>())
+                .FirstOrDefault(d => d != null && string.Equals(d.CsvClassName, className, StringComparison.OrdinalIgnoreCase));
+            if (classDef != null && !classDef.Enabled)
+            {
+                return false;
+            }
+
+            return true;
+        }
+
         public EffectiveRaceClassInfo ResolvePlayerEffectiveClass(LaunchPluginSettings settings, int? playerCustomerId, string playerName)
         {
             if (settings == null || !settings.LeagueClassEnabled)

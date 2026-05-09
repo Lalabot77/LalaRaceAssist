@@ -5595,6 +5595,19 @@ namespace LaunchPlugin
                 int csvClassCount = _leagueClassResolver != null
                     ? _leagueClassResolver.CountValidCsvDriversInClass(Settings, player.Name)
                     : 0;
+
+                int? playerUserId;
+                string playerName;
+                TryGetLivePlayerIdentityPreview(out playerUserId, out playerName);
+                bool playerAlreadyRepresentedInCsv = _leagueClassResolver != null
+                    && _leagueClassResolver.HasValidCsvMembership(Settings, playerUserId, player.Name);
+
+                // Preserve live-path cohort semantics: player is part of their own effective cohort.
+                if (!playerAlreadyRepresentedInCsv)
+                {
+                    csvClassCount += 1;
+                }
+
                 return csvClassCount > 0 ? csvClassCount : 0;
             }
 

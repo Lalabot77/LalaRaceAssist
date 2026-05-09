@@ -1,3 +1,5 @@
+- 2026-05-09 follow-up: preserved player-included cohort semantics in LeagueClass.Player.DriverCount CSV fallback.
+  - when live competing-driver rows are unavailable, CSV fallback now adds the player into cohort count unless the player already has a valid CSV membership in the same effective class.
 - 2026-05-09 follow-up: gated LeagueClass.Player.DriverCount CSV fallback by active League Class mode.
   - CSV fallback cohort count now runs only in CSV-capable modes (`CsvOnly` / `CsvThenName`), preventing stale in-memory CSV counts from leaking into `NameOnly` semantics during live-row outages.
 - 2026-05-09 follow-up: LeagueClass.Player.DriverCount CSV fallback now applies class-definition enablement gate.
