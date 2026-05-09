@@ -2130,3 +2130,8 @@ The public user-facing release history is maintained in the root `CHANGELOG.md`.
 - Classification: **both** (H2HTrack class presentation correctness + internal contract/docs alignment).
 - `BuildH2HTrackSelector(...)` now carries selected CarSA slot `UserID` into `H2HEngine.TargetSelector` so `H2HTrack.Ahead/Behind.ClassColor` and `ClassColorHex` can resolve League Class via the same CSV-first identity seam as CarSA/H2HRace when enabled.
 - Kept H2HTrack physical target selection and all sector/delta/timing logic unchanged; unresolved/disabled paths still fall back to native class colour behavior.
+
+## 2026-05-09 — PR follow-up: finish-like flag wording clarification
+- Classification: **internal-only** (documentation wording clarification only; no runtime/code changes).
+- Clarified finish-latch wording to describe checkered as the practical finish-like source in this telemetry path, while noting crossed is not relied on as required line-crossing proof.
+- Kept existing RaceFinish/leader-finished latch behavior unchanged.
