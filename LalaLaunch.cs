@@ -12731,6 +12731,7 @@ namespace LaunchPlugin
             }
             catch (Exception ex)
             {
+                _propertySnapshotLastProcessedPressCount = pressCount;
                 SimHub.Logging.Current.Warn($"[LalaPlugin:Debug] Property snapshot export failed for marker count {pressCount}: {ex.Message}");
             }
         }

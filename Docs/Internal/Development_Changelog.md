@@ -1,3 +1,6 @@
+- 2026-05-09 property snapshot per-press failure handling fix:
+  - failed marker snapshot attempts now stamp the processed press count in the failure path to prevent repeated retries/log spam from a single press; next snapshots still require a new marker press.
+
 - 2026-05-09 property snapshot write-path hardening follow-up:
   - snapshot one-shot and rolling writes now retry to Documents fallback when Program Files primary path fails during file write/append (including ACL-denied existing-folder cases);
   - snapshot export no longer permanently disables after a single primary IO failure;
