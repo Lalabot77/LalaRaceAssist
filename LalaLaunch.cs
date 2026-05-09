@@ -5593,7 +5593,7 @@ namespace LaunchPlugin
                 // Fallback path: when live competing-driver identity rows are unavailable,
                 // still provide player effective-class cohort size from valid CSV mappings.
                 int csvClassCount = _leagueClassResolver != null
-                    ? _leagueClassResolver.CountValidCsvDriversInClass(player.Name)
+                    ? _leagueClassResolver.CountValidCsvDriversInClass(Settings, player.Name)
                     : 0;
                 return csvClassCount > 0 ? csvClassCount : 0;
             }

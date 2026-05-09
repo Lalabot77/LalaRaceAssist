@@ -1,3 +1,5 @@
+- 2026-05-09 follow-up: LeagueClass.Player.DriverCount CSV fallback now applies class-definition enablement gate.
+  - CSV fallback cohort count now returns `0` for disabled class definitions, matching resolver behavior (`Source=NATIVE` invalid path) and avoiding fallback/live semantic drift.
 
 - 2026-05-09 LeagueClass.Player.DriverCount cohort-count reliability fix:
   - fixed enabled+resolved League Class cases where `LeagueClass.Player.DriverCount` could publish `0` despite valid player class resolution and loaded CSV mappings.

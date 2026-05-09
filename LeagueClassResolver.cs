@@ -275,9 +275,16 @@ namespace LaunchPlugin
         }
 
 
-        public int CountValidCsvDriversInClass(string className)
+        public int CountValidCsvDriversInClass(LaunchPluginSettings settings, string className)
         {
-            if (string.IsNullOrWhiteSpace(className) || _csvByCustomerId.Count <= 0)
+            if (settings == null || string.IsNullOrWhiteSpace(className) || _csvByCustomerId.Count <= 0)
+            {
+                return 0;
+            }
+
+            var classDef = (settings.LeagueClassDefinitions ?? new List<LeagueClassDefinition>())
+                .FirstOrDefault(d => d != null && string.Equals(d.CsvClassName, className, StringComparison.OrdinalIgnoreCase));
+            if (classDef != null && !classDef.Enabled)
             {
                 return 0;
             }
