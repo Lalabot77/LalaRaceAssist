@@ -5584,6 +5584,14 @@ namespace LaunchPlugin
                     int carIdx = SafeReadIntProperty(basePath + ".CarIdx", -1);
                     int userId = SafeReadIntProperty(basePath + ".UserID");
                     string name = SafeReadStringProperty(basePath + ".UserName");
+                    if (string.IsNullOrWhiteSpace(name))
+                    {
+                        name = SafeReadStringProperty(basePath + ".UserNameRaw");
+                    }
+                    if (string.IsNullOrWhiteSpace(name))
+                    {
+                        name = SafeReadStringProperty(basePath + ".UserNameProcessed");
+                    }
                     if (userId <= 0 && string.IsNullOrWhiteSpace(name)) continue;
 
                     bool isPlayerRow = playerCarIdx >= 0 && carIdx == playerCarIdx;
@@ -5602,7 +5610,39 @@ namespace LaunchPlugin
                     if (!info.Valid || string.IsNullOrWhiteSpace(info.Name)) continue;
                     if (string.Equals(info.Name, player.Name, StringComparison.OrdinalIgnoreCase)) count++;
                 }
-                return count > 0 ? count : 0;
+
+                if (count > 0)
+                {
+                    return count;
+                }
+
+                // Fallback path: when live competing-driver identity rows are unavailable,
+                // still provide player effective-class cohort size from valid CSV mappings.
+                var mode = (LeagueClassMode)(Settings?.LeagueClassMode ?? (int)LeagueClassMode.Disabled);
+                bool allowCsvFallback = mode == LeagueClassMode.CsvOnly || mode == LeagueClassMode.CsvThenName;
+                if (!allowCsvFallback)
+                {
+                    return 0;
+                }
+
+                int csvClassCount = _leagueClassResolver != null
+                    ? _leagueClassResolver.CountValidCsvDriversInClass(Settings, player.Name)
+                    : 0;
+
+                int? playerUserId;
+                string playerName;
+                TryGetLivePlayerIdentityPreview(out playerUserId, out playerName);
+                bool playerAlreadyRepresentedInCsv = _leagueClassResolver != null
+                    && _leagueClassResolver.HasValidCsvMembership(Settings, playerUserId, player.Name);
+
+                // Preserve live-path cohort semantics: player is part of their own effective cohort,
+                // but only when CSV fallback semantics are active for the current mode.
+                if (!playerAlreadyRepresentedInCsv)
+                {
+                    csvClassCount += 1;
+                }
+
+                return csvClassCount > 0 ? csvClassCount : 0;
             }
 
             return GetNativePlayerClassDriverCount();
