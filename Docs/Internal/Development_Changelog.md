@@ -1,3 +1,7 @@
+- 2026-05-09 property snapshot path parity + gating diagnostics fix:
+  - aligned snapshot primary CSV path with existing plugin CSV writers (`<SimHub install>/Logs/LalaPluginData`) and kept Documents fallback on write/append failure;
+  - added one-time warning when Property Snapshot is enabled while Soft Debug is off, plus one-time info log of resolved primary/fallback snapshot paths.
+
 - 2026-05-09 property snapshot per-press failure handling fix:
   - failed marker snapshot attempts now stamp the processed press count in the failure path to prevent repeated retries/log spam from a single press; next snapshots still require a new marker press.
 

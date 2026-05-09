@@ -5063,6 +5063,8 @@ namespace LaunchPlugin
         private readonly Stopwatch _msgCxCooldownTimer = new Stopwatch();
         private readonly Stopwatch _eventMarkerCooldownTimer = new Stopwatch();
         private Dictionary<string, string> _propertySnapshotPreviousValues = new Dictionary<string, string>(StringComparer.Ordinal);
+        private bool _propertySnapshotDisabledGateLogged = false;
+        private bool _propertySnapshotPathLogged = false;
 
         // --- State: Timers ---
         private readonly Stopwatch _pittingTimer = new Stopwatch();
@@ -8884,6 +8886,8 @@ namespace LaunchPlugin
             _eventMarkerPressed = false;
             _eventMarkerPressCount = 0;
             _propertySnapshotLastProcessedPressCount = 0;
+            _propertySnapshotDisabledGateLogged = false;
+            _propertySnapshotPathLogged = false;
             _propertySnapshotPreviousValues.Clear();
 
             _shiftAssistAudio?.HardStop();
@@ -12714,13 +12718,25 @@ namespace LaunchPlugin
 
         private void MaybeWritePropertySnapshot(double sessionTimeSec)
         {
-            bool enabled = SoftDebugEnabled && Settings?.EnablePropertySnapshot == true;
+            bool snapshotSettingEnabled = Settings?.EnablePropertySnapshot == true;
+            bool enabled = SoftDebugEnabled && snapshotSettingEnabled;
             int pressCount = _eventMarkerPressCount;
             if (!enabled)
             {
+                if (snapshotSettingEnabled && !SoftDebugEnabled && !_propertySnapshotDisabledGateLogged)
+                {
+                    _propertySnapshotDisabledGateLogged = true;
+                    SimHub.Logging.Current.Warn("[LalaPlugin:Debug] Property Snapshot is enabled but Soft Debug is off; snapshot capture is gated until Soft Debug is enabled.");
+                }
+                if (!snapshotSettingEnabled)
+                {
+                    _propertySnapshotDisabledGateLogged = false;
+                }
                 _propertySnapshotLastProcessedPressCount = pressCount;
                 return;
             }
+
+            _propertySnapshotDisabledGateLogged = false;
 
             if (pressCount == _propertySnapshotLastProcessedPressCount) return;
 
@@ -12756,6 +12772,11 @@ namespace LaunchPlugin
 
             rows.Sort((a, b) => string.CompareOrdinal(a.Item1, b.Item1));
             string folder = ResolvePropertySnapshotPrimaryLogsFolder();
+            if (!_propertySnapshotPathLogged)
+            {
+                _propertySnapshotPathLogged = true;
+                SimHub.Logging.Current.Info($"[LalaPlugin:Debug] Property snapshot paths primary='{folder}' fallback='{ResolvePropertySnapshotFallbackLogsFolder()}'.");
+            }
             string utcStamp = DateTime.UtcNow.ToString("yyyy-MM-dd_HH-mm-ss-fff", CultureInfo.InvariantCulture);
             string sessStamp = double.IsNaN(sessionTimeSec) || double.IsInfinity(sessionTimeSec)
                 ? "NA"
@@ -12818,10 +12839,10 @@ namespace LaunchPlugin
 
         private static string ResolvePropertySnapshotPrimaryLogsFolder()
         {
-            string programFilesX86 = Environment.GetFolderPath(Environment.SpecialFolder.ProgramFilesX86);
-            if (!string.IsNullOrWhiteSpace(programFilesX86))
+            string baseDirectory = AppDomain.CurrentDomain.BaseDirectory;
+            if (!string.IsNullOrWhiteSpace(baseDirectory))
             {
-                return Path.Combine(programFilesX86, "SimHub", "Logs", "LalaPluginData");
+                return Path.Combine(baseDirectory, "Logs", "LalaPluginData");
             }
 
             return ResolvePropertySnapshotFallbackLogsFolder();
