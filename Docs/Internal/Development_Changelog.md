@@ -1,4 +1,5 @@
 ## 2026-05-09 — Debug Property Snapshot CSV system (Event Marker-triggered)
+- Follow-up review fix: snapshot trigger now consumes/stamps marker press count while snapshot mode is disabled, preventing stale disabled-window presses from firing immediate captures when re-enabled later in the same session.
 - Follow-up review fixes: `Car.Debug.*` now classifies into `RawDebug` before generic `Car.*`, and snapshot triggering now keys off per-press marker count (not pulse-edge bool) so every Event Marker action produces a snapshot even inside the 5s pulse window.
 - Follow-up review fix: added missing CSV sanitizer/value-string helpers used by Property Snapshot writer (`SanitizeCsvValue`, `SnapshotValueToString`) so build path compiles and CSV quoting handles commas/quotes/newlines safely.
 - Follow-up review fixes: property snapshot writes are now guarded by failure handling (one-time disable + warning on IO exceptions), and rolling CSV schema is now stable with always-present `ChangedVsPrevious` column (`NA` when changed-comparison is disabled for that capture).

@@ -1,3 +1,6 @@
+- 2026-05-09 stale disabled-window marker presses fix for Property Snapshot:
+  - while snapshot mode is disabled, marker press counter is now consumed so old presses do not trigger captures on later re-enable in the same session.
+
 - 2026-05-09 per-press trigger + Car.Debug bucket fix for Property Snapshot:
   - `Car.Debug.*` now routes to `RawDebug` classification bucket;
   - snapshot trigger now processes each Event Marker action press (counter-based), including repeated presses during the event pulse window.

@@ -12593,7 +12593,13 @@ namespace LaunchPlugin
             bool enabled = SoftDebugEnabled && Settings?.EnablePropertySnapshot == true;
             if (_propertySnapshotWriteFailed) return;
             int pressCount = _eventMarkerPressCount;
-            if (!enabled || pressCount == _propertySnapshotLastProcessedPressCount) return;
+            if (!enabled)
+            {
+                _propertySnapshotLastProcessedPressCount = pressCount;
+                return;
+            }
+
+            if (pressCount == _propertySnapshotLastProcessedPressCount) return;
 
             try
             {
