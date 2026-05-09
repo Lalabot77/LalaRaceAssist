@@ -22,6 +22,17 @@
 - Preserved priority hierarchy and invariants: per-car finish-like flags + player checkered seams trigger player capture before fallback; `SessionState==6` remains last-resort safety fallback.
 - Fixed `RaceFinish.PlayerClassFieldSize` freeze reliability by avoiding zero-opponent telemetry lock-in at class snapshot and using existing effective class cohort fallback when available.
 - Result: player-facing frozen `RaceFinish` values now freeze at actual player finish crossing in replay paths instead of drifting until session complete fallback.
+## 2026-05-09 — Debug Property Snapshot CSV system (Event Marker-triggered)
+- Follow-up test fix: Property Snapshot export path now targets `Program Files (x86)/SimHub/Logs/LalaPluginData` (fallback `Documents/SimHub/Logs/LalaPluginData` if Program Files x86 is unavailable) to align with active SimHub install log location.
+- Follow-up review fix: snapshot trigger now consumes/stamps marker press count while snapshot mode is disabled, preventing stale disabled-window presses from firing immediate captures when re-enabled later in the same session.
+- Follow-up review fixes: `Car.Debug.*` now classifies into `RawDebug` before generic `Car.*`, and snapshot triggering now keys off per-press marker count (not pulse-edge bool) so every Event Marker action produces a snapshot even inside the 5s pulse window.
+- Follow-up review fix: added missing CSV sanitizer/value-string helpers used by Property Snapshot writer (`SanitizeCsvValue`, `SnapshotValueToString`) so build path compiles and CSV quoting handles commas/quotes/newlines safely.
+- Follow-up review fixes: property snapshot writes are now guarded by failure handling (one-time disable + warning on IO exceptions), and rolling CSV schema is now stable with always-present `ChangedVsPrevious` column (`NA` when changed-comparison is disabled for that capture).
+- Classification: **both** (new debug settings/workflow + internal docs alignment).
+- Added Debug `Enable Property Snapshot` flow: when enabled and Event Marker is pressed, plugin writes `PropertySnapshot_<UTC>_Sess<SessionTimeSec>.csv` under `SimHub/Logs/LalaPluginData/`.
+- Snapshot rows include `SimHubProperty`, `InternalSource`, `Value`, `GroupType`; optional `ChangedVsPrevious` column compares values against the prior marker snapshot (`NA` when no baseline exists).
+- Added checkbox-scoped group filtering (`Select All`, Fuel/Strategy, Car/Opp/H2H, Pit/PitExit, Shift Assist, Message System, League Class, Raw Debug) and optional rolling append output (`PropertySnapshot_Rolling.csv`).
+- Added core export `Debug.PropertySnapshotEnabled` (`1`/`0`) for dash/debug visibility.
 
 ## 2026-05-09 — RaceFinish live-then-freeze player fields + frozen denominator exports
 - Classification: **both** (dash-facing RaceFinish behavior refinement + new exports + docs alignment).
