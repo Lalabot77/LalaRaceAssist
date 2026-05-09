@@ -274,6 +274,27 @@ namespace LaunchPlugin
             };
         }
 
+
+        public int CountValidCsvDriversInClass(string className)
+        {
+            if (string.IsNullOrWhiteSpace(className) || _csvByCustomerId.Count <= 0)
+            {
+                return 0;
+            }
+
+            int count = 0;
+            foreach (var entry in _csvByCustomerId.Values)
+            {
+                if (entry != null && !string.IsNullOrWhiteSpace(entry.ClassName)
+                    && string.Equals(entry.ClassName, className, StringComparison.OrdinalIgnoreCase))
+                {
+                    count++;
+                }
+            }
+
+            return count;
+        }
+
         public EffectiveRaceClassInfo ResolvePlayerEffectiveClass(LaunchPluginSettings settings, int? playerCustomerId, string playerName)
         {
             if (settings == null || !settings.LeagueClassEnabled)

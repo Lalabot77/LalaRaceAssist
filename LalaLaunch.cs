@@ -5558,6 +5558,14 @@ namespace LaunchPlugin
                     int carIdx = SafeReadIntProperty(basePath + ".CarIdx", -1);
                     int userId = SafeReadIntProperty(basePath + ".UserID");
                     string name = SafeReadStringProperty(basePath + ".UserName");
+                    if (string.IsNullOrWhiteSpace(name))
+                    {
+                        name = SafeReadStringProperty(basePath + ".UserNameRaw");
+                    }
+                    if (string.IsNullOrWhiteSpace(name))
+                    {
+                        name = SafeReadStringProperty(basePath + ".UserNameProcessed");
+                    }
                     if (userId <= 0 && string.IsNullOrWhiteSpace(name)) continue;
 
                     bool isPlayerRow = playerCarIdx >= 0 && carIdx == playerCarIdx;
@@ -5576,7 +5584,18 @@ namespace LaunchPlugin
                     if (!info.Valid || string.IsNullOrWhiteSpace(info.Name)) continue;
                     if (string.Equals(info.Name, player.Name, StringComparison.OrdinalIgnoreCase)) count++;
                 }
-                return count > 0 ? count : 0;
+
+                if (count > 0)
+                {
+                    return count;
+                }
+
+                // Fallback path: when live competing-driver identity rows are unavailable,
+                // still provide player effective-class cohort size from valid CSV mappings.
+                int csvClassCount = _leagueClassResolver != null
+                    ? _leagueClassResolver.CountValidCsvDriversInClass(player.Name)
+                    : 0;
+                return csvClassCount > 0 ? csvClassCount : 0;
             }
 
             return GetNativePlayerClassDriverCount();

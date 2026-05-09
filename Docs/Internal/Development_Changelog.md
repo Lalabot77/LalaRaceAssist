@@ -1,3 +1,8 @@
+
+- 2026-05-09 LeagueClass.Player.DriverCount cohort-count reliability fix:
+  - fixed enabled+resolved League Class cases where `LeagueClass.Player.DriverCount` could publish `0` despite valid player class resolution and loaded CSV mappings.
+  - added live-row name fallback probes (`UserNameRaw`, `UserNameProcessed`) in the competing-driver scan path.
+  - added fallback to CSV cohort count for the resolved player class when live competing-driver identity rows are temporarily unavailable; native-class fallback behavior when League Class is disabled/unresolved remains unchanged.
 - 2026-05-08 Phase 2B fuel export audit documentation sync landed:
   - marked `Fuel.Refuel.*` as canonical race-running next-stop refuel guidance surface across inventory/subsystem dash docs, while preserving `StrategyDash.NextRefuel*` as pre-green/planning (not obsolete);
   - reinforced dashboard guidance to prefer plugin-owned `Fuel.Refuel.*`, `Fuel.RequiredBurnToEnd*`, `Fuel.Contingency.*`, and `Fuel.Delta.*` for runtime fuel widgets instead of dash-side NCALC chains;
