@@ -5041,6 +5041,7 @@ namespace LaunchPlugin
         private bool _isTimingZeroTo100 = false;
         private bool _launchSuccessful = false;
         private bool _eventMarkerPressed = false;
+        private bool _propertySnapshotLastMarkerState = false;
         private bool _msgCxPressed = false;
         private bool _pitScreenActive = false;
         private bool _pitScreenDismissed = false;
@@ -5057,6 +5058,7 @@ namespace LaunchPlugin
         private readonly Stopwatch _offTrackHighSpeedTimer = new Stopwatch();
         private readonly Stopwatch _msgCxCooldownTimer = new Stopwatch();
         private readonly Stopwatch _eventMarkerCooldownTimer = new Stopwatch();
+        private Dictionary<string, string> _propertySnapshotPreviousValues = new Dictionary<string, string>(StringComparer.Ordinal);
 
         // --- State: Timers ---
         private readonly Stopwatch _pittingTimer = new Stopwatch();
@@ -6189,7 +6191,13 @@ namespace LaunchPlugin
         private const string GlobalSettingsFileName = "GlobalSettings.json";
         private const string GlobalSettingsLegacyFileName = "LalaLaunch.GlobalSettings_V2.json";
 
-        private void AttachCore(string name, Func<object> getter) => this.AttachDelegate(name, getter);
+        private readonly Dictionary<string, Func<object>> _attachedCoreGetters = new Dictionary<string, Func<object>>(StringComparer.Ordinal);
+        private void AttachCore(string name, Func<object> getter)
+        {
+            this.AttachDelegate(name, getter);
+            if (string.IsNullOrWhiteSpace(name) || getter == null) return;
+            _attachedCoreGetters[name] = getter;
+        }
         private void AttachVerbose(string name, Func<object> getter)
         {
             if (SimhubPublish.VERBOSE) this.AttachDelegate(name, getter);
@@ -6973,6 +6981,7 @@ namespace LaunchPlugin
             AttachCore("RaceFinish.ClassBestLapSec", () => _raceFinishClassBestLapSec);
             AttachCore("MsgCxPressed", () => _msgCxPressed);
             AttachCore("Debug.EventMarkerPressed", () => _eventMarkerPressed);
+            AttachCore("Debug.PropertySnapshotEnabled", () => Settings?.EnablePropertySnapshot == true ? 1 : 0);
             AttachCore("Debug.Hide_1", () => Settings?.DebugHide1 == true ? 1 : 0);
             AttachCore("Debug.Hide_2", () => Settings?.DebugHide2 == true ? 1 : 0);
             AttachCore("Debug.Hide_3", () => Settings?.DebugHide3 == true ? 1 : 0);
@@ -8746,6 +8755,8 @@ namespace LaunchPlugin
             _msgCxPressed = false;
             _eventMarkerCooldownTimer.Reset();
             _eventMarkerPressed = false;
+            _propertySnapshotLastMarkerState = false;
+            _propertySnapshotPreviousValues.Clear();
 
             _shiftAssistAudio?.HardStop();
             _shiftAssistTargetCurrentGear = 0;
@@ -9691,6 +9702,7 @@ namespace LaunchPlugin
 
             _carPlayerTrackPct = SanitizeTrackPercent(trackPct);
             double sessionTimeSec = ResolveShiftAssistSessionTimeSec(pluginManager);
+            MaybeWritePropertySnapshot(sessionTimeSec);
             double sessionTimeRemainingSec = SafeReadDouble(pluginManager, "DataCorePlugin.GameRawData.Telemetry.SessionTimeRemain", double.NaN);
             int sessionState = SafeReadInt(pluginManager, "DataCorePlugin.GameRawData.Telemetry.SessionState", 0);
             string sessionTypeName = !string.IsNullOrWhiteSpace(currentSessionTypeForConfidence)
@@ -12569,6 +12581,136 @@ namespace LaunchPlugin
             }
 
             return buffer.ToString();
+        }
+
+        private void MaybeWritePropertySnapshot(double sessionTimeSec)
+        {
+            bool enabled = SoftDebugEnabled && Settings?.EnablePropertySnapshot == true;
+            bool markerNow = _eventMarkerPressed;
+            bool risingEdge = markerNow && !_propertySnapshotLastMarkerState;
+            _propertySnapshotLastMarkerState = markerNow;
+            if (!enabled || !risingEdge) return;
+
+            WritePropertySnapshotCsv(sessionTimeSec);
+        }
+
+        private void WritePropertySnapshotCsv(double sessionTimeSec)
+        {
+            var rows = new List<Tuple<string, string, string, string>>();
+            var currentValues = new Dictionary<string, string>(StringComparer.Ordinal);
+            foreach (var kvp in _attachedCoreGetters)
+            {
+                string propertyName = kvp.Key;
+                string group = ResolvePropertySnapshotGroup(propertyName);
+                if (!IsPropertySnapshotGroupEnabled(group)) continue;
+
+                object rawValue = null;
+                try { rawValue = kvp.Value(); } catch { rawValue = null; }
+                string valueText = SanitizeCsvValue(rawValue);
+                string source = propertyName;
+                currentValues[propertyName] = valueText;
+                rows.Add(Tuple.Create(propertyName, source, valueText, group));
+            }
+
+            rows.Sort((a, b) => string.CompareOrdinal(a.Item1, b.Item1));
+            string folder = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.MyDocuments), "SimHub", "Logs", "LalapluginData");
+            Directory.CreateDirectory(folder);
+            string utcStamp = DateTime.UtcNow.ToString("yyyy-MM-dd_HH-mm-ss-fff", CultureInfo.InvariantCulture);
+            string sessStamp = double.IsNaN(sessionTimeSec) || double.IsInfinity(sessionTimeSec)
+                ? "NA"
+                : sessionTimeSec.ToString("0.00", CultureInfo.InvariantCulture);
+            string filePath = Path.Combine(folder, $"PropertySnapshot_{utcStamp}_Sess{sessStamp}.csv");
+
+            var buffer = new StringBuilder(8192);
+            buffer.Append("SimHubProperty,InternalSource,Value,GroupType");
+            if (Settings?.PropertySnapshotIncludeChangedValues == true) buffer.Append(",ChangedVsPrevious");
+            buffer.AppendLine();
+            foreach (var row in rows)
+            {
+                buffer.Append(SanitizeCsvValue(row.Item1)).Append(',')
+                    .Append(SanitizeCsvValue(row.Item2)).Append(',')
+                    .Append(SanitizeCsvValue(row.Item3)).Append(',')
+                    .Append(SanitizeCsvValue(row.Item4));
+                if (Settings?.PropertySnapshotIncludeChangedValues == true)
+                {
+                    if (_propertySnapshotPreviousValues.TryGetValue(row.Item1, out var prev))
+                    {
+                        buffer.Append(',').Append(string.Equals(prev, row.Item3, StringComparison.Ordinal) ? "0" : "1");
+                    }
+                    else
+                    {
+                        buffer.Append(",NA");
+                    }
+                }
+                buffer.AppendLine();
+            }
+            File.WriteAllText(filePath, buffer.ToString());
+
+            if (Settings?.PropertySnapshotRollingCombinedCsv == true)
+            {
+                string rollingPath = Path.Combine(folder, "PropertySnapshot_Rolling.csv");
+                bool newFile = !File.Exists(rollingPath);
+                var rolling = new StringBuilder(8192);
+                if (newFile)
+                {
+                    rolling.Append("SnapshotUtc,SessionTimeSec,SimHubProperty,InternalSource,Value,GroupType");
+                    if (Settings?.PropertySnapshotIncludeChangedValues == true) rolling.Append(",ChangedVsPrevious");
+                    rolling.AppendLine();
+                }
+                foreach (var row in rows)
+                {
+                    rolling.Append(SanitizeCsvValue(utcStamp)).Append(',')
+                        .Append(SanitizeCsvValue(sessStamp)).Append(',')
+                        .Append(SanitizeCsvValue(row.Item1)).Append(',')
+                        .Append(SanitizeCsvValue(row.Item2)).Append(',')
+                        .Append(SanitizeCsvValue(row.Item3)).Append(',')
+                        .Append(SanitizeCsvValue(row.Item4));
+                    if (Settings?.PropertySnapshotIncludeChangedValues == true)
+                    {
+                        if (_propertySnapshotPreviousValues.TryGetValue(row.Item1, out var prev))
+                        {
+                            rolling.Append(',').Append(string.Equals(prev, row.Item3, StringComparison.Ordinal) ? "0" : "1");
+                        }
+                        else
+                        {
+                            rolling.Append(",NA");
+                        }
+                    }
+                    rolling.AppendLine();
+                }
+                File.AppendAllText(rollingPath, rolling.ToString());
+            }
+
+            _propertySnapshotPreviousValues = currentValues;
+        }
+
+        private bool IsPropertySnapshotGroupEnabled(string group)
+        {
+            bool all = Settings?.PropertySnapshotSelectAllGroups == true;
+            if (all) return true;
+            switch (group)
+            {
+                case "FuelStrategy": return Settings?.PropertySnapshotGroupFuelStrategy == true;
+                case "CarOppH2H": return Settings?.PropertySnapshotGroupCarOppH2H == true;
+                case "PitPitExit": return Settings?.PropertySnapshotGroupPitPitExit == true;
+                case "ShiftAssist": return Settings?.PropertySnapshotGroupShiftAssist == true;
+                case "MessageSystem": return Settings?.PropertySnapshotGroupMessageSystem == true;
+                case "LeagueClass": return Settings?.PropertySnapshotGroupLeagueClass == true;
+                case "RawDebug": return Settings?.PropertySnapshotGroupRawDebug == true;
+                default: return false;
+            }
+        }
+
+        private static string ResolvePropertySnapshotGroup(string propertyName)
+        {
+            if (propertyName.StartsWith("Fuel.", StringComparison.Ordinal) || propertyName.StartsWith("Strategy", StringComparison.Ordinal)) return "FuelStrategy";
+            if (propertyName.StartsWith("Car.", StringComparison.Ordinal) || propertyName.StartsWith("Opp.", StringComparison.Ordinal) || propertyName.StartsWith("H2H", StringComparison.Ordinal) || propertyName.StartsWith("LapRef.", StringComparison.Ordinal)) return "CarOppH2H";
+            if (propertyName.StartsWith("Pit.", StringComparison.Ordinal) || propertyName.StartsWith("PitExit.", StringComparison.Ordinal)) return "PitPitExit";
+            if (propertyName.StartsWith("ShiftAssist.", StringComparison.Ordinal)) return "ShiftAssist";
+            if (propertyName.StartsWith("MSG", StringComparison.Ordinal) || propertyName.StartsWith("Message", StringComparison.Ordinal)) return "MessageSystem";
+            if (propertyName.StartsWith("LeagueClass.", StringComparison.Ordinal)) return "LeagueClass";
+            if (propertyName.StartsWith("Debug.", StringComparison.Ordinal) || propertyName.StartsWith("Car.Debug.", StringComparison.Ordinal)) return "RawDebug";
+            return "RawDebug";
         }
 
         private static void AppendCarSaDebugHeaderColumn(StringBuilder buffer, string columnName)
@@ -19958,6 +20100,17 @@ namespace LaunchPlugin
         public bool EnableCarSADebugExport { get; set; } = false;
         public bool EnableOffTrackDebugCsv { get; set; } = false;
         public bool OffTrackDebugLogChangesOnly { get; set; } = false;
+        public bool EnablePropertySnapshot { get; set; } = false;
+        public bool PropertySnapshotSelectAllGroups { get; set; } = true;
+        public bool PropertySnapshotGroupFuelStrategy { get; set; } = true;
+        public bool PropertySnapshotGroupCarOppH2H { get; set; } = true;
+        public bool PropertySnapshotGroupPitPitExit { get; set; } = true;
+        public bool PropertySnapshotGroupShiftAssist { get; set; } = true;
+        public bool PropertySnapshotGroupMessageSystem { get; set; } = true;
+        public bool PropertySnapshotGroupLeagueClass { get; set; } = true;
+        public bool PropertySnapshotGroupRawDebug { get; set; } = true;
+        public bool PropertySnapshotIncludeChangedValues { get; set; } = false;
+        public bool PropertySnapshotRollingCombinedCsv { get; set; } = false;
         public int CarSADebugExportCadence { get; set; } = 1;
         public int CarSADebugExportTickMaxHz { get; set; } = 20;
         public bool CarSADebugExportWriteEventsCsv { get; set; } = true;

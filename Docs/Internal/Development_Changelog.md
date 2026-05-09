@@ -1,3 +1,10 @@
+## 2026-05-09 — Debug Property Snapshot CSV system (Event Marker-triggered)
+- Classification: **both** (new debug settings/workflow + internal docs alignment).
+- Added Debug `Enable Property Snapshot` flow: when enabled and Event Marker is pressed, plugin writes `PropertySnapshot_<UTC>_Sess<SessionTimeSec>.csv` under `SimHub/Logs/LalapluginData/`.
+- Snapshot rows include `SimHubProperty`, `InternalSource`, `Value`, `GroupType`; optional `ChangedVsPrevious` column compares values against the prior marker snapshot (`NA` when no baseline exists).
+- Added checkbox-scoped group filtering (`Select All`, Fuel/Strategy, Car/Opp/H2H, Pit/PitExit, Shift Assist, Message System, League Class, Raw Debug) and optional rolling append output (`PropertySnapshot_Rolling.csv`).
+- Added core export `Debug.PropertySnapshotEnabled` (`1`/`0`) for dash/debug visibility.
+
 ## 2026-05-08 — RaceFinish split snapshots + player finish gap timer
 - Classification: **both** (RaceFinish contract refinement + dash-facing behavior update).
 - Refactored RaceFinish from single-shot capture to split stages:

@@ -1,3 +1,9 @@
+- 2026-05-09 debug snapshot system landed:
+  - added Event Marker-triggered `PropertySnapshot_<UTC>_Sess<SessionTimeSec>.csv` debug export (group-filtered property snapshot with `SimHubProperty/InternalSource/Value/GroupType`);
+  - optional `ChangedVsPrevious` column compares against prior snapshot (`NA` when no baseline);
+  - optional rolling append output `PropertySnapshot_Rolling.csv`;
+  - added core visibility export `Debug.PropertySnapshotEnabled`.
+
 - 2026-05-08 docs sweep landed:
   - added canonical subsystem documentation `Docs/Subsystems/League_Class_System.md` covering resolver precedence, fallback hierarchy, UI workflow, export contract, and ownership boundaries;
   - aligned subsystem/internal cross-references (`Project_Index`, `H2H`, `Dash_Integration`, `SimHubParameterInventory`, `Plugin_UI_Tooltips`) to point to the canonical League Class doc and reduce duplication/stale drift.
