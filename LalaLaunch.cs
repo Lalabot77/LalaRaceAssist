@@ -12931,14 +12931,14 @@ namespace LaunchPlugin
                 var lines = File.ReadAllLines(filePath);
                 if (lines.Length > 0)
                 {
-                    var header = lines[0].Split(',');
-                    for (int i = 1; i < header.Length; i++) stamps.Add(header[i]);
+                    var header = ParseCsvLineQuoted(lines[0]);
+                    for (int i = 1; i < header.Count; i++) stamps.Add(header[i]);
                     for (int i = 1; i < lines.Length; i++)
                     {
-                        var cols = lines[i].Split(',');
-                        if (cols.Length == 0) continue;
+                        var cols = ParseCsvLineQuoted(lines[i]);
+                        if (cols.Count == 0) continue;
                         var values = new List<string>();
-                        for (int c = 1; c < cols.Length; c++) values.Add(cols[c]);
+                        for (int c = 1; c < cols.Count; c++) values.Add(cols[c]);
                         while (values.Count < stamps.Count) values.Add(string.Empty);
                         existing[cols[0]] = values;
                     }
@@ -13011,6 +13011,48 @@ namespace LaunchPlugin
             if (value is bool b) return b ? "true" : "false";
             if (value is IFormattable f) return f.ToString(null, CultureInfo.InvariantCulture) ?? string.Empty;
             return Convert.ToString(value, CultureInfo.InvariantCulture) ?? string.Empty;
+        }
+
+
+        private static List<string> ParseCsvLineQuoted(string line)
+        {
+            var result = new List<string>();
+            if (line == null)
+            {
+                result.Add(string.Empty);
+                return result;
+            }
+
+            var current = new StringBuilder();
+            bool inQuotes = false;
+            for (int i = 0; i < line.Length; i++)
+            {
+                char ch = line[i];
+                if (ch == '"')
+                {
+                    if (inQuotes && i + 1 < line.Length && line[i + 1] == '"')
+                    {
+                        current.Append('"');
+                        i++;
+                    }
+                    else
+                    {
+                        inQuotes = !inQuotes;
+                    }
+                }
+                else if (ch == ',' && !inQuotes)
+                {
+                    result.Add(current.ToString());
+                    current.Clear();
+                }
+                else
+                {
+                    current.Append(ch);
+                }
+            }
+
+            result.Add(current.ToString());
+            return result;
         }
 
         private static string SanitizeCsvValue(object value)

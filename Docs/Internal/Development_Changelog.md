@@ -1,3 +1,6 @@
+- 2026-05-10 rolling CSV parser correctness fix:
+  - rolling wide-file reload now parses CSV with quote-aware logic (no naive `Split(',')`), preventing comma/quote-containing values from corrupting column alignment over subsequent captures.
+
 - 2026-05-10 rolling snapshot layout + fallback path bugfix:
   - rolling `PropertySnapshot_Rolling.csv` now writes in wide format (`SimHubProperty` rows, one new timestamp column per capture) for easier left-to-right comparison;
   - one-shot fallback writes now preserve relative subfolder paths (including `PropertySnapshots`) instead of flattening to fallback root.
