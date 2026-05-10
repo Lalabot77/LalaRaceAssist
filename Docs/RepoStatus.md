@@ -1,3 +1,7 @@
+- 2026-05-10 property snapshot one-shot file organization tweak:
+  - one-shot `PropertySnapshot_<...>.csv` files now write under `.../Logs/LalaPluginData/PropertySnapshots/` for cleaner folder organization;
+  - rolling `PropertySnapshot_Rolling.csv` remains at `.../Logs/LalaPluginData/`.
+
 - 2026-05-09 property snapshot path parity + gating diagnostics fix:
   - aligned snapshot primary CSV path with existing plugin CSV writers (`<SimHub install>/Logs/LalaPluginData`) and kept Documents fallback on write/append failure;
   - added one-time warning when Property Snapshot is enabled while Soft Debug is off, plus one-time info log of resolved primary/fallback snapshot paths.

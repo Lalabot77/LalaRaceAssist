@@ -12775,13 +12775,14 @@ namespace LaunchPlugin
             if (!_propertySnapshotPathLogged)
             {
                 _propertySnapshotPathLogged = true;
-                SimHub.Logging.Current.Info($"[LalaPlugin:Debug] Property snapshot paths primary='{folder}' fallback='{ResolvePropertySnapshotFallbackLogsFolder()}'.");
+                SimHub.Logging.Current.Info($"[LalaPlugin:Debug] Property snapshot paths primary='{folder}' fallback='{ResolvePropertySnapshotFallbackLogsFolder()}', one-shot subfolder='PropertySnapshots'.");
             }
             string utcStamp = DateTime.UtcNow.ToString("yyyy-MM-dd_HH-mm-ss-fff", CultureInfo.InvariantCulture);
             string sessStamp = double.IsNaN(sessionTimeSec) || double.IsInfinity(sessionTimeSec)
                 ? "NA"
                 : sessionTimeSec.ToString("0.00", CultureInfo.InvariantCulture);
-            string filePath = Path.Combine(folder, $"PropertySnapshot_{utcStamp}_Sess{sessStamp}.csv");
+            string snapshotFolder = Path.Combine(folder, "PropertySnapshots");
+            string filePath = Path.Combine(snapshotFolder, $"PropertySnapshot_{utcStamp}_Sess{sessStamp}.csv");
 
             var buffer = new StringBuilder(8192);
             bool includeChanged = Settings?.PropertySnapshotIncludeChangedValues == true;
