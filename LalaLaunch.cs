@@ -12824,26 +12824,7 @@ namespace LaunchPlugin
             if (Settings?.PropertySnapshotRollingCombinedCsv == true)
             {
                 string rollingPath = Path.Combine(folder, "PropertySnapshot_Rolling.csv");
-                const string rollingHeader = "SnapshotUtc,SessionTimeSec,SimHubProperty,InternalSource,Value,GroupType,ChangedVsPrevious";
-                var rolling = new StringBuilder(8192);
-                foreach (var row in rows)
-                {
-                    rolling.Append(SanitizeCsvValue(utcStamp)).Append(',')
-                        .Append(SanitizeCsvValue(sessStamp)).Append(',')
-                        .Append(SanitizeCsvValue(row.Item1)).Append(',')
-                        .Append(SanitizeCsvValue(row.Item2)).Append(',')
-                        .Append(SanitizeCsvValue(row.Item3)).Append(',')
-                        .Append(SanitizeCsvValue(row.Item4));
-                    string changedText = "NA";
-                    if (_propertySnapshotPreviousValues.TryGetValue(row.Item1, out var prev))
-                    {
-                        changedText = string.Equals(prev, row.Item3, StringComparison.Ordinal) ? "0" : "1";
-                    }
-                    if (!includeChanged) changedText = "NA";
-                    rolling.Append(',').Append(changedText);
-                    rolling.AppendLine();
-                }
-                AppendSnapshotRollingWithFallback(rollingPath, rolling.ToString(), rollingHeader);
+                WriteSnapshotRollingWideWithFallback(rollingPath, utcStamp, rows);
             }
 
             _propertySnapshotPreviousValues = currentValues;
@@ -12875,7 +12856,7 @@ namespace LaunchPlugin
             }
             catch (Exception primaryEx)
             {
-                string fallbackFilePath = Path.Combine(ResolvePropertySnapshotFallbackLogsFolder(), Path.GetFileName(primaryFilePath));
+                string fallbackFilePath = BuildFallbackPathFromPrimary(primaryFilePath);
                 Directory.CreateDirectory(Path.GetDirectoryName(fallbackFilePath));
                 File.WriteAllText(fallbackFilePath, content);
                 SimHub.Logging.Current.Warn($"[LalaPlugin:Debug] Property snapshot primary write failed; fallback path used: {fallbackFilePath}. Primary error: {primaryEx.Message}");
@@ -12897,7 +12878,7 @@ namespace LaunchPlugin
             }
             catch (Exception primaryEx)
             {
-                string fallbackFilePath = Path.Combine(ResolvePropertySnapshotFallbackLogsFolder(), Path.GetFileName(primaryFilePath));
+                string fallbackFilePath = BuildFallbackPathFromPrimary(primaryFilePath);
                 Directory.CreateDirectory(Path.GetDirectoryName(fallbackFilePath));
                 bool fallbackNewFile = !File.Exists(fallbackFilePath);
                 if (fallbackNewFile)
@@ -12909,6 +12890,90 @@ namespace LaunchPlugin
             }
         }
 
+
+        private string BuildFallbackPathFromPrimary(string primaryFilePath)
+        {
+            string fallbackRoot = ResolvePropertySnapshotFallbackLogsFolder();
+            string primaryRoot = ResolvePropertySnapshotPrimaryLogsFolder();
+            if (!string.IsNullOrWhiteSpace(primaryRoot) && primaryFilePath.StartsWith(primaryRoot, StringComparison.OrdinalIgnoreCase))
+            {
+                string relative = primaryFilePath.Substring(primaryRoot.Length).TrimStart(Path.DirectorySeparatorChar, Path.AltDirectorySeparatorChar);
+                if (!string.IsNullOrWhiteSpace(relative))
+                {
+                    return Path.Combine(fallbackRoot, relative);
+                }
+            }
+            return Path.Combine(fallbackRoot, Path.GetFileName(primaryFilePath));
+        }
+
+        private void WriteSnapshotRollingWideWithFallback(string primaryFilePath, string captureStamp, List<Tuple<string, string, string, string>> rows)
+        {
+            try
+            {
+                WriteSnapshotRollingWide(primaryFilePath, captureStamp, rows);
+                SimHub.Logging.Current.Info($"[LalaPlugin:Debug] Property snapshot rolling append success: {primaryFilePath}");
+            }
+            catch (Exception primaryEx)
+            {
+                string fallbackFilePath = BuildFallbackPathFromPrimary(primaryFilePath);
+                WriteSnapshotRollingWide(fallbackFilePath, captureStamp, rows);
+                SimHub.Logging.Current.Warn($"[LalaPlugin:Debug] Property snapshot rolling primary append failed; fallback path used: {fallbackFilePath}. Primary error: {primaryEx.Message}");
+            }
+        }
+
+        private void WriteSnapshotRollingWide(string filePath, string captureStamp, List<Tuple<string, string, string, string>> rows)
+        {
+            Directory.CreateDirectory(Path.GetDirectoryName(filePath));
+            var existing = new Dictionary<string, List<string>>(StringComparer.Ordinal);
+            var stamps = new List<string>();
+            if (File.Exists(filePath))
+            {
+                var lines = File.ReadAllLines(filePath);
+                if (lines.Length > 0)
+                {
+                    var header = lines[0].Split(',');
+                    for (int i = 1; i < header.Length; i++) stamps.Add(header[i]);
+                    for (int i = 1; i < lines.Length; i++)
+                    {
+                        var cols = lines[i].Split(',');
+                        if (cols.Length == 0) continue;
+                        var values = new List<string>();
+                        for (int c = 1; c < cols.Length; c++) values.Add(cols[c]);
+                        while (values.Count < stamps.Count) values.Add(string.Empty);
+                        existing[cols[0]] = values;
+                    }
+                }
+            }
+            stamps.Add(captureStamp);
+            foreach (var row in rows)
+            {
+                if (!existing.TryGetValue(row.Item1, out var vals))
+                {
+                    vals = new List<string>();
+                    existing[row.Item1] = vals;
+                }
+                while (vals.Count < stamps.Count - 1) vals.Add(string.Empty);
+                vals.Add(row.Item3 ?? string.Empty);
+            }
+            foreach (var kv in existing)
+            {
+                while (kv.Value.Count < stamps.Count) kv.Value.Add(string.Empty);
+            }
+            var keys = new List<string>(existing.Keys);
+            keys.Sort(StringComparer.Ordinal);
+            var sb = new StringBuilder(8192);
+            sb.Append("SimHubProperty");
+            foreach (var s2 in stamps) sb.Append(',').Append(SanitizeCsvValue(s2));
+            sb.AppendLine();
+            foreach (var key in keys)
+            {
+                sb.Append(SanitizeCsvValue(key));
+                var vals = existing[key];
+                for (int i = 0; i < vals.Count; i++) sb.Append(',').Append(SanitizeCsvValue(vals[i]));
+                sb.AppendLine();
+            }
+            File.WriteAllText(filePath, sb.ToString());
+        }
         private bool IsPropertySnapshotGroupEnabled(string group)
         {
             bool all = Settings?.PropertySnapshotSelectAllGroups == true;

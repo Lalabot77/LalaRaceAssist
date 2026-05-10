@@ -1,3 +1,7 @@
+- 2026-05-10 rolling snapshot layout + fallback path bugfix:
+  - rolling `PropertySnapshot_Rolling.csv` now writes in wide format (`SimHubProperty` rows, one new timestamp column per capture) for easier left-to-right comparison;
+  - one-shot fallback writes now preserve relative subfolder paths (including `PropertySnapshots`) instead of flattening to fallback root.
+
 - 2026-05-10 property snapshot changed-values observability tweak:
   - added per-capture summary log with `includeChanged`, row count, and `changed1/changed0/changedNA` totals to make changed-comparison behavior explicit during testing.
 
