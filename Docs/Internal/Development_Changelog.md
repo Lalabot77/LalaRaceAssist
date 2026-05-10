@@ -1,3 +1,6 @@
+- 2026-05-10 property snapshot changed-values observability tweak:
+  - added per-capture summary log with `includeChanged`, row count, and `changed1/changed0/changedNA` totals to make changed-comparison behavior explicit during testing.
+
 - 2026-05-10 property snapshot one-shot file organization tweak:
   - one-shot `PropertySnapshot_<...>.csv` files now write under `.../Logs/LalaPluginData/PropertySnapshots/` for cleaner folder organization;
   - rolling `PropertySnapshot_Rolling.csv` remains at `.../Logs/LalaPluginData/`.

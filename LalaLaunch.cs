@@ -12786,6 +12786,9 @@ namespace LaunchPlugin
 
             var buffer = new StringBuilder(8192);
             bool includeChanged = Settings?.PropertySnapshotIncludeChangedValues == true;
+            int changedOnes = 0;
+            int changedZeros = 0;
+            int changedNa = 0;
             buffer.Append("SimHubProperty,InternalSource,Value,GroupType");
             if (includeChanged) buffer.Append(",ChangedVsPrevious");
             buffer.AppendLine();
@@ -12799,15 +12802,23 @@ namespace LaunchPlugin
                 {
                     if (_propertySnapshotPreviousValues.TryGetValue(row.Item1, out var prev))
                     {
-                        buffer.Append(',').Append(string.Equals(prev, row.Item3, StringComparison.Ordinal) ? "0" : "1");
+                        bool same = string.Equals(prev, row.Item3, StringComparison.Ordinal);
+                        buffer.Append(',').Append(same ? "0" : "1");
+                        if (same) changedZeros++; else changedOnes++;
                     }
                     else
                     {
                         buffer.Append(",NA");
+                        changedNa++;
                     }
+                }
+                else
+                {
+                    changedNa++;
                 }
                 buffer.AppendLine();
             }
+            SimHub.Logging.Current.Info($"[LalaPlugin:Debug] Property snapshot summary includeChanged={includeChanged} rows={rows.Count} changed1={changedOnes} changed0={changedZeros} changedNA={changedNa}.");
             WriteSnapshotWithFallback(filePath, buffer.ToString());
 
             if (Settings?.PropertySnapshotRollingCombinedCsv == true)
