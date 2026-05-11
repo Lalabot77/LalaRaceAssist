@@ -18250,19 +18250,30 @@ namespace LaunchPlugin
             var (profileDry, profileWet) = GetProfileFuelBaselines();
             double profileFuel = isWetMode ? profileWet : profileDry;
             double fuelReadyConfidence = GetFuelReadyConfidenceThreshold();
+            bool hasLiveAuthority = Confidence >= fuelReadyConfidence && LiveFuelPerLap > 0.0;
+            bool hasProfileAuthority = profileFuel > 0.0;
 
-            double candidate = fallbackFuelPerLap;
+            double candidate = 0.0;
             string source = "Fallback";
 
-            if (Confidence >= fuelReadyConfidence && LiveFuelPerLap > 0.0)
+            // Authority order (strict):
+            // 1) trusted live
+            // 2) profile burn
+            // 3) fallback only when neither live nor profile are valid
+            if (hasLiveAuthority)
             {
                 candidate = LiveFuelPerLap;
                 source = "Live";
             }
-            else if (profileFuel > 0.0 && fuelReadyConfidence <= ProfileAllowedConfidenceCeiling)
+            else if (hasProfileAuthority)
             {
                 candidate = profileFuel;
                 source = "Profile";
+            }
+            else if (fallbackFuelPerLap > 0.0)
+            {
+                candidate = fallbackFuelPerLap;
+                source = "Fallback";
             }
 
             // --- Stable confidence reflects the chosen stable source, not always live Confidence ---
@@ -18280,6 +18291,10 @@ namespace LaunchPlugin
             double stable = _stableFuelPerLap;
             string selectedSource = source;
             double selectedConfidence = GetConfidenceForStableSource(selectedSource);
+
+            bool stableIsFallback = string.Equals(_stableFuelPerLapSource, "Fallback", StringComparison.OrdinalIgnoreCase);
+            bool candidateIsAuthority = string.Equals(source, "Live", StringComparison.OrdinalIgnoreCase) ||
+                                       string.Equals(source, "Profile", StringComparison.OrdinalIgnoreCase);
 
             if (candidate <= 0.0)
             {
@@ -18299,7 +18314,8 @@ namespace LaunchPlugin
             }
             else
             {
-                if (stable <= 0.0 || Math.Abs(candidate - stable) >= StableFuelPerLapDeadband)
+                bool forceReplaceFallbackWithAuthority = stableIsFallback && candidateIsAuthority;
+                if (stable <= 0.0 || forceReplaceFallbackWithAuthority || Math.Abs(candidate - stable) >= StableFuelPerLapDeadband)
                 {
                     // Accept new stable candidate: update source + confidence together.
                     stable = candidate;

@@ -2252,3 +2252,10 @@ The public user-facing release history is maintained in the root `CHANGELOG.md`.
 - Classification: **internal-only** (documentation wording clarification only; no runtime/code changes).
 - Clarified finish-latch wording to describe checkered as the practical finish-like source in this telemetry path, while noting crossed is not relied on as required line-crossing proof.
 - Kept existing RaceFinish/leader-finished latch behavior unchanged.
+
+## 2026-05-11 — PR #708 fuel stable-authority follow-up (fallback poisoning fix)
+- Classification: **internal-only** (runtime fuel stable-source correctness; no lap-acceptance/profile-persistence/pit-command/dashboard ownership changes).
+- Tightened `UpdateStableFuelPerLap(...)` authority ordering to strict `Live (trusted) -> Profile -> Fallback`.
+- Removed prior profile-confidence ceiling gate from stable-source selection so valid profile burn cannot be bypassed by fallback when live confidence is still below threshold.
+- Added fallback replacement guard: when stable source is currently `Fallback`, any newly valid `Profile` or trusted `Live` candidate now replaces stable source+value immediately (deadband does not block authority recovery).
+- Session/combo reset semantics remain intact: stable fuel source/value/confidence are still reset together by existing reset paths.
