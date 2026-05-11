@@ -1,3 +1,45 @@
+<<<<<<< ours
+<<<<<<< ours
+=======
+=======
+>>>>>>> theirs
+- 2026-05-11 RaceFinish lifecycle hold + player/class snapshot follow-up fixes:
+  - RaceFinish snapshot reset no longer clears split-stage snapshots merely because `SessionState<5`; active finish snapshots now hold through valid post-timer-zero `SessionState 4` class-finish lifecycle and only clear when leaving race lifecycle (`SessionState<4`) or existing full reset paths.
+  - `RaceFinish.PlayerSnapshotActive` capture trigger now explicitly aligns with player-checkered evidence while class snapshot is active (`driver_checkered` seams via `GameData.Flag_Checkered` / `SessionFlagsDetails.IsCheckered*`) instead of deferring to `SessionState==6` fallback.
+  - `RaceFinish.PlayerClassFieldSize` freeze now retries class cohort resolution through existing League/native seams (including native class-driver-count fallback) so valid class cohorts no longer freeze at `0` when `OpponentsInClassCount` is missing.
+  - `Race.OverallLeaderHasFinished` now latches from `SessionState>=5` as overall lifecycle authority in multiclass as well (class-finish ownership unchanged and still independently resolved).
+
+- 2026-05-11 property snapshot final polish pass:
+  - UI cleanup: `Select All` now drives all Property Snapshot group checkboxes, and individual group toggles now back-sync `Select All`;
+  - rolling hardening: snapshot value text now normalizes CR/LF to literal `\n` before CSV write to keep wide rolling reload line-safe.
+
+- 2026-05-10 rolling CSV parser correctness fix:
+  - rolling wide-file reload now parses CSV with quote-aware logic (no naive `Split(',')`), preventing comma/quote-containing values from corrupting column alignment over subsequent captures.
+
+- 2026-05-10 rolling snapshot layout + fallback path bugfix:
+  - rolling `PropertySnapshot_Rolling.csv` now writes in wide format (`SimHubProperty` rows, one new timestamp column per capture) for easier left-to-right comparison;
+  - one-shot fallback writes now preserve relative subfolder paths (including `PropertySnapshots`) instead of flattening to fallback root.
+
+- 2026-05-10 property snapshot changed-values observability tweak:
+  - added per-capture summary log with `includeChanged`, row count, and `changed1/changed0/changedNA` totals to make changed-comparison behavior explicit during testing.
+
+- 2026-05-10 property snapshot one-shot file organization tweak:
+  - one-shot `PropertySnapshot_<...>.csv` files now write under `.../Logs/LalaPluginData/PropertySnapshots/` for cleaner folder organization;
+  - rolling `PropertySnapshot_Rolling.csv` remains at `.../Logs/LalaPluginData/`.
+
+- 2026-05-09 property snapshot path parity + gating diagnostics fix:
+  - aligned snapshot primary CSV path with existing plugin CSV writers (`<SimHub install>/Logs/LalaPluginData`) and kept Documents fallback on write/append failure;
+  - added one-time warning when Property Snapshot is enabled while Soft Debug is off, plus one-time info log of resolved primary/fallback snapshot paths.
+
+- 2026-05-09 property snapshot per-press failure handling fix:
+  - failed marker snapshot attempts now stamp the processed press count in the failure path to prevent repeated retries/log spam from a single press; next snapshots still require a new marker press.
+
+- 2026-05-09 property snapshot write-path hardening follow-up:
+  - snapshot one-shot and rolling writes now retry to Documents fallback when Program Files primary path fails during file write/append (including ACL-denied existing-folder cases);
+  - snapshot export no longer permanently disables after a single primary IO failure;
+  - added action-bounded diagnostics for marker press registration, snapshot write success, rolling append success, and fallback-path usage.
+
+>>>>>>> theirs
 ## 2026-05-09 — Finish semantics correction: SessionState 5 is overall lifecycle, class finish remains independently resolved
 
 - Corrected finish model: `SessionState 4->5` is treated as overall race lifecycle / overall-leader finish phase, not an unconditional player-class-leader finish signal in multiclass.

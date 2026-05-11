@@ -1,3 +1,45 @@
+<<<<<<< ours
+<<<<<<< ours
+=======
+=======
+>>>>>>> theirs
+- 2026-05-11 RaceFinish lifecycle/player snapshot/class-field-size follow-up landed:
+  - active RaceFinish split-stage snapshots now remain held through valid class-finish lifecycle in `SessionState 4` after timer-zero; reset no longer fires purely on `<5` and now clears when leaving race lifecycle (`SessionState<4`) plus existing timing/session resets;
+  - player snapshot capture now aligns with player-checkered seams while class snapshot is active (no forced wait for `SessionState 6` fallback);
+  - class denominator freeze (`RaceFinish.PlayerClassFieldSize`) now falls back through League/native class cohort seams when `OpponentsInClassCount` is unavailable, preventing valid cohorts from freezing as `0`;
+  - multiclass now also latches `Race.OverallLeaderHasFinished` from `SessionState>=5` lifecycle authority while class-leader finish logic remains independently resolved.
+
+- 2026-05-11 property snapshot final polish pass:
+  - UI cleanup: `Select All` now drives all Property Snapshot group checkboxes, and individual group toggles now back-sync `Select All`;
+  - rolling hardening: snapshot value text now normalizes CR/LF to literal `\n` before CSV write to keep wide rolling reload line-safe.
+
+- 2026-05-10 rolling CSV parser correctness fix:
+  - rolling wide-file reload now parses CSV with quote-aware logic (no naive `Split(',')`), preventing comma/quote-containing values from corrupting column alignment over subsequent captures.
+
+- 2026-05-10 rolling snapshot layout + fallback path bugfix:
+  - rolling `PropertySnapshot_Rolling.csv` now writes in wide format (`SimHubProperty` rows, one new timestamp column per capture) for easier left-to-right comparison;
+  - one-shot fallback writes now preserve relative subfolder paths (including `PropertySnapshots`) instead of flattening to fallback root.
+
+- 2026-05-10 property snapshot changed-values observability tweak:
+  - added per-capture summary log with `includeChanged`, row count, and `changed1/changed0/changedNA` totals to make changed-comparison behavior explicit during testing.
+
+- 2026-05-10 property snapshot one-shot file organization tweak:
+  - one-shot `PropertySnapshot_<...>.csv` files now write under `.../Logs/LalaPluginData/PropertySnapshots/` for cleaner folder organization;
+  - rolling `PropertySnapshot_Rolling.csv` remains at `.../Logs/LalaPluginData/`.
+
+- 2026-05-09 property snapshot path parity + gating diagnostics fix:
+  - aligned snapshot primary CSV path with existing plugin CSV writers (`<SimHub install>/Logs/LalaPluginData`) and kept Documents fallback on write/append failure;
+  - added one-time warning when Property Snapshot is enabled while Soft Debug is off, plus one-time info log of resolved primary/fallback snapshot paths.
+
+- 2026-05-09 property snapshot per-press failure handling fix:
+  - failed marker snapshot attempts now stamp the processed press count in the failure path to prevent repeated retries/log spam from a single press; next snapshots still require a new marker press.
+
+- 2026-05-09 property snapshot write-path hardening follow-up:
+  - snapshot one-shot and rolling writes now retry to Documents fallback when Program Files primary path fails during file write/append (including ACL-denied existing-folder cases);
+  - snapshot export no longer permanently disables after a single primary IO failure;
+  - added action-bounded diagnostics for marker press registration, snapshot write success, rolling append success, and fallback-path usage.
+
+>>>>>>> theirs
 - 2026-05-09 finish-reference-retry follow-up landed:
   - when SS5 transition tick lacks valid overall-leader lap-pct sample, finish-reference capture now retries on later `SessionState>=5` ticks until captured;
   - once captured, the reference remains latched until finish-timing reset.
