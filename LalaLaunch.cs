@@ -4278,12 +4278,9 @@ namespace LaunchPlugin
                 string reason = useProfileFallback ? "profile-before-simhub" : "simhub-last-resort";
                 string signature = string.Format(
                     CultureInfo.InvariantCulture,
-                    "{0}|{1:0.###}|{2:0.###}|{3:0.###}|{4}",
+                    "{0}|{1:0.###}",
                     useProfileFallback ? "PROFILE" : "SIMHUB",
-                    LiveFuelPerLap,
-                    fallbackFuelPerLap,
-                    profileFuelPerLap,
-                    reason);
+                    LiveFuelPerLap);
                 if (!string.Equals(signature, _lastFuelBurnAuthoritySignature, StringComparison.Ordinal))
                 {
                     _lastFuelBurnAuthoritySignature = signature;
