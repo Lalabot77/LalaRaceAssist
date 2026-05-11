@@ -8681,16 +8681,24 @@ namespace LaunchPlugin
 
         private int ResolveRaceFinishLiveClassFieldSize(PluginManager pluginManager, int playerCarIdx)
         {
+            int driverCount = GetLeagueClassPlayerDriverCount();
+            if (driverCount > 0)
+            {
+                return driverCount;
+            }
+
             int classOpponentsCount = SafeReadInt(pluginManager, "DataCorePlugin.GameRawData.Telemetry.OpponentsInClassCount", int.MinValue);
             if (classOpponentsCount >= 0)
             {
                 return classOpponentsCount + 1;
             }
 
-            int driverCount = GetLeagueClassPlayerDriverCount();
-            if (driverCount > 0)
+            // SimHub baseline fallback: some sessions expose class opponents count on GameData/NewData
+            // even when raw telemetry path is unavailable at snapshot tick.
+            int simHubClassOpponentsCount = SafeReadInt(pluginManager, "DataCorePlugin.GameData.NewData.OpponentsInClassCount", int.MinValue);
+            if (simHubClassOpponentsCount >= 0)
             {
-                return driverCount;
+                return simHubClassOpponentsCount + 1;
             }
 
             int nativeDriverCount = GetNativePlayerClassDriverCount();

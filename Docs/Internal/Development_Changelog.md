@@ -1,3 +1,7 @@
+- 2026-05-11 RaceFinish class denominator follow-up fix landed:
+  - `ResolveRaceFinishLiveClassFieldSize(...)` source ordering now prefers existing effective class driver-count seam first, then native `Telemetry.OpponentsInClassCount + 1`, then SimHub baseline `GameData.NewData.OpponentsInClassCount + 1`; returns `0` only when all are unavailable/invalid;
+  - preserves valid solo-class semantics (`0` opponents -> field size `1`) and keeps class snapshot/player snapshot/finish timing semantics unchanged.
+
 ## 2026-05-11 — Fuel burn runtime authority fix (PROFILE over SimHub fallback)
 - Classification: **both** (runtime fuel authority-chain correctness + docs/log contract alignment).
 - In `LalaLaunch`, no-accepted-lap runtime assignment now resolves `LiveFuelPerLap` to active-condition profile fuel when available, only falling back to `DataCorePlugin.Computed.Fuel_LitersPerLap` as last resort.
