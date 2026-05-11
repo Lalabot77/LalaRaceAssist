@@ -865,6 +865,10 @@ namespace LaunchPlugin
         private double _lastOverallLeaderLapPct = double.NaN;
         private int _lastClassLeaderCarIdx = -1;
         private int _lastOverallLeaderCarIdx = -1;
+        private int _lastClassLeaderLap = -1;
+        private bool _lastClassLeaderSampleFromPostLifecycle;
+        private int _finishTimingLastSessionState = 0;
+        private double _finishLifecycleReferencePct = double.NaN;
         private string _classBestResolveLastLogReason = string.Empty;
         private int _lastCompletedLapForFinish = -1;
         private bool _leaderFinishLatchedByFlag;
@@ -8458,6 +8462,10 @@ namespace LaunchPlugin
             _lastOverallLeaderLapPct = double.NaN;
             _lastClassLeaderCarIdx = -1;
             _lastOverallLeaderCarIdx = -1;
+            _lastClassLeaderLap = -1;
+            _lastClassLeaderSampleFromPostLifecycle = false;
+            _finishTimingLastSessionState = 0;
+            _finishLifecycleReferencePct = double.NaN;
             _lastCompletedLapForFinish = -1;
             LeaderHasFinished = false;
             _leaderFinishLatchedByFlag = false;
@@ -9959,6 +9967,12 @@ namespace LaunchPlugin
                     playerCarIdx >= 0 &&
                     playerCarIdx < carIdxSessionFlags.Length &&
                     IsFinishLikeSessionFlag(carIdxSessionFlags[playerCarIdx]);
+                bool playerCheckeredBySessionFlags = ReadFlagBool(
+                    pluginManager,
+                    "DataCorePlugin.GameRawData.Telemetry.SessionFlagsDetails.IsCheckeredFlag",
+                    "DataCorePlugin.GameRawData.Telemetry.SessionFlagsDetails.IsCheckered");
+                bool playerCheckeredByGameData = Convert.ToBoolean(pluginManager.GetPropertyValue("DataCorePlugin.GameData.Flag_Checkered") ?? false);
+                bool playerFinishedByCheckered = playerCheckeredBySessionFlags || playerCheckeredByGameData;
                 if (ClassLeaderValid
                     && ClassLeaderCarIdx >= 0
                     && (!string.IsNullOrWhiteSpace(ClassLeaderName)
@@ -9976,7 +9990,12 @@ namespace LaunchPlugin
                     _raceFinishPlayerFinishGapSec = Math.Max(0.0, sessionTimeSec - _raceFinishClassFinishSessionTimeSec);
                     _raceFinishClassWinnerGapSec = _raceFinishPlayerFinishGapSec;
                 }
-                TryCaptureRaceFinishPlayerSnapshot(pluginManager, sessionState, playerCarIdx, playerFinishedByFlags, sessionTimeSec);
+                TryCaptureRaceFinishPlayerSnapshot(
+                    pluginManager,
+                    sessionState,
+                    playerCarIdx,
+                    playerFinishedByFlags || playerFinishedByCheckered,
+                    sessionTimeSec);
                 if (_h2hEngine != null)
                 {
                     var previousRaceAhead = _h2hEngine.Outputs?.Race?.Ahead;
@@ -18727,13 +18746,13 @@ namespace LaunchPlugin
         private string _finishTimingSessionType = string.Empty;
 
         private void UpdateFinishTiming(
-        PluginManager pluginManager,
-        GameData data,
-        double sessionTime,
-        double sessionTimeRemain,
-        int completedLaps,
-        long sessionId,
-        string sessionType)
+     PluginManager pluginManager,
+     GameData data,
+     double sessionTime,
+     double sessionTimeRemain,
+     int completedLaps,
+     long sessionId,
+     string sessionType)
         {
             bool isRace = IsRaceSession(sessionType);
 
@@ -18774,9 +18793,9 @@ namespace LaunchPlugin
             bool isTimedRace = hasRemain;
             int sessionStateNumeric = ReadSessionStateInt(pluginManager);
             bool hasSessionState = sessionStateNumeric > 0;
+            bool enteredOverallFinishLifecycle = hasSessionState && sessionStateNumeric >= 5 && _finishTimingLastSessionState < 5;
             int playerCarIdx = GetInt(pluginManager, "DataCorePlugin.GameRawData.Telemetry.PlayerCarIdx", -1);
 
-            // Detect first genuine crossing to zero
             bool crossedToZero =
                 hasRemain &&
                 !double.IsNaN(_prevSessionTimeRemain) &&
@@ -18864,6 +18883,7 @@ namespace LaunchPlugin
             bool isMultiClassSession = IsMultiClassSession(pluginManager);
             var trackSurfaces = GetIntArray(pluginManager, "DataCorePlugin.GameRawData.Telemetry.CarIdxTrackSurface");
             var lapDistPct = GetDoubleArray(pluginManager, "DataCorePlugin.GameRawData.Telemetry.CarIdxLapDistPct");
+            var carIdxLap = GetIntArray(pluginManager, "DataCorePlugin.GameRawData.Telemetry.CarIdxLap");
             var overallPositions = GetIntArray(pluginManager, "DataCorePlugin.GameRawData.Telemetry.CarIdxPosition");
             var classPositions = GetIntArray(pluginManager, "DataCorePlugin.GameRawData.Telemetry.CarIdxClassPosition");
             var carIdxSessionFlags = GetIntArray(pluginManager, "DataCorePlugin.GameRawData.Telemetry.CarIdxSessionFlags");
@@ -18877,6 +18897,17 @@ namespace LaunchPlugin
                 overallLeaderIdx = FindOverallLeaderCarIdx(overallPositions, trackSurfaces);
             }
             OverallLeaderHasFinishedValid = overallLeaderIdx >= 0;
+
+            if (hasSessionState && sessionStateNumeric >= 5 &&
+                double.IsNaN(_finishLifecycleReferencePct) &&
+                lapDistPct != null &&
+                overallLeaderIdx >= 0 &&
+                overallLeaderIdx < lapDistPct.Length &&
+                lapDistPct[overallLeaderIdx] >= 0.0 &&
+                lapDistPct[overallLeaderIdx] <= 1.0)
+            {
+                _finishLifecycleReferencePct = lapDistPct[overallLeaderIdx];
+            }
 
             bool classLeaderFinishByFlags = classLeaderIdx >= 0
                 && carIdxSessionFlags != null
@@ -18909,6 +18940,63 @@ namespace LaunchPlugin
                     $"[LalaPlugin:Finish] overall_finish trigger=state_backup state={sessionStateNumeric} phase={RaceEndPhaseText} conf={RaceEndPhaseConfidence}");
             }
 
+            bool classLeaderFinishByOverallLifecycleEquivalence = false;
+            if (isMultiClassSession && hasSessionState && sessionStateNumeric >= 5 &&
+                classLeaderIdx >= 0 && overallLeaderIdx >= 0 &&
+                lapDistPct != null && carIdxLap != null &&
+                classLeaderIdx < lapDistPct.Length && overallLeaderIdx < lapDistPct.Length &&
+                classLeaderIdx < carIdxLap.Length && overallLeaderIdx < carIdxLap.Length)
+            {
+                if (classLeaderIdx == overallLeaderIdx)
+                {
+                    classLeaderFinishByOverallLifecycleEquivalence = true;
+                }
+                else
+                {
+                    int classLeaderLap = carIdxLap[classLeaderIdx];
+                    double classLeaderPct = lapDistPct[classLeaderIdx];
+                    bool hasRef = !double.IsNaN(_finishLifecycleReferencePct) &&
+                                  _finishLifecycleReferencePct >= 0.0 &&
+                                  _finishLifecycleReferencePct <= 1.0;
+
+                    bool reachedDynamicFinishReference =
+                        hasRef &&
+                        _lastClassLeaderSampleFromPostLifecycle &&
+                        _lastClassLeaderCarIdx == classLeaderIdx &&
+                        !double.IsNaN(_lastClassLeaderLapPct) &&
+                        _lastClassLeaderLapPct < _finishLifecycleReferencePct &&
+                        classLeaderPct >= _finishLifecycleReferencePct;
+
+                    bool wrapAfterLifecycleStart =
+                        _lastClassLeaderSampleFromPostLifecycle &&
+                        _lastClassLeaderCarIdx == classLeaderIdx &&
+                        _lastClassLeaderLap >= 0 &&
+                        (_lastClassLeaderLap < classLeaderLap ||
+                         (!double.IsNaN(_lastClassLeaderLapPct) &&
+                          hasRef &&
+                          _lastClassLeaderLapPct >= _finishLifecycleReferencePct &&
+                          classLeaderPct < _finishLifecycleReferencePct));
+
+                    bool likelyAlreadyCrossedOnTransition =
+                        enteredOverallFinishLifecycle &&
+                        _lastClassLeaderCarIdx == classLeaderIdx &&
+                        hasRef &&
+                        !double.IsNaN(_lastClassLeaderLapPct) &&
+                        _lastClassLeaderLapPct >= _finishLifecycleReferencePct &&
+                        classLeaderPct < (_finishLifecycleReferencePct * 0.5);
+
+                    classLeaderFinishByOverallLifecycleEquivalence =
+                        reachedDynamicFinishReference || wrapAfterLifecycleStart || likelyAlreadyCrossedOnTransition;
+                }
+            }
+
+            if (!ClassLeaderHasFinished && classLeaderFinishByOverallLifecycleEquivalence)
+            {
+                ClassLeaderHasFinished = true;
+                SimHub.Logging.Current.Info(
+                    $"[LalaPlugin:Finish] class_finish trigger=overall_lifecycle_equivalence classIdx={classLeaderIdx} overallIdx={overallLeaderIdx}");
+            }
+
             bool canRunClassFinishHeuristic = isTimedRace && _timerZeroSeen && classLeaderIdx >= 0;
             bool canRunOverallFinishHeuristic = isTimedRace && _timerZeroSeen && !hasSessionState && overallLeaderIdx >= 0;
 
@@ -18926,6 +19014,8 @@ namespace LaunchPlugin
             {
                 _lastClassLeaderLapPct = lapDistPct[classLeaderIdx];
                 _lastClassLeaderCarIdx = classLeaderIdx;
+                _lastClassLeaderLap = (carIdxLap != null && classLeaderIdx < carIdxLap.Length) ? carIdxLap[classLeaderIdx] : -1;
+                _lastClassLeaderSampleFromPostLifecycle = sessionStateNumeric >= 5;
             }
 
             if (canRunOverallFinishHeuristic)
@@ -18943,6 +19033,7 @@ namespace LaunchPlugin
                 _lastOverallLeaderLapPct = lapDistPct[overallLeaderIdx];
                 _lastOverallLeaderCarIdx = overallLeaderIdx;
             }
+            _finishTimingLastSessionState = sessionStateNumeric;
 
             if (!isMultiClassSession && OverallLeaderHasFinished && !ClassLeaderHasFinished)
             {

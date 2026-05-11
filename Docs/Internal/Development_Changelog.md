@@ -28,6 +28,30 @@
   - snapshot export no longer permanently disables after a single primary IO failure;
   - added action-bounded diagnostics for marker press registration, snapshot write success, rolling append success, and fallback-path usage.
 
+## 2026-05-09 — Finish semantics correction: SessionState 5 is overall lifecycle, class finish remains independently resolved
+
+- Corrected finish model: `SessionState 4->5` is treated as overall race lifecycle / overall-leader finish phase, not an unconditional player-class-leader finish signal in multiclass.
+- `Race.ClassLeaderHasFinished` remains primarily driven by resolved class-leader per-car finish-like flags, with multiclass lifecycle-equivalence fallback only when class/overall identities are provably equivalent (`same car`) or class leader is already on a higher lap than overall leader once session enters `state>=5`.
+- `RaceFinish.ClassSnapshotActive` continues to key from `Race.ClassLeaderHasFinished` (plus `SessionState==6` safety fallback), preventing blind SessionState-only class snapshot capture in multiclass.
+- `RaceFinish.PlayerSnapshotActive` remains player-perspective: per-car finish-like flags and robust player-checkered seams (`GameData.Flag_Checkered` / `SessionFlagsDetails.IsCheckered*`) before `SessionState==6` safety fallback.
+- Preserved split-stage snapshot architecture and Race.EndPhase semantics; no dashboard ownership changes.
+
+- 2026-05-09 follow-up: corrected multiclass class-finish lifecycle fallback reference model.
+  - removed invalid `class leader lap > overall leader lap` assumption,
+  - now captures dynamic finish reference pct from overall leader at `SessionState 4->5`,
+  - class-finish fallback now uses class-leader own crossing/wrap evidence against that dynamic reference,
+  - includes guarded already-crossed-on-transition path requiring credible prior sampled class-leader pct evidence.
+- 2026-05-09 pre-merge follow-up: restored valid solo-class denominator behavior (`OpponentsInClassCount>=0 => +1`) and tightened dynamic finish-reference latch to require true prior->current crossing evidence (wrap/already-crossed guards unchanged).
+- 2026-05-09 follow-up: anchored class-leader post-lifecycle crossing/wrap detection to post-`SessionState>=5` samples only; pre-transition sample evidence is now limited to guarded already-crossed-on-transition detection.
+- 2026-05-09 follow-up: finish-reference pct capture now retries on post-transition `SessionState>=5` ticks while reference is unset, so a missing first SS5 sample no longer leaves multiclass fallback unarmed for the full lifecycle.
+
+## 2026-05-09 — RaceFinish replay player-cross fallback + class field-size freeze reliability fix
+
+- Behavior change: `RaceFinish.PlayerSnapshotActive` can now trigger before `SessionState==6` fallback when replay/fast-forward misses player finish-like `CarIdxSessionFlags` bits.
+- Refined player snapshot trigger for replay reliability to use robust player-checkered seams (`DataCorePlugin.GameData.Flag_Checkered` and `SessionFlagsDetails.IsCheckered*`) as primary player-finish evidence when class snapshot is active and player snapshot is pending.
+- Preserved priority hierarchy and invariants: per-car finish-like flags + player checkered seams trigger player capture before fallback; `SessionState==6` remains last-resort safety fallback.
+- Fixed `RaceFinish.PlayerClassFieldSize` freeze reliability by avoiding zero-opponent telemetry lock-in at class snapshot and using existing effective class cohort fallback when available.
+- Result: player-facing frozen `RaceFinish` values now freeze at actual player finish crossing in replay paths instead of drifting until session complete fallback.
 ## 2026-05-09 — Debug Property Snapshot CSV system (Event Marker-triggered)
 - Follow-up test fix: Property Snapshot export path now targets `Program Files (x86)/SimHub/Logs/LalaPluginData` (fallback `Documents/SimHub/Logs/LalaPluginData` if Program Files x86 is unavailable) to align with active SimHub install log location.
 - Follow-up review fix: snapshot trigger now consumes/stamps marker press count while snapshot mode is disabled, preventing stale disabled-window presses from firing immediate captures when re-enabled later in the same session.

@@ -28,6 +28,23 @@
   - snapshot export no longer permanently disables after a single primary IO failure;
   - added action-bounded diagnostics for marker press registration, snapshot write success, rolling append success, and fallback-path usage.
 
+- 2026-05-09 finish-reference-retry follow-up landed:
+  - when SS5 transition tick lacks valid overall-leader lap-pct sample, finish-reference capture now retries on later `SessionState>=5` ticks until captured;
+  - once captured, the reference remains latched until finish-timing reset.
+- 2026-05-09 post-lifecycle sample anchoring follow-up landed:
+  - class-leader dynamic-reference crossing/wrap fallback now requires prior sample captured after lifecycle start (`SessionState>=5`);
+  - pre-transition sample evidence remains scoped to guarded already-crossed-on-transition path only.
+- 2026-05-09 pre-merge finish follow-up landed:
+  - solo-class denominator behavior restored (`OpponentsInClassCount=0` now correctly freezes class field size as `1`);
+  - dynamic finish-reference class-cross latch now requires true prior->current crossing evidence (wrap/already-crossed guards retained).
+- 2026-05-09 finish-semantics correction landed:
+  - SessionState `4->5` is now documented/treated as overall race lifecycle/overall-leader finish phase (not unconditional class-leader finish in multiclass);
+  - class-leader finish remains independently resolved; multiclass lifecycle fallback now uses dynamic finish-reference pct capture at `SessionState 4->5` plus class-leader own crossing/wrap evidence (no class-vs-overall lap-count comparison);
+  - RaceFinish class/player split-stage behavior preserved with `SessionState==6` as safety fallback only.
+- 2026-05-09 RaceFinish replay fallback + class field-size freeze reliability follow-up landed:
+  - player snapshot replay reliability now uses robust player-checkered seams (`GameData.Flag_Checkered` / `SessionFlagsDetails.IsCheckered*`) alongside per-car finish-like bits;
+  - fallback ordering preserved (`flags/checkered -> SessionState==6` safety only);
+  - class field-size freeze avoids zero-opponent lock-in and now reuses effective class cohort fallback when class telemetry count is unavailable/zero.
 - 2026-05-09 snapshot path alignment fix for Property Snapshot:
   - snapshot files now target `Program Files (x86)/SimHub/Logs/LalaPluginData` with Documents fallback when Program Files x86 path is unavailable.
 
