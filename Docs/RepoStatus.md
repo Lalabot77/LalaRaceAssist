@@ -1,3 +1,7 @@
+- 2026-05-11 property snapshot final polish pass:
+  - UI cleanup: `Select All` now drives all Property Snapshot group checkboxes, and individual group toggles now back-sync `Select All`;
+  - rolling hardening: snapshot value text now normalizes CR/LF to literal `\n` before CSV write to keep wide rolling reload line-safe.
+
 - 2026-05-10 rolling CSV parser correctness fix:
   - rolling wide-file reload now parses CSV with quote-aware logic (no naive `Split(',')`), preventing comma/quote-containing values from corrupting column alignment over subsequent captures.
 

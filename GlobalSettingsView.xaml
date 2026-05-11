@@ -437,16 +437,18 @@
                                                      ToolTip="When enabled, pressing Event Marker writes a CSV snapshot of plugin properties."/>
                             <WrapPanel Margin="22,6,0,0"
                                        IsEnabled="{Binding ElementName=PropertySnapshotToggle, Path=IsChecked}">
-                                <CheckBox Content="Select All"
+                                <CheckBox x:Name="PropertySnapshotSelectAllCheckBox"
+                                          Content="Select All"
                                           Margin="0,0,12,6"
+                                          Click="PropertySnapshotSelectAll_Click"
                                           IsChecked="{Binding Settings.PropertySnapshotSelectAllGroups, Mode=TwoWay}"/>
-                                <CheckBox Content="Fuel/Strategy" Margin="0,0,12,6" IsChecked="{Binding Settings.PropertySnapshotGroupFuelStrategy, Mode=TwoWay}"/>
-                                <CheckBox Content="Car/Opp/H2H" Margin="0,0,12,6" IsChecked="{Binding Settings.PropertySnapshotGroupCarOppH2H, Mode=TwoWay}"/>
-                                <CheckBox Content="Pit/PitExit" Margin="0,0,12,6" IsChecked="{Binding Settings.PropertySnapshotGroupPitPitExit, Mode=TwoWay}"/>
-                                <CheckBox Content="Shift Assist" Margin="0,0,12,6" IsChecked="{Binding Settings.PropertySnapshotGroupShiftAssist, Mode=TwoWay}"/>
-                                <CheckBox Content="Message System" Margin="0,0,12,6" IsChecked="{Binding Settings.PropertySnapshotGroupMessageSystem, Mode=TwoWay}"/>
-                                <CheckBox Content="League Class" Margin="0,0,12,6" IsChecked="{Binding Settings.PropertySnapshotGroupLeagueClass, Mode=TwoWay}"/>
-                                <CheckBox Content="Raw Debug" Margin="0,0,12,6" IsChecked="{Binding Settings.PropertySnapshotGroupRawDebug, Mode=TwoWay}"/>
+                                <CheckBox x:Name="PropertySnapshotFuelStrategyCheckBox" Content="Fuel/Strategy" Margin="0,0,12,6" Click="PropertySnapshotGroup_Click" IsChecked="{Binding Settings.PropertySnapshotGroupFuelStrategy, Mode=TwoWay}"/>
+                                <CheckBox x:Name="PropertySnapshotCarOppH2HCheckBox" Content="Car/Opp/H2H" Margin="0,0,12,6" Click="PropertySnapshotGroup_Click" IsChecked="{Binding Settings.PropertySnapshotGroupCarOppH2H, Mode=TwoWay}"/>
+                                <CheckBox x:Name="PropertySnapshotPitPitExitCheckBox" Content="Pit/PitExit" Margin="0,0,12,6" Click="PropertySnapshotGroup_Click" IsChecked="{Binding Settings.PropertySnapshotGroupPitPitExit, Mode=TwoWay}"/>
+                                <CheckBox x:Name="PropertySnapshotShiftAssistCheckBox" Content="Shift Assist" Margin="0,0,12,6" Click="PropertySnapshotGroup_Click" IsChecked="{Binding Settings.PropertySnapshotGroupShiftAssist, Mode=TwoWay}"/>
+                                <CheckBox x:Name="PropertySnapshotMessageSystemCheckBox" Content="Message System" Margin="0,0,12,6" Click="PropertySnapshotGroup_Click" IsChecked="{Binding Settings.PropertySnapshotGroupMessageSystem, Mode=TwoWay}"/>
+                                <CheckBox x:Name="PropertySnapshotLeagueClassCheckBox" Content="League Class" Margin="0,0,12,6" Click="PropertySnapshotGroup_Click" IsChecked="{Binding Settings.PropertySnapshotGroupLeagueClass, Mode=TwoWay}"/>
+                                <CheckBox x:Name="PropertySnapshotRawDebugCheckBox" Content="Raw Debug" Margin="0,0,12,6" Click="PropertySnapshotGroup_Click" IsChecked="{Binding Settings.PropertySnapshotGroupRawDebug, Mode=TwoWay}"/>
                                 <CheckBox Content="Include changed vs previous" Margin="0,0,12,6" IsChecked="{Binding Settings.PropertySnapshotIncludeChangedValues, Mode=TwoWay}"/>
                                 <CheckBox Content="Write rolling combined CSV" Margin="0,0,12,6" IsChecked="{Binding Settings.PropertySnapshotRollingCombinedCsv, Mode=TwoWay}"/>
                             </WrapPanel>

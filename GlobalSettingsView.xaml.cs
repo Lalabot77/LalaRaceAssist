@@ -25,6 +25,69 @@ namespace LaunchPlugin
             DataContext = plugin;
             LaunchSettingsHost.Content = new LaunchPluginSettingsUI(plugin, telemetry);
             InitializeIOverlayImport();
+            SyncPropertySnapshotSelectAllFromGroups();
+        }
+
+        private void PropertySnapshotSelectAll_Click(object sender, RoutedEventArgs e)
+        {
+            if (Plugin?.Settings == null || PropertySnapshotSelectAllCheckBox == null)
+            {
+                return;
+            }
+
+            bool allSelected = PropertySnapshotSelectAllCheckBox.IsChecked == true;
+            Plugin.Settings.PropertySnapshotGroupFuelStrategy = allSelected;
+            Plugin.Settings.PropertySnapshotGroupCarOppH2H = allSelected;
+            Plugin.Settings.PropertySnapshotGroupPitPitExit = allSelected;
+            Plugin.Settings.PropertySnapshotGroupShiftAssist = allSelected;
+            Plugin.Settings.PropertySnapshotGroupMessageSystem = allSelected;
+            Plugin.Settings.PropertySnapshotGroupLeagueClass = allSelected;
+            Plugin.Settings.PropertySnapshotGroupRawDebug = allSelected;
+            SyncPropertySnapshotGroupCheckboxes();
+        }
+
+        private void PropertySnapshotGroup_Click(object sender, RoutedEventArgs e)
+        {
+            SyncPropertySnapshotSelectAllFromGroups();
+        }
+
+        private void SyncPropertySnapshotSelectAllFromGroups()
+        {
+            if (Plugin?.Settings == null)
+            {
+                return;
+            }
+
+            bool allSelected = Plugin.Settings.PropertySnapshotGroupFuelStrategy
+                && Plugin.Settings.PropertySnapshotGroupCarOppH2H
+                && Plugin.Settings.PropertySnapshotGroupPitPitExit
+                && Plugin.Settings.PropertySnapshotGroupShiftAssist
+                && Plugin.Settings.PropertySnapshotGroupMessageSystem
+                && Plugin.Settings.PropertySnapshotGroupLeagueClass
+                && Plugin.Settings.PropertySnapshotGroupRawDebug;
+
+            Plugin.Settings.PropertySnapshotSelectAllGroups = allSelected;
+            if (PropertySnapshotSelectAllCheckBox != null)
+            {
+                PropertySnapshotSelectAllCheckBox.IsChecked = allSelected;
+            }
+        }
+
+        private void SyncPropertySnapshotGroupCheckboxes()
+        {
+            if (Plugin?.Settings == null)
+            {
+                return;
+            }
+
+            if (PropertySnapshotFuelStrategyCheckBox != null) PropertySnapshotFuelStrategyCheckBox.IsChecked = Plugin.Settings.PropertySnapshotGroupFuelStrategy;
+            if (PropertySnapshotCarOppH2HCheckBox != null) PropertySnapshotCarOppH2HCheckBox.IsChecked = Plugin.Settings.PropertySnapshotGroupCarOppH2H;
+            if (PropertySnapshotPitPitExitCheckBox != null) PropertySnapshotPitPitExitCheckBox.IsChecked = Plugin.Settings.PropertySnapshotGroupPitPitExit;
+            if (PropertySnapshotShiftAssistCheckBox != null) PropertySnapshotShiftAssistCheckBox.IsChecked = Plugin.Settings.PropertySnapshotGroupShiftAssist;
+            if (PropertySnapshotMessageSystemCheckBox != null) PropertySnapshotMessageSystemCheckBox.IsChecked = Plugin.Settings.PropertySnapshotGroupMessageSystem;
+            if (PropertySnapshotLeagueClassCheckBox != null) PropertySnapshotLeagueClassCheckBox.IsChecked = Plugin.Settings.PropertySnapshotGroupLeagueClass;
+            if (PropertySnapshotRawDebugCheckBox != null) PropertySnapshotRawDebugCheckBox.IsChecked = Plugin.Settings.PropertySnapshotGroupRawDebug;
+            SyncPropertySnapshotSelectAllFromGroups();
         }
 
         private void AddFriend_Click(object sender, RoutedEventArgs e)

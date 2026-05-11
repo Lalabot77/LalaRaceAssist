@@ -13007,10 +13007,10 @@ namespace LaunchPlugin
         private static string SnapshotValueToString(object value)
         {
             if (value == null) return string.Empty;
-            if (value is string s) return s;
+            if (value is string s) return s.Replace("\r\n", "\\n").Replace("\n", "\\n").Replace("\r", "\\n");
             if (value is bool b) return b ? "true" : "false";
-            if (value is IFormattable f) return f.ToString(null, CultureInfo.InvariantCulture) ?? string.Empty;
-            return Convert.ToString(value, CultureInfo.InvariantCulture) ?? string.Empty;
+            if (value is IFormattable f) return (f.ToString(null, CultureInfo.InvariantCulture) ?? string.Empty).Replace("\r\n", "\\n").Replace("\n", "\\n").Replace("\r", "\\n");
+            return (Convert.ToString(value, CultureInfo.InvariantCulture) ?? string.Empty).Replace("\r\n", "\\n").Replace("\n", "\\n").Replace("\r", "\\n");
         }
 
 
