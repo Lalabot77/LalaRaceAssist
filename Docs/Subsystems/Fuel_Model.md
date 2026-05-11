@@ -117,6 +117,10 @@ The runtime chooses a stable burn candidate from:
 2. profile condition averages,
 3. safe fallback behavior.
 
+Fallback promotion guardrail:
+- Fallback must never become or remain stable authority when a valid profile candidate exists, or when trusted live confidence is reached.
+- If current stable source is fallback and a valid Profile/Live candidate appears, stable value and source are replaced together immediately (no deadband hold against authority replacement).
+
 A deadband holds the previous stable value when the new candidate is only trivially different, while source and confidence labels can still update.
 
 ### 4) Confidence growth
