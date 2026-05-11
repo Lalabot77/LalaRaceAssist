@@ -4261,16 +4261,36 @@ namespace LaunchPlugin
                 _lapStartFuel = currentFuel;
             }
 
-            // If we haven’t accumulated any accepted laps yet, fall back to SimHub’s estimator
+            // If we haven’t accumulated any accepted laps yet, keep profile fuel authoritative over SimHub fallback.
             if ((_validDryLaps + _validWetLaps) == 0)
             {
-                LiveFuelPerLap = fallbackFuelPerLap;
-                _usingFallbackFuelProfile = true;
+                var (profileDry, profileWet) = GetProfileFuelBaselines();
+                double profileFuelPerLap = _isWetMode ? profileWet : profileDry;
+                bool useProfileFallback = profileFuelPerLap > 0.0;
+                LiveFuelPerLap = useProfileFallback ? profileFuelPerLap : fallbackFuelPerLap;
+                _usingFallbackFuelProfile = !useProfileFallback;
                 Confidence = 0;
                 FuelCalculator?.SetLiveConfidenceLevels(Confidence, PaceConfidence, OverallConfidence);
 
                 if (LiveFuelPerLap > 0)
                     FuelCalculator?.OnLiveFuelPerLapUpdated();
+
+                string reason = useProfileFallback ? "profile-before-simhub" : "simhub-last-resort";
+                string signature = useProfileFallback ? "PROFILE" : "SIMHUB";
+                if (!string.Equals(signature, _lastFuelBurnAuthoritySignature, StringComparison.Ordinal))
+                {
+                    _lastFuelBurnAuthoritySignature = signature;
+                    SimHub.Logging.Current.Info(
+                        string.Format(
+                            CultureInfo.InvariantCulture,
+                            "[LalaPlugin:Fuel Burn] runtime burn basis selected source={0} burn={1:F3} liveAccepted={2} fallback={3:F3} profileFuel={4:F3} reason={5}",
+                            useProfileFallback ? "PROFILE" : "SIMHUB",
+                            LiveFuelPerLap,
+                            (_validDryLaps + _validWetLaps),
+                            fallbackFuelPerLap,
+                            profileFuelPerLap,
+                            reason));
+                }
             }
 
             UpdateStableFuelPerLap(_isWetMode, fallbackFuelPerLap);
@@ -6072,6 +6092,7 @@ namespace LaunchPlugin
 
         // --- Already added earlier for MaxFuel throttling ---
         private double _lastAnnouncedMaxFuel = -1;
+        private string _lastFuelBurnAuthoritySignature = string.Empty;
         private const double LiveMaxFuelJitterThreshold = 0.1;
 
         // --- Track marker trigger pulses (for messaging module) ---

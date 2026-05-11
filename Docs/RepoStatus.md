@@ -1,13 +1,12 @@
-<<<<<<< ours
-<<<<<<< ours
-=======
-=======
->>>>>>> theirs
-- 2026-05-11 RaceFinish lifecycle/player snapshot/class-field-size follow-up landed:
-  - active RaceFinish split-stage snapshots now remain held through valid class-finish lifecycle in `SessionState 4` after timer-zero; reset no longer fires purely on `<5` and now clears when leaving race lifecycle (`SessionState<4`) plus existing timing/session resets;
-  - player snapshot capture now aligns with player-checkered seams while class snapshot is active (no forced wait for `SessionState 6` fallback);
-  - class denominator freeze (`RaceFinish.PlayerClassFieldSize`) now falls back through League/native class cohort seams when `OpponentsInClassCount` is unavailable, preventing valid cohorts from freezing as `0`;
-  - multiclass now also latches `Race.OverallLeaderHasFinished` from `SessionState>=5` lifecycle authority while class-leader finish logic remains independently resolved.
+- 2026-05-11 fuel burn authority-chain fix landed:
+  - in no-accepted-lap runtime path, `LiveFuelPerLap` now uses active-condition profile fuel when valid and only uses SimHub/DataCore fallback as last resort;
+  - added bounded `[LalaPlugin:Fuel Burn] runtime burn basis selected ...` transition log for source/value auditability.
+  - follow-up narrowed that log throttle signature to true authority state (`source`) so fallback-input jitter cannot spam repeated transition logs.
+
+- 2026-05-11 rolling snapshot legacy schema guard fix:
+  - rolling `PropertySnapshot_Rolling.csv` reuse now validates header column 0 as exact `SimHubProperty` before parsing existing rows;
+  - legacy header `SnapshotUtc` and malformed/unknown headers are treated as incompatible and safely reset/re-written in current wide schema;
+  - added bounded debug info log when a rolling schema reset occurs.
 
 - 2026-05-11 property snapshot final polish pass:
   - UI cleanup: `Select All` now drives all Property Snapshot group checkboxes, and individual group toggles now back-sync `Select All`;
@@ -39,7 +38,6 @@
   - snapshot export no longer permanently disables after a single primary IO failure;
   - added action-bounded diagnostics for marker press registration, snapshot write success, rolling append success, and fallback-path usage.
 
->>>>>>> theirs
 - 2026-05-09 finish-reference-retry follow-up landed:
   - when SS5 transition tick lacks valid overall-leader lap-pct sample, finish-reference capture now retries on later `SessionState>=5` ticks until captured;
   - once captured, the reference remains latched until finish-timing reset.

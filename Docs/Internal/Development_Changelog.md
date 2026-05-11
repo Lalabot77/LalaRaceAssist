@@ -1,13 +1,8 @@
-<<<<<<< ours
-<<<<<<< ours
-=======
-=======
->>>>>>> theirs
-- 2026-05-11 RaceFinish lifecycle hold + player/class snapshot follow-up fixes:
-  - RaceFinish snapshot reset no longer clears split-stage snapshots merely because `SessionState<5`; active finish snapshots now hold through valid post-timer-zero `SessionState 4` class-finish lifecycle and only clear when leaving race lifecycle (`SessionState<4`) or existing full reset paths.
-  - `RaceFinish.PlayerSnapshotActive` capture trigger now explicitly aligns with player-checkered evidence while class snapshot is active (`driver_checkered` seams via `GameData.Flag_Checkered` / `SessionFlagsDetails.IsCheckered*`) instead of deferring to `SessionState==6` fallback.
-  - `RaceFinish.PlayerClassFieldSize` freeze now retries class cohort resolution through existing League/native seams (including native class-driver-count fallback) so valid class cohorts no longer freeze at `0` when `OpponentsInClassCount` is missing.
-  - `Race.OverallLeaderHasFinished` now latches from `SessionState>=5` as overall lifecycle authority in multiclass as well (class-finish ownership unchanged and still independently resolved).
+## 2026-05-11 — Fuel burn runtime authority fix (PROFILE over SimHub fallback)
+- Classification: **both** (runtime fuel authority-chain correctness + docs/log contract alignment).
+- In `LalaLaunch`, no-accepted-lap runtime assignment now resolves `LiveFuelPerLap` to active-condition profile fuel when available, only falling back to `DataCorePlugin.Computed.Fuel_LitersPerLap` as last resort.
+- Added bounded fuel-burn authority log on no-live-lap source/value transition (`[LalaPlugin:Fuel Burn] runtime burn basis selected ...`).
+- Follow-up: narrowed transition-log signature to selected authority source only, preventing log churn from unused fallback/profile input jitter when authority is unchanged.
 
 - 2026-05-11 property snapshot final polish pass:
   - UI cleanup: `Select All` now drives all Property Snapshot group checkboxes, and individual group toggles now back-sync `Select All`;
@@ -39,7 +34,6 @@
   - snapshot export no longer permanently disables after a single primary IO failure;
   - added action-bounded diagnostics for marker press registration, snapshot write success, rolling append success, and fallback-path usage.
 
->>>>>>> theirs
 ## 2026-05-09 — Finish semantics correction: SessionState 5 is overall lifecycle, class finish remains independently resolved
 
 - Corrected finish model: `SessionState 4->5` is treated as overall race lifecycle / overall-leader finish phase, not an unconditional player-class-leader finish signal in multiclass.
@@ -2246,6 +2240,13 @@ The public user-facing release history is maintained in the root `CHANGELOG.md`.
 - Classification: **both** (H2HTrack class presentation correctness + internal contract/docs alignment).
 - `BuildH2HTrackSelector(...)` now carries selected CarSA slot `UserID` into `H2HEngine.TargetSelector` so `H2HTrack.Ahead/Behind.ClassColor` and `ClassColorHex` can resolve League Class via the same CSV-first identity seam as CarSA/H2HRace when enabled.
 - Kept H2HTrack physical target selection and all sector/delta/timing logic unchanged; unresolved/disabled paths still fall back to native class colour behavior.
+
+## 2026-05-11 — Rolling snapshot CSV legacy-schema guard fix (PR #705 follow-up)
+- Classification: **internal-only** (debug rolling CSV compatibility hardening; no runtime telemetry/export contract changes).
+- Added a strict rolling wide-schema header guard in `LalaLaunch.WriteSnapshotRollingWide(...)`:
+  - valid reusable rolling files must have header column 0 exactly `SimHubProperty`;
+  - legacy schema (`SnapshotUtc` column 0) is detected and treated as incompatible.
+- Incompatible rolling files (legacy/missing/blank/unknown header) are no longer parsed as wide-property rows; they are safely rewritten in current wide schema on the next capture with a bounded info diagnostic line.
 
 ## 2026-05-09 — PR follow-up: finish-like flag wording clarification
 - Classification: **internal-only** (documentation wording clarification only; no runtime/code changes).
