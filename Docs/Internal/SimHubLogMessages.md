@@ -73,6 +73,7 @@ Scope: Info/Warn logs emitted via `SimHub.Logging.Current.Info(...)` and `SimHub
 - **`[LalaPlugin:Fuel Burn] Car/track change detected – clearing seeds and confidence`** — Fuel model reset because car or track identity changed.【F:LalaLaunch.cs†L968-L983】
 - **`[LalaPlugin:Session] token change old=... new=... type=...`** — Session identity changed (SessionID/SubSessionID); triggers subsystem resets and pit-save finalization.【F:LalaLaunch.cs†L3308-L3365】
 - **`[LalaPlugin:Fuel Burn] live-max health source=... raw=... live=... lastValid=... effective=...`** — Debounced live-cap diagnostic snapshot for runtime-authoritative max tank seam and fallback state.
+- **`[LalaPlugin:Fuel Burn] runtime burn basis selected source=... burn=... liveAccepted=... fallback=... profileFuel=... reason=...`** — Logged on no-live-lap runtime authority selection changes to prove PROFILE-before-SIMHUB ordering.
 - **`[LalaPlugin:Surface] Mode flip Dry->Wet/Wet->Dry (tyres=..., PlayerTireCompound=..., ExtraProp=..., trackWetness=...)`** — Wet mode toggled based on tyre compound telemetry; includes track wetness context for the change.【F:LalaLaunch.cs†L1402-L1426】
 
 ## Lap detection and per-lap summaries

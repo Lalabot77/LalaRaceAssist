@@ -21,7 +21,7 @@ Branch: work
 
 | Exported name | Type | Units / meaning | Update cadence | Defined in |
 | --- | --- | --- | --- | --- |
-| Fuel.LiveFuelPerLap | double | Rolling average burn per accepted lap (wet/dry windows, rejects pit/warmup/off-track/outliers). | 500 ms poll (`UpdateLiveFuelCalcs`). | `LalaLaunch.cs` — `UpdateLiveFuelCalcs` + `AttachCore`【F:LalaLaunch.cs†L1895-L2143】【F:LalaLaunch.cs†L2672-L2955】 |
+| Fuel.LiveFuelPerLap | double | Rolling average burn per accepted lap (wet/dry windows, rejects pit/warmup/off-track/outliers). When accepted laps are unavailable, runtime uses profile condition burn before SimHub/DataCore fallback. | 500 ms poll (`UpdateLiveFuelCalcs`). | `LalaLaunch.cs` — `UpdateLiveFuelCalcs` + `AttachCore`【F:LalaLaunch.cs†L1895-L2143】【F:LalaLaunch.cs†L2672-L2955】 |
 | Fuel.LiveFuelPerLap_Stable / StableSource / StableConfidence | double/string/double | Smoothed burn chosen from live/profile (deadband hold; confidence aligned to source). | 500 ms poll. | `LalaLaunch.cs` — `UpdateStableFuelPerLap` + `AttachCore`【F:LalaLaunch.cs†L4180-L4254】【F:LalaLaunch.cs†L2672-L2955】 |
 | Surface.TrackWetness | int | Raw iRacing track wetness (0–3/4 depending on telemetry); informational only. | 500 ms poll. | `LalaLaunch.cs` — `ReadTrackWetness` + `AttachCore`【F:LalaLaunch.cs†L1402-L1426】【F:LalaLaunch.cs†L6095-L6134】【F:LalaLaunch.cs†L2996-L3003】 |
 | Surface.TrackWetnessLabel | string | Human label for track wetness (“Dry/Damp/Light Wet/Mod Wet/Very Wet/Unknown”). | 500 ms poll. | `LalaLaunch.cs` — `MapWetnessLabel` + `AttachCore`【F:LalaLaunch.cs†L1402-L1426】【F:LalaLaunch.cs†L6115-L6134】【F:LalaLaunch.cs†L2996-L3003】 |

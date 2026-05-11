@@ -1,3 +1,7 @@
+- 2026-05-11 fuel burn authority-chain fix landed:
+  - in no-accepted-lap runtime path, `LiveFuelPerLap` now uses active-condition profile fuel when valid and only uses SimHub/DataCore fallback as last resort;
+  - added bounded `[LalaPlugin:Fuel Burn] runtime burn basis selected ...` transition log for source/value auditability.
+
 - 2026-05-11 rolling snapshot legacy schema guard fix:
   - rolling `PropertySnapshot_Rolling.csv` reuse now validates header column 0 as exact `SimHubProperty` before parsing existing rows;
   - legacy header `SnapshotUtc` and malformed/unknown headers are treated as incompatible and safely reset/re-written in current wide schema;

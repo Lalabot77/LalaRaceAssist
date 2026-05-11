@@ -239,3 +239,7 @@ The v1 GitHub docs now present dashboards as the presentation layer across all s
   - `StrategyDash.BurnPlanText` is a concise no-stop/grid helper (`BURN PLAN: NORM/SAVE/PUSH`, optional `/ LIVE` or `/ MEMORY`) so dashes can show useful burn intent when next-refuel is not applicable; `NORM` is runtime/live, while `PUSH`/`SAVE` suffixes follow DATA when the basis is clear,
   - `StrategyDash.NextRefuelDeltaLitres` is `requested refuel - StrategyDash.NextRefuelTargetLitres`, using the exact same burn/source/DATA basis as the target,
   - `StrategyDash.NextRefuelStatus` aligns to absolute delta (`<=0.5 OK`, `<=2.0 CHECK`, else ACTION).
+
+
+## Fuel PROFILE provenance contract
+When `Fuel.LiveFuelPerLap_StableSource` resolves to `Profile`, runtime numeric fuel burn consumed by fuel outputs is profile-backed for that condition; SimHub/DataCore fallback must not be used in parallel as numeric authority.

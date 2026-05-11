@@ -111,6 +111,7 @@ The subsystem then:
 - pace/avg-lap persistence is driven by **pace-accepted laps** (not gated behind fuel-sample acceptance), so valid wet pace can continue feeding Strategy/Profile lap-time data even when a lap's fuel delta is rejected.
 
 ### 3) Stable burn selection
+The runtime stable/active burn authority must keep source and numeric value aligned: when valid profile fuel exists and accepted live laps are unavailable, profile fuel is the active burn basis; SimHub/DataCore fallback is last-resort only.
 The runtime chooses a stable burn candidate from:
 1. trustworthy live window data,
 2. profile condition averages,

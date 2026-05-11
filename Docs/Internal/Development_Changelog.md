@@ -1,3 +1,8 @@
+## 2026-05-11 — Fuel burn runtime authority fix (PROFILE over SimHub fallback)
+- Classification: **both** (runtime fuel authority-chain correctness + docs/log contract alignment).
+- In `LalaLaunch`, no-accepted-lap runtime assignment now resolves `LiveFuelPerLap` to active-condition profile fuel when available, only falling back to `DataCorePlugin.Computed.Fuel_LitersPerLap` as last resort.
+- Added bounded fuel-burn authority log on no-live-lap source/value transition (`[LalaPlugin:Fuel Burn] runtime burn basis selected ...`).
+
 - 2026-05-11 property snapshot final polish pass:
   - UI cleanup: `Select All` now drives all Property Snapshot group checkboxes, and individual group toggles now back-sync `Select All`;
   - rolling hardening: snapshot value text now normalizes CR/LF to literal `\n` before CSV write to keep wide rolling reload line-safe.
