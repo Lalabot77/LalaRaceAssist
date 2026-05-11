@@ -1,3 +1,8 @@
+- 2026-05-11 rolling snapshot legacy schema guard fix:
+  - rolling `PropertySnapshot_Rolling.csv` reuse now validates header column 0 as exact `SimHubProperty` before parsing existing rows;
+  - legacy header `SnapshotUtc` and malformed/unknown headers are treated as incompatible and safely reset/re-written in current wide schema;
+  - added bounded debug info log when a rolling schema reset occurs.
+
 - 2026-05-11 property snapshot final polish pass:
   - UI cleanup: `Select All` now drives all Property Snapshot group checkboxes, and individual group toggles now back-sync `Select All`;
   - rolling hardening: snapshot value text now normalizes CR/LF to literal `\n` before CSV write to keep wide rolling reload line-safe.
