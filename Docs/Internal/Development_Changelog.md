@@ -1,3 +1,9 @@
+- 2026-05-11 RaceFinish lifecycle hold + player/class snapshot follow-up fixes:
+  - RaceFinish snapshot reset no longer clears split-stage snapshots merely because `SessionState<5`; active finish snapshots now hold through valid post-timer-zero `SessionState 4` class-finish lifecycle and only clear when leaving race lifecycle (`SessionState<4`) or existing full reset paths.
+  - `RaceFinish.PlayerSnapshotActive` capture trigger now explicitly aligns with player-checkered evidence while class snapshot is active (`driver_checkered` seams via `GameData.Flag_Checkered` / `SessionFlagsDetails.IsCheckered*`) instead of deferring to `SessionState==6` fallback.
+  - `RaceFinish.PlayerClassFieldSize` freeze now retries class cohort resolution through existing League/native seams (including native class-driver-count fallback) so valid class cohorts no longer freeze at `0` when `OpponentsInClassCount` is missing.
+  - `Race.OverallLeaderHasFinished` now latches from `SessionState>=5` as overall lifecycle authority in multiclass as well (class-finish ownership unchanged and still independently resolved).
+
 - 2026-05-11 property snapshot final polish pass:
   - UI cleanup: `Select All` now drives all Property Snapshot group checkboxes, and individual group toggles now back-sync `Select All`;
   - rolling hardening: snapshot value text now normalizes CR/LF to literal `\n` before CSV write to keep wide rolling reload line-safe.

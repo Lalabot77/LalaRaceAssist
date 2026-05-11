@@ -1,3 +1,9 @@
+- 2026-05-11 RaceFinish lifecycle/player snapshot/class-field-size follow-up landed:
+  - active RaceFinish split-stage snapshots now remain held through valid class-finish lifecycle in `SessionState 4` after timer-zero; reset no longer fires purely on `<5` and now clears when leaving race lifecycle (`SessionState<4`) plus existing timing/session resets;
+  - player snapshot capture now aligns with player-checkered seams while class snapshot is active (no forced wait for `SessionState 6` fallback);
+  - class denominator freeze (`RaceFinish.PlayerClassFieldSize`) now falls back through League/native class cohort seams when `OpponentsInClassCount` is unavailable, preventing valid cohorts from freezing as `0`;
+  - multiclass now also latches `Race.OverallLeaderHasFinished` from `SessionState>=5` lifecycle authority while class-leader finish logic remains independently resolved.
+
 - 2026-05-11 property snapshot final polish pass:
   - UI cleanup: `Select All` now drives all Property Snapshot group checkboxes, and individual group toggles now back-sync `Select All`;
   - rolling hardening: snapshot value text now normalizes CR/LF to literal `\n` before CSV write to keep wide rolling reload line-safe.
