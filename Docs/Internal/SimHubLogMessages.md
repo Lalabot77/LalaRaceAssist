@@ -163,6 +163,9 @@ Scope: Info/Warn logs emitted via `SimHub.Logging.Current.Info(...)` and `SimHub
 - **`[LalaPlugin:Finish] leader_finish trigger=derived source=...`** — Derived leader finish (class/overall) once timer zero seen and heuristics trip.【F:LalaLaunch.cs†L4716-L4740】
 - **`[LalaPlugin:Finish] finish_latch trigger=driver_checkered ...`** — Driver checkered lap detected; logs timer0, leader/driver checkered times, after-zero measurements.【F:LalaLaunch.cs†L4729-L4780】
 
+## Property snapshot debug exports
+- **`[LalaPlugin:Debug] Property snapshot rolling CSV schema reset: <reason>. Existing file will be rewritten using current wide schema.`** — One-shot rolling snapshot compatibility guard log emitted when an existing rolling CSV is legacy (`SnapshotUtc`), missing/blank, or unknown schema; old contents are not parsed as wide rows and the file is safely rewritten in current wide format (`SimHubProperty` column-0 authority).
+
 ## Leader lap selection
 - **`[LalaPlugin:Leader Lap] reject source=... reason=...`** — Candidate leader lap rejected (too small, below floor); may fall back to previous avg.【F:LalaLaunch.cs†L4845-L4862】
 - **`[LalaPlugin:Leader Lap] using leader lap from <source> = Xs`** — Accepted leader lap source (telemetry fallback ordering).【F:LalaLaunch.cs†L4852-L4867】

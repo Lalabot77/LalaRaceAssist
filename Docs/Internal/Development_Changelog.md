@@ -2241,6 +2241,13 @@ The public user-facing release history is maintained in the root `CHANGELOG.md`.
 - `BuildH2HTrackSelector(...)` now carries selected CarSA slot `UserID` into `H2HEngine.TargetSelector` so `H2HTrack.Ahead/Behind.ClassColor` and `ClassColorHex` can resolve League Class via the same CSV-first identity seam as CarSA/H2HRace when enabled.
 - Kept H2HTrack physical target selection and all sector/delta/timing logic unchanged; unresolved/disabled paths still fall back to native class colour behavior.
 
+## 2026-05-11 — Rolling snapshot CSV legacy-schema guard fix (PR #705 follow-up)
+- Classification: **internal-only** (debug rolling CSV compatibility hardening; no runtime telemetry/export contract changes).
+- Added a strict rolling wide-schema header guard in `LalaLaunch.WriteSnapshotRollingWide(...)`:
+  - valid reusable rolling files must have header column 0 exactly `SimHubProperty`;
+  - legacy schema (`SnapshotUtc` column 0) is detected and treated as incompatible.
+- Incompatible rolling files (legacy/missing/blank/unknown header) are no longer parsed as wide-property rows; they are safely rewritten in current wide schema on the next capture with a bounded info diagnostic line.
+
 ## 2026-05-09 — PR follow-up: finish-like flag wording clarification
 - Classification: **internal-only** (documentation wording clarification only; no runtime/code changes).
 - Clarified finish-latch wording to describe checkered as the practical finish-like source in this telemetry path, while noting crossed is not relied on as required line-crossing proof.
