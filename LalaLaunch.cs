@@ -12951,15 +12951,23 @@ namespace LaunchPlugin
                 if (lines.Length > 0)
                 {
                     var header = ParseCsvLineQuoted(lines[0]);
-                    for (int i = 1; i < header.Count; i++) stamps.Add(header[i]);
-                    for (int i = 1; i < lines.Length; i++)
+                    string schemaGuardReason = GetRollingSnapshotWideSchemaGuardReason(header);
+                    if (schemaGuardReason == null)
                     {
-                        var cols = ParseCsvLineQuoted(lines[i]);
-                        if (cols.Count == 0) continue;
-                        var values = new List<string>();
-                        for (int c = 1; c < cols.Count; c++) values.Add(cols[c]);
-                        while (values.Count < stamps.Count) values.Add(string.Empty);
-                        existing[cols[0]] = values;
+                        for (int i = 1; i < header.Count; i++) stamps.Add(header[i]);
+                        for (int i = 1; i < lines.Length; i++)
+                        {
+                            var cols = ParseCsvLineQuoted(lines[i]);
+                            if (cols.Count == 0) continue;
+                            var values = new List<string>();
+                            for (int c = 1; c < cols.Count; c++) values.Add(cols[c]);
+                            while (values.Count < stamps.Count) values.Add(string.Empty);
+                            existing[cols[0]] = values;
+                        }
+                    }
+                    else
+                    {
+                        SimHub.Logging.Current.Info("[LalaPlugin:Debug] Property snapshot rolling CSV schema reset: " + schemaGuardReason + ". Existing file will be rewritten using current wide schema.");
                     }
                 }
             }
@@ -12992,6 +13000,32 @@ namespace LaunchPlugin
                 sb.AppendLine();
             }
             File.WriteAllText(filePath, sb.ToString());
+        }
+
+        private static string GetRollingSnapshotWideSchemaGuardReason(List<string> header)
+        {
+            if (header == null || header.Count == 0)
+            {
+                return "missing/blank header";
+            }
+
+            string first = header[0] ?? string.Empty;
+            if (string.Equals(first, "SimHubProperty", StringComparison.Ordinal))
+            {
+                return null;
+            }
+
+            if (string.Equals(first, "SnapshotUtc", StringComparison.Ordinal))
+            {
+                return "legacy schema detected (SnapshotUtc)";
+            }
+
+            if (string.IsNullOrWhiteSpace(first))
+            {
+                return "blank header column 0";
+            }
+
+            return "unknown schema header column 0='" + first + "'";
         }
         private bool IsPropertySnapshotGroupEnabled(string group)
         {
