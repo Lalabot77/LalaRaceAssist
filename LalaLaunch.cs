@@ -8598,14 +8598,17 @@ namespace LaunchPlugin
             SimHub.Logging.Current.Info($"[LalaPlugin:RaceFinish] class snapshot captured state={sessionStateNumeric} source={source} winner='{_raceFinishClassWinnerName}'");
         }
 
-        private void TryCaptureRaceFinishPlayerSnapshot(PluginManager pluginManager, int sessionStateNumeric, int playerCarIdx, bool playerFinishedByFlags, double sessionTimeSec)
+        private void TryCaptureRaceFinishPlayerSnapshot(PluginManager pluginManager, int sessionStateNumeric, int playerCarIdx, bool playerFinishedByFlags, bool playerFinishedByCheckered, double sessionTimeSec)
         {
             if (_raceFinishPlayerSnapshotActive)
             {
                 return;
             }
 
-            bool shouldCapture = playerFinishedByFlags || sessionStateNumeric == 6;
+            bool shouldCapture =
+                sessionStateNumeric == 6
+                || playerFinishedByFlags
+                || (_raceFinishClassSnapshotActive && playerFinishedByCheckered);
             if (!shouldCapture)
             {
                 return;
@@ -8684,13 +8687,16 @@ namespace LaunchPlugin
                 return classOpponentsCount + 1;
             }
 
-            if (playerCarIdx >= 0)
+            int driverCount = GetLeagueClassPlayerDriverCount();
+            if (driverCount > 0)
             {
-                int driverCount = GetLeagueClassPlayerDriverCount();
-                if (driverCount > 0)
-                {
-                    return driverCount;
-                }
+                return driverCount;
+            }
+
+            int nativeDriverCount = GetNativePlayerClassDriverCount();
+            if (nativeDriverCount > 0)
+            {
+                return nativeDriverCount;
             }
 
             return 0;
@@ -9979,7 +9985,7 @@ namespace LaunchPlugin
                     myPaceSec,
                     playerBestLapTimeSec,
                     playerLastLapTimeSec);
-                if ((_raceFinishClassSnapshotActive || _raceFinishPlayerSnapshotActive) && sessionState < 5)
+                if ((_raceFinishClassSnapshotActive || _raceFinishPlayerSnapshotActive) && sessionState < 4)
                 {
                     ResetRaceFinishSnapshot("session_state_left_post_finish");
                 }
@@ -10016,6 +10022,7 @@ namespace LaunchPlugin
                     sessionState,
                     playerCarIdx,
                     playerFinishedByFlags || playerFinishedByCheckered,
+                    playerFinishedByCheckered,
                     sessionTimeSec);
                 if (_h2hEngine != null)
                 {
@@ -18988,7 +18995,7 @@ namespace LaunchPlugin
                     $"[LalaPlugin:Finish] overall_finish trigger=caridx_flags carIdx={overallLeaderIdx} flags={carIdxSessionFlags[overallLeaderIdx]}");
             }
 
-            if (!OverallLeaderHasFinished && !isMultiClassSession && hasSessionState && sessionStateNumeric >= 5)
+            if (!OverallLeaderHasFinished && hasSessionState && sessionStateNumeric >= 5)
             {
                 OverallLeaderHasFinished = true;
                 SimHub.Logging.Current.Info(
