@@ -2,7 +2,7 @@
 - Classification: **both** (runtime fuel authority-chain correctness + docs/log contract alignment).
 - In `LalaLaunch`, no-accepted-lap runtime assignment now resolves `LiveFuelPerLap` to active-condition profile fuel when available, only falling back to `DataCorePlugin.Computed.Fuel_LitersPerLap` as last resort.
 - Added bounded fuel-burn authority log on no-live-lap source/value transition (`[LalaPlugin:Fuel Burn] runtime burn basis selected ...`).
-- Follow-up: narrowed transition-log signature to selected authority source + selected burn only, preventing log churn from unused fallback/profile input jitter when authority is unchanged.
+- Follow-up: narrowed transition-log signature to selected authority source only, preventing log churn from unused fallback/profile input jitter when authority is unchanged.
 
 - 2026-05-11 property snapshot final polish pass:
   - UI cleanup: `Select All` now drives all Property Snapshot group checkboxes, and individual group toggles now back-sync `Select All`;

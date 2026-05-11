@@ -4276,11 +4276,7 @@ namespace LaunchPlugin
                     FuelCalculator?.OnLiveFuelPerLapUpdated();
 
                 string reason = useProfileFallback ? "profile-before-simhub" : "simhub-last-resort";
-                string signature = string.Format(
-                    CultureInfo.InvariantCulture,
-                    "{0}|{1:0.###}",
-                    useProfileFallback ? "PROFILE" : "SIMHUB",
-                    LiveFuelPerLap);
+                string signature = useProfileFallback ? "PROFILE" : "SIMHUB";
                 if (!string.Equals(signature, _lastFuelBurnAuthoritySignature, StringComparison.Ordinal))
                 {
                     _lastFuelBurnAuthoritySignature = signature;
