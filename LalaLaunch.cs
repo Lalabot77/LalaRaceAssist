@@ -5612,9 +5612,9 @@ namespace LaunchPlugin
                 for (int i = 0; i < 64; i++)
                 {
                     string basePath = $"DataCorePlugin.GameRawData.SessionData.DriverInfo.CompetingDrivers[{i}]";
-                    int carIdx = SafeReadIntProperty(basePath + ".CarIdx", -1);
-                    int userId = SafeReadIntProperty(basePath + ".UserID");
-                    string name = SafeReadStringProperty(basePath + ".UserName");
+                    int carIdx = ReadCompetingDriverIntWithFallback(basePath, ".CarIdx", -1);
+                    int userId = ReadCompetingDriverIntWithFallback(basePath, ".UserID");
+                    string name = ReadCompetingDriverStringWithFallback(basePath, ".UserName");
                     if (string.IsNullOrWhiteSpace(name))
                     {
                         name = SafeReadStringProperty(basePath + ".UserNameRaw");
@@ -7041,6 +7041,8 @@ namespace LaunchPlugin
             AttachCore("Race.EndPhaseText", () => RaceEndPhaseText);
             AttachCore("Race.EndPhaseConfidence", () => RaceEndPhaseConfidence);
             AttachCore("Race.LastLapLikely", () => RaceLastLapLikely);
+            AttachCore("Race.FieldSize", () => ResolveLiveOverallFieldSize(this.PluginManager));
+            AttachCore("Race.PlayerClassFieldSize", () => ResolveLivePlayerClassFieldSize(this.PluginManager, _playerCarIdxLastTick));
             AttachCore("RaceFinish.ClassSnapshotActive", () => _raceFinishClassSnapshotActive);
             AttachCore("RaceFinish.PlayerSnapshotActive", () => _raceFinishPlayerSnapshotActive);
             AttachCore("RaceFinish.Active", () => _raceFinishClassSnapshotActive || _raceFinishPlayerSnapshotActive);
@@ -8570,8 +8572,8 @@ namespace LaunchPlugin
 
             _raceFinishClassSnapshotActive = true;
             _raceFinishClassCaptureSessionState = sessionStateNumeric;
-            _raceFinishPlayerOverallFieldSize = ResolveRaceFinishLiveOverallFieldSize(this.PluginManager);
-            _raceFinishPlayerClassFieldSize = ResolveRaceFinishLiveClassFieldSize(this.PluginManager, _playerCarIdxLastTick);
+            _raceFinishPlayerOverallFieldSize = ResolveLiveOverallFieldSize(this.PluginManager);
+            _raceFinishPlayerClassFieldSize = ResolveLivePlayerClassFieldSize(this.PluginManager, _playerCarIdxLastTick);
             _raceFinishPlayerFinishGapSec = 0.0;
             if (hasCurrentLeaderIdentity)
             {
@@ -8668,19 +8670,31 @@ namespace LaunchPlugin
             return Math.Max(0, effectiveClassPos);
         }
 
-        private int ResolveRaceFinishLiveOverallFieldSize(PluginManager pluginManager)
+        private int ResolveLiveOverallFieldSize(PluginManager pluginManager)
         {
+            int rosterCount = CountValidCompetingDriverRowsExcludingPaceCar();
+            if (rosterCount > 0)
+            {
+                return rosterCount;
+            }
+
             int opponentsCount = SafeReadInt(pluginManager, "DataCorePlugin.GameData.OpponentsCount", int.MinValue);
             if (opponentsCount >= 0)
             {
-                return opponentsCount + 1;
+                return opponentsCount;
             }
 
             return 0;
         }
 
-        private int ResolveRaceFinishLiveClassFieldSize(PluginManager pluginManager, int playerCarIdx)
+        private int ResolveLivePlayerClassFieldSize(PluginManager pluginManager, int playerCarIdx)
         {
+            int playerClassRosterCount = CountPlayerClassCompetingDriverRowsExcludingPaceCar();
+            if (playerClassRosterCount > 0)
+            {
+                return playerClassRosterCount;
+            }
+
             int driverCount = GetLeagueClassPlayerDriverCount();
             if (driverCount > 0)
             {
@@ -8708,6 +8722,185 @@ namespace LaunchPlugin
             }
 
             return 0;
+        }
+
+        private int CountValidCompetingDriverRowsExcludingPaceCar()
+        {
+            int count = 0;
+            for (int i = 0; i < 64; i++)
+            {
+                string basePath = GetCompetingDriverBasePath(i);
+                if (!IsCompetingDriverRowValid(basePath) || IsDriverRowPaceCar(basePath, i))
+                {
+                    continue;
+                }
+
+                count++;
+            }
+
+            return count;
+        }
+
+        private int CountPlayerClassCompetingDriverRowsExcludingPaceCar()
+        {
+            var player = ResolveLivePlayerLeagueClassInfo();
+            bool useLeagueClass = (Settings?.LeagueClassEnabled == true) && player.Valid && !string.IsNullOrWhiteSpace(player.Name);
+            string playerNativeClass = useLeagueClass ? string.Empty : ResolvePlayerNativeClassName();
+            if (!useLeagueClass && string.IsNullOrWhiteSpace(playerNativeClass))
+            {
+                return 0;
+            }
+
+            int count = 0;
+            int playerCarIdx = ResolveLivePlayerCarIdxForLeagueCount();
+            int? fallbackPlayerUserId;
+            string _;
+            TryGetLivePlayerIdentityPreview(out fallbackPlayerUserId, out _);
+
+            for (int i = 0; i < 64; i++)
+            {
+                string basePath = GetCompetingDriverBasePath(i);
+                if (!IsCompetingDriverRowValid(basePath) || IsDriverRowPaceCar(basePath, i))
+                {
+                    continue;
+                }
+
+                if (useLeagueClass)
+                {
+                    int carIdx = SafeReadIntProperty(basePath + ".CarIdx", -1);
+                    int userId = SafeReadIntProperty(basePath + ".UserID");
+                    string name = SafeReadStringProperty(basePath + ".UserName");
+                    bool isPlayerRow = playerCarIdx >= 0 && carIdx == playerCarIdx;
+                    if (!isPlayerRow && userId > 0 && fallbackPlayerUserId.HasValue && fallbackPlayerUserId.Value > 0)
+                    {
+                        isPlayerRow = fallbackPlayerUserId.Value == userId;
+                    }
+
+                    EffectiveRaceClassInfo info = isPlayerRow
+                        ? ResolveLivePlayerLeagueClassInfo()
+                        : ResolveLeagueClassDriverInfo(userId > 0 ? (int?)userId : null, name);
+
+                    if (info.Valid && !string.IsNullOrWhiteSpace(info.Name)
+                        && string.Equals(info.Name, player.Name, StringComparison.OrdinalIgnoreCase))
+                    {
+                        count++;
+                    }
+                }
+                else
+                {
+                    string cls = ReadCompetingDriverStringWithFallback(basePath, ".CarClassShortName");
+                    if (string.IsNullOrWhiteSpace(cls)) cls = ReadCompetingDriverStringWithFallback(basePath, ".CarClassName");
+                    if (!string.IsNullOrWhiteSpace(cls)
+                        && string.Equals(cls, playerNativeClass, StringComparison.OrdinalIgnoreCase))
+                    {
+                        count++;
+                    }
+                }
+            }
+
+            return count;
+        }
+
+        private bool IsCompetingDriverRowValid(string basePath)
+        {
+            int carIdx = ReadCompetingDriverIntWithFallback(basePath, ".CarIdx", -1);
+            int userId = ReadCompetingDriverIntWithFallback(basePath, ".UserID");
+            string userName = ReadCompetingDriverStringWithFallback(basePath, ".UserName");
+            string carNumber = ReadCompetingDriverStringWithFallback(basePath, ".CarNumber");
+            return carIdx >= 0 || userId > 0 || !string.IsNullOrWhiteSpace(userName) || !string.IsNullOrWhiteSpace(carNumber);
+        }
+
+        private bool IsDriverRowPaceCar(string basePath, int rowIndex)
+        {
+            if (SafeReadBool(PluginManager, basePath + ".IsPaceCar", false))
+            {
+                return true;
+            }
+
+            string numberedCompetingPath = GetCompetingDriverBasePathNumbered(rowIndex);
+            if (!string.Equals(numberedCompetingPath, basePath, StringComparison.Ordinal)
+                && SafeReadBool(PluginManager, numberedCompetingPath + ".IsPaceCar", false))
+            {
+                return true;
+            }
+
+            string driversBasePath = $"DataCorePlugin.GameRawData.SessionData.DriverInfo.Drivers{(rowIndex + 1):00}";
+            return SafeReadBool(PluginManager, driversBasePath + ".IsPaceCar", false);
+        }
+
+        private static string GetCompetingDriverBasePath(int rowIndex)
+        {
+            return $"DataCorePlugin.GameRawData.SessionData.DriverInfo.CompetingDrivers[{rowIndex}]";
+        }
+
+        private static string GetCompetingDriverBasePathNumbered(int rowIndex)
+        {
+            return $"DataCorePlugin.GameRawData.SessionData.DriverInfo.CompetingDrivers{(rowIndex + 1):00}";
+        }
+
+        private int ReadCompetingDriverIntWithFallback(string bracketBasePath, string suffix, int fallback = 0)
+        {
+            int value = SafeReadIntProperty(bracketBasePath + suffix, int.MinValue);
+            if (value != int.MinValue)
+            {
+                return value;
+            }
+
+            int rowIndex = ExtractCompetingDriverRowIndex(bracketBasePath);
+            if (rowIndex < 0)
+            {
+                return fallback;
+            }
+
+            string numberedBasePath = GetCompetingDriverBasePathNumbered(rowIndex);
+            return SafeReadIntProperty(numberedBasePath + suffix, fallback);
+        }
+
+        private string ReadCompetingDriverStringWithFallback(string bracketBasePath, string suffix)
+        {
+            string value = SafeReadStringProperty(bracketBasePath + suffix);
+            if (!string.IsNullOrWhiteSpace(value))
+            {
+                return value;
+            }
+
+            int rowIndex = ExtractCompetingDriverRowIndex(bracketBasePath);
+            if (rowIndex < 0)
+            {
+                return string.Empty;
+            }
+
+            string numberedBasePath = GetCompetingDriverBasePathNumbered(rowIndex);
+            return SafeReadStringProperty(numberedBasePath + suffix);
+        }
+
+        private static int ExtractCompetingDriverRowIndex(string basePath)
+        {
+            if (string.IsNullOrWhiteSpace(basePath))
+            {
+                return -1;
+            }
+
+            int open = basePath.LastIndexOf('[', StringComparison.Ordinal);
+            int close = basePath.LastIndexOf(']', StringComparison.Ordinal);
+            if (open < 0 || close <= open)
+            {
+                return -1;
+            }
+
+            string token = basePath.Substring(open + 1, close - open - 1);
+            return int.TryParse(token, NumberStyles.Integer, CultureInfo.InvariantCulture, out int rowIndex) ? rowIndex : -1;
+        }
+
+        private string ResolvePlayerNativeClassName()
+        {
+            string playerClass = SafeReadStringProperty("DataCorePlugin.GameRawData.Telemetry.PlayerCarClass");
+            if (string.IsNullOrWhiteSpace(playerClass))
+            {
+                playerClass = SafeReadStringProperty("DataCorePlugin.GameRawData.SessionData.DriverInfo.DriverCarClass");
+            }
+
+            return playerClass;
         }
 
         private double ResolveRaceFinishLiveFuelLeft(PluginManager pluginManager)
