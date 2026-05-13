@@ -7,7 +7,7 @@ Branch: work
 ## Purpose
 This subsystem owns plugin-driven pit-lane command dispatch and command-state surfaces used by dashboards and hardware bindings.
 
-UI/control surface note: Dash Control -> Global Dash Functions -> Fuel exposes `Fuel Data Plan Mode` (OFF=`LIVE`, ON=`PLAN`) for Pit Fuel Control DATA, and Settings -> Pit Commands exposes `Fuel Data Cycle` (`LalaLaunch.Pit.FuelControl.CycleData`) plus the one-release legacy `PushSaveModeCycle` binding alias.
+UI/control surface note: Dash Control -> Global Dash Functions -> Fuel exposes `Fuel Data Plan Mode` (OFF=`LIVE`, ON=`PLAN`) for Pit Fuel Control DATA, and Settings -> Pit Commands exposes `Fuel Data Cycle` (`LalaLaunch.Pit.FuelControl.CycleData`).
 
 It combines:
 - built-in pit command actions (`LalaLaunch.Pit.*`),
@@ -78,7 +78,7 @@ This is the canonical technical document for the pit/custom command stack and re
 - Target litres and override-active semantics for command generation.
 - DATA defaults to `LIVE` on session/control reset. Changing DATA always forces `SOURCE=STBY`, disarms AUTO, and sends no fuel command.
 - `SOURCE=PLAN` has been retired. The one-release compatibility action `Pit.FuelControl.SetPlan` now maps to `DATA=PLAN` + `SOURCE=STBY` and publishes `FUEL DATA PLAN`.
-- `Pit.FuelControl.PushSaveMode*` is a compatibility/alias surface after the DATA model cutover and should not be treated as a new source family.
+- Legacy `Pit.FuelControl.PushSaveMode*` compatibility exports/actions were removed before public release; use `Pit.FuelControl.Data*` only.
 - `NORM` now follows DATA like `PUSH`/`SAVE`: `DATA LIVE` uses runtime/live stable normal target; `DATA PLAN` uses planner/profile normal target. `PUSH`/`SAVE` behavior is unchanged (`LIVE` selects live push/save targets; `PLAN` selects planner/profile memory push/save targets with the existing guarded fallback behavior).
 - Fault export state (`Pit.FuelControl.Fault`) for post-settle selector disagreement diagnostics only (`0/1/2/3` contract).
 

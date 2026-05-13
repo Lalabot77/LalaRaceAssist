@@ -1,3 +1,8 @@
+- 2026-05-13 Pit Fuel Control legacy PushSave surface removal landed:
+  - removed legacy action `Pit.FuelControl.PushSaveModeCycle` and legacy compatibility exports `Pit.FuelControl.PushSaveMode` / `Pit.FuelControl.PushSaveModeText`;
+  - removed legacy PushSave compatibility settings/property wiring and moved UI binding to canonical DATA setting state (`PitFuelControlDataMode` / `PitFuelControlDataPlanModeEnabled`);
+  - kept DATA PLAN PUSH/SAVE guard behavior unchanged and renamed UI wording to `DATA PLAN Push/Save Guard (%)`.
+
 - 2026-05-13 Pit Fuel Control NORM DATA-basis alignment landed:
   - `BuildPitFuelControlSnapshot()` now applies DATA authority to `NORM` target selection in addition to existing `PUSH/SAVE` behavior;
   - `DATA LIVE + NORM` keeps current runtime/live stable normal targeting;

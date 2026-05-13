@@ -120,14 +120,14 @@
                                      ToolTip="Reserve fuel as a percentage of one lap (based on stable fuel burn) when calculating stint burn targets." />
                     <styles:SHToggleCheckbox Content="Fuel Data Plan Mode"
                                              Margin="0,8,0,0"
-                                             IsChecked="{Binding Settings.PitFuelControlPushSaveProfileModeEnabled, Mode=TwoWay}"
+                                             IsChecked="{Binding Settings.PitFuelControlDataPlanModeEnabled, Mode=TwoWay}"
                                              ToolTip="Toggle Pit Fuel Control DATA. OFF = LIVE runtime burn assumptions, ON = PLAN memory/profile assumptions for PUSH/SAVE. Changing DATA parks SOURCE at STBY." />
                     <TextBlock Text="OFF = LIVE, ON = PLAN"
                                FontSize="11"
                                Opacity="0.7"
                                TextWrapping="Wrap"
                                Margin="0,2,0,0"/>
-                    <ui:TitledSlider Title="Pit Fuel DATA PLAN Guard (%): "
+                    <ui:TitledSlider Title="DATA PLAN Push/Save Guard (%): "
                                      Margin="0,8,0,0"
                                      Minimum="0"
                                      Maximum="30"
