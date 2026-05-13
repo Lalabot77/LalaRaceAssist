@@ -4761,14 +4761,31 @@ namespace LaunchPlugin
                 ResolveDataGovernedBurnAndPaceBasis(data, dataGovernedFallback, out selectedNormBurn, out selectedLapSeconds, out selectedNormBurnSource, out selectedLapSource);
 
                 double selectedLapsRemaining;
-                bool selectedLapsValid = TryResolveSelectedLapsRemainingForRefuel(
-                    data,
+                bool selectedLapsValid = TryResolveDataGovernedProjectedLapsRemaining(
                     selectedLapSource,
                     selectedLapSeconds,
                     LiveLapsRemainingInRace_Stable,
                     simLapsRemaining,
+                    projectionSessionTimeRemain,
                     driveTimeAfterZero,
                     out selectedLapsRemaining);
+
+                bool contingencyInLaps = resolvedContingency.IsConfiguredInLaps;
+                double contingencyValue = Math.Max(0.0, contingencyInLaps ? resolvedContingency.Laps : resolvedContingency.Litres);
+                double ResolveSelectedContingencyLitres(double selectedBurn, double fallbackLitres)
+                {
+                    if (!contingencyInLaps)
+                    {
+                        return Math.Max(0.0, fallbackLitres);
+                    }
+
+                    if (selectedBurn <= 0.0 || double.IsNaN(selectedBurn) || double.IsInfinity(selectedBurn))
+                    {
+                        return Math.Max(0.0, fallbackLitres);
+                    }
+
+                    return Math.Max(0.0, contingencyValue) * selectedBurn;
+                }
 
                 bool hasPlanNormalRequirement = selectedNormBurn > 0.0 && selectedLapsValid && selectedLapsRemaining > 0.0;
                 if (!hasPlanNormalRequirement)
@@ -4780,54 +4797,54 @@ namespace LaunchPlugin
                 }
                 else
                 {
-                double selectedContingencyNorm = ResolveContingencyLitresForBurn(selectedNormBurn, contingencyInLaps, contingencyValue, contingencyLitresNormal);
-                double selectedRequiredLitresNormal = hasPlanNormalRequirement ? (selectedLapsRemaining * selectedNormBurn) + selectedContingencyNorm : 0.0;
-                Fuel_Delta_LitresPlan = ComputeDeltaLitres(fuelPlanExit, selectedRequiredLitresNormal, hasPlanNormalRequirement);
+                    double selectedContingencyNorm = ResolveSelectedContingencyLitres(selectedNormBurn, contingencyLitresNormal);
+                    double selectedRequiredLitresNormal = (selectedLapsRemaining * selectedNormBurn) + selectedContingencyNorm;
+                    Fuel_Delta_LitresPlan = ComputeDeltaLitres(fuelPlanExit, selectedRequiredLitresNormal, hasPlanNormalRequirement);
 
-                double selectedPushBurn = PushFuelPerLap;
-                if ((_pitFuelControlEngine?.Data ?? PitFuelControlData.Live) == PitFuelControlData.Plan)
-                {
-                    double profilePushBurn;
-                    double profileSaveBurn;
-                    if (TryGetProfilePushSaveBurnsForCurrentCondition(out profilePushBurn, out profileSaveBurn) && profilePushBurn > 0.0)
+                    double selectedPushBurn = PushFuelPerLap;
+                    if ((_pitFuelControlEngine?.Data ?? PitFuelControlData.Live) == PitFuelControlData.Plan)
                     {
-                        selectedPushBurn = profilePushBurn;
+                        double profilePushBurn;
+                        double profileSaveBurn;
+                        if (TryGetProfilePushSaveBurnsForCurrentCondition(out profilePushBurn, out profileSaveBurn) && profilePushBurn > 0.0)
+                        {
+                            selectedPushBurn = profilePushBurn;
+                        }
+                        else
+                        {
+                            selectedPushBurn = selectedNormBurn > 0.0 ? selectedNormBurn * 1.02 : 0.0;
+                        }
                     }
-                    else
+
+                    bool hasPlanPushRequirement = selectedPushBurn > 0.0 && selectedLapsValid && selectedLapsRemaining > 0.0;
+                    double selectedContingencyPush = ResolveSelectedContingencyLitres(selectedPushBurn, contingencyLitresPush);
+                    double selectedRequiredLitresPush = hasPlanPushRequirement ? (selectedLapsRemaining * selectedPushBurn) + selectedContingencyPush : 0.0;
+                    Fuel_Delta_LitresPlanPush = ComputeDeltaLitres(fuelPlanExit, selectedRequiredLitresPush, hasPlanPushRequirement);
+
+                    double selectedSaveBurn = FuelSaveFuelPerLap;
+                    if ((_pitFuelControlEngine?.Data ?? PitFuelControlData.Live) == PitFuelControlData.Plan)
                     {
-                        selectedPushBurn = selectedNormBurn > 0.0 ? selectedNormBurn * 1.02 : 0.0;
+                        double profilePushBurn;
+                        double profileSaveBurn;
+                        if (TryGetProfilePushSaveBurnsForCurrentCondition(out profilePushBurn, out profileSaveBurn) && profileSaveBurn > 0.0)
+                        {
+                            selectedSaveBurn = profileSaveBurn;
+                        }
+                        else
+                        {
+                            selectedSaveBurn = selectedNormBurn > 0.0 ? selectedNormBurn * 0.97 : 0.0;
+                        }
                     }
-                }
 
-                bool hasPlanPushRequirement = selectedPushBurn > 0.0 && selectedLapsValid && selectedLapsRemaining > 0.0;
-                double selectedContingencyPush = ResolveContingencyLitresForBurn(selectedPushBurn, contingencyInLaps, contingencyValue, contingencyLitresPush);
-                double selectedRequiredLitresPush = hasPlanPushRequirement ? (selectedLapsRemaining * selectedPushBurn) + selectedContingencyPush : 0.0;
-                Fuel_Delta_LitresPlanPush = ComputeDeltaLitres(fuelPlanExit, selectedRequiredLitresPush, hasPlanPushRequirement);
+                    bool hasPlanSaveRequirement = selectedSaveBurn > 0.0 && selectedLapsValid && selectedLapsRemaining > 0.0;
+                    double selectedContingencySave = ResolveSelectedContingencyLitres(selectedSaveBurn, contingencyLitresSave);
+                    double selectedRequiredLitresSave = hasPlanSaveRequirement ? (selectedLapsRemaining * selectedSaveBurn) + selectedContingencySave : 0.0;
+                    Fuel_Delta_LitresPlanSave = ComputeDeltaLitres(fuelPlanExit, selectedRequiredLitresSave, hasPlanSaveRequirement);
 
-                double selectedSaveBurn = FuelSaveFuelPerLap;
-                if ((_pitFuelControlEngine?.Data ?? PitFuelControlData.Live) == PitFuelControlData.Plan)
-                {
-                    double profilePushBurn;
-                    double profileSaveBurn;
-                    if (TryGetProfilePushSaveBurnsForCurrentCondition(out profilePushBurn, out profileSaveBurn) && profileSaveBurn > 0.0)
-                    {
-                        selectedSaveBurn = profileSaveBurn;
-                    }
-                    else
-                    {
-                        selectedSaveBurn = selectedNormBurn > 0.0 ? selectedNormBurn * 0.97 : 0.0;
-                    }
-                }
-
-                bool hasPlanSaveRequirement = selectedSaveBurn > 0.0 && selectedLapsValid && selectedLapsRemaining > 0.0;
-                double selectedContingencySave = ResolveContingencyLitresForBurn(selectedSaveBurn, contingencyInLaps, contingencyValue, contingencyLitresSave);
-                double selectedRequiredLitresSave = hasPlanSaveRequirement ? (selectedLapsRemaining * selectedSaveBurn) + selectedContingencySave : 0.0;
-                Fuel_Delta_LitresPlanSave = ComputeDeltaLitres(fuelPlanExit, selectedRequiredLitresSave, hasPlanSaveRequirement);
-
-                var sourceMode = _pitFuelControlEngine?.Source ?? PitFuelControlSource.Stby;
-                if (sourceMode == PitFuelControlSource.Push) Fuel_Delta_AfterStop_Selected = Fuel_Delta_LitresPlanPush;
-                else if (sourceMode == PitFuelControlSource.Save) Fuel_Delta_AfterStop_Selected = Fuel_Delta_LitresPlanSave;
-                else Fuel_Delta_AfterStop_Selected = Fuel_Delta_LitresPlan;
+                    var sourceMode = _pitFuelControlEngine?.Source ?? PitFuelControlSource.Stby;
+                    if (sourceMode == PitFuelControlSource.Push) Fuel_Delta_AfterStop_Selected = Fuel_Delta_LitresPlanPush;
+                    else if (sourceMode == PitFuelControlSource.Save) Fuel_Delta_AfterStop_Selected = Fuel_Delta_LitresPlanSave;
+                    else Fuel_Delta_AfterStop_Selected = Fuel_Delta_LitresPlan;
                 }
             }
 
