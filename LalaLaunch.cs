@@ -809,6 +809,7 @@ namespace LaunchPlugin
 
         // --- Live Fuel Calculation State ---
         private double _lastFuelLevel = -1;
+        private GameData _currentTickGameData;
         private double _lapStartFuel = -1;
         private double _lastLapDistPct = -1;
         private int _lapDetectorLastCompleted = -1;
@@ -9289,6 +9290,11 @@ namespace LaunchPlugin
             {
                 double stableLapsRemaining = LiveLapsRemainingInRace_Stable;
                 double currentFuel = Math.Max(0.0, _lastFuelLevel);
+                if (TryResolvePlanNormNeed(_currentTickGameData, stableLapsRemaining, currentFuel, out double planNormNeed))
+                {
+                    normNeedLitres = planNormNeed;
+                }
+
                 if (TryResolveProfileAssistedPushSaveNeeds(stableLapsRemaining, currentFuel, out double profilePushNeed, out double profileSaveNeed))
                 {
                     pushNeedLitres = profilePushNeed;
@@ -9304,6 +9310,41 @@ namespace LaunchPlugin
             snapshot.TankSpaceLitres = Math.Max(0.0, Pit_TankSpaceAvailable);
             snapshot.TelemetryRequestedFuelLitres = SafeReadDouble(PluginManager, "DataCorePlugin.GameRawData.Telemetry.PitSvFuel", 0.0);
             return snapshot;
+        }
+
+        private bool TryResolvePlanNormNeed(GameData data, double stableLapsRemaining, double currentFuel, out double normNeedLitres)
+        {
+            normNeedLitres = -Fuel_Delta_LitresCurrent;
+            if (stableLapsRemaining <= 0.0)
+            {
+                return false;
+            }
+
+            double fallbackFuelPerLap = IsFinitePositive(LiveFuelPerLap_Stable) ? LiveFuelPerLap_Stable : 0.0;
+            double selectedBurn;
+            double ignoredLapSeconds;
+            string burnSource;
+            string ignoredLapSource;
+            ResolveDataGovernedBurnAndPaceBasis(
+                data: data,
+                fallbackFuelPerLap: fallbackFuelPerLap,
+                fuelPerLap: out selectedBurn,
+                lapSeconds: out ignoredLapSeconds,
+                fuelSource: out burnSource,
+                lapSource: out ignoredLapSource);
+
+            string sourceToken = ClassifyRefuelSourceToken(burnSource);
+            bool plannerAuthority = string.Equals(sourceToken, "PLAN", StringComparison.Ordinal) ||
+                                    string.Equals(sourceToken, "PROFILE", StringComparison.Ordinal);
+            if (!plannerAuthority || !IsFinitePositive(selectedBurn))
+            {
+                return false;
+            }
+
+            double contingency = ResolveLivePitFuelControlContingencyLitres(selectedBurn);
+            double requiredLitres = (stableLapsRemaining * selectedBurn) + contingency;
+            normNeedLitres = Math.Max(0.0, requiredLitres - currentFuel);
+            return true;
         }
 
         private int GetPitFuelControlPushSaveMode()
@@ -9864,6 +9905,8 @@ namespace LaunchPlugin
                 _eventMarkerCooldownTimer.Reset();
                 _eventMarkerPressed = false;
             }
+
+            _currentTickGameData = data;
 
             // --- MASTER GUARD CLAUSES ---
             if (Settings == null || pluginManager == null) return;

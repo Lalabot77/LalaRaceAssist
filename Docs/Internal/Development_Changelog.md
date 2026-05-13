@@ -1,3 +1,11 @@
+- 2026-05-13 Pit Fuel Control DATA alignment follow-up landed:
+  - `BuildPitFuelControlSnapshot()` now applies DATA basis selection to `NORM` as well as `PUSH/SAVE`;
+  - `DATA LIVE + NORM` remains runtime/live stable normal target behavior;
+  - `DATA PLAN + NORM` now uses planner/profile normal-basis target calculation (and rejects LIVE/SIM authority on this path);
+  - `PUSH/SAVE`, DATA reset/toggle behavior, source/mode cycling, AUTO arming, and command-send behavior remain unchanged.
+  - review follow-up: fixed `ResolveDataGovernedBurnAndPaceBasis(...)` call-site argument names in `TryResolvePlanNormNeed(...)` to match actual signature and avoid build failure.
+  - review follow-up: removed stale Dash Integration wording that still implied `NORM` is always runtime/live.
+  - review follow-up: threaded live `GameData` through `TryResolvePlanNormNeed(...)` into `ResolveDataGovernedBurnAndPaceBasis(...)` to prevent null `data` dereference risk on PLAN + NORM snapshot path.
 - 2026-05-13 PitExit League Class color resolver identity fix landed:
   - PitExit ahead/behind class-color publication now passes selected target `UserID` into the existing race-context League resolver seam (instead of null identity), restoring CSV-only League Class color resolution for `PitExit.Ahead.ClassColor` / `PitExit.Behind.ClassColor`;
   - suffix-only and CSV-then-suffix behavior remain unchanged; native fallback and `0xRRGGBB` format are preserved;
