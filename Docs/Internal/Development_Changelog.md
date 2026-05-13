@@ -1,3 +1,9 @@
+- 2026-05-13 Pit Fuel Control DATA alignment follow-up landed:
+  - `BuildPitFuelControlSnapshot()` now applies DATA basis selection to `NORM` as well as `PUSH/SAVE`;
+  - `DATA LIVE + NORM` remains runtime/live stable normal target behavior;
+  - `DATA PLAN + NORM` now uses planner/profile normal-basis target calculation (and rejects LIVE/SIM authority on this path);
+  - `PUSH/SAVE`, DATA reset/toggle behavior, source/mode cycling, AUTO arming, and command-send behavior remain unchanged.
+
 - 2026-05-11 RaceFinish class denominator follow-up fix landed:
   - `ResolveRaceFinishLiveClassFieldSize(...)` source ordering now prefers existing effective class driver-count seam first, then native `Telemetry.OpponentsInClassCount + 1`, then SimHub baseline `GameData.NewData.OpponentsInClassCount + 1`; returns `0` only when all are unavailable/invalid;
   - preserves valid solo-class semantics (`0` opponents -> field size `1`) and keeps class snapshot/player snapshot/finish timing semantics unchanged.

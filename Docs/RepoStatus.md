@@ -1,3 +1,9 @@
+- 2026-05-13 Pit Fuel Control NORM DATA-basis alignment landed:
+  - `BuildPitFuelControlSnapshot()` now applies DATA authority to `NORM` target selection in addition to existing `PUSH/SAVE` behavior;
+  - `DATA LIVE + NORM` keeps current runtime/live stable normal targeting;
+  - `DATA PLAN + NORM` now uses planner/profile normal-basis targeting and does not take LIVE/SIM authority on this path;
+  - no changes to PUSH/SAVE behavior, DATA toggle/reset behavior, source/mode cycling, AUTO arming, or pit command send semantics.
+
 - 2026-05-11 RaceFinish class-field-size source-order follow-up landed:
   - class denominator resolution now prefers effective class driver-count seam, then native telemetry `OpponentsInClassCount + 1`, then SimHub baseline `GameData.NewData.OpponentsInClassCount + 1`;
   - preserves valid solo-class denominator (`0` opponents => `1`) and leaves finish timing/snapshot triggers unchanged.

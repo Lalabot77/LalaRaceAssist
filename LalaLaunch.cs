@@ -9274,6 +9274,11 @@ namespace LaunchPlugin
             {
                 double stableLapsRemaining = LiveLapsRemainingInRace_Stable;
                 double currentFuel = Math.Max(0.0, _lastFuelLevel);
+                if (TryResolvePlanNormNeed(stableLapsRemaining, currentFuel, out double planNormNeed))
+                {
+                    normNeedLitres = planNormNeed;
+                }
+
                 if (TryResolveProfileAssistedPushSaveNeeds(stableLapsRemaining, currentFuel, out double profilePushNeed, out double profileSaveNeed))
                 {
                     pushNeedLitres = profilePushNeed;
@@ -9289,6 +9294,41 @@ namespace LaunchPlugin
             snapshot.TankSpaceLitres = Math.Max(0.0, Pit_TankSpaceAvailable);
             snapshot.TelemetryRequestedFuelLitres = SafeReadDouble(PluginManager, "DataCorePlugin.GameRawData.Telemetry.PitSvFuel", 0.0);
             return snapshot;
+        }
+
+        private bool TryResolvePlanNormNeed(double stableLapsRemaining, double currentFuel, out double normNeedLitres)
+        {
+            normNeedLitres = -Fuel_Delta_LitresCurrent;
+            if (stableLapsRemaining <= 0.0)
+            {
+                return false;
+            }
+
+            double fallbackFuelPerLap = IsFinitePositive(LiveFuelPerLap_Stable) ? LiveFuelPerLap_Stable : 0.0;
+            double selectedBurn;
+            double ignoredLapSeconds;
+            string burnSource;
+            string ignoredLapSource;
+            ResolveDataGovernedBurnAndPaceBasis(
+                data: null,
+                fallbackFuelPerLap: fallbackFuelPerLap,
+                selectedBurn: out selectedBurn,
+                selectedLapSeconds: out ignoredLapSeconds,
+                selectedFuelSource: out burnSource,
+                selectedLapSource: out ignoredLapSource);
+
+            string sourceToken = ClassifyRefuelSourceToken(burnSource);
+            bool plannerAuthority = string.Equals(sourceToken, "PLAN", StringComparison.Ordinal) ||
+                                    string.Equals(sourceToken, "PROFILE", StringComparison.Ordinal);
+            if (!plannerAuthority || !IsFinitePositive(selectedBurn))
+            {
+                return false;
+            }
+
+            double contingency = ResolveLivePitFuelControlContingencyLitres(selectedBurn);
+            double requiredLitres = (stableLapsRemaining * selectedBurn) + contingency;
+            normNeedLitres = Math.Max(0.0, requiredLitres - currentFuel);
+            return true;
         }
 
         private int GetPitFuelControlPushSaveMode()
