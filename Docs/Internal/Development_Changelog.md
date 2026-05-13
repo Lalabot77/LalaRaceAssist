@@ -4,6 +4,7 @@
 - Added `Fuel.Delta.AfterStop.Selected` export selecting from `LitresPlan*` by Pit Fuel Control SOURCE (`PUSH`, `SAVE`, `NORM`, `STBY->NORM advisory`).
 - Protected invariants: no export renames/removals, no pit-command send-path changes, and no changes to `Fuel.Refuel.*`/current-stint delta families.
 - PR review follow-up fixes: DATA PLAN after-stop delta path no longer allows runtime fallback fuel authority (`fallback=0` when DATA PLAN), and invalid after-stop DATA-governed basis now clears `Fuel.Delta.LitresPlan*` plus `Fuel.Delta.AfterStop.Selected` to prevent stale selected export values.
+- Late PR review follow-up: `ResolveDataGovernedBurnAndPaceBasis(...)` now guards missing `GameData/NewData` so startup DATA PLAN snapshot paths fail cleanly instead of null-dereferencing (`stableLap/simLap` read only when game data is present).
 
 - 2026-05-11 RaceFinish class denominator follow-up fix landed:
   - `ResolveRaceFinishLiveClassFieldSize(...)` source ordering now prefers existing effective class driver-count seam first, then native `Telemetry.OpponentsInClassCount + 1`, then SimHub baseline `GameData.NewData.OpponentsInClassCount + 1`; returns `0` only when all are unavailable/invalid;

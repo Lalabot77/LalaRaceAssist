@@ -1177,7 +1177,8 @@ namespace LaunchPlugin
             double runtimeFuel = LiveFuelPerLap;
             string stableFuelSource = LiveFuelPerLap_StableSource ?? string.Empty;
 
-            double stableLap = GetProjectionLapSeconds(data);
+            bool hasGameData = data != null && data.NewData != null;
+            double stableLap = hasGameData ? GetProjectionLapSeconds(data) : 0.0;
             string stableLapSource = ProjectionLapTime_StableSource ?? string.Empty;
 
             double planFuel = FuelCalculator?.FuelPerLap ?? 0.0;
@@ -1192,7 +1193,7 @@ namespace LaunchPlugin
             double profileFuel = _isWetMode ? profileFuelWet : profileFuelDry;
             double profileLap = GetProfileAvgLapSeconds();
 
-            double simLap = (data.NewData?.LastLapTime ?? TimeSpan.Zero).TotalSeconds;
+            double simLap = hasGameData ? ((data.NewData?.LastLapTime ?? TimeSpan.Zero).TotalSeconds) : 0.0;
             bool usePlanData = (_pitFuelControlEngine?.Data ?? PitFuelControlData.Live) == PitFuelControlData.Plan;
 
             fuelPerLap = 0.0;
