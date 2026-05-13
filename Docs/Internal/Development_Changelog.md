@@ -1,3 +1,9 @@
+## 2026-05-13 — After-stop delta DATA-governance + selected export
+- Classification: **both** (runtime fuel delta behavior adjustment for existing exports + new dash-facing export).
+- Updated `Fuel.Delta.LitresPlan`, `Fuel.Delta.LitresPlanPush`, and `Fuel.Delta.LitresPlanSave` to keep their existing meaning (after planned stop/add) while making burn/lap basis follow Pit Fuel Control DATA (`LIVE` uses live/stable basis, `PLAN` uses planner/profile basis only).
+- Added `Fuel.Delta.AfterStop.Selected` export selecting from `LitresPlan*` by Pit Fuel Control SOURCE (`PUSH`, `SAVE`, `NORM`, `STBY->NORM advisory`).
+- Protected invariants: no export renames/removals, no pit-command send-path changes, and no changes to `Fuel.Refuel.*`/current-stint delta families.
+
 - 2026-05-11 RaceFinish class denominator follow-up fix landed:
   - `ResolveRaceFinishLiveClassFieldSize(...)` source ordering now prefers existing effective class driver-count seam first, then native `Telemetry.OpponentsInClassCount + 1`, then SimHub baseline `GameData.NewData.OpponentsInClassCount + 1`; returns `0` only when all are unavailable/invalid;
   - preserves valid solo-class semantics (`0` opponents -> field size `1`) and keeps class snapshot/player snapshot/finish timing semantics unchanged.
