@@ -809,6 +809,7 @@ namespace LaunchPlugin
 
         // --- Live Fuel Calculation State ---
         private double _lastFuelLevel = -1;
+        private GameData _currentTickGameData;
         private double _lapStartFuel = -1;
         private double _lastLapDistPct = -1;
         private int _lapDetectorLastCompleted = -1;
@@ -7607,11 +7608,21 @@ namespace LaunchPlugin
             AttachCore("PitExit.Summary", () => _opponentsEngine?.Outputs.PitExit.Summary ?? string.Empty);
             AttachCore("PitExit.Ahead.Name", () => _opponentsEngine?.Outputs.PitExit.AheadName ?? string.Empty);
             AttachCore("PitExit.Ahead.CarNumber", () => _opponentsEngine?.Outputs.PitExit.AheadCarNumber ?? string.Empty);
-            AttachCore("PitExit.Ahead.ClassColor", () => _opponentsEngine?.Outputs.PitExit.AheadClassColor ?? string.Empty);
+            AttachCore("PitExit.Ahead.ClassColor", () =>
+            {
+                var pitExit = _opponentsEngine?.Outputs.PitExit;
+                int? userId = (pitExit != null && pitExit.AheadUserID > 0) ? (int?)pitExit.AheadUserID : null;
+                return ResolveRaceContextClassColorNativeFormat(userId, pitExit?.AheadName ?? string.Empty, pitExit?.AheadClassColor ?? string.Empty);
+            });
             AttachCore("PitExit.Ahead.GapSec", () => _opponentsEngine?.Outputs.PitExit.AheadGapSec ?? 0.0);
             AttachCore("PitExit.Behind.Name", () => _opponentsEngine?.Outputs.PitExit.BehindName ?? string.Empty);
             AttachCore("PitExit.Behind.CarNumber", () => _opponentsEngine?.Outputs.PitExit.BehindCarNumber ?? string.Empty);
-            AttachCore("PitExit.Behind.ClassColor", () => _opponentsEngine?.Outputs.PitExit.BehindClassColor ?? string.Empty);
+            AttachCore("PitExit.Behind.ClassColor", () =>
+            {
+                var pitExit = _opponentsEngine?.Outputs.PitExit;
+                int? userId = (pitExit != null && pitExit.BehindUserID > 0) ? (int?)pitExit.BehindUserID : null;
+                return ResolveRaceContextClassColorNativeFormat(userId, pitExit?.BehindName ?? string.Empty, pitExit?.BehindClassColor ?? string.Empty);
+            });
             AttachCore("PitExit.Behind.GapSec", () => _opponentsEngine?.Outputs.PitExit.BehindGapSec ?? 0.0);
 
             AttachH2HExports();
@@ -7638,7 +7649,12 @@ namespace LaunchPlugin
             AttachCore("Car.Player.TrackSurfaceMaterialRaw", () => SoftDebugEnabled ? (_carSaEngine?.Outputs.Debug.PlayerTrackSurfaceMaterialRaw ?? -1) : -1);
             AttachCore("Car.Player.CarIdx", () => _carSaEngine?.Outputs.PlayerSlot.CarIdx ?? -1);
             AttachCore("Car.Player.TrackPct", () => _carPlayerTrackPct);
-            AttachCore("Car.Player.PositionInClass", () => _carSaEngine?.Outputs.PlayerSlot.PositionInClass ?? 0);
+            AttachCore("Car.Player.PositionInClass", () =>
+            {
+                int playerCarIdx = _carSaEngine?.Outputs.PlayerSlot.CarIdx ?? -1;
+                int nativePosition = _carSaEngine?.Outputs.PlayerSlot.PositionInClass ?? 0;
+                return GetEffectivePositionInClassForPublishedContext(playerCarIdx, nativePosition);
+            });
             AttachCore("Car.Player.ClassName", () =>
             {
                 var playerSlot = _carSaEngine?.Outputs.PlayerSlot;
@@ -9370,6 +9386,11 @@ namespace LaunchPlugin
             {
                 double stableLapsRemaining = LiveLapsRemainingInRace_Stable;
                 double currentFuel = Math.Max(0.0, _lastFuelLevel);
+                if (TryResolvePlanNormNeed(_currentTickGameData, stableLapsRemaining, currentFuel, out double planNormNeed))
+                {
+                    normNeedLitres = planNormNeed;
+                }
+
                 if (TryResolveProfileAssistedPushSaveNeeds(stableLapsRemaining, currentFuel, out double profilePushNeed, out double profileSaveNeed))
                 {
                     pushNeedLitres = profilePushNeed;
@@ -9385,6 +9406,41 @@ namespace LaunchPlugin
             snapshot.TankSpaceLitres = Math.Max(0.0, Pit_TankSpaceAvailable);
             snapshot.TelemetryRequestedFuelLitres = SafeReadDouble(PluginManager, "DataCorePlugin.GameRawData.Telemetry.PitSvFuel", 0.0);
             return snapshot;
+        }
+
+        private bool TryResolvePlanNormNeed(GameData data, double stableLapsRemaining, double currentFuel, out double normNeedLitres)
+        {
+            normNeedLitres = -Fuel_Delta_LitresCurrent;
+            if (stableLapsRemaining <= 0.0)
+            {
+                return false;
+            }
+
+            double fallbackFuelPerLap = IsFinitePositive(LiveFuelPerLap_Stable) ? LiveFuelPerLap_Stable : 0.0;
+            double selectedBurn;
+            double ignoredLapSeconds;
+            string burnSource;
+            string ignoredLapSource;
+            ResolveDataGovernedBurnAndPaceBasis(
+                data: data,
+                fallbackFuelPerLap: fallbackFuelPerLap,
+                fuelPerLap: out selectedBurn,
+                lapSeconds: out ignoredLapSeconds,
+                fuelSource: out burnSource,
+                lapSource: out ignoredLapSource);
+
+            string sourceToken = ClassifyRefuelSourceToken(burnSource);
+            bool plannerAuthority = string.Equals(sourceToken, "PLAN", StringComparison.Ordinal) ||
+                                    string.Equals(sourceToken, "PROFILE", StringComparison.Ordinal);
+            if (!plannerAuthority || !IsFinitePositive(selectedBurn))
+            {
+                return false;
+            }
+
+            double contingency = ResolveLivePitFuelControlContingencyLitres(selectedBurn);
+            double requiredLitres = (stableLapsRemaining * selectedBurn) + contingency;
+            normNeedLitres = Math.Max(0.0, requiredLitres - currentFuel);
+            return true;
         }
 
         private int GetPitFuelControlPushSaveMode()
@@ -9945,6 +10001,8 @@ namespace LaunchPlugin
                 _eventMarkerCooldownTimer.Reset();
                 _eventMarkerPressed = false;
             }
+
+            _currentTickGameData = data;
 
             // --- MASTER GUARD CLAUSES ---
             if (Settings == null || pluginManager == null) return;

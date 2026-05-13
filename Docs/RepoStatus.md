@@ -4,6 +4,23 @@
   - no pit command send behavior changes and no changes to `Fuel.Delta.LitresCurrent*` families.
   - PR review follow-up: DATA PLAN after-stop basis now blocks runtime fallback fuel authority and invalid/no-basis paths clear `Fuel.Delta.AfterStop.Selected` with `Fuel.Delta.LitresPlan*` to avoid stale non-zero carry-over.
   - late review fix: DATA-governed resolver now guards null `GameData/NewData` so pre-first-tick PLAN snapshot paths fail-safe instead of throwing.
+- 2026-05-13 Pit Fuel Control NORM DATA-basis alignment landed:
+  - `BuildPitFuelControlSnapshot()` now applies DATA authority to `NORM` target selection in addition to existing `PUSH/SAVE` behavior;
+  - `DATA LIVE + NORM` keeps current runtime/live stable normal targeting;
+  - `DATA PLAN + NORM` now uses planner/profile normal-basis targeting and does not take LIVE/SIM authority on this path;
+  - no changes to PUSH/SAVE behavior, DATA toggle/reset behavior, source/mode cycling, AUTO arming, or pit command send semantics.
+  - review follow-up fixed the `TryResolvePlanNormNeed(...)` call-site parameter names to the current `ResolveDataGovernedBurnAndPaceBasis(...)` signature.
+  - review follow-up removed stale Dash Integration wording that contradicted NORM DATA-basis behavior.
+  - review follow-up now threads live `GameData` into `TryResolvePlanNormNeed(...)` and through to `ResolveDataGovernedBurnAndPaceBasis(...)`, removing the null `data` handoff that could throw on PLAN+NORM paths.
+
+- 2026-05-13 PitExit League Class identity follow-up landed:
+  - fixed PitExit class-color presentation resolver identity by passing selected ahead/behind target `UserID` into League race-context color resolution, enabling CSV-only color mapping on PitExit exports;
+  - format contract preserved (`PitExit.Ahead/Behind.ClassColor` remains `0xRRGGBB`), with unchanged native fallback and unchanged PitExit selection/math domains.
+
+- 2026-05-13 League Class authority alignment follow-up landed:
+  - `Car.Player.PositionInClass` now uses the existing effective-class position seam when League Class is enabled+resolved, with native fallback unchanged when disabled/unresolved;
+  - `PitExit.Ahead.ClassColor` / `PitExit.Behind.ClassColor` now publish through the existing League race-context presentation seam while preserving `0xRRGGBB` format and native fallback behavior;
+  - PitExit selection and prediction math domains remain unchanged (`PredictedPositionInClass`, gaps, countdown, loss, distance semantics preserved).
 
 - 2026-05-11 RaceFinish class-field-size source-order follow-up landed:
   - class denominator resolution now prefers effective class driver-count seam, then native telemetry `OpponentsInClassCount + 1`, then SimHub baseline `GameData.NewData.OpponentsInClassCount + 1`;
