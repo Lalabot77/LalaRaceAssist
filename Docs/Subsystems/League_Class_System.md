@@ -44,11 +44,13 @@ Major affected families:
 - `H2HTrack.*` (presentation fields while keeping CarSA target ownership)
 - `Opp.Ahead1..5.*` / `Opp.Behind1..5.*`
 - `LeagueClass.Player.*`
+- `PitExit.*` class-facing fields (`Ahead/Behind.ClassColor`, class-cohort prediction fields)
 
 Contract notes:
 - `ClassName` presentation prefers effective League `ShortName`, then effective League `Name`.
 - `ClassColor` and `ClassColorHex` keep family formatting contracts (`0xRRGGBB` vs `#RRGGBB`) per export family.
 - Disabled/unresolved paths keep native class presentation.
+- `Car.Player.PositionInClass` and `PitExit.PredictedPositionInClass` follow effective-class cohorts only when League Class is enabled+resolved, otherwise native fallback.
 
 ## 6) Effective PositionInClass semantics
 - Each published row shows position inside that driver’s **effective cohort** when effective context is available.

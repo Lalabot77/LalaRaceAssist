@@ -7511,11 +7511,19 @@ namespace LaunchPlugin
             AttachCore("PitExit.Summary", () => _opponentsEngine?.Outputs.PitExit.Summary ?? string.Empty);
             AttachCore("PitExit.Ahead.Name", () => _opponentsEngine?.Outputs.PitExit.AheadName ?? string.Empty);
             AttachCore("PitExit.Ahead.CarNumber", () => _opponentsEngine?.Outputs.PitExit.AheadCarNumber ?? string.Empty);
-            AttachCore("PitExit.Ahead.ClassColor", () => _opponentsEngine?.Outputs.PitExit.AheadClassColor ?? string.Empty);
+            AttachCore("PitExit.Ahead.ClassColor", () =>
+            {
+                var pitExit = _opponentsEngine?.Outputs.PitExit;
+                return ResolveRaceContextClassColorNativeFormat(null, pitExit?.AheadName ?? string.Empty, pitExit?.AheadClassColor ?? string.Empty);
+            });
             AttachCore("PitExit.Ahead.GapSec", () => _opponentsEngine?.Outputs.PitExit.AheadGapSec ?? 0.0);
             AttachCore("PitExit.Behind.Name", () => _opponentsEngine?.Outputs.PitExit.BehindName ?? string.Empty);
             AttachCore("PitExit.Behind.CarNumber", () => _opponentsEngine?.Outputs.PitExit.BehindCarNumber ?? string.Empty);
-            AttachCore("PitExit.Behind.ClassColor", () => _opponentsEngine?.Outputs.PitExit.BehindClassColor ?? string.Empty);
+            AttachCore("PitExit.Behind.ClassColor", () =>
+            {
+                var pitExit = _opponentsEngine?.Outputs.PitExit;
+                return ResolveRaceContextClassColorNativeFormat(null, pitExit?.BehindName ?? string.Empty, pitExit?.BehindClassColor ?? string.Empty);
+            });
             AttachCore("PitExit.Behind.GapSec", () => _opponentsEngine?.Outputs.PitExit.BehindGapSec ?? 0.0);
 
             AttachH2HExports();
@@ -7542,7 +7550,12 @@ namespace LaunchPlugin
             AttachCore("Car.Player.TrackSurfaceMaterialRaw", () => SoftDebugEnabled ? (_carSaEngine?.Outputs.Debug.PlayerTrackSurfaceMaterialRaw ?? -1) : -1);
             AttachCore("Car.Player.CarIdx", () => _carSaEngine?.Outputs.PlayerSlot.CarIdx ?? -1);
             AttachCore("Car.Player.TrackPct", () => _carPlayerTrackPct);
-            AttachCore("Car.Player.PositionInClass", () => _carSaEngine?.Outputs.PlayerSlot.PositionInClass ?? 0);
+            AttachCore("Car.Player.PositionInClass", () =>
+            {
+                int playerCarIdx = _carSaEngine?.Outputs.PlayerSlot.CarIdx ?? -1;
+                int nativePosition = _carSaEngine?.Outputs.PlayerSlot.PositionInClass ?? 0;
+                return GetEffectivePositionInClassForPublishedContext(playerCarIdx, nativePosition);
+            });
             AttachCore("Car.Player.ClassName", () =>
             {
                 var playerSlot = _carSaEngine?.Outputs.PlayerSlot;
