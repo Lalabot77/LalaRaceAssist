@@ -2270,3 +2270,5 @@ The public user-facing release history is maintained in the root `CHANGELOG.md`.
 - Added live plugin-owned `Race.FieldSize` and `Race.PlayerClassFieldSize` exports in `LalaLaunch.cs`.
 - Live field-size counting is roster-first and explicitly excludes pace car rows using both `CompetingDrivers[].IsPaceCar` and `Drivers##.IsPaceCar`; fallback to opponent counters remains only when roster/class roster data is unavailable.
 - `RaceFinish.PlayerOverallFieldSize` and `RaceFinish.PlayerClassFieldSize` now freeze from live `Race.*` field-size sources at class snapshot, preserving existing snapshot timing while preventing pace-car overcount and class-size `0` regressions.
+- Follow-up fix: replaced undefined `SafeReadBoolProperty(...)` usage with existing bool-read helper path and added CompetingDrivers bracketed+numbered path compatibility fallback reads for roster counting.
+- Follow-up fix: corrected overall fallback semantics so `GameData.OpponentsCount` is treated as field size directly (no unconditional `+1`).

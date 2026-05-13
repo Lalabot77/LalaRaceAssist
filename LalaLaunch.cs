@@ -5612,9 +5612,9 @@ namespace LaunchPlugin
                 for (int i = 0; i < 64; i++)
                 {
                     string basePath = $"DataCorePlugin.GameRawData.SessionData.DriverInfo.CompetingDrivers[{i}]";
-                    int carIdx = SafeReadIntProperty(basePath + ".CarIdx", -1);
-                    int userId = SafeReadIntProperty(basePath + ".UserID");
-                    string name = SafeReadStringProperty(basePath + ".UserName");
+                    int carIdx = ReadCompetingDriverIntWithFallback(basePath, ".CarIdx", -1);
+                    int userId = ReadCompetingDriverIntWithFallback(basePath, ".UserID");
+                    string name = ReadCompetingDriverStringWithFallback(basePath, ".UserName");
                     if (string.IsNullOrWhiteSpace(name))
                     {
                         name = SafeReadStringProperty(basePath + ".UserNameRaw");
@@ -8681,7 +8681,7 @@ namespace LaunchPlugin
             int opponentsCount = SafeReadInt(pluginManager, "DataCorePlugin.GameData.OpponentsCount", int.MinValue);
             if (opponentsCount >= 0)
             {
-                return opponentsCount + 1;
+                return opponentsCount;
             }
 
             return 0;
@@ -8729,7 +8729,7 @@ namespace LaunchPlugin
             int count = 0;
             for (int i = 0; i < 64; i++)
             {
-                string basePath = $"DataCorePlugin.GameRawData.SessionData.DriverInfo.CompetingDrivers[{i}]";
+                string basePath = GetCompetingDriverBasePath(i);
                 if (!IsCompetingDriverRowValid(basePath) || IsDriverRowPaceCar(basePath, i))
                 {
                     continue;
@@ -8759,7 +8759,7 @@ namespace LaunchPlugin
 
             for (int i = 0; i < 64; i++)
             {
-                string basePath = $"DataCorePlugin.GameRawData.SessionData.DriverInfo.CompetingDrivers[{i}]";
+                string basePath = GetCompetingDriverBasePath(i);
                 if (!IsCompetingDriverRowValid(basePath) || IsDriverRowPaceCar(basePath, i))
                 {
                     continue;
@@ -8788,8 +8788,8 @@ namespace LaunchPlugin
                 }
                 else
                 {
-                    string cls = SafeReadStringProperty(basePath + ".CarClassShortName");
-                    if (string.IsNullOrWhiteSpace(cls)) cls = SafeReadStringProperty(basePath + ".CarClassName");
+                    string cls = ReadCompetingDriverStringWithFallback(basePath, ".CarClassShortName");
+                    if (string.IsNullOrWhiteSpace(cls)) cls = ReadCompetingDriverStringWithFallback(basePath, ".CarClassName");
                     if (!string.IsNullOrWhiteSpace(cls)
                         && string.Equals(cls, playerNativeClass, StringComparison.OrdinalIgnoreCase))
                     {
@@ -8803,22 +8803,93 @@ namespace LaunchPlugin
 
         private bool IsCompetingDriverRowValid(string basePath)
         {
-            int carIdx = SafeReadIntProperty(basePath + ".CarIdx", -1);
-            int userId = SafeReadIntProperty(basePath + ".UserID");
-            string userName = SafeReadStringProperty(basePath + ".UserName");
-            string carNumber = SafeReadStringProperty(basePath + ".CarNumber");
+            int carIdx = ReadCompetingDriverIntWithFallback(basePath, ".CarIdx", -1);
+            int userId = ReadCompetingDriverIntWithFallback(basePath, ".UserID");
+            string userName = ReadCompetingDriverStringWithFallback(basePath, ".UserName");
+            string carNumber = ReadCompetingDriverStringWithFallback(basePath, ".CarNumber");
             return carIdx >= 0 || userId > 0 || !string.IsNullOrWhiteSpace(userName) || !string.IsNullOrWhiteSpace(carNumber);
         }
 
         private bool IsDriverRowPaceCar(string basePath, int rowIndex)
         {
-            if (SafeReadBoolProperty(basePath + ".IsPaceCar"))
+            if (SafeReadBool(PluginManager, basePath + ".IsPaceCar", false))
+            {
+                return true;
+            }
+
+            string numberedCompetingPath = GetCompetingDriverBasePathNumbered(rowIndex);
+            if (!string.Equals(numberedCompetingPath, basePath, StringComparison.Ordinal)
+                && SafeReadBool(PluginManager, numberedCompetingPath + ".IsPaceCar", false))
             {
                 return true;
             }
 
             string driversBasePath = $"DataCorePlugin.GameRawData.SessionData.DriverInfo.Drivers{(rowIndex + 1):00}";
-            return SafeReadBoolProperty(driversBasePath + ".IsPaceCar");
+            return SafeReadBool(PluginManager, driversBasePath + ".IsPaceCar", false);
+        }
+
+        private static string GetCompetingDriverBasePath(int rowIndex)
+        {
+            return $"DataCorePlugin.GameRawData.SessionData.DriverInfo.CompetingDrivers[{rowIndex}]";
+        }
+
+        private static string GetCompetingDriverBasePathNumbered(int rowIndex)
+        {
+            return $"DataCorePlugin.GameRawData.SessionData.DriverInfo.CompetingDrivers{(rowIndex + 1):00}";
+        }
+
+        private int ReadCompetingDriverIntWithFallback(string bracketBasePath, string suffix, int fallback = 0)
+        {
+            int value = SafeReadIntProperty(bracketBasePath + suffix, int.MinValue);
+            if (value != int.MinValue)
+            {
+                return value;
+            }
+
+            int rowIndex = ExtractCompetingDriverRowIndex(bracketBasePath);
+            if (rowIndex < 0)
+            {
+                return fallback;
+            }
+
+            string numberedBasePath = GetCompetingDriverBasePathNumbered(rowIndex);
+            return SafeReadIntProperty(numberedBasePath + suffix, fallback);
+        }
+
+        private string ReadCompetingDriverStringWithFallback(string bracketBasePath, string suffix)
+        {
+            string value = SafeReadStringProperty(bracketBasePath + suffix);
+            if (!string.IsNullOrWhiteSpace(value))
+            {
+                return value;
+            }
+
+            int rowIndex = ExtractCompetingDriverRowIndex(bracketBasePath);
+            if (rowIndex < 0)
+            {
+                return string.Empty;
+            }
+
+            string numberedBasePath = GetCompetingDriverBasePathNumbered(rowIndex);
+            return SafeReadStringProperty(numberedBasePath + suffix);
+        }
+
+        private static int ExtractCompetingDriverRowIndex(string basePath)
+        {
+            if (string.IsNullOrWhiteSpace(basePath))
+            {
+                return -1;
+            }
+
+            int open = basePath.LastIndexOf('[', StringComparison.Ordinal);
+            int close = basePath.LastIndexOf(']', StringComparison.Ordinal);
+            if (open < 0 || close <= open)
+            {
+                return -1;
+            }
+
+            string token = basePath.Substring(open + 1, close - open - 1);
+            return int.TryParse(token, NumberStyles.Integer, CultureInfo.InvariantCulture, out int rowIndex) ? rowIndex : -1;
         }
 
         private string ResolvePlayerNativeClassName()
