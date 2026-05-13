@@ -1409,6 +1409,7 @@ namespace LaunchPlugin
                 {
                     _output.AheadName = nearestBehind.Name ?? string.Empty;
                     _output.AheadCarNumber = nearestBehind.CarNumber ?? string.Empty;
+                    _output.AheadUserID = nearestBehind.UserID > 0 ? nearestBehind.UserID : 0;
                     _output.AheadClassColor = nearestBehind.ClassColor ?? string.Empty;
                     _output.AheadGapSec = Math.Abs(nearestBehindDelta * paceRef);
                 }
@@ -1416,6 +1417,7 @@ namespace LaunchPlugin
                 {
                     _output.AheadName = string.Empty;
                     _output.AheadCarNumber = string.Empty;
+                    _output.AheadUserID = 0;
                     _output.AheadClassColor = string.Empty;
                     _output.AheadGapSec = 0.0;
                 }
@@ -1424,6 +1426,7 @@ namespace LaunchPlugin
                 {
                     _output.BehindName = nearestAhead.Name ?? string.Empty;
                     _output.BehindCarNumber = nearestAhead.CarNumber ?? string.Empty;
+                    _output.BehindUserID = nearestAhead.UserID > 0 ? nearestAhead.UserID : 0;
                     _output.BehindClassColor = nearestAhead.ClassColor ?? string.Empty;
                     _output.BehindGapSec = Math.Abs(nearestAheadDelta * paceRef);
                 }
@@ -1431,6 +1434,7 @@ namespace LaunchPlugin
                 {
                     _output.BehindName = string.Empty;
                     _output.BehindCarNumber = string.Empty;
+                    _output.BehindUserID = 0;
                     _output.BehindClassColor = string.Empty;
                     _output.BehindGapSec = 0.0;
                 }
@@ -1460,10 +1464,12 @@ namespace LaunchPlugin
                     ActivePitCycle = _output.ActivePitCycle,
                     AheadName = _output.AheadName,
                     AheadCarNumber = _output.AheadCarNumber,
+                    AheadUserID = _output.AheadUserID,
                     AheadClassColor = _output.AheadClassColor,
                     AheadGapSec = _output.AheadGapSec,
                     BehindName = _output.BehindName,
                     BehindCarNumber = _output.BehindCarNumber,
+                    BehindUserID = _output.BehindUserID,
                     BehindClassColor = _output.BehindClassColor,
                     BehindGapSec = _output.BehindGapSec,
                     GapToLeaderLiveSec = double.NaN,
@@ -1841,10 +1847,12 @@ namespace LaunchPlugin
             public bool ActivePitCycle { get; set; }
             public string AheadName { get; set; } = string.Empty;
             public string AheadCarNumber { get; set; } = string.Empty;
+            public int AheadUserID { get; set; }
             public string AheadClassColor { get; set; } = string.Empty;
             public double AheadGapSec { get; set; }
             public string BehindName { get; set; } = string.Empty;
             public string BehindCarNumber { get; set; } = string.Empty;
+            public int BehindUserID { get; set; }
             public string BehindClassColor { get; set; } = string.Empty;
             public double BehindGapSec { get; set; }
         }
@@ -1859,10 +1867,12 @@ namespace LaunchPlugin
             public string Summary { get; set; } = string.Empty;
             public string AheadName { get; set; } = string.Empty;
             public string AheadCarNumber { get; set; } = string.Empty;
+            public int AheadUserID { get; set; }
             public string AheadClassColor { get; set; } = string.Empty;
             public double AheadGapSec { get; set; }
             public string BehindName { get; set; } = string.Empty;
             public string BehindCarNumber { get; set; } = string.Empty;
+            public int BehindUserID { get; set; }
             public string BehindClassColor { get; set; } = string.Empty;
             public double BehindGapSec { get; set; }
 
@@ -1876,10 +1886,12 @@ namespace LaunchPlugin
                 Summary = string.Empty;
                 AheadName = string.Empty;
                 AheadCarNumber = string.Empty;
+                AheadUserID = 0;
                 AheadClassColor = string.Empty;
                 AheadGapSec = 0.0;
                 BehindName = string.Empty;
                 BehindCarNumber = string.Empty;
+                BehindUserID = 0;
                 BehindClassColor = string.Empty;
                 BehindGapSec = 0.0;
             }

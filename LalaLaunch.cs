@@ -7514,7 +7514,8 @@ namespace LaunchPlugin
             AttachCore("PitExit.Ahead.ClassColor", () =>
             {
                 var pitExit = _opponentsEngine?.Outputs.PitExit;
-                return ResolveRaceContextClassColorNativeFormat(null, pitExit?.AheadName ?? string.Empty, pitExit?.AheadClassColor ?? string.Empty);
+                int? userId = (pitExit != null && pitExit.AheadUserID > 0) ? (int?)pitExit.AheadUserID : null;
+                return ResolveRaceContextClassColorNativeFormat(userId, pitExit?.AheadName ?? string.Empty, pitExit?.AheadClassColor ?? string.Empty);
             });
             AttachCore("PitExit.Ahead.GapSec", () => _opponentsEngine?.Outputs.PitExit.AheadGapSec ?? 0.0);
             AttachCore("PitExit.Behind.Name", () => _opponentsEngine?.Outputs.PitExit.BehindName ?? string.Empty);
@@ -7522,7 +7523,8 @@ namespace LaunchPlugin
             AttachCore("PitExit.Behind.ClassColor", () =>
             {
                 var pitExit = _opponentsEngine?.Outputs.PitExit;
-                return ResolveRaceContextClassColorNativeFormat(null, pitExit?.BehindName ?? string.Empty, pitExit?.BehindClassColor ?? string.Empty);
+                int? userId = (pitExit != null && pitExit.BehindUserID > 0) ? (int?)pitExit.BehindUserID : null;
+                return ResolveRaceContextClassColorNativeFormat(userId, pitExit?.BehindName ?? string.Empty, pitExit?.BehindClassColor ?? string.Empty);
             });
             AttachCore("PitExit.Behind.GapSec", () => _opponentsEngine?.Outputs.PitExit.BehindGapSec ?? 0.0);
 

@@ -1,3 +1,7 @@
+- 2026-05-13 PitExit League Class identity follow-up landed:
+  - fixed PitExit class-color presentation resolver identity by passing selected ahead/behind target `UserID` into League race-context color resolution, enabling CSV-only color mapping on PitExit exports;
+  - format contract preserved (`PitExit.Ahead/Behind.ClassColor` remains `0xRRGGBB`), with unchanged native fallback and unchanged PitExit selection/math domains.
+
 - 2026-05-13 League Class authority alignment follow-up landed:
   - `Car.Player.PositionInClass` now uses the existing effective-class position seam when League Class is enabled+resolved, with native fallback unchanged when disabled/unresolved;
   - `PitExit.Ahead.ClassColor` / `PitExit.Behind.ClassColor` now publish through the existing League race-context presentation seam while preserving `0xRRGGBB` format and native fallback behavior;
