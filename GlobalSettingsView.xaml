@@ -153,7 +153,6 @@
                         <TextBlock Margin="0,12,0,4" FontWeight="SemiBold" Text="Pit Fuel Control"/>
                         <TextBlock Foreground="LightGray" TextWrapping="Wrap" Text="Plugin-owned pit fuel control surface (data/source/mode logic remains plugin-owned)."/>
                         <ui:ControlsEditor ActionName="LalaLaunch.Pit.FuelControl.CycleData" FriendlyName="Fuel Data Cycle"/>
-                        <ui:ControlsEditor ActionName="LalaLaunch.Pit.FuelControl.PushSaveModeCycle" FriendlyName="Fuel Data Cycle (legacy)"/>
                     </StackPanel>
                 </StackPanel>
             </Expander>

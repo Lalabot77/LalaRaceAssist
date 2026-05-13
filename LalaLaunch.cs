@@ -334,15 +334,6 @@ namespace LaunchPlugin
             ApplyPitFuelControlData(PitFuelControlData.Plan, "Pit.FuelControl.SetPlan");
         }
 
-        public void PitFuelControlPushSaveModeCycle()
-        {
-            PitFuelControlData nextData = _pitFuelControlEngine.Data == PitFuelControlData.Live
-                ? PitFuelControlData.Plan
-                : PitFuelControlData.Live;
-            ApplyPitFuelControlData(nextData, "Pit.FuelControl.PushSaveModeCycle");
-            SimHub.Logging.Current.Info($"[LalaPlugin:PitFuelControl] PitFuelControlPushSaveModeCycle -> data={PitFuelControlDataToText(nextData)}");
-        }
-
         private void ApplyPitFuelControlData(PitFuelControlData data, string actionName)
         {
             if (Settings != null)
@@ -350,8 +341,7 @@ namespace LaunchPlugin
                 _applyingPitFuelControlDataAction = true;
                 try
                 {
-                    Settings.PitFuelControlPushSaveMode = data == PitFuelControlData.Plan ? 1 : 0;
-                    Settings.RaisePitFuelControlPushSaveModeChanged();
+                    Settings.PitFuelControlDataMode = data == PitFuelControlData.Plan ? 1 : 0;
                     SaveSettings();
                 }
                 finally
@@ -374,8 +364,7 @@ namespace LaunchPlugin
             _applyingPitFuelControlDataAction = true;
             try
             {
-                Settings.PitFuelControlPushSaveMode = 0;
-                Settings.RaisePitFuelControlPushSaveModeChanged();
+                Settings.PitFuelControlDataMode = 0;
             }
             finally
             {
@@ -6704,7 +6693,6 @@ namespace LaunchPlugin
             this.AddAction("Pit.FuelControl.SetDataPlan", (a, b) => PitFuelControlSetDataPlan());
             this.AddAction("Pit.FuelControl.CycleData", (a, b) => PitFuelControlCycleData());
             this.AddAction("Pit.FuelControl.SetPlan", (a, b) => PitFuelControlSetPlan());
-            this.AddAction("Pit.FuelControl.PushSaveModeCycle", (a, b) => PitFuelControlPushSaveModeCycle());
             this.AddAction("Pit.TyreControl.ModeCycle", (a, b) => PitTyreControlModeCycle());
             this.AddAction("Pit.TyreControl.SetOff", (a, b) => PitTyreControlSetOff());
             this.AddAction("Pit.TyreControl.SetDry", (a, b) => PitTyreControlSetDry());
@@ -7181,8 +7169,6 @@ namespace LaunchPlugin
             AttachCore("Pit.FuelControl.TargetLitres", () => _pitFuelControlEngine.TargetLitres);
             AttachCore("Pit.FuelControl.OverrideActive", () => _pitFuelControlEngine.OverrideActive);
             AttachCore("Pit.FuelControl.Fault", () => _pitFuelControlEngine.Fault);
-            AttachCore("Pit.FuelControl.PushSaveMode", () => GetPitFuelControlPushSaveMode());
-            AttachCore("Pit.FuelControl.PushSaveModeText", () => GetPitFuelControlPushSaveModeText());
             AttachCore("Pit.TyreControl.Mode", () => (int)_pitTyreControlEngine.Mode);
             AttachCore("Pit.TyreControl.ModeText", () => _pitTyreControlEngine.ModeText);
             AttachCore("Pit.TyreControl.Fault", () => _pitTyreControlEngine.Fault);
@@ -8340,9 +8326,9 @@ namespace LaunchPlugin
                 settings.PitCommandTransportMode = (int)PitCommandTransportMode.Auto;
             }
 
-            if (settings.PitFuelControlPushSaveMode < 0 || settings.PitFuelControlPushSaveMode > 1)
+            if (settings.PitFuelControlDataMode < 0 || settings.PitFuelControlDataMode > 1)
             {
-                settings.PitFuelControlPushSaveMode = 0;
+                settings.PitFuelControlDataMode = 0;
             }
 
             settings.PitFuelPushSaveProfileGuardPct = ClampToRange(
@@ -9441,16 +9427,6 @@ namespace LaunchPlugin
             double requiredLitres = (stableLapsRemaining * selectedBurn) + contingency;
             normNeedLitres = Math.Max(0.0, requiredLitres - currentFuel);
             return true;
-        }
-
-        private int GetPitFuelControlPushSaveMode()
-        {
-            return _pitFuelControlEngine.Data == PitFuelControlData.Plan ? 1 : 0;
-        }
-
-        private string GetPitFuelControlPushSaveModeText()
-        {
-            return GetPitFuelControlPushSaveMode() == 1 ? "PROFILE" : "LIVE";
         }
 
         private static string PitFuelControlDataToText(PitFuelControlData data)
@@ -13948,12 +13924,12 @@ namespace LaunchPlugin
             }
 
             string propertyName = e?.PropertyName ?? string.Empty;
-            if (!string.Equals(propertyName, nameof(LaunchPluginSettings.PitFuelControlPushSaveMode), StringComparison.Ordinal))
+            if (!string.Equals(propertyName, nameof(LaunchPluginSettings.PitFuelControlDataMode), StringComparison.Ordinal))
             {
                 return;
             }
 
-            PitFuelControlData data = (_subscribedPitFuelControlSettings?.PitFuelControlPushSaveMode ?? 0) == 1
+            PitFuelControlData data = (_subscribedPitFuelControlSettings?.PitFuelControlDataMode ?? 0) == 1
                 ? PitFuelControlData.Plan
                 : PitFuelControlData.Live;
             _pitFuelControlEngine.SetData(data, "Pit.FuelControl.DataSetting", publishFeedback: false);
@@ -21010,31 +20986,31 @@ namespace LaunchPlugin
         public double ResultsDisplayTime { get; set; } = 5.0; // Corrected to 5 seconds
         public double FuelReadyConfidence { get; set; } = LalaLaunch.FuelReadyConfidenceDefault;
         public int StintFuelMarginPct { get; set; } = LalaLaunch.StintFuelMarginPctDefault;
-        private int _pitFuelControlPushSaveMode = 0;
-        public int PitFuelControlPushSaveMode
+        private int _pitFuelControlDataMode = 0;
+        public int PitFuelControlDataMode
         {
-            get { return _pitFuelControlPushSaveMode; }
+            get { return _pitFuelControlDataMode; }
             set
             {
                 int normalized = value == 1 ? 1 : 0;
-                if (_pitFuelControlPushSaveMode == normalized) return;
-                _pitFuelControlPushSaveMode = normalized;
-                OnPropertyChanged(nameof(PitFuelControlPushSaveMode));
-                OnPropertyChanged(nameof(PitFuelControlPushSaveProfileModeEnabled));
+                if (_pitFuelControlDataMode == normalized) return;
+                _pitFuelControlDataMode = normalized;
+                OnPropertyChanged(nameof(PitFuelControlDataMode));
+                OnPropertyChanged(nameof(PitFuelControlDataPlanModeEnabled));
             }
         }
 
         [JsonIgnore]
-        public bool PitFuelControlPushSaveProfileModeEnabled
+        public bool PitFuelControlDataPlanModeEnabled
         {
-            get { return PitFuelControlPushSaveMode == 1; }
-            set { PitFuelControlPushSaveMode = value ? 1 : 0; }
+            get { return PitFuelControlDataMode == 1; }
+            set { PitFuelControlDataMode = value ? 1 : 0; }
         }
 
-        public void RaisePitFuelControlPushSaveModeChanged()
+        public void RaisePitFuelControlDataModeChanged()
         {
-            OnPropertyChanged(nameof(PitFuelControlPushSaveMode));
-            OnPropertyChanged(nameof(PitFuelControlPushSaveProfileModeEnabled));
+            OnPropertyChanged(nameof(PitFuelControlDataMode));
+            OnPropertyChanged(nameof(PitFuelControlDataPlanModeEnabled));
         }
         public double PitFuelPushSaveProfileGuardPct { get; set; } = 10.0;
         public bool EnableAutoDashSwitch { get; set; } = true;

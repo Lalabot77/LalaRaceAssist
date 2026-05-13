@@ -1,3 +1,9 @@
+- 2026-05-13 Pit Fuel Control legacy PushSave surface removal landed:
+  - removed legacy action `Pit.FuelControl.PushSaveModeCycle`; canonical DATA actions remain (`SetDataLive`, `SetDataPlan`, `CycleData`);
+  - removed legacy compatibility exports `Pit.FuelControl.PushSaveMode` / `Pit.FuelControl.PushSaveModeText`;
+  - removed legacy PushSave compatibility settings/property wiring in favor of canonical settings-backed DATA mode (`PitFuelControlDataMode` / `PitFuelControlDataPlanModeEnabled`);
+  - kept DATA PLAN guard behavior unchanged and renamed UI wording to `DATA PLAN Push/Save Guard (%)`.
+
 ## 2026-05-13 — After-stop delta DATA-governance + selected export
 - Classification: **both** (runtime fuel delta behavior adjustment for existing exports + new dash-facing export).
 - Updated `Fuel.Delta.LitresPlan`, `Fuel.Delta.LitresPlanPush`, and `Fuel.Delta.LitresPlanSave` to keep their existing meaning (after planned stop/add) while making burn/lap basis follow Pit Fuel Control DATA (`LIVE` uses live/stable basis, `PLAN` uses planner/profile basis only).
@@ -352,7 +358,7 @@
 - Classification: **both** (dash-facing action/export contract change + internal state-machine simplification).
 - Retired `SOURCE=PLAN`; Pit Fuel Control SOURCE is now `STBY`/`NORM`/`PUSH`/`SAVE`, with source cycling `STBY -> NORM -> PUSH -> SAVE -> STBY`.
 - Added Pit Fuel Control DATA (`LIVE`/`PLAN`) exports and actions (`SetDataLive`, `SetDataPlan`, `CycleData`). DATA defaults to `LIVE` on control/session reset, and every DATA change forces `SOURCE=STBY` with no fuel command send.
-- Compatibility: legacy `Pit.FuelControl.SetPlan` remains registered for one release but now maps to `DATA=PLAN` + `SOURCE=STBY` and publishes `FUEL DATA PLAN`; legacy `PushSaveModeCycle` remains as a DATA-cycle alias.
+- Compatibility: legacy `Pit.FuelControl.SetPlan` remains registered for one release but now maps to `DATA=PLAN` + `SOURCE=STBY` and publishes `FUEL DATA PLAN`; legacy `PushSaveModeCycle` was removed before public release.
 - Removed PLAN validity/session-match enforcement from Pit Fuel Control because PLAN is no longer a command source. `NORM` always uses runtime/live burn; `PUSH`/`SAVE` use live burn under DATA LIVE or planner/profile memory burn under DATA PLAN.
 - Aligned StrategyDash pre-green next-refuel and burn-plan text with the DATA/SOURCE model: `NORM` uses runtime burn, `PUSH`/`SAVE` follow DATA, `/ LIVE` and `/ MEMORY` suffixes are emitted only when the basis is clear.
 

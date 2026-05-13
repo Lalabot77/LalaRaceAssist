@@ -1,3 +1,8 @@
+- 2026-05-13 Pit Fuel Control legacy PushSave surface removal landed:
+  - removed legacy action `Pit.FuelControl.PushSaveModeCycle` and legacy compatibility exports `Pit.FuelControl.PushSaveMode` / `Pit.FuelControl.PushSaveModeText`;
+  - removed legacy PushSave compatibility settings/property wiring and moved UI binding to canonical DATA setting state (`PitFuelControlDataMode` / `PitFuelControlDataPlanModeEnabled`);
+  - kept DATA PLAN PUSH/SAVE guard behavior unchanged and renamed UI wording to `DATA PLAN Push/Save Guard (%)`.
+
 - 2026-05-13 after-stop delta DATA-governance update landed:
   - existing after-stop exports `Fuel.Delta.LitresPlan`, `Fuel.Delta.LitresPlanPush`, `Fuel.Delta.LitresPlanSave` now keep name/meaning (after planned add) but select burn/lap basis from Pit Fuel Control DATA (`LIVE` live/stable, `PLAN` planner/profile only);
   - added plugin-owned selected export `Fuel.Delta.AfterStop.Selected` with SOURCE selection (`PUSH/SAVE/NORM/STBY=>PlanPush/PlanSave/Plan/Plan`, STBY advisory NORM);
