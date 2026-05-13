@@ -1,3 +1,9 @@
+- 2026-05-13 after-stop delta DATA-governance update landed:
+  - existing after-stop exports `Fuel.Delta.LitresPlan`, `Fuel.Delta.LitresPlanPush`, `Fuel.Delta.LitresPlanSave` now keep name/meaning (after planned add) but select burn/lap basis from Pit Fuel Control DATA (`LIVE` live/stable, `PLAN` planner/profile only);
+  - added plugin-owned selected export `Fuel.Delta.AfterStop.Selected` with SOURCE selection (`PUSH/SAVE/NORM/STBY=>PlanPush/PlanSave/Plan/Plan`, STBY advisory NORM);
+  - no pit command send behavior changes and no changes to `Fuel.Delta.LitresCurrent*` families.
+  - PR review follow-up: DATA PLAN after-stop basis now blocks runtime fallback fuel authority and invalid/no-basis paths clear `Fuel.Delta.AfterStop.Selected` with `Fuel.Delta.LitresPlan*` to avoid stale non-zero carry-over.
+  - late review fix: DATA-governed resolver now guards null `GameData/NewData` so pre-first-tick PLAN snapshot paths fail-safe instead of throwing.
 - 2026-05-13 Pit Fuel Control NORM DATA-basis alignment landed:
   - `BuildPitFuelControlSnapshot()` now applies DATA authority to `NORM` target selection in addition to existing `PUSH/SAVE` behavior;
   - `DATA LIVE + NORM` keeps current runtime/live stable normal targeting;
