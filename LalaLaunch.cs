@@ -809,6 +809,7 @@ namespace LaunchPlugin
 
         // --- Live Fuel Calculation State ---
         private double _lastFuelLevel = -1;
+        private GameData _currentTickGameData;
         private double _lapStartFuel = -1;
         private double _lastLapDistPct = -1;
         private int _lapDetectorLastCompleted = -1;
@@ -9274,7 +9275,7 @@ namespace LaunchPlugin
             {
                 double stableLapsRemaining = LiveLapsRemainingInRace_Stable;
                 double currentFuel = Math.Max(0.0, _lastFuelLevel);
-                if (TryResolvePlanNormNeed(stableLapsRemaining, currentFuel, out double planNormNeed))
+                if (TryResolvePlanNormNeed(_currentTickGameData, stableLapsRemaining, currentFuel, out double planNormNeed))
                 {
                     normNeedLitres = planNormNeed;
                 }
@@ -9296,7 +9297,7 @@ namespace LaunchPlugin
             return snapshot;
         }
 
-        private bool TryResolvePlanNormNeed(double stableLapsRemaining, double currentFuel, out double normNeedLitres)
+        private bool TryResolvePlanNormNeed(GameData data, double stableLapsRemaining, double currentFuel, out double normNeedLitres)
         {
             normNeedLitres = -Fuel_Delta_LitresCurrent;
             if (stableLapsRemaining <= 0.0)
@@ -9310,7 +9311,7 @@ namespace LaunchPlugin
             string burnSource;
             string ignoredLapSource;
             ResolveDataGovernedBurnAndPaceBasis(
-                data: null,
+                data: data,
                 fallbackFuelPerLap: fallbackFuelPerLap,
                 fuelPerLap: out selectedBurn,
                 lapSeconds: out ignoredLapSeconds,
@@ -9889,6 +9890,8 @@ namespace LaunchPlugin
                 _eventMarkerCooldownTimer.Reset();
                 _eventMarkerPressed = false;
             }
+
+            _currentTickGameData = data;
 
             // --- MASTER GUARD CLAUSES ---
             if (Settings == null || pluginManager == null) return;

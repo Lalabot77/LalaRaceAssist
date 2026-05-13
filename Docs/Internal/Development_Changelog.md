@@ -5,6 +5,7 @@
   - `PUSH/SAVE`, DATA reset/toggle behavior, source/mode cycling, AUTO arming, and command-send behavior remain unchanged.
   - review follow-up: fixed `ResolveDataGovernedBurnAndPaceBasis(...)` call-site argument names in `TryResolvePlanNormNeed(...)` to match actual signature and avoid build failure.
   - review follow-up: removed stale Dash Integration wording that still implied `NORM` is always runtime/live.
+  - review follow-up: threaded live `GameData` through `TryResolvePlanNormNeed(...)` into `ResolveDataGovernedBurnAndPaceBasis(...)` to prevent null `data` dereference risk on PLAN + NORM snapshot path.
 
 - 2026-05-11 RaceFinish class denominator follow-up fix landed:
   - `ResolveRaceFinishLiveClassFieldSize(...)` source ordering now prefers existing effective class driver-count seam first, then native `Telemetry.OpponentsInClassCount + 1`, then SimHub baseline `GameData.NewData.OpponentsInClassCount + 1`; returns `0` only when all are unavailable/invalid;

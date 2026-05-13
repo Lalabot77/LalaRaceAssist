@@ -5,6 +5,8 @@
   - no changes to PUSH/SAVE behavior, DATA toggle/reset behavior, source/mode cycling, AUTO arming, or pit command send semantics.
   - review follow-up fixed the `TryResolvePlanNormNeed(...)` call-site parameter names to the current `ResolveDataGovernedBurnAndPaceBasis(...)` signature.
   - review follow-up removed stale Dash Integration wording that contradicted NORM DATA-basis behavior.
+  - review follow-up now threads live `GameData` into `TryResolvePlanNormNeed(...)` and through to `ResolveDataGovernedBurnAndPaceBasis(...)`, removing the null `data` handoff that could throw on PLAN+NORM paths.
+
 
 - 2026-05-11 RaceFinish class-field-size source-order follow-up landed:
   - class denominator resolution now prefers effective class driver-count seam, then native telemetry `OpponentsInClassCount + 1`, then SimHub baseline `GameData.NewData.OpponentsInClassCount + 1`;
