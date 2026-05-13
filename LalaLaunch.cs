@@ -7041,6 +7041,8 @@ namespace LaunchPlugin
             AttachCore("Race.EndPhaseText", () => RaceEndPhaseText);
             AttachCore("Race.EndPhaseConfidence", () => RaceEndPhaseConfidence);
             AttachCore("Race.LastLapLikely", () => RaceLastLapLikely);
+            AttachCore("Race.FieldSize", () => ResolveLiveOverallFieldSize(this.PluginManager));
+            AttachCore("Race.PlayerClassFieldSize", () => ResolveLivePlayerClassFieldSize(this.PluginManager, _playerCarIdxLastTick));
             AttachCore("RaceFinish.ClassSnapshotActive", () => _raceFinishClassSnapshotActive);
             AttachCore("RaceFinish.PlayerSnapshotActive", () => _raceFinishPlayerSnapshotActive);
             AttachCore("RaceFinish.Active", () => _raceFinishClassSnapshotActive || _raceFinishPlayerSnapshotActive);
@@ -8570,8 +8572,8 @@ namespace LaunchPlugin
 
             _raceFinishClassSnapshotActive = true;
             _raceFinishClassCaptureSessionState = sessionStateNumeric;
-            _raceFinishPlayerOverallFieldSize = ResolveRaceFinishLiveOverallFieldSize(this.PluginManager);
-            _raceFinishPlayerClassFieldSize = ResolveRaceFinishLiveClassFieldSize(this.PluginManager, _playerCarIdxLastTick);
+            _raceFinishPlayerOverallFieldSize = ResolveLiveOverallFieldSize(this.PluginManager);
+            _raceFinishPlayerClassFieldSize = ResolveLivePlayerClassFieldSize(this.PluginManager, _playerCarIdxLastTick);
             _raceFinishPlayerFinishGapSec = 0.0;
             if (hasCurrentLeaderIdentity)
             {
@@ -8668,8 +8670,14 @@ namespace LaunchPlugin
             return Math.Max(0, effectiveClassPos);
         }
 
-        private int ResolveRaceFinishLiveOverallFieldSize(PluginManager pluginManager)
+        private int ResolveLiveOverallFieldSize(PluginManager pluginManager)
         {
+            int rosterCount = CountValidCompetingDriverRowsExcludingPaceCar();
+            if (rosterCount > 0)
+            {
+                return rosterCount;
+            }
+
             int opponentsCount = SafeReadInt(pluginManager, "DataCorePlugin.GameData.OpponentsCount", int.MinValue);
             if (opponentsCount >= 0)
             {
@@ -8679,8 +8687,14 @@ namespace LaunchPlugin
             return 0;
         }
 
-        private int ResolveRaceFinishLiveClassFieldSize(PluginManager pluginManager, int playerCarIdx)
+        private int ResolveLivePlayerClassFieldSize(PluginManager pluginManager, int playerCarIdx)
         {
+            int playerClassRosterCount = CountPlayerClassCompetingDriverRowsExcludingPaceCar();
+            if (playerClassRosterCount > 0)
+            {
+                return playerClassRosterCount;
+            }
+
             int driverCount = GetLeagueClassPlayerDriverCount();
             if (driverCount > 0)
             {
@@ -8708,6 +8722,114 @@ namespace LaunchPlugin
             }
 
             return 0;
+        }
+
+        private int CountValidCompetingDriverRowsExcludingPaceCar()
+        {
+            int count = 0;
+            for (int i = 0; i < 64; i++)
+            {
+                string basePath = $"DataCorePlugin.GameRawData.SessionData.DriverInfo.CompetingDrivers[{i}]";
+                if (!IsCompetingDriverRowValid(basePath) || IsDriverRowPaceCar(basePath, i))
+                {
+                    continue;
+                }
+
+                count++;
+            }
+
+            return count;
+        }
+
+        private int CountPlayerClassCompetingDriverRowsExcludingPaceCar()
+        {
+            var player = ResolveLivePlayerLeagueClassInfo();
+            bool useLeagueClass = (Settings?.LeagueClassEnabled == true) && player.Valid && !string.IsNullOrWhiteSpace(player.Name);
+            string playerNativeClass = useLeagueClass ? string.Empty : ResolvePlayerNativeClassName();
+            if (!useLeagueClass && string.IsNullOrWhiteSpace(playerNativeClass))
+            {
+                return 0;
+            }
+
+            int count = 0;
+            int playerCarIdx = ResolveLivePlayerCarIdxForLeagueCount();
+            int? fallbackPlayerUserId;
+            string _;
+            TryGetLivePlayerIdentityPreview(out fallbackPlayerUserId, out _);
+
+            for (int i = 0; i < 64; i++)
+            {
+                string basePath = $"DataCorePlugin.GameRawData.SessionData.DriverInfo.CompetingDrivers[{i}]";
+                if (!IsCompetingDriverRowValid(basePath) || IsDriverRowPaceCar(basePath, i))
+                {
+                    continue;
+                }
+
+                if (useLeagueClass)
+                {
+                    int carIdx = SafeReadIntProperty(basePath + ".CarIdx", -1);
+                    int userId = SafeReadIntProperty(basePath + ".UserID");
+                    string name = SafeReadStringProperty(basePath + ".UserName");
+                    bool isPlayerRow = playerCarIdx >= 0 && carIdx == playerCarIdx;
+                    if (!isPlayerRow && userId > 0 && fallbackPlayerUserId.HasValue && fallbackPlayerUserId.Value > 0)
+                    {
+                        isPlayerRow = fallbackPlayerUserId.Value == userId;
+                    }
+
+                    EffectiveRaceClassInfo info = isPlayerRow
+                        ? ResolveLivePlayerLeagueClassInfo()
+                        : ResolveLeagueClassDriverInfo(userId > 0 ? (int?)userId : null, name);
+
+                    if (info.Valid && !string.IsNullOrWhiteSpace(info.Name)
+                        && string.Equals(info.Name, player.Name, StringComparison.OrdinalIgnoreCase))
+                    {
+                        count++;
+                    }
+                }
+                else
+                {
+                    string cls = SafeReadStringProperty(basePath + ".CarClassShortName");
+                    if (string.IsNullOrWhiteSpace(cls)) cls = SafeReadStringProperty(basePath + ".CarClassName");
+                    if (!string.IsNullOrWhiteSpace(cls)
+                        && string.Equals(cls, playerNativeClass, StringComparison.OrdinalIgnoreCase))
+                    {
+                        count++;
+                    }
+                }
+            }
+
+            return count;
+        }
+
+        private bool IsCompetingDriverRowValid(string basePath)
+        {
+            int carIdx = SafeReadIntProperty(basePath + ".CarIdx", -1);
+            int userId = SafeReadIntProperty(basePath + ".UserID");
+            string userName = SafeReadStringProperty(basePath + ".UserName");
+            string carNumber = SafeReadStringProperty(basePath + ".CarNumber");
+            return carIdx >= 0 || userId > 0 || !string.IsNullOrWhiteSpace(userName) || !string.IsNullOrWhiteSpace(carNumber);
+        }
+
+        private bool IsDriverRowPaceCar(string basePath, int rowIndex)
+        {
+            if (SafeReadBoolProperty(basePath + ".IsPaceCar"))
+            {
+                return true;
+            }
+
+            string driversBasePath = $"DataCorePlugin.GameRawData.SessionData.DriverInfo.Drivers{(rowIndex + 1):00}";
+            return SafeReadBoolProperty(driversBasePath + ".IsPaceCar");
+        }
+
+        private string ResolvePlayerNativeClassName()
+        {
+            string playerClass = SafeReadStringProperty("DataCorePlugin.GameRawData.Telemetry.PlayerCarClass");
+            if (string.IsNullOrWhiteSpace(playerClass))
+            {
+                playerClass = SafeReadStringProperty("DataCorePlugin.GameRawData.SessionData.DriverInfo.DriverCarClass");
+            }
+
+            return playerClass;
         }
 
         private double ResolveRaceFinishLiveFuelLeft(PluginManager pluginManager)
