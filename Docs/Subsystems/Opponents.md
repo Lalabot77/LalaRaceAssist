@@ -93,6 +93,8 @@ Opponents now reads from:
 - `Opponents_SummaryAhead/Behind` and per-slot variants (`Ahead1..5`, `Behind1..5`).
   - Top-level `Opponents_SummaryAhead/Behind` remains short/readable (first two slots emphasis) for dash compatibility.
 - `PitExit.Valid`, `PitExit.PredictedPositionInClass`, `PitExit.CarsAheadAfterPitCount`, `PitExit.RemainingCountdownSec`, `PitExit.ActivePitCycle`, `PitExit.Summary`, `PitExit.Ahead.*`, `PitExit.Behind.*`.
+  - `PitExit.Ahead.ClassColor` / `PitExit.Behind.ClassColor` are class-presentation exports: when League Class is enabled+resolved they publish effective-class colour via the shared race-context presentation seam; disabled/unresolved paths keep native class colour fallback.
+  - `PitExit.PredictedPositionInClass` remains owned by the existing pit-exit predictor/class-cohort selection seam; pit-exit timing/gap/countdown/loss math and target identity selection are unchanged.
 
 ## Known limitations vs old Extra-Properties-backed behavior
 - No direct leaderboard `RelativeGapToLeader` parity path.
