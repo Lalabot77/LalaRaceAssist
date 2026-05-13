@@ -4368,6 +4368,7 @@ namespace LaunchPlugin
                 Fuel_Delta_LitresCurrentSave = 0;
                 Fuel_Delta_LitresPlanSave = 0;
                 Fuel_Delta_LitresWillAddSave = 0;
+                Fuel_Delta_AfterStop_Selected = 0;
 
                 PushFuelPerLap = 0;
                 DeltaLapsIfPush = 0;
@@ -4754,7 +4755,9 @@ namespace LaunchPlugin
                 double selectedLapSeconds;
                 string selectedNormBurnSource;
                 string selectedLapSource;
-                ResolveDataGovernedBurnAndPaceBasis(data, fuelPerLapForCalc, out selectedNormBurn, out selectedLapSeconds, out selectedNormBurnSource, out selectedLapSource);
+                bool dataPlanForAfterStop = (_pitFuelControlEngine?.Data ?? PitFuelControlData.Live) == PitFuelControlData.Plan;
+                double dataGovernedFallback = dataPlanForAfterStop ? 0.0 : fuelPerLapForCalc;
+                ResolveDataGovernedBurnAndPaceBasis(data, dataGovernedFallback, out selectedNormBurn, out selectedLapSeconds, out selectedNormBurnSource, out selectedLapSource);
 
                 double selectedLapsRemaining;
                 bool selectedLapsValid = TryResolveSelectedLapsRemainingForRefuel(
@@ -4767,6 +4770,15 @@ namespace LaunchPlugin
                     out selectedLapsRemaining);
 
                 bool hasPlanNormalRequirement = selectedNormBurn > 0.0 && selectedLapsValid && selectedLapsRemaining > 0.0;
+                if (!hasPlanNormalRequirement)
+                {
+                    Fuel_Delta_LitresPlan = 0.0;
+                    Fuel_Delta_LitresPlanPush = 0.0;
+                    Fuel_Delta_LitresPlanSave = 0.0;
+                    Fuel_Delta_AfterStop_Selected = 0.0;
+                }
+                else
+                {
                 double selectedContingencyNorm = ResolveContingencyLitresForBurn(selectedNormBurn, contingencyInLaps, contingencyValue, contingencyLitresNormal);
                 double selectedRequiredLitresNormal = hasPlanNormalRequirement ? (selectedLapsRemaining * selectedNormBurn) + selectedContingencyNorm : 0.0;
                 Fuel_Delta_LitresPlan = ComputeDeltaLitres(fuelPlanExit, selectedRequiredLitresNormal, hasPlanNormalRequirement);
@@ -4815,6 +4827,7 @@ namespace LaunchPlugin
                 if (sourceMode == PitFuelControlSource.Push) Fuel_Delta_AfterStop_Selected = Fuel_Delta_LitresPlanPush;
                 else if (sourceMode == PitFuelControlSource.Save) Fuel_Delta_AfterStop_Selected = Fuel_Delta_LitresPlanSave;
                 else Fuel_Delta_AfterStop_Selected = Fuel_Delta_LitresPlan;
+                }
             }
 
             // --- Pit window state exports ---
