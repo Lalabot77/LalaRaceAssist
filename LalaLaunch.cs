@@ -9312,10 +9312,10 @@ namespace LaunchPlugin
             ResolveDataGovernedBurnAndPaceBasis(
                 data: null,
                 fallbackFuelPerLap: fallbackFuelPerLap,
-                selectedBurn: out selectedBurn,
-                selectedLapSeconds: out ignoredLapSeconds,
-                selectedFuelSource: out burnSource,
-                selectedLapSource: out ignoredLapSource);
+                fuelPerLap: out selectedBurn,
+                lapSeconds: out ignoredLapSeconds,
+                fuelSource: out burnSource,
+                lapSource: out ignoredLapSource);
 
             string sourceToken = ClassifyRefuelSourceToken(burnSource);
             bool plannerAuthority = string.Equals(sourceToken, "PLAN", StringComparison.Ordinal) ||

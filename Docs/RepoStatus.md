@@ -3,6 +3,8 @@
   - `DATA LIVE + NORM` keeps current runtime/live stable normal targeting;
   - `DATA PLAN + NORM` now uses planner/profile normal-basis targeting and does not take LIVE/SIM authority on this path;
   - no changes to PUSH/SAVE behavior, DATA toggle/reset behavior, source/mode cycling, AUTO arming, or pit command send semantics.
+  - review follow-up fixed the `TryResolvePlanNormNeed(...)` call-site parameter names to the current `ResolveDataGovernedBurnAndPaceBasis(...)` signature.
+  - review follow-up removed stale Dash Integration wording that contradicted NORM DATA-basis behavior.
 
 - 2026-05-11 RaceFinish class-field-size source-order follow-up landed:
   - class denominator resolution now prefers effective class driver-count seam, then native telemetry `OpponentsInClassCount + 1`, then SimHub baseline `GameData.NewData.OpponentsInClassCount + 1`;

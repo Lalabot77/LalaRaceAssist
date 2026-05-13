@@ -238,7 +238,7 @@ The v1 GitHub docs now present dashboards as the presentation layer across all s
 - `StrategyDash.*` remains publish-safe in race-running phase but is not the primary runtime contract; keep race-running widgets on existing `Fuel.*`, `Fuel.Pit.*`, `Fuel.Delta.*`, `Fuel.RequiredBurnToEnd*`, `Pit.FuelControl.*`, and boxed refuel latch seams.
 - `StrategyDash.StartFuelAdviceText/StartFuelStatus` are owned by a dedicated start-fuel check (live fuel, then setup fallback, else unknown) against `StrategyDash.StartFuelRequiredLitres` with a `1.0 L` tolerance; they are intentionally not mapped from `LalaLaunch.PreRace.StatusText`.
 - StrategyDash pre-green helpers:
-  - `StrategyDash.BurnPlanText` is a concise no-stop/grid helper (`BURN PLAN: NORM/SAVE/PUSH`, optional `/ LIVE` or `/ MEMORY`) so dashes can show useful burn intent when next-refuel is not applicable; `NORM` is runtime/live, while `PUSH`/`SAVE` suffixes follow DATA when the basis is clear,
+  - `StrategyDash.BurnPlanText` is a concise no-stop/grid helper (`BURN PLAN: NORM/SAVE/PUSH`, optional `/ LIVE` or `/ MEMORY`) so dashes can show useful burn intent when next-refuel is not applicable; `NORM` now follows DATA basis (`LIVE` vs `PLAN`), while `PUSH`/`SAVE` suffixes continue following DATA when the basis is clear,
   - `StrategyDash.NextRefuelDeltaLitres` is `requested refuel - StrategyDash.NextRefuelTargetLitres`, using the exact same burn/source/DATA basis as the target,
   - `StrategyDash.NextRefuelStatus` aligns to absolute delta (`<=0.5 OK`, `<=2.0 CHECK`, else ACTION).
 
