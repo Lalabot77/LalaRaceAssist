@@ -1,3 +1,8 @@
+- 2026-05-13 League Class authority alignment follow-up landed:
+  - `Car.Player.PositionInClass` now uses the existing effective-class position seam when League Class is enabled+resolved, with native fallback unchanged when disabled/unresolved;
+  - `PitExit.Ahead.ClassColor` / `PitExit.Behind.ClassColor` now publish through the existing League race-context presentation seam while preserving `0xRRGGBB` format and native fallback behavior;
+  - PitExit selection and prediction math domains remain unchanged (`PredictedPositionInClass`, gaps, countdown, loss, distance semantics preserved).
+
 - 2026-05-11 RaceFinish class-field-size source-order follow-up landed:
   - class denominator resolution now prefers effective class driver-count seam, then native telemetry `OpponentsInClassCount + 1`, then SimHub baseline `GameData.NewData.OpponentsInClassCount + 1`;
   - preserves valid solo-class denominator (`0` opponents => `1`) and leaves finish timing/snapshot triggers unchanged.
