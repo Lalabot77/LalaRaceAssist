@@ -20191,6 +20191,7 @@ namespace LaunchPlugin
             if (TryReadSetupFuelCandidate(pluginManager, "DataCorePlugin.GameRawData.SessionData.CarSetup.Chassis.Front.FuelLevel", "chassis.front", out litres, out source)) return true;
             if (TryReadSetupFuelCandidate(pluginManager, "DataCorePlugin.GameRawData.SessionData.CarSetup.Chassis.Rear.FuelLevel", "chassis.rear", out litres, out source)) return true;
             if (TryReadSetupFuelCandidate(pluginManager, "DataCorePlugin.GameRawData.SessionData.CarSetup.Suspension.Rear.FuelLevel", "suspension.rear", out litres, out source)) return true;
+            if (TryReadSetupFuelCandidate(pluginManager, "DataCorePlugin.GameRawData.SessionData.CarSetup.Chassis.FrontBrakesLights.FuelLevel", "frontBrakesLights", out litres, out source)) return true;
 
             return false;
         }
