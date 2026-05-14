@@ -953,6 +953,9 @@ namespace LaunchPlugin
         public int PitStopsRequiredByFuel { get; private set; }
         public int PitStopsRequiredByPlan { get; private set; }
         public int Pit_StopsRequiredToEnd { get; private set; }
+        public double Fuel_PitStopsRequiredByFuelExact { get; private set; }
+        public double Fuel_Live_RemainingStints { get; private set; }
+        public double Fuel_MaxTank { get; private set; }
         public double LiveLapsRemainingInRace_S { get; private set; }
         public double LiveLapsRemainingInRace_Stable_S { get; private set; }
         public double Pit_DeltaAfterStop_S { get; private set; }
@@ -1001,6 +1004,7 @@ namespace LaunchPlugin
         public string Fuel_Refuel_LapSource { get; private set; } = "DEFAULT";
         public string Fuel_Refuel_DataMode { get; private set; } = "LIVE";
         public string Fuel_Refuel_BurnMode { get; private set; } = "STBY";
+        public double Fuel_Refuel_SelectedBurnPerLap { get; private set; }
         public string StrategyDash_BurnPlanText { get; private set; } = "NORM";
         public string StrategyDash_ContingencyText { get; private set; } = "CONT 0";
         private bool _isRefuelSelected = true;
@@ -4328,6 +4332,7 @@ namespace LaunchPlugin
                 Pit_FuelSaveDeltaAfterStop = 0;
                 Pit_PushDeltaAfterStop = 0;
                 PitStopsRequiredByFuel = 0;
+                Fuel_PitStopsRequiredByFuelExact = 0.0;
                 PitStopsRequiredByPlan = 0;
                 Pit_StopsRequiredToEnd = 0;
 
@@ -4501,6 +4506,7 @@ namespace LaunchPlugin
                 double requestedAddLitres = pitWindowRequestedAdd;
                 requestedAddLitresForSmooth = requestedAddLitres;
                 Pit_TankSpaceAvailable = Math.Max(0, maxTankCapacity - currentFuel);
+                Fuel_MaxTank = Math.Max(0.0, maxTankCapacity);
 
                 double safeFuelRequest = requestedAddLitres;
                 Pit_WillAdd = Math.Min(safeFuelRequest, Pit_TankSpaceAvailable);
@@ -4527,6 +4533,9 @@ namespace LaunchPlugin
                 int stopsRequiredByFuel = (effectiveMaxTank > 0)
                     ? (int)Math.Ceiling(litresShort / effectiveMaxTank)
                     : 0;
+                Fuel_PitStopsRequiredByFuelExact = (effectiveMaxTank > 0.0)
+                    ? Math.Max(0.0, litresShort / effectiveMaxTank)
+                    : 0.0;
 
                 // Planner remains authoritative for feasible stop-count outputs.
                 int plannedStops = Math.Max(0, strategyRequiredStops);
@@ -6873,6 +6882,7 @@ namespace LaunchPlugin
             AttachCore("Fuel.Refuel.LapSource", () => Fuel_Refuel_LapSource ?? "DEFAULT");
             AttachCore("Fuel.Refuel.DataMode", () => Fuel_Refuel_DataMode ?? "LIVE");
             AttachCore("Fuel.Refuel.BurnMode", () => Fuel_Refuel_BurnMode ?? "STBY");
+            AttachCore("Fuel.Refuel.SelectedBurnPerLap", () => Math.Round(Math.Max(0.0, Fuel_Refuel_SelectedBurnPerLap), 3));
             AttachCore("Fuel.Delta.LitresCurrent", () => Math.Round(Fuel_Delta_LitresCurrent, 1));
             AttachCore("Fuel.Delta.LitresPlan", () => Math.Round(Fuel_Delta_LitresPlan, 1));
             AttachCore("Fuel.Delta.LitresWillAdd", () => Math.Round(Fuel_Delta_LitresWillAdd, 1));
@@ -6903,6 +6913,9 @@ namespace LaunchPlugin
             AttachCore("Fuel.Pit.PushDeltaAfterStop_S", () => Pit_PushDeltaAfterStop_S);
             AttachCore("Fuel.Pit.FuelOnExit", () => Pit_FuelOnExit);
             AttachCore("Fuel.PitStopsRequiredByFuel", () => PitStopsRequiredByFuel);
+            AttachCore("Fuel.PitStopsRequiredByFuelExact", () => Math.Round(Math.Max(0.0, Fuel_PitStopsRequiredByFuelExact), 1));
+            AttachCore("Fuel.Live.RemainingStints", () => Math.Round(Math.Max(0.0, Fuel_Live_RemainingStints), 1));
+            AttachCore("Fuel.MaxTank", () => Math.Round(Math.Max(0.0, Fuel_MaxTank), 1));
             AttachCore("Fuel.PitStopsRequiredByPlan", () => PitStopsRequiredByPlan);
             AttachCore("Fuel.Pit.StopsRequiredToEnd", () => Pit_StopsRequiredToEnd);
             AttachCore("Fuel.Live.RefuelRate_Lps", () => FuelCalculator?.EffectiveRefuelRateLps ?? 0.0);
@@ -7167,6 +7180,7 @@ namespace LaunchPlugin
             AttachCore("Pit.FuelControl.Mode", () => (int)_pitFuelControlEngine.Mode);
             AttachCore("Pit.FuelControl.ModeText", () => _pitFuelControlEngine.ModeText);
             AttachCore("Pit.FuelControl.TargetLitres", () => _pitFuelControlEngine.TargetLitres);
+            AttachCore("Pit.FuelControl.TargetText", () => _pitFuelControlEngine.TargetText ?? "0L");
             AttachCore("Pit.FuelControl.OverrideActive", () => _pitFuelControlEngine.OverrideActive);
             AttachCore("Pit.FuelControl.Fault", () => _pitFuelControlEngine.Fault);
             AttachCore("Pit.TyreControl.Mode", () => (int)_pitTyreControlEngine.Mode);
@@ -9390,6 +9404,7 @@ namespace LaunchPlugin
             snapshot.StopsRequiredToEnd = Pit_StopsRequiredToEnd;
             snapshot.CurrentFuelLitres = Math.Max(0.0, _lastFuelLevel);
             snapshot.TankSpaceLitres = Math.Max(0.0, Pit_TankSpaceAvailable);
+            snapshot.MaxTankLitres = Math.Max(0.0, ResolveRuntimeLiveMaxTankCapacity());
             snapshot.TelemetryRequestedFuelLitres = SafeReadDouble(PluginManager, "DataCorePlugin.GameRawData.Telemetry.PitSvFuel", 0.0);
             return snapshot;
         }
@@ -9672,6 +9687,8 @@ namespace LaunchPlugin
             Fuel_Refuel_LapSource = "DEFAULT";
             Fuel_Refuel_DataMode = (_pitFuelControlEngine?.Data ?? PitFuelControlData.Live) == PitFuelControlData.Plan ? "PLAN" : "LIVE";
             Fuel_Refuel_BurnMode = GetRefuelBurnModeText(_pitFuelControlEngine?.Source ?? PitFuelControlSource.Stby);
+            Fuel_Refuel_SelectedBurnPerLap = 0.0;
+            Fuel_Live_RemainingStints = 0.0;
         }
 
         private void ComputeRuntimeRefuelOutputs(
@@ -9697,6 +9714,7 @@ namespace LaunchPlugin
             bool hasBasis = ResolveRuntimeRefuelBasis(data, fallbackFuelPerLap, out selectedBurn, out lapSeconds, out burnSource, out lapSource);
             Fuel_Refuel_BurnSource = ClassifyRefuelSourceToken(burnSource);
             Fuel_Refuel_LapSource = ClassifyRefuelSourceToken(lapSource);
+            Fuel_Refuel_SelectedBurnPerLap = selectedBurn > 0.0 ? selectedBurn : 0.0;
             double projectedLapsRemaining;
             bool hasProjection = TryResolveDataGovernedProjectedLapsRemaining(
                 Fuel_Refuel_LapSource,
@@ -9721,6 +9739,17 @@ namespace LaunchPlugin
             {
                 ResetRuntimeRefuelOutputsInvalid();
                 return;
+            }
+
+            double runtimeMaxTank = ResolveRuntimeLiveMaxTankCapacity();
+            if (runtimeMaxTank > 0.0 && selectedBurn > 0.0 && projectedLapsRemaining > 0.0)
+            {
+                double requiredLitres = Math.Max(0.0, (projectedLapsRemaining * selectedBurn) - currentFuel);
+                Fuel_Live_RemainingStints = Math.Max(0.0, requiredLitres / runtimeMaxTank);
+            }
+            else
+            {
+                Fuel_Live_RemainingStints = 0.0;
             }
 
             double contingencyLitres = contingency.IsConfiguredInLaps
@@ -18491,8 +18520,11 @@ namespace LaunchPlugin
             Pit_FuelSaveDeltaAfterStop = 0;
             Pit_PushDeltaAfterStop = 0;
             PitStopsRequiredByFuel = 0;
+            Fuel_PitStopsRequiredByFuelExact = 0;
             PitStopsRequiredByPlan = 0;
             Pit_StopsRequiredToEnd = 0;
+            Fuel_Live_RemainingStints = 0;
+            Fuel_MaxTank = 0;
 
             Fuel_Delta_LitresCurrent = 0;
             Fuel_Delta_LitresPlan = 0;
@@ -18542,6 +18574,7 @@ namespace LaunchPlugin
             Fuel_Refuel_LapSource = "DEFAULT";
             Fuel_Refuel_DataMode = "LIVE";
             Fuel_Refuel_BurnMode = "STBY";
+            Fuel_Refuel_SelectedBurnPerLap = 0;
             StrategyDash_BurnPlanText = "NORM";
             StrategyDash_ContingencyText = "CONT 0";
 

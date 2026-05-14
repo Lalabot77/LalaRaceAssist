@@ -36,6 +36,7 @@ namespace LaunchPlugin
 
         public double CurrentFuelLitres;
         public double TankSpaceLitres;
+        public double MaxTankLitres;
         public double StopsRequiredToEnd;
         public double TelemetryRequestedFuelLitres;
     }
@@ -72,6 +73,7 @@ namespace LaunchPlugin
         public bool AutoArmed { get; private set; }
         public int LastSentFuelLitres { get; private set; } = -1;
         public double TargetLitres { get; private set; }
+        public string TargetText { get; private set; } = "0L";
         public bool OverrideActive { get; private set; }
         public int Fault { get; private set; }
 
@@ -94,6 +96,7 @@ namespace LaunchPlugin
             LastSentFuelLitres = -1;
             ClearObservedExternalState();
             TargetLitres = 0.0;
+            TargetText = "0L";
             OverrideActive = false;
             Fault = 0;
             _maxOverrideArmed = false;
@@ -514,12 +517,14 @@ namespace LaunchPlugin
             if (snapshot == null)
             {
                 TargetLitres = 0.0;
+                TargetText = "0L";
                 OverrideActive = false;
                 return -1;
             }
 
             double rawTarget = ResolveSourceTarget(snapshot, Source);
-            TargetLitres = rawTarget;
+            TargetLitres = ApplyTargetCaps(rawTarget, snapshot, out bool isMaxCapped);
+            TargetText = BuildTargetText(TargetLitres, isMaxCapped);
 
             bool canOverride = Source == PitFuelControlSource.Push ||
                                Source == PitFuelControlSource.Norm ||
@@ -546,9 +551,10 @@ namespace LaunchPlugin
 
             OverrideActive = canOverride && _maxOverrideArmed;
 
-            double effectiveTarget = OverrideActive
+            double effectiveTargetRaw = OverrideActive
                 ? Math.Max(0.0, snapshot.TankSpaceLitres)
                 : Math.Max(0.0, rawTarget);
+            double effectiveTarget = ApplyTargetCaps(effectiveTargetRaw, snapshot, out _);
 
             return RoundUpLitres(effectiveTarget);
         }
@@ -595,6 +601,7 @@ namespace LaunchPlugin
             if (snapshot == null)
             {
                 TargetLitres = 0.0;
+                TargetText = "0L";
                 OverrideActive = false;
                 return;
             }
@@ -603,11 +610,13 @@ namespace LaunchPlugin
             {
                 DisarmAutoAndForceStby(clearSuppressWindow: true);
                 TargetLitres = 0.0;
+                TargetText = "0L";
                 OverrideActive = false;
                 return;
             }
 
-            TargetLitres = ResolveSourceTarget(snapshot, Source);
+            TargetLitres = ApplyTargetCaps(ResolveSourceTarget(snapshot, Source), snapshot, out bool isMaxCapped);
+            TargetText = BuildTargetText(TargetLitres, isMaxCapped);
         }
 
         private bool TryApplySuppressedState()
@@ -620,6 +629,7 @@ namespace LaunchPlugin
 
             DisarmAutoAndForceStby(clearSuppressWindow: true);
             TargetLitres = 0.0;
+            TargetText = "0L";
             OverrideActive = false;
             return true;
         }
@@ -743,6 +753,39 @@ namespace LaunchPlugin
             }
 
             return actionName ?? "SetData";
+        }
+
+        private static double ApplyTargetCaps(double targetLitres, PitFuelControlSnapshot snapshot, out bool isMaxCapped)
+        {
+            isMaxCapped = false;
+            double nonNegative = Math.Max(0.0, targetLitres);
+            if (snapshot == null)
+            {
+                return nonNegative;
+            }
+
+            double maxTank = snapshot.MaxTankLitres;
+            bool hasValidMaxTank = !double.IsNaN(maxTank) && !double.IsInfinity(maxTank) && maxTank > 0.0;
+            if (!hasValidMaxTank)
+            {
+                return nonNegative;
+            }
+
+            if (nonNegative > maxTank)
+            {
+                isMaxCapped = true;
+                return maxTank;
+            }
+
+            return nonNegative;
+        }
+
+        private static string BuildTargetText(double targetLitres, bool isMaxCapped)
+        {
+            int wholeLitres = RoundUpLitres(Math.Max(0.0, targetLitres));
+            return isMaxCapped
+                ? string.Concat(wholeLitres.ToString(), "L MAX")
+                : string.Concat(wholeLitres.ToString(), "L");
         }
 
         private static string ResolveSuppressionReason(PitFuelControlSnapshot snapshot)
