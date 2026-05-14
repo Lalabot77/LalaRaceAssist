@@ -1,3 +1,11 @@
+
+## 2026-05-14 — Fuel dash support exports + capped fuel-control target
+- Classification: **both** (new dash-facing fuel exports + pit fuel-control display/target cap behavior alignment).
+- Added new exports: `Fuel.Live.RemainingStints` (1dp runtime stints projection on selected refuel burn basis), `Fuel.MaxTank` (runtime effective max-tank authority seam), `Fuel.PitStopsRequiredByFuelExact` (1dp non-ceiled companion), and `Pit.FuelControl.TargetText` (`"{N}L"` / `"{N}L MAX"`).
+- Kept `Fuel.PitStopsRequiredByFuel` unchanged as rounded-up integer behavior; new exact export is additive only.
+- Capped `Pit.FuelControl.TargetLitres` to valid runtime max tank while preserving numeric contract and non-negative clamp; invalid max tank keeps existing fallback behavior.
+- Updated `Pit.LastPaceDeltaNetLoss` lifecycle to persist after stop and clear on next pit entry/session reset only.
+
 - 2026-05-13 Pit Fuel Control legacy PushSave surface removal landed:
   - removed legacy action `Pit.FuelControl.PushSaveModeCycle`; canonical DATA actions remain (`SetDataLive`, `SetDataPlan`, `CycleData`);
   - removed legacy compatibility exports `Pit.FuelControl.PushSaveMode` / `Pit.FuelControl.PushSaveModeText`;

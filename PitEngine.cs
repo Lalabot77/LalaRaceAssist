@@ -116,6 +116,7 @@ namespace LaunchPlugin
             // --- NEW: Reset new state properties ---
             LastDirectTravelTime = 0.0;
             LastTotalPitCycleTimeLoss = 0.0;
+            LastPaceDeltaNetLoss = 0.0;
             _paceDeltaState = PaceDeltaState.Idle;
             _avgPaceAtPit = 0.0;
             _lastTimeOnPitRoad = TimeSpan.Zero;
@@ -212,6 +213,7 @@ namespace LaunchPlugin
                 if (!_pitRoadTimer.IsRunning)
                 {
                     _pitRoadTimer.Restart();
+                    LastPaceDeltaNetLoss = 0.0;
                     // --- Reset last stop duration on entry to prevent using stale data for drive-throughs ---
                     _lastPitStopDuration = TimeSpan.Zero;
                 }
