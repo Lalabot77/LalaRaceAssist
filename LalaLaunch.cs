@@ -4767,7 +4767,7 @@ namespace LaunchPlugin
                     LiveLapsRemainingInRace_Stable,
                     simLapsRemaining,
                     projectionSessionTimeRemain,
-                    driveTimeAfterZero,
+                    LiveProjectedDriveTimeAfterZero,
                     out selectedLapsRemaining);
 
                 bool contingencyInLaps = resolvedContingency.IsConfiguredInLaps;
@@ -8994,8 +8994,8 @@ namespace LaunchPlugin
                 return -1;
             }
 
-            int open = basePath.LastIndexOf('[', StringComparison.Ordinal);
-            int close = basePath.LastIndexOf(']', StringComparison.Ordinal);
+            int open = basePath.LastIndexOf("[", StringComparison.Ordinal);
+            int close = basePath.LastIndexOf("]", StringComparison.Ordinal);
             if (open < 0 || close <= open)
             {
                 return -1;
