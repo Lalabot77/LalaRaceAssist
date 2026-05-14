@@ -1,4 +1,8 @@
 
+- 2026-05-14: StrategyDash start-fuel setup-fallback phase-gate fix landed.
+  - `StrategyDash.StartFuelAdviceText` / `StrategyDash.StartFuelStatus` now use setup fallback only when pre-race/grid/formation fallback is allowed (`SessionState < 4`), while keeping live-fuel-first precedence and unknown fallback behavior unchanged.
+  - active race-running (`SessionState == 4`) no longer allows setup fuel to influence StrategyDash start-fuel advice/status.
+
 - 2026-05-14: Fuel dash support export/cap alignment landed. Added `Fuel.Live.RemainingStints`, `Fuel.MaxTank`, `Fuel.PitStopsRequiredByFuelExact`, `Pit.FuelControl.TargetText`, and `Fuel.Refuel.SelectedBurnPerLap`; capped `Pit.FuelControl.TargetLitres` by runtime max-tank authority while preserving numeric contract; `Pit.LastPaceDeltaNetLoss` now clears on next pit entry/session reset.
 
 - 2026-05-13 Pit Fuel Control legacy PushSave surface removal landed:

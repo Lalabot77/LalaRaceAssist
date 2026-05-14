@@ -1,4 +1,10 @@
 
+## 2026-05-14 — StrategyDash start-fuel setup fallback now respects pre-race phase gate
+- Classification: **both** (dash-facing start-fuel advice correctness + docs alignment).
+- `StrategyDash.StartFuelAdviceText` / `StrategyDash.StartFuelStatus` now use setup-fuel fallback only when pre-race/grid/formation fallback is allowed (`SessionState < 4`), while keeping live-fuel-first precedence and unknown fallback behavior unchanged.
+- Active race-running (`SessionState == 4`) no longer allows setup fuel to mask live start-fuel evaluation on StrategyDash.
+- `1.0 L` start-fuel tolerance and advice text/status contract remain unchanged (`START FUEL OK/MAX`, `CHECK START FUEL`, `ADD START FUEL`; `0/1/2`).
+
 ## 2026-05-14 — Fuel dash support exports + capped fuel-control target
 - Classification: **both** (new dash-facing fuel exports + pit fuel-control display/target cap behavior alignment).
 - Added new exports: `Fuel.Live.RemainingStints` (1dp runtime stints projection on selected refuel burn basis), `Fuel.MaxTank` (runtime effective max-tank authority seam), `Fuel.PitStopsRequiredByFuelExact` (1dp non-ceiled companion), and `Pit.FuelControl.TargetText` (`"{N}L"` / `"{N}L MAX"`).

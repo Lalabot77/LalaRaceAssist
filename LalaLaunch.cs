@@ -1423,6 +1423,7 @@ namespace LaunchPlugin
             int selectedStrategy,
             RequiredPreRaceStrategy requiredStrategy,
             double currentFuel,
+            bool allowSetupFallback,
             double plannedSingleStopRefuel,
             double effectiveMaxTank,
             double maxTankCapacity,
@@ -1450,7 +1451,7 @@ namespace LaunchPlugin
 
             const double startFuelOkToleranceLitres = 1.0;
             bool hasLiveStartFuel = currentFuel > 0.0 && !double.IsNaN(currentFuel) && !double.IsInfinity(currentFuel);
-            bool hasSetupStartFuel = Fuel_Setup_FuelLevelValid && Fuel_Setup_FuelLevel > 0.0 && !double.IsNaN(Fuel_Setup_FuelLevel) && !double.IsInfinity(Fuel_Setup_FuelLevel);
+            bool hasSetupStartFuel = allowSetupFallback && Fuel_Setup_FuelLevelValid && Fuel_Setup_FuelLevel > 0.0 && !double.IsNaN(Fuel_Setup_FuelLevel) && !double.IsInfinity(Fuel_Setup_FuelLevel);
             bool hasKnownStartFuel = hasLiveStartFuel || hasSetupStartFuel;
             double effectiveStartFuelLitres = hasLiveStartFuel ? currentFuel : (hasSetupStartFuel ? Fuel_Setup_FuelLevel : 0.0);
             bool startFuelShort = hasKnownStartFuel && (effectiveStartFuelLitres < (StrategyDash_StartFuelRequiredLitres - startFuelOkToleranceLitres));
@@ -1686,7 +1687,7 @@ namespace LaunchPlugin
             else
                 contingencyText = "CONT 0";
 
-            UpdateStrategyDashAdvice(selectedStrategy, requiredStrategy, currentFuel, plannedSingleStopRefuel, effectiveMaxTank, maxTankCapacity, contingencyLitres, contingencyText, oneStopTarget, strategyDashBurnSourceTag, isRaceRunning, isGridOrFormation, isOnTrackCar);
+            UpdateStrategyDashAdvice(selectedStrategy, requiredStrategy, currentFuel, allowSetupFallback, plannedSingleStopRefuel, effectiveMaxTank, maxTankCapacity, contingencyLitres, contingencyText, oneStopTarget, strategyDashBurnSourceTag, isRaceRunning, isGridOrFormation, isOnTrackCar);
         }
 
         // Stable model inputs
