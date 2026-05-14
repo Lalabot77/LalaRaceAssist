@@ -1506,14 +1506,14 @@ namespace LaunchPlugin
             }
             else
             {
-                StrategyDash_NextRefuelAdviceText = string.Format(CultureInfo.InvariantCulture, "SET {0:F1} L", StrategyDash_NextRefuelTargetLitres);
+                StrategyDash_NextRefuelAdviceText = string.Format(CultureInfo.InvariantCulture, "SET {0:F1}L", StrategyDash_NextRefuelTargetLitres);
                 StrategyDash_NextRefuelDeltaLitres = plannedSingleStopRefuel - StrategyDash_NextRefuelTargetLitres;
                 double refuelGap = Math.Abs(StrategyDash_NextRefuelDeltaLitres);
                 StrategyDash_NextRefuelStatus = refuelGap <= 0.5 ? 0 : (refuelGap <= 2.0 ? 1 : 2);
             }
 
             StrategyDash_ContingencyText = string.IsNullOrWhiteSpace(contingencyText)
-                ? string.Format(CultureInfo.InvariantCulture, "CONT {0:F1} L", Math.Max(0.0, contingencyLitres))
+                ? string.Format(CultureInfo.InvariantCulture, "CONT {0:F1}L", Math.Max(0.0, contingencyLitres))
                 : contingencyText;
         }
 
@@ -1683,7 +1683,7 @@ namespace LaunchPlugin
             if (preRaceContingency.IsConfiguredInLaps && preRaceContingency.Laps > 0.0)
                 contingencyText = string.Format(CultureInfo.InvariantCulture, "CONT {0:F1} LAPS", preRaceContingency.Laps);
             else if (contingencyLitres > 0.0)
-                contingencyText = string.Format(CultureInfo.InvariantCulture, "CONT {0:F1} L", contingencyLitres);
+                contingencyText = string.Format(CultureInfo.InvariantCulture, "CONT {0:F1}L", contingencyLitres);
             else
                 contingencyText = "CONT 0";
 
@@ -1817,7 +1817,7 @@ namespace LaunchPlugin
             { CarSAStyleResolver.BorderModeDefault, "#F5F5F5" }
         };
         private const int LapTimeConfidenceSwitchOn = 50;
-        private const double StableFuelPerLapDeadband = 0.03; // 0.03 L/lap chosen to suppress lap-to-lap noise and prevent delta chatter
+        private const double StableFuelPerLapDeadband = 0.03; // 0.03L/lap chosen to suppress lap-to-lap noise and prevent delta chatter
         private const double StableLapTimeDeadband = 0.3; // 0.3 s chosen to stop projection lap time source flapping on small variance
         private int _lastPitWindowState = -1;
         private string _lastPitWindowLabel = string.Empty;
@@ -3846,7 +3846,7 @@ namespace LaunchPlugin
                         // 7) Obvious fuel telemetry junk
                         if (!fuelRejected)
                         {
-                            // coarse cap: 20% of tank or 10 L, whichever is larger
+                            // coarse cap: 20% of tank or 10L, whichever is larger
                             double maxPlausibleHard = Math.Max(10.0, 0.20 * Math.Max(effectiveMaxTank, 50.0));
                             if (fuelUsed <= 0.05)
                             {
@@ -5107,7 +5107,7 @@ namespace LaunchPlugin
                             runtimeRateLps = ActiveProfile.RefuelRate;
                             if (IsVerboseDebugLoggingOn)
                             {
-                                SimHub.Logging.Current.Debug($"[LalaPlugin:Refuel Rate] Locked; blocked learned overwrite for '{ActiveProfile.ProfileName}' (candidate {rateLps:F2} L/s).");
+                                SimHub.Logging.Current.Debug($"[LalaPlugin:Refuel Rate] Locked; blocked learned overwrite for '{ActiveProfile.ProfileName}' (candidate {rateLps:F2}L/s).");
                             }
                             return RefuelRateSaveOutcome.BlockedLocked;
                         }
@@ -5119,7 +5119,7 @@ namespace LaunchPlugin
                     runtimeRateLps = ActiveProfile.RefuelRate;
                     if (IsVerboseDebugLoggingOn)
                     {
-                        SimHub.Logging.Current.Debug($"[LalaPlugin:Profiles] Refuel rate saved for '{ActiveProfile.ProfileName}': {rateLps:F3} L/s");
+                        SimHub.Logging.Current.Debug($"[LalaPlugin:Profiles] Refuel rate saved for '{ActiveProfile.ProfileName}': {rateLps:F3}L/s");
                     }
                     return RefuelRateSaveOutcome.Saved;
                 }
@@ -6236,9 +6236,9 @@ namespace LaunchPlugin
         private double _refuelLastRiseTime = 0.0;     // sessionTime when we last saw a positive rise
 
         // Tunables (conservative defaults)
-        private const double FuelNoiseEps = 0.02;  // ignore < 0.02 L ticks
+        private const double FuelNoiseEps = 0.02;  // ignore < 0.02L ticks
         private const double StartWindowSec = 0.50;  // require rise inside this window
-        private const double StartRiseLiters = 0.40;  // need ≥ 0.4 L to start
+        private const double StartRiseLiters = 0.40;  // need ≥ 0.4L to start
         private const double EndIdleSec = 0.50;  // stop if no rise for this long
         private const double MaxDeltaPerTickLit = 2.00;  // clamp corrupted spikes
         private const double MinValidAddLiters = 1.00;  // discard tiny fills
@@ -10565,7 +10565,7 @@ namespace LaunchPlugin
                                 if (saveOutcome == RefuelRateSaveOutcome.Saved)
                                 {
                                     SimHub.Logging.Current.Info(
-                                        $"[LalaPlugin:Refuel Rate] Learned refuel rate {runtimeRefuelRate:F2} L/s (raw {rate:F2} L/s, added {fuelAdded:F1} L over {duration:F1} s). " +
+                                        $"[LalaPlugin:Refuel Rate] Learned refuel rate {runtimeRefuelRate:F2}L/s (raw {rate:F2}L/s, added {fuelAdded:F1}L over {duration:F1} s). " +
                                         $"Cooldown until {_refuelLearnCooldownEnd:F1} s.");
                                 }
                             }

@@ -1852,7 +1852,7 @@ namespace LaunchPlugin
 
             double learnedValue = Math.Round(rawMaxFuel, 1);
             SelectedProfile.BaseTankLitres = learnedValue;
-            SimHub.Logging.Current.Debug($"[LalaPlugin:Profiles] Learned Base Tank for '{SelectedProfile.ProfileName}': {learnedValue:F1} L");
+            SimHub.Logging.Current.Debug($"[LalaPlugin:Profiles] Learned Base Tank for '{SelectedProfile.ProfileName}': {learnedValue:F1}L");
         }
 
         private void DeleteProfile()

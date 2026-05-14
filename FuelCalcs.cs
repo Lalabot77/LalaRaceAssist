@@ -1340,7 +1340,7 @@ namespace LaunchPlugin
 
     private static string FormatFuelPerLapDisplay(double? value)
     {
-        return value.HasValue ? $"{value.Value:F2} L" : "-";
+        return value.HasValue ? $"{value.Value:F2}L" : "-";
     }
 
     private bool IsWetSurface() => _liveWeatherIsWet ?? IsWet;
@@ -1469,7 +1469,7 @@ namespace LaunchPlugin
     {
         if (value > 0)
         {
-            MaxFuelPerLapDisplay = $"{value:F2} L";
+            MaxFuelPerLapDisplay = $"{value:F2}L";
         }
         else
         {
@@ -1681,8 +1681,8 @@ namespace LaunchPlugin
             : (wetLap.HasValue ? TimeSpan.FromMilliseconds(wetLap.Value).ToString(@"m\:ss\.fff") : "-");
 
         ProfileAvgFuelDisplay = IsDry
-            ? (dryFuel.HasValue ? dryFuel.Value.ToString("F2") + " L" : "-")
-            : (wetFuel.HasValue ? wetFuel.Value.ToString("F2") + " L" : "-");
+            ? (dryFuel.HasValue ? dryFuel.Value.ToString("F2") + "L" : "-")
+            : (wetFuel.HasValue ? wetFuel.Value.ToString("F2") + "L" : "-");
 
         OnPropertyChanged(nameof(ProfileAvgLapTimeDisplay));
         OnPropertyChanged(nameof(ProfileAvgFuelDisplay));
@@ -1722,7 +1722,7 @@ namespace LaunchPlugin
 
     private void ApplyLastRefuelRate(double litersPerSecond)
     {
-        LastRefuelRateDisplay = litersPerSecond > 0 ? $"{litersPerSecond:F2} L/s" : "-";
+        LastRefuelRateDisplay = litersPerSecond > 0 ? $"{litersPerSecond:F2}L/s" : "-";
     }
 
     public void SetLastTyreChangeSeconds(double seconds)
@@ -3907,10 +3907,10 @@ namespace LaunchPlugin
     private static string BuildFuelSummary(double avg, double min, double max, int samples, string sourceLabel)
     {
         var parts = new List<string>();
-        if (avg > 0) parts.Add($"Avg {avg:F2} L");
-        if (min > 0 && max > 0) parts.Add($"Range {min:F2}–{max:F2} L");
-        else if (max > 0) parts.Add($"Max {max:F2} L");
-        else if (min > 0) parts.Add($"Min {min:F2} L");
+        if (avg > 0) parts.Add($"Avg {avg:F2}L");
+        if (min > 0 && max > 0) parts.Add($"Range {min:F2}–{max:F2}L");
+        else if (max > 0) parts.Add($"Max {max:F2}L");
+        else if (min > 0) parts.Add($"Min {min:F2}L");
         if (samples > 0) parts.Add(samples == 1 ? "1 lap" : $"{samples} laps");
         if (parts.Count == 0) return "-";
 
@@ -4303,7 +4303,7 @@ namespace LaunchPlugin
                     : "-";
 
                 ProfileAvgDryFuelDisplay = (dryFuel.HasValue && dryFuel.Value > 0)
-                    ? dryFuel.Value.ToString("F2") + " L"
+                    ? dryFuel.Value.ToString("F2") + "L"
                     : "-";
 
                 HasProfileFuelPerLap = ts?.AvgFuelPerLapDry > 0 || ts?.AvgFuelPerLapWet > 0;
@@ -4453,15 +4453,15 @@ namespace LaunchPlugin
                 : "-");
 
         ProfileAvgFuelDisplay = IsDry
-            ? (dryFuel.HasValue && dryFuel.Value > 0 ? $"{dryFuel.Value:F2} L" : "-")
-            : (wetFuel.HasValue && wetFuel.Value > 0 ? $"{wetFuel.Value:F2} L" : "-");
+            ? (dryFuel.HasValue && dryFuel.Value > 0 ? $"{dryFuel.Value:F2}L" : "-")
+            : (wetFuel.HasValue && wetFuel.Value > 0 ? $"{wetFuel.Value:F2}L" : "-");
 
         ProfileAvgDryLapTimeDisplay = (dryLap.HasValue && dryLap.Value > 0)
             ? TimeSpan.FromMilliseconds(dryLap.Value).ToString(@"m\:ss\.fff")
             : "-";
 
         ProfileAvgDryFuelDisplay = (dryFuel.HasValue && dryFuel.Value > 0)
-            ? dryFuel.Value.ToString("F2") + " L"
+            ? dryFuel.Value.ToString("F2") + "L"
             : "-";
 
         HasProfileFuelPerLap = (dryFuel.HasValue && dryFuel.Value > 0) || (wetFuel.HasValue && wetFuel.Value > 0);
@@ -4569,8 +4569,8 @@ namespace LaunchPlugin
         _liveMaxFuel = liveMaxFuel;
         _liveFuelTankLiters = liveMaxFuel;
 
-        LiveFuelTankSizeDisplay = liveMaxFuel > 0 ? $"{liveMaxFuel:F1} L" : "—";
-        DetectedMaxFuelDisplay = liveMaxFuel > 0 ? $"(Detected Max: {liveMaxFuel:F1} L)" : "(Detected Max: —)";
+        LiveFuelTankSizeDisplay = liveMaxFuel > 0 ? $"{liveMaxFuel:F1}L" : "—";
+        DetectedMaxFuelDisplay = liveMaxFuel > 0 ? $"(Detected Max: {liveMaxFuel:F1}L)" : "(Detected Max: —)";
 
         OnPropertyChanged(nameof(DetectedMaxFuelDisplay));
         OnPropertyChanged(nameof(IsMaxFuelOverrideTooHigh));
