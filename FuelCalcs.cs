@@ -3249,7 +3249,16 @@ namespace LaunchPlugin
                 else if (SelectedPlanningSourceMode == PlanningSourceMode.LiveSnapshot)
                 {
                     fuel = GetLiveAverageFuelPerLapForCurrentCondition();
-                    isLiveFuel = true;
+                    if (fuel.HasValue && fuel.Value > 0.0)
+                    {
+                        isLiveFuel = true;
+                    }
+                    else if (TryGetProfileFuelForCondition(IsWet, out var profileFuel, out var profileSource))
+                    {
+                        fuel = profileFuel;
+                        fuelSource = profileSource;
+                        isLiveFuel = false;
+                    }
                 }
 
                 if (fuel.HasValue)
@@ -3278,9 +3287,20 @@ namespace LaunchPlugin
                                 _suppressFuelTextSync = false;
                             }
                             IsFuelPerLapManual = false;
-                            FuelPerLapSourceInfo = SelectedPlanningSourceMode == PlanningSourceMode.Profile
-                                ? FormatConditionSourceLabel("Profile avg")
-                                : FormatConditionSourceLabel("Live avg");
+                            if (SelectedPlanningSourceMode == PlanningSourceMode.Profile)
+                            {
+                                FuelPerLapSourceInfo = FormatConditionSourceLabel("Profile avg");
+                            }
+                            else if (isLiveFuel)
+                            {
+                                FuelPerLapSourceInfo = FormatConditionSourceLabel("Live avg");
+                            }
+                            else
+                            {
+                                FuelPerLapSourceInfo = !string.IsNullOrWhiteSpace(fuelSource)
+                                    ? fuelSource
+                                    : FormatConditionSourceLabel("Profile avg");
+                            }
                         });
                     }
                 }
@@ -3638,6 +3658,7 @@ namespace LaunchPlugin
 
     private void ClearLiveFuelSnapshot()
     {
+        LiveFuelPerLap = 0.0;
         RefreshLiveMaxFuelDisplays(0);
         _liveDryFuelAvg = 0;
         _liveDryFuelMin = 0;
