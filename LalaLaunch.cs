@@ -4332,6 +4332,7 @@ namespace LaunchPlugin
                 Pit_FuelSaveDeltaAfterStop = 0;
                 Pit_PushDeltaAfterStop = 0;
                 PitStopsRequiredByFuel = 0;
+                Fuel_PitStopsRequiredByFuelExact = 0.0;
                 PitStopsRequiredByPlan = 0;
                 Pit_StopsRequiredToEnd = 0;
 
