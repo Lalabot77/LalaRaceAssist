@@ -19,16 +19,9 @@ namespace LaunchPlugin
             this.DataContext = _fuelCalcs;
         }
 
-        private void OnPresetSelectionChanged(object sender, SelectionChangedEventArgs e)
+        private void OnReapplySelectedPreset(object sender, RoutedEventArgs e)
         {
-            if (_fuelCalcs == null) return;
-            if (e.AddedItems == null || e.AddedItems.Count == 0) return;
-            if (e.RemovedItems == null || e.RemovedItems.Count == 0) return;
-
-            if (ReferenceEquals(e.AddedItems[0], e.RemovedItems[0]))
-            {
-                _fuelCalcs.ReapplySelectedPreset();
-            }
+            _fuelCalcs?.ReapplySelectedPreset();
         }
 
         private void OnOpenPresetManager(object sender, RoutedEventArgs e)

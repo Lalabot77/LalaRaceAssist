@@ -2455,7 +2455,7 @@ namespace LaunchPlugin
             {
                 _contingencyValue = value;
                 OnPropertyChanged();
-                CalculateStrategy(); // Recalculate when changed
+                RequestStrategyRecalc();
                 RaisePresetStateChanged();
                 MarkPlannerDirty();
             }
@@ -3033,12 +3033,18 @@ namespace LaunchPlugin
 
     private RacePreset BuildPresetFromCurrentState(string name)
     {
+        if (!TryGetEffectiveRaceBasis(out bool isTimeLimitedEffective, out double raceLengthEffective) || raceLengthEffective <= 0.0)
+        {
+            throw new InvalidOperationException("Cannot save preset: no valid effective race basis.");
+        }
+
+        int roundedLength = (int)Math.Round(Math.Max(0.0, raceLengthEffective), MidpointRounding.AwayFromZero);
         return new RacePreset
         {
             Name = name,
-            Type = IsTimeLimitedRace ? RacePresetType.TimeLimited : RacePresetType.LapLimited,
-            RaceMinutes = IsTimeLimitedRace ? (int?)RaceMinutes : null,
-            RaceLaps = IsLapLimitedRace ? (int?)RaceLaps : null,
+            Type = isTimeLimitedEffective ? RacePresetType.TimeLimited : RacePresetType.LapLimited,
+            RaceMinutes = isTimeLimitedEffective ? (int?)roundedLength : null,
+            RaceLaps = isTimeLimitedEffective ? null : (int?)roundedLength,
 
             PreRaceMode = NormalizePitStrategyValue(SelectedPreRaceMode),
             TireChangeTimeSec = TireChangeTime,
@@ -4748,7 +4754,9 @@ namespace LaunchPlugin
             bool hasEffectiveRaceBasis = TryGetEffectiveRaceBasis(out bool effectiveRaceIsTimeLimited, out double effectiveRaceLength);
             if (!hasEffectiveRaceBasis || effectiveRaceLength <= 0.0)
             {
-                ValidationMessage = IsLiveDetectRace
+                ValidationMessage = IsRaceBasisPreset && _appliedPreset == null
+                    ? "Error: Select a race preset."
+                    : IsLiveDetectRace
                     ? "Error: Live Detect race definition unavailable."
                     : "Error: Race length must be greater than zero.";
             }
@@ -5264,41 +5272,6 @@ namespace LaunchPlugin
     }
 
     public bool IsRaceLengthEditable => IsRaceBasisLapLimited || IsRaceBasisTimeLimited;
-
-    private void HandleRaceTypeOwnershipTransition(RaceType previousRaceType, RaceType newRaceType)
-    {
-        if (previousRaceType == newRaceType)
-        {
-            return;
-        }
-
-        if (newRaceType == RaceType.LiveDetect)
-        {
-            _selectedPreset = null;
-            _appliedPreset = null;
-            OnPropertyChanged(nameof(SelectedPreset));
-            OnPropertyChanged(nameof(HasSelectedPreset));
-            return;
-        }
-
-        if (previousRaceType == RaceType.LiveDetect)
-        {
-            _liveDetectedRaceType = null;
-            _lastLiveDetectedRaceLaps = 0.0;
-            _lastLiveDetectedRaceMinutes = 0.0;
-            _selectedPreset = null;
-            _appliedPreset = null;
-            OnPropertyChanged(nameof(SelectedPreset));
-            OnPropertyChanged(nameof(HasSelectedPreset));
-            OnPropertyChanged(nameof(ShowEffectiveLapLimitedRace));
-            OnPropertyChanged(nameof(ShowEffectiveTimeLimitedRace));
-            _liveDetectHelperText = "Live Detect: waiting for race definition";
-            OnPropertyChanged(nameof(LiveDetectHelperText));
-
-            RaceLaps = ManualRaceLapsDefault;
-            RaceMinutes = ManualRaceMinutesDefault;
-        }
-    }
 
     public void UpdateLiveDetectedRaceDefinition(string detectedSessionLabel, bool? isLapLimited, double? raceLaps, bool? isTimeLimited, double? raceMinutes)
     {

@@ -295,8 +295,7 @@
   - PR #669 follow-up: in enabled+valid League effective-class mode, class-leader selection now chooses the lowest positive `CarIdxPosition` across the full effective-class cohort (race order) instead of first matching array index; native class-position fallback remains when overall position data is unavailable.
 - 2026-05-04 Strategy tab race-configuration ownership cleanup landed:
   - Race Preset selector is now hidden during `Live Detect` ownership and preset modified UI is suppressed in that mode.
-  - Enter/exit `Live Detect` now clears selected/applied preset state to prevent stale hidden preset influence after mode changes.
-  - Exiting `Live Detect` resets manual race length fields to neutral manual defaults (`20 laps` / `40 min`) for explicit post-detect user intent.
+  - Live Detect owner transitions now preserve selected/applied preset state and preserve manual/preset setup values; only race-basis authority changes while Live Detect is selected.
   - Strategy calculation ownership remains effective-basis-only; no fuel model/live detect detection logic changes and no Refresh Calcs ownership mutation.
 
 - 2026-05-04 Strategy race-ownership follow-up (P1 review) landed:

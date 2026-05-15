@@ -328,3 +328,6 @@ Reset semantics are shared with the Fuel Model and documented centrally in:
 - Strategy race-basis ownership now uses explicit owner modes (Preset/Lap/Time/Live Detect) with last-selected owner winning race type/length authority.
 - Refresh Calcs is recompute-only and no longer reloads profile/live ownership state.
 - Preset modified badge now ignores PreRace-mode-only differences to avoid implying core strategy-output change.
+
+- Preset row now includes a compact reapply button (`↻`) that reapplies the currently selected preset explicitly; same-item ComboBox reselection is no longer required.
+- When Race Basis owner is `Preset` and no preset is selected/applied, planner outputs stay invalid with explicit validation (`Select a race preset`) rather than silently using stale race length.

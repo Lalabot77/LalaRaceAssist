@@ -511,11 +511,19 @@
                                   MinWidth="140"
                                   ItemsSource="{Binding AvailablePresets}" 
                                   SelectedItem="{Binding SelectedPreset, Mode=TwoWay}"
-                                  SelectionChanged="OnPresetSelectionChanged"
                                   DisplayMemberPath="Name"
                                   ToolTip="Select a preset to apply."/>
+                                <Button Grid.Column="2"
+                                        Content="↻"
+                                        Width="24"
+                                        Height="22"
+                                        Margin="8,0,0,0"
+                                        VerticalAlignment="Center"
+                                        ToolTip="Reapply selected preset"
+                                        Click="OnReapplySelectedPreset"
+                                        IsEnabled="{Binding HasSelectedPreset}"/>
 
-                                <TextBlock Grid.Column="2"
+                                <TextBlock Grid.Column="3"
                                    Text="modified"
                                    Foreground="Yellow"
                                    Margin="10,0,0,0"
@@ -528,7 +536,7 @@
                                     </TextBlock.Visibility>
                                 </TextBlock>
 
-                                <styles:SHButtonPrimary Grid.Column="3"
+                                <styles:SHButtonPrimary Grid.Column="4"
                             Content="Presets..."
                             Height="28"
                             Margin="12,0,0,0"
