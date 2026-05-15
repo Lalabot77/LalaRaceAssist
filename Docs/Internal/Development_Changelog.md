@@ -1,3 +1,6 @@
+- 2026-05-15 RaceFinish deferred-identity stale-clear follow-up landed.
+  - `UpdateFinishTiming(...)` now clears pending deferred session identity when observed identity reverts to current active identity before lifecycle exit (`A→B→A` transient churn), preventing stale deferred identity apply on later genuine session changes.
+
 - 2026-05-15 RaceFinish deferred session-reset detectability follow-up landed.
   - `UpdateFinishTiming(...)` now stores pending session identity while defer guard is active and does not overwrite current finish-session identity until reset can safely execute after lifecycle exit.
   - Preserves no-spam defer behavior during active post-finish lifecycle, then performs one clean reset + pending identity apply + existing LiveDetect fuel recalc path.

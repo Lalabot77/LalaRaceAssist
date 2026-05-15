@@ -19219,6 +19219,16 @@ namespace LaunchPlugin
             bool inPostFinishLifecycle = hasSessionState && sessionStateNumeric >= 5;
             bool activeFinishSnapshot = _raceFinishClassSnapshotActive || _raceFinishPlayerSnapshotActive;
             bool shouldDeferSessionReset = sessionIdentityChanged && isRace && inPostFinishLifecycle && activeFinishSnapshot;
+
+            // If transient deferred churn has already reverted to the currently active session identity,
+            // drop the stale pending identity so it cannot be incorrectly applied on a later real change.
+            if (_finishTimingHasPendingSessionIdentity && !sessionIdentityChanged)
+            {
+                _finishTimingHasPendingSessionIdentity = false;
+                _finishTimingPendingSessionId = -1;
+                _finishTimingPendingSessionType = string.Empty;
+            }
+
             if (sessionIdentityChanged)
             {
                 if (shouldDeferSessionReset)

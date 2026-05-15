@@ -1,3 +1,5 @@
+- 2026-05-15: RaceFinish deferred identity stale-clear validated: transient `A→B→A` churn during active finish lifecycle now clears pending deferred identity, avoiding extra reset/fuel-recalc cycle from stale pending apply.
+
 - 2026-05-15: RaceFinish deferred-session detectability follow-up validated: deferred path now stores pending session identity without overwriting active finish-session identity, then applies one clean reset/identity update after lifecycle exit.
 
 
