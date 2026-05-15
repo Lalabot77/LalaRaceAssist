@@ -5502,13 +5502,7 @@ namespace LaunchPlugin
 
             if (!TryBuildRaceContextNativeCarRow(pluginManager, playerCarIdx, out var playerRow))
             {
-                playerRow = new OpponentsEngine.NativeCarRow
-                {
-                    CarIdx = playerCarIdx,
-                    IdentityKey = string.Empty,
-                    UserID = 0,
-                    Name = string.Empty
-                };
+                return IsCarInPlayerClass(pluginManager, candidateCarIdx, isMultiClassSession, playerClassShort);
             }
 
             if (!TryBuildRaceContextNativeCarRow(pluginManager, candidateCarIdx, out var candidateRow))
