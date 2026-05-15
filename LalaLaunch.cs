@@ -5468,6 +5468,11 @@ namespace LaunchPlugin
                     playerRow.Name);
                 if (!playerEffectiveClass.Valid || string.IsNullOrWhiteSpace(playerEffectiveClass.Name))
                 {
+                    if (string.IsNullOrWhiteSpace(playerRow.ClassColor) || string.IsNullOrWhiteSpace(candidateRow.ClassColor))
+                    {
+                        return false;
+                    }
+
                     return string.Equals(candidateRow.ClassColor, playerRow.ClassColor, StringComparison.Ordinal);
                 }
 
@@ -5538,7 +5543,8 @@ namespace LaunchPlugin
                 CarIdx = carIdx,
                 IdentityKey = identityKey,
                 UserID = userId,
-                Name = resolvedName ?? string.Empty
+                Name = resolvedName ?? string.Empty,
+                ClassColor = resolvedClassColor ?? string.Empty
             };
             return true;
         }
