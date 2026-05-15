@@ -5446,13 +5446,11 @@ namespace LaunchPlugin
 
         private OpponentsEngine.IsRaceContextClassMatch BuildRaceContextLeagueClassMatchDelegate()
         {
-            var playerEffectiveClass = ResolveLivePlayerLeagueClassInfo();
-            if (!(Settings?.LeagueClassEnabled == true) || !playerEffectiveClass.Valid || string.IsNullOrWhiteSpace(playerEffectiveClass.Name))
+            if (!(Settings?.LeagueClassEnabled == true))
             {
                 return null;
             }
 
-            string normalizedPlayerClassName = playerEffectiveClass.Name.Trim();
             return (playerRow, candidateRow) =>
             {
                 if (playerRow == null || candidateRow == null)
@@ -5464,6 +5462,21 @@ namespace LaunchPlugin
                 {
                     return true;
                 }
+
+                var playerEffectiveClass = ResolveLeagueClassPlayerInfo(
+                    playerRow.UserID > 0 ? (int?)playerRow.UserID : null,
+                    playerRow.Name);
+                if (!playerEffectiveClass.Valid || string.IsNullOrWhiteSpace(playerEffectiveClass.Name))
+                {
+                    if (string.IsNullOrWhiteSpace(playerRow.ClassColor) || string.IsNullOrWhiteSpace(candidateRow.ClassColor))
+                    {
+                        return false;
+                    }
+
+                    return string.Equals(candidateRow.ClassColor, playerRow.ClassColor, StringComparison.Ordinal);
+                }
+
+                string normalizedPlayerClassName = playerEffectiveClass.Name.Trim();
 
                 var candidateEffectiveClass = ResolveLeagueClassDriverInfo(candidateRow.UserID > 0 ? (int?)candidateRow.UserID : null, candidateRow.Name);
                 if (!candidateEffectiveClass.Valid || string.IsNullOrWhiteSpace(candidateEffectiveClass.Name))
@@ -5489,13 +5502,7 @@ namespace LaunchPlugin
 
             if (!TryBuildRaceContextNativeCarRow(pluginManager, playerCarIdx, out var playerRow))
             {
-                playerRow = new OpponentsEngine.NativeCarRow
-                {
-                    CarIdx = playerCarIdx,
-                    IdentityKey = string.Empty,
-                    UserID = 0,
-                    Name = string.Empty
-                };
+                return IsCarInPlayerClass(pluginManager, candidateCarIdx, isMultiClassSession, playerClassShort);
             }
 
             if (!TryBuildRaceContextNativeCarRow(pluginManager, candidateCarIdx, out var candidateRow))
@@ -5530,7 +5537,8 @@ namespace LaunchPlugin
                 CarIdx = carIdx,
                 IdentityKey = identityKey,
                 UserID = userId,
-                Name = resolvedName ?? string.Empty
+                Name = resolvedName ?? string.Empty,
+                ClassColor = resolvedClassColor ?? string.Empty
             };
             return true;
         }

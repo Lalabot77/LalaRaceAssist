@@ -1,4 +1,17 @@
 
+## 2026-05-15 — PR #722 follow-up: unresolved-player native fallback now requires valid native class colours
+- Classification: **internal-only** (cohort fallback correctness hardening; no export/format changes).
+- In `BuildRaceContextLeagueClassMatchDelegate()`, unresolved-player fallback now performs native class-color compare only when both `playerRow.ClassColor` and `candidateRow.ClassColor` are non-empty; missing colour now returns `false` (prevents accidental match-all cohorting).
+- `TryBuildRaceContextNativeCarRow(...)` now carries `ClassColor` into `NativeCarRow` so native fallback can still work when native class-color data is available.
+- Protected domains unchanged: League enabled+valid effective-class behavior, disabled behavior, PitExit timing/gap/countdown/loss/distance math, Opp race-slot math, CarSA, and H2H.
+
+## 2026-05-15 — PitExit League-class cohort selection fix (effective-class matcher delegate reliability)
+- Classification: **both** (PitExit cohort target correctness + docs alignment).
+- Fixed `BuildRaceContextLeagueClassMatchDelegate()` so League race-context matching no longer returns `null` solely because the preview player resolver is transiently unresolved.
+- The delegate is now created whenever League Class is enabled, and resolves player effective class from the current race-model player row (`UserID`/name) at match time.
+- When enabled but player effective class is unresolved at match time, class matching falls back to native class-color matching (existing fallback preserved).
+- Result: `PitExit.PredictedPositionInClass`, `PitExit.CarsAheadAfterPitCount`, `PitExit.Ahead/Behind.Name|CarNumber|GapSec`, and `PitExit.Summary` now reliably switch to effective-class cohort selection when enabled+resolved (instead of remaining native-only with color-only League presentation).
+- Protected domains unchanged: PitExit timing/gap/countdown/loss/distance math, Opp race slot selection, CarSA, and H2H logic.
 ## 2026-05-14 — Planner live fuel-session validity + pit delta lifecycle correction
 - Classification: **both** (strategy planner source correctness + pit delta lifecycle correction + docs alignment).
 - Strategy Planner (`FuelCalcs`) live-snapshot fuel path now enforces current-session validity:
