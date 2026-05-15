@@ -6,6 +6,7 @@
 - 2026-05-14: Fuel dash support export/cap alignment landed. Added `Fuel.Live.RemainingStints`, `Fuel.MaxTank`, `Fuel.PitStopsRequiredByFuelExact`, `Pit.FuelControl.TargetText`, and `Fuel.Refuel.SelectedBurnPerLap`; capped `Pit.FuelControl.TargetLitres` by runtime max-tank authority while preserving numeric contract; `Pit.LastPaceDeltaNetLoss` lifecycle restored to pre-#718 behavior (no pit-entry clear).
 - 2026-05-14: Planner/Pit lifecycle follow-up landed.
   - Strategy Planner live snapshot fuel-per-lap now clears live fuel cache on new live car/track combo and falls back to profile condition fuel/source when current-session live fuel authority is unavailable.
+  - PR review follow-up: when live fuel authority returns and value is inside deadband, planner now still updates `FuelPerLapSourceInfo` back to live so source-aware UI does not remain on profile fallback labels.
   - `Pit.Box.LastDeltaSec` now persists post-stop for review, clears on next boxed stop start, and clears on reset/session reset (no short auto-expire window).
 
 - 2026-05-13 Pit Fuel Control legacy PushSave surface removal landed:

@@ -7,6 +7,7 @@
   - `FuelPerLapSourceInfo` now correctly reports Profile source on that fallback path (no stale `Live` carry-over label).
 - Reverted the prior pit-entry clear behavior for `Pit.LastPaceDeltaNetLoss`; lifecycle returns to prior behavior (latched on completed pit-cycle calculation and cleared by existing reset paths only).
 - `Pit.Box.LastDeltaSec` now stays latched after stop for review, clears at next boxed-stop activation, and clears on reset/session-reset paths (no short auto-expire window).
+- PR review follow-up: Live Snapshot fuel source labels now recover to `Live avg` even when the returning live value is within fuel deadband, preventing stale profile-source labeling during live-valid periods.
 
 ## 2026-05-14 — StrategyDash start-fuel setup fallback now respects pre-race phase gate
 - Classification: **both** (dash-facing start-fuel advice correctness + docs alignment).

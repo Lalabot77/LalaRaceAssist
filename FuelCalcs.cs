@@ -3263,44 +3263,52 @@ namespace LaunchPlugin
 
                 if (fuel.HasValue)
                 {
-                    bool shouldApply = true;
+                    string nextFuelSourceInfo;
+                    if (SelectedPlanningSourceMode == PlanningSourceMode.Profile)
+                    {
+                        nextFuelSourceInfo = FormatConditionSourceLabel("Profile avg");
+                    }
+                    else if (isLiveFuel)
+                    {
+                        nextFuelSourceInfo = FormatConditionSourceLabel("Live avg");
+                    }
+                    else
+                    {
+                        nextFuelSourceInfo = !string.IsNullOrWhiteSpace(fuelSource)
+                            ? fuelSource
+                            : FormatConditionSourceLabel("Profile avg");
+                    }
+
+                    bool shouldApplyFuelValue = true;
                     if (SelectedPlanningSourceMode == PlanningSourceMode.LiveSnapshot
                         && isLiveFuel
                         && FuelPerLap > 0.0
                         && Math.Abs(fuel.Value - FuelPerLap) < LiveFuelPerLapDeadband)
                     {
-                        shouldApply = false;
+                        shouldApplyFuelValue = false;
                     }
 
-                    if (shouldApply)
+                    bool shouldApplyFuelSource = !string.Equals(FuelPerLapSourceInfo, nextFuelSourceInfo, StringComparison.Ordinal);
+                    if (shouldApplyFuelValue || shouldApplyFuelSource)
                     {
                         ApplySourceUpdate(() =>
                         {
-                            FuelPerLap = fuel.Value;
-                            _suppressFuelTextSync = true;
-                            try
+                            if (shouldApplyFuelValue)
                             {
-                                FuelPerLapText = fuel.Value.ToString("0.00", CultureInfo.InvariantCulture);
+                                FuelPerLap = fuel.Value;
+                                _suppressFuelTextSync = true;
+                                try
+                                {
+                                    FuelPerLapText = fuel.Value.ToString("0.00", CultureInfo.InvariantCulture);
+                                }
+                                finally
+                                {
+                                    _suppressFuelTextSync = false;
+                                }
                             }
-                            finally
-                            {
-                                _suppressFuelTextSync = false;
-                            }
+
                             IsFuelPerLapManual = false;
-                            if (SelectedPlanningSourceMode == PlanningSourceMode.Profile)
-                            {
-                                FuelPerLapSourceInfo = FormatConditionSourceLabel("Profile avg");
-                            }
-                            else if (isLiveFuel)
-                            {
-                                FuelPerLapSourceInfo = FormatConditionSourceLabel("Live avg");
-                            }
-                            else
-                            {
-                                FuelPerLapSourceInfo = !string.IsNullOrWhiteSpace(fuelSource)
-                                    ? fuelSource
-                                    : FormatConditionSourceLabel("Profile avg");
-                            }
+                            FuelPerLapSourceInfo = nextFuelSourceInfo;
                         });
                     }
                 }
