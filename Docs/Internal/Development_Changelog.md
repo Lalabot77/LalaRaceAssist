@@ -1,3 +1,7 @@
+- 2026-05-15 RaceFinish deferred session-reset detectability follow-up landed.
+  - `UpdateFinishTiming(...)` now stores pending session identity while defer guard is active and does not overwrite current finish-session identity until reset can safely execute after lifecycle exit.
+  - Preserves no-spam defer behavior during active post-finish lifecycle, then performs one clean reset + pending identity apply + existing LiveDetect fuel recalc path.
+
 - 2026-05-15 RaceFinish reset/capture loop guard + class-position freeze guard landed.
   - `UpdateFinishTiming(...)` now defers `ResetFinishTimingState()` when session identity churn is observed during an already-active post-finish lifecycle (`SessionState>=5` with active RaceFinish snapshot), preventing per-tick reset/re-capture log spam in replay/finish phases.
   - Added bounded diagnostic log: `[LalaPlugin:Finish] session_change deferred in_active_finish_lifecycle state=...`.

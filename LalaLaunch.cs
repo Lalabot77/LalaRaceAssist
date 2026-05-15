@@ -19196,6 +19196,9 @@ namespace LaunchPlugin
         private long _finishTimingSessionId = -1;
         private string _finishTimingSessionType = string.Empty;
         private bool _finishTimingSessionChangeDeferredInActiveLifecycle;
+        private bool _finishTimingHasPendingSessionIdentity;
+        private long _finishTimingPendingSessionId = -1;
+        private string _finishTimingPendingSessionType = string.Empty;
 
         private void UpdateFinishTiming(
      PluginManager pluginManager,
@@ -19218,11 +19221,12 @@ namespace LaunchPlugin
             bool shouldDeferSessionReset = sessionIdentityChanged && isRace && inPostFinishLifecycle && activeFinishSnapshot;
             if (sessionIdentityChanged)
             {
-                _finishTimingSessionId = sessionId;
-                _finishTimingSessionType = sessionType;
-
                 if (shouldDeferSessionReset)
                 {
+                    _finishTimingHasPendingSessionIdentity = true;
+                    _finishTimingPendingSessionId = sessionId;
+                    _finishTimingPendingSessionType = sessionType ?? string.Empty;
+
                     if (!_finishTimingSessionChangeDeferredInActiveLifecycle)
                     {
                         SimHub.Logging.Current.Info($"[LalaPlugin:Finish] session_change deferred in_active_finish_lifecycle state={sessionStateNumeric}");
@@ -19239,6 +19243,20 @@ namespace LaunchPlugin
                     if (FuelCalculator != null && FuelCalculator.IsLiveDetectRace)
                     {
                         UpdateLiveFuelCalcs(data, pluginManager);
+                    }
+
+                    if (_finishTimingHasPendingSessionIdentity)
+                    {
+                        _finishTimingSessionId = _finishTimingPendingSessionId;
+                        _finishTimingSessionType = _finishTimingPendingSessionType ?? string.Empty;
+                        _finishTimingHasPendingSessionIdentity = false;
+                        _finishTimingPendingSessionId = -1;
+                        _finishTimingPendingSessionType = string.Empty;
+                    }
+                    else
+                    {
+                        _finishTimingSessionId = sessionId;
+                        _finishTimingSessionType = sessionType ?? string.Empty;
                     }
                 }
             }

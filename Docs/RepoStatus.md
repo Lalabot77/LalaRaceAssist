@@ -1,3 +1,5 @@
+- 2026-05-15: RaceFinish deferred-session detectability follow-up validated: deferred path now stores pending session identity without overwriting active finish-session identity, then applies one clean reset/identity update after lifecycle exit.
+
 
 - 2026-05-14: StrategyDash start-fuel setup-fallback phase-gate fix landed.
   - `StrategyDash.StartFuelAdviceText` / `StrategyDash.StartFuelStatus` now use setup fallback only when pre-race/grid/formation fallback is allowed (`SessionState < 4`), while keeping live-fuel-first precedence and unknown fallback behavior unchanged.
