@@ -1,3 +1,8 @@
+- 2026-05-15 RaceFinish reset/capture loop guard + class-position freeze guard landed.
+  - `UpdateFinishTiming(...)` now defers `ResetFinishTimingState()` when session identity churn is observed during an already-active post-finish lifecycle (`SessionState>=5` with active RaceFinish snapshot), preventing per-tick reset/re-capture log spam in replay/finish phases.
+  - Added bounded diagnostic log: `[LalaPlugin:Finish] session_change deferred in_active_finish_lifecycle state=...`.
+  - `TryCaptureRaceFinishPlayerSnapshot(...)` now requires a positive live class position before freezing player snapshot (except `SessionState==6` safety fallback), preventing `RaceFinish.PlayerClassPosition=0` freeze when valid class position resolves a tick later.
+
 
 ## 2026-05-14 — StrategyDash start-fuel setup fallback now respects pre-race phase gate
 - Classification: **both** (dash-facing start-fuel advice correctness + docs alignment).
