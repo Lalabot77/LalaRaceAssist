@@ -1389,3 +1389,5 @@ Branch: work
 - 2026-05-06 H2HTrack selected-target League identity handoff fix landed:
   - `BuildH2HTrackSelector(...)` now forwards selected-slot `UserID` into H2H target selector identity so `H2HTrack.Ahead/Behind.ClassColor` and `ClassColorHex` resolve through CSV-first League Class semantics when available;
   - fallback behavior unchanged when League Class is disabled/unresolved, and no H2HTrack physical target-selection or sector/delta/timing ownership was changed.
+
+- 2026-05-15: Strategy race-basis owner mode refresh landed; Refresh Calcs now recompute-only; preset modified indicator excludes PreRace-only differences.

@@ -324,3 +324,7 @@ Reset semantics are shared with the Fuel Model and documented centrally in:
   - `Live Detect` lap-limited => detected laps,
   - `Live Detect` with no valid detected basis => strategy stays invalid (`Live Detect race definition unavailable`) and does not silently run lap-based math.
 - Live Detect refresh now runs on session context transitions (session id/type changes) when Live Detect is selected, in addition to normal periodic polling.
+
+- Strategy race-basis ownership now uses explicit owner modes (Preset/Lap/Time/Live Detect) with last-selected owner winning race type/length authority.
+- Refresh Calcs is recompute-only and no longer reloads profile/live ownership state.
+- Preset modified badge now ignores PreRace-mode-only differences to avoid implying core strategy-output change.

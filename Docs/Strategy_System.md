@@ -180,3 +180,7 @@ If Strategy looks repeatedly wrong, the usual causes are:
 
 - PreRace fuel-needed basis now follows active contingency (`base race fuel + active contingency litres`) instead of the prior hardcoded `+2 laps` buffer.
 - StrategyDash V2 adds pre-green advice exports only; race-running fuel/pit/control contracts remain on existing runtime seams.
+
+- Strategy Race Basis now explicitly selects owner: Preset, Lap-Limited, Time-Limited, or Live Detect.
+- Live Detect only owns race type/length while selected; preset/manual setup values are retained.
+- Refresh Calcs now recomputes outputs only and does not change owner/preset/source selections.

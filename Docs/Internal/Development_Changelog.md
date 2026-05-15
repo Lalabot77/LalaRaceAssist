@@ -2344,3 +2344,10 @@ The public user-facing release history is maintained in the root `CHANGELOG.md`.
 - `RaceFinish.PlayerOverallFieldSize` and `RaceFinish.PlayerClassFieldSize` now freeze from live `Race.*` field-size sources at class snapshot, preserving existing snapshot timing while preventing pace-car overcount and class-size `0` regressions.
 - Follow-up fix: replaced undefined `SafeReadBoolProperty(...)` usage with existing bool-read helper path and added CompetingDrivers bracketed+numbered path compatibility fallback reads for roster counting.
 - Follow-up fix: corrected overall fallback semantics so `GameData.OpponentsCount` is treated as field size directly (no unconditional `+1`).
+
+## 2026-05-15 — Strategy race-basis owner model + refresh recalculation-only cleanup
+- Classification: **both** (user-facing Strategy workflow clarity + internal ownership correctness).
+- Added explicit Strategy race-basis owner modes (`Preset`, `LapLimited`, `TimeLimited`, `LiveDetect`) so race type/length authority follows the selected owner deterministically.
+- Live Detect now only overrides race basis while selected; preset/profile/manual planning inputs remain intact.
+- Refresh Calcs now recomputes strategy outputs only and no longer reloads profile/live owner state.
+- Preset modified badge no longer flips when only PreRace mode differs, reducing misleading “calc changed” cues.
