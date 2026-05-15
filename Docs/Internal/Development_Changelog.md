@@ -12,6 +12,15 @@
 - When enabled but player effective class is unresolved at match time, class matching falls back to native class-color matching (existing fallback preserved).
 - Result: `PitExit.PredictedPositionInClass`, `PitExit.CarsAheadAfterPitCount`, `PitExit.Ahead/Behind.Name|CarNumber|GapSec`, and `PitExit.Summary` now reliably switch to effective-class cohort selection when enabled+resolved (instead of remaining native-only with color-only League presentation).
 - Protected domains unchanged: PitExit timing/gap/countdown/loss/distance math, Opp race slot selection, CarSA, and H2H logic.
+## 2026-05-14 — Planner live fuel-session validity + pit delta lifecycle correction
+- Classification: **both** (strategy planner source correctness + pit delta lifecycle correction + docs alignment).
+- Strategy Planner (`FuelCalcs`) live-snapshot fuel path now enforces current-session validity:
+  - live fuel cache is cleared on new car/track live-session combination,
+  - LiveSnapshot fuel auto-fill falls back to profile condition fuel when live fuel is unavailable for the current session,
+  - `FuelPerLapSourceInfo` now correctly reports Profile source on that fallback path (no stale `Live` carry-over label).
+- Reverted the prior pit-entry clear behavior for `Pit.LastPaceDeltaNetLoss`; lifecycle returns to prior behavior (latched on completed pit-cycle calculation and cleared by existing reset paths only).
+- `Pit.Box.LastDeltaSec` now stays latched after stop for review, clears at next boxed-stop activation, and clears on reset/session-reset paths (no short auto-expire window).
+- PR review follow-up: Live Snapshot fuel source labels now recover to `Live avg` even when the returning live value is within fuel deadband, preventing stale profile-source labeling during live-valid periods.
 
 ## 2026-05-14 — StrategyDash start-fuel setup fallback now respects pre-race phase gate
 - Classification: **both** (dash-facing start-fuel advice correctness + docs alignment).

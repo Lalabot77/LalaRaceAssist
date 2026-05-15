@@ -6220,9 +6220,7 @@ namespace LaunchPlugin
         private double _pitBoxLatchedTargetSec = 0.0;
         private bool _pitBoxTargetLatched = false;
         private double _pitBoxLastDeltaSec = 0.0;
-        private DateTime _pitBoxLastDeltaExpiresUtc = DateTime.MinValue;
         private const double PitBoxTargetLatchSettleSeconds = 1.0;
-        private const double PitBoxLastDeltaWindowSeconds = 20.0;
         private const double PitBoxModeledServiceOverheadSeconds = 1.0;
         private const double PitExitTransitionAllowanceSec = 2.00;
         private bool _pitRefuelEntryLatched = false;
@@ -18141,15 +18139,6 @@ namespace LaunchPlugin
             _pitBoxTargetLatched = false;
         }
 
-        private void UpdatePitBoxLastDeltaVisibility()
-        {
-            if (_pitBoxLastDeltaExpiresUtc <= DateTime.UtcNow)
-            {
-                _pitBoxLastDeltaSec = 0.0;
-                _pitBoxLastDeltaExpiresUtc = DateTime.MinValue;
-            }
-        }
-
         private bool IsInValidPitBoxServiceState()
         {
             if (_pit == null || _pit.CurrentPitPhase != PitPhase.InBox)
@@ -18258,11 +18247,9 @@ namespace LaunchPlugin
                     }
 
                     _pitBoxLastDeltaSec = deltaSec;
-                    _pitBoxLastDeltaExpiresUtc = DateTime.UtcNow.AddSeconds(PitBoxLastDeltaWindowSeconds);
                 }
 
                 ResetPitBoxCountdownState();
-                UpdatePitBoxLastDeltaVisibility();
                 return;
             }
 
@@ -18273,7 +18260,6 @@ namespace LaunchPlugin
             if (!wasActive)
             {
                 _pitBoxLastDeltaSec = 0.0;
-                _pitBoxLastDeltaExpiresUtc = DateTime.MinValue;
             }
 
             double modeledTargetSec = CalculatePitBoxModeledTargetSeconds();
@@ -18302,7 +18288,6 @@ namespace LaunchPlugin
             _pitBoxElapsedSec = elapsedSec;
             _pitBoxTargetSec = targetSec;
             _pitBoxRemainingSec = remainingSec;
-            UpdatePitBoxLastDeltaVisibility();
         }
 
         private void ResetPitRefuelGaugeValues()

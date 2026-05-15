@@ -108,6 +108,7 @@ The planner tracks *what source is currently active* for each input:
 - **Profile mode:** the pace-vs-leader slider remains editable, and planner saves persist the stored/default pace delta (or an explicit manual override).
 - **Live Snapshot mode:** the effective planner delta follows the current live leader delta whenever live leader pace is available; entering Live Snapshot clears any manual leader-delta override instead of preserving it behind the scenes.
 - **Live Snapshot fallback:** if live leader pace is unavailable, the effective leader delta falls back to `0.0` rather than reusing a stale manual or stored profile delta, so the planner does not masquerade as live while using old data.
+- **Live Snapshot fuel-source recovery:** when live fuel becomes valid again after a profile fallback, `FuelPerLapSourceInfo` immediately flips back to live provenance even if the numeric fuel value remains inside deadband (source and value no longer require the same update trigger).
 - The old manual "use live/reset to live" recovery path is no longer part of normal leader-delta operation.
 
 ### Track-condition handling (dry vs wet)

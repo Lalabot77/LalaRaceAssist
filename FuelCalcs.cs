@@ -3249,38 +3249,66 @@ namespace LaunchPlugin
                 else if (SelectedPlanningSourceMode == PlanningSourceMode.LiveSnapshot)
                 {
                     fuel = GetLiveAverageFuelPerLapForCurrentCondition();
-                    isLiveFuel = true;
+                    if (fuel.HasValue && fuel.Value > 0.0)
+                    {
+                        isLiveFuel = true;
+                    }
+                    else if (TryGetProfileFuelForCondition(IsWet, out var profileFuel, out var profileSource))
+                    {
+                        fuel = profileFuel;
+                        fuelSource = profileSource;
+                        isLiveFuel = false;
+                    }
                 }
 
                 if (fuel.HasValue)
                 {
-                    bool shouldApply = true;
+                    string nextFuelSourceInfo;
+                    if (SelectedPlanningSourceMode == PlanningSourceMode.Profile)
+                    {
+                        nextFuelSourceInfo = FormatConditionSourceLabel("Profile avg");
+                    }
+                    else if (isLiveFuel)
+                    {
+                        nextFuelSourceInfo = FormatConditionSourceLabel("Live avg");
+                    }
+                    else
+                    {
+                        nextFuelSourceInfo = !string.IsNullOrWhiteSpace(fuelSource)
+                            ? fuelSource
+                            : FormatConditionSourceLabel("Profile avg");
+                    }
+
+                    bool shouldApplyFuelValue = true;
                     if (SelectedPlanningSourceMode == PlanningSourceMode.LiveSnapshot
                         && isLiveFuel
                         && FuelPerLap > 0.0
                         && Math.Abs(fuel.Value - FuelPerLap) < LiveFuelPerLapDeadband)
                     {
-                        shouldApply = false;
+                        shouldApplyFuelValue = false;
                     }
 
-                    if (shouldApply)
+                    bool shouldApplyFuelSource = !string.Equals(FuelPerLapSourceInfo, nextFuelSourceInfo, StringComparison.Ordinal);
+                    if (shouldApplyFuelValue || shouldApplyFuelSource)
                     {
                         ApplySourceUpdate(() =>
                         {
-                            FuelPerLap = fuel.Value;
-                            _suppressFuelTextSync = true;
-                            try
+                            if (shouldApplyFuelValue)
                             {
-                                FuelPerLapText = fuel.Value.ToString("0.00", CultureInfo.InvariantCulture);
+                                FuelPerLap = fuel.Value;
+                                _suppressFuelTextSync = true;
+                                try
+                                {
+                                    FuelPerLapText = fuel.Value.ToString("0.00", CultureInfo.InvariantCulture);
+                                }
+                                finally
+                                {
+                                    _suppressFuelTextSync = false;
+                                }
                             }
-                            finally
-                            {
-                                _suppressFuelTextSync = false;
-                            }
+
                             IsFuelPerLapManual = false;
-                            FuelPerLapSourceInfo = SelectedPlanningSourceMode == PlanningSourceMode.Profile
-                                ? FormatConditionSourceLabel("Profile avg")
-                                : FormatConditionSourceLabel("Live avg");
+                            FuelPerLapSourceInfo = nextFuelSourceInfo;
                         });
                     }
                 }
@@ -3638,6 +3666,7 @@ namespace LaunchPlugin
 
     private void ClearLiveFuelSnapshot()
     {
+        LiveFuelPerLap = 0.0;
         RefreshLiveMaxFuelDisplays(0);
         _liveDryFuelAvg = 0;
         _liveDryFuelMin = 0;

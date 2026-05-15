@@ -213,7 +213,6 @@ namespace LaunchPlugin
                 if (!_pitRoadTimer.IsRunning)
                 {
                     _pitRoadTimer.Restart();
-                    LastPaceDeltaNetLoss = 0.0;
                     // --- Reset last stop duration on entry to prevent using stale data for drive-throughs ---
                     _lastPitStopDuration = TimeSpan.Zero;
                 }
