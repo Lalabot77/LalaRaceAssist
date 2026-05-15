@@ -110,6 +110,12 @@ Opponents now reads from:
   - `PitExit.*` class-relative cohort selection now uses the same race-context class seam as Opp targets (`IsRaceContextClassMatch`) so enabled+valid League Class uses effective-class matching; disabled/enabled+unresolved-player paths fall back to native class-color matching unchanged.
   - Pit-exit countdown/loss/progress/gap math and active pit-cycle model are unchanged; only same-class cohort inclusion changed.
 
+- 2026-05-15 PitExit League-class cohort selector reliability follow-up:
+  - League race-context matcher delegate creation is now gated only by `LeagueClassEnabled`; player effective-class resolution is performed per-row from the current race-model player identity inside the delegate.
+  - This prevents null-delegate fallback to native class-color cohorting during PitExit updates when the live preview resolver is transiently unresolved while player row identity is valid.
+  - PitExit selection outputs (`PredictedPositionInClass`, `CarsAheadAfterPitCount`, `PitExit.Ahead/Behind.*`, `PitExit.Summary`) now reliably use the effective-class cohort whenever enabled+player-resolved at update time; disabled/unresolved-player paths remain native fallback.
+  - PitExit timing/gap/countdown/loss/distance math and Opp race-slot selection remain unchanged.
+
 
 - 2026-05-05 replay identity/gating follow-up:
   - ClassLeader/ClassBest race-context candidate rows built in `LalaLaunch` now require canonical identity (`ClassColor:CarNumber`) and no longer synthesize `car:{idx}` fallback identities;

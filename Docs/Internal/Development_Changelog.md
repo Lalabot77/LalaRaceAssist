@@ -1,4 +1,12 @@
 
+## 2026-05-15 — PitExit League-class cohort selection fix (effective-class matcher delegate reliability)
+- Classification: **both** (PitExit cohort target correctness + docs alignment).
+- Fixed `BuildRaceContextLeagueClassMatchDelegate()` so League race-context matching no longer returns `null` solely because the preview player resolver is transiently unresolved.
+- The delegate is now created whenever League Class is enabled, and resolves player effective class from the current race-model player row (`UserID`/name) at match time.
+- When enabled but player effective class is unresolved at match time, class matching falls back to native class-color matching (existing fallback preserved).
+- Result: `PitExit.PredictedPositionInClass`, `PitExit.CarsAheadAfterPitCount`, `PitExit.Ahead/Behind.Name|CarNumber|GapSec`, and `PitExit.Summary` now reliably switch to effective-class cohort selection when enabled+resolved (instead of remaining native-only with color-only League presentation).
+- Protected domains unchanged: PitExit timing/gap/countdown/loss/distance math, Opp race slot selection, CarSA, and H2H logic.
+
 ## 2026-05-14 — StrategyDash start-fuel setup fallback now respects pre-race phase gate
 - Classification: **both** (dash-facing start-fuel advice correctness + docs alignment).
 - `StrategyDash.StartFuelAdviceText` / `StrategyDash.StartFuelStatus` now use setup-fuel fallback only when pre-race/grid/formation fallback is allowed (`SessionState < 4`), while keeping live-fuel-first precedence and unknown fallback behavior unchanged.
