@@ -2024,7 +2024,7 @@ namespace LaunchPlugin
                     AntiStallThreshold = 10.0,
 
                     // Fuel & Pit Properties
-                    PreRaceMode = 3,
+                    PreRaceMode = 1,
                     TireChangeTime = 22,
                     RefuelRate = 3.7,
                     RefuelRateLocked = false,

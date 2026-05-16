@@ -2702,7 +2702,7 @@ namespace LaunchPlugin
             this.RaceLaps = 20;
             this.RaceMinutes = 40;
         }
-        this.SelectedPreRaceMode = (int)PreRaceMode.MultiStop;
+        this.SelectedPreRaceMode = (int)PreRaceMode.SingleStop;
 
         // Smartly default Max Fuel: use the profile base tank (or default).
         if (!preserveMaxFuel)
@@ -3113,7 +3113,7 @@ namespace LaunchPlugin
             Type = RacePresetType.TimeLimited,
             RaceLaps = null,
             RaceMinutes = 40,
-            PreRaceMode = (int)PreRaceMode.MultiStop,
+            PreRaceMode = (int)PreRaceMode.SingleStop,
             TireChangeTimeSec = 23,
             MaxFuelPercent = 100,
             LegacyMaxFuelLitres = null,

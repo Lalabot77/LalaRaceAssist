@@ -2385,3 +2385,11 @@ The public user-facing release history is maintained in the root `CHANGELOG.md`.
 - `IsPresetModified()` race-basis comparisons now use effective basis/length (invalid effective basis no longer reports false clean match).
 
 - Final cleanup tightened race-basis invalidation/notification paths so applied-preset removal while Preset owner is active now immediately invalidates outputs (`Select a race preset`) and prevents stale strategy display.
+
+## 2026-05-16 — Strategy PreRace default mode changed to Single Stop
+- Classification: **both** (default workflow behavior update + docs alignment).
+- Updated Strategy default PreRace mode from `Multi Stop` to `Single Stop` for new/default planner state and new preset template creation.
+- Preserved persistence/backward compatibility semantics:
+  - existing saved profile/preset `PreRaceMode` values are unchanged,
+  - legacy persisted `Auto` value (`3`) normalization behavior remains unchanged (`3 -> Multi Stop`).
+- No planner math/race-basis/live-detect/runtime fuel/dash export behavior changes.
