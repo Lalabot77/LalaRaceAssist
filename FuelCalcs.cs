@@ -2527,7 +2527,7 @@ namespace LaunchPlugin
         set { IsContingencyInLaps = !value; }
     }
 
-    private int _selectedPreRaceMode = (int)PreRaceMode.MultiStop;
+    private int _selectedPreRaceMode = (int)PreRaceMode.SingleStop;
     public int SelectedPreRaceMode
     {
         get => _selectedPreRaceMode;
@@ -2693,7 +2693,7 @@ namespace LaunchPlugin
         }
     }
 
-    private void ResetStrategyInputs(bool preserveMaxFuel = false, bool preserveRaceDuration = false)
+    private void ResetStrategyInputs(bool preserveMaxFuel = false, bool preserveRaceDuration = false, bool preservePreRaceMode = false)
     {
         // Reset race-specific parameters to sensible defaults
         if (!preserveRaceDuration)
@@ -2702,7 +2702,10 @@ namespace LaunchPlugin
             this.RaceLaps = 20;
             this.RaceMinutes = 40;
         }
-        this.SelectedPreRaceMode = (int)PreRaceMode.SingleStop;
+        if (!preservePreRaceMode)
+        {
+            this.SelectedPreRaceMode = (int)PreRaceMode.SingleStop;
+        }
 
         // Smartly default Max Fuel: use the profile base tank (or default).
         if (!preserveMaxFuel)
@@ -4415,7 +4418,7 @@ namespace LaunchPlugin
                 {
                     // When switching cars, reinitialize the max-fuel override from the new car's tank size
                     // (or default) but keep the user's race duration/type selections intact.
-                    ResetStrategyInputs(preserveMaxFuel: false, preserveRaceDuration: true);
+                    ResetStrategyInputs(preserveMaxFuel: false, preserveRaceDuration: true, preservePreRaceMode: true);
                 }
 
                 OnPropertyChanged(nameof(MaxFuelOverrideMaximum));

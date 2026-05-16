@@ -1407,3 +1407,4 @@ Branch: work
   - existing saved profile/preset PreRaceMode values are preserved;
   - legacy persisted Auto (`3`) normalization remains unchanged (`3 -> Multi Stop`);
   - no planner math, race-basis ownership, Live Detect, runtime fuel model, or dash export behavior changes.
+  - follow-up fix: profile/car-load reset path now preserves loaded persisted PreRace mode (No Stop/Single Stop/Multi Stop) instead of overwriting to default Single Stop on car change.
