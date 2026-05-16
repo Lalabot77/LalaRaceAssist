@@ -1,3 +1,6 @@
+- 2026-05-16: Added bounded runtime diagnostics for race class denominator resolution.
+  - `LalaLaunch` now logs `[LalaPlugin:RaceDenom]` only on denominator result/signature change so live sessions can identify which canonical branch won (`roster`, `native`, game-data/telemetry fallbacks, or none) without per-tick spam.
+
 - 2026-05-16: Race player-class denominator authority fix landed.
   - `Race.PlayerClassFieldSize` now uses a canonical current-session denominator path and no longer takes League CSV registered class-membership fallback through `LeagueClass.Player.DriverCount`.
   - League-enabled denominator remains current-session effective cohort first, with native/session telemetry class-denominator fallback when cohort data is unavailable.

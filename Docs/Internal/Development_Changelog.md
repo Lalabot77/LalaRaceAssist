@@ -1,3 +1,6 @@
+- 2026-05-16: Added bounded race denominator branch diagnostics in `LalaLaunch` for `Race.PlayerClassFieldSize` / `RaceFinish.PlayerClassFieldSize` investigation.
+  - New `[LalaPlugin:RaceDenom]` info log emits only when denominator branch/signature/result changes, including branch, league toggle, roster/native/opponent counters, and player native/effective class context.
+
 - 2026-05-16 RaceFinish player finish-time baseline latch follow-up landed.
   - `TryCaptureRaceFinishPlayerSnapshot(...)` now latches the first observed player-finish tick session timestamp before class-position retry gating.
   - If class position is temporarily unresolved (`<=0`) and capture retries on a later tick, `RaceFinish.PlayerFinishGapSec` now computes from the latched first-finish timestamp (no retry-path drift).
