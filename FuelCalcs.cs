@@ -479,7 +479,9 @@ namespace LaunchPlugin
                 UpdateProfileAverageDisplaysForCondition();
                 if (previousMode != PlanningSourceMode.Profile && SelectedPreset != null)
                 {
-                    ApplySelectedPreset();
+                    // Refresh preset-derived setup values (contingency/tyre/max-fuel etc.) without
+                    // stealing race-basis ownership from the user's current owner mode.
+                    ApplySelectedPreset(activatePresetOwner: false);
                 }
             }
 
@@ -871,7 +873,7 @@ namespace LaunchPlugin
         public ICommand ClearPresetCommand { get; private set; }
         public ICommand ApplySourceWetFactorCommand { get; }
 
-    private void ApplyPresetValues(RacePreset preset)
+    private void ApplyPresetValues(RacePreset preset, bool activatePresetOwner = true)
     {
         if (preset == null) return;
 
@@ -907,7 +909,10 @@ namespace LaunchPlugin
         ContingencyValue = p.ContingencyValue;
 
         _appliedPreset = p;
-        SelectedRaceBasisMode = RaceBasisMode.Preset;
+        if (activatePresetOwner)
+        {
+            SelectedRaceBasisMode = RaceBasisMode.Preset;
+        }
         RaiseRaceBasisStateChanged(includeOwner: false);
 
         if (SelectedPlanningSourceMode == PlanningSourceMode.Profile)
@@ -927,16 +932,16 @@ namespace LaunchPlugin
         }
     }
 
-    private void ApplySelectedPreset()
+    private void ApplySelectedPreset(bool activatePresetOwner = true)
     {
-        ApplyPresetValues(_selectedPreset);
+        ApplyPresetValues(_selectedPreset, activatePresetOwner);
     }
 
     public void ReapplySelectedPreset()
     {
         if (_selectedPreset != null)
         {
-            ApplyPresetValues(_selectedPreset);
+            ApplyPresetValues(_selectedPreset, activatePresetOwner: true);
         }
     }
 
