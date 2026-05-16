@@ -1,3 +1,8 @@
+- 2026-05-16: Race player-class denominator authority fix landed.
+  - `Race.PlayerClassFieldSize` now uses a canonical current-session denominator path and no longer takes League CSV registered class-membership fallback through `LeagueClass.Player.DriverCount`.
+  - League-enabled denominator remains current-session effective cohort first, with native/session telemetry class-denominator fallback when cohort data is unavailable.
+  - `RaceFinish.PlayerClassFieldSize` class-snapshot freeze now uses the same canonical denominator helper and can refresh while class snapshot is active/player snapshot pending only when initial value was invalid (`0`).
+
 - 2026-05-16: RaceFinish player finish retry-gap baseline latch validated: first observed player-finish session timestamp is latched before class-position retry guard, so delayed snapshot capture does not drift `RaceFinish.PlayerFinishGapSec`.
 
 - 2026-05-16: RaceFinish deferred-reset apply-path hardening validated: pending identity is applied only if it still matches current observed session identity; stale pending is discarded and active defer-log latch resets on churn reversion.

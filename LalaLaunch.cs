@@ -8710,7 +8710,7 @@ namespace LaunchPlugin
             _raceFinishClassSnapshotActive = true;
             _raceFinishClassCaptureSessionState = sessionStateNumeric;
             _raceFinishPlayerOverallFieldSize = ResolveLiveOverallFieldSize(this.PluginManager);
-            _raceFinishPlayerClassFieldSize = ResolveLivePlayerClassFieldSize(this.PluginManager, _playerCarIdxLastTick);
+            _raceFinishPlayerClassFieldSize = ResolveCanonicalPlayerClassRaceDenominator(this.PluginManager);
             _raceFinishPlayerFinishGapSec = 0.0;
             if (hasCurrentLeaderIdentity)
             {
@@ -8735,6 +8735,25 @@ namespace LaunchPlugin
                 ? "live"
                 : (hasHeldLeaderIdentity ? "held" : "fallback_missing_identity");
             SimHub.Logging.Current.Info($"[LalaPlugin:RaceFinish] class snapshot captured state={sessionStateNumeric} source={source} winner='{_raceFinishClassWinnerName}'");
+        }
+
+        private void TryRefreshRaceFinishPlayerClassFieldSizeWhilePending()
+        {
+            if (!_raceFinishClassSnapshotActive || _raceFinishPlayerSnapshotActive)
+            {
+                return;
+            }
+
+            if (_raceFinishPlayerClassFieldSize > 0)
+            {
+                return;
+            }
+
+            int refreshed = ResolveCanonicalPlayerClassRaceDenominator(this.PluginManager);
+            if (refreshed > 0)
+            {
+                _raceFinishPlayerClassFieldSize = refreshed;
+            }
         }
 
         private void TryCaptureRaceFinishPlayerSnapshot(PluginManager pluginManager, int sessionStateNumeric, int playerCarIdx, bool playerFinishedByFlags, bool playerFinishedByCheckered, double sessionTimeSec)
@@ -8841,32 +8860,12 @@ namespace LaunchPlugin
             return 0;
         }
 
-        private int ResolveLivePlayerClassFieldSize(PluginManager pluginManager, int playerCarIdx)
+        private int ResolveCanonicalPlayerClassRaceDenominator(PluginManager pluginManager)
         {
             int playerClassRosterCount = CountPlayerClassCompetingDriverRowsExcludingPaceCar();
             if (playerClassRosterCount > 0)
             {
                 return playerClassRosterCount;
-            }
-
-            int driverCount = GetLeagueClassPlayerDriverCount();
-            if (driverCount > 0)
-            {
-                return driverCount;
-            }
-
-            int classOpponentsCount = SafeReadInt(pluginManager, "DataCorePlugin.GameRawData.Telemetry.OpponentsInClassCount", int.MinValue);
-            if (classOpponentsCount >= 0)
-            {
-                return classOpponentsCount + 1;
-            }
-
-            // SimHub baseline fallback: some sessions expose class opponents count on GameData/NewData
-            // even when raw telemetry path is unavailable at snapshot tick.
-            int simHubClassOpponentsCount = SafeReadInt(pluginManager, "DataCorePlugin.GameData.NewData.OpponentsInClassCount", int.MinValue);
-            if (simHubClassOpponentsCount >= 0)
-            {
-                return simHubClassOpponentsCount + 1;
             }
 
             int nativeDriverCount = GetNativePlayerClassDriverCount();
@@ -8875,7 +8874,30 @@ namespace LaunchPlugin
                 return nativeDriverCount;
             }
 
+            int classOpponentsCount = SafeReadInt(pluginManager, "DataCorePlugin.GameData.PlayerClassOpponentsCount", int.MinValue);
+            if (classOpponentsCount >= 0)
+            {
+                return classOpponentsCount;
+            }
+
+            classOpponentsCount = SafeReadInt(pluginManager, "DataCorePlugin.GameRawData.Telemetry.OpponentsInClassCount", int.MinValue);
+            if (classOpponentsCount >= 0)
+            {
+                return classOpponentsCount + 1;
+            }
+
+            int simHubClassOpponentsCount = SafeReadInt(pluginManager, "DataCorePlugin.GameData.NewData.OpponentsInClassCount", int.MinValue);
+            if (simHubClassOpponentsCount >= 0)
+            {
+                return simHubClassOpponentsCount + 1;
+            }
+
             return 0;
+        }
+
+        private int ResolveLivePlayerClassFieldSize(PluginManager pluginManager, int playerCarIdx)
+        {
+            return ResolveCanonicalPlayerClassRaceDenominator(pluginManager);
         }
 
         private int CountValidCompetingDriverRowsExcludingPaceCar()
@@ -8942,10 +8964,13 @@ namespace LaunchPlugin
                 }
                 else
                 {
-                    string cls = ReadCompetingDriverStringWithFallback(basePath, ".CarClassShortName");
-                    if (string.IsNullOrWhiteSpace(cls)) cls = ReadCompetingDriverStringWithFallback(basePath, ".CarClassName");
-                    if (!string.IsNullOrWhiteSpace(cls)
-                        && string.Equals(cls, playerNativeClass, StringComparison.OrdinalIgnoreCase))
+                    string rowClassShort = ReadCompetingDriverStringWithFallback(basePath, ".CarClassShortName");
+                    string rowClassName = ReadCompetingDriverStringWithFallback(basePath, ".CarClassName");
+                    bool classMatch =
+                        (!string.IsNullOrWhiteSpace(rowClassShort) && string.Equals(rowClassShort, playerNativeClass, StringComparison.OrdinalIgnoreCase)) ||
+                        (!string.IsNullOrWhiteSpace(rowClassName) && string.Equals(rowClassName, playerNativeClass, StringComparison.OrdinalIgnoreCase)) ||
+                        IsSingleNativeClassRoster();
+                    if (classMatch)
                     {
                         count++;
                     }
@@ -9055,6 +9080,13 @@ namespace LaunchPlugin
             }
 
             return playerClass;
+        }
+
+        private bool IsSingleNativeClassRoster()
+        {
+            int classOpponentsCount = SafeReadInt(this.PluginManager, "DataCorePlugin.GameData.PlayerClassOpponentsCount", int.MinValue);
+            int opponentsCount = SafeReadInt(this.PluginManager, "DataCorePlugin.GameData.OpponentsCount", int.MinValue);
+            return classOpponentsCount >= 0 && opponentsCount >= 0 && classOpponentsCount == opponentsCount;
         }
 
         private double ResolveRaceFinishLiveFuelLeft(PluginManager pluginManager)
@@ -10419,6 +10451,7 @@ namespace LaunchPlugin
                     _raceFinishLastValidClassLeaderCarNumber = ClassLeaderCarNumber ?? string.Empty;
                 }
                 TryCaptureRaceFinishClassSnapshot(sessionState, sessionTimeSec, ClassLeaderHasFinished);
+                TryRefreshRaceFinishPlayerClassFieldSizeWhilePending();
                 if (_raceFinishClassSnapshotActive && !_raceFinishPlayerSnapshotActive && !double.IsNaN(_raceFinishClassFinishSessionTimeSec))
                 {
                     _raceFinishPlayerFinishGapSec = Math.Max(0.0, sessionTimeSec - _raceFinishClassFinishSessionTimeSec);

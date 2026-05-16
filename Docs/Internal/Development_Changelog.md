@@ -2401,3 +2401,7 @@ The public user-facing release history is maintained in the root `CHANGELOG.md`.
   - legacy persisted `Auto` value (`3`) normalization behavior remains unchanged (`3 -> Multi Stop`).
 - No planner math/race-basis/live-detect/runtime fuel/dash export behavior changes.
 - PR #726 follow-up fix: `LoadProfileData()` car-change reset path now preserves the already loaded persisted `PreRaceMode` instead of forcing the reset default; Single Stop default remains active for cold-start/default state.
+- 2026-05-16 Race class denominator authority fix landed.
+  - `Race.PlayerClassFieldSize` now resolves from a canonical current-session denominator path and no longer uses League CSV registered membership fallback (`CountValidCsvDriversInClass`) through `LeagueClass.Player.DriverCount`.
+  - League-enabled class denominator remains current-session effective cohort first; if unresolved in-session, fallback is native/session telemetry class denominator (not CSV membership count).
+  - `RaceFinish.PlayerClassFieldSize` class-snapshot freeze now uses the same canonical denominator helper and allows bounded pending refresh only when the initial frozen value is invalid (`0`) and player snapshot is still pending; finish timing/triggers unchanged.
