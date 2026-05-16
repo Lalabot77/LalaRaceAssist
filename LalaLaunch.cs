@@ -833,6 +833,7 @@ namespace LaunchPlugin
         private int _raceFinishClassCaptureSessionState;
         private int _raceFinishPlayerCaptureSessionState;
         private double _raceFinishClassFinishSessionTimeSec = double.NaN;
+        private double _raceFinishPlayerFinishObservedSessionTimeSec = double.NaN;
         private double _raceFinishPlayerFinishGapSec;
         private int _raceFinishLastValidClassLeaderCarIdx = -1;
         private string _raceFinishLastValidClassLeaderName = string.Empty;
@@ -8625,6 +8626,7 @@ namespace LaunchPlugin
             _raceFinishClassCaptureSessionState = 0;
             _raceFinishPlayerCaptureSessionState = 0;
             _raceFinishClassFinishSessionTimeSec = double.NaN;
+            _raceFinishPlayerFinishObservedSessionTimeSec = double.NaN;
             _raceFinishPlayerFinishGapSec = 0.0;
             _raceFinishLastValidClassLeaderCarIdx = -1;
             _raceFinishLastValidClassLeaderName = string.Empty;
@@ -8726,7 +8728,13 @@ namespace LaunchPlugin
                 || (_raceFinishClassSnapshotActive && playerFinishedByCheckered);
             if (!shouldCapture)
             {
+                _raceFinishPlayerFinishObservedSessionTimeSec = double.NaN;
                 return;
+            }
+
+            if (double.IsNaN(_raceFinishPlayerFinishObservedSessionTimeSec))
+            {
+                _raceFinishPlayerFinishObservedSessionTimeSec = sessionTimeSec;
             }
 
             int liveOverallPosition = ResolveRaceFinishLiveOverallPosition(pluginManager);
@@ -8753,13 +8761,17 @@ namespace LaunchPlugin
 
             if (_raceFinishClassSnapshotActive && !double.IsNaN(_raceFinishClassFinishSessionTimeSec))
             {
-                _raceFinishPlayerFinishGapSec = Math.Max(0.0, sessionTimeSec - _raceFinishClassFinishSessionTimeSec);
+                double gapBaselineSessionTimeSec = !double.IsNaN(_raceFinishPlayerFinishObservedSessionTimeSec)
+                    ? _raceFinishPlayerFinishObservedSessionTimeSec
+                    : sessionTimeSec;
+                _raceFinishPlayerFinishGapSec = Math.Max(0.0, gapBaselineSessionTimeSec - _raceFinishClassFinishSessionTimeSec);
             }
             else
             {
                 _raceFinishPlayerFinishGapSec = 0.0;
             }
             _raceFinishClassWinnerGapSec = _raceFinishPlayerFinishGapSec;
+            _raceFinishPlayerFinishObservedSessionTimeSec = double.NaN;
 
             SimHub.Logging.Current.Info(
                 $"[LalaPlugin:RaceFinish] player snapshot captured state={sessionStateNumeric} overall={_raceFinishPlayerOverallPosition} class={_raceFinishPlayerClassPosition} " +

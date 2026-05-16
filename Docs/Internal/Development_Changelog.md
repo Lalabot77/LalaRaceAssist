@@ -1,3 +1,8 @@
+- 2026-05-16 RaceFinish player finish-time baseline latch follow-up landed.
+  - `TryCaptureRaceFinishPlayerSnapshot(...)` now latches the first observed player-finish tick session timestamp before class-position retry gating.
+  - If class position is temporarily unresolved (`<=0`) and capture retries on a later tick, `RaceFinish.PlayerFinishGapSec` now computes from the latched first-finish timestamp (no retry-path drift).
+  - Latch clears when finish condition is no longer active or when player snapshot capture completes.
+
 - 2026-05-16 RaceFinish deferred-identity apply-current-observed follow-up landed.
   - Deferred-reset apply path now uses pending identity only when it still matches the current observed session identity; otherwise pending is discarded and current observed identity is applied, preventing stale `B` apply when observed identity is `C`.
   - `A→B→A` stale-pending clear now also resets `_finishTimingSessionChangeDeferredInActiveLifecycle` so future defers log once again.
