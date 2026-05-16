@@ -1216,12 +1216,10 @@ namespace LaunchPlugin
             }
             else
             {
-                if (planFuel > 0.0) { fuelPerLap = planFuel; fuelSource = "PLAN"; }
-                else if (profileFuel > 0.0) { fuelPerLap = profileFuel; fuelSource = "PROFILE"; }
+                if (profileFuel > 0.0) { fuelPerLap = profileFuel; fuelSource = "PROFILE"; }
                 else if (fallbackFuelPerLap > 0.0) { fuelPerLap = fallbackFuelPerLap; fuelSource = "DEFAULT"; }
 
-                if (planLap > 0.0) { lapSeconds = planLap; lapSource = "PLAN"; }
-                else if (profileLap > 0.0) { lapSeconds = profileLap; lapSource = "PROFILE"; }
+                if (profileLap > 0.0) { lapSeconds = profileLap; lapSource = "PROFILE"; }
                 else { lapSource = "DEFAULT"; }
             }
         }
@@ -9542,7 +9540,8 @@ namespace LaunchPlugin
                 default: return new PitFuelDataAuthorityState { Code = PitFuelDataAuthorityCode.Fail, Text = "FAIL", ColorHex = "#FF0000" };
             }
         }
-private static string PitFuelControlDataToText(PitFuelControlData data)
+
+        private static string PitFuelControlDataToText(PitFuelControlData data)
         {
             return data == PitFuelControlData.Plan ? "SAVED" : "LIVE";
         }

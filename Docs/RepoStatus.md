@@ -318,7 +318,7 @@
 
 - 2026-05-04 StrategyDash phase compile-fix follow-up (PR #660) landed:
   - `UpdateStrategyDashAdvice(...)` phase detection now takes explicit real-state booleans from the existing pre-race call path (`isRaceRunning`, `isGridOrFormation`) instead of referencing removed non-existent fields;
-  - StrategyDash phase contract is preserved (`1=SAVEDNING`, `2=GRID FORMATION`, `3=RACE`) with grid+formation still combined;
+  - StrategyDash phase contract is preserved (`1=PLANNING`, `2=GRID FORMATION`, `3=RACE`) with grid+formation still combined;
   - no changes were made to fuel data/source/mode behavior, `PitFuelControlEngine`, `Fuel.Delta.*`, `Fuel.RequiredBurnToEnd*`, `Fuel.Pit.*`, boxed refuel latches, or `Pit.FuelControl.*` semantics.
 
 - 2026-05-04 League Race header alignment follow-up landed:
