@@ -950,13 +950,15 @@ namespace LaunchPlugin
     {
         if (_appliedPreset == null) return false;
 
-        bool typeDiff =
-            (_appliedPreset.Type == RacePresetType.TimeLimited && !IsTimeLimitedRace) ||
-            (_appliedPreset.Type == RacePresetType.LapLimited && !IsLapLimitedRace);
+        bool hasEffectiveBasis = TryGetEffectiveRaceBasis(out bool effectiveTimeLimited, out double effectiveLength);
+        bool typeDiff = !hasEffectiveBasis ||
+            (_appliedPreset.Type == RacePresetType.TimeLimited && !effectiveTimeLimited) ||
+            (_appliedPreset.Type == RacePresetType.LapLimited && effectiveTimeLimited);
 
-        bool durDiff =
-            (_appliedPreset.Type == RacePresetType.TimeLimited && (_appliedPreset.RaceMinutes ?? RaceMinutes) != RaceMinutes) ||
-            (_appliedPreset.Type == RacePresetType.LapLimited && (_appliedPreset.RaceLaps ?? RaceLaps) != RaceLaps);
+        double appliedLength = _appliedPreset.Type == RacePresetType.TimeLimited
+            ? (_appliedPreset.RaceMinutes ?? 0.0)
+            : (_appliedPreset.RaceLaps ?? 0.0);
+        bool durDiff = !hasEffectiveBasis || Math.Abs(appliedLength - effectiveLength) > 0.05;
 
         bool tyreDiff = _appliedPreset.TireChangeTimeSec.HasValue &&
                         Math.Abs(_appliedPreset.TireChangeTimeSec.Value - TireChangeTime) > 0.05;
@@ -1167,6 +1169,10 @@ namespace LaunchPlugin
             OnPropertyChanged(nameof(IsRaceLengthEditable));
             OnPropertyChanged(nameof(ShowEffectiveLapLimitedRace));
             OnPropertyChanged(nameof(ShowEffectiveTimeLimitedRace));
+            OnPropertyChanged(nameof(EffectiveRaceBasisValid));
+            OnPropertyChanged(nameof(IsEffectiveTimeLimitedRace));
+            OnPropertyChanged(nameof(IsEffectiveLapLimitedRace));
+            OnPropertyChanged(nameof(EffectiveRaceLength));
             RaisePresetStateChanged();
             RequestStrategyRecalc();
         }
@@ -1199,9 +1205,22 @@ namespace LaunchPlugin
         get => SelectedRaceBasisMode == RaceBasisMode.TimeLimited;
         set { if (value) SelectedRaceBasisMode = RaceBasisMode.TimeLimited; }
     }
-    public bool ShowEffectiveLapLimitedRace => IsRaceBasisLapLimited || (IsRaceBasisLiveDetect && _liveDetectedRaceType == RaceType.LapLimited) || (IsRaceBasisPreset && _appliedPreset?.Type == RacePresetType.LapLimited);
-    public bool ShowEffectiveTimeLimitedRace => IsRaceBasisTimeLimited || (IsRaceBasisLiveDetect && _liveDetectedRaceType == RaceType.TimeLimited) || (IsRaceBasisPreset && _appliedPreset?.Type == RacePresetType.TimeLimited);
+    public bool ShowEffectiveLapLimitedRace => IsEffectiveLapLimitedRace;
+    public bool ShowEffectiveTimeLimitedRace => IsEffectiveTimeLimitedRace;
     public string LiveDetectHelperText => _liveDetectHelperText;
+
+    // Legacy owner helpers (IsLapLimitedRace/IsTimeLimitedRace/IsLiveDetectRace) are owner-mode flags.
+    // Use effective helpers below for strategy/effective-basis semantics.
+    public bool EffectiveRaceBasisValid => TryGetEffectiveRaceBasis(out _, out _);
+    public bool IsEffectiveTimeLimitedRace => TryGetEffectiveRaceBasis(out bool isTimeLimited, out _) && isTimeLimited;
+    public bool IsEffectiveLapLimitedRace => TryGetEffectiveRaceBasis(out bool isTimeLimited, out _) && !isTimeLimited;
+    public double EffectiveRaceLength
+    {
+        get
+        {
+            return TryGetEffectiveRaceBasis(out _, out double length) ? length : 0.0;
+        }
+    }
 
     public double RaceLaps
     {
@@ -2656,7 +2675,7 @@ namespace LaunchPlugin
         // Reset race-specific parameters to sensible defaults
         if (!preserveRaceDuration)
         {
-            this.SelectedRaceType = RaceType.TimeLimited;
+            this.SelectedRaceBasisMode = RaceBasisMode.TimeLimited;
             this.RaceLaps = 20;
             this.RaceMinutes = 40;
         }
@@ -5290,6 +5309,10 @@ namespace LaunchPlugin
             OnPropertyChanged(nameof(IsTimeLimitedRace));
             OnPropertyChanged(nameof(ShowEffectiveLapLimitedRace));
             OnPropertyChanged(nameof(ShowEffectiveTimeLimitedRace));
+            OnPropertyChanged(nameof(EffectiveRaceBasisValid));
+            OnPropertyChanged(nameof(IsEffectiveTimeLimitedRace));
+            OnPropertyChanged(nameof(IsEffectiveLapLimitedRace));
+            OnPropertyChanged(nameof(EffectiveRaceLength));
 
             if (Math.Abs(_lastLiveDetectedRaceLaps - raceLaps.Value) > 0.001)
             {
@@ -5324,6 +5347,10 @@ namespace LaunchPlugin
             OnPropertyChanged(nameof(IsTimeLimitedRace));
             OnPropertyChanged(nameof(ShowEffectiveLapLimitedRace));
             OnPropertyChanged(nameof(ShowEffectiveTimeLimitedRace));
+            OnPropertyChanged(nameof(EffectiveRaceBasisValid));
+            OnPropertyChanged(nameof(IsEffectiveTimeLimitedRace));
+            OnPropertyChanged(nameof(IsEffectiveLapLimitedRace));
+            OnPropertyChanged(nameof(EffectiveRaceLength));
 
             if (Math.Abs(_lastLiveDetectedRaceMinutes - raceMinutes.Value) > 0.001)
             {
@@ -5358,6 +5385,10 @@ namespace LaunchPlugin
             OnPropertyChanged(nameof(IsTimeLimitedRace));
             OnPropertyChanged(nameof(ShowEffectiveLapLimitedRace));
             OnPropertyChanged(nameof(ShowEffectiveTimeLimitedRace));
+            OnPropertyChanged(nameof(EffectiveRaceBasisValid));
+            OnPropertyChanged(nameof(IsEffectiveTimeLimitedRace));
+            OnPropertyChanged(nameof(IsEffectiveLapLimitedRace));
+            OnPropertyChanged(nameof(EffectiveRaceLength));
             string helperText = string.IsNullOrWhiteSpace(detectedSessionLabel)
                 ? "Live Detect: no declared race found"
                 : string.Format(

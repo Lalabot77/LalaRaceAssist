@@ -1390,3 +1390,5 @@ Branch: work
   - fallback behavior unchanged when League Class is disabled/unresolved, and no H2HTrack physical target-selection or sector/delta/timing ownership was changed.
 
 - 2026-05-15: Strategy race-basis owner mode refresh landed; Refresh Calcs now recompute-only; preset modified indicator excludes PreRace-only differences.
+
+- 2026-05-16: Strategy owner-vs-effective race-basis semantics tightened; dirty-state and effective visibility now derive from effective basis helpers.

@@ -2357,3 +2357,8 @@ The public user-facing release history is maintained in the root `CHANGELOG.md`.
 - Fixed preset-save race-type derivation regression by serializing preset race basis/length from effective race-basis resolver instead of owner-mode booleans.
 - Preset-owner-without-preset now surfaces explicit validation (`Select a race preset`) instead of silently using stale/manual fallback basis.
 - Removed obsolete destructive Live Detect transition helper that cleared preset state; Live Detect now remains race-basis-only ownership while selected.
+
+## 2026-05-16 — PR #723 semantic cleanup: owner vs effective race-basis separation
+- Classification: **internal-only** (Strategy state semantics hardening + regression prevention).
+- Clarified owner-vs-effective semantics in `FuelCalcs`: owner helpers remain radio-mode state while modified-state/visibility/serialization paths now consume effective race-basis helpers.
+- `IsPresetModified()` race-basis comparisons now use effective basis/length (invalid effective basis no longer reports false clean match).
