@@ -19227,6 +19227,7 @@ namespace LaunchPlugin
                 _finishTimingHasPendingSessionIdentity = false;
                 _finishTimingPendingSessionId = -1;
                 _finishTimingPendingSessionType = string.Empty;
+                _finishTimingSessionChangeDeferredInActiveLifecycle = false;
             }
 
             if (sessionIdentityChanged)
@@ -19255,19 +19256,25 @@ namespace LaunchPlugin
                         UpdateLiveFuelCalcs(data, pluginManager);
                     }
 
-                    if (_finishTimingHasPendingSessionIdentity)
+                    bool pendingStillMatchesCurrentObservedIdentity =
+                        _finishTimingHasPendingSessionIdentity &&
+                        _finishTimingPendingSessionId == sessionId &&
+                        string.Equals(_finishTimingPendingSessionType ?? string.Empty, sessionType ?? string.Empty, StringComparison.Ordinal);
+
+                    if (pendingStillMatchesCurrentObservedIdentity)
                     {
                         _finishTimingSessionId = _finishTimingPendingSessionId;
                         _finishTimingSessionType = _finishTimingPendingSessionType ?? string.Empty;
-                        _finishTimingHasPendingSessionIdentity = false;
-                        _finishTimingPendingSessionId = -1;
-                        _finishTimingPendingSessionType = string.Empty;
                     }
                     else
                     {
                         _finishTimingSessionId = sessionId;
                         _finishTimingSessionType = sessionType ?? string.Empty;
                     }
+
+                    _finishTimingHasPendingSessionIdentity = false;
+                    _finishTimingPendingSessionId = -1;
+                    _finishTimingPendingSessionType = string.Empty;
                 }
             }
 

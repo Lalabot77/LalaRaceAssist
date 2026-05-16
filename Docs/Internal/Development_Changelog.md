@@ -1,3 +1,7 @@
+- 2026-05-16 RaceFinish deferred-identity apply-current-observed follow-up landed.
+  - Deferred-reset apply path now uses pending identity only when it still matches the current observed session identity; otherwise pending is discarded and current observed identity is applied, preventing stale `B` apply when observed identity is `C`.
+  - `A→B→A` stale-pending clear now also resets `_finishTimingSessionChangeDeferredInActiveLifecycle` so future defers log once again.
+
 - 2026-05-15 RaceFinish deferred-identity stale-clear follow-up landed.
   - `UpdateFinishTiming(...)` now clears pending deferred session identity when observed identity reverts to current active identity before lifecycle exit (`A→B→A` transient churn), preventing stale deferred identity apply on later genuine session changes.
 
