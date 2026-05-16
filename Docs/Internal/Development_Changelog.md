@@ -2325,8 +2325,7 @@ The public user-facing release history is maintained in the root `CHANGELOG.md`.
   - marker toggle uses the existing marker-store lock seam (`SetTrackMarkersLock`) and keeps existing marker persistence conventions.
 - 2026-05-04 Strategy tab race-configuration ownership cleanup landed:
   - Race Preset control now hides while `Live Detect` race type is selected, preventing mixed manual/preset/live ownership cues.
-  - Entering or leaving `Live Detect` now clears selected/applied preset state (and modified badge state) so hidden preset influence cannot persist.
-  - Leaving `Live Detect` resets manual race length fields to neutral defaults (`RaceLaps=20`, `RaceMinutes=40`) before manual Lap/Time planning continues.
+  - Live Detect owner transitions no longer clear selected/applied preset state; race-basis ownership alone changes while preset/profile/manual setup values remain intact.
   - Refresh Calcs ownership remains unchanged (recalculation-only; no preset reapply/live-detect retrigger path added).
 ### 2026-05-04 — Strategy race-ownership cleanup follow-up (P1 review)
 - Classification: **internal-only** (state-ownership correction; no fuel/detection formula changes).
@@ -2365,3 +2364,24 @@ The public user-facing release history is maintained in the root `CHANGELOG.md`.
 - `RaceFinish.PlayerOverallFieldSize` and `RaceFinish.PlayerClassFieldSize` now freeze from live `Race.*` field-size sources at class snapshot, preserving existing snapshot timing while preventing pace-car overcount and class-size `0` regressions.
 - Follow-up fix: replaced undefined `SafeReadBoolProperty(...)` usage with existing bool-read helper path and added CompetingDrivers bracketed+numbered path compatibility fallback reads for roster counting.
 - Follow-up fix: corrected overall fallback semantics so `GameData.OpponentsCount` is treated as field size directly (no unconditional `+1`).
+
+## 2026-05-15 — Strategy race-basis owner model + refresh recalculation-only cleanup
+- Classification: **both** (user-facing Strategy workflow clarity + internal ownership correctness).
+- Added explicit Strategy race-basis owner modes (`Preset`, `LapLimited`, `TimeLimited`, `LiveDetect`) so race type/length authority follows the selected owner deterministically.
+- Live Detect now only overrides race basis while selected; preset/profile/manual planning inputs remain intact.
+- Refresh Calcs now recomputes strategy outputs only and no longer reloads profile/live owner state.
+- Preset modified badge no longer flips when only PreRace mode differs, reducing misleading “calc changed” cues.
+
+## 2026-05-15 — PR #723 follow-up fixes (preset reapply button + preset-save basis fix)
+- Classification: **both** (Strategy UX correctness + preset serialization correctness + docs alignment).
+- Replaced same-item ComboBox reselect reapply behavior with an explicit compact preset reapply button (`↻`) beside the preset selector.
+- Fixed preset-save race-type derivation regression by serializing preset race basis/length from effective race-basis resolver instead of owner-mode booleans.
+- Preset-owner-without-preset now surfaces explicit validation (`Select a race preset`) instead of silently using stale/manual fallback basis.
+- Removed obsolete destructive Live Detect transition helper that cleared preset state; Live Detect now remains race-basis-only ownership while selected.
+
+## 2026-05-16 — PR #723 semantic cleanup: owner vs effective race-basis separation
+- Classification: **internal-only** (Strategy state semantics hardening + regression prevention).
+- Clarified owner-vs-effective semantics in `FuelCalcs`: owner helpers remain radio-mode state while modified-state/visibility/serialization paths now consume effective race-basis helpers.
+- `IsPresetModified()` race-basis comparisons now use effective basis/length (invalid effective basis no longer reports false clean match).
+
+- Final cleanup tightened race-basis invalidation/notification paths so applied-preset removal while Preset owner is active now immediately invalidates outputs (`Select a race preset`) and prevents stale strategy display.

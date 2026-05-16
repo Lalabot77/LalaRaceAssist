@@ -303,8 +303,7 @@
   - PR #669 follow-up: in enabled+valid League effective-class mode, class-leader selection now chooses the lowest positive `CarIdxPosition` across the full effective-class cohort (race order) instead of first matching array index; native class-position fallback remains when overall position data is unavailable.
 - 2026-05-04 Strategy tab race-configuration ownership cleanup landed:
   - Race Preset selector is now hidden during `Live Detect` ownership and preset modified UI is suppressed in that mode.
-  - Enter/exit `Live Detect` now clears selected/applied preset state to prevent stale hidden preset influence after mode changes.
-  - Exiting `Live Detect` resets manual race length fields to neutral manual defaults (`20 laps` / `40 min`) for explicit post-detect user intent.
+  - Live Detect owner transitions now preserve selected/applied preset state and preserve manual/preset setup values; only race-basis authority changes while Live Detect is selected.
   - Strategy calculation ownership remains effective-basis-only; no fuel model/live detect detection logic changes and no Refresh Calcs ownership mutation.
 
 - 2026-05-04 Strategy race-ownership follow-up (P1 review) landed:
@@ -1397,3 +1396,9 @@ Branch: work
 - 2026-05-06 H2HTrack selected-target League identity handoff fix landed:
   - `BuildH2HTrackSelector(...)` now forwards selected-slot `UserID` into H2H target selector identity so `H2HTrack.Ahead/Behind.ClassColor` and `ClassColorHex` resolve through CSV-first League Class semantics when available;
   - fallback behavior unchanged when League Class is disabled/unresolved, and no H2HTrack physical target-selection or sector/delta/timing ownership was changed.
+
+- 2026-05-15: Strategy race-basis owner mode refresh landed; Refresh Calcs now recompute-only; preset modified indicator excludes PreRace-only differences.
+
+- 2026-05-16: Strategy owner-vs-effective race-basis semantics tightened; dirty-state and effective visibility now derive from effective basis helpers.
+
+- Final PR #723 cleanup: effective race-basis notification/invalidation now centralised in FuelCalcs; preset removal while Preset owner active now clears stale strategy outputs immediately.

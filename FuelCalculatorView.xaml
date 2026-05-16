@@ -491,7 +491,7 @@
 
                             <!-- Race Preset selector (inline, auto-apply) -->
                             <Grid Margin="0,10,0,10"
-                                  Visibility="{Binding ShowRacePresetControls, Converter={StaticResource BooleanToVisibilityConverter}}">
+                                  Visibility="{Binding IsRaceBasisPreset, Converter={StaticResource BooleanToVisibilityConverter}}">
                                 <Grid.ColumnDefinitions>
                                     <ColumnDefinition Width="Auto"/>
                                     <ColumnDefinition Width="Auto"/>
@@ -513,8 +513,17 @@
                                   SelectedItem="{Binding SelectedPreset, Mode=TwoWay}"
                                   DisplayMemberPath="Name"
                                   ToolTip="Select a preset to apply."/>
+                                <Button Grid.Column="2"
+                                        Content="↻"
+                                        Width="24"
+                                        Height="22"
+                                        Margin="8,0,0,0"
+                                        VerticalAlignment="Center"
+                                        ToolTip="Reapply selected preset"
+                                        Click="OnReapplySelectedPreset"
+                                        IsEnabled="{Binding HasSelectedPreset}"/>
 
-                                <TextBlock Grid.Column="2"
+                                <TextBlock Grid.Column="3"
                                    Text="modified"
                                    Foreground="Yellow"
                                    Margin="10,0,0,0"
@@ -527,7 +536,7 @@
                                     </TextBlock.Visibility>
                                 </TextBlock>
 
-                                <styles:SHButtonPrimary Grid.Column="3"
+                                <styles:SHButtonPrimary Grid.Column="4"
                             Content="Presets..."
                             Height="28"
                             Margin="12,0,0,0"
@@ -537,13 +546,15 @@
                             </Grid>
 
                         <StackPanel Orientation="Horizontal" Margin="0,5,0,10">
-                            <TextBlock Text="Race Type:" VerticalAlignment="Center" Margin="0,0,10,0"
-                                       ToolTip="Choose whether the race is limited by laps or time."/>
-                            <RadioButton Content="Lap-Limited" IsChecked="{Binding IsLapLimitedRace, Mode=TwoWay}" GroupName="RaceType"
-                                         ToolTip="Plan for a fixed number of laps."/>
-                            <RadioButton Content="Time-Limited" IsChecked="{Binding IsTimeLimitedRace, Mode=TwoWay}" GroupName="RaceType" Margin="10,0,0,0"
-                                         ToolTip="Plan for a fixed race duration (minutes)."/>
-                            <RadioButton Content="Live Detect" IsChecked="{Binding IsLiveDetectRace, Mode=TwoWay}" GroupName="RaceType" Margin="10,0,0,0"
+                            <TextBlock Text="Race Basis:" VerticalAlignment="Center" Margin="0,0,10,0"
+                                       ToolTip="Choose which source owns race type and race length."/>
+                            <RadioButton Content="Preset" IsChecked="{Binding IsRaceBasisPreset, Mode=TwoWay}" GroupName="RaceBasis"
+                                         ToolTip="Use selected preset race type/length."/>
+                            <RadioButton Content="Lap-Limited" IsChecked="{Binding IsRaceBasisLapLimited, Mode=TwoWay}" GroupName="RaceBasis" Margin="10,0,0,0"
+                                         ToolTip="Use manual lap length slider."/>
+                            <RadioButton Content="Time-Limited" IsChecked="{Binding IsRaceBasisTimeLimited, Mode=TwoWay}" GroupName="RaceBasis" Margin="10,0,0,0"
+                                         ToolTip="Use manual time length slider."/>
+                            <RadioButton Content="Live Detect" IsChecked="{Binding IsRaceBasisLiveDetect, Mode=TwoWay}" GroupName="RaceBasis" Margin="10,0,0,0"
                                          ToolTip="Use declared race session metadata as race type/length authority."/>
                         </StackPanel>
                         <TextBlock Text="{Binding LiveDetectHelperText}"
@@ -696,7 +707,7 @@
                             </TextBlock>
                         </StackPanel>
                     </Grid>
-                    <TextBlock FontSize="14" Margin="0,10,0,10" Visibility="{Binding IsTimeLimitedRace, Converter={StaticResource BooleanToVisibilityConverter}}">
+                    <TextBlock FontSize="14" Margin="0,10,0,10" Visibility="{Binding IsEffectiveTimeLimitedRace, Converter={StaticResource BooleanToVisibilityConverter}}">
                         <Run Text="Est. Drive Time After Timer Zero: "/>
                         <Run Text="{Binding ExtraTimeAfterLeader, Mode=OneWay}" FontWeight="Bold"/>
                     </TextBlock>

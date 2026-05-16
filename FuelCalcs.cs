@@ -18,6 +18,7 @@ namespace LaunchPlugin
     {
         // --- Enums and Structs ---
         public enum RaceType { LapLimited, TimeLimited, LiveDetect }
+        public enum RaceBasisMode { Preset, LapLimited, TimeLimited, LiveDetect }
         public enum TrackCondition { Dry, Wet }
         public enum PlanningSourceMode { Profile, LiveSnapshot }
         public enum PreRaceMode
@@ -46,21 +47,39 @@ namespace LaunchPlugin
         isTimeLimited = false;
         raceLength = 0.0;
 
-        if (SelectedRaceType == RaceType.TimeLimited)
+        if (SelectedRaceBasisMode == RaceBasisMode.Preset)
+        {
+            if (_appliedPreset == null) return false;
+            if (_appliedPreset.Type == RacePresetType.TimeLimited && _appliedPreset.RaceMinutes.HasValue)
+            {
+                isTimeLimited = true;
+                raceLength = Math.Max(0.0, _appliedPreset.RaceMinutes.Value);
+                return true;
+            }
+            if (_appliedPreset.Type == RacePresetType.LapLimited && _appliedPreset.RaceLaps.HasValue)
+            {
+                isTimeLimited = false;
+                raceLength = Math.Max(0.0, _appliedPreset.RaceLaps.Value);
+                return true;
+            }
+            return false;
+        }
+
+        if (SelectedRaceBasisMode == RaceBasisMode.TimeLimited)
         {
             isTimeLimited = true;
             raceLength = Math.Max(0.0, RaceMinutes);
             return true;
         }
 
-        if (SelectedRaceType == RaceType.LapLimited)
+        if (SelectedRaceBasisMode == RaceBasisMode.LapLimited)
         {
             isTimeLimited = false;
             raceLength = Math.Max(0.0, RaceLaps);
             return true;
         }
 
-        if (SelectedRaceType == RaceType.LiveDetect && _liveDetectedRaceType.HasValue)
+        if (SelectedRaceBasisMode == RaceBasisMode.LiveDetect && _liveDetectedRaceType.HasValue)
         {
             if (_liveDetectedRaceType.Value == RaceType.TimeLimited)
             {
@@ -126,6 +145,7 @@ namespace LaunchPlugin
     private CarProfile _selectedCarProfile; // CHANGED to CarProfile object
     private string _selectedTrack;
     private RaceType _raceType;
+    private RaceBasisMode _raceBasisMode = RaceBasisMode.TimeLimited;
     private RaceType? _liveDetectedRaceType;
     private string _liveDetectHelperText = "Live Detect: no declared race found";
     private double _lastLiveDetectedRaceLaps;
@@ -244,6 +264,8 @@ namespace LaunchPlugin
     // --- Planner state tracking ---
     private bool _isPlannerDirty = false;
     private bool _suppressPlannerDirtyUpdates = false;
+    private bool _isBatchUpdatingPlannerInputs = false;
+    private bool _pendingBatchStrategyRecalc = false;
                                              
     // --- NEW: Local properties for "what-if" parameters ---
     private double _contingencyValue = 1.5;
@@ -298,6 +320,17 @@ namespace LaunchPlugin
     private void ResetPlannerDirty()
     {
         IsPlannerDirty = false;
+    }
+
+    private void RequestStrategyRecalc()
+    {
+        if (_isBatchUpdatingPlannerInputs)
+        {
+            _pendingBatchStrategyRecalc = true;
+            return;
+        }
+
+        CalculateStrategy();
     }
 
     public bool IsEstimatedLapTimeManual
@@ -446,11 +479,13 @@ namespace LaunchPlugin
                 UpdateProfileAverageDisplaysForCondition();
                 if (previousMode != PlanningSourceMode.Profile && SelectedPreset != null)
                 {
-                    ApplySelectedPreset();
+                    // Refresh preset-derived setup values (contingency/tyre/max-fuel etc.) without
+                    // stealing race-basis ownership from the user's current owner mode.
+                    ApplySelectedPreset(activatePresetOwner: false);
                 }
             }
 
-            CalculateStrategy();
+            RequestStrategyRecalc();
         }
     }
 
@@ -730,7 +765,7 @@ namespace LaunchPlugin
                 _refuelRate = rateLps;
                 _plugin?.SaveRefuelRateToActiveProfile(rateLps); // call into LalaLaunch
                 RaiseRefuelRateChanged();
-                CalculateStrategy();
+                RequestStrategyRecalc();
             }
         }
 
@@ -811,7 +846,7 @@ namespace LaunchPlugin
         get { return IsPresetModified(); }
     }
 
-    public bool ShowRacePresetControls => !IsLiveDetectRace;
+    public bool ShowRacePresetControls => IsRaceBasisPreset;
 
     // Pit-lane live detection not implemented yet; hide the button for now
     public bool IsLivePitLaneLossAvailable => false;
@@ -838,24 +873,22 @@ namespace LaunchPlugin
         public ICommand ClearPresetCommand { get; private set; }
         public ICommand ApplySourceWetFactorCommand { get; }
 
-    private void ApplyPresetValues(RacePreset preset)
+    private void ApplyPresetValues(RacePreset preset, bool activatePresetOwner = true)
     {
         if (preset == null) return;
 
         var p = preset;
+        _isBatchUpdatingPlannerInputs = true;
+        _pendingBatchStrategyRecalc = false;
+        try
+        {
 
-        // Race type + duration
-        if (p.Type == RacePresetType.TimeLimited)
+        // Race type + duration are only applied for explicit user intent paths
+        // (preset select / preset reapply) that activate Preset ownership.
+        if (activatePresetOwner)
         {
-            IsTimeLimitedRace = true;   // your existing setters raise OnPropertyChanged
-            IsLapLimitedRace = false;
-            if (p.RaceMinutes.HasValue) RaceMinutes = p.RaceMinutes.Value;
-        }
-        else
-        {
-            IsTimeLimitedRace = false;
-            IsLapLimitedRace = true;
-            if (p.RaceLaps.HasValue) RaceLaps = p.RaceLaps.Value;
+            if (p.Type == RacePresetType.TimeLimited && p.RaceMinutes.HasValue) RaceMinutes = p.RaceMinutes.Value;
+            if (p.Type == RacePresetType.LapLimited && p.RaceLaps.HasValue) RaceLaps = p.RaceLaps.Value;
         }
 
         SelectedPreRaceMode = NormalizePitStrategyValue(p.PreRaceMode);
@@ -880,40 +913,62 @@ namespace LaunchPlugin
         ContingencyValue = p.ContingencyValue;
 
         _appliedPreset = p;
-        RaisePresetStateChanged();
+        if (activatePresetOwner)
+        {
+            SelectedRaceBasisMode = RaceBasisMode.Preset;
+        }
+        RaiseRaceBasisStateChanged(includeOwner: false);
 
         if (SelectedPlanningSourceMode == PlanningSourceMode.Profile)
         {
             ClampMaxFuelOverrideToProfileBaseTank();
         }
 
-        CalculateStrategy();
+        }
+        finally
+        {
+            _isBatchUpdatingPlannerInputs = false;
+            if (_pendingBatchStrategyRecalc)
+            {
+                _pendingBatchStrategyRecalc = false;
+            }
+            CalculateStrategy();
+        }
     }
 
-    private void ApplySelectedPreset()
+    private void ApplySelectedPreset(bool activatePresetOwner = true)
     {
-        ApplyPresetValues(_selectedPreset);
+        ApplyPresetValues(_selectedPreset, activatePresetOwner);
+    }
+
+    public void ReapplySelectedPreset()
+    {
+        if (_selectedPreset != null)
+        {
+            ApplyPresetValues(_selectedPreset, activatePresetOwner: true);
+        }
     }
 
     private void ClearAppliedPreset()
     {
         _appliedPreset = null;
-        RaisePresetStateChanged();
+        RaiseRaceBasisStateChanged(includeOwner: false);
+        RequestStrategyRecalc();
     }
 
     private bool IsPresetModified()
     {
         if (_appliedPreset == null) return false;
 
-        bool typeDiff =
-            (_appliedPreset.Type == RacePresetType.TimeLimited && !IsTimeLimitedRace) ||
-            (_appliedPreset.Type == RacePresetType.LapLimited && !IsLapLimitedRace);
+        bool hasEffectiveBasis = TryGetEffectiveRaceBasis(out bool effectiveTimeLimited, out double effectiveLength);
+        bool typeDiff = !hasEffectiveBasis ||
+            (_appliedPreset.Type == RacePresetType.TimeLimited && !effectiveTimeLimited) ||
+            (_appliedPreset.Type == RacePresetType.LapLimited && effectiveTimeLimited);
 
-        bool durDiff =
-            (_appliedPreset.Type == RacePresetType.TimeLimited && (_appliedPreset.RaceMinutes ?? RaceMinutes) != RaceMinutes) ||
-            (_appliedPreset.Type == RacePresetType.LapLimited && (_appliedPreset.RaceLaps ?? RaceLaps) != RaceLaps);
-
-        bool stopDiff = NormalizePitStrategyValue(_appliedPreset.PreRaceMode) != SelectedPreRaceMode;
+        double appliedLength = _appliedPreset.Type == RacePresetType.TimeLimited
+            ? (_appliedPreset.RaceMinutes ?? 0.0)
+            : (_appliedPreset.RaceLaps ?? 0.0);
+        bool durDiff = !hasEffectiveBasis || Math.Abs(appliedLength - effectiveLength) > 0.05;
 
         bool tyreDiff = _appliedPreset.TireChangeTimeSec.HasValue &&
                         Math.Abs(_appliedPreset.TireChangeTimeSec.Value - TireChangeTime) > 0.05;
@@ -929,7 +984,7 @@ namespace LaunchPlugin
             (_appliedPreset.ContingencyInLaps != IsContingencyInLaps) ||
             Math.Abs(_appliedPreset.ContingencyValue - ContingencyValue) > 0.05;
 
-        return typeDiff || durDiff || stopDiff || tyreDiff || fuelDiff || contDiff;
+        return typeDiff || durDiff || tyreDiff || fuelDiff || contDiff;
     }
 
     private void RaisePresetStateChanged()
@@ -937,6 +992,32 @@ namespace LaunchPlugin
         OnPropertyChanged(nameof(AppliedPreset));
         OnPropertyChanged(nameof(PresetBadge));
         OnPropertyChanged(nameof(IsPresetModifiedFlag));
+    }
+
+    private void RaiseRaceBasisStateChanged(bool includeOwner = true)
+    {
+        if (includeOwner)
+        {
+            OnPropertyChanged(nameof(SelectedRaceBasisMode));
+            OnPropertyChanged(nameof(SelectedRaceType));
+            OnPropertyChanged(nameof(IsRaceBasisPreset));
+            OnPropertyChanged(nameof(IsRaceBasisLapLimited));
+            OnPropertyChanged(nameof(IsRaceBasisTimeLimited));
+            OnPropertyChanged(nameof(IsRaceBasisLiveDetect));
+            OnPropertyChanged(nameof(IsLiveDetectRace));
+            OnPropertyChanged(nameof(IsLapLimitedRace));
+            OnPropertyChanged(nameof(IsTimeLimitedRace));
+            OnPropertyChanged(nameof(IsRaceLengthEditable));
+            OnPropertyChanged(nameof(ShowRacePresetControls));
+        }
+
+        OnPropertyChanged(nameof(ShowEffectiveLapLimitedRace));
+        OnPropertyChanged(nameof(ShowEffectiveTimeLimitedRace));
+        OnPropertyChanged(nameof(EffectiveRaceBasisValid));
+        OnPropertyChanged(nameof(IsEffectiveTimeLimitedRace));
+        OnPropertyChanged(nameof(IsEffectiveLapLimitedRace));
+        OnPropertyChanged(nameof(EffectiveRaceLength));
+        RaisePresetStateChanged();
     }
 
     public string FuelPerLapText
@@ -1104,46 +1185,65 @@ namespace LaunchPlugin
         }
     }
 
+    public RaceBasisMode SelectedRaceBasisMode
+    {
+        get => _raceBasisMode;
+        set
+        {
+            if (_raceBasisMode == value) return;
+            _raceBasisMode = value;
+            if (_raceBasisMode == RaceBasisMode.LapLimited) _raceType = RaceType.LapLimited;
+            else if (_raceBasisMode == RaceBasisMode.TimeLimited) _raceType = RaceType.TimeLimited;
+            else if (_raceBasisMode == RaceBasisMode.LiveDetect) _raceType = RaceType.LiveDetect;
+
+            RaiseRaceBasisStateChanged(includeOwner: true);
+            RequestStrategyRecalc();
+        }
+    }
+
+    public bool IsRaceBasisPreset { get => SelectedRaceBasisMode == RaceBasisMode.Preset; set { if (value) SelectedRaceBasisMode = RaceBasisMode.Preset; } }
+    public bool IsRaceBasisLapLimited { get => SelectedRaceBasisMode == RaceBasisMode.LapLimited; set { if (value) SelectedRaceBasisMode = RaceBasisMode.LapLimited; } }
+    public bool IsRaceBasisTimeLimited { get => SelectedRaceBasisMode == RaceBasisMode.TimeLimited; set { if (value) SelectedRaceBasisMode = RaceBasisMode.TimeLimited; } }
+    public bool IsRaceBasisLiveDetect { get => SelectedRaceBasisMode == RaceBasisMode.LiveDetect; set { if (value) SelectedRaceBasisMode = RaceBasisMode.LiveDetect; } }
+
     public RaceType SelectedRaceType
     {
         get => _raceType;
         set
         {
-            if (_raceType != value)
-            {
-                var previousRaceType = _raceType;
-                _raceType = value;
-
-                HandleRaceTypeOwnershipTransition(previousRaceType, _raceType);
-
-                OnPropertyChanged("SelectedRaceType");
-                OnPropertyChanged("IsLapLimitedRace");
-                OnPropertyChanged("IsTimeLimitedRace");
-                OnPropertyChanged(nameof(IsLiveDetectRace));
-                OnPropertyChanged(nameof(ShowRacePresetControls));
-                OnPropertyChanged(nameof(IsRaceLengthEditable));
-                OnPropertyChanged(nameof(ShowEffectiveLapLimitedRace));
-                OnPropertyChanged(nameof(ShowEffectiveTimeLimitedRace));
-                CalculateStrategy();
-                RaisePresetStateChanged();
-            }
+            if (value == RaceType.LapLimited) SelectedRaceBasisMode = RaceBasisMode.LapLimited;
+            else if (value == RaceType.TimeLimited) SelectedRaceBasisMode = RaceBasisMode.TimeLimited;
+            else if (value == RaceType.LiveDetect) SelectedRaceBasisMode = RaceBasisMode.LiveDetect;
         }
     }
 
     public bool IsLapLimitedRace
     {
-        get => SelectedRaceType == RaceType.LapLimited;
-        set { if (value) SelectedRaceType = RaceType.LapLimited; }
+        get => SelectedRaceBasisMode == RaceBasisMode.LapLimited;
+        set { if (value) SelectedRaceBasisMode = RaceBasisMode.LapLimited; }
     }
 
     public bool IsTimeLimitedRace
     {
-        get => SelectedRaceType == RaceType.TimeLimited;
-        set { if (value) SelectedRaceType = RaceType.TimeLimited; }
+        get => SelectedRaceBasisMode == RaceBasisMode.TimeLimited;
+        set { if (value) SelectedRaceBasisMode = RaceBasisMode.TimeLimited; }
     }
-    public bool ShowEffectiveLapLimitedRace => IsLapLimitedRace || (IsLiveDetectRace && _liveDetectedRaceType == RaceType.LapLimited);
-    public bool ShowEffectiveTimeLimitedRace => IsTimeLimitedRace || (IsLiveDetectRace && _liveDetectedRaceType == RaceType.TimeLimited);
+    public bool ShowEffectiveLapLimitedRace => IsEffectiveLapLimitedRace;
+    public bool ShowEffectiveTimeLimitedRace => IsEffectiveTimeLimitedRace;
     public string LiveDetectHelperText => _liveDetectHelperText;
+
+    // Legacy owner helpers (IsLapLimitedRace/IsTimeLimitedRace/IsLiveDetectRace) are owner-mode flags.
+    // Use effective helpers below for strategy/effective-basis semantics.
+    public bool EffectiveRaceBasisValid => TryGetEffectiveRaceBasis(out _, out _);
+    public bool IsEffectiveTimeLimitedRace => TryGetEffectiveRaceBasis(out bool isTimeLimited, out _) && isTimeLimited;
+    public bool IsEffectiveLapLimitedRace => TryGetEffectiveRaceBasis(out bool isTimeLimited, out _) && !isTimeLimited;
+    public double EffectiveRaceLength
+    {
+        get
+        {
+            return TryGetEffectiveRaceBasis(out _, out double length) ? length : 0.0;
+        }
+    }
 
     public double RaceLaps
     {
@@ -1154,8 +1254,8 @@ namespace LaunchPlugin
             {
                 _raceLaps = value;
                 OnPropertyChanged("RaceLaps");
-                CalculateStrategy();
-                RaisePresetStateChanged();
+                RaiseRaceBasisStateChanged(includeOwner: false);
+                RequestStrategyRecalc();
             }
         }
     }
@@ -1169,8 +1269,8 @@ namespace LaunchPlugin
             {
                 _raceMinutes = value;
                 OnPropertyChanged("RaceMinutes");
-                CalculateStrategy();
-                RaisePresetStateChanged();
+                RaiseRaceBasisStateChanged(includeOwner: false);
+                RequestStrategyRecalc();
             }
         }
     }
@@ -1190,7 +1290,7 @@ namespace LaunchPlugin
                     IsEstimatedLapTimeManual = true;
                     LapTimeSourceInfo = "Manual (user entry)";
                 }
-                CalculateStrategy();
+                RequestStrategyRecalc();
                 MarkPlannerDirty();
             }
         }
@@ -1250,7 +1350,7 @@ namespace LaunchPlugin
             _leaderDeltaSeconds = newDelta;
 
             // Same behaviour as before: changing the effective delta recalculates the strategy.
-            CalculateStrategy();
+            RequestStrategyRecalc();
             OnPropertyChanged(nameof(LeaderDeltaSeconds));
         }
 
@@ -1297,7 +1397,7 @@ namespace LaunchPlugin
                 MarkPlannerDirty();
 
                 if (IsDry) { _baseDryFuelPerLap = _fuelPerLap; }
-                CalculateStrategy();
+                RequestStrategyRecalc();
 
                 // Keep the textbox text aligned unless the change originated from the textbox itself
                 if (!_suppressFuelTextSync)
@@ -2126,7 +2226,7 @@ namespace LaunchPlugin
                 OnPropertyChanged(nameof(MaxFuelOverrideDisplayValue));
                 OnPropertyChanged(nameof(IsMaxFuelOverrideTooHigh)); // Notify UI to re-check the highlight
                 OnPropertyChanged(nameof(MaxFuelOverridePercentDisplay));
-                CalculateStrategy();
+                RequestStrategyRecalc();
                 RaisePresetStateChanged();
             }
         }
@@ -2142,7 +2242,7 @@ namespace LaunchPlugin
                 _tireChangeTime = value;
                 OnPropertyChanged("TireChangeTime");
                 OnPropertyChanged(nameof(TimingParameters));
-                CalculateStrategy();
+                RequestStrategyRecalc();
                 RaisePresetStateChanged();
                 MarkPlannerDirty();
             }
@@ -2159,7 +2259,7 @@ namespace LaunchPlugin
                 _pitLaneTimeLoss = value;
                 OnPropertyChanged("PitLaneTimeLoss");
                 OnPropertyChanged(nameof(TimingParameters));
-                CalculateStrategy();
+                RequestStrategyRecalc();
                 MarkPlannerDirty();
             }
         }
@@ -2174,7 +2274,7 @@ namespace LaunchPlugin
             {
                 _fuelSaveTarget = value;
                 OnPropertyChanged("FuelSaveTarget");
-                CalculateStrategy();
+                RequestStrategyRecalc();
             }
         }
     }
@@ -2188,7 +2288,7 @@ namespace LaunchPlugin
             {
                 _timeLossPerLapOfFuelSave = value;
                 OnPropertyChanged("TimeLossPerLapOfFuelSave");
-                CalculateStrategy();
+                RequestStrategyRecalc();
             }
         }
     }
@@ -2202,7 +2302,7 @@ namespace LaunchPlugin
             {
                 _formationLapFuelLiters = value;
                 OnPropertyChanged("FormationLapFuelLiters");
-                CalculateStrategy();
+                RequestStrategyRecalc();
                 MarkPlannerDirty();
             }
         }
@@ -2330,7 +2430,7 @@ namespace LaunchPlugin
                 LapTimeSourceInfo = FormatConditionSourceLabel("Profile avg");
                 OnPropertyChanged(nameof(EstimatedLapTime));
                 OnPropertyChanged(nameof(LapTimeSourceInfo));
-                CalculateStrategy();
+                RequestStrategyRecalc();
             }
         }
 
@@ -2397,7 +2497,7 @@ namespace LaunchPlugin
             {
                 _contingencyValue = value;
                 OnPropertyChanged();
-                CalculateStrategy(); // Recalculate when changed
+                RequestStrategyRecalc();
                 RaisePresetStateChanged();
                 MarkPlannerDirty();
             }
@@ -2414,7 +2514,7 @@ namespace LaunchPlugin
                 _isContingencyInLaps = value;
                 OnPropertyChanged();
                 OnPropertyChanged(nameof(IsContingencyLitres));
-                CalculateStrategy();
+                RequestStrategyRecalc();
                 RaisePresetStateChanged();
                 MarkPlannerDirty();
             }
@@ -2598,7 +2698,7 @@ namespace LaunchPlugin
         // Reset race-specific parameters to sensible defaults
         if (!preserveRaceDuration)
         {
-            this.SelectedRaceType = RaceType.TimeLimited;
+            this.SelectedRaceBasisMode = RaceBasisMode.TimeLimited;
             this.RaceLaps = 20;
             this.RaceMinutes = 40;
         }
@@ -2801,7 +2901,8 @@ namespace LaunchPlugin
             OnPropertyChanged(nameof(AvailablePresets));
             OnPropertyChanged(nameof(SelectedPreset));
             OnPropertyChanged(nameof(HasSelectedPreset));
-            RaisePresetStateChanged();
+            RaiseRaceBasisStateChanged(includeOwner: false);
+            RequestStrategyRecalc();
         }
         catch (Exception ex)
         {
@@ -2812,7 +2913,8 @@ namespace LaunchPlugin
             OnPropertyChanged(nameof(AvailablePresets));
             OnPropertyChanged(nameof(SelectedPreset));
             OnPropertyChanged(nameof(HasSelectedPreset));
-            RaisePresetStateChanged();
+            RaiseRaceBasisStateChanged(includeOwner: false);
+            RequestStrategyRecalc();
         }
     }
 
@@ -2956,6 +3058,7 @@ namespace LaunchPlugin
     {
         LaunchPlugin.RacePresetStore.SaveAll(PresetList.ToList());
 
+        var previousApplied = _appliedPreset;
         _selectedPreset = ResolveSelection(preferredSelection ?? _selectedPreset);
         _appliedPreset = ResolveAppliedPreset(_appliedPreset);
 
@@ -2969,18 +3072,28 @@ namespace LaunchPlugin
         }
         else
         {
-            RaisePresetStateChanged();
+            RaiseRaceBasisStateChanged(includeOwner: false);
+            if (!ReferenceEquals(previousApplied, _appliedPreset))
+            {
+                RequestStrategyRecalc();
+            }
         }
     }
 
     private RacePreset BuildPresetFromCurrentState(string name)
     {
+        if (!TryGetEffectiveRaceBasis(out bool isTimeLimitedEffective, out double raceLengthEffective) || raceLengthEffective <= 0.0)
+        {
+            throw new InvalidOperationException("Cannot save preset: no valid effective race basis.");
+        }
+
+        int roundedLength = (int)Math.Round(Math.Max(0.0, raceLengthEffective), MidpointRounding.AwayFromZero);
         return new RacePreset
         {
             Name = name,
-            Type = IsTimeLimitedRace ? RacePresetType.TimeLimited : RacePresetType.LapLimited,
-            RaceMinutes = IsTimeLimitedRace ? (int?)RaceMinutes : null,
-            RaceLaps = IsLapLimitedRace ? (int?)RaceLaps : null,
+            Type = isTimeLimitedEffective ? RacePresetType.TimeLimited : RacePresetType.LapLimited,
+            RaceMinutes = isTimeLimitedEffective ? (int?)roundedLength : null,
+            RaceLaps = isTimeLimitedEffective ? null : (int?)roundedLength,
 
             PreRaceMode = NormalizePitStrategyValue(SelectedPreRaceMode),
             TireChangeTimeSec = TireChangeTime,
@@ -3039,12 +3152,20 @@ namespace LaunchPlugin
     {
         if (string.IsNullOrWhiteSpace(name))
             throw new ArgumentException("Preset name cannot be empty.", nameof(name));
+        try
+        {
+            var template = BuildPresetFromCurrentState(name);
+            var preset = CreateOrUpdatePreset(template, originalName: null, allowOverwrite: overwriteIfExists, forceUniqueName: !overwriteIfExists);
 
-        var template = BuildPresetFromCurrentState(name);
-        var preset = CreateOrUpdatePreset(template, originalName: null, allowOverwrite: overwriteIfExists, forceUniqueName: !overwriteIfExists);
-
-        CommitPresetChanges(preferredSelection: preset, reapplyAppliedPreset: false);
-        return preset;
+            CommitPresetChanges(preferredSelection: preset, reapplyAppliedPreset: false);
+            return preset;
+        }
+        catch (InvalidOperationException ex)
+        {
+            SimHub.Logging.Current.Warn("[LalaPlugin:Fuel Burn] SaveCurrentAsPreset blocked: " + ex.Message);
+            MessageBox.Show(ex.Message, "Save Preset", MessageBoxButton.OK, MessageBoxImage.Warning);
+            return null;
+        }
     }
 
     public void DeletePreset(string name)
@@ -4118,72 +4239,11 @@ namespace LaunchPlugin
             _suppressPlannerDirtyUpdates = true;
             try
             {
-                // IMPORTANT:
-                // In planner-only mode (no live session/replay), Refresh Calcs must NOT rebind
-                // to ActiveProfile / live track identifiers, or it can collapse the planner back
-                // to Default Settings when telemetry is absent.
-                if (!IsLiveSessionActive)
-                {
-                    // Planner-only refresh: keep current UI selections intact and recompute derived outputs.
-                    RefreshProfilePlanningData();
-                    RefreshConditionParameters();
-                    UpdateTrackDerivedSummaries();
-                    UpdateFuelBurnSummaries();
-                    UpdateLiveFuelChoiceDisplays();
-                    CalculateStrategy();
-                    return;
-                }
-
-                // Live session path (existing behaviour): align planner to active profile + live track identity.
-                var activeProfile = _plugin?.ActiveProfile;
-                if (activeProfile != null && !ReferenceEquals(SelectedCarProfile, activeProfile))
-                {
-                    SelectedCarProfile = activeProfile;
-                }
-
-                // Re-resolve the track against the active profile and live telemetry identifiers
-                TrackStats resolvedTrack = SelectedTrackStats;
-                if (SelectedCarProfile != null)
-                {
-                    var liveTrackKey = _plugin?.CurrentTrackKey;
-                    var liveTrackName = _plugin?.CurrentTrackName;
-
-                    resolvedTrack = SelectedCarProfile.ResolveTrackByNameOrKey(
-                                        resolvedTrack?.Key
-                                        ?? (!string.IsNullOrWhiteSpace(liveTrackKey) ? liveTrackKey : liveTrackName)
-                                        ?? SelectedTrack)
-                                   ?? resolvedTrack;
-                }
-
-                if (!ReferenceEquals(resolvedTrack, SelectedTrackStats) && resolvedTrack != null)
-                {
-                    _suppressProfileDataReload = true;
-                    SelectedTrackStats = resolvedTrack;
-                    _suppressProfileDataReload = false;
-                }
-
-                LoadProfileData();
-                RefreshProfilePlanningData();
-                RefreshConditionParameters();
-                UpdateTrackDerivedSummaries();
-                UpdateFuelBurnSummaries();
-                UpdateLiveFuelChoiceDisplays();
-
-                // After refresh in live sessions, restore LiveSnapshot auto-fill for lap time
-                // (otherwise LoadProfileData can seed profile averages and leave planner stuck there).
-                if (SelectedPlanningSourceMode == PlanningSourceMode.LiveSnapshot
-                    && IsLiveLapPaceAvailable
-                    && !IsEstimatedLapTimeManual)
-                {
-                    ApplyPlanningSourceToAutoFields(applyLapTime: true, applyFuel: false);
-                }
-
-                CalculateStrategy();
+                RequestStrategyRecalc();
             }
             finally
             {
                 _suppressPlannerDirtyUpdates = false;
-                ResetPlannerDirty();
             }
         }
 
@@ -4198,7 +4258,7 @@ namespace LaunchPlugin
                 _lastLoadedCarProfile = null;
                 _lastLoadedTrackKey = null;
                 SetUIDefaults();
-                CalculateStrategy();
+                RequestStrategyRecalc();
                 return;
             }
 
@@ -4221,7 +4281,7 @@ namespace LaunchPlugin
             {
                 UpdateProfileAverageDisplaysForCondition(null);
                 UpdateTrackDerivedSummaries();
-                CalculateStrategy();
+                RequestStrategyRecalc();
                 _lastLoadedCarProfile = car;
                 _lastLoadedTrackKey = trackKey;
                 return;
@@ -4363,7 +4423,7 @@ namespace LaunchPlugin
                 OnPropertyChanged(nameof(MaxFuelOverridePercentDisplay));
 
                 // Recompute with the newly loaded data
-                CalculateStrategy();
+                RequestStrategyRecalc();
 
                 UpdateTrackDerivedSummaries();
 
@@ -4751,7 +4811,9 @@ namespace LaunchPlugin
             bool hasEffectiveRaceBasis = TryGetEffectiveRaceBasis(out bool effectiveRaceIsTimeLimited, out double effectiveRaceLength);
             if (!hasEffectiveRaceBasis || effectiveRaceLength <= 0.0)
             {
-                ValidationMessage = IsLiveDetectRace
+                ValidationMessage = IsRaceBasisPreset && _appliedPreset == null
+                    ? "Error: Select a race preset."
+                    : IsLiveDetectRace
                     ? "Error: Live Detect race definition unavailable."
                     : "Error: Race length must be greater than zero.";
             }
@@ -5262,46 +5324,11 @@ namespace LaunchPlugin
 
     public bool IsLiveDetectRace
     {
-        get => SelectedRaceType == RaceType.LiveDetect;
-        set { if (value) SelectedRaceType = RaceType.LiveDetect; }
+        get => SelectedRaceBasisMode == RaceBasisMode.LiveDetect;
+        set { if (value) SelectedRaceBasisMode = RaceBasisMode.LiveDetect; }
     }
 
-    public bool IsRaceLengthEditable => !IsLiveDetectRace;
-
-    private void HandleRaceTypeOwnershipTransition(RaceType previousRaceType, RaceType newRaceType)
-    {
-        if (previousRaceType == newRaceType)
-        {
-            return;
-        }
-
-        if (newRaceType == RaceType.LiveDetect)
-        {
-            _selectedPreset = null;
-            _appliedPreset = null;
-            OnPropertyChanged(nameof(SelectedPreset));
-            OnPropertyChanged(nameof(HasSelectedPreset));
-            return;
-        }
-
-        if (previousRaceType == RaceType.LiveDetect)
-        {
-            _liveDetectedRaceType = null;
-            _lastLiveDetectedRaceLaps = 0.0;
-            _lastLiveDetectedRaceMinutes = 0.0;
-            _selectedPreset = null;
-            _appliedPreset = null;
-            OnPropertyChanged(nameof(SelectedPreset));
-            OnPropertyChanged(nameof(HasSelectedPreset));
-            OnPropertyChanged(nameof(ShowEffectiveLapLimitedRace));
-            OnPropertyChanged(nameof(ShowEffectiveTimeLimitedRace));
-            _liveDetectHelperText = "Live Detect: waiting for race definition";
-            OnPropertyChanged(nameof(LiveDetectHelperText));
-
-            RaceLaps = ManualRaceLapsDefault;
-            RaceMinutes = ManualRaceMinutesDefault;
-        }
-    }
+    public bool IsRaceLengthEditable => IsRaceBasisLapLimited || IsRaceBasisTimeLimited;
 
     public void UpdateLiveDetectedRaceDefinition(string detectedSessionLabel, bool? isLapLimited, double? raceLaps, bool? isTimeLimited, double? raceMinutes)
     {
@@ -5316,16 +5343,13 @@ namespace LaunchPlugin
                 shouldRecalculate = true;
             }
             _liveDetectedRaceType = RaceType.LapLimited;
-            OnPropertyChanged(nameof(IsLapLimitedRace));
-            OnPropertyChanged(nameof(IsTimeLimitedRace));
-            OnPropertyChanged(nameof(ShowEffectiveLapLimitedRace));
-            OnPropertyChanged(nameof(ShowEffectiveTimeLimitedRace));
 
             if (Math.Abs(_lastLiveDetectedRaceLaps - raceLaps.Value) > 0.001)
             {
                 shouldRecalculate = true;
             }
             _lastLiveDetectedRaceLaps = raceLaps.Value;
+            RaiseRaceBasisStateChanged(includeOwner: false);
             if (IsLiveDetectRace && Math.Abs(RaceLaps - _lastLiveDetectedRaceLaps) > 0.001)
             {
                 RaceLaps = _lastLiveDetectedRaceLaps;
@@ -5350,16 +5374,13 @@ namespace LaunchPlugin
                 shouldRecalculate = true;
             }
             _liveDetectedRaceType = RaceType.TimeLimited;
-            OnPropertyChanged(nameof(IsLapLimitedRace));
-            OnPropertyChanged(nameof(IsTimeLimitedRace));
-            OnPropertyChanged(nameof(ShowEffectiveLapLimitedRace));
-            OnPropertyChanged(nameof(ShowEffectiveTimeLimitedRace));
 
             if (Math.Abs(_lastLiveDetectedRaceMinutes - raceMinutes.Value) > 0.001)
             {
                 shouldRecalculate = true;
             }
             _lastLiveDetectedRaceMinutes = raceMinutes.Value;
+            RaiseRaceBasisStateChanged(includeOwner: false);
             if (IsLiveDetectRace && Math.Abs(RaceMinutes - _lastLiveDetectedRaceMinutes) > 0.001)
             {
                 RaceMinutes = _lastLiveDetectedRaceMinutes;
@@ -5384,10 +5405,7 @@ namespace LaunchPlugin
                 shouldRecalculate = true;
             }
             _liveDetectedRaceType = null;
-            OnPropertyChanged(nameof(IsLapLimitedRace));
-            OnPropertyChanged(nameof(IsTimeLimitedRace));
-            OnPropertyChanged(nameof(ShowEffectiveLapLimitedRace));
-            OnPropertyChanged(nameof(ShowEffectiveTimeLimitedRace));
+            RaiseRaceBasisStateChanged(includeOwner: false);
             string helperText = string.IsNullOrWhiteSpace(detectedSessionLabel)
                 ? "Live Detect: no declared race found"
                 : string.Format(
@@ -5404,7 +5422,7 @@ namespace LaunchPlugin
 
         if (shouldRecalculate && IsLiveDetectRace)
         {
-            CalculateStrategy();
+            RequestStrategyRecalc();
             RaisePresetStateChanged();
         }
     }

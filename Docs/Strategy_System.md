@@ -174,9 +174,15 @@ If Strategy looks repeatedly wrong, the usual causes are:
 - Track condition ownership is explicit: `Auto`, `Dry`, `Wet`.
 - Race type ownership now includes persistent `Live Detect`; detected race format/length are pulled from declared race metadata rather than current practice/qualifying session length.
 - Race-definition ownership is now exclusive:
-  - `Live Detect`: preset selector is hidden, preset selection/applied state are cleared, and race-length controls remain telemetry-owned.
-  - Leaving `Live Detect` for manual Lap/Time clears preset state and resets manual race length controls to neutral defaults (`20 laps` / `40 min`) to avoid stale hidden ownership.
+  - `Live Detect`: race length controls remain telemetry-owned while selected; preset/profile/manual setup state is preserved.
+  - Live Detect no longer clears selected/applied preset state; switching owners preserves preset/profile/manual setup values and only changes race-basis authority while selected.
   - Presets remain one-shot initializers: selecting a preset sets race type + race length once, then manual edits can diverge and show `(modified)`.
 
 - PreRace fuel-needed basis now follows active contingency (`base race fuel + active contingency litres`) instead of the prior hardcoded `+2 laps` buffer.
 - StrategyDash V2 adds pre-green advice exports only; race-running fuel/pit/control contracts remain on existing runtime seams.
+
+- Strategy Race Basis now explicitly selects owner: Preset, Lap-Limited, Time-Limited, or Live Detect.
+- Live Detect only owns race type/length while selected; preset/manual setup values are retained.
+- Refresh Calcs now recomputes outputs only and does not change owner/preset/source selections.
+
+- Owner mode and effective basis are now treated separately in planner internals: owner radios (`Preset`/`Lap`/`Time`/`Live Detect`) select authority, while strategy calculations, preset dirty state, and preset serialization use the resolved effective race basis.
