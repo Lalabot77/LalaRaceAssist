@@ -1392,3 +1392,5 @@ Branch: work
 - 2026-05-15: Strategy race-basis owner mode refresh landed; Refresh Calcs now recompute-only; preset modified indicator excludes PreRace-only differences.
 
 - 2026-05-16: Strategy owner-vs-effective race-basis semantics tightened; dirty-state and effective visibility now derive from effective basis helpers.
+
+- Final PR #723 cleanup: effective race-basis notification/invalidation now centralised in FuelCalcs; preset removal while Preset owner active now clears stale strategy outputs immediately.

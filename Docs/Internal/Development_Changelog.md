@@ -2362,3 +2362,5 @@ The public user-facing release history is maintained in the root `CHANGELOG.md`.
 - Classification: **internal-only** (Strategy state semantics hardening + regression prevention).
 - Clarified owner-vs-effective semantics in `FuelCalcs`: owner helpers remain radio-mode state while modified-state/visibility/serialization paths now consume effective race-basis helpers.
 - `IsPresetModified()` race-basis comparisons now use effective basis/length (invalid effective basis no longer reports false clean match).
+
+- Final cleanup tightened race-basis invalidation/notification paths so applied-preset removal while Preset owner is active now immediately invalidates outputs (`Select a race preset`) and prevents stale strategy display.
