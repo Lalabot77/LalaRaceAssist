@@ -5452,6 +5452,10 @@ namespace LaunchPlugin
                 return null;
             }
 
+            var livePlayerEffectiveClass = ResolveLivePlayerLeagueClassInfo();
+            bool enforceEffectiveMatching = livePlayerEffectiveClass.Valid && !string.IsNullOrWhiteSpace(livePlayerEffectiveClass.Name);
+            string normalizedLivePlayerClassName = enforceEffectiveMatching ? livePlayerEffectiveClass.Name.Trim() : string.Empty;
+
             return (playerRow, candidateRow) =>
             {
                 if (playerRow == null || candidateRow == null)
@@ -5464,10 +5468,21 @@ namespace LaunchPlugin
                     return true;
                 }
 
-                var playerEffectiveClass = ResolveLeagueClassPlayerInfo(
+                if (enforceEffectiveMatching)
+                {
+                    var candidateEffectiveClass = ResolveLeagueClassDriverInfo(candidateRow.UserID > 0 ? (int?)candidateRow.UserID : null, candidateRow.Name);
+                    if (!candidateEffectiveClass.Valid || string.IsNullOrWhiteSpace(candidateEffectiveClass.Name))
+                    {
+                        return false;
+                    }
+
+                    return string.Equals(normalizedLivePlayerClassName, candidateEffectiveClass.Name.Trim(), StringComparison.OrdinalIgnoreCase);
+                }
+
+                var playerEffectiveClassFromRow = ResolveLeagueClassPlayerInfo(
                     playerRow.UserID > 0 ? (int?)playerRow.UserID : null,
                     playerRow.Name);
-                if (!playerEffectiveClass.Valid || string.IsNullOrWhiteSpace(playerEffectiveClass.Name))
+                if (!playerEffectiveClassFromRow.Valid || string.IsNullOrWhiteSpace(playerEffectiveClassFromRow.Name))
                 {
                     if (string.IsNullOrWhiteSpace(playerRow.ClassColor) || string.IsNullOrWhiteSpace(candidateRow.ClassColor))
                     {
@@ -5477,7 +5492,7 @@ namespace LaunchPlugin
                     return string.Equals(candidateRow.ClassColor, playerRow.ClassColor, StringComparison.Ordinal);
                 }
 
-                string normalizedPlayerClassName = playerEffectiveClass.Name.Trim();
+                string normalizedPlayerClassName = playerEffectiveClassFromRow.Name.Trim();
 
                 var candidateEffectiveClass = ResolveLeagueClassDriverInfo(candidateRow.UserID > 0 ? (int?)candidateRow.UserID : null, candidateRow.Name);
                 if (!candidateEffectiveClass.Valid || string.IsNullOrWhiteSpace(candidateEffectiveClass.Name))
@@ -6124,6 +6139,7 @@ namespace LaunchPlugin
         private LaunchPluginSettings _subscribedLeagueClassSettings;
         private LaunchPluginSettings _subscribedPitFuelControlSettings;
         private bool _applyingPitFuelControlDataAction;
+        private bool _leagueClassOpponentsRefreshPending;
         private List<LeagueClassDefinition> _subscribedLeagueClassDefinitions;
         private readonly HashSet<LeagueClassDefinition> _leagueClassDefinitionSubscriptions = new HashSet<LeagueClassDefinition>();
         private bool _isSavingSettings;
@@ -10042,6 +10058,11 @@ namespace LaunchPlugin
             EvaluateDarkMode(pluginManager);
             ApplyLeagueClassEnableModeGuard();
             MaybeRefreshLeagueClassPreview(pluginManager);
+            if (_leagueClassOpponentsRefreshPending)
+            {
+                _opponentsEngine?.Reset();
+                _leagueClassOpponentsRefreshPending = false;
+            }
             if (!data.GameRunning || data.NewData == null) return;
 
             _isRefuelSelected = IsRefuelSelected(pluginManager);
@@ -14020,6 +14041,7 @@ namespace LaunchPlugin
                 HookLeagueClassDefinitions(_subscribedLeagueClassSettings?.LeagueClassDefinitions);
                 OnPropertyChanged(nameof(LeagueClassStatus));
                 OnPropertyChanged(nameof(LeagueClassPlayerPreviewText));
+                _leagueClassOpponentsRefreshPending = true;
                 return;
             }
 
@@ -14034,6 +14056,7 @@ namespace LaunchPlugin
             OnPropertyChanged(nameof(LeagueClassPlayerPreviewText));
             OnPropertyChanged(nameof(LeagueClassShowCsvSection));
             OnPropertyChanged(nameof(LeagueClassShowFallbackSection));
+            _leagueClassOpponentsRefreshPending = true;
         }
 
         private void HookLeagueClassDefinitions(List<LeagueClassDefinition> definitions)
@@ -14095,6 +14118,7 @@ namespace LaunchPlugin
         private void OnLeagueClassDefinitionPropertyChanged(object sender, PropertyChangedEventArgs e)
         {
             OnPropertyChanged(nameof(LeagueClassPlayerPreviewText));
+            _leagueClassOpponentsRefreshPending = true;
             SaveSettings();
         }
 

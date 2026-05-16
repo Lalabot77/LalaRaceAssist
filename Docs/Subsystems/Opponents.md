@@ -116,6 +116,13 @@ Opponents now reads from:
   - PitExit selection outputs (`PredictedPositionInClass`, `CarsAheadAfterPitCount`, `PitExit.Ahead/Behind.*`, `PitExit.Summary`) now reliably use the effective-class cohort whenever enabled+player-resolved at update time; disabled/unresolved-player paths remain native fallback.
   - PitExit timing/gap/countdown/loss/distance math and Opp race-slot selection remain unchanged.
 
+- 2026-05-16 PitExit League cohort authority follow-up:
+  - when League Class is enabled and the live player effective class resolves valid, race-context class matching is locked to that effective class for PitExit/Opp cohort scans (candidate rows must resolve valid effective class to match);
+  - this prevents per-row player-resolution fallback states from preserving native-equivalent PitExit target cohorts while only class-colour presentation changes;
+  - when enabled but live player effective class is unresolved, fallback remains native class-colour matching only when both rows have native colours (no match-all);
+  - a narrow League settings/definition-change invalidation resets Opponents/PitExit on next update tick so mode/definition toggles do not leave stale PitExit cohort selections in the off-pit refresh window;
+  - pit-exit timing/gap/countdown/loss/distance math remains unchanged.
+
 
 - 2026-05-05 replay identity/gating follow-up:
   - ClassLeader/ClassBest race-context candidate rows built in `LalaLaunch` now require canonical identity (`ClassColor:CarNumber`) and no longer synthesize `car:{idx}` fallback identities;

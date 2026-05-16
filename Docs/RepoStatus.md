@@ -2,6 +2,12 @@
 
 - 2026-05-16: RaceFinish deferred-reset apply-path hardening validated: pending identity is applied only if it still matches current observed session identity; stale pending is discarded and active defer-log latch resets on churn reversion.
 
+- 2026-05-16: PitExit League cohort authority follow-up validated.
+  - when League Class is enabled and live player effective class resolves valid, PitExit/Opp race-context cohort matching now stays on effective-class authority (candidate rows must resolve valid effective class to match), preventing native-equivalent cohort carry-over with colour-only changes.
+  - when League Class is enabled but live player effective class is unresolved, native fallback remains guarded by valid native class colours on both rows (no match-all).
+  - added narrow League settings/definition-change invalidation path to refresh Opponents/PitExit cohort state on next tick.
+  - protected systems unchanged: PitExit timing/gap/countdown/loss/distance math, Opp race-slot ordering/gap math, CarSA, H2H, and fuel systems.
+
 - 2026-05-15: RaceFinish deferred identity stale-clear validated: transient `A→B→A` churn during active finish lifecycle now clears pending deferred identity, avoiding extra reset/fuel-recalc cycle from stale pending apply.
 
 - 2026-05-15: RaceFinish deferred-session detectability follow-up validated: deferred path now stores pending session identity without overwriting active finish-session identity, then applies one clean reset/identity update after lifecycle exit.
