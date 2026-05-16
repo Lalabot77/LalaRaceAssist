@@ -1408,3 +1408,9 @@ Branch: work
 - 2026-05-16: Strategy owner-vs-effective race-basis semantics tightened; dirty-state and effective visibility now derive from effective basis helpers.
 
 - Final PR #723 cleanup: effective race-basis notification/invalidation now centralised in FuelCalcs; preset removal while Preset owner active now clears stale strategy outputs immediately.
+
+- 2026-05-16: Strategy PreRace default mode changed from Multi Stop to Single Stop for new/default planner state and new preset template creation.
+  - existing saved profile/preset PreRaceMode values are preserved;
+  - legacy persisted Auto (`3`) normalization remains unchanged (`3 -> Multi Stop`);
+  - no planner math, race-basis ownership, Live Detect, runtime fuel model, or dash export behavior changes.
+  - follow-up fix: profile/car-load reset path now preserves loaded persisted PreRace mode (No Stop/Single Stop/Multi Stop) instead of overwriting to default Single Stop on car change.

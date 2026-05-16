@@ -976,8 +976,8 @@ namespace LaunchPlugin
         public double Fuel_Setup_FuelLevel { get; private set; }
         public bool Fuel_Setup_FuelLevelValid { get; private set; }
         public string Fuel_Setup_FuelLevelSource { get; private set; } = "none";
-        public int PreRace_Selected { get; private set; } = 2;
-        public string PreRace_SelectedText { get; private set; } = "Multi Stop";
+        public int PreRace_Selected { get; private set; } = 1;
+        public string PreRace_SelectedText { get; private set; } = "Single Stop";
         public double PreRace_Stints { get; private set; }
         public double PreRace_TotalFuelNeeded { get; private set; }
         public double PreRace_FuelDelta { get; private set; }
@@ -18582,8 +18582,8 @@ namespace LaunchPlugin
             Contingency_Laps = 0;
             Contingency_Source = "none";
 
-            PreRace_Selected = 2;
-            PreRace_SelectedText = "Multi Stop";
+            PreRace_Selected = 1;
+            PreRace_SelectedText = "Single Stop";
             PreRace_Stints = 0;
             PreRace_TotalFuelNeeded = 0;
             PreRace_FuelDelta = 0;
