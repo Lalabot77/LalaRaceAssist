@@ -833,6 +833,7 @@ namespace LaunchPlugin
         private int _raceFinishClassCaptureSessionState;
         private int _raceFinishPlayerCaptureSessionState;
         private double _raceFinishClassFinishSessionTimeSec = double.NaN;
+        private double _raceFinishPlayerFinishObservedSessionTimeSec = double.NaN;
         private double _raceFinishPlayerFinishGapSec;
         private int _raceFinishLastValidClassLeaderCarIdx = -1;
         private string _raceFinishLastValidClassLeaderName = string.Empty;
@@ -8631,6 +8632,7 @@ namespace LaunchPlugin
             _raceFinishClassCaptureSessionState = 0;
             _raceFinishPlayerCaptureSessionState = 0;
             _raceFinishClassFinishSessionTimeSec = double.NaN;
+            _raceFinishPlayerFinishObservedSessionTimeSec = double.NaN;
             _raceFinishPlayerFinishGapSec = 0.0;
             _raceFinishLastValidClassLeaderCarIdx = -1;
             _raceFinishLastValidClassLeaderName = string.Empty;
@@ -8732,13 +8734,26 @@ namespace LaunchPlugin
                 || (_raceFinishClassSnapshotActive && playerFinishedByCheckered);
             if (!shouldCapture)
             {
+                _raceFinishPlayerFinishObservedSessionTimeSec = double.NaN;
+                return;
+            }
+
+            if (double.IsNaN(_raceFinishPlayerFinishObservedSessionTimeSec))
+            {
+                _raceFinishPlayerFinishObservedSessionTimeSec = sessionTimeSec;
+            }
+
+            int liveOverallPosition = ResolveRaceFinishLiveOverallPosition(pluginManager);
+            int liveClassPosition = ResolveRaceFinishLiveClassPosition(pluginManager, playerCarIdx);
+            if (sessionStateNumeric != 6 && liveClassPosition <= 0)
+            {
                 return;
             }
 
             _raceFinishPlayerSnapshotActive = true;
             _raceFinishPlayerCaptureSessionState = sessionStateNumeric;
-            _raceFinishPlayerOverallPosition = ResolveRaceFinishLiveOverallPosition(pluginManager);
-            _raceFinishPlayerClassPosition = ResolveRaceFinishLiveClassPosition(pluginManager, playerCarIdx);
+            _raceFinishPlayerOverallPosition = liveOverallPosition;
+            _raceFinishPlayerClassPosition = liveClassPosition;
             _raceFinishPlayerFuelLeft = ResolveRaceFinishLiveFuelLeft(pluginManager);
 
             double playerBestLapSec = _lastSeenBestLap > TimeSpan.Zero
@@ -8752,13 +8767,17 @@ namespace LaunchPlugin
 
             if (_raceFinishClassSnapshotActive && !double.IsNaN(_raceFinishClassFinishSessionTimeSec))
             {
-                _raceFinishPlayerFinishGapSec = Math.Max(0.0, sessionTimeSec - _raceFinishClassFinishSessionTimeSec);
+                double gapBaselineSessionTimeSec = !double.IsNaN(_raceFinishPlayerFinishObservedSessionTimeSec)
+                    ? _raceFinishPlayerFinishObservedSessionTimeSec
+                    : sessionTimeSec;
+                _raceFinishPlayerFinishGapSec = Math.Max(0.0, gapBaselineSessionTimeSec - _raceFinishClassFinishSessionTimeSec);
             }
             else
             {
                 _raceFinishPlayerFinishGapSec = 0.0;
             }
             _raceFinishClassWinnerGapSec = _raceFinishPlayerFinishGapSec;
+            _raceFinishPlayerFinishObservedSessionTimeSec = double.NaN;
 
             SimHub.Logging.Current.Info(
                 $"[LalaPlugin:RaceFinish] player snapshot captured state={sessionStateNumeric} overall={_raceFinishPlayerOverallPosition} class={_raceFinishPlayerClassPosition} " +
@@ -19181,6 +19200,10 @@ namespace LaunchPlugin
 
         private long _finishTimingSessionId = -1;
         private string _finishTimingSessionType = string.Empty;
+        private bool _finishTimingSessionChangeDeferredInActiveLifecycle;
+        private bool _finishTimingHasPendingSessionIdentity;
+        private long _finishTimingPendingSessionId = -1;
+        private string _finishTimingPendingSessionType = string.Empty;
 
         private void UpdateFinishTiming(
      PluginManager pluginManager,
@@ -19192,18 +19215,71 @@ namespace LaunchPlugin
      string sessionType)
         {
             bool isRace = IsRaceSession(sessionType);
+            int sessionStateNumeric = ReadSessionStateInt(pluginManager);
+            bool hasSessionState = sessionStateNumeric > 0;
 
-            // Reset cleanly on session change
-            if (sessionId != _finishTimingSessionId || sessionType != _finishTimingSessionType)
+            // Reset cleanly on true session change, but do not tear down an active post-finish lifecycle
+            // due to transient identity churn in replay/telemetry while SessionState remains post-finish.
+            bool sessionIdentityChanged = sessionId != _finishTimingSessionId || sessionType != _finishTimingSessionType;
+            bool inPostFinishLifecycle = hasSessionState && sessionStateNumeric >= 5;
+            bool activeFinishSnapshot = _raceFinishClassSnapshotActive || _raceFinishPlayerSnapshotActive;
+            bool shouldDeferSessionReset = sessionIdentityChanged && isRace && inPostFinishLifecycle && activeFinishSnapshot;
+
+            // If transient deferred churn has already reverted to the currently active session identity,
+            // drop the stale pending identity so it cannot be incorrectly applied on a later real change.
+            if (_finishTimingHasPendingSessionIdentity && !sessionIdentityChanged)
             {
-                _finishTimingSessionId = sessionId;
-                _finishTimingSessionType = sessionType;
-                _afterZeroResultLogged = false;
-                ResetFinishTimingState();
+                _finishTimingHasPendingSessionIdentity = false;
+                _finishTimingPendingSessionId = -1;
+                _finishTimingPendingSessionType = string.Empty;
+                _finishTimingSessionChangeDeferredInActiveLifecycle = false;
+            }
 
-                if (FuelCalculator != null && FuelCalculator.IsLiveDetectRace)
+            if (sessionIdentityChanged)
+            {
+                if (shouldDeferSessionReset)
                 {
-                    UpdateLiveFuelCalcs(data, pluginManager);
+                    _finishTimingHasPendingSessionIdentity = true;
+                    _finishTimingPendingSessionId = sessionId;
+                    _finishTimingPendingSessionType = sessionType ?? string.Empty;
+
+                    if (!_finishTimingSessionChangeDeferredInActiveLifecycle)
+                    {
+                        SimHub.Logging.Current.Info($"[LalaPlugin:Finish] session_change deferred in_active_finish_lifecycle state={sessionStateNumeric}");
+                    }
+
+                    _finishTimingSessionChangeDeferredInActiveLifecycle = true;
+                }
+                else
+                {
+                    _finishTimingSessionChangeDeferredInActiveLifecycle = false;
+                    _afterZeroResultLogged = false;
+                    ResetFinishTimingState();
+
+                    if (FuelCalculator != null && FuelCalculator.IsLiveDetectRace)
+                    {
+                        UpdateLiveFuelCalcs(data, pluginManager);
+                    }
+
+                    bool pendingStillMatchesCurrentObservedIdentity =
+                        _finishTimingHasPendingSessionIdentity &&
+                        _finishTimingPendingSessionId == sessionId &&
+                        string.Equals(_finishTimingPendingSessionType ?? string.Empty, sessionType ?? string.Empty, StringComparison.Ordinal);
+
+                    if (pendingStillMatchesCurrentObservedIdentity)
+                    {
+                        _finishTimingSessionId = _finishTimingPendingSessionId;
+                        _finishTimingSessionType = _finishTimingPendingSessionType ?? string.Empty;
+                    }
+                    else
+                    {
+                        _finishTimingSessionId = sessionId;
+                        _finishTimingSessionType = sessionType ?? string.Empty;
+                    }
+
+                    _finishTimingHasPendingSessionIdentity = false;
+                    _finishTimingPendingSessionId = -1;
+                    _finishTimingPendingSessionType = string.Empty;
                 }
             }
 
@@ -19228,8 +19304,6 @@ namespace LaunchPlugin
 
             bool hasRemain = !double.IsNaN(sessionTimeRemain);
             bool isTimedRace = hasRemain;
-            int sessionStateNumeric = ReadSessionStateInt(pluginManager);
-            bool hasSessionState = sessionStateNumeric > 0;
             bool enteredOverallFinishLifecycle = hasSessionState && sessionStateNumeric >= 5 && _finishTimingLastSessionState < 5;
             int playerCarIdx = GetInt(pluginManager, "DataCorePlugin.GameRawData.Telemetry.PlayerCarIdx", -1);
 

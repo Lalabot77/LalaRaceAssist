@@ -1,3 +1,24 @@
+- 2026-05-16 RaceFinish player finish-time baseline latch follow-up landed.
+  - `TryCaptureRaceFinishPlayerSnapshot(...)` now latches the first observed player-finish tick session timestamp before class-position retry gating.
+  - If class position is temporarily unresolved (`<=0`) and capture retries on a later tick, `RaceFinish.PlayerFinishGapSec` now computes from the latched first-finish timestamp (no retry-path drift).
+  - Latch clears when finish condition is no longer active or when player snapshot capture completes.
+
+- 2026-05-16 RaceFinish deferred-identity apply-current-observed follow-up landed.
+  - Deferred-reset apply path now uses pending identity only when it still matches the current observed session identity; otherwise pending is discarded and current observed identity is applied, preventing stale `B` apply when observed identity is `C`.
+  - `A→B→A` stale-pending clear now also resets `_finishTimingSessionChangeDeferredInActiveLifecycle` so future defers log once again.
+
+- 2026-05-15 RaceFinish deferred-identity stale-clear follow-up landed.
+  - `UpdateFinishTiming(...)` now clears pending deferred session identity when observed identity reverts to current active identity before lifecycle exit (`A→B→A` transient churn), preventing stale deferred identity apply on later genuine session changes.
+
+- 2026-05-15 RaceFinish deferred session-reset detectability follow-up landed.
+  - `UpdateFinishTiming(...)` now stores pending session identity while defer guard is active and does not overwrite current finish-session identity until reset can safely execute after lifecycle exit.
+  - Preserves no-spam defer behavior during active post-finish lifecycle, then performs one clean reset + pending identity apply + existing LiveDetect fuel recalc path.
+
+- 2026-05-15 RaceFinish reset/capture loop guard + class-position freeze guard landed.
+  - `UpdateFinishTiming(...)` now defers `ResetFinishTimingState()` when session identity churn is observed during an already-active post-finish lifecycle (`SessionState>=5` with active RaceFinish snapshot), preventing per-tick reset/re-capture log spam in replay/finish phases.
+  - Added bounded diagnostic log: `[LalaPlugin:Finish] session_change deferred in_active_finish_lifecycle state=...`.
+  - `TryCaptureRaceFinishPlayerSnapshot(...)` now requires a positive live class position before freezing player snapshot (except `SessionState==6` safety fallback), preventing `RaceFinish.PlayerClassPosition=0` freeze when valid class position resolves a tick later.
+
 
 ## 2026-05-15 — PR #722 follow-up: unresolved-player native fallback now requires valid native class colours
 - Classification: **internal-only** (cohort fallback correctness hardening; no export/format changes).

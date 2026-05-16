@@ -1,3 +1,11 @@
+- 2026-05-16: RaceFinish player finish retry-gap baseline latch validated: first observed player-finish session timestamp is latched before class-position retry guard, so delayed snapshot capture does not drift `RaceFinish.PlayerFinishGapSec`.
+
+- 2026-05-16: RaceFinish deferred-reset apply-path hardening validated: pending identity is applied only if it still matches current observed session identity; stale pending is discarded and active defer-log latch resets on churn reversion.
+
+- 2026-05-15: RaceFinish deferred identity stale-clear validated: transient `A→B→A` churn during active finish lifecycle now clears pending deferred identity, avoiding extra reset/fuel-recalc cycle from stale pending apply.
+
+- 2026-05-15: RaceFinish deferred-session detectability follow-up validated: deferred path now stores pending session identity without overwriting active finish-session identity, then applies one clean reset/identity update after lifecycle exit.
+
 
 - 2026-05-15: PR #722 review follow-up fixed unresolved-player native fallback guard.
   - unresolved-player path in League race-context matcher now compares native class colors only when both sides have valid non-empty class color values; missing colors now fail closed (`false`) instead of matching cohort-wide.
