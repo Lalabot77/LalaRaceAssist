@@ -1,3 +1,5 @@
+- 2026-05-16: RaceFinish player finish retry-gap baseline latch validated: first observed player-finish session timestamp is latched before class-position retry guard, so delayed snapshot capture does not drift `RaceFinish.PlayerFinishGapSec`.
+
 - 2026-05-16: RaceFinish deferred-reset apply-path hardening validated: pending identity is applied only if it still matches current observed session identity; stale pending is discarded and active defer-log latch resets on churn reversion.
 
 - 2026-05-15: RaceFinish deferred identity stale-clear validated: transient `A→B→A` churn during active finish lifecycle now clears pending deferred identity, avoiding extra reset/fuel-recalc cycle from stale pending apply.
