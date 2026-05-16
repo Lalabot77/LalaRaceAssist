@@ -80,6 +80,7 @@ Contract notes:
 - Manual override is player-only.
 - Does not globally force every driver into League mapping when unresolved.
 - Unresolved drivers can remain native.
+- CSV registered class membership is configuration data, not race denominator authority for `Race.PlayerClassFieldSize` / `RaceFinish.PlayerClassFieldSize`; those denominators are current-session cohort/native fallback resolved.
 
 ## 10) Troubleshooting
 - **CSV loaded but driver unresolved:** check identity keys (`UserID`/name path), mode, and class-definition validity.
