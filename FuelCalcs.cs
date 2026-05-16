@@ -883,9 +883,13 @@ namespace LaunchPlugin
         try
         {
 
-        // Race type + duration
-        if (p.Type == RacePresetType.TimeLimited && p.RaceMinutes.HasValue) RaceMinutes = p.RaceMinutes.Value;
-        if (p.Type == RacePresetType.LapLimited && p.RaceLaps.HasValue) RaceLaps = p.RaceLaps.Value;
+        // Race type + duration are only applied for explicit user intent paths
+        // (preset select / preset reapply) that activate Preset ownership.
+        if (activatePresetOwner)
+        {
+            if (p.Type == RacePresetType.TimeLimited && p.RaceMinutes.HasValue) RaceMinutes = p.RaceMinutes.Value;
+            if (p.Type == RacePresetType.LapLimited && p.RaceLaps.HasValue) RaceLaps = p.RaceLaps.Value;
+        }
 
         SelectedPreRaceMode = NormalizePitStrategyValue(p.PreRaceMode);
 
