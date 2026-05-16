@@ -7,6 +7,13 @@
   - Deferred-reset apply path now uses pending identity only when it still matches the current observed session identity; otherwise pending is discarded and current observed identity is applied, preventing stale `B` apply when observed identity is `C`.
   - `A→B→A` stale-pending clear now also resets `_finishTimingSessionChangeDeferredInActiveLifecycle` so future defers log once again.
 
+- 2026-05-16 PitExit League cohort authority follow-up landed.
+  - `BuildRaceContextLeagueClassMatchDelegate()` now locks cohort authority to the live player effective class whenever League Class is enabled and the live player resolves valid, instead of allowing per-row player-resolution fallback to keep native-equivalent cohorts in some PitExit update states.
+  - Candidate rows must resolve a valid effective class to join that effective cohort; unresolved candidates are excluded in League-active effective mode.
+  - When League Class is enabled but live player effective class is unresolved, fallback remains native class-colour matching only when both rows have valid native class colours; otherwise `false` (no match-all).
+  - Added narrow League settings/definition change invalidation for Opponents/PitExit (`_opponentsEngine.Reset()` on next tick) to avoid stale colour-only carry-over after mode/definition toggles.
+  - PitExit timing/gap/countdown/loss/distance math unchanged; Opp race-slot ordering/gap math unchanged; CarSA/H2H/fuel unchanged.
+
 - 2026-05-15 RaceFinish deferred-identity stale-clear follow-up landed.
   - `UpdateFinishTiming(...)` now clears pending deferred session identity when observed identity reverts to current active identity before lifecycle exit (`A→B→A` transient churn), preventing stale deferred identity apply on later genuine session changes.
 
