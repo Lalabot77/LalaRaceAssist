@@ -5470,13 +5470,13 @@ namespace LaunchPlugin
 
                 if (enforceEffectiveMatching)
                 {
-                    var candidateEffectiveClass = ResolveLeagueClassDriverInfo(candidateRow.UserID > 0 ? (int?)candidateRow.UserID : null, candidateRow.Name);
-                    if (!candidateEffectiveClass.Valid || string.IsNullOrWhiteSpace(candidateEffectiveClass.Name))
+                    var enforcedCandidateEffectiveClass = ResolveLeagueClassDriverInfo(candidateRow.UserID > 0 ? (int?)candidateRow.UserID : null, candidateRow.Name);
+                    if (!enforcedCandidateEffectiveClass.Valid || string.IsNullOrWhiteSpace(enforcedCandidateEffectiveClass.Name))
                     {
                         return false;
                     }
 
-                    return string.Equals(normalizedLivePlayerClassName, candidateEffectiveClass.Name.Trim(), StringComparison.OrdinalIgnoreCase);
+                    return string.Equals(normalizedLivePlayerClassName, enforcedCandidateEffectiveClass.Name.Trim(), StringComparison.OrdinalIgnoreCase);
                 }
 
                 var playerEffectiveClassFromRow = ResolveLeagueClassPlayerInfo(
