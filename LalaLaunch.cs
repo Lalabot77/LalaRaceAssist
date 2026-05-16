@@ -9704,7 +9704,7 @@ namespace LaunchPlugin
                 else if ((normFuelSource == "PLAN" || normFuelSource == "PROFILE") && hasProfilePushSave && profilePushBurn > 0.0)
                 {
                     selectedBurn = profilePushBurn;
-                    burnSource = "PLAN";
+                    burnSource = normFuelSource == "PROFILE" ? "PROFILE" : "PLAN";
                 }
                 else if (hasProfilePushSave && profilePushBurn > 0.0)
                 {
@@ -9727,7 +9727,7 @@ namespace LaunchPlugin
                 else if ((normFuelSource == "PLAN" || normFuelSource == "PROFILE") && hasProfilePushSave && profileSaveBurn > 0.0)
                 {
                     selectedBurn = profileSaveBurn;
-                    burnSource = "PLAN";
+                    burnSource = normFuelSource == "PROFILE" ? "PROFILE" : "PLAN";
                 }
                 else if (hasProfilePushSave && profileSaveBurn > 0.0)
                 {
