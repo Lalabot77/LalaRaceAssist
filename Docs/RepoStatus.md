@@ -1429,3 +1429,9 @@ Branch: work
   - legacy persisted Auto (`3`) normalization remains unchanged (`3 -> Multi Stop`);
   - no planner math, race-basis ownership, Live Detect, runtime fuel model, or dash export behavior changes.
   - follow-up fix: profile/car-load reset path now preserves loaded persisted PreRace mode (No Stop/Single Stop/Multi Stop) instead of overwriting to default Single Stop on car change.
+
+- 2026-05-17: Strategy planner microcopy/docs alignment pass landed (wording-only, no behavior changes).
+  - Refresh Calcs tooltip now states recompute-only semantics from current selected/effective inputs and explicitly says it does not reload profile/live, reapply presets, or change ownership.
+  - Race Basis microcopy now consistently frames owner semantics (Preset/Lap-Limited/Time-Limited/Live Detect) and clarifies Live Detect is non-destructive to saved preset/profile state.
+  - Preset reapply (`↻`) tooltip now explicitly describes deliberate preset-value reapply action.
+  - Docs now clarify modified-badge semantics: calc-affecting preset divergence only, PreRace-only differences excluded, and Live Detect/manual owner divergence does not imply preset overwrite.

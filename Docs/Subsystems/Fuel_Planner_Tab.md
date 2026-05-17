@@ -327,10 +327,12 @@ Reset semantics are shared with the Fuel Model and documented centrally in:
 - Live Detect refresh now runs on session context transitions (session id/type changes) when Live Detect is selected, in addition to normal periodic polling.
 
 - Strategy race-basis ownership now uses explicit owner modes (Preset/Lap/Time/Live Detect) with last-selected owner winning race type/length authority.
-- Refresh Calcs is recompute-only and no longer reloads profile/live ownership state.
+- Refresh Calcs is recompute-only: it recalculates strategy outputs and stint breakdown from current effective inputs, and does not reload profile/live data, reapply presets, or reset owner/source state.
 - Preset modified badge now ignores PreRace-mode-only differences to avoid implying core strategy-output change.
 
 - Preset row now includes a compact reapply button (`↻`) that reapplies the currently selected preset explicitly; same-item ComboBox reselection is no longer required.
 - When Race Basis owner is `Preset` and no preset is selected/applied, planner outputs stay invalid with explicit validation (`Select a race preset`) rather than silently using stale race length.
 
 - Owner-mode helpers (`IsRaceBasis*`) are UI ownership flags; effective helpers (`IsEffective*`, `EffectiveRaceBasisValid`) mirror the basis actually consumed by strategy calculations and dependent preset dirty/save logic.
+
+- Live Detect owns race basis only while selected; invalid/no declared race definition intentionally invalidates strategy outputs (no silent fallback to manual race length) while preserving selected/applied preset state.
