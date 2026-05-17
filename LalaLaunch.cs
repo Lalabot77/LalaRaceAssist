@@ -851,6 +851,8 @@ namespace LaunchPlugin
         private string _raceFinishClassBestLap = "-";
         private int _raceFinishPlayerOverallFieldSize;
         private int _raceFinishPlayerClassFieldSize;
+        private string _raceDenominatorDebugSignature = string.Empty;
+        private int _raceDenominatorDebugResult = int.MinValue;
         private int _playerCarIdxLastTick = -1;
         private double _lastClassLeaderLapPct = double.NaN;
         private double _lastOverallLeaderLapPct = double.NaN;
@@ -8864,34 +8866,85 @@ namespace LaunchPlugin
             int playerClassRosterCount = CountPlayerClassCompetingDriverRowsExcludingPaceCar();
             if (playerClassRosterCount > 0)
             {
+                LogRaceDenominatorResolution("roster", playerClassRosterCount, pluginManager, playerClassRosterCount);
                 return playerClassRosterCount;
             }
 
             int nativeDriverCount = GetNativePlayerClassDriverCount();
             if (nativeDriverCount > 0)
             {
+                LogRaceDenominatorResolution("native", nativeDriverCount, pluginManager, playerClassRosterCount, nativeDriverCount);
                 return nativeDriverCount;
             }
 
             int classOpponentsCount = SafeReadInt(pluginManager, "DataCorePlugin.GameData.PlayerClassOpponentsCount", int.MinValue);
             if (classOpponentsCount >= 0)
             {
+                LogRaceDenominatorResolution("gamedata_playerClassOpp", classOpponentsCount, pluginManager, playerClassRosterCount, nativeDriverCount, classOpponentsCount);
                 return classOpponentsCount;
             }
 
             classOpponentsCount = SafeReadInt(pluginManager, "DataCorePlugin.GameRawData.Telemetry.OpponentsInClassCount", int.MinValue);
             if (classOpponentsCount >= 0)
             {
-                return classOpponentsCount + 1;
+                int result = classOpponentsCount + 1;
+                LogRaceDenominatorResolution("telemetry_oppInClass_plusPlayer", result, pluginManager, playerClassRosterCount, nativeDriverCount, int.MinValue, classOpponentsCount);
+                return result;
             }
 
             int simHubClassOpponentsCount = SafeReadInt(pluginManager, "DataCorePlugin.GameData.NewData.OpponentsInClassCount", int.MinValue);
             if (simHubClassOpponentsCount >= 0)
             {
-                return simHubClassOpponentsCount + 1;
+                int result = simHubClassOpponentsCount + 1;
+                LogRaceDenominatorResolution("simhubNewData_oppInClass_plusPlayer", result, pluginManager, playerClassRosterCount, nativeDriverCount, int.MinValue, int.MinValue, simHubClassOpponentsCount);
+                return result;
             }
 
+            LogRaceDenominatorResolution("none", 0, pluginManager, playerClassRosterCount, nativeDriverCount);
             return 0;
+        }
+
+        private void LogRaceDenominatorResolution(
+            string branch,
+            int result,
+            PluginManager pluginManager,
+            int rosterCount,
+            int nativeCount = int.MinValue,
+            int gamePlayerClassOpp = int.MinValue,
+            int telemetryOppInClass = int.MinValue,
+            int simHubNewDataOppInClass = int.MinValue)
+        {
+            int leagueOn = (Settings?.LeagueClassEnabled == true) ? 1 : 0;
+            int gameOpp = SafeReadInt(pluginManager, "DataCorePlugin.GameData.OpponentsCount", int.MinValue);
+            int csvDriverCount = GetLeagueClassPlayerDriverCount();
+            string playerNative = ResolvePlayerNativeClassName() ?? string.Empty;
+            var playerLeague = ResolveLivePlayerLeagueClassInfo();
+            string playerLeagueName = playerLeague.Valid && !string.IsNullOrWhiteSpace(playerLeague.Name) ? playerLeague.Name : string.Empty;
+
+            string signature = string.Format(
+                CultureInfo.InvariantCulture,
+                "branch={0}|league={1}|roster={2}|native={3}|gamePlayerClassOpp={4}|telemetryOppInClass={5}|simHubNewDataOppInClass={6}|gameOpp={7}|csvDriverCount={8}|playerNative={9}|playerLeague={10}",
+                branch,
+                leagueOn,
+                rosterCount,
+                nativeCount,
+                gamePlayerClassOpp,
+                telemetryOppInClass,
+                simHubNewDataOppInClass,
+                gameOpp,
+                csvDriverCount,
+                playerNative,
+                playerLeagueName);
+
+            if (result == _raceDenominatorDebugResult && string.Equals(signature, _raceDenominatorDebugSignature, StringComparison.Ordinal))
+            {
+                return;
+            }
+
+            _raceDenominatorDebugResult = result;
+            _raceDenominatorDebugSignature = signature;
+            SimHub.Logging.Current.Info(
+                $"[LalaPlugin:RaceDenom] playerClassDenom result={result} {signature}");
         }
 
         private int ResolveLivePlayerClassFieldSize(PluginManager pluginManager, int playerCarIdx)
