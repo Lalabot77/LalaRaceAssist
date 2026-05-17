@@ -2423,3 +2423,8 @@ The public user-facing release history is maintained in the root `CHANGELOG.md`.
     - locked+usable stored value blocks overwrite,
     - locked+missing/unusable stored value allows one-time first fill (matching refuel model philosophy).
   - Strategy/pit timing math ownership unchanged; existing `TireChangeTime` consumption path retained.
+
+## 2026-05-17 — Strategy planner microcopy/docs alignment pass
+- Classification: **both** (driver-facing wording clarity + docs contract alignment; no behavior/logic changes).
+- Updated Strategy UI tooltips for `Refresh Calcs`, Race Basis owner radios, Live Detect owner semantics, and preset reapply (`↻`) to match active owner/effective-basis behavior.
+- Aligned Strategy docs + tooltip inventory wording with current semantics: recompute-only Refresh Calcs, explicit Race Basis ownership, non-destructive Live Detect, and modified-badge divergence meaning.

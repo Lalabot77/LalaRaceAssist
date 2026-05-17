@@ -64,11 +64,13 @@ Branch: work
 - L485: Live rolling average fuel per lap.
 - L486: Most efficient lap recorded in this session.
 - L487: Highest valid fuel per lap recorded in this session.
-- L513: Select a preset to apply.
+- L513: Select which preset is active for Preset race-basis ownership.
+- L520: Reapply selected preset values.
 - L526: Open the Preset Manager to create, rename, edit, or delete strategy presets.
-- L533: Choose lap-limited, time-limited, or persistent Live Detect race ownership.
-- L535: Plan for a fixed number of laps.
-- L537: Plan for a fixed race duration (minutes).
+- L533: Choose which Race Basis owner controls race type/length (Preset, Lap-Limited, Time-Limited, Live Detect).
+- L535: Lap-Limited owner: use the manual race laps slider.
+- L537: Time-Limited owner: use the manual race minutes slider.
+- L539: Live Detect owner: use declared race metadata while selected only; does not overwrite saved preset/profile values.
 - L541: Total race distance in laps.
 - L543: Total race duration in minutes.
 - L546: Fuel to reserve for formation or pace laps (L).
@@ -80,7 +82,7 @@ Branch: work
 - L569: Driver-selected mode for the PreRace on-grid info layer only. Auto is planner-first (falls back to runtime estimate only if planner values are unavailable); manual modes only affect PreRace outputs and never change planner/live fuel behavior.
 - L580: Estimated pit lane loss per stop. Auto selection uses: drive-through loss, then direct pit entry-to-exit time, then the default.
 - L592: Additional stationary time if tyres are changed. Set to 0s for a drive-through-only stop.
-- L606: Reload the planner from the active profile and live session without clearing live samples.
+- L606: Recompute calculated strategy outputs/stints from current selected inputs only; no profile reload, preset reapply, or owner/source reset.
 - L612: Save the current Race and PreRace mode parameters to the selected car/track profile (PreRace mode persistence is independent from planner calculations).
 - L697: Fuel to save per lap (L/lap) for the simulator.
 - L702: Estimated time lost per lap when saving fuel (m:ss.fff).

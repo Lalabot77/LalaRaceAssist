@@ -519,7 +519,7 @@
                                         Height="22"
                                         Margin="8,0,0,0"
                                         VerticalAlignment="Center"
-                                        ToolTip="Reapply selected preset"
+                                        ToolTip="Reapply selected preset values."
                                         Click="OnReapplySelectedPreset"
                                         IsEnabled="{Binding HasSelectedPreset}"/>
 
@@ -555,7 +555,7 @@
                             <RadioButton Content="Time-Limited" IsChecked="{Binding IsRaceBasisTimeLimited, Mode=TwoWay}" GroupName="RaceBasis" Margin="10,0,0,0"
                                          ToolTip="Use manual time length slider."/>
                             <RadioButton Content="Live Detect" IsChecked="{Binding IsRaceBasisLiveDetect, Mode=TwoWay}" GroupName="RaceBasis" Margin="10,0,0,0"
-                                         ToolTip="Use declared race session metadata as race type/length authority."/>
+                                         ToolTip="Use declared race metadata as race type/length while selected. Does not overwrite saved preset/profile values."/>
                         </StackPanel>
                         <TextBlock Text="{Binding LiveDetectHelperText}"
                                    Margin="0,-6,0,10"
@@ -645,7 +645,7 @@
                             Command="{Binding RefreshPlannerViewCommand}"
                             Padding="8,2"
                             HorizontalAlignment="Left"
-                            ToolTip="Reload the planner from the active profile and live session without clearing live samples."/>
+                            ToolTip="Recompute calculated strategy outputs and stint breakdown from the current selected inputs. Does not reload profile, reapply presets, or change ownership."/>
                         <styles:SHButtonPrimary
                             Content="Save All to Profile"
                             Command="{Binding SavePlannerDataToProfileCommand}"
