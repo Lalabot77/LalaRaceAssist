@@ -1,3 +1,6 @@
+- 2026-05-17: Live race class denominator publish path tightened.
+  - `Race.PlayerClassFieldSize` now attaches directly to `ResolveCanonicalPlayerClassRaceDenominator(...)`; no League-specific live override path remains. `RaceFinish.PlayerClassFieldSize` path unchanged.
+
 - 2026-05-16: Added bounded runtime diagnostics for race class denominator resolution.
   - `LalaLaunch` now logs `[LalaPlugin:RaceDenom]` only on denominator result/signature change so live sessions can identify which canonical branch won (`roster`, `native`, game-data/telemetry fallbacks, or none) without per-tick spam.
 

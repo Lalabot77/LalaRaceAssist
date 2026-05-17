@@ -1,3 +1,6 @@
+- 2026-05-17: Fixed live `Race.PlayerClassFieldSize` attach path to call canonical race denominator helper directly.
+  - Removed the remaining indirection method for live export so League-enabled live publish cannot take a stale/legacy override path; `RaceFinish.PlayerClassFieldSize` freeze path and denominator helper logic unchanged.
+
 - 2026-05-16: Added bounded race denominator branch diagnostics in `LalaLaunch` for `Race.PlayerClassFieldSize` / `RaceFinish.PlayerClassFieldSize` investigation.
   - New `[LalaPlugin:RaceDenom]` info log emits only when denominator branch/signature/result changes, including branch, league toggle, roster/native/opponent counters, and player native/effective class context.
 

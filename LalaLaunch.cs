@@ -7166,7 +7166,7 @@ namespace LaunchPlugin
             AttachCore("Race.EndPhaseConfidence", () => RaceEndPhaseConfidence);
             AttachCore("Race.LastLapLikely", () => RaceLastLapLikely);
             AttachCore("Race.FieldSize", () => ResolveLiveOverallFieldSize(this.PluginManager));
-            AttachCore("Race.PlayerClassFieldSize", () => ResolveLivePlayerClassFieldSize(this.PluginManager, _playerCarIdxLastTick));
+            AttachCore("Race.PlayerClassFieldSize", () => ResolveCanonicalPlayerClassRaceDenominator(this.PluginManager));
             AttachCore("RaceFinish.ClassSnapshotActive", () => _raceFinishClassSnapshotActive);
             AttachCore("RaceFinish.PlayerSnapshotActive", () => _raceFinishPlayerSnapshotActive);
             AttachCore("RaceFinish.Active", () => _raceFinishClassSnapshotActive || _raceFinishPlayerSnapshotActive);
@@ -8946,11 +8946,6 @@ namespace LaunchPlugin
             _raceDenominatorDebugSignature = signature;
             SimHub.Logging.Current.Info(
                 $"[LalaPlugin:RaceDenom] playerClassDenom result={result} {signature}");
-        }
-
-        private int ResolveLivePlayerClassFieldSize(PluginManager pluginManager, int playerCarIdx)
-        {
-            return ResolveCanonicalPlayerClassRaceDenominator(pluginManager);
         }
 
         private int CountValidCompetingDriverRowsExcludingPaceCar()
