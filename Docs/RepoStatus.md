@@ -42,18 +42,18 @@
 - 2026-05-13 Pit Fuel Control legacy PushSave surface removal landed:
   - removed legacy action `Pit.FuelControl.PushSaveModeCycle` and legacy compatibility exports `Pit.FuelControl.PushSaveMode` / `Pit.FuelControl.PushSaveModeText`;
   - removed legacy PushSave compatibility settings/property wiring and moved UI binding to canonical DATA setting state (`PitFuelControlDataMode` / `PitFuelControlDataPlanModeEnabled`);
-  - kept DATA PLAN PUSH/SAVE guard behavior unchanged and renamed UI wording to `DATA PLAN Push/Save Guard (%)`.
+  - kept DATA SAVED PUSH/SAVE guard behavior unchanged and renamed UI wording to `DATA SAVED Push/Save Guard (%)`.
 
 - 2026-05-13 after-stop delta DATA-governance update landed:
-  - existing after-stop exports `Fuel.Delta.LitresPlan`, `Fuel.Delta.LitresPlanPush`, `Fuel.Delta.LitresPlanSave` now keep name/meaning (after planned add) but select burn/lap basis from Pit Fuel Control DATA (`LIVE` live/stable, `PLAN` planner/profile only);
+  - existing after-stop exports `Fuel.Delta.LitresPlan`, `Fuel.Delta.LitresPlanPush`, `Fuel.Delta.LitresPlanSave` now keep name/meaning (after planned add) but select burn/lap basis from Pit Fuel Control DATA (`LIVE` live/stable, `SAVED` planner/profile only);
   - added plugin-owned selected export `Fuel.Delta.AfterStop.Selected` with SOURCE selection (`PUSH/SAVE/NORM/STBY=>PlanPush/PlanSave/Plan/Plan`, STBY advisory NORM);
   - no pit command send behavior changes and no changes to `Fuel.Delta.LitresCurrent*` families.
-  - PR review follow-up: DATA PLAN after-stop basis now blocks runtime fallback fuel authority and invalid/no-basis paths clear `Fuel.Delta.AfterStop.Selected` with `Fuel.Delta.LitresPlan*` to avoid stale non-zero carry-over.
+  - PR review follow-up: DATA SAVED after-stop basis now blocks runtime fallback fuel authority and invalid/no-basis paths clear `Fuel.Delta.AfterStop.Selected` with `Fuel.Delta.LitresPlan*` to avoid stale non-zero carry-over.
   - late review fix: DATA-governed resolver now guards null `GameData/NewData` so pre-first-tick PLAN snapshot paths fail-safe instead of throwing.
 - 2026-05-13 Pit Fuel Control NORM DATA-basis alignment landed:
   - `BuildPitFuelControlSnapshot()` now applies DATA authority to `NORM` target selection in addition to existing `PUSH/SAVE` behavior;
   - `DATA LIVE + NORM` keeps current runtime/live stable normal targeting;
-  - `DATA PLAN + NORM` now uses planner/profile normal-basis targeting and does not take LIVE/SIM authority on this path;
+  - `DATA SAVED + NORM` now uses planner/profile normal-basis targeting and does not take LIVE/SIM authority on this path;
   - no changes to PUSH/SAVE behavior, DATA toggle/reset behavior, source/mode cycling, AUTO arming, or pit command send semantics.
   - review follow-up fixed the `TryResolvePlanNormNeed(...)` call-site parameter names to the current `ResolveDataGovernedBurnAndPaceBasis(...)` signature.
   - review follow-up removed stale Dash Integration wording that contradicted NORM DATA-basis behavior.
@@ -168,7 +168,7 @@
   - disabled/unresolved League behavior remains native fallback; no changes to class color, effective position, CarSA/Opponents/H2H selection-ordering logic, or manual-override scope.
 
 - 2026-05-07 Fuel.Refuel DATA projection follow-up landed:
-  - removed the incorrect `simLapsRemaining > 0` reprojection gate so DATA PLAN timed-race paths can remain valid when time context + selected lap-seconds are sufficient;
+  - removed the incorrect `simLapsRemaining > 0` reprojection gate so DATA SAVED timed-race paths can remain valid when time context + selected lap-seconds are sufficient;
   - contingency configured in laps is now converted using the selected Fuel.Refuel burn basis (`selectedBurn`) used by `Fuel.Refuel.NextLitres` (including PUSH/SAVE and STBY advisory NORM), not stable/NORM-only contingency litres.
 
 - 2026-05-07 Fuel.Refuel DATA-governed projected-laps alignment landed:
@@ -178,7 +178,7 @@
 
 - 2026-05-07 Fuel.Refuel review follow-up landed:
   - invalid Fuel.Refuel reset paths now clear stale source/basis context (`BurnSource/LapSource=DEFAULT`) and refresh `DataMode/BurnMode` from current Pit Fuel Control state (safe fallback `LIVE`/`STBY`);
-  - DATA PLAN + PUSH/SAVE fallback source labelling now reflects actual derivation from selected normal basis (`PLAN`/`PROFILE`/`LIVE`) instead of always reporting `DEFAULT`.
+  - DATA SAVED + PUSH/SAVE fallback source labelling now reflects actual derivation from selected normal basis (`SAVED`/`PROFILE`/`LIVE`) instead of always reporting `DEFAULT`.
 
 - 2026-05-07 Fuel.Refuel NextStopCap follow-up landed:
   - final-stop vs multi-stop decision threshold now uses runtime effective restricted tank-cap authority seam (`ResolveRuntimeLiveMaxTankCapacity`) instead of current on-track tank-space;
@@ -205,9 +205,9 @@
   - StrategyDash phase contract is now `0=IDLE`, `1=PRE GRID`, `2=GRIDDING`, `3=START READY`, `5=RACE`;
   - added `Docs/Internal/FuelSystemMessages_Catalog.csv` as PR-safe text authority for the catalogue/split update; binary spreadsheet sync is deferred to manual/local conversion.
 
-- 2026-05-06 DATA LIVE provenance follow-up landed: PreRace DATA basis labels now emit true selected provenance tokens (`LIVE|PLAN|PROFILE|SIM|DEFAULT`) with DATA PLAN never emitting LIVE/SIM; retired `StrategyDash.IsAutoStrategy` export/wiring.
+- 2026-05-06 DATA LIVE provenance follow-up landed: PreRace DATA basis labels now emit true selected provenance tokens (`LIVE|PLAN|PROFILE|SIM|DEFAULT`) with DATA SAVED never emitting LIVE/SIM; retired `StrategyDash.IsAutoStrategy` export/wiring.
 
-  - PR #684 P1 follow-up: stable projection source `fuelcalc.estimated` now maps to LAP `PLAN` in the DATA resolver (prevents temporary `DEFAULT` regression when planner estimate is the held stable lap).
+  - PR #684 P1 follow-up: stable projection source `fuelcalc.estimated` now maps to LAP `SAVED` in the DATA resolver (prevents temporary `DEFAULT` regression when planner estimate is the held stable lap).
 
 - 2026-05-06 H2H ClassColorHex coverage follow-up landed:
   - added H2H target `ClassColorHex` exports (`H2HRace.Ahead/Behind`, `H2HTrack.Ahead/Behind`) and aligned them to the existing League-aware presentation gate with `#RRGGBB` format.
@@ -234,14 +234,14 @@
   - restored missing `ResolveDataGovernedBurnAndPaceBasis(...)` helper in `LalaLaunch` (PreRace helper region) so `UpdatePreRaceOutputs(...)` compile path is valid again;
   - hierarchy/source contracts preserved exactly:
     - DATA LIVE burn: `LIVE -> PLAN -> PROFILE -> DEFAULT`; lap: `LIVE -> PLAN -> PROFILE -> SIM -> DEFAULT`;
-    - DATA PLAN burn: `PLAN -> PROFILE -> DEFAULT`; lap: `PLAN -> PROFILE -> DEFAULT`;
+    - DATA SAVED burn: `PLAN -> PROFILE -> DEFAULT`; lap: `PLAN -> PROFILE -> DEFAULT`;
   - protected runtime domains untouched (`Fuel.Delta.*`, `Fuel.Pit.*`, `Fuel.RequiredBurnToEnd*`, boxed refuel latches, `PitFuelControlEngine` target/send behavior).
 
 - 2026-05-05 Pit Fuel Control DATA/SOURCE simplification landed:
-  - retired `SOURCE=PLAN`; source cycle is now `STBY -> NORM -> PUSH -> SAVE -> STBY`;
+  - retired `SOURCE=SAVED`; source cycle is now `STBY -> NORM -> PUSH -> SAVE -> STBY`;
   - added `Pit.FuelControl.Data` / `DataText` and actions `SetDataLive`, `SetDataPlan`, `CycleData`;
   - DATA defaults to `LIVE` on control/session reset, and changing DATA forces `SOURCE=STBY` with no fuel command send;
-  - legacy `SetPlan` remains for one release as `DATA=PLAN` + `SOURCE=STBY` feedback-only compatibility (`FUEL DATA PLAN`);
+  - legacy `SetPlan` remains for one release as `DATA=SAVED` + `SOURCE=STBY` feedback-only compatibility (`FUEL DATA SAVED`);
   - StrategyDash next-refuel target and burn-plan text now follow the DATA/SOURCE model (`NORM` runtime/live; `PUSH`/`SAVE` live or planner/profile memory by DATA).
 
 - 2026-05-05 StrategyDash burn-basis alignment + no-stop burn-plan + refuel-delta landed:
@@ -553,7 +553,7 @@ Branch: work
 - 2026-04-28 Pit Fuel Control contingency double-count follow-up landed:
   - corrected live `NORM/PUSH/SAVE` target composition in `BuildPitFuelControlSnapshot()` so `Pit.FuelControl.TargetLitres` consumes `-Fuel.Delta.LitresCurrent*` directly with non-negative clamp;
   - removed contingency re-add in Pit Fuel Control live target path because tactical deltas already protect contingency on required-to-finish;
-  - preserved planner `PLAN` target ownership (`PlannerNextAddLitres`) and all existing tactical delta semantics.
+  - preserved planner `SAVED` target ownership (`PlannerNextAddLitres`) and all existing tactical delta semantics.
 - 2026-04-28 Burn-to-end + contingency tactical fuel guidance update landed:
   - added new runtime exports: `Fuel.RequiredBurnToEnd`, `Fuel.RequiredBurnToEnd.Valid`, `Fuel.RequiredBurnToEnd.State`, `Fuel.RequiredBurnToEnd.StateText`, `Fuel.RequiredBurnToEnd.Source`, `Fuel.Contingency.Litres`, `Fuel.Contingency.Laps`, `Fuel.Contingency.Source`;
   - tactical `Fuel.Delta.LitresCurrent/Plan/WillAdd` and Push/Save variants now protect active contingency reserve on the required-to-finish side only;
@@ -748,7 +748,7 @@ Branch: work
   - AUTO entry now sends immediately for `PUSH/NORM/SAVE` and arms only on successful send; PLAN entry is one-shot immediate send and then forced back to `Source=STBY` disarmed,
   - AUTO source cycle is now PLAN-isolated (`PUSH -> NORM -> SAVE -> PUSH` only); PLAN remains available in MAN cycle only,
   - AUTO cancel edge-trigger and lap-cross AUTO update cadence remain unchanged.
-  - same-day follow-up: MAN->AUTO immediate-send failures now explicitly publish `Pit Cmd Fail` for both `PLAN` and `PUSH/NORM/SAVE` entry branches while preserving fallback-to-`STBY` + disarmed behavior.
+  - same-day follow-up: MAN->AUTO immediate-send failures now explicitly publish `Pit Cmd Fail` for both `SAVED` and `PUSH/NORM/SAVE` entry branches while preserving fallback-to-`STBY` + disarmed behavior.
 - Tyre Control PR follow-up landed (explicit raw-command model + AUTO external ownership cancel/remap):
   - tyre control engine no longer uses internal toggle semantics for service enforcement (`Pit.ToggleTyresAll` remains a direct user action only);
   - explicit tyre commands are now authoritative in-engine (`OFF => #cleartires$`; `DRY/WET/AUTO => #t$` then dry/wet `#tc ...$`);
@@ -964,12 +964,12 @@ Branch: work
   - `Pit.FuelSetMax` tank-full short-circuit is now phase-aware: MAX phase can short-circuit, ZERO phase always transports.
   - forced-STBY mode transitions now preserve mode context in one feedback string:
     - `AUTO -> MAN` => `FUEL MAN STBY`
-    - `MAN -> AUTO` from `PLAN` => `FUEL AUTO STBY`
-  - `MAN -> AUTO` from `PLAN` now leaves `AutoArmed=false` while forcing `Source=STBY` (AUTO mode selected, but not armed until explicit live-source reselection/send).
+    - `MAN -> AUTO` from `SAVED` => `FUEL AUTO STBY`
+  - `MAN -> AUTO` from `SAVED` now leaves `AutoArmed=false` while forcing `Source=STBY` (AUTO mode selected, but not armed until explicit live-source reselection/send).
   - `MAN -> AUTO` from `STBY` now also leaves `AutoArmed=false` and keeps feedback explicit as `FUEL AUTO STBY` (prevents immediate self-cancel before reselection/send).
 - Pit Fuel Control control-model follow-up corrected action semantics:
   - `Pit.FuelSetMax` is now a real MAX/ZERO behavioral toggle on transport (`MAX -> ZERO -> MAX -> ZERO`), while `Pit.Command.FuelSetMaxToggleState` still flips on every press.
-  - `ModeCycle` no longer hard-blocks `MAN -> AUTO` when `Source=PLAN`; it allows AUTO and immediately forces `Source=STBY` so the driver must reselect a live source.
+  - `ModeCycle` no longer hard-blocks `MAN -> AUTO` when `Source=SAVED`; it allows AUTO and immediately forces `Source=STBY` so the driver must reselect a live source.
   - Latest follow-up keeps that MAN->AUTO forced-STBY guardrail but restores disable flow by cycling `AUTO -> OFF` (no AUTO->MAN forced-STBY branch in current behavior).
   - `ModeCycle` selection feedback remains plugin-owned and explicit (`FUEL AUTO STBY` on forced-STBY MAN->AUTO, `FUEL MODE OFF` on AUTO->OFF).
 - PR follow-up hardened LapRef authoritative-lap freshness at rollover:
@@ -998,7 +998,7 @@ Branch: work
   - SessionState `4` keeps normal live running projection behavior
   - existing `Fuel.Delta.*` / `Fuel.Pit.*` outputs inherit the fix from the shared projection seam
 - Remapped Pit Fuel Control source authority to non-clamped live seams:
-  - `PLAN` stays planner-owned (`PlannerNextAddLitres`)
+  - `SAVED` stays planner-owned (`PlannerNextAddLitres`)
   - `NORM` stays non-clamped runtime need seam
   - `PUSH/SAVE` now use direct requirement-minus-current seams (no `WillAdd` coupling)
 - Added live-source contingency alignment for Pit Fuel Control:

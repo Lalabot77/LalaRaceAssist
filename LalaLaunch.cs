@@ -1216,12 +1216,10 @@ namespace LaunchPlugin
             }
             else
             {
-                if (planFuel > 0.0) { fuelPerLap = planFuel; fuelSource = "PLAN"; }
-                else if (profileFuel > 0.0) { fuelPerLap = profileFuel; fuelSource = "PROFILE"; }
+                if (profileFuel > 0.0) { fuelPerLap = profileFuel; fuelSource = "PROFILE"; }
                 else if (fallbackFuelPerLap > 0.0) { fuelPerLap = fallbackFuelPerLap; fuelSource = "DEFAULT"; }
 
-                if (planLap > 0.0) { lapSeconds = planLap; lapSource = "PLAN"; }
-                else if (profileLap > 0.0) { lapSeconds = profileLap; lapSource = "PROFILE"; }
+                if (profileLap > 0.0) { lapSeconds = profileLap; lapSource = "PROFILE"; }
                 else { lapSource = "DEFAULT"; }
             }
         }
@@ -7197,8 +7195,9 @@ namespace LaunchPlugin
             AttachCore("Pit.Command.LastAction", () => _pitCommandEngine.LastAction);
             AttachCore("Pit.Command.LastRaw", () => _pitCommandEngine.LastRaw);
             AttachCore("Pit.Command.FuelSetMaxToggleState", () => _pitCommandEngine.FuelSetMaxToggleState);
-            AttachCore("Pit.FuelControl.Data", () => (int)_pitFuelControlEngine.Data);
-            AttachCore("Pit.FuelControl.DataText", () => _pitFuelControlEngine.DataText);
+            AttachCore("Pit.FuelControl.Data", () => (int)ResolvePitFuelControlDataAuthorityState(_currentTickGameData).Code);
+            AttachCore("Pit.FuelControl.DataText", () => ResolvePitFuelControlDataAuthorityState(_currentTickGameData).Text);
+            AttachCore("Pit.FuelControl.DataColor", () => ResolvePitFuelControlDataAuthorityState(_currentTickGameData).ColorHex);
             AttachCore("Pit.FuelControl.Source", () => (int)_pitFuelControlEngine.Source);
             AttachCore("Pit.FuelControl.SourceText", () => _pitFuelControlEngine.SourceText);
             AttachCore("Pit.FuelControl.Mode", () => (int)_pitFuelControlEngine.Mode);
@@ -9518,23 +9517,79 @@ namespace LaunchPlugin
             return true;
         }
 
+        
+        private enum PitFuelDataAuthorityCode
+        {
+            Live = 0,
+            Build = 1,
+            Saved = 2,
+            Simh = 3,
+            Dfalt = 4,
+            Fail = 5
+        }
+
+        private struct PitFuelDataAuthorityState
+        {
+            public PitFuelDataAuthorityCode Code;
+            public string Text;
+            public string ColorHex;
+        }
+
+        private PitFuelDataAuthorityState ResolvePitFuelControlDataAuthorityState(GameData data)
+        {
+            double fallbackFuelPerLap = IsFinitePositive(LiveFuelPerLap_Stable) ? LiveFuelPerLap_Stable : 0.0;
+            if (ResolveRuntimeRefuelBasis(data, fallbackFuelPerLap, out double selectedBurn, out double lapSeconds, out string burnSource, out string lapSource))
+            {
+                string source = ClassifyRefuelSourceToken(burnSource);
+                var selectedData = _pitFuelControlEngine?.Data ?? PitFuelControlData.Live;
+                if (selectedData == PitFuelControlData.Live)
+                {
+                    if (source == "LIVE") return MakePitFuelDataAuthorityState(PitFuelDataAuthorityCode.Live);
+                    if (source == "PROFILE" || source == "PLAN") return MakePitFuelDataAuthorityState(PitFuelDataAuthorityCode.Build);
+                    if (source == "SIM") return MakePitFuelDataAuthorityState(PitFuelDataAuthorityCode.Simh);
+                    if (source == "DEFAULT") return MakePitFuelDataAuthorityState(PitFuelDataAuthorityCode.Dfalt);
+                }
+                else
+                {
+                    if (source == "PROFILE" || source == "PLAN") return MakePitFuelDataAuthorityState(PitFuelDataAuthorityCode.Saved);
+                    if (source == "SIM") return MakePitFuelDataAuthorityState(PitFuelDataAuthorityCode.Simh);
+                    if (source == "DEFAULT") return MakePitFuelDataAuthorityState(PitFuelDataAuthorityCode.Dfalt);
+                }
+            }
+
+            return MakePitFuelDataAuthorityState(PitFuelDataAuthorityCode.Fail);
+        }
+
+        private static PitFuelDataAuthorityState MakePitFuelDataAuthorityState(PitFuelDataAuthorityCode code)
+        {
+            switch (code)
+            {
+                case PitFuelDataAuthorityCode.Live: return new PitFuelDataAuthorityState { Code = code, Text = "LIVE", ColorHex = "#FF00FF" };
+                case PitFuelDataAuthorityCode.Build: return new PitFuelDataAuthorityState { Code = code, Text = "BUILD", ColorHex = "#FFFF00" };
+                case PitFuelDataAuthorityCode.Saved: return new PitFuelDataAuthorityState { Code = code, Text = "SAVED", ColorHex = "#00FFFF" };
+                case PitFuelDataAuthorityCode.Simh: return new PitFuelDataAuthorityState { Code = code, Text = "SIMH", ColorHex = "#FFA500" };
+                case PitFuelDataAuthorityCode.Dfalt: return new PitFuelDataAuthorityState { Code = code, Text = "DFALT", ColorHex = "#FFA500" };
+                default: return new PitFuelDataAuthorityState { Code = PitFuelDataAuthorityCode.Fail, Text = "FAIL", ColorHex = "#FF0000" };
+            }
+        }
+
         private static string PitFuelControlDataToText(PitFuelControlData data)
         {
-            return data == PitFuelControlData.Plan ? "PLAN" : "LIVE";
+            return data == PitFuelControlData.Plan ? "SAVED" : "LIVE";
         }
 
         private static string ClassifyStrategyDashBurnSourceTag(string source)
         {
             if (string.IsNullOrWhiteSpace(source)) return string.Empty;
             string token = source.Trim().ToUpperInvariant();
-            return token == "LIVE" || token == "PLAN" || token == "PROFILE" || token == "SIM" || token == "DEFAULT" ? token : string.Empty;
+            return token == "LIVE" || token == "SAVED" || token == "PLAN" || token == "PROFILE" || token == "SIM" || token == "DEFAULT" ? token : string.Empty;
         }
 
         private static string ClassifyRefuelSourceToken(string source)
         {
             if (string.IsNullOrWhiteSpace(source)) return "DEFAULT";
             string token = source.Trim().ToUpperInvariant();
-            return token == "LIVE" || token == "PLAN" || token == "PROFILE" || token == "SIM" || token == "DEFAULT" ? token : "DEFAULT";
+            return token == "LIVE" || token == "SAVED" || token == "PLAN" || token == "PROFILE" || token == "SIM" || token == "DEFAULT" ? token : "DEFAULT";
         }
 
         private static string GetRefuelBurnModeText(PitFuelControlSource source)
@@ -9678,10 +9733,10 @@ namespace LaunchPlugin
                     selectedBurn = PushFuelPerLap;
                     burnSource = "LIVE";
                 }
-                else if (normFuelSource == "PLAN" && FuelCalculator != null && FuelCalculator.FuelPerLap > 0.0 && hasProfilePushSave && profilePushBurn > 0.0)
+                else if ((normFuelSource == "PLAN" || normFuelSource == "PROFILE") && hasProfilePushSave && profilePushBurn > 0.0)
                 {
                     selectedBurn = profilePushBurn;
-                    burnSource = "PLAN";
+                    burnSource = normFuelSource == "PROFILE" ? "PROFILE" : "PLAN";
                 }
                 else if (hasProfilePushSave && profilePushBurn > 0.0)
                 {
@@ -9701,10 +9756,10 @@ namespace LaunchPlugin
                     selectedBurn = FuelSaveFuelPerLap;
                     burnSource = "LIVE";
                 }
-                else if (normFuelSource == "PLAN" && FuelCalculator != null && FuelCalculator.FuelPerLap > 0.0 && hasProfilePushSave && profileSaveBurn > 0.0)
+                else if ((normFuelSource == "PLAN" || normFuelSource == "PROFILE") && hasProfilePushSave && profileSaveBurn > 0.0)
                 {
                     selectedBurn = profileSaveBurn;
-                    burnSource = "PLAN";
+                    burnSource = normFuelSource == "PROFILE" ? "PROFILE" : "PLAN";
                 }
                 else if (hasProfilePushSave && profileSaveBurn > 0.0)
                 {
@@ -9759,7 +9814,7 @@ namespace LaunchPlugin
             Fuel_Refuel_NextText = "CHECK FUEL";
             Fuel_Refuel_BurnSource = "DEFAULT";
             Fuel_Refuel_LapSource = "DEFAULT";
-            Fuel_Refuel_DataMode = (_pitFuelControlEngine?.Data ?? PitFuelControlData.Live) == PitFuelControlData.Plan ? "PLAN" : "LIVE";
+            Fuel_Refuel_DataMode = (_pitFuelControlEngine?.Data ?? PitFuelControlData.Live) == PitFuelControlData.Plan ? "SAVED" : "LIVE";
             Fuel_Refuel_BurnMode = GetRefuelBurnModeText(_pitFuelControlEngine?.Source ?? PitFuelControlSource.Stby);
             Fuel_Refuel_SelectedBurnPerLap = 0.0;
             Fuel_Live_RemainingStints = 0.0;
@@ -9777,7 +9832,7 @@ namespace LaunchPlugin
             double multiStopDisplayAddCapLitres,
             ResolvedContingency contingency)
         {
-            Fuel_Refuel_DataMode = (_pitFuelControlEngine?.Data ?? PitFuelControlData.Live) == PitFuelControlData.Plan ? "PLAN" : "LIVE";
+            Fuel_Refuel_DataMode = (_pitFuelControlEngine?.Data ?? PitFuelControlData.Live) == PitFuelControlData.Plan ? "SAVED" : "LIVE";
             var sourceMode = _pitFuelControlEngine?.Source ?? PitFuelControlSource.Stby;
             Fuel_Refuel_BurnMode = GetRefuelBurnModeText(sourceMode);
 
