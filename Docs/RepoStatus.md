@@ -1,3 +1,7 @@
+- 2026-05-17: PR #730 follow-up fixed tyre-time profile copy parity.
+  - profile clone/copy paths now copy `TireChangeTime` whenever `TireChangeTimeLocked` is copied, preventing locked-with-stale-value destination states.
+  - removed unused `_tyreLearnLastAllFourSelected` field from runtime learner state storage (no learning-semantics change).
+
 - 2026-05-17: Tyre change time learning + lock model landed (car-level, conservative all-four learning).
   - Added profile field `TireChangeTimeLocked` (default false for legacy profiles) and propagated default/clone/copy paths.
   - Added Profiles CAR-tab tyre timing lock UI beside tyre-change time control.

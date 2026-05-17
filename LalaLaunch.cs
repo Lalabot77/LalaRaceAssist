@@ -6331,7 +6331,6 @@ namespace LaunchPlugin
         }
         private TyreLearnState _tyreLearnState = TyreLearnState.Idle;
         private double _tyreLearnStartSessionTimeSec = 0.0;
-        private bool _tyreLearnLastAllFourSelected = false;
         private string _tyreLearnLastProfileName = string.Empty;
         private const double TyreLearnMinSeconds = 5.0;
         private const double TyreLearnMaxSeconds = 60.0;
@@ -9345,7 +9344,6 @@ namespace LaunchPlugin
             _lastFuel = 0.0;
             _tyreLearnState = TyreLearnState.Idle;
             _tyreLearnStartSessionTimeSec = 0.0;
-            _tyreLearnLastAllFourSelected = false;
             _tyreLearnLastProfileName = string.Empty;
 
             FuelCalculator?.ForceProfileDataReload();
@@ -10750,7 +10748,6 @@ namespace LaunchPlugin
                     _tyreLearnStartSessionTimeSec = 0.0;
                 }
             }
-            _tyreLearnLastAllFourSelected = allFourSelected;
 
             // === AUTO-LEARN REFUEL RATE FROM PIT BOX (hardened) ===
             double currentFuel = data.NewData?.Fuel ?? 0.0;

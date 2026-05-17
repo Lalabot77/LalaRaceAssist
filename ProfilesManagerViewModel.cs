@@ -1407,6 +1407,7 @@ namespace LaunchPlugin
                 newProfile.AntiStallThreshold = defaultProfile.AntiStallThreshold;
                 newProfile.PreRaceMode = defaultProfile.PreRaceMode;
                 newProfile.RefuelRate = defaultProfile.RefuelRate;
+                newProfile.TireChangeTime = defaultProfile.TireChangeTime;
                 newProfile.TireChangeTimeLocked = defaultProfile.TireChangeTimeLocked;
                 newProfile.RefuelRateLocked = defaultProfile.RefuelRateLocked;
                 newProfile.BaseTankLitres = defaultProfile.BaseTankLitres;
@@ -1532,6 +1533,7 @@ namespace LaunchPlugin
             destination.SpinYawRateThreshold = source.SpinYawRateThreshold;
             destination.TrafficApproachWarnSeconds = source.TrafficApproachWarnSeconds;
             destination.RefuelRate = source.RefuelRate;
+            destination.TireChangeTime = source.TireChangeTime;
             destination.TireChangeTimeLocked = source.TireChangeTimeLocked;
             destination.RefuelRateLocked = source.RefuelRateLocked;
             destination.BaseTankLitres = source.BaseTankLitres;

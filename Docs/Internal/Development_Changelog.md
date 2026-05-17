@@ -1,3 +1,8 @@
+- 2026-05-17: PR #730 follow-up fixed tyre-time value/lock copy parity in profile clone paths.
+  - `NewProfile()` default-seed clone now copies `TireChangeTime` together with `TireChangeTimeLocked`.
+  - `CopyProfileProperties(...)` now copies `TireChangeTime` together with `TireChangeTimeLocked`.
+  - removed unused `_tyreLearnLastAllFourSelected` field/assignments from `LalaLaunch` (no behavior change to learner state machine).
+
 - 2026-05-16 RaceFinish player finish-time baseline latch follow-up landed.
   - `TryCaptureRaceFinishPlayerSnapshot(...)` now latches the first observed player-finish tick session timestamp before class-position retry gating.
   - If class position is temporarily unresolved (`<=0`) and capture retries on a later tick, `RaceFinish.PlayerFinishGapSec` now computes from the latched first-finish timestamp (no retry-path drift).
