@@ -4461,6 +4461,12 @@ namespace LaunchPlugin
         HasProfileFuelPerLap = false;
         HasProfilePitLaneLoss = false;
 
+        OnPropertyChanged(nameof(ProfileAvgLapTimeDisplay));
+        OnPropertyChanged(nameof(ProfileAvgFuelDisplay));
+        OnPropertyChanged(nameof(ProfileAvgDryLapTimeDisplay));
+        OnPropertyChanged(nameof(ProfileAvgDryFuelDisplay));
+        OnPropertyChanged(nameof(ShowProfileLapHelper));
+
         _profileDryFuelAvg = 0;
         _profileDryFuelMin = 0;
         _profileDryFuelMax = 0;

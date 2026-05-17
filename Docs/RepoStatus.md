@@ -1,3 +1,7 @@
+- 2026-05-17: Strategy Planner profile preview stale-label regression fix validated.
+  - Profile-mode AVG/ECO/MAX preview row now clears immediately on missing/deleted track fuel context (no Live Snapshot toggle required).
+  - fix is UI-refresh scoped (`PropertyChanged` on profile preview display fields during track-scoped reset); no runtime DATA authority, pit command behavior, or refuel-formula behavior changes.
+
 - 2026-05-17: PR #730 follow-up fixed tyre-time profile copy parity.
   - profile clone/copy paths now copy `TireChangeTime` whenever `TireChangeTimeLocked` is copied, preventing locked-with-stale-value destination states.
   - removed unused `_tyreLearnLastAllFourSelected` field from runtime learner state storage (no learning-semantics change).
