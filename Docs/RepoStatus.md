@@ -1,3 +1,9 @@
+- 2026-05-17: Tyre change time learning + lock model landed (car-level, conservative all-four learning).
+  - Added profile field `TireChangeTimeLocked` (default false for legacy profiles) and propagated default/clone/copy paths.
+  - Added Profiles CAR-tab tyre timing lock UI beside tyre-change time control.
+  - Added lock-aware tyre-time persistence seam mirroring refuel behavior (`locked suppress`, `locked first-fill when no usable stored value`).
+  - Added bounded `[LalaPlugin:Tyre Learn]` state-machine logging and learning path using only per-wheel tyre flags (`dpLFTireChange/dpRFTireChange/dpLRTireChange/dpRRTireChange`), rejecting uncertain candidates conservatively.
+
 - 2026-05-16: Race player-class denominator authority fix landed.
   - `Race.PlayerClassFieldSize` now uses a canonical current-session denominator path and no longer takes League CSV registered class-membership fallback through `LeagueClass.Player.DriverCount`.
   - League-enabled denominator remains current-session effective cohort first, with native/session telemetry class-denominator fallback when cohort data is unavailable.

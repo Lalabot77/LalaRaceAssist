@@ -2405,3 +2405,16 @@ The public user-facing release history is maintained in the root `CHANGELOG.md`.
   - `Race.PlayerClassFieldSize` now resolves from a canonical current-session denominator path and no longer uses League CSV registered membership fallback (`CountValidCsvDriversInClass`) through `LeagueClass.Player.DriverCount`.
   - League-enabled class denominator remains current-session effective cohort first; if unresolved in-session, fallback is native/session telemetry class denominator (not CSV membership count).
   - `RaceFinish.PlayerClassFieldSize` class-snapshot freeze now uses the same canonical denominator helper and allows bounded pending refresh only when the initial frozen value is invalid (`0`) and player snapshot is still pending; finish timing/triggers unchanged.
+- 2026-05-17: Tyre change time learning + lock model landed (refuel-lock analogue).
+  - Added car-level profile lock field `TireChangeTimeLocked` with backward-compatible default `false` on existing profiles.
+  - Added Profiles CAR-tab tyre timing lock UI beside tyre-change time edit control.
+  - Added bounded runtime tyre-time learner (`[LalaPlugin:Tyre Learn]`) using individual per-wheel tyre flags only (`dpLFTireChange/dpRFTireChange/dpLRTireChange/dpRRTireChange`), with conservative state machine:
+    - arm on all-four selected in pit lane,
+    - confirm start in valid in-box service context,
+    - complete on all-four clear,
+    - reject out-of-bounds/partial/gap/ambiguous candidates.
+  - Added lock-aware save seam `SaveTireChangeTimeToActiveProfile(...)`:
+    - unlocked save allowed,
+    - locked+usable stored value blocks overwrite,
+    - locked+missing/unusable stored value allows one-time first fill (matching refuel model philosophy).
+  - Strategy/pit timing math ownership unchanged; existing `TireChangeTime` consumption path retained.

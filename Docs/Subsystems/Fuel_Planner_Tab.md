@@ -71,6 +71,7 @@ These planner inputs persist on the selected `TrackStats` record rather than on 
 - contingency mode (`laps` vs `litres`)
 
 The current car profile still owns per-car items such as refuel rate, refuel-rate lock, base tank, tyre-change time, and pit-entry settings, but the four planner controls above are now **track-only**. With refuel-rate lock enabled and a usable stored value, planner/runtime keep using that stored value instead of applying later learned overwrite candidates (except the one-time locked first-fill fail-safe when no usable stored rate exists yet).
+Tyre-change time follows the same car-level lock philosophy: `TireChangeTime` remains car-scoped and live tyre-time learning can update it only while unlocked (or one-time locked first-fill when no usable stored tyre time exists).
 
 Planner inputs persist until explicitly changed by the user or reset by session identity change.
 

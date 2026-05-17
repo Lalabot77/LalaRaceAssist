@@ -253,6 +253,7 @@ namespace LaunchPlugin
                     car.AntiStallThreshold = defaultProfile.AntiStallThreshold;
                     car.PreRaceMode = defaultProfile.PreRaceMode;
                     car.TireChangeTime = defaultProfile.TireChangeTime;
+                    car.TireChangeTimeLocked = defaultProfile.TireChangeTimeLocked;
                     car.RefuelRate = defaultProfile.RefuelRate;
                     car.RefuelRateLocked = defaultProfile.RefuelRateLocked;
                     car.BaseTankLitres = defaultProfile.BaseTankLitres;
@@ -1406,6 +1407,7 @@ namespace LaunchPlugin
                 newProfile.AntiStallThreshold = defaultProfile.AntiStallThreshold;
                 newProfile.PreRaceMode = defaultProfile.PreRaceMode;
                 newProfile.RefuelRate = defaultProfile.RefuelRate;
+                newProfile.TireChangeTimeLocked = defaultProfile.TireChangeTimeLocked;
                 newProfile.RefuelRateLocked = defaultProfile.RefuelRateLocked;
                 newProfile.BaseTankLitres = defaultProfile.BaseTankLitres;
                 newProfile.RejoinWarningLingerTime = defaultProfile.RejoinWarningLingerTime;
@@ -1530,6 +1532,7 @@ namespace LaunchPlugin
             destination.SpinYawRateThreshold = source.SpinYawRateThreshold;
             destination.TrafficApproachWarnSeconds = source.TrafficApproachWarnSeconds;
             destination.RefuelRate = source.RefuelRate;
+            destination.TireChangeTimeLocked = source.TireChangeTimeLocked;
             destination.RefuelRateLocked = source.RefuelRateLocked;
             destination.BaseTankLitres = source.BaseTankLitres;
             destination.PitEntryDecelMps2 = source.PitEntryDecelMps2;
@@ -2026,6 +2029,7 @@ namespace LaunchPlugin
                     // Fuel & Pit Properties
                     PreRaceMode = 1,
                     TireChangeTime = 22,
+                    TireChangeTimeLocked = false,
                     RefuelRate = 3.7,
                     RefuelRateLocked = false,
                     BaseTankLitres = null,

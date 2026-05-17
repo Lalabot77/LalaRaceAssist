@@ -78,6 +78,24 @@
                                                   IsChecked="{Binding RefuelRateLocked, Mode=TwoWay}"
                                                   ToolTip="Lock to prevent live refuel learning from overwriting this value."/>
                                     </Grid>
+
+                                    <TextBlock Margin="0,10,0,0" Text="Tyre Change Time (s):" ToolTip="Estimated 4-tyre service time. Live learning can update this value while unlocked."/>
+                                    <Grid Margin="0,4,0,0">
+                                        <Grid.ColumnDefinitions>
+                                            <ColumnDefinition Width="*" />
+                                            <ColumnDefinition Width="Auto" />
+                                            <ColumnDefinition Width="Auto" />
+                                        </Grid.ColumnDefinitions>
+                                        <Slider Grid.Column="0" VerticalAlignment="Center" Value="{Binding TireChangeTime, Mode=TwoWay}" Minimum="5" Maximum="60" SmallChange="0.5" TickFrequency="0.5" IsSnapToTickEnabled="True"
+                                                ToolTip="Set tyre change time (seconds). Live all-four tyre service learning can update this value while unlocked."/>
+                                        <TextBlock Grid.Column="1" Text="{Binding TireChangeTime, StringFormat=N1}" VerticalAlignment="Center" Margin="10,0,0,0" MinWidth="35" TextAlignment="Right"/>
+                                        <CheckBox Grid.Column="2"
+                                                  Margin="12,0,0,0"
+                                                  VerticalAlignment="Center"
+                                                  Content="Locked"
+                                                  IsChecked="{Binding TireChangeTimeLocked, Mode=TwoWay}"
+                                                  ToolTip="Lock to prevent live tyre-time learning from overwriting this value."/>
+                                    </Grid>
                                 </StackPanel>
 
                                 <StackPanel Grid.Column="2">
