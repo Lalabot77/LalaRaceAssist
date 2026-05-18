@@ -1,3 +1,8 @@
+- 2026-05-18: PR #733 runtime refuel SIM provenance propagation fix landed.
+  - Runtime refuel path now propagates fallback provenance into `ResolveRuntimeRefuelBasis(...)`/`ResolveDataGovernedBurnAndPaceBasis(...)` so genuine DataCore computed fallback can emit `SIM`/`SIMH`.
+  - Data-authority classification path that uses plugin-held stable fallback keeps `fallbackFuelIsSimHub=false`, so synthetic/default fallback still emits `DEFAULT`/`DFALT`.
+  - no authority-order, pit-send, or refuel-formula behavior change.
+
 - 2026-05-18: PR #733 follow-up SIM provenance guard fix landed.
   - DATA-governed burn resolver now emits burn source `SIM` only when fallback provenance is genuine `DataCorePlugin.Computed.Fuel_LitersPerLap`; plugin/synthetic fallback inputs now emit `DEFAULT`.
   - prevents false `Fuel.Refuel.BurnSource=SIM` / `Pit.FuelControl.DataText=SIMH` on synthetic/default fallback values (for example startup floor values).

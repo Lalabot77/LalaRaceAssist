@@ -1442,3 +1442,4 @@ Branch: work
 - 2026-05-18: DATA LIVE BUILD/SIMH fallback authority audit validated (runtime BUILD no longer uses planner default burn; SIMH burn fallback reachable and correctly surfaced as SIMH authority when profile burn is unavailable).
 - 2026-05-18: PR #733 final wording cleanup: active transitional DATA label renamed BUILD -> PEND (code `Pit.FuelControl.Data=1` unchanged); terminology-only update with no runtime authority/maths/send behavior change.
 - 2026-05-18: PR #733 SIM provenance guard follow-up: burn `SIM`/`SIMH` now requires genuine DataCore computed fallback provenance; synthetic/plugin fallback now reports `DEFAULT`/`DFALT` (no authority-chain or refuel-math change).
+- 2026-05-18: PR #733 runtime refuel provenance propagation follow-up: runtime refuel basis now preserves genuine DataCore fallback provenance (`SIM`/`SIMH`) while plugin-held synthetic fallback remains `DEFAULT`/`DFALT` (no authority-order or math/send behavior change).

@@ -9604,7 +9604,7 @@ namespace LaunchPlugin
         private PitFuelDataAuthorityState ResolvePitFuelControlDataAuthorityState(GameData data)
         {
             double fallbackFuelPerLap = IsFinitePositive(LiveFuelPerLap_Stable) ? LiveFuelPerLap_Stable : 0.0;
-            if (ResolveRuntimeRefuelBasis(data, fallbackFuelPerLap, out double selectedBurn, out double lapSeconds, out string burnSource, out string lapSource))
+            if (ResolveRuntimeRefuelBasis(data, fallbackFuelPerLap, fallbackFuelIsSimHub: false, out double selectedBurn, out double lapSeconds, out string burnSource, out string lapSource))
             {
                 string source = ClassifyRefuelSourceToken(burnSource);
                 var selectedData = _pitFuelControlEngine?.Data ?? PitFuelControlData.Live;
@@ -9753,6 +9753,7 @@ namespace LaunchPlugin
         private bool ResolveRuntimeRefuelBasis(
             GameData data,
             double fallbackFuelPerLap,
+            bool fallbackFuelIsSimHub,
             out double selectedBurn,
             out double projectionLapSeconds,
             out string burnSource,
@@ -9770,7 +9771,7 @@ namespace LaunchPlugin
             double resolvedLapSeconds;
             string normFuelSourceRaw;
             string lapSourceRaw;
-            ResolveDataGovernedBurnAndPaceBasis(data, fallbackFuelPerLap, fallbackFuelIsSimHub: false, out normFuelPerLap, out resolvedLapSeconds, out normFuelSourceRaw, out lapSourceRaw);
+            ResolveDataGovernedBurnAndPaceBasis(data, fallbackFuelPerLap, fallbackFuelIsSimHub: fallbackFuelIsSimHub, out normFuelPerLap, out resolvedLapSeconds, out normFuelSourceRaw, out lapSourceRaw);
 
             string normFuelSource = ClassifyRefuelSourceToken(normFuelSourceRaw);
             string resolvedLapSource = ClassifyRefuelSourceToken(lapSourceRaw);
@@ -9906,7 +9907,7 @@ namespace LaunchPlugin
             double lapSeconds;
             string burnSource;
             string lapSource;
-            bool hasBasis = ResolveRuntimeRefuelBasis(data, fallbackFuelPerLap, out selectedBurn, out lapSeconds, out burnSource, out lapSource);
+            bool hasBasis = ResolveRuntimeRefuelBasis(data, fallbackFuelPerLap, fallbackFuelIsSimHub: true, out selectedBurn, out lapSeconds, out burnSource, out lapSource);
             Fuel_Refuel_BurnSource = ClassifyRefuelSourceToken(burnSource);
             Fuel_Refuel_LapSource = ClassifyRefuelSourceToken(lapSource);
             Fuel_Refuel_SelectedBurnPerLap = selectedBurn > 0.0 ? selectedBurn : 0.0;
