@@ -1,3 +1,8 @@
+- 2026-05-18: PR #733 same-tick authority/refuel SIM provenance alignment fix landed.
+  - Active DATA authority classification now shares the same current-tick fallback provenance used by runtime refuel basis resolution.
+  - prevents contradictory same-tick exports (`Fuel.Refuel.BurnSource=SIM` with `Pit.FuelControl.DataText=DFALT`); genuine DataCore fallback now aligns to `SIM`/`SIMH`, synthetic/plugin fallback aligns to `DEFAULT`/`DFALT`.
+  - no authority-order, pit-send, or refuel-formula behavior change.
+
 - 2026-05-18: PR #733 runtime refuel SIM provenance propagation fix landed.
   - Runtime refuel path now propagates fallback provenance into `ResolveRuntimeRefuelBasis(...)`/`ResolveDataGovernedBurnAndPaceBasis(...)` so genuine DataCore computed fallback can emit `SIM`/`SIMH`.
   - Data-authority classification path that uses plugin-held stable fallback keeps `fallbackFuelIsSimHub=false`, so synthetic/default fallback still emits `DEFAULT`/`DFALT`.

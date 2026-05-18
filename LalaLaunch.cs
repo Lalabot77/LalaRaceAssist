@@ -799,6 +799,8 @@ namespace LaunchPlugin
         // --- Live Fuel Calculation State ---
         private double _lastFuelLevel = -1;
         private GameData _currentTickGameData;
+        private double _currentTickFallbackFuelPerLap;
+        private bool _currentTickFallbackFuelIsSimHub;
         private double _lapStartFuel = -1;
         private double _lastLapDistPct = -1;
         private int _lapDetectorLastCompleted = -1;
@@ -3488,6 +3490,8 @@ namespace LaunchPlugin
             double fallbackFuelPerLap = Convert.ToDouble(
                 PluginManager.GetPropertyValue("DataCorePlugin.Computed.Fuel_LitersPerLap") ?? 0.0
             );
+            _currentTickFallbackFuelPerLap = fallbackFuelPerLap;
+            _currentTickFallbackFuelIsSimHub = true;
 
             double effectiveMaxTank = EffectiveLiveMaxTank;
 
@@ -9603,8 +9607,11 @@ namespace LaunchPlugin
 
         private PitFuelDataAuthorityState ResolvePitFuelControlDataAuthorityState(GameData data)
         {
-            double fallbackFuelPerLap = IsFinitePositive(LiveFuelPerLap_Stable) ? LiveFuelPerLap_Stable : 0.0;
-            if (ResolveRuntimeRefuelBasis(data, fallbackFuelPerLap, fallbackFuelIsSimHub: false, out double selectedBurn, out double lapSeconds, out string burnSource, out string lapSource))
+            double fallbackFuelPerLap = IsFinitePositive(_currentTickFallbackFuelPerLap)
+                ? _currentTickFallbackFuelPerLap
+                : (IsFinitePositive(LiveFuelPerLap_Stable) ? LiveFuelPerLap_Stable : 0.0);
+            bool fallbackFuelIsSimHub = IsFinitePositive(_currentTickFallbackFuelPerLap) && _currentTickFallbackFuelIsSimHub;
+            if (ResolveRuntimeRefuelBasis(data, fallbackFuelPerLap, fallbackFuelIsSimHub: fallbackFuelIsSimHub, out double selectedBurn, out double lapSeconds, out string burnSource, out string lapSource))
             {
                 string source = ClassifyRefuelSourceToken(burnSource);
                 var selectedData = _pitFuelControlEngine?.Data ?? PitFuelControlData.Live;
