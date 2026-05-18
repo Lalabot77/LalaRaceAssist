@@ -1,3 +1,8 @@
+- 2026-05-18: Drivers## metadata hydration hold/readiness follow-up landed.
+  - Added Drivers-only hydration hold behavior for ClassLeader/ClassBest identity fields, CarSA iRating/class-est-lap cache, and CarSA class-rank map so short Drivers table gaps no longer clear metadata to blank/0/NaN.
+  - `IsCarSaIdentitySourceReady()` now scans Drivers01..Drivers64 for any usable row identity/class metadata instead of relying only on `Drivers01.CarIdx` presence.
+  - Added bounded one-time transition diagnostics for hold/recovery states; no `CompetingDrivers` fallback restored and no denominator ownership/count paths changed.
+
 - 2026-05-18 final tidy: aligned active docs/contracts with Drivers-only identity and renamed Drivers-row counter helpers for clarity.
   - Active ClassLeader/ClassBest docs now describe `DriverInfo.Drivers##` identity seams only (no CompetingDrivers fallback contract).
   - Renamed denominator support helpers to `CountValidDriversRowsExcludingPaceCar` / `CountPlayerClassDriversRowsExcludingPaceCar` to match current `Drivers##` data source usage.
