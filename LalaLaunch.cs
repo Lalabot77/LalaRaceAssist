@@ -6459,6 +6459,7 @@ namespace LaunchPlugin
         private bool _tyreLearnPrevLrSelected = false;
         private bool _tyreLearnPrevRrSelected = false;
         private const double TyreLearnFixedTailSeconds = 6.0;
+        private const double TyreLearnJackDropAllowanceSeconds = 1.0;
         private const double TyreLearnIntervalMinSeconds = 1.0;
         private const double TyreLearnIntervalMaxSeconds = 15.0;
         private const double TyreLearnIntervalSpreadMaxSeconds = 4.0;
@@ -10796,7 +10797,7 @@ namespace LaunchPlugin
                         double firstClear = _tyreLearnFirstClearSessionTimeSec > 0.0 ? _tyreLearnFirstClearSessionTimeSec : sessionTime;
                         double lastClear = _tyreLearnLastClearSessionTimeSec > 0.0 ? _tyreLearnLastClearSessionTimeSec : sessionTime;
                         double rawSec = candidateSec;
-                        double correctedFixedSec = rawSec + TyreLearnFixedTailSeconds;
+                        double correctedFixedSec = rawSec + TyreLearnFixedTailSeconds + TyreLearnJackDropAllowanceSeconds;
                         string wheelOrder = "NA";
                         double delta1 = 0.0;
                         double delta2 = 0.0;
@@ -10839,7 +10840,7 @@ namespace LaunchPlugin
                                 spread <= TyreLearnIntervalSpreadMaxSeconds)
                             {
                                 derivedValid = true;
-                                correctedDerivedSec = (firstClear - _tyreLearnStartSessionTimeSec) + (4.0 * perTyreEstimateSec.Value);
+                                correctedDerivedSec = (firstClear - _tyreLearnStartSessionTimeSec) + (4.0 * perTyreEstimateSec.Value) + TyreLearnJackDropAllowanceSeconds;
                             }
                             else
                             {
@@ -10876,7 +10877,7 @@ namespace LaunchPlugin
                         string lrOffsetText = _tyreLearnLrClearSessionTimeSec > 0.0 ? (_tyreLearnLrClearSessionTimeSec - _tyreLearnStartSessionTimeSec).ToString("F2", CultureInfo.InvariantCulture) : "NA";
                         string rrOffsetText = _tyreLearnRrClearSessionTimeSec > 0.0 ? (_tyreLearnRrClearSessionTimeSec - _tyreLearnStartSessionTimeSec).ToString("F2", CultureInfo.InvariantCulture) : "NA";
                         SimHub.Logging.Current.Info(
-                            $"[LalaPlugin:Tyre Learn] sample raw={rawSec:F1}s correctedFixed={correctedFixedSec:F1}s correctedDerived={correctedDerivedText}s savedNow={currentSavedTyreTime:F1}s wheelOrder={wheelOrder} tLF={tLfText} tRF={tRfText} tLR={tLrText} tRR={tRrText} d1={delta1:F2} d2={delta2:F2} d3={delta3:F2} avgInterval={avgIntervalText} medianInterval={medianIntervalText} perTyreEst={perTyreEstimateText} corrected4TyreEst={corrected4TyreText} start={_tyreLearnStartSessionTimeSec:F2} firstClear={firstClear:F2} lastClear={lastClear:F2} offsets=LF:{lfOffsetText},RF:{rfOffsetText},LR:{lrOffsetText},RR:{rrOffsetText} pitEntry={pitEntryText} pitExit={pitExitText} stallExit={stallExitText} pitSvStatus={pitSvStatus} pitSvFlags={pitSvFlags} pitStopElapsed={(pitStopElapsedSec.HasValue ? pitStopElapsedSec.Value.ToString("F2", CultureInfo.InvariantCulture) : "NA")}");
+                            $"[LalaPlugin:Tyre Learn] sample raw={rawSec:F1}s correctedFixed={correctedFixedSec:F1}s correctedDerived={correctedDerivedText}s jackDropAllowance={TyreLearnJackDropAllowanceSeconds:F1}s savedNow={currentSavedTyreTime:F1}s wheelOrder={wheelOrder} tLF={tLfText} tRF={tRfText} tLR={tLrText} tRR={tRrText} d1={delta1:F2} d2={delta2:F2} d3={delta3:F2} avgInterval={avgIntervalText} medianInterval={medianIntervalText} perTyreEst={perTyreEstimateText} corrected4TyreEst={corrected4TyreText} start={_tyreLearnStartSessionTimeSec:F2} firstClear={firstClear:F2} lastClear={lastClear:F2} offsets=LF:{lfOffsetText},RF:{rfOffsetText},LR:{lrOffsetText},RR:{rrOffsetText} pitEntry={pitEntryText} pitExit={pitExitText} stallExit={stallExitText} pitSvStatus={pitSvStatus} pitSvFlags={pitSvFlags} pitStopElapsed={(pitStopElapsedSec.HasValue ? pitStopElapsedSec.Value.ToString("F2", CultureInfo.InvariantCulture) : "NA")}");
                         if (candidateSec <= TyreLearnMinSeconds || candidateSec > TyreLearnMaxSeconds)
                         {
                             SimHub.Logging.Current.Info($"[LalaPlugin:Tyre Learn] rejected: candidate out of bounds ({candidateSec:F1}s).");
@@ -10892,12 +10893,12 @@ namespace LaunchPlugin
                             if (derivedValid && correctedDerivedSec.HasValue)
                             {
                                 correctedCandidateSec = correctedDerivedSec.Value;
-                                method = $"derived, perTyre={perTyreEstimateSec.Value:F2}s";
+                                method = $"derived, perTyre={perTyreEstimateSec.Value:F2}s, jackDrop={TyreLearnJackDropAllowanceSeconds:F1}s";
                             }
                             else
                             {
                                 correctedCandidateSec = correctedFixedSec;
-                                method = "fixed_tail";
+                                method = $"fixed_tail+jack_drop({TyreLearnJackDropAllowanceSeconds:F1}s)";
                             }
 
                             if (correctedCandidateSec <= TyreLearnMinSeconds || correctedCandidateSec > TyreLearnMaxSeconds)
