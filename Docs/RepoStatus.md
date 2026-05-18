@@ -1,3 +1,8 @@
+- 2026-05-18: Property Snapshot observability follow-up validated.
+  - Added debug exports `Debug.PropertySnapshot.RollingStatusText` and `Debug.PropertySnapshot.RollingModeText` for dashboard/plugin-state visibility of rolling capture readiness and active recording state.
+  - Property Snapshot capture now also records selected external DataCore fuel properties directly (`DataCorePlugin.Computed.Fuel_*`) under Fuel/Strategy group gating, blank-safe when unavailable.
+  - No Fuel.Refuel/Pit.FuelControl/PreRace authority logic changes; update is debug observability only.
+
 - 2026-05-18: Tyre learn Phase 2 corrected persistence validated.
   - clean all-four candidates now persist corrected tyre service-time (derived median-interval preferred, fixed-tail fallback) instead of diagnostic-only raw candidate handling.
   - lock-aware save semantics and runtime/profile tyre-time ownership unchanged; accepted logs now explicitly report corrected vs raw method.

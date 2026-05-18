@@ -26,6 +26,7 @@ namespace LaunchPlugin
             LaunchSettingsHost.Content = new LaunchPluginSettingsUI(plugin, telemetry);
             InitializeIOverlayImport();
             SyncPropertySnapshotSelectAllFromGroups();
+            RefreshPropertySnapshotRollingStatusText();
         }
 
         private void PropertySnapshotSelectAll_Click(object sender, RoutedEventArgs e)
@@ -49,21 +50,46 @@ namespace LaunchPlugin
         private void PropertySnapshotGroup_Click(object sender, RoutedEventArgs e)
         {
             SyncPropertySnapshotSelectAllFromGroups();
+            RefreshPropertySnapshotRollingStatusText();
         }
 
         private void PropertySnapshotStartRolling_Click(object sender, RoutedEventArgs e)
         {
             Plugin?.StartPropertySnapshotRolling();
+            RefreshPropertySnapshotRollingStatusText();
         }
 
         private void PropertySnapshotStopRolling_Click(object sender, RoutedEventArgs e)
         {
             Plugin?.StopPropertySnapshotRolling();
+            RefreshPropertySnapshotRollingStatusText();
         }
 
         private void PropertySnapshotResetRollingCsv_Click(object sender, RoutedEventArgs e)
         {
             Plugin?.ResetPropertySnapshotRollingCsv();
+            RefreshPropertySnapshotRollingStatusText();
+        }
+
+        private void PropertySnapshotRollingStatusRefresh_Click(object sender, RoutedEventArgs e)
+        {
+            RefreshPropertySnapshotRollingStatusText();
+        }
+
+        private void PropertySnapshotRollingStatusRefresh_Click(object sender, SelectionChangedEventArgs e)
+        {
+            RefreshPropertySnapshotRollingStatusText();
+        }
+
+        private void RefreshPropertySnapshotRollingStatusText()
+        {
+            if (PropertySnapshotRollingStatusTextBlock == null)
+            {
+                return;
+            }
+
+            string status = Plugin?.GetPropertySnapshotRollingStatusTextForUi() ?? "OFF";
+            PropertySnapshotRollingStatusTextBlock.Text = "ROLLING CSV: " + status;
         }
 
         private void SyncPropertySnapshotSelectAllFromGroups()

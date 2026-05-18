@@ -1,3 +1,8 @@
+- 2026-05-18: Property Snapshot rolling status exports + DataCore fuel capture rows added (debug observability only).
+  - Added core exports `Debug.PropertySnapshot.RollingStatusText` (`OFF`/`READY`/`RECORDING`) and `Debug.PropertySnapshot.RollingModeText` (`MANUAL`/`FREQUENCY`/`PER LAP`) from existing snapshot rolling gates/runtime state.
+  - Added Property Snapshot external capture rows (Fuel/Strategy group only) via direct `PluginManager.GetPropertyValue(...)` reads for `DataCorePlugin.Computed.Fuel_LitersPerLap`, `Fuel_LastLapConsumption`, `Fuel_CurrentLapConsumption`, plus optional `Fuel_CurrentLapValidForTracking` and `Fuel_RemainingLaps`; missing values remain blank-safe.
+  - Debug UI now shows `ROLLING CSV: <status>` beside rolling controls and refreshes on relevant control actions; no rolling schema/layout changes and no fuel authority logic changes.
+
 - 2026-05-18: Tyre learn Phase 2 corrected persistence landed.
   - Replaced diagnostic-only all-four tyre learner completion path with corrected persistence to `TireChangeTime` using lock-aware `SaveTireChangeTimeToActiveProfile(...)`.
   - Preferred correction uses per-wheel clear ordered intervals (`d1/d2/d3`) with median-per-tyre derived model: `(firstClear-start) + 4*medianInterval`; fallback uses fixed-tail `raw+6.0s` only when derived validation fails.
