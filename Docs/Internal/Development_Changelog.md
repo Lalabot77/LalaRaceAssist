@@ -1,3 +1,8 @@
+- 2026-05-18: PR #733 follow-up SIM provenance guard fix landed.
+  - DATA-governed burn resolver now emits burn source `SIM` only when fallback provenance is genuine `DataCorePlugin.Computed.Fuel_LitersPerLap`; plugin/synthetic fallback inputs now emit `DEFAULT`.
+  - prevents false `Fuel.Refuel.BurnSource=SIM` / `Pit.FuelControl.DataText=SIMH` on synthetic/default fallback values (for example startup floor values).
+  - no authority-chain order changes and no pit-send/refuel-math behavior changes.
+
 - 2026-05-18: DATA authority label cleanup before PR #733 merge.
   - Active DATA transitional authority text renamed from `BUILD` to `PEND` (`Pit.FuelControl.DataText` / docs/UI contract) for clearer driver-facing meaning (live authority pending while fallback is active).
   - Numeric authority code remains unchanged (`Pit.FuelControl.Data == 1`), with no authority-chain logic change and no pit send/refuel math behavior change.

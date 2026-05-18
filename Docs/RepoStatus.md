@@ -1441,3 +1441,4 @@ Branch: work
   - Docs now clarify modified-badge semantics: calc-affecting preset divergence only, PreRace-only differences excluded, and Live Detect/manual owner divergence does not imply preset overwrite.
 - 2026-05-18: DATA LIVE BUILD/SIMH fallback authority audit validated (runtime BUILD no longer uses planner default burn; SIMH burn fallback reachable and correctly surfaced as SIMH authority when profile burn is unavailable).
 - 2026-05-18: PR #733 final wording cleanup: active transitional DATA label renamed BUILD -> PEND (code `Pit.FuelControl.Data=1` unchanged); terminology-only update with no runtime authority/maths/send behavior change.
+- 2026-05-18: PR #733 SIM provenance guard follow-up: burn `SIM`/`SIMH` now requires genuine DataCore computed fallback provenance; synthetic/plugin fallback now reports `DEFAULT`/`DFALT` (no authority-chain or refuel-math change).

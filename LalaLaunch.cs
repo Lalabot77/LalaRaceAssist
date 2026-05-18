@@ -1163,6 +1163,7 @@ namespace LaunchPlugin
         private void ResolveDataGovernedBurnAndPaceBasis(
             GameData data,
             double fallbackFuelPerLap,
+            bool fallbackFuelIsSimHub,
             out double fuelPerLap,
             out double lapSeconds,
             out string fuelSource,
@@ -1202,7 +1203,7 @@ namespace LaunchPlugin
                 else if (stableFuel > 0.0 && IsFuelStableSourceProfile(stableFuelSource)) { fuelPerLap = stableFuel; fuelSource = "PROFILE"; }
                 else if (runtimeFuel > 0.0 && IsFuelStableSourceLive(stableFuelSource)) { fuelPerLap = runtimeFuel; fuelSource = "LIVE"; }
                 else if (profileFuel > 0.0) { fuelPerLap = profileFuel; fuelSource = "PROFILE"; }
-                else if (fallbackFuelPerLap > 0.0) { fuelPerLap = fallbackFuelPerLap; fuelSource = "SIM"; }
+                else if (fallbackFuelPerLap > 0.0) { fuelPerLap = fallbackFuelPerLap; fuelSource = fallbackFuelIsSimHub ? "SIM" : "DEFAULT"; }
 
                 if (stableLap > 0.0 && IsProjectionStableSourceLive(stableLapSource)) { lapSeconds = stableLap; lapSource = "LIVE"; }
                 else if (stableLap > 0.0 && IsProjectionStableSourceProfile(stableLapSource)) { lapSeconds = stableLap; lapSource = "PROFILE"; }
@@ -1552,7 +1553,7 @@ namespace LaunchPlugin
             string preRaceLapSource;
             double preRaceFuelPerLap;
             double preRaceProjectionLapSeconds;
-            ResolveDataGovernedBurnAndPaceBasis(data, fallbackFuelPerLap, out preRaceFuelPerLap, out preRaceProjectionLapSeconds, out preRaceFuelSource, out preRaceLapSource);
+            ResolveDataGovernedBurnAndPaceBasis(data, fallbackFuelPerLap, fallbackFuelIsSimHub: true, out preRaceFuelPerLap, out preRaceProjectionLapSeconds, out preRaceFuelSource, out preRaceLapSource);
 
             double forecastRaceLaps = 0.0;
             if (raceSessionDurationSeconds > 0.0 && preRaceProjectionLapSeconds > 0.0)
@@ -4756,7 +4757,7 @@ namespace LaunchPlugin
                 string selectedLapSource;
                 bool dataPlanForAfterStop = (_pitFuelControlEngine?.Data ?? PitFuelControlData.Live) == PitFuelControlData.Plan;
                 double dataGovernedFallback = dataPlanForAfterStop ? 0.0 : fuelPerLapForCalc;
-                ResolveDataGovernedBurnAndPaceBasis(data, dataGovernedFallback, out selectedNormBurn, out selectedLapSeconds, out selectedNormBurnSource, out selectedLapSource);
+                ResolveDataGovernedBurnAndPaceBasis(data, dataGovernedFallback, fallbackFuelIsSimHub: false, out selectedNormBurn, out selectedLapSeconds, out selectedNormBurnSource, out selectedLapSource);
 
                 double selectedLapsRemaining;
                 bool selectedLapsValid = TryResolveDataGovernedProjectedLapsRemaining(
@@ -9562,6 +9563,7 @@ namespace LaunchPlugin
             ResolveDataGovernedBurnAndPaceBasis(
                 data: data,
                 fallbackFuelPerLap: fallbackFuelPerLap,
+                fallbackFuelIsSimHub: false,
                 fuelPerLap: out selectedBurn,
                 lapSeconds: out ignoredLapSeconds,
                 fuelSource: out burnSource,
@@ -9768,7 +9770,7 @@ namespace LaunchPlugin
             double resolvedLapSeconds;
             string normFuelSourceRaw;
             string lapSourceRaw;
-            ResolveDataGovernedBurnAndPaceBasis(data, fallbackFuelPerLap, out normFuelPerLap, out resolvedLapSeconds, out normFuelSourceRaw, out lapSourceRaw);
+            ResolveDataGovernedBurnAndPaceBasis(data, fallbackFuelPerLap, fallbackFuelIsSimHub: false, out normFuelPerLap, out resolvedLapSeconds, out normFuelSourceRaw, out lapSourceRaw);
 
             string normFuelSource = ClassifyRefuelSourceToken(normFuelSourceRaw);
             string resolvedLapSource = ClassifyRefuelSourceToken(lapSourceRaw);
