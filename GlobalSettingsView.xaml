@@ -451,10 +451,10 @@
                                 <CheckBox Content="Include changed vs previous" Margin="0,0,12,6" IsChecked="{Binding Settings.PropertySnapshotIncludeChangedValues, Mode=TwoWay}"/>
                                 <CheckBox Content="Write rolling combined CSV" Margin="0,0,12,6" IsChecked="{Binding Settings.PropertySnapshotRollingCombinedCsv, Mode=TwoWay}"/>
                                 <TextBlock Text="Rolling mode" VerticalAlignment="Center" Margin="0,0,8,6"/>
-                                <ComboBox Width="170" Margin="0,0,12,6" SelectedValuePath="Tag" SelectedValue="{Binding Settings.PropertySnapshotRollingMode, Mode=TwoWay}">
-                                    <ComboBoxItem Content="MANUAL" Tag="0"/>
-                                    <ComboBoxItem Content="FREQUENCY" Tag="1"/>
-                                    <ComboBoxItem Content="PER LAP" Tag="2"/>
+                                <ComboBox Width="170" Margin="0,0,12,6" SelectedIndex="{Binding Settings.PropertySnapshotRollingMode, Mode=TwoWay}">
+                                    <ComboBoxItem Content="MANUAL"/>
+                                    <ComboBoxItem Content="FREQUENCY"/>
+                                    <ComboBoxItem Content="PER LAP"/>
                                 </ComboBox>
                                 <TextBlock Text="Frequency Hz" VerticalAlignment="Center" Margin="0,0,8,6"/>
                                 <TextBox Width="60" Margin="0,0,12,6" Text="{Binding Settings.PropertySnapshotRollingFrequencyHz, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" ToolTip="Used in FREQUENCY mode. Valid range 1 to 5 Hz."/>

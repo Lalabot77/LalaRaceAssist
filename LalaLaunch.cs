@@ -565,18 +565,31 @@ namespace LaunchPlugin
         public void StartPropertySnapshotRolling()
         {
             if (Settings == null) return;
-            Settings.PropertySnapshotRollingActive = true;
+            if (!SoftDebugEnabled)
+            {
+                SimHub.Logging.Current.Warn("[LalaPlugin:Debug] Property snapshot rolling START ignored: Soft Debug is disabled.");
+                return;
+            }
+            if (Settings.EnablePropertySnapshot != true)
+            {
+                SimHub.Logging.Current.Warn("[LalaPlugin:Debug] Property snapshot rolling START ignored: Enable Property Snapshot is off.");
+                return;
+            }
+            if (Settings.PropertySnapshotRollingCombinedCsv != true)
+            {
+                SimHub.Logging.Current.Warn("[LalaPlugin:Debug] Property snapshot rolling START ignored: Write rolling combined CSV is off.");
+                return;
+            }
+            _propertySnapshotRollingActiveRuntime = true;
             _propertySnapshotLastAutoCaptureUtc = DateTime.MinValue;
             _propertySnapshotLastLapCaptured = -1;
-            SaveSettings();
-            SimHub.Logging.Current.Info("[LalaPlugin:Debug] Property snapshot rolling automation START.");
+            SimHub.Logging.Current.Info("[LalaPlugin:Debug] Property snapshot rolling automation START (runtime-only). Frequency mode rewrites full rolling CSV each capture; max frequency capped at 2 Hz.");
         }
 
         public void StopPropertySnapshotRolling()
         {
             if (Settings == null) return;
-            Settings.PropertySnapshotRollingActive = false;
-            SaveSettings();
+            _propertySnapshotRollingActiveRuntime = false;
             SimHub.Logging.Current.Info("[LalaPlugin:Debug] Property snapshot rolling automation STOP.");
         }
 
@@ -5249,8 +5262,10 @@ namespace LaunchPlugin
         private bool _eventMarkerPressed = false;
         private int _eventMarkerPressCount = 0;
         private int _propertySnapshotLastProcessedPressCount = 0;
+        private bool _propertySnapshotRollingActiveRuntime = false;
         private DateTime _propertySnapshotLastAutoCaptureUtc = DateTime.MinValue;
         private int _propertySnapshotLastLapCaptured = -1;
+        private DateTime _propertySnapshotLastAutoSnapshotLogUtc = DateTime.MinValue;
         private bool _msgCxPressed = false;
         private bool _pitScreenActive = false;
         private bool _pitScreenDismissed = false;
@@ -5270,8 +5285,9 @@ namespace LaunchPlugin
         private Dictionary<string, string> _propertySnapshotPreviousValues = new Dictionary<string, string>(StringComparer.Ordinal);
         private bool _propertySnapshotDisabledGateLogged = false;
         private bool _propertySnapshotPathLogged = false;
+        private bool _propertySnapshotRollingPersistedStateCleared = false;
         private const double PropertySnapshotRollingFrequencyDefaultHz = 1.0;
-        private const double PropertySnapshotRollingFrequencyMaxHz = 5.0;
+        private const double PropertySnapshotRollingFrequencyMaxHz = 2.0;
 
         // --- State: Timers ---
         private readonly Stopwatch _pittingTimer = new Stopwatch();
@@ -10246,6 +10262,14 @@ namespace LaunchPlugin
 
             // --- MASTER GUARD CLAUSES ---
             if (Settings == null || pluginManager == null) return;
+            if (!_propertySnapshotRollingPersistedStateCleared)
+            {
+                if (Settings.PropertySnapshotRollingActive)
+                {
+                    Settings.PropertySnapshotRollingActive = false;
+                }
+                _propertySnapshotRollingPersistedStateCleared = true;
+            }
             EnforceHardDebugSettings(Settings);
             TryFlushPendingCustomMessageSaveDebounce(false);
             EvaluateDarkMode(pluginManager);
@@ -13495,12 +13519,12 @@ namespace LaunchPlugin
                 bool manualTriggered = pressCount != _propertySnapshotLastProcessedPressCount;
                 if (manualTriggered)
                 {
-                    WritePropertySnapshotCsv(sessionTimeSec, includeOneShot: true, includeRolling: Settings?.PropertySnapshotRollingCombinedCsv == true);
+                    WritePropertySnapshotCsv(sessionTimeSec, includeOneShot: true, includeRolling: Settings?.PropertySnapshotRollingCombinedCsv == true, captureReason: "manual-marker", detailedLogs: true);
                     _propertySnapshotLastProcessedPressCount = pressCount;
                 }
 
                 bool rollingEnabled = Settings?.PropertySnapshotRollingCombinedCsv == true;
-                bool autoActive = Settings?.PropertySnapshotRollingActive == true;
+                bool autoActive = _propertySnapshotRollingActiveRuntime;
                 if (!rollingEnabled || !autoActive) return;
 
                 int mode = NormalizePropertySnapshotRollingMode();
@@ -13511,13 +13535,13 @@ namespace LaunchPlugin
                     if (_propertySnapshotLastAutoCaptureUtc == DateTime.MinValue ||
                         (DateTime.UtcNow - _propertySnapshotLastAutoCaptureUtc).TotalSeconds >= intervalSeconds)
                     {
-                        WritePropertySnapshotCsv(sessionTimeSec, includeOneShot: false, includeRolling: true);
+                        WritePropertySnapshotCsv(sessionTimeSec, includeOneShot: false, includeRolling: true, captureReason: "auto-frequency", detailedLogs: false);
                         _propertySnapshotLastAutoCaptureUtc = DateTime.UtcNow;
                     }
                 }
                 else if (mode == 2 && lapCrossed && completedLaps > 0 && completedLaps != _propertySnapshotLastLapCaptured)
                 {
-                    WritePropertySnapshotCsv(sessionTimeSec, includeOneShot: false, includeRolling: true);
+                    WritePropertySnapshotCsv(sessionTimeSec, includeOneShot: false, includeRolling: true, captureReason: "auto-perlap", detailedLogs: false);
                     _propertySnapshotLastLapCaptured = completedLaps;
                 }
             }
@@ -13528,7 +13552,7 @@ namespace LaunchPlugin
             }
         }
 
-        private void WritePropertySnapshotCsv(double sessionTimeSec, bool includeOneShot, bool includeRolling)
+        private void WritePropertySnapshotCsv(double sessionTimeSec, bool includeOneShot, bool includeRolling, string captureReason, bool detailedLogs)
         {
             var rows = new List<Tuple<string, string, string, string>>();
             var currentValues = new Dictionary<string, string>(StringComparer.Ordinal);
@@ -13594,7 +13618,15 @@ namespace LaunchPlugin
                 }
                 buffer.AppendLine();
             }
-            SimHub.Logging.Current.Info($"[LalaPlugin:Debug] Property snapshot summary includeChanged={includeChanged} rows={rows.Count} changed1={changedOnes} changed0={changedZeros} changedNA={changedNa}.");
+            if (detailedLogs)
+            {
+                SimHub.Logging.Current.Info($"[LalaPlugin:Debug] Property snapshot summary reason={captureReason} includeChanged={includeChanged} rows={rows.Count} changed1={changedOnes} changed0={changedZeros} changedNA={changedNa}.");
+            }
+            else if ((DateTime.UtcNow - _propertySnapshotLastAutoSnapshotLogUtc).TotalSeconds >= 10.0)
+            {
+                _propertySnapshotLastAutoSnapshotLogUtc = DateTime.UtcNow;
+                SimHub.Logging.Current.Info($"[LalaPlugin:Debug] Property snapshot auto capture heartbeat reason={captureReason} rows={rows.Count}.");
+            }
             if (includeOneShot)
             {
                 WriteSnapshotWithFallback(filePath, buffer.ToString());
@@ -13603,7 +13635,7 @@ namespace LaunchPlugin
             if (includeRolling)
             {
                 string rollingPath = Path.Combine(folder, "PropertySnapshot_Rolling.csv");
-                WriteSnapshotRollingWideWithFallback(rollingPath, utcStamp, rows);
+                WriteSnapshotRollingWideWithFallback(rollingPath, utcStamp, rows, detailedLogs);
             }
 
             _propertySnapshotPreviousValues = currentValues;
@@ -13685,12 +13717,15 @@ namespace LaunchPlugin
             return Path.Combine(fallbackRoot, Path.GetFileName(primaryFilePath));
         }
 
-        private void WriteSnapshotRollingWideWithFallback(string primaryFilePath, string captureStamp, List<Tuple<string, string, string, string>> rows)
+        private void WriteSnapshotRollingWideWithFallback(string primaryFilePath, string captureStamp, List<Tuple<string, string, string, string>> rows, bool detailedLogs)
         {
             try
             {
                 WriteSnapshotRollingWide(primaryFilePath, captureStamp, rows);
-                SimHub.Logging.Current.Info($"[LalaPlugin:Debug] Property snapshot rolling append success: {primaryFilePath}");
+                if (detailedLogs)
+                {
+                    SimHub.Logging.Current.Info($"[LalaPlugin:Debug] Property snapshot rolling append success: {primaryFilePath}");
+                }
             }
             catch (Exception primaryEx)
             {
