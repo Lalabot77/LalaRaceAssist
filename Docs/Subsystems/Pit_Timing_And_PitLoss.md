@@ -41,6 +41,8 @@ Out of scope:
 
 Canonical boxed-stop prediction contract:
 
+Tyre service-time learning remains a car-profile seam (not pit-loss baseline ownership): it learns from a clean all-four tyre stop using per-wheel tyre clear timing and persists a corrected service-time estimate (derived model preferred, fixed-tail fallback), then should be driver-locked in Profiles once validated.
+
 `boxed stop loss = learned drive-through baseline + boxed service model + 2.00s transition allowance`
 
 ---
