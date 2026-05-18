@@ -7,6 +7,26 @@
   - Added Drivers-only hydration hold behavior for ClassLeader/ClassBest identity fields, CarSA iRating/class-est-lap cache, and CarSA class-rank map so short Drivers table gaps no longer clear metadata to blank/0/NaN.
   - `IsCarSaIdentitySourceReady()` now scans Drivers01..Drivers64 for any usable row identity/class metadata instead of relying only on `Drivers01.CarIdx` presence.
   - Added bounded one-time transition diagnostics for hold/recovery states; no `CompetingDrivers` fallback restored and no denominator ownership/count paths changed.
+- 2026-05-18: Tyre learning correction instrumentation pass validated (diagnostic-only, save-path unchanged).
+  - Added one compact `[LalaPlugin:Tyre Learn] sample ...` line per clean all-four candidate, reporting raw all-four-clear timing, fixed `+6.0s` correction, derived-tail `+1.0s` correction (when derivable), per-wheel clear offsets, pit service status/flags, stall-exit sample, and pit-stop elapsed sample.
+  - Follow-up diagnostics now also report wheel clear order, per-wheel clear timestamps, interval statistics (`d1/d2/d3`, avg, median), per-tyre estimate, corrected 4-tyre estimate, retained saved tyre time, and pit entry/exit timestamps for future per-tyre model validation.
+  - Follow-up ordering fix now records per-wheel `1->0` transitions before `allFourCleared` sample emission in `ServiceStarted`, so final-wheel clear tick samples include all four wheel timestamps/order and populated interval metrics.
+  - Follow-up tidy now prints `NA` for missing wheel offsets in the sample line.
+  - Follow-up diagnostic context fix now clears stale `pitExit` on each new `pitEntry` edge, and `savedNow` now reports direct runtime/profile stored tyre time (not tyre-selection-gated), so all-four-clear samples no longer show stale previous-stop exit or `savedNow=0` artifacts.
+  - PR #734 safety follow-up now disables raw learner persistence from the diagnostic path: clean all-four raw candidates still produce sample diagnostics but no longer call profile save/update runtime tyre time; diagnostic path emits `diagnostic-only: raw candidate not persisted.`.
+  - `savedNow` in diagnostics now prefers persisted profile value first, then runtime fallback, with invalid values sanitized to `0.0`.
+  - Added per-wheel clear timestamp capture (`LF/RF/LR/RR`) plus first/last clear tracking inside tyre learner runtime state.
+  - Candidate detection/state-machine shape and reject-path semantics remain unchanged; only diagnostic context/safety behavior changed.
+- 2026-05-18: Property Snapshot rolling automation hardening validated (PR #736 follow-up).
+  - automation active state no longer persists across restart/reload (runtime-only + persisted flag clear-on-init).
+  - START now refuses to arm unless Soft Debug + Property Snapshot + Rolling CSV toggles are all enabled.
+  - FREQUENCY mode cap reduced to 2 Hz due to full-file rolling wide rewrite cost; auto logging throttled to prevent debug log spam.
+
+- 2026-05-18: Property Snapshot rolling automation modes + controls validated (Part 2).
+  - Debug Options > Property Snapshot now includes rolling mode selector (`MANUAL`/`FREQUENCY`/`PER LAP`), frequency setting, and explicit `START`/`STOP`/`RESET ROLLING CSV` controls.
+  - Manual Event Marker semantics preserved; manual captures still write one-shot snapshot files and optional rolling column append.
+  - Automatic rolling capture is gated by START + rolling-enabled toggle: FREQUENCY uses guarded 1..5 Hz cadence (default 1), PER LAP reuses existing lap-cross seam and prevents duplicate same-lap capture.
+  - Rolling reset clears only `PropertySnapshot_Rolling.csv` (primary + fallback), without touching one-shot files, group settings, or snapshot include-changed behavior.
 
 - 2026-05-18 final tidy: aligned active docs/contracts with Drivers-only identity and renamed Drivers-row counter helpers for clarity.
   - Active ClassLeader/ClassBest docs now describe `DriverInfo.Drivers##` identity seams only (no CompetingDrivers fallback contract).
@@ -1480,3 +1500,8 @@ Branch: work
   - Race Basis microcopy now consistently frames owner semantics (Preset/Lap-Limited/Time-Limited/Live Detect) and clarifies Live Detect is non-destructive to saved preset/profile state.
   - Preset reapply (`↻`) tooltip now explicitly describes deliberate preset-value reapply action.
   - Docs now clarify modified-badge semantics: calc-affecting preset divergence only, PreRace-only differences excluded, and Live Detect/manual owner divergence does not imply preset overwrite.
+- 2026-05-18: DATA LIVE BUILD/SIMH fallback authority audit validated (runtime BUILD no longer uses planner default burn; SIMH burn fallback reachable and correctly surfaced as SIMH authority when profile burn is unavailable).
+- 2026-05-18: PR #733 final wording cleanup: active transitional DATA label renamed BUILD -> PEND (code `Pit.FuelControl.Data=1` unchanged); terminology-only update with no runtime authority/maths/send behavior change.
+- 2026-05-18: PR #733 SIM provenance guard follow-up: burn `SIM`/`SIMH` now requires genuine DataCore computed fallback provenance; synthetic/plugin fallback now reports `DEFAULT`/`DFALT` (no authority-chain or refuel-math change).
+- 2026-05-18: PR #733 runtime refuel provenance propagation follow-up: runtime refuel basis now preserves genuine DataCore fallback provenance (`SIM`/`SIMH`) while plugin-held synthetic fallback remains `DEFAULT`/`DFALT` (no authority-order or math/send behavior change).
+- 2026-05-18: PR #733 same-tick provenance alignment follow-up: `Pit.FuelControl.DataText` now shares runtime refuel fallback provenance, eliminating SIM/DFALT contradiction on the same tick (no authority-order or math/send behavior change).

@@ -450,7 +450,22 @@
                                 <CheckBox x:Name="PropertySnapshotRawDebugCheckBox" Content="Raw Debug" Margin="0,0,12,6" Click="PropertySnapshotGroup_Click" IsChecked="{Binding Settings.PropertySnapshotGroupRawDebug, Mode=TwoWay}"/>
                                 <CheckBox Content="Include changed vs previous" Margin="0,0,12,6" IsChecked="{Binding Settings.PropertySnapshotIncludeChangedValues, Mode=TwoWay}"/>
                                 <CheckBox Content="Write rolling combined CSV" Margin="0,0,12,6" IsChecked="{Binding Settings.PropertySnapshotRollingCombinedCsv, Mode=TwoWay}"/>
+                                <TextBlock Text="Rolling mode" VerticalAlignment="Center" Margin="0,0,8,6"/>
+                                <ComboBox Width="170" Margin="0,0,12,6" SelectedIndex="{Binding Settings.PropertySnapshotRollingMode, Mode=TwoWay}">
+                                    <ComboBoxItem Content="MANUAL"/>
+                                    <ComboBoxItem Content="FREQUENCY"/>
+                                    <ComboBoxItem Content="PER LAP"/>
+                                </ComboBox>
+                                <TextBlock Text="Frequency Hz" VerticalAlignment="Center" Margin="0,0,8,6"/>
+                                <TextBox Width="60" Margin="0,0,12,6" Text="{Binding Settings.PropertySnapshotRollingFrequencyHz, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" ToolTip="Used in FREQUENCY mode. Valid range 1 to 5 Hz."/>
+                                <Button Content="START" Margin="0,0,8,6" Padding="10,2" Click="PropertySnapshotStartRolling_Click"/>
+                                <Button Content="STOP" Margin="0,0,8,6" Padding="10,2" Click="PropertySnapshotStopRolling_Click"/>
+                                <Button Content="RESET ROLLING CSV" Margin="0,0,12,6" Padding="10,2" Click="PropertySnapshotResetRollingCsv_Click"/>
                             </WrapPanel>
+                            <TextBlock Margin="22,2,0,0"
+                                       Foreground="LightGray"
+                                       TextWrapping="Wrap"
+                                       Text="MANUAL: Event Marker writes one snapshot. FREQUENCY: START/STOP captures rolling snapshots at configured snapshots/sec. PER LAP: START/STOP captures one rolling snapshot per completed lap."/>
                         </StackPanel>
                         <StackPanel Orientation="Horizontal" Margin="0,10,0,0">
                             <styles:SHToggleCheckbox Content="OffTrack Debug CSV" Margin="0,0,15,0"

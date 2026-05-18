@@ -7,6 +7,51 @@
   - Added Drivers-only hydration hold behavior for ClassLeader/ClassBest identity fields, CarSA iRating/class-est-lap cache, and CarSA class-rank map so short Drivers table gaps no longer clear metadata to blank/0/NaN.
   - `IsCarSaIdentitySourceReady()` now scans Drivers01..Drivers64 for any usable row identity/class metadata instead of relying only on `Drivers01.CarIdx` presence.
   - Added bounded one-time transition diagnostics for hold/recovery states; no `CompetingDrivers` fallback restored and no denominator ownership/count paths changed.
+- 2026-05-18: PR #733 same-tick authority/refuel SIM provenance alignment fix landed.
+  - Active DATA authority classification now shares the same current-tick fallback provenance used by runtime refuel basis resolution.
+  - prevents contradictory same-tick exports (`Fuel.Refuel.BurnSource=SIM` with `Pit.FuelControl.DataText=DFALT`); genuine DataCore fallback now aligns to `SIM`/`SIMH`, synthetic/plugin fallback aligns to `DEFAULT`/`DFALT`.
+  - no authority-order, pit-send, or refuel-formula behavior change.
+
+- 2026-05-18: PR #733 runtime refuel SIM provenance propagation fix landed.
+  - Runtime refuel path now propagates fallback provenance into `ResolveRuntimeRefuelBasis(...)`/`ResolveDataGovernedBurnAndPaceBasis(...)` so genuine DataCore computed fallback can emit `SIM`/`SIMH`.
+  - Data-authority classification path that uses plugin-held stable fallback keeps `fallbackFuelIsSimHub=false`, so synthetic/default fallback still emits `DEFAULT`/`DFALT`.
+  - no authority-order, pit-send, or refuel-formula behavior change.
+
+- 2026-05-18: PR #733 follow-up SIM provenance guard fix landed.
+  - DATA-governed burn resolver now emits burn source `SIM` only when fallback provenance is genuine `DataCorePlugin.Computed.Fuel_LitersPerLap`; plugin/synthetic fallback inputs now emit `DEFAULT`.
+  - prevents false `Fuel.Refuel.BurnSource=SIM` / `Pit.FuelControl.DataText=SIMH` on synthetic/default fallback values (for example startup floor values).
+  - no authority-chain order changes and no pit-send/refuel-math behavior changes.
+
+- 2026-05-18: DATA authority label cleanup before PR #733 merge.
+  - Active DATA transitional authority text renamed from `BUILD` to `PEND` (`Pit.FuelControl.DataText` / docs/UI contract) for clearer driver-facing meaning (live authority pending while fallback is active).
+  - Numeric authority code remains unchanged (`Pit.FuelControl.Data == 1`), with no authority-chain logic change and no pit send/refuel math behavior change.
+
+- 2026-05-18: DATA LIVE BUILD fallback authority/provenance fix landed.
+  - `ResolveDataGovernedBurnAndPaceBasis(...)` no longer takes Strategy Planner `FuelCalculator.FuelPerLap` as DATA LIVE burn authority during BUILD fallback; LIVE now falls back burn authority in order: LIVE stable -> PROFILE stable/profile baseline -> SIMH (`DataCorePlugin.Computed.Fuel_LitersPerLap`) -> DEFAULT.
+  - DATA LIVE BUILD now reports truthful burn provenance (`Fuel.Refuel.BurnSource=PROFILE` when profile burn is used), keeps lap PROFILE precedence in BUILD, and no longer requires Strategy-tab live/profile toggles to refresh in-use runtime burn authority.
+  - SIMH fallback is now reachable and surfaced as runtime authority (`BurnSource=SIM`, `Pit.FuelControl.DataText=SIMH`) when profile burn is unavailable but SimHub computed burn is valid.
+- 2026-05-18: Tyre learning correction instrumentation pass landed (diagnostic-only).
+  - Added bounded one-line `[LalaPlugin:Tyre Learn] sample ...` diagnostics on clean all-four tyre candidates, including service start, per-wheel clear timestamps/offsets, first/last clear, pit service status/flags snapshots, pit-stop elapsed sample, and corrected-estimate comparisons (`+6.0s` fixed tail and derived-tail `+1.0s` jack allowance when derivable).
+  - Added per-wheel clear timestamp capture within the tyre learner state machine for LF/RF/LR/RR clear events.
+  - Follow-up expanded sample payload with wheel clear order (`LF/RF/LR/RR`), explicit clear timestamps (`tLF/tRF/tLR/tRR`), derived intervals (`d1/d2/d3`), avg/median interval metrics, per-tyre estimate, corrected 4-tyre estimate, retained current saved tyre time, and pit entry/exit timestamps.
+  - Ordering fix: in `ServiceStarted`, per-wheel `1->0` clear transitions and first/last clear timestamps are now captured before evaluating `allFourCleared`, ensuring the final-wheel tick sample includes complete wheel order/interval metrics.
+  - Optional tidy: sample offset fields now print `NA` when a wheel timestamp is unavailable instead of negative offset artifacts.
+  - Diagnostic context fix: pit-entry edge now clears prior stop `pitExit` sample context; `savedNow` now reads direct runtime/profile stored tyre time (no tyre-selection-gated resolver), preventing stale-exit carry-over and false `savedNow=0` on all-four-clear samples.
+  - Safety follow-up for PR #734: raw all-four-clear candidate path is now diagnostic-only and no longer persists `candidateSec` to `TireChangeTime`; sample logging remains active and now emits `diagnostic-only: raw candidate not persisted.` on valid candidate path.
+  - `savedNow` diagnostic source preference now uses persisted profile value first (`ActiveProfile.TireChangeTime` when valid), then runtime fallback (`FuelCalculator.TireChangeTime`), else `0.0`.
+- 2026-05-18: Property Snapshot rolling automation hardening follow-up (PR #736 review).
+  - rolling START/STOP state is now runtime-only; persisted `PropertySnapshotRollingActive` is forcibly cleared false on first runtime tick so automation cannot silently resume after restart/reload.
+  - START now hard-guards on `Soft Debug`, `Enable Property Snapshot`, and `Write rolling combined CSV`; when any gate is off, START is ignored with bounded warning.
+  - reduced FREQUENCY cap from 5 Hz to 2 Hz because rolling wide writer rewrites/parses the whole CSV each capture; START log now explicitly documents this IO cost/cap rationale.
+  - auto-capture logging is now throttled/heartbeat-only; full snapshot summary + rolling success logs remain on manual marker captures.
+  - Property Snapshot rolling mode ComboBox binding switched to `SelectedIndex` for robust int binding semantics (`MANUAL/FREQUENCY/PER LAP` => `0/1/2`).
+
+- 2026-05-18: Property Snapshot rolling automation modes (Part 2) validated.
+  - added rolling capture modes via debug settings: `MANUAL` (0), `FREQUENCY` (1), `PER LAP` (2), with `START`/`STOP` state control and guarded frequency setting (`default 1 Hz`, capped `max 5 Hz`).
+  - Event Marker behavior remains manual capture trigger; manual captures still write one-shot snapshot files and optional rolling snapshots per existing toggle.
+  - automatic rolling captures now run only when rolling output is enabled and START is active: FREQUENCY uses capped interval timing; PER LAP reuses existing lap-cross seam and de-duplicates by completed lap number.
+  - added `RESET ROLLING CSV` UI/action path that deletes only `PropertySnapshot_Rolling.csv` (primary + fallback path) with bounded info/warn logging.
+  - preserved existing group filters, select-all sync, rolling wide schema, changed-vs-previous behavior, and one-shot folder semantics.
 
 - 2026-05-18 final tidy: aligned active docs/contracts with Drivers-only identity and renamed Drivers-row counter helpers for clarity.
   - Active ClassLeader/ClassBest docs now describe `DriverInfo.Drivers##` identity seams only (no CompetingDrivers fallback contract).

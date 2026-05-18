@@ -562,6 +562,53 @@ namespace LaunchPlugin
             SimHub.Logging.Current.Info("[LalaPlugin:Dash] Event marker action fired (pressed latched).");
         }
 
+        public void StartPropertySnapshotRolling()
+        {
+            if (Settings == null) return;
+            if (!SoftDebugEnabled)
+            {
+                SimHub.Logging.Current.Warn("[LalaPlugin:Debug] Property snapshot rolling START ignored: Soft Debug is disabled.");
+                return;
+            }
+            if (Settings.EnablePropertySnapshot != true)
+            {
+                SimHub.Logging.Current.Warn("[LalaPlugin:Debug] Property snapshot rolling START ignored: Enable Property Snapshot is off.");
+                return;
+            }
+            if (Settings.PropertySnapshotRollingCombinedCsv != true)
+            {
+                SimHub.Logging.Current.Warn("[LalaPlugin:Debug] Property snapshot rolling START ignored: Write rolling combined CSV is off.");
+                return;
+            }
+            _propertySnapshotRollingActiveRuntime = true;
+            _propertySnapshotLastAutoCaptureUtc = DateTime.MinValue;
+            _propertySnapshotLastLapCaptured = -1;
+            SimHub.Logging.Current.Info("[LalaPlugin:Debug] Property snapshot rolling automation START (runtime-only). Frequency mode rewrites full rolling CSV each capture; max frequency capped at 2 Hz.");
+        }
+
+        public void StopPropertySnapshotRolling()
+        {
+            if (Settings == null) return;
+            _propertySnapshotRollingActiveRuntime = false;
+            SimHub.Logging.Current.Info("[LalaPlugin:Debug] Property snapshot rolling automation STOP.");
+        }
+
+        public void ResetPropertySnapshotRollingCsv()
+        {
+            try
+            {
+                string primaryPath = Path.Combine(ResolvePropertySnapshotPrimaryLogsFolder(), "PropertySnapshot_Rolling.csv");
+                string fallbackPath = BuildFallbackPathFromPrimary(primaryPath);
+                if (File.Exists(primaryPath)) File.Delete(primaryPath);
+                if (!string.Equals(primaryPath, fallbackPath, StringComparison.OrdinalIgnoreCase) && File.Exists(fallbackPath)) File.Delete(fallbackPath);
+                SimHub.Logging.Current.Info("[LalaPlugin:Debug] Property snapshot rolling CSV reset completed.");
+            }
+            catch (Exception ex)
+            {
+                SimHub.Logging.Current.Warn($"[LalaPlugin:Debug] Property snapshot rolling CSV reset failed: {ex.Message}");
+            }
+        }
+
         /*
         // --- Legacy/experimental MsgCx helpers (parked) ---
         // Only keep if you still actively bind to these from somewhere.
@@ -799,6 +846,8 @@ namespace LaunchPlugin
         // --- Live Fuel Calculation State ---
         private double _lastFuelLevel = -1;
         private GameData _currentTickGameData;
+        private double _currentTickFallbackFuelPerLap;
+        private bool _currentTickFallbackFuelIsSimHub;
         private double _lapStartFuel = -1;
         private double _lastLapDistPct = -1;
         private int _lapDetectorLastCompleted = -1;
@@ -1166,6 +1215,7 @@ namespace LaunchPlugin
         private void ResolveDataGovernedBurnAndPaceBasis(
             GameData data,
             double fallbackFuelPerLap,
+            bool fallbackFuelIsSimHub,
             out double fuelPerLap,
             out double lapSeconds,
             out string fuelSource,
@@ -1202,19 +1252,18 @@ namespace LaunchPlugin
             if (!usePlanData)
             {
                 if (stableFuel > 0.0 && IsFuelStableSourceLive(stableFuelSource)) { fuelPerLap = stableFuel; fuelSource = "LIVE"; }
-                else if (planFuel > 0.0) { fuelPerLap = planFuel; fuelSource = "PLAN"; }
                 else if (stableFuel > 0.0 && IsFuelStableSourceProfile(stableFuelSource)) { fuelPerLap = stableFuel; fuelSource = "PROFILE"; }
                 else if (runtimeFuel > 0.0 && IsFuelStableSourceLive(stableFuelSource)) { fuelPerLap = runtimeFuel; fuelSource = "LIVE"; }
                 else if (profileFuel > 0.0) { fuelPerLap = profileFuel; fuelSource = "PROFILE"; }
-                else if (fallbackFuelPerLap > 0.0) { fuelPerLap = fallbackFuelPerLap; fuelSource = "DEFAULT"; }
+                else if (fallbackFuelPerLap > 0.0) { fuelPerLap = fallbackFuelPerLap; fuelSource = fallbackFuelIsSimHub ? "SIM" : "DEFAULT"; }
 
                 if (stableLap > 0.0 && IsProjectionStableSourceLive(stableLapSource)) { lapSeconds = stableLap; lapSource = "LIVE"; }
-                else if (stableLap > 0.0 && IsProjectionStableSourcePlan(stableLapSource)) { lapSeconds = stableLap; lapSource = "PLAN"; }
-                else if (planLap > 0.0) { lapSeconds = planLap; lapSource = "PLAN"; }
                 else if (stableLap > 0.0 && IsProjectionStableSourceProfile(stableLapSource)) { lapSeconds = stableLap; lapSource = "PROFILE"; }
                 else if (profileLap > 0.0) { lapSeconds = profileLap; lapSource = "PROFILE"; }
                 else if (stableLap > 0.0 && IsProjectionStableSourceSim(stableLapSource)) { lapSeconds = stableLap; lapSource = "SIM"; }
                 else if (simLap > 0.0) { lapSeconds = simLap; lapSource = "SIM"; }
+                else if (stableLap > 0.0 && IsProjectionStableSourcePlan(stableLapSource)) { lapSeconds = stableLap; lapSource = "PLAN"; }
+                else if (planLap > 0.0) { lapSeconds = planLap; lapSource = "PLAN"; }
                 else { lapSource = "DEFAULT"; }
             }
             else
@@ -1556,7 +1605,7 @@ namespace LaunchPlugin
             string preRaceLapSource;
             double preRaceFuelPerLap;
             double preRaceProjectionLapSeconds;
-            ResolveDataGovernedBurnAndPaceBasis(data, fallbackFuelPerLap, out preRaceFuelPerLap, out preRaceProjectionLapSeconds, out preRaceFuelSource, out preRaceLapSource);
+            ResolveDataGovernedBurnAndPaceBasis(data, fallbackFuelPerLap, fallbackFuelIsSimHub: true, out preRaceFuelPerLap, out preRaceProjectionLapSeconds, out preRaceFuelSource, out preRaceLapSource);
 
             double forecastRaceLaps = 0.0;
             if (raceSessionDurationSeconds > 0.0 && preRaceProjectionLapSeconds > 0.0)
@@ -3491,6 +3540,8 @@ namespace LaunchPlugin
             double fallbackFuelPerLap = Convert.ToDouble(
                 PluginManager.GetPropertyValue("DataCorePlugin.Computed.Fuel_LitersPerLap") ?? 0.0
             );
+            _currentTickFallbackFuelPerLap = fallbackFuelPerLap;
+            _currentTickFallbackFuelIsSimHub = true;
 
             double effectiveMaxTank = EffectiveLiveMaxTank;
 
@@ -4760,7 +4811,7 @@ namespace LaunchPlugin
                 string selectedLapSource;
                 bool dataPlanForAfterStop = (_pitFuelControlEngine?.Data ?? PitFuelControlData.Live) == PitFuelControlData.Plan;
                 double dataGovernedFallback = dataPlanForAfterStop ? 0.0 : fuelPerLapForCalc;
-                ResolveDataGovernedBurnAndPaceBasis(data, dataGovernedFallback, out selectedNormBurn, out selectedLapSeconds, out selectedNormBurnSource, out selectedLapSource);
+                ResolveDataGovernedBurnAndPaceBasis(data, dataGovernedFallback, fallbackFuelIsSimHub: false, out selectedNormBurn, out selectedLapSeconds, out selectedNormBurnSource, out selectedLapSource);
 
                 double selectedLapsRemaining;
                 bool selectedLapsValid = TryResolveDataGovernedProjectedLapsRemaining(
@@ -5218,6 +5269,10 @@ namespace LaunchPlugin
         private bool _eventMarkerPressed = false;
         private int _eventMarkerPressCount = 0;
         private int _propertySnapshotLastProcessedPressCount = 0;
+        private bool _propertySnapshotRollingActiveRuntime = false;
+        private DateTime _propertySnapshotLastAutoCaptureUtc = DateTime.MinValue;
+        private int _propertySnapshotLastLapCaptured = -1;
+        private DateTime _propertySnapshotLastAutoSnapshotLogUtc = DateTime.MinValue;
         private bool _msgCxPressed = false;
         private bool _pitScreenActive = false;
         private bool _pitScreenDismissed = false;
@@ -5237,6 +5292,9 @@ namespace LaunchPlugin
         private Dictionary<string, string> _propertySnapshotPreviousValues = new Dictionary<string, string>(StringComparer.Ordinal);
         private bool _propertySnapshotDisabledGateLogged = false;
         private bool _propertySnapshotPathLogged = false;
+        private bool _propertySnapshotRollingPersistedStateCleared = false;
+        private const double PropertySnapshotRollingFrequencyDefaultHz = 1.0;
+        private const double PropertySnapshotRollingFrequencyMaxHz = 2.0;
 
         // --- State: Timers ---
         private readonly Stopwatch _pittingTimer = new Stopwatch();
@@ -5801,7 +5859,7 @@ namespace LaunchPlugin
             strictCount = 0;
             if (player == null || !player.Valid || string.IsNullOrWhiteSpace(player.Name))
             {
-                LogLeagueSubclassCountDiagnostics(string.Empty, null, 0, 0, 0, 0, 0, 0, 0, string.Empty, "player_unresolved", "drivers_rows");
+                LogLeagueSubclassCountDiagnostics(string.Empty, null, 0, 0, 0, 0, 0, 0, 0, string.Empty, string.Empty, "player_unresolved", "drivers_rows");
                 return false;
             }
 
@@ -6450,6 +6508,20 @@ namespace LaunchPlugin
         private TyreLearnState _tyreLearnState = TyreLearnState.Idle;
         private double _tyreLearnStartSessionTimeSec = 0.0;
         private string _tyreLearnLastProfileName = string.Empty;
+        private double _tyreLearnLfClearSessionTimeSec = 0.0;
+        private double _tyreLearnRfClearSessionTimeSec = 0.0;
+        private double _tyreLearnLrClearSessionTimeSec = 0.0;
+        private double _tyreLearnRrClearSessionTimeSec = 0.0;
+        private double _tyreLearnFirstClearSessionTimeSec = 0.0;
+        private double _tyreLearnLastClearSessionTimeSec = 0.0;
+        private double _tyreLearnLastPitEntrySessionTimeSec = 0.0;
+        private double _tyreLearnLastPitExitSessionTimeSec = 0.0;
+        private bool _tyreLearnPrevLfSelected = false;
+        private bool _tyreLearnPrevRfSelected = false;
+        private bool _tyreLearnPrevLrSelected = false;
+        private bool _tyreLearnPrevRrSelected = false;
+        private const double TyreLearnFixedTailSeconds = 6.0;
+        private const double TyreLearnDerivedJackAllowanceSeconds = 1.0;
         private const double TyreLearnMinSeconds = 5.0;
         private const double TyreLearnMaxSeconds = 60.0;
 
@@ -6927,6 +6999,9 @@ namespace LaunchPlugin
             this.AddAction("DeclutterMode", (a, b) => DeclutterMode0());
             this.AddAction("ToggleDarkMode", (a, b) => ToggleDarkMode());
             this.AddAction("EventMarker", (a, b) => EventMarker());
+            this.AddAction("PropertySnapshotRolling.Start", (a, b) => StartPropertySnapshotRolling());
+            this.AddAction("PropertySnapshotRolling.Stop", (a, b) => StopPropertySnapshotRolling());
+            this.AddAction("PropertySnapshotRolling.ResetCsv", (a, b) => ResetPropertySnapshotRollingCsv());
             this.AddAction("LaunchMode", (a, b) => LaunchMode());
             this.AddAction("TrackMarkersLock", (a, b) => SetTrackMarkersLocked(true));
             this.AddAction("TrackMarkersUnlock", (a, b) => SetTrackMarkersLocked(false));
@@ -9371,6 +9446,9 @@ namespace LaunchPlugin
             _tyreLearnState = TyreLearnState.Idle;
             _tyreLearnStartSessionTimeSec = 0.0;
             _tyreLearnLastProfileName = string.Empty;
+            _tyreLearnLastPitEntrySessionTimeSec = 0.0;
+            _tyreLearnLastPitExitSessionTimeSec = 0.0;
+            ResetTyreLearnTimingSamples();
 
             FuelCalculator?.ForceProfileDataReload();
 
@@ -9589,6 +9667,7 @@ namespace LaunchPlugin
             ResolveDataGovernedBurnAndPaceBasis(
                 data: data,
                 fallbackFuelPerLap: fallbackFuelPerLap,
+                fallbackFuelIsSimHub: false,
                 fuelPerLap: out selectedBurn,
                 lapSeconds: out ignoredLapSeconds,
                 fuelSource: out burnSource,
@@ -9628,8 +9707,11 @@ namespace LaunchPlugin
 
         private PitFuelDataAuthorityState ResolvePitFuelControlDataAuthorityState(GameData data)
         {
-            double fallbackFuelPerLap = IsFinitePositive(LiveFuelPerLap_Stable) ? LiveFuelPerLap_Stable : 0.0;
-            if (ResolveRuntimeRefuelBasis(data, fallbackFuelPerLap, out double selectedBurn, out double lapSeconds, out string burnSource, out string lapSource))
+            double fallbackFuelPerLap = IsFinitePositive(_currentTickFallbackFuelPerLap)
+                ? _currentTickFallbackFuelPerLap
+                : (IsFinitePositive(LiveFuelPerLap_Stable) ? LiveFuelPerLap_Stable : 0.0);
+            bool fallbackFuelIsSimHub = IsFinitePositive(_currentTickFallbackFuelPerLap) && _currentTickFallbackFuelIsSimHub;
+            if (ResolveRuntimeRefuelBasis(data, fallbackFuelPerLap, fallbackFuelIsSimHub: fallbackFuelIsSimHub, out double selectedBurn, out double lapSeconds, out string burnSource, out string lapSource))
             {
                 string source = ClassifyRefuelSourceToken(burnSource);
                 var selectedData = _pitFuelControlEngine?.Data ?? PitFuelControlData.Live;
@@ -9656,7 +9738,7 @@ namespace LaunchPlugin
             switch (code)
             {
                 case PitFuelDataAuthorityCode.Live: return new PitFuelDataAuthorityState { Code = code, Text = "LIVE", ColorHex = "#FF00FF" };
-                case PitFuelDataAuthorityCode.Build: return new PitFuelDataAuthorityState { Code = code, Text = "BUILD", ColorHex = "#FFFF00" };
+                case PitFuelDataAuthorityCode.Build: return new PitFuelDataAuthorityState { Code = code, Text = "PEND", ColorHex = "#FFFF00" };
                 case PitFuelDataAuthorityCode.Saved: return new PitFuelDataAuthorityState { Code = code, Text = "SAVED", ColorHex = "#00FFFF" };
                 case PitFuelDataAuthorityCode.Simh: return new PitFuelDataAuthorityState { Code = code, Text = "SIMH", ColorHex = "#FFA500" };
                 case PitFuelDataAuthorityCode.Dfalt: return new PitFuelDataAuthorityState { Code = code, Text = "DFALT", ColorHex = "#FFA500" };
@@ -9778,6 +9860,7 @@ namespace LaunchPlugin
         private bool ResolveRuntimeRefuelBasis(
             GameData data,
             double fallbackFuelPerLap,
+            bool fallbackFuelIsSimHub,
             out double selectedBurn,
             out double projectionLapSeconds,
             out string burnSource,
@@ -9795,7 +9878,7 @@ namespace LaunchPlugin
             double resolvedLapSeconds;
             string normFuelSourceRaw;
             string lapSourceRaw;
-            ResolveDataGovernedBurnAndPaceBasis(data, fallbackFuelPerLap, out normFuelPerLap, out resolvedLapSeconds, out normFuelSourceRaw, out lapSourceRaw);
+            ResolveDataGovernedBurnAndPaceBasis(data, fallbackFuelPerLap, fallbackFuelIsSimHub: fallbackFuelIsSimHub, out normFuelPerLap, out resolvedLapSeconds, out normFuelSourceRaw, out lapSourceRaw);
 
             string normFuelSource = ClassifyRefuelSourceToken(normFuelSourceRaw);
             string resolvedLapSource = ClassifyRefuelSourceToken(lapSourceRaw);
@@ -9931,7 +10014,7 @@ namespace LaunchPlugin
             double lapSeconds;
             string burnSource;
             string lapSource;
-            bool hasBasis = ResolveRuntimeRefuelBasis(data, fallbackFuelPerLap, out selectedBurn, out lapSeconds, out burnSource, out lapSource);
+            bool hasBasis = ResolveRuntimeRefuelBasis(data, fallbackFuelPerLap, fallbackFuelIsSimHub: true, out selectedBurn, out lapSeconds, out burnSource, out lapSource);
             Fuel_Refuel_BurnSource = ClassifyRefuelSourceToken(burnSource);
             Fuel_Refuel_LapSource = ClassifyRefuelSourceToken(lapSource);
             Fuel_Refuel_SelectedBurnPerLap = selectedBurn > 0.0 ? selectedBurn : 0.0;
@@ -10231,6 +10314,14 @@ namespace LaunchPlugin
 
             // --- MASTER GUARD CLAUSES ---
             if (Settings == null || pluginManager == null) return;
+            if (!_propertySnapshotRollingPersistedStateCleared)
+            {
+                if (Settings.PropertySnapshotRollingActive)
+                {
+                    Settings.PropertySnapshotRollingActive = false;
+                }
+                _propertySnapshotRollingPersistedStateCleared = true;
+            }
             EnforceHardDebugSettings(Settings);
             TryFlushPendingCustomMessageSaveDebounce(false);
             EvaluateDarkMode(pluginManager);
@@ -10455,7 +10546,7 @@ namespace LaunchPlugin
 
             _carPlayerTrackPct = SanitizeTrackPercent(trackPct);
             double sessionTimeSec = ResolveShiftAssistSessionTimeSec(pluginManager);
-            MaybeWritePropertySnapshot(sessionTimeSec);
+            MaybeWritePropertySnapshot(sessionTimeSec, lapCrossed, completedLaps);
             double sessionTimeRemainingSec = SafeReadDouble(pluginManager, "DataCorePlugin.GameRawData.Telemetry.SessionTimeRemain", double.NaN);
             int sessionState = SafeReadInt(pluginManager, "DataCorePlugin.GameRawData.Telemetry.SessionState", 0);
             string sessionTypeName = !string.IsNullOrWhiteSpace(currentSessionTypeForConfidence)
@@ -10680,11 +10771,14 @@ namespace LaunchPlugin
 
             if (pitEntryEdge)
             {
+                _tyreLearnLastPitEntrySessionTimeSec = sessionTime;
+                _tyreLearnLastPitExitSessionTimeSec = 0.0;
                 LogPitExitPitInSnapshot(sessionTime, completedLaps + 1, pitLossSec);
             }
 
             if (pitExitEdge)
             {
+                _tyreLearnLastPitExitSessionTimeSec = sessionTime;
                 _opponentsEngine?.NotifyPitExitLine(completedLaps, sessionTime, trackPct);
                 // LogPitExitPitOutSnapshot(sessionTime, completedLaps + 1, pitTripActive);
             }
@@ -10706,6 +10800,7 @@ namespace LaunchPlugin
             {
                 _tyreLearnState = TyreLearnState.Idle;
                 _tyreLearnStartSessionTimeSec = 0.0;
+                ResetTyreLearnTimingSamples();
             }
             _tyreLearnLastProfileName = activeProfileName;
 
@@ -10714,12 +10809,17 @@ namespace LaunchPlugin
                 SimHub.Logging.Current.Info("[LalaPlugin:Tyre Learn] rejected: left pit before completion.");
                 _tyreLearnState = TyreLearnState.Idle;
                 _tyreLearnStartSessionTimeSec = 0.0;
+                ResetTyreLearnTimingSamples();
             }
             else if (_tyreLearnState == TyreLearnState.Idle)
             {
                 if (inPitRoadNow && allFourSelected)
                 {
                     _tyreLearnState = TyreLearnState.Armed;
+                    _tyreLearnPrevLfSelected = tyreLf ?? false;
+                    _tyreLearnPrevRfSelected = tyreRf ?? false;
+                    _tyreLearnPrevLrSelected = tyreLr ?? false;
+                    _tyreLearnPrevRrSelected = tyreRr ?? false;
                     SimHub.Logging.Current.Info("[LalaPlugin:Tyre Learn] candidate armed (all four tyres selected).");
                 }
             }
@@ -10729,11 +10829,18 @@ namespace LaunchPlugin
                 {
                     SimHub.Logging.Current.Info("[LalaPlugin:Tyre Learn] rejected: partial tyre selection before service start.");
                     _tyreLearnState = TyreLearnState.Idle;
+                    _tyreLearnStartSessionTimeSec = 0.0;
+                    ResetTyreLearnTimingSamples();
                 }
                 else if (inPitBoxServiceContext)
                 {
                     _tyreLearnStartSessionTimeSec = sessionTime;
                     _tyreLearnState = TyreLearnState.ServiceStarted;
+                    ResetTyreLearnTimingSamples();
+                    _tyreLearnPrevLfSelected = tyreLf ?? false;
+                    _tyreLearnPrevRfSelected = tyreRf ?? false;
+                    _tyreLearnPrevLrSelected = tyreLr ?? false;
+                    _tyreLearnPrevRrSelected = tyreRr ?? false;
                     SimHub.Logging.Current.Info("[LalaPlugin:Tyre Learn] service start confirmed.");
                 }
             }
@@ -10744,34 +10851,144 @@ namespace LaunchPlugin
                     SimHub.Logging.Current.Info("[LalaPlugin:Tyre Learn] rejected: telemetry gap on tyre flags.");
                     _tyreLearnState = TyreLearnState.Idle;
                     _tyreLearnStartSessionTimeSec = 0.0;
+                    ResetTyreLearnTimingSamples();
                 }
-                else if (allFourCleared)
+                else
                 {
-                    double candidateSec = Math.Max(0.0, sessionTime - _tyreLearnStartSessionTimeSec);
-                    if (candidateSec <= TyreLearnMinSeconds || candidateSec > TyreLearnMaxSeconds)
+                    if (_tyreLearnPrevLfSelected && !tyreLf.Value)
                     {
-                        SimHub.Logging.Current.Info($"[LalaPlugin:Tyre Learn] rejected: candidate out of bounds ({candidateSec:F1}s).");
+                        _tyreLearnLfClearSessionTimeSec = sessionTime;
                     }
-                    else if (ActiveProfile == null)
+                    if (_tyreLearnPrevRfSelected && !tyreRf.Value)
                     {
-                        SimHub.Logging.Current.Info("[LalaPlugin:Tyre Learn] rejected: no active profile.");
+                        _tyreLearnRfClearSessionTimeSec = sessionTime;
                     }
-                    else
+                    if (_tyreLearnPrevLrSelected && !tyreLr.Value)
                     {
-                        double runtimeTyreTimeSec;
-                        var tyreSaveOutcome = SaveTireChangeTimeToActiveProfile(candidateSec, out runtimeTyreTimeSec);
-                        if (tyreSaveOutcome == TireChangeTimeSaveOutcome.Saved)
-                        {
-                            if (FuelCalculator != null)
-                            {
-                                FuelCalculator.TireChangeTime = runtimeTyreTimeSec;
-                            }
-                            SimHub.Logging.Current.Info($"[LalaPlugin:Tyre Learn] accepted/persisted tyre change time {runtimeTyreTimeSec:F1}s (candidate {candidateSec:F1}s).");
-                        }
+                        _tyreLearnLrClearSessionTimeSec = sessionTime;
+                    }
+                    if (_tyreLearnPrevRrSelected && !tyreRr.Value)
+                    {
+                        _tyreLearnRrClearSessionTimeSec = sessionTime;
                     }
 
-                    _tyreLearnState = TyreLearnState.Idle;
-                    _tyreLearnStartSessionTimeSec = 0.0;
+                    if (_tyreLearnFirstClearSessionTimeSec <= 0.0)
+                    {
+                        double firstSeen = 0.0;
+                        if (_tyreLearnLfClearSessionTimeSec > 0.0) firstSeen = _tyreLearnLfClearSessionTimeSec;
+                        if (_tyreLearnRfClearSessionTimeSec > 0.0) firstSeen = firstSeen <= 0.0 ? _tyreLearnRfClearSessionTimeSec : Math.Min(firstSeen, _tyreLearnRfClearSessionTimeSec);
+                        if (_tyreLearnLrClearSessionTimeSec > 0.0) firstSeen = firstSeen <= 0.0 ? _tyreLearnLrClearSessionTimeSec : Math.Min(firstSeen, _tyreLearnLrClearSessionTimeSec);
+                        if (_tyreLearnRrClearSessionTimeSec > 0.0) firstSeen = firstSeen <= 0.0 ? _tyreLearnRrClearSessionTimeSec : Math.Min(firstSeen, _tyreLearnRrClearSessionTimeSec);
+                        _tyreLearnFirstClearSessionTimeSec = firstSeen;
+                    }
+
+                    double lastSeen = 0.0;
+                    if (_tyreLearnLfClearSessionTimeSec > 0.0) lastSeen = Math.Max(lastSeen, _tyreLearnLfClearSessionTimeSec);
+                    if (_tyreLearnRfClearSessionTimeSec > 0.0) lastSeen = Math.Max(lastSeen, _tyreLearnRfClearSessionTimeSec);
+                    if (_tyreLearnLrClearSessionTimeSec > 0.0) lastSeen = Math.Max(lastSeen, _tyreLearnLrClearSessionTimeSec);
+                    if (_tyreLearnRrClearSessionTimeSec > 0.0) lastSeen = Math.Max(lastSeen, _tyreLearnRrClearSessionTimeSec);
+                    _tyreLearnLastClearSessionTimeSec = lastSeen;
+
+                    _tyreLearnPrevLfSelected = tyreLf.Value;
+                    _tyreLearnPrevRfSelected = tyreRf.Value;
+                    _tyreLearnPrevLrSelected = tyreLr.Value;
+                    _tyreLearnPrevRrSelected = tyreRr.Value;
+
+                    if (allFourCleared)
+                    {
+                        double candidateSec = Math.Max(0.0, sessionTime - _tyreLearnStartSessionTimeSec);
+                        double? pitStopElapsedSec = _pit?.PitStopElapsedSec;
+                        int pitSvStatus = TryReadNullableInt(pluginManager.GetPropertyValue("DataCorePlugin.GameRawData.Telemetry.PlayerCarPitSvStatus")) ?? -1;
+                        int pitSvFlags = TryReadNullableInt(pluginManager.GetPropertyValue("DataCorePlugin.GameRawData.Telemetry.PlayerCarPitSvFlags")) ?? -1;
+                        double firstClear = _tyreLearnFirstClearSessionTimeSec > 0.0 ? _tyreLearnFirstClearSessionTimeSec : sessionTime;
+                        double lastClear = _tyreLearnLastClearSessionTimeSec > 0.0 ? _tyreLearnLastClearSessionTimeSec : sessionTime;
+                        double rawSec = candidateSec;
+                        double correctedFixedSec = rawSec + TyreLearnFixedTailSeconds;
+                        double? derivedTailSec = null;
+                        string wheelOrder = "NA";
+                        double delta1 = 0.0;
+                        double delta2 = 0.0;
+                        double delta3 = 0.0;
+                        double? avgIntervalSec = null;
+                        double? medianIntervalSec = null;
+                        double? perTyreEstimateSec = null;
+                        double? correctedFourTyreEstimateSec = null;
+                        if (_tyreLearnLfClearSessionTimeSec > 0.0 && _tyreLearnRfClearSessionTimeSec > 0.0 && _tyreLearnLrClearSessionTimeSec > 0.0 && _tyreLearnRrClearSessionTimeSec > 0.0)
+                        {
+                            var wheelEvents = new List<KeyValuePair<string, double>>(4)
+                            {
+                                new KeyValuePair<string, double>("LF", _tyreLearnLfClearSessionTimeSec),
+                                new KeyValuePair<string, double>("RF", _tyreLearnRfClearSessionTimeSec),
+                                new KeyValuePair<string, double>("LR", _tyreLearnLrClearSessionTimeSec),
+                                new KeyValuePair<string, double>("RR", _tyreLearnRrClearSessionTimeSec)
+                            };
+                            wheelEvents.Sort((a, b) => a.Value.CompareTo(b.Value));
+                            wheelOrder = string.Join("/", wheelEvents.Select(w => w.Key));
+
+                            delta1 = Math.Max(0.0, wheelEvents[1].Value - wheelEvents[0].Value);
+                            delta2 = Math.Max(0.0, wheelEvents[2].Value - wheelEvents[1].Value);
+                            delta3 = Math.Max(0.0, wheelEvents[3].Value - wheelEvents[2].Value);
+                            double[] intervals = new[] { delta1, delta2, delta3 };
+                            avgIntervalSec = intervals.Average();
+                            double[] sortedIntervals = new[] { delta1, delta2, delta3 };
+                            Array.Sort(sortedIntervals);
+                            medianIntervalSec = sortedIntervals[1];
+
+                            derivedTailSec = avgIntervalSec;
+                            perTyreEstimateSec = avgIntervalSec.Value + TyreLearnDerivedJackAllowanceSeconds;
+                            correctedFourTyreEstimateSec = perTyreEstimateSec.Value * 4.0;
+                        }
+                        string derivedTailText = derivedTailSec.HasValue ? derivedTailSec.Value.ToString("F1", CultureInfo.InvariantCulture) : "NA";
+                        string correctedDerivedText = derivedTailSec.HasValue
+                            ? (rawSec + derivedTailSec.Value + TyreLearnDerivedJackAllowanceSeconds).ToString("F1", CultureInfo.InvariantCulture)
+                            : "NA";
+                        string avgIntervalText = avgIntervalSec.HasValue ? avgIntervalSec.Value.ToString("F2", CultureInfo.InvariantCulture) : "NA";
+                        string medianIntervalText = medianIntervalSec.HasValue ? medianIntervalSec.Value.ToString("F2", CultureInfo.InvariantCulture) : "NA";
+                        string perTyreEstimateText = perTyreEstimateSec.HasValue ? perTyreEstimateSec.Value.ToString("F2", CultureInfo.InvariantCulture) : "NA";
+                        string corrected4TyreText = correctedFourTyreEstimateSec.HasValue ? correctedFourTyreEstimateSec.Value.ToString("F2", CultureInfo.InvariantCulture) : "NA";
+                        string stallExitText = inPitStallNow ? "NA" : sessionTime.ToString("F2", CultureInfo.InvariantCulture);
+                        double currentSavedTyreTime = 0.0;
+                        if (ActiveProfile != null)
+                        {
+                            currentSavedTyreTime = ActiveProfile.TireChangeTime;
+                        }
+                        if (currentSavedTyreTime <= 0.0 || double.IsNaN(currentSavedTyreTime) || double.IsInfinity(currentSavedTyreTime))
+                        {
+                            currentSavedTyreTime = FuelCalculator?.TireChangeTime ?? 0.0;
+                        }
+                        if (double.IsNaN(currentSavedTyreTime) || double.IsInfinity(currentSavedTyreTime) || currentSavedTyreTime < 0.0)
+                        {
+                            currentSavedTyreTime = 0.0;
+                        }
+                        string pitEntryText = _tyreLearnLastPitEntrySessionTimeSec > 0.0 ? _tyreLearnLastPitEntrySessionTimeSec.ToString("F2", CultureInfo.InvariantCulture) : "NA";
+                        string pitExitText = _tyreLearnLastPitExitSessionTimeSec > 0.0 ? _tyreLearnLastPitExitSessionTimeSec.ToString("F2", CultureInfo.InvariantCulture) : "NA";
+                        string tLfText = _tyreLearnLfClearSessionTimeSec > 0.0 ? _tyreLearnLfClearSessionTimeSec.ToString("F2", CultureInfo.InvariantCulture) : "NA";
+                        string tRfText = _tyreLearnRfClearSessionTimeSec > 0.0 ? _tyreLearnRfClearSessionTimeSec.ToString("F2", CultureInfo.InvariantCulture) : "NA";
+                        string tLrText = _tyreLearnLrClearSessionTimeSec > 0.0 ? _tyreLearnLrClearSessionTimeSec.ToString("F2", CultureInfo.InvariantCulture) : "NA";
+                        string tRrText = _tyreLearnRrClearSessionTimeSec > 0.0 ? _tyreLearnRrClearSessionTimeSec.ToString("F2", CultureInfo.InvariantCulture) : "NA";
+                        string lfOffsetText = _tyreLearnLfClearSessionTimeSec > 0.0 ? (_tyreLearnLfClearSessionTimeSec - _tyreLearnStartSessionTimeSec).ToString("F2", CultureInfo.InvariantCulture) : "NA";
+                        string rfOffsetText = _tyreLearnRfClearSessionTimeSec > 0.0 ? (_tyreLearnRfClearSessionTimeSec - _tyreLearnStartSessionTimeSec).ToString("F2", CultureInfo.InvariantCulture) : "NA";
+                        string lrOffsetText = _tyreLearnLrClearSessionTimeSec > 0.0 ? (_tyreLearnLrClearSessionTimeSec - _tyreLearnStartSessionTimeSec).ToString("F2", CultureInfo.InvariantCulture) : "NA";
+                        string rrOffsetText = _tyreLearnRrClearSessionTimeSec > 0.0 ? (_tyreLearnRrClearSessionTimeSec - _tyreLearnStartSessionTimeSec).ToString("F2", CultureInfo.InvariantCulture) : "NA";
+                        SimHub.Logging.Current.Info(
+                            $"[LalaPlugin:Tyre Learn] sample raw={rawSec:F1}s correctedFixed={correctedFixedSec:F1}s correctedDerived={correctedDerivedText}s savedNow={currentSavedTyreTime:F1}s wheelOrder={wheelOrder} tLF={tLfText} tRF={tRfText} tLR={tLrText} tRR={tRrText} d1={delta1:F2} d2={delta2:F2} d3={delta3:F2} avgInterval={avgIntervalText} medianInterval={medianIntervalText} perTyreEst={perTyreEstimateText} corrected4TyreEst={corrected4TyreText} tailDerived={derivedTailText}s start={_tyreLearnStartSessionTimeSec:F2} firstClear={firstClear:F2} lastClear={lastClear:F2} offsets=LF:{lfOffsetText},RF:{rfOffsetText},LR:{lrOffsetText},RR:{rrOffsetText} pitEntry={pitEntryText} pitExit={pitExitText} stallExit={stallExitText} pitSvStatus={pitSvStatus} pitSvFlags={pitSvFlags} pitStopElapsed={(pitStopElapsedSec.HasValue ? pitStopElapsedSec.Value.ToString("F2", CultureInfo.InvariantCulture) : "NA")}");
+                        if (candidateSec <= TyreLearnMinSeconds || candidateSec > TyreLearnMaxSeconds)
+                        {
+                            SimHub.Logging.Current.Info($"[LalaPlugin:Tyre Learn] rejected: candidate out of bounds ({candidateSec:F1}s).");
+                        }
+                        else if (ActiveProfile == null)
+                        {
+                            SimHub.Logging.Current.Info("[LalaPlugin:Tyre Learn] rejected: no active profile.");
+                        }
+                        else
+                        {
+                            SimHub.Logging.Current.Info("[LalaPlugin:Tyre Learn] diagnostic-only: raw candidate not persisted.");
+                        }
+
+                        _tyreLearnState = TyreLearnState.Idle;
+                        _tyreLearnStartSessionTimeSec = 0.0;
+                        ResetTyreLearnTimingSamples();
+                    }
                 }
             }
 
@@ -13465,7 +13682,25 @@ namespace LaunchPlugin
             return buffer.ToString();
         }
 
-        private void MaybeWritePropertySnapshot(double sessionTimeSec)
+        private int NormalizePropertySnapshotRollingMode()
+        {
+            int mode = Settings?.PropertySnapshotRollingMode ?? 0;
+            if (mode < 0 || mode > 2) mode = 0;
+            return mode;
+        }
+
+        private double NormalizePropertySnapshotRollingFrequencyHz()
+        {
+            double hz = Settings?.PropertySnapshotRollingFrequencyHz ?? PropertySnapshotRollingFrequencyDefaultHz;
+            if (double.IsNaN(hz) || double.IsInfinity(hz) || hz <= 0.0)
+            {
+                hz = PropertySnapshotRollingFrequencyDefaultHz;
+            }
+            if (hz > PropertySnapshotRollingFrequencyMaxHz) hz = PropertySnapshotRollingFrequencyMaxHz;
+            return hz;
+        }
+
+        private void MaybeWritePropertySnapshot(double sessionTimeSec, bool lapCrossed, int completedLaps)
         {
             bool snapshotSettingEnabled = Settings?.EnablePropertySnapshot == true;
             bool enabled = SoftDebugEnabled && snapshotSettingEnabled;
@@ -13487,12 +13722,36 @@ namespace LaunchPlugin
 
             _propertySnapshotDisabledGateLogged = false;
 
-            if (pressCount == _propertySnapshotLastProcessedPressCount) return;
-
             try
             {
-                WritePropertySnapshotCsv(sessionTimeSec);
-                _propertySnapshotLastProcessedPressCount = pressCount;
+                bool manualTriggered = pressCount != _propertySnapshotLastProcessedPressCount;
+                if (manualTriggered)
+                {
+                    WritePropertySnapshotCsv(sessionTimeSec, includeOneShot: true, includeRolling: Settings?.PropertySnapshotRollingCombinedCsv == true, captureReason: "manual-marker", detailedLogs: true);
+                    _propertySnapshotLastProcessedPressCount = pressCount;
+                }
+
+                bool rollingEnabled = Settings?.PropertySnapshotRollingCombinedCsv == true;
+                bool autoActive = _propertySnapshotRollingActiveRuntime;
+                if (!rollingEnabled || !autoActive) return;
+
+                int mode = NormalizePropertySnapshotRollingMode();
+                if (mode == 1)
+                {
+                    double hz = NormalizePropertySnapshotRollingFrequencyHz();
+                    double intervalSeconds = 1.0 / hz;
+                    if (_propertySnapshotLastAutoCaptureUtc == DateTime.MinValue ||
+                        (DateTime.UtcNow - _propertySnapshotLastAutoCaptureUtc).TotalSeconds >= intervalSeconds)
+                    {
+                        WritePropertySnapshotCsv(sessionTimeSec, includeOneShot: false, includeRolling: true, captureReason: "auto-frequency", detailedLogs: false);
+                        _propertySnapshotLastAutoCaptureUtc = DateTime.UtcNow;
+                    }
+                }
+                else if (mode == 2 && lapCrossed && completedLaps > 0 && completedLaps != _propertySnapshotLastLapCaptured)
+                {
+                    WritePropertySnapshotCsv(sessionTimeSec, includeOneShot: false, includeRolling: true, captureReason: "auto-perlap", detailedLogs: false);
+                    _propertySnapshotLastLapCaptured = completedLaps;
+                }
             }
             catch (Exception ex)
             {
@@ -13501,7 +13760,7 @@ namespace LaunchPlugin
             }
         }
 
-        private void WritePropertySnapshotCsv(double sessionTimeSec)
+        private void WritePropertySnapshotCsv(double sessionTimeSec, bool includeOneShot, bool includeRolling, string captureReason, bool detailedLogs)
         {
             var rows = new List<Tuple<string, string, string, string>>();
             var currentValues = new Dictionary<string, string>(StringComparer.Ordinal);
@@ -13567,13 +13826,24 @@ namespace LaunchPlugin
                 }
                 buffer.AppendLine();
             }
-            SimHub.Logging.Current.Info($"[LalaPlugin:Debug] Property snapshot summary includeChanged={includeChanged} rows={rows.Count} changed1={changedOnes} changed0={changedZeros} changedNA={changedNa}.");
-            WriteSnapshotWithFallback(filePath, buffer.ToString());
+            if (detailedLogs)
+            {
+                SimHub.Logging.Current.Info($"[LalaPlugin:Debug] Property snapshot summary reason={captureReason} includeChanged={includeChanged} rows={rows.Count} changed1={changedOnes} changed0={changedZeros} changedNA={changedNa}.");
+            }
+            else if ((DateTime.UtcNow - _propertySnapshotLastAutoSnapshotLogUtc).TotalSeconds >= 10.0)
+            {
+                _propertySnapshotLastAutoSnapshotLogUtc = DateTime.UtcNow;
+                SimHub.Logging.Current.Info($"[LalaPlugin:Debug] Property snapshot auto capture heartbeat reason={captureReason} rows={rows.Count}.");
+            }
+            if (includeOneShot)
+            {
+                WriteSnapshotWithFallback(filePath, buffer.ToString());
+            }
 
-            if (Settings?.PropertySnapshotRollingCombinedCsv == true)
+            if (includeRolling)
             {
                 string rollingPath = Path.Combine(folder, "PropertySnapshot_Rolling.csv");
-                WriteSnapshotRollingWideWithFallback(rollingPath, utcStamp, rows);
+                WriteSnapshotRollingWideWithFallback(rollingPath, utcStamp, rows, detailedLogs);
             }
 
             _propertySnapshotPreviousValues = currentValues;
@@ -13655,12 +13925,15 @@ namespace LaunchPlugin
             return Path.Combine(fallbackRoot, Path.GetFileName(primaryFilePath));
         }
 
-        private void WriteSnapshotRollingWideWithFallback(string primaryFilePath, string captureStamp, List<Tuple<string, string, string, string>> rows)
+        private void WriteSnapshotRollingWideWithFallback(string primaryFilePath, string captureStamp, List<Tuple<string, string, string, string>> rows, bool detailedLogs)
         {
             try
             {
                 WriteSnapshotRollingWide(primaryFilePath, captureStamp, rows);
-                SimHub.Logging.Current.Info($"[LalaPlugin:Debug] Property snapshot rolling append success: {primaryFilePath}");
+                if (detailedLogs)
+                {
+                    SimHub.Logging.Current.Info($"[LalaPlugin:Debug] Property snapshot rolling append success: {primaryFilePath}");
+                }
             }
             catch (Exception primaryEx)
             {
@@ -18413,6 +18686,20 @@ namespace LaunchPlugin
             return modeledServiceSec + PitBoxModeledServiceOverheadSeconds;
         }
 
+        private void ResetTyreLearnTimingSamples()
+        {
+            _tyreLearnLfClearSessionTimeSec = 0.0;
+            _tyreLearnRfClearSessionTimeSec = 0.0;
+            _tyreLearnLrClearSessionTimeSec = 0.0;
+            _tyreLearnRrClearSessionTimeSec = 0.0;
+            _tyreLearnFirstClearSessionTimeSec = 0.0;
+            _tyreLearnLastClearSessionTimeSec = 0.0;
+            _tyreLearnPrevLfSelected = false;
+            _tyreLearnPrevRfSelected = false;
+            _tyreLearnPrevLrSelected = false;
+            _tyreLearnPrevRrSelected = false;
+        }
+
         private double CalculatePitBoxRepairRemainingSeconds()
         {
             if (!IsInValidPitBoxServiceState())
@@ -21378,6 +21665,9 @@ namespace LaunchPlugin
         public bool PropertySnapshotGroupRawDebug { get; set; } = true;
         public bool PropertySnapshotIncludeChangedValues { get; set; } = false;
         public bool PropertySnapshotRollingCombinedCsv { get; set; } = false;
+        public int PropertySnapshotRollingMode { get; set; } = 0;
+        public bool PropertySnapshotRollingActive { get; set; } = false;
+        public double PropertySnapshotRollingFrequencyHz { get; set; } = 1.0;
         public int CarSADebugExportCadence { get; set; } = 1;
         public int CarSADebugExportTickMaxHz { get; set; } = 20;
         public bool CarSADebugExportWriteEventsCsv { get; set; } = true;
