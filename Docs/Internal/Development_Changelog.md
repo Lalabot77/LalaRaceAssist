@@ -123,6 +123,9 @@
   - `TryCaptureRaceFinishPlayerSnapshot(...)` now requires a positive live class position before freezing player snapshot (except `SessionState==6` safety fallback), preventing `RaceFinish.PlayerClassPosition=0` freeze when valid class position resolves a tick later.
 
 
+- 2026-05-18: PR #736 review follow-up hardened Property Snapshot PER LAP write path with local exception guard.
+  - wrapped `MaybeWritePropertySnapshotPerLap(...)` rolling write in `try/catch` and downgraded write failures to bounded warning logging, preserving lap-tick processing continuity and existing manual/frequency error-handling behavior.
+
 ## 2026-05-15 — PR #722 follow-up: unresolved-player native fallback now requires valid native class colours
 - Classification: **internal-only** (cohort fallback correctness hardening; no export/format changes).
 - In `BuildRaceContextLeagueClassMatchDelegate()`, unresolved-player fallback now performs native class-color compare only when both `playerRow.ClassColor` and `candidateRow.ClassColor` are non-empty; missing colour now returns `false` (prevents accidental match-all cohorting).
@@ -2519,3 +2522,7 @@ The public user-facing release history is maintained in the root `CHANGELOG.md`.
 - Classification: **both** (driver-facing wording clarity + docs contract alignment; no behavior/logic changes).
 - Updated Strategy UI tooltips for `Refresh Calcs`, Race Basis owner radios, Live Detect owner semantics, and preset reapply (`↻`) to match active owner/effective-basis behavior.
 - Aligned Strategy docs + tooltip inventory wording with current semantics: recompute-only Refresh Calcs, explicit Race Basis ownership, non-destructive Live Detect, and modified-badge divergence meaning.
+- 2026-05-18: Property Snapshot PER LAP wiring compile-fix validated (PR #736 follow-up).
+  - removed out-of-scope `MaybeWritePropertySnapshot(sessionTimeSec, lapCrossed, completedLaps)` call from `DataUpdate(...)`; manual marker + FREQUENCY automation remain owned there.
+  - added narrow `MaybeWritePropertySnapshotPerLap(sessionTimeSec, lapCrossed, completedLaps)` seam called from `UpdateLiveFuelCalcs(...)` immediately after existing lap-cross detection/CompletedLaps context is available.
+  - PER LAP automation remains rolling-only, de-duped by completed lap, and reuses existing `DetectLapCrossing(...)` seam (no second lap detector, no fuel/pit/projection logic changes).
