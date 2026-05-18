@@ -10672,6 +10672,7 @@ namespace LaunchPlugin
             if (pitEntryEdge)
             {
                 _tyreLearnLastPitEntrySessionTimeSec = sessionTime;
+                _tyreLearnLastPitExitSessionTimeSec = 0.0;
                 LogPitExitPitInSnapshot(sessionTime, completedLaps + 1, pitLossSec);
             }
 
@@ -10846,7 +10847,16 @@ namespace LaunchPlugin
                         string perTyreEstimateText = perTyreEstimateSec.HasValue ? perTyreEstimateSec.Value.ToString("F2", CultureInfo.InvariantCulture) : "NA";
                         string corrected4TyreText = correctedFourTyreEstimateSec.HasValue ? correctedFourTyreEstimateSec.Value.ToString("F2", CultureInfo.InvariantCulture) : "NA";
                         string stallExitText = inPitStallNow ? "NA" : sessionTime.ToString("F2", CultureInfo.InvariantCulture);
-                        double currentSavedTyreTime = GetEffectiveTireChangeTimeSeconds();
+                        double currentSavedTyreTime = FuelCalculator?.TireChangeTime ?? 0.0;
+                        if ((currentSavedTyreTime <= 0.0 || double.IsNaN(currentSavedTyreTime) || double.IsInfinity(currentSavedTyreTime))
+                            && ActiveProfile != null)
+                        {
+                            currentSavedTyreTime = ActiveProfile.TireChangeTime;
+                        }
+                        if (double.IsNaN(currentSavedTyreTime) || double.IsInfinity(currentSavedTyreTime) || currentSavedTyreTime < 0.0)
+                        {
+                            currentSavedTyreTime = 0.0;
+                        }
                         string pitEntryText = _tyreLearnLastPitEntrySessionTimeSec > 0.0 ? _tyreLearnLastPitEntrySessionTimeSec.ToString("F2", CultureInfo.InvariantCulture) : "NA";
                         string pitExitText = _tyreLearnLastPitExitSessionTimeSec > 0.0 ? _tyreLearnLastPitExitSessionTimeSec.ToString("F2", CultureInfo.InvariantCulture) : "NA";
                         string tLfText = _tyreLearnLfClearSessionTimeSec > 0.0 ? _tyreLearnLfClearSessionTimeSec.ToString("F2", CultureInfo.InvariantCulture) : "NA";

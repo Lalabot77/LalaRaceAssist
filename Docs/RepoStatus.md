@@ -3,6 +3,7 @@
   - Follow-up diagnostics now also report wheel clear order, per-wheel clear timestamps, interval statistics (`d1/d2/d3`, avg, median), per-tyre estimate, corrected 4-tyre estimate, retained saved tyre time, and pit entry/exit timestamps for future per-tyre model validation.
   - Follow-up ordering fix now records per-wheel `1->0` transitions before `allFourCleared` sample emission in `ServiceStarted`, so final-wheel clear tick samples include all four wheel timestamps/order and populated interval metrics.
   - Follow-up tidy now prints `NA` for missing wheel offsets in the sample line.
+  - Follow-up diagnostic context fix now clears stale `pitExit` on each new `pitEntry` edge, and `savedNow` now reports direct runtime/profile stored tyre time (not tyre-selection-gated), so all-four-clear samples no longer show stale previous-stop exit or `savedNow=0` artifacts.
   - Added per-wheel clear timestamp capture (`LF/RF/LR/RR`) plus first/last clear tracking inside tyre learner runtime state.
   - Existing accepted/rejected candidate semantics and persisted `TireChangeTime` save basis remain unchanged in this pass.
 

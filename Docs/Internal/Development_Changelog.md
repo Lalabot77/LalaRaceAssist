@@ -4,6 +4,7 @@
   - Follow-up expanded sample payload with wheel clear order (`LF/RF/LR/RR`), explicit clear timestamps (`tLF/tRF/tLR/tRR`), derived intervals (`d1/d2/d3`), avg/median interval metrics, per-tyre estimate, corrected 4-tyre estimate, retained current saved tyre time, and pit entry/exit timestamps.
   - Ordering fix: in `ServiceStarted`, per-wheel `1->0` clear transitions and first/last clear timestamps are now captured before evaluating `allFourCleared`, ensuring the final-wheel tick sample includes complete wheel order/interval metrics.
   - Optional tidy: sample offset fields now print `NA` when a wheel timestamp is unavailable instead of negative offset artifacts.
+  - Diagnostic context fix: pit-entry edge now clears prior stop `pitExit` sample context; `savedNow` now reads direct runtime/profile stored tyre time (no tyre-selection-gated resolver), preventing stale-exit carry-over and false `savedNow=0` on all-four-clear samples.
   - Persisted tyre-time learner save path remains unchanged (existing accepted candidate still uses raw all-four-clear timing in this pass).
 
 - 2026-05-17: Strategy Planner profile fuel preview stale-label fix + Property Snapshot include alignment.
