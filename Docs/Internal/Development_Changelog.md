@@ -1,3 +1,8 @@
+- 2026-05-18: Property Snapshot rolling recording indicator visual polish landed.
+  - Debug UI now shows rolling status in a bordered state pill beside rolling controls using existing resolver output (`OFF`/`READY`/`RECORDING`) with explicit visual emphasis (`OFF` neutral grey, `READY` cyan/blue standby, `RECORDING` bright green active).
+  - Added status-driven button enablement polish in-plugin only: `START` disabled during `RECORDING`; `STOP` disabled when inactive.
+  - No rolling automation logic, resolver semantics, exports, snapshot/group capture behavior, DataCore fuel capture, or rolling CSV schema changes.
+
 - 2026-05-18: Property Snapshot rolling status stale-refresh follow-up (PR #740 review).
   - Wired status refresh callback to `Enable debugging mode` (`Settings.EnableSoftDebug`) and `Enable Property Snapshot` master toggle so `ROLLING CSV: OFF/READY/RECORDING` updates immediately when status gates change.
   - Existing refresh hooks for rolling CSV toggle, mode selector, START/STOP/RESET, group toggle interactions, and view init remain unchanged.

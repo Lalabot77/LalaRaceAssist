@@ -460,11 +460,25 @@
                                 </ComboBox>
                                 <TextBlock Text="Frequency Hz" VerticalAlignment="Center" Margin="0,0,8,6"/>
                                 <TextBox Width="60" Margin="0,0,12,6" Text="{Binding Settings.PropertySnapshotRollingFrequencyHz, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" ToolTip="Used in FREQUENCY mode. Valid range 1 to 5 Hz."/>
-                                <Button Content="START" Margin="0,0,8,6" Padding="10,2" Click="PropertySnapshotStartRolling_Click"/>
-                                <Button Content="STOP" Margin="0,0,8,6" Padding="10,2" Click="PropertySnapshotStopRolling_Click"/>
+                                <Button x:Name="PropertySnapshotStartRollingButton" Content="START" Margin="0,0,8,6" Padding="10,2" Click="PropertySnapshotStartRolling_Click"/>
+                                <Button x:Name="PropertySnapshotStopRollingButton" Content="STOP" Margin="0,0,8,6" Padding="10,2" Click="PropertySnapshotStopRolling_Click"/>
                                 <Button Content="RESET ROLLING CSV" Margin="0,0,12,6" Padding="10,2" Click="PropertySnapshotResetRollingCsv_Click"/>
                             </WrapPanel>
-                            <TextBlock x:Name="PropertySnapshotRollingStatusTextBlock" Margin="22,0,0,0" Foreground="LightGray" Text="ROLLING CSV: OFF"/>
+                            <StackPanel Orientation="Horizontal" Margin="22,0,0,0">
+                                <TextBlock Margin="0,0,8,0" VerticalAlignment="Center" Foreground="LightGray" Text="ROLLING CSV:"/>
+                                <Border x:Name="PropertySnapshotRollingStatusBorder"
+                                        Padding="8,1"
+                                        CornerRadius="10"
+                                        BorderThickness="1"
+                                        Background="#222222"
+                                        BorderBrush="#666666">
+                                    <TextBlock x:Name="PropertySnapshotRollingStatusTextBlock"
+                                               VerticalAlignment="Center"
+                                               FontWeight="SemiBold"
+                                               Foreground="#D8D8D8"
+                                               Text="OFF"/>
+                                </Border>
+                            </StackPanel>
                             <TextBlock Margin="22,2,0,0"
                                        Foreground="LightGray"
                                        TextWrapping="Wrap"
