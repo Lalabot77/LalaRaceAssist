@@ -1,3 +1,12 @@
+- 2026-05-18: Tyre learning correction instrumentation pass landed (diagnostic-only).
+  - Added bounded one-line `[LalaPlugin:Tyre Learn] sample ...` diagnostics on clean all-four tyre candidates, including service start, per-wheel clear timestamps/offsets, first/last clear, pit service status/flags snapshots, pit-stop elapsed sample, and corrected-estimate comparisons (`+6.0s` fixed tail and derived-tail `+1.0s` jack allowance when derivable).
+  - Added per-wheel clear timestamp capture within the tyre learner state machine for LF/RF/LR/RR clear events.
+  - Follow-up expanded sample payload with wheel clear order (`LF/RF/LR/RR`), explicit clear timestamps (`tLF/tRF/tLR/tRR`), derived intervals (`d1/d2/d3`), avg/median interval metrics, per-tyre estimate, corrected 4-tyre estimate, retained current saved tyre time, and pit entry/exit timestamps.
+  - Ordering fix: in `ServiceStarted`, per-wheel `1->0` clear transitions and first/last clear timestamps are now captured before evaluating `allFourCleared`, ensuring the final-wheel tick sample includes complete wheel order/interval metrics.
+  - Optional tidy: sample offset fields now print `NA` when a wheel timestamp is unavailable instead of negative offset artifacts.
+  - Diagnostic context fix: pit-entry edge now clears prior stop `pitExit` sample context; `savedNow` now reads direct runtime/profile stored tyre time (no tyre-selection-gated resolver), preventing stale-exit carry-over and false `savedNow=0` on all-four-clear samples.
+  - Safety follow-up for PR #734: raw all-four-clear candidate path is now diagnostic-only and no longer persists `candidateSec` to `TireChangeTime`; sample logging remains active and now emits `diagnostic-only: raw candidate not persisted.` on valid candidate path.
+  - `savedNow` diagnostic source preference now uses persisted profile value first (`ActiveProfile.TireChangeTime` when valid), then runtime fallback (`FuelCalculator.TireChangeTime`), else `0.0`.
 - 2026-05-18: Property Snapshot rolling automation hardening follow-up (PR #736 review).
   - rolling START/STOP state is now runtime-only; persisted `PropertySnapshotRollingActive` is forcibly cleared false on first runtime tick so automation cannot silently resume after restart/reload.
   - START now hard-guards on `Soft Debug`, `Enable Property Snapshot`, and `Write rolling combined CSV`; when any gate is off, START is ignored with bounded warning.

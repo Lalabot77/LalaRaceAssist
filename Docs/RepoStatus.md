@@ -1,3 +1,13 @@
+- 2026-05-18: Tyre learning correction instrumentation pass validated (diagnostic-only, save-path unchanged).
+  - Added one compact `[LalaPlugin:Tyre Learn] sample ...` line per clean all-four candidate, reporting raw all-four-clear timing, fixed `+6.0s` correction, derived-tail `+1.0s` correction (when derivable), per-wheel clear offsets, pit service status/flags, stall-exit sample, and pit-stop elapsed sample.
+  - Follow-up diagnostics now also report wheel clear order, per-wheel clear timestamps, interval statistics (`d1/d2/d3`, avg, median), per-tyre estimate, corrected 4-tyre estimate, retained saved tyre time, and pit entry/exit timestamps for future per-tyre model validation.
+  - Follow-up ordering fix now records per-wheel `1->0` transitions before `allFourCleared` sample emission in `ServiceStarted`, so final-wheel clear tick samples include all four wheel timestamps/order and populated interval metrics.
+  - Follow-up tidy now prints `NA` for missing wheel offsets in the sample line.
+  - Follow-up diagnostic context fix now clears stale `pitExit` on each new `pitEntry` edge, and `savedNow` now reports direct runtime/profile stored tyre time (not tyre-selection-gated), so all-four-clear samples no longer show stale previous-stop exit or `savedNow=0` artifacts.
+  - PR #734 safety follow-up now disables raw learner persistence from the diagnostic path: clean all-four raw candidates still produce sample diagnostics but no longer call profile save/update runtime tyre time; diagnostic path emits `diagnostic-only: raw candidate not persisted.`.
+  - `savedNow` in diagnostics now prefers persisted profile value first, then runtime fallback, with invalid values sanitized to `0.0`.
+  - Added per-wheel clear timestamp capture (`LF/RF/LR/RR`) plus first/last clear tracking inside tyre learner runtime state.
+  - Candidate detection/state-machine shape and reject-path semantics remain unchanged; only diagnostic context/safety behavior changed.
 - 2026-05-18: Property Snapshot rolling automation hardening validated (PR #736 follow-up).
   - automation active state no longer persists across restart/reload (runtime-only + persisted flag clear-on-init).
   - START now refuses to arm unless Soft Debug + Property Snapshot + Rolling CSV toggles are all enabled.
