@@ -9629,7 +9629,7 @@ namespace LaunchPlugin
             switch (code)
             {
                 case PitFuelDataAuthorityCode.Live: return new PitFuelDataAuthorityState { Code = code, Text = "LIVE", ColorHex = "#FF00FF" };
-                case PitFuelDataAuthorityCode.Build: return new PitFuelDataAuthorityState { Code = code, Text = "BUILD", ColorHex = "#FFFF00" };
+                case PitFuelDataAuthorityCode.Build: return new PitFuelDataAuthorityState { Code = code, Text = "PEND", ColorHex = "#FFFF00" };
                 case PitFuelDataAuthorityCode.Saved: return new PitFuelDataAuthorityState { Code = code, Text = "SAVED", ColorHex = "#00FFFF" };
                 case PitFuelDataAuthorityCode.Simh: return new PitFuelDataAuthorityState { Code = code, Text = "SIMH", ColorHex = "#FFA500" };
                 case PitFuelDataAuthorityCode.Dfalt: return new PitFuelDataAuthorityState { Code = code, Text = "DFALT", ColorHex = "#FFA500" };

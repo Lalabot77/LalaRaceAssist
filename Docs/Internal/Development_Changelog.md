@@ -1,3 +1,7 @@
+- 2026-05-18: DATA authority label cleanup before PR #733 merge.
+  - Active DATA transitional authority text renamed from `BUILD` to `PEND` (`Pit.FuelControl.DataText` / docs/UI contract) for clearer driver-facing meaning (live authority pending while fallback is active).
+  - Numeric authority code remains unchanged (`Pit.FuelControl.Data == 1`), with no authority-chain logic change and no pit send/refuel math behavior change.
+
 - 2026-05-18: DATA LIVE BUILD fallback authority/provenance fix landed.
   - `ResolveDataGovernedBurnAndPaceBasis(...)` no longer takes Strategy Planner `FuelCalculator.FuelPerLap` as DATA LIVE burn authority during BUILD fallback; LIVE now falls back burn authority in order: LIVE stable -> PROFILE stable/profile baseline -> SIMH (`DataCorePlugin.Computed.Fuel_LitersPerLap`) -> DEFAULT.
   - DATA LIVE BUILD now reports truthful burn provenance (`Fuel.Refuel.BurnSource=PROFILE` when profile burn is used), keeps lap PROFILE precedence in BUILD, and no longer requires Strategy-tab live/profile toggles to refresh in-use runtime burn authority.
