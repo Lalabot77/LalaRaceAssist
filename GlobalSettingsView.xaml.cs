@@ -5,6 +5,7 @@ using System.IO;
 using System.Linq;
 using System.Windows;
 using System.Windows.Controls;
+using System.Windows.Media;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 
@@ -88,8 +89,49 @@ namespace LaunchPlugin
                 return;
             }
 
-            string status = Plugin?.GetPropertySnapshotRollingStatusTextForUi() ?? "OFF";
-            PropertySnapshotRollingStatusTextBlock.Text = "ROLLING CSV: " + status;
+            string status = (Plugin?.GetPropertySnapshotRollingStatusTextForUi() ?? "OFF").Trim().ToUpperInvariant();
+            bool isRecording = string.Equals(status, "RECORDING", StringComparison.Ordinal);
+
+            PropertySnapshotRollingStatusTextBlock.Text = status;
+
+            if (PropertySnapshotStartRollingButton != null)
+            {
+                PropertySnapshotStartRollingButton.IsEnabled = !isRecording;
+            }
+
+            if (PropertySnapshotStopRollingButton != null)
+            {
+                PropertySnapshotStopRollingButton.IsEnabled = isRecording;
+            }
+
+            if (PropertySnapshotRollingStatusBorder == null)
+            {
+                return;
+            }
+
+            switch (status)
+            {
+                case "RECORDING":
+                    PropertySnapshotRollingStatusBorder.Background = CreateBrush("#13351F");
+                    PropertySnapshotRollingStatusBorder.BorderBrush = CreateBrush("#2CFF7A");
+                    PropertySnapshotRollingStatusTextBlock.Foreground = CreateBrush("#7CFFA7");
+                    break;
+                case "READY":
+                    PropertySnapshotRollingStatusBorder.Background = CreateBrush("#11263A");
+                    PropertySnapshotRollingStatusBorder.BorderBrush = CreateBrush("#4FB7FF");
+                    PropertySnapshotRollingStatusTextBlock.Foreground = CreateBrush("#78CCFF");
+                    break;
+                default:
+                    PropertySnapshotRollingStatusBorder.Background = CreateBrush("#222222");
+                    PropertySnapshotRollingStatusBorder.BorderBrush = CreateBrush("#666666");
+                    PropertySnapshotRollingStatusTextBlock.Foreground = CreateBrush("#D8D8D8");
+                    break;
+            }
+        }
+
+        private static SolidColorBrush CreateBrush(string hex)
+        {
+            return (SolidColorBrush)new BrushConverter().ConvertFromString(hex);
         }
 
         private void SyncPropertySnapshotSelectAllFromGroups()
