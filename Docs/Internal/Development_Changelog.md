@@ -1,3 +1,7 @@
+- 2026-05-18 final tidy: aligned active docs/contracts with Drivers-only identity and renamed Drivers-row counter helpers for clarity.
+  - Active ClassLeader/ClassBest docs now describe `DriverInfo.Drivers##` identity seams only (no CompetingDrivers fallback contract).
+  - Renamed denominator support helpers to `CountValidDriversRowsExcludingPaceCar` / `CountPlayerClassDriversRowsExcludingPaceCar` to match current `Drivers##` data source usage.
+
 - 2026-05-18 PR follow-up: removed remaining `DriverInfo.CompetingDrivers` runtime reliance and hardened native class-match identity for denominator fallback.
   - Race and League denominator support paths now consume `DriverInfo.Drivers##` only (including roster count, CarSA class-rank map source, identity and driver-info resolution helpers, and class-short resolution fallback).
   - `GetNativePlayerClassDriverCount()` now matches by native class ID (`PlayerCarClassID`/`DriverCarClassID` + row `CarClassID`) with class-name fallback, reducing short-name/id mismatch zero-count risk.

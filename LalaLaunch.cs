@@ -8957,7 +8957,7 @@ namespace LaunchPlugin
 
         private int ResolveLiveOverallFieldSize(PluginManager pluginManager)
         {
-            int rosterCount = CountValidCompetingDriverRowsExcludingPaceCar();
+            int rosterCount = CountValidDriversRowsExcludingPaceCar();
             if (rosterCount > 0)
             {
                 return rosterCount;
@@ -8974,7 +8974,7 @@ namespace LaunchPlugin
 
         private int ResolveCanonicalPlayerClassRaceDenominator(PluginManager pluginManager)
         {
-            int playerClassRosterCount = CountPlayerClassCompetingDriverRowsExcludingPaceCar();
+            int playerClassRosterCount = CountPlayerClassDriversRowsExcludingPaceCar();
             if (playerClassRosterCount > 0)
             {
                 LogRaceDenominatorResolution("roster", playerClassRosterCount, pluginManager, playerClassRosterCount);
@@ -9056,7 +9056,7 @@ namespace LaunchPlugin
                 $"[LalaPlugin:RaceDenom] playerClassDenom result={result} {signature}");
         }
 
-        private int CountValidCompetingDriverRowsExcludingPaceCar()
+        private int CountValidDriversRowsExcludingPaceCar()
         {
             int count = 0;
             for (int i = 1; i <= 64; i++)
@@ -9078,7 +9078,7 @@ namespace LaunchPlugin
             return count;
         }
 
-        private int CountPlayerClassCompetingDriverRowsExcludingPaceCar()
+        private int CountPlayerClassDriversRowsExcludingPaceCar()
         {
             var player = ResolveLivePlayerLeagueClassInfo();
             bool useLeagueClass = (Settings?.LeagueClassEnabled == true) && player.Valid && !string.IsNullOrWhiteSpace(player.Name);
