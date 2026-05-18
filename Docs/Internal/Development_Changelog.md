@@ -1,3 +1,26 @@
+- 2026-05-18: PR #733 same-tick authority/refuel SIM provenance alignment fix landed.
+  - Active DATA authority classification now shares the same current-tick fallback provenance used by runtime refuel basis resolution.
+  - prevents contradictory same-tick exports (`Fuel.Refuel.BurnSource=SIM` with `Pit.FuelControl.DataText=DFALT`); genuine DataCore fallback now aligns to `SIM`/`SIMH`, synthetic/plugin fallback aligns to `DEFAULT`/`DFALT`.
+  - no authority-order, pit-send, or refuel-formula behavior change.
+
+- 2026-05-18: PR #733 runtime refuel SIM provenance propagation fix landed.
+  - Runtime refuel path now propagates fallback provenance into `ResolveRuntimeRefuelBasis(...)`/`ResolveDataGovernedBurnAndPaceBasis(...)` so genuine DataCore computed fallback can emit `SIM`/`SIMH`.
+  - Data-authority classification path that uses plugin-held stable fallback keeps `fallbackFuelIsSimHub=false`, so synthetic/default fallback still emits `DEFAULT`/`DFALT`.
+  - no authority-order, pit-send, or refuel-formula behavior change.
+
+- 2026-05-18: PR #733 follow-up SIM provenance guard fix landed.
+  - DATA-governed burn resolver now emits burn source `SIM` only when fallback provenance is genuine `DataCorePlugin.Computed.Fuel_LitersPerLap`; plugin/synthetic fallback inputs now emit `DEFAULT`.
+  - prevents false `Fuel.Refuel.BurnSource=SIM` / `Pit.FuelControl.DataText=SIMH` on synthetic/default fallback values (for example startup floor values).
+  - no authority-chain order changes and no pit-send/refuel-math behavior changes.
+
+- 2026-05-18: DATA authority label cleanup before PR #733 merge.
+  - Active DATA transitional authority text renamed from `BUILD` to `PEND` (`Pit.FuelControl.DataText` / docs/UI contract) for clearer driver-facing meaning (live authority pending while fallback is active).
+  - Numeric authority code remains unchanged (`Pit.FuelControl.Data == 1`), with no authority-chain logic change and no pit send/refuel math behavior change.
+
+- 2026-05-18: DATA LIVE BUILD fallback authority/provenance fix landed.
+  - `ResolveDataGovernedBurnAndPaceBasis(...)` no longer takes Strategy Planner `FuelCalculator.FuelPerLap` as DATA LIVE burn authority during BUILD fallback; LIVE now falls back burn authority in order: LIVE stable -> PROFILE stable/profile baseline -> SIMH (`DataCorePlugin.Computed.Fuel_LitersPerLap`) -> DEFAULT.
+  - DATA LIVE BUILD now reports truthful burn provenance (`Fuel.Refuel.BurnSource=PROFILE` when profile burn is used), keeps lap PROFILE precedence in BUILD, and no longer requires Strategy-tab live/profile toggles to refresh in-use runtime burn authority.
+  - SIMH fallback is now reachable and surfaced as runtime authority (`BurnSource=SIM`, `Pit.FuelControl.DataText=SIMH`) when profile burn is unavailable but SimHub computed burn is valid.
 - 2026-05-18: Tyre learning correction instrumentation pass landed (diagnostic-only).
   - Added bounded one-line `[LalaPlugin:Tyre Learn] sample ...` diagnostics on clean all-four tyre candidates, including service start, per-wheel clear timestamps/offsets, first/last clear, pit service status/flags snapshots, pit-stop elapsed sample, and corrected-estimate comparisons (`+6.0s` fixed tail and derived-tail `+1.0s` jack allowance when derivable).
   - Added per-wheel clear timestamp capture within the tyre learner state machine for LF/RF/LR/RR clear events.
