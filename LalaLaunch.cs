@@ -905,9 +905,6 @@ namespace LaunchPlugin
         private string _raceFinishClassBestLap = "-";
         private int _raceFinishPlayerOverallFieldSize;
         private int _raceFinishPlayerClassFieldSize;
-        private string _raceDenominatorDebugSignature = string.Empty;
-        private int _raceDenominatorDebugResult = int.MinValue;
-        private string _leagueSubclassCountDebugSignature = string.Empty;
         private int _playerCarIdxLastTick = -1;
         private double _lastClassLeaderLapPct = double.NaN;
         private double _lastOverallLeaderLapPct = double.NaN;
@@ -5865,7 +5862,6 @@ namespace LaunchPlugin
             strictCount = 0;
             if (player == null || !player.Valid || string.IsNullOrWhiteSpace(player.Name))
             {
-                LogLeagueSubclassCountDiagnostics(string.Empty, null, 0, 0, 0, 0, 0, 0, 0, string.Empty, string.Empty, "player_unresolved", "drivers_rows");
                 return false;
             }
 
@@ -5879,8 +5875,6 @@ namespace LaunchPlugin
             int? playerUserId;
             string playerName;
             TryGetLivePlayerIdentityPreview(out playerUserId, out playerName);
-            string matchSamples = string.Empty;
-            string unresolvedSamples = string.Empty;
 
             for (int i = 1; i <= 64; i++)
             {
@@ -5919,11 +5913,6 @@ namespace LaunchPlugin
                 if (userId <= 0 && string.IsNullOrWhiteSpace(name))
                 {
                     unresolvedRows++;
-                    if (unresolvedRows <= 3)
-                    {
-                        unresolvedSamples += (unresolvedSamples.Length > 0 ? ", " : string.Empty)
-                            + $"{(carIdx >= 0 ? ("carIdx:" + carIdx.ToString(CultureInfo.InvariantCulture)) : "carIdx:-1")}:{(carNumber ?? string.Empty)}";
-                    }
                     continue;
                 }
 
@@ -5940,11 +5929,6 @@ namespace LaunchPlugin
                 if (!info.Valid || string.IsNullOrWhiteSpace(info.Name))
                 {
                     unresolvedRows++;
-                    if (unresolvedRows <= 3)
-                    {
-                        unresolvedSamples += (unresolvedSamples.Length > 0 ? ", " : string.Empty)
-                            + $"{(userId > 0 ? userId.ToString(CultureInfo.InvariantCulture) : "0")}:{(name ?? string.Empty)}";
-                    }
                     continue;
                 }
 
@@ -5952,15 +5936,8 @@ namespace LaunchPlugin
                 if (string.Equals(info.Name, player.Name, StringComparison.OrdinalIgnoreCase))
                 {
                     count++;
-                    if (count <= 3)
-                    {
-                        matchSamples += (matchSamples.Length > 0 ? ", " : string.Empty)
-                            + $"{(userId > 0 ? userId.ToString(CultureInfo.InvariantCulture) : "0")}:{(name ?? string.Empty)}";
-                    }
                 }
             }
-
-            LogLeagueSubclassCountDiagnostics(player.Name, playerUserId, sessionRows, validRows, paceCars, resolvedRows, count, 0, unresolvedRows, matchSamples, unresolvedSamples, count > 0 ? "strict_match" : "strict_no_match", "drivers_rows");
             strictCount = count;
             return count > 0;
         }
@@ -5974,46 +5951,6 @@ namespace LaunchPlugin
 
             string userName = SafeReadStringProperty(driversBasePath + ".UserName");
             return string.Equals((userName ?? string.Empty).Trim(), "Pace Car", StringComparison.OrdinalIgnoreCase);
-        }
-
-        private void LogLeagueSubclassCountDiagnostics(
-            string playerClassName,
-            int? playerUserId,
-            int sessionRows,
-            int validRows,
-            int paceCars,
-            int resolvedRows,
-            int matchingRows,
-            int csvRegisteredClassCount,
-            int unresolvedRows,
-            string sampleMatches,
-            string sampleUnresolved,
-            string source,
-            string rowSource)
-        {
-            string signature = string.Format(
-                CultureInfo.InvariantCulture,
-                "rowSource={0}|playerClass={1}|playerUserId={2}|sessionRows={3}|validRows={4}|paceCars={5}|resolvedRows={6}|matchingRows={7}|csvRegisteredClassCount={8}|unresolvedRows={9}|source={10}",
-                rowSource ?? string.Empty,
-                playerClassName ?? string.Empty,
-                playerUserId.HasValue ? playerUserId.Value.ToString(CultureInfo.InvariantCulture) : "0",
-                sessionRows,
-                validRows,
-                paceCars,
-                resolvedRows,
-                matchingRows,
-                csvRegisteredClassCount,
-                unresolvedRows,
-                source ?? string.Empty);
-
-            if (string.Equals(signature, _leagueSubclassCountDebugSignature, StringComparison.Ordinal))
-            {
-                return;
-            }
-
-            _leagueSubclassCountDebugSignature = signature;
-            SimHub.Logging.Current.Info(
-                $"[LalaPlugin:LeagueSubclassCount] source={source} rowSource={rowSource} playerClass='{playerClassName ?? string.Empty}' playerUserId={(playerUserId ?? 0)} sessionRows={sessionRows} validRows={validRows} paceCars={paceCars} resolvedRows={resolvedRows} matchingRows={matchingRows} csvRegisteredClassCount={csvRegisteredClassCount} unresolvedRows={unresolvedRows} sampleMatches='{sampleMatches ?? string.Empty}' sampleUnresolved='{sampleUnresolved ?? string.Empty}'");
         }
 
         private int GetNativePlayerClassDriverCount()
@@ -6527,6 +6464,7 @@ namespace LaunchPlugin
         private bool _tyreLearnPrevLrSelected = false;
         private bool _tyreLearnPrevRrSelected = false;
         private const double TyreLearnFixedTailSeconds = 6.0;
+        private const double TyreLearnJackDropAllowanceSeconds = 1.0;
         private const double TyreLearnIntervalMinSeconds = 1.0;
         private const double TyreLearnIntervalMaxSeconds = 15.0;
         private const double TyreLearnIntervalSpreadMaxSeconds = 4.0;
@@ -9129,21 +9067,18 @@ namespace LaunchPlugin
             int playerClassRosterCount = CountPlayerClassDriversRowsExcludingPaceCar();
             if (playerClassRosterCount > 0)
             {
-                LogRaceDenominatorResolution("roster", playerClassRosterCount, pluginManager, playerClassRosterCount);
                 return playerClassRosterCount;
             }
 
             int nativeDriverCount = GetNativePlayerClassDriverCount();
             if (nativeDriverCount > 0)
             {
-                LogRaceDenominatorResolution("native", nativeDriverCount, pluginManager, playerClassRosterCount, nativeDriverCount);
                 return nativeDriverCount;
             }
 
             int classOpponentsCount = SafeReadInt(pluginManager, "DataCorePlugin.GameData.PlayerClassOpponentsCount", int.MinValue);
             if (classOpponentsCount >= 0)
             {
-                LogRaceDenominatorResolution("gamedata_playerClassOpp", classOpponentsCount, pluginManager, playerClassRosterCount, nativeDriverCount, classOpponentsCount);
                 return classOpponentsCount;
             }
 
@@ -9151,7 +9086,6 @@ namespace LaunchPlugin
             if (classOpponentsCount >= 0)
             {
                 int result = classOpponentsCount + 1;
-                LogRaceDenominatorResolution("telemetry_oppInClass_plusPlayer", result, pluginManager, playerClassRosterCount, nativeDriverCount, int.MinValue, classOpponentsCount);
                 return result;
             }
 
@@ -9159,53 +9093,10 @@ namespace LaunchPlugin
             if (simHubClassOpponentsCount >= 0)
             {
                 int result = simHubClassOpponentsCount + 1;
-                LogRaceDenominatorResolution("simhubNewData_oppInClass_plusPlayer", result, pluginManager, playerClassRosterCount, nativeDriverCount, int.MinValue, int.MinValue, simHubClassOpponentsCount);
                 return result;
             }
 
-            LogRaceDenominatorResolution("none", 0, pluginManager, playerClassRosterCount, nativeDriverCount);
             return 0;
-        }
-
-        private void LogRaceDenominatorResolution(
-            string branch,
-            int result,
-            PluginManager pluginManager,
-            int rosterCount,
-            int nativeCount = int.MinValue,
-            int gamePlayerClassOpp = int.MinValue,
-            int telemetryOppInClass = int.MinValue,
-            int simHubNewDataOppInClass = int.MinValue)
-        {
-            int leagueOn = (Settings?.LeagueClassEnabled == true) ? 1 : 0;
-            int gameOpp = SafeReadInt(pluginManager, "DataCorePlugin.GameData.OpponentsCount", int.MinValue);
-            string playerNative = ResolvePlayerNativeClassName() ?? string.Empty;
-            var playerLeague = ResolveLivePlayerLeagueClassInfo();
-            string playerLeagueName = playerLeague.Valid && !string.IsNullOrWhiteSpace(playerLeague.Name) ? playerLeague.Name : string.Empty;
-
-            string signature = string.Format(
-                CultureInfo.InvariantCulture,
-                "branch={0}|league={1}|roster={2}|native={3}|gamePlayerClassOpp={4}|telemetryOppInClass={5}|simHubNewDataOppInClass={6}|gameOpp={7}|playerNative={8}|playerLeague={9}",
-                branch,
-                leagueOn,
-                rosterCount,
-                nativeCount,
-                gamePlayerClassOpp,
-                telemetryOppInClass,
-                simHubNewDataOppInClass,
-                gameOpp,
-                playerNative,
-                playerLeagueName);
-
-            if (result == _raceDenominatorDebugResult && string.Equals(signature, _raceDenominatorDebugSignature, StringComparison.Ordinal))
-            {
-                return;
-            }
-
-            _raceDenominatorDebugResult = result;
-            _raceDenominatorDebugSignature = signature;
-            SimHub.Logging.Current.Info(
-                $"[LalaPlugin:RaceDenom] playerClassDenom result={result} {signature}");
         }
 
         private int CountValidDriversRowsExcludingPaceCar()
@@ -10913,7 +10804,7 @@ namespace LaunchPlugin
                         double firstClear = _tyreLearnFirstClearSessionTimeSec > 0.0 ? _tyreLearnFirstClearSessionTimeSec : sessionTime;
                         double lastClear = _tyreLearnLastClearSessionTimeSec > 0.0 ? _tyreLearnLastClearSessionTimeSec : sessionTime;
                         double rawSec = candidateSec;
-                        double correctedFixedSec = rawSec + TyreLearnFixedTailSeconds;
+                        double correctedFixedSec = rawSec + TyreLearnFixedTailSeconds + TyreLearnJackDropAllowanceSeconds;
                         string wheelOrder = "NA";
                         double delta1 = 0.0;
                         double delta2 = 0.0;
@@ -10956,7 +10847,7 @@ namespace LaunchPlugin
                                 spread <= TyreLearnIntervalSpreadMaxSeconds)
                             {
                                 derivedValid = true;
-                                correctedDerivedSec = (firstClear - _tyreLearnStartSessionTimeSec) + (4.0 * perTyreEstimateSec.Value);
+                                correctedDerivedSec = (firstClear - _tyreLearnStartSessionTimeSec) + (4.0 * perTyreEstimateSec.Value) + TyreLearnJackDropAllowanceSeconds;
                             }
                             else
                             {
@@ -10993,7 +10884,7 @@ namespace LaunchPlugin
                         string lrOffsetText = _tyreLearnLrClearSessionTimeSec > 0.0 ? (_tyreLearnLrClearSessionTimeSec - _tyreLearnStartSessionTimeSec).ToString("F2", CultureInfo.InvariantCulture) : "NA";
                         string rrOffsetText = _tyreLearnRrClearSessionTimeSec > 0.0 ? (_tyreLearnRrClearSessionTimeSec - _tyreLearnStartSessionTimeSec).ToString("F2", CultureInfo.InvariantCulture) : "NA";
                         SimHub.Logging.Current.Info(
-                            $"[LalaPlugin:Tyre Learn] sample raw={rawSec:F1}s correctedFixed={correctedFixedSec:F1}s correctedDerived={correctedDerivedText}s savedNow={currentSavedTyreTime:F1}s wheelOrder={wheelOrder} tLF={tLfText} tRF={tRfText} tLR={tLrText} tRR={tRrText} d1={delta1:F2} d2={delta2:F2} d3={delta3:F2} avgInterval={avgIntervalText} medianInterval={medianIntervalText} perTyreEst={perTyreEstimateText} corrected4TyreEst={corrected4TyreText} start={_tyreLearnStartSessionTimeSec:F2} firstClear={firstClear:F2} lastClear={lastClear:F2} offsets=LF:{lfOffsetText},RF:{rfOffsetText},LR:{lrOffsetText},RR:{rrOffsetText} pitEntry={pitEntryText} pitExit={pitExitText} stallExit={stallExitText} pitSvStatus={pitSvStatus} pitSvFlags={pitSvFlags} pitStopElapsed={(pitStopElapsedSec.HasValue ? pitStopElapsedSec.Value.ToString("F2", CultureInfo.InvariantCulture) : "NA")}");
+                            $"[LalaPlugin:Tyre Learn] sample raw={rawSec:F1}s correctedFixed={correctedFixedSec:F1}s correctedDerived={correctedDerivedText}s jackDropAllowance={TyreLearnJackDropAllowanceSeconds:F1}s savedNow={currentSavedTyreTime:F1}s wheelOrder={wheelOrder} tLF={tLfText} tRF={tRfText} tLR={tLrText} tRR={tRrText} d1={delta1:F2} d2={delta2:F2} d3={delta3:F2} avgInterval={avgIntervalText} medianInterval={medianIntervalText} perTyreEst={perTyreEstimateText} corrected4TyreEst={corrected4TyreText} start={_tyreLearnStartSessionTimeSec:F2} firstClear={firstClear:F2} lastClear={lastClear:F2} offsets=LF:{lfOffsetText},RF:{rfOffsetText},LR:{lrOffsetText},RR:{rrOffsetText} pitEntry={pitEntryText} pitExit={pitExitText} stallExit={stallExitText} pitSvStatus={pitSvStatus} pitSvFlags={pitSvFlags} pitStopElapsed={(pitStopElapsedSec.HasValue ? pitStopElapsedSec.Value.ToString("F2", CultureInfo.InvariantCulture) : "NA")}");
                         if (candidateSec <= TyreLearnMinSeconds || candidateSec > TyreLearnMaxSeconds)
                         {
                             SimHub.Logging.Current.Info($"[LalaPlugin:Tyre Learn] rejected: candidate out of bounds ({candidateSec:F1}s).");
@@ -11009,12 +10900,12 @@ namespace LaunchPlugin
                             if (derivedValid && correctedDerivedSec.HasValue)
                             {
                                 correctedCandidateSec = correctedDerivedSec.Value;
-                                method = $"derived, perTyre={perTyreEstimateSec.Value:F2}s";
+                                method = $"derived, perTyre={perTyreEstimateSec.Value:F2}s, jackDrop={TyreLearnJackDropAllowanceSeconds:F1}s";
                             }
                             else
                             {
                                 correctedCandidateSec = correctedFixedSec;
-                                method = "fixed_tail";
+                                method = $"fixed_tail+jack_drop({TyreLearnJackDropAllowanceSeconds:F1}s)";
                             }
 
                             if (correctedCandidateSec <= TyreLearnMinSeconds || correctedCandidateSec > TyreLearnMaxSeconds)
