@@ -396,6 +396,7 @@
                 <styles:SHToggleCheckbox x:Name="DebugMasterToggle"
                                          Content="Enable debugging mode"
                                          Margin="0,10,0,0"
+                                         Click="PropertySnapshotRollingStatusRefresh_Click"
                                          IsChecked="{Binding Settings.EnableSoftDebug, Mode=TwoWay}"
                                          ToolTip="Master toggle that enables debug UI and debug processing."/>
                 <TextBlock Margin="0,6,0,0"
@@ -432,6 +433,7 @@
                         <StackPanel Orientation="Vertical" Margin="0,10,0,0">
                             <styles:SHToggleCheckbox x:Name="PropertySnapshotToggle"
                                                      Content="Enable Property Snapshot"
+                                                     Click="PropertySnapshotRollingStatusRefresh_Click"
                                                      IsChecked="{Binding Settings.EnablePropertySnapshot, Mode=TwoWay}"
                                                      ToolTip="When enabled, pressing Event Marker writes a CSV snapshot of plugin properties."/>
                             <WrapPanel Margin="22,6,0,0"
@@ -449,9 +451,9 @@
                                 <CheckBox x:Name="PropertySnapshotLeagueClassCheckBox" Content="League Class" Margin="0,0,12,6" Click="PropertySnapshotGroup_Click" IsChecked="{Binding Settings.PropertySnapshotGroupLeagueClass, Mode=TwoWay}"/>
                                 <CheckBox x:Name="PropertySnapshotRawDebugCheckBox" Content="Raw Debug" Margin="0,0,12,6" Click="PropertySnapshotGroup_Click" IsChecked="{Binding Settings.PropertySnapshotGroupRawDebug, Mode=TwoWay}"/>
                                 <CheckBox Content="Include changed vs previous" Margin="0,0,12,6" IsChecked="{Binding Settings.PropertySnapshotIncludeChangedValues, Mode=TwoWay}"/>
-                                <CheckBox Content="Write rolling combined CSV" Margin="0,0,12,6" IsChecked="{Binding Settings.PropertySnapshotRollingCombinedCsv, Mode=TwoWay}"/>
+                                <CheckBox Content="Write rolling combined CSV" Margin="0,0,12,6" Click="PropertySnapshotRollingStatusRefresh_Click" IsChecked="{Binding Settings.PropertySnapshotRollingCombinedCsv, Mode=TwoWay}"/>
                                 <TextBlock Text="Rolling mode" VerticalAlignment="Center" Margin="0,0,8,6"/>
-                                <ComboBox Width="170" Margin="0,0,12,6" SelectedIndex="{Binding Settings.PropertySnapshotRollingMode, Mode=TwoWay}">
+                                <ComboBox Width="170" Margin="0,0,12,6" SelectionChanged="PropertySnapshotRollingStatusRefresh_Click" SelectedIndex="{Binding Settings.PropertySnapshotRollingMode, Mode=TwoWay}">
                                     <ComboBoxItem Content="MANUAL"/>
                                     <ComboBoxItem Content="FREQUENCY"/>
                                     <ComboBoxItem Content="PER LAP"/>
@@ -462,6 +464,7 @@
                                 <Button Content="STOP" Margin="0,0,8,6" Padding="10,2" Click="PropertySnapshotStopRolling_Click"/>
                                 <Button Content="RESET ROLLING CSV" Margin="0,0,12,6" Padding="10,2" Click="PropertySnapshotResetRollingCsv_Click"/>
                             </WrapPanel>
+                            <TextBlock x:Name="PropertySnapshotRollingStatusTextBlock" Margin="22,0,0,0" Foreground="LightGray" Text="ROLLING CSV: OFF"/>
                             <TextBlock Margin="22,2,0,0"
                                        Foreground="LightGray"
                                        TextWrapping="Wrap"

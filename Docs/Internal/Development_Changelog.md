@@ -1,3 +1,11 @@
+- 2026-05-18: Property Snapshot rolling status stale-refresh follow-up (PR #740 review).
+  - Wired status refresh callback to `Enable debugging mode` (`Settings.EnableSoftDebug`) and `Enable Property Snapshot` master toggle so `ROLLING CSV: OFF/READY/RECORDING` updates immediately when status gates change.
+  - Existing refresh hooks for rolling CSV toggle, mode selector, START/STOP/RESET, group toggle interactions, and view init remain unchanged.
+
+- 2026-05-18: Property Snapshot rolling status exports + DataCore fuel capture rows added (debug observability only).
+  - Added core exports `Debug.PropertySnapshot.RollingStatusText` (`OFF`/`READY`/`RECORDING`) and `Debug.PropertySnapshot.RollingModeText` (`MANUAL`/`FREQUENCY`/`PER LAP`) from existing snapshot rolling gates/runtime state.
+  - Added Property Snapshot external capture rows (Fuel/Strategy group only) via direct `PluginManager.GetPropertyValue(...)` reads for `DataCorePlugin.Computed.Fuel_LitersPerLap`, `Fuel_LastLapConsumption`, `Fuel_CurrentLapConsumption`, plus optional `Fuel_CurrentLapValidForTracking` and `Fuel_RemainingLaps`; missing values remain blank-safe.
+  - Debug UI now shows `ROLLING CSV: <status>` beside rolling controls and refreshes on relevant control actions; no rolling schema/layout changes and no fuel authority logic changes.
 - 2026-05-18: Tyre learn corrected persistence jack/drop allowance tuning landed.
   - Added `TyreLearnJackDropAllowanceSeconds=1.0` to corrected tyre learner outputs so persisted full-service estimates include observed post-service jack/drop release transition.
   - Derived path now computes `(firstClear-start) + 4*medianInterval + 1.0`; fixed-tail fallback now computes `raw + 6.0 + 1.0` when derived validation fails.

@@ -593,6 +593,11 @@ namespace LaunchPlugin
             SimHub.Logging.Current.Info("[LalaPlugin:Debug] Property snapshot rolling automation STOP.");
         }
 
+        public string GetPropertySnapshotRollingStatusTextForUi()
+        {
+            return ResolvePropertySnapshotRollingStatusText();
+        }
+
         public void ResetPropertySnapshotRollingCsv()
         {
             try
@@ -7378,6 +7383,8 @@ namespace LaunchPlugin
             AttachCore("MsgCxPressed", () => _msgCxPressed);
             AttachCore("Debug.EventMarkerPressed", () => _eventMarkerPressed);
             AttachCore("Debug.PropertySnapshotEnabled", () => Settings?.EnablePropertySnapshot == true ? 1 : 0);
+            AttachCore("Debug.PropertySnapshot.RollingStatusText", () => ResolvePropertySnapshotRollingStatusText());
+            AttachCore("Debug.PropertySnapshot.RollingModeText", () => ResolvePropertySnapshotRollingModeText());
             AttachCore("Debug.Hide_1", () => Settings?.DebugHide1 == true ? 1 : 0);
             AttachCore("Debug.Hide_2", () => Settings?.DebugHide2 == true ? 1 : 0);
             AttachCore("Debug.Hide_3", () => Settings?.DebugHide3 == true ? 1 : 0);
@@ -13624,6 +13631,26 @@ namespace LaunchPlugin
             return mode;
         }
 
+        private string ResolvePropertySnapshotRollingModeText()
+        {
+            switch (NormalizePropertySnapshotRollingMode())
+            {
+                case 1: return "FREQUENCY";
+                case 2: return "PER LAP";
+                default: return "MANUAL";
+            }
+        }
+
+        private string ResolvePropertySnapshotRollingStatusText()
+        {
+            if (!SoftDebugEnabled || Settings?.EnablePropertySnapshot != true || Settings?.PropertySnapshotRollingCombinedCsv != true)
+            {
+                return "OFF";
+            }
+
+            return _propertySnapshotRollingActiveRuntime ? "RECORDING" : "READY";
+        }
+
         private double NormalizePropertySnapshotRollingFrequencyHz()
         {
             double hz = Settings?.PropertySnapshotRollingFrequencyHz ?? PropertySnapshotRollingFrequencyDefaultHz;
@@ -13746,6 +13773,15 @@ namespace LaunchPlugin
                 rows.Add(Tuple.Create(propertyName, source, valueText, group));
             }
 
+            if (IsPropertySnapshotGroupEnabled("FuelStrategy"))
+            {
+                AddPropertySnapshotExternalRow(rows, currentValues, "DataCorePlugin.Computed.Fuel_LitersPerLap", "FuelStrategy");
+                AddPropertySnapshotExternalRow(rows, currentValues, "DataCorePlugin.Computed.Fuel_LastLapConsumption", "FuelStrategy");
+                AddPropertySnapshotExternalRow(rows, currentValues, "DataCorePlugin.Computed.Fuel_CurrentLapConsumption", "FuelStrategy");
+                AddPropertySnapshotExternalRow(rows, currentValues, "DataCorePlugin.Computed.Fuel_CurrentLapValidForTracking", "FuelStrategy");
+                AddPropertySnapshotExternalRow(rows, currentValues, "DataCorePlugin.Computed.Fuel_RemainingLaps", "FuelStrategy");
+            }
+
             rows.Sort((a, b) => string.CompareOrdinal(a.Item1, b.Item1));
             string folder = ResolvePropertySnapshotPrimaryLogsFolder();
             if (!_propertySnapshotPathLogged)
@@ -13815,6 +13851,22 @@ namespace LaunchPlugin
             }
 
             _propertySnapshotPreviousValues = currentValues;
+        }
+
+        private void AddPropertySnapshotExternalRow(List<Tuple<string, string, string, string>> rows, Dictionary<string, string> currentValues, string propertyName, string group)
+        {
+            string valueText = string.Empty;
+            try
+            {
+                valueText = SnapshotValueToString(PluginManager?.GetPropertyValue(propertyName));
+            }
+            catch
+            {
+                valueText = string.Empty;
+            }
+
+            currentValues[propertyName] = valueText ?? string.Empty;
+            rows.Add(Tuple.Create(propertyName, "PluginManager.GetPropertyValue", valueText ?? string.Empty, group));
         }
 
         private static string ResolvePropertySnapshotPrimaryLogsFolder()
