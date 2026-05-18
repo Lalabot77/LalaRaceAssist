@@ -5853,7 +5853,7 @@ namespace LaunchPlugin
             strictCount = 0;
             if (player == null || !player.Valid || string.IsNullOrWhiteSpace(player.Name))
             {
-                LogLeagueSubclassCountDiagnostics(string.Empty, null, 0, 0, 0, 0, 0, 0, 0, string.Empty, "player_unresolved", "drivers_rows");
+                LogLeagueSubclassCountDiagnostics(string.Empty, null, 0, 0, 0, 0, 0, 0, 0, string.Empty, string.Empty, "player_unresolved", "drivers_rows");
                 return false;
             }
 
