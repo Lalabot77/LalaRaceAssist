@@ -2,6 +2,8 @@
   - Added bounded one-line `[LalaPlugin:Tyre Learn] sample ...` diagnostics on clean all-four tyre candidates, including service start, per-wheel clear timestamps/offsets, first/last clear, pit service status/flags snapshots, pit-stop elapsed sample, and corrected-estimate comparisons (`+6.0s` fixed tail and derived-tail `+1.0s` jack allowance when derivable).
   - Added per-wheel clear timestamp capture within the tyre learner state machine for LF/RF/LR/RR clear events.
   - Follow-up expanded sample payload with wheel clear order (`LF/RF/LR/RR`), explicit clear timestamps (`tLF/tRF/tLR/tRR`), derived intervals (`d1/d2/d3`), avg/median interval metrics, per-tyre estimate, corrected 4-tyre estimate, retained current saved tyre time, and pit entry/exit timestamps.
+  - Ordering fix: in `ServiceStarted`, per-wheel `1->0` clear transitions and first/last clear timestamps are now captured before evaluating `allFourCleared`, ensuring the final-wheel tick sample includes complete wheel order/interval metrics.
+  - Optional tidy: sample offset fields now print `NA` when a wheel timestamp is unavailable instead of negative offset artifacts.
   - Persisted tyre-time learner save path remains unchanged (existing accepted candidate still uses raw all-four-clear timing in this pass).
 
 - 2026-05-17: Strategy Planner profile fuel preview stale-label fix + Property Snapshot include alignment.
