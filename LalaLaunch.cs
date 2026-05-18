@@ -5513,6 +5513,8 @@ namespace LaunchPlugin
         private Dictionary<string, int> _carSaClassRankByColor;
         private string _carSaClassRankToken;
         private string _carSaClassRankSource;
+        private bool _carSaClassRankHoldActive;
+        private string _carSaClassRankSessionToken = string.Empty;
         private readonly int[] _carSaLastAheadIdx = new int[CarSAEngine.SlotsAhead];
         private readonly int[] _carSaLastBehindIdx = new int[CarSAEngine.SlotsBehind];
         private readonly Dictionary<int, int> _carSaLastPaceFlags = new Dictionary<int, int>();
@@ -5533,6 +5535,10 @@ namespace LaunchPlugin
         private readonly double[] _carSaCarClassEstLapTimeSecByIdx = new double[CarSAEngine.MaxCars];
         private readonly int[] _carSaClassPositionByIdx = new int[CarSAEngine.MaxCars];
         private readonly int[] _carSaIRatingByIdx = new int[CarSAEngine.MaxCars];
+        private bool _carSaDriverInfoCacheHoldActive;
+        private bool _carSaIdentityReadinessHoldLogged;
+        private string _carSaDriverInfoCacheSessionToken = string.Empty;
+        private bool _classBestIdentityHoldLogActive;
         private readonly HashSet<int> _friendUserIds = new HashSet<int>();
         private readonly HashSet<int> _teammateUserIds = new HashSet<int>();
         private readonly HashSet<int> _badUserIds = new HashSet<int>();
@@ -13035,18 +13041,48 @@ namespace LaunchPlugin
         private void UpdateCarSaClassRankMap(PluginManager pluginManager)
         {
             string token = string.IsNullOrWhiteSpace(_currentSessionToken) ? "na" : _currentSessionToken;
+            if (!string.Equals(_carSaClassRankSessionToken, token, StringComparison.Ordinal))
+            {
+                _carSaClassRankSessionToken = token;
+                _carSaClassRankToken = token;
+                _carSaClassRankByColor = null;
+                _carSaClassRankSource = string.Empty;
+                _carSaClassRankHoldActive = false;
+            }
             if (_carSaClassRankByColor != null && string.Equals(_carSaClassRankToken, token, StringComparison.Ordinal))
             {
                 return;
             }
 
-            _carSaClassRankToken = token;
-            _carSaClassRankByColor = BuildCarSaClassRankMap(pluginManager, out _carSaClassRankSource);
-            if (_carSaClassRankByColor != null && _carSaClassRankByColor.Count > 0)
+            Dictionary<string, int> resolved = BuildCarSaClassRankMap(pluginManager, out string resolvedSource);
+            if (resolved != null && resolved.Count > 0)
             {
+                _carSaClassRankToken = token;
+                _carSaClassRankByColor = resolved;
+                _carSaClassRankSource = resolvedSource;
+                if (_carSaClassRankHoldActive)
+                {
+                    _carSaClassRankHoldActive = false;
+                    SimHub.Logging.Current.Info("[LalaPlugin:CarSA] Class rank map hold cleared; Drivers metadata recovered.");
+                }
                 string sourceLabel = string.IsNullOrWhiteSpace(_carSaClassRankSource) ? "unknown" : _carSaClassRankSource;
                 SimHub.Logging.Current.Info($"[LalaPlugin:CarSA] Class rank map built using {sourceLabel} ({_carSaClassRankByColor.Count} classes)");
+                return;
             }
+
+            if (_carSaClassRankByColor != null && _carSaClassRankByColor.Count > 0)
+            {
+                if (!_carSaClassRankHoldActive)
+                {
+                    _carSaClassRankHoldActive = true;
+                    SimHub.Logging.Current.Info("[LalaPlugin:CarSA] Class rank map hold active; retaining last valid Drivers-derived ranks during hydration gap.");
+                }
+                return;
+            }
+
+            _carSaClassRankToken = token;
+            _carSaClassRankByColor = null;
+            _carSaClassRankSource = string.Empty;
         }
 
         private Dictionary<string, int> BuildCarSaClassRankMap(PluginManager pluginManager, out string source)
@@ -14373,10 +14409,23 @@ namespace LaunchPlugin
 
         private void UpdateCarSaDriverInfoCache(PluginManager pluginManager)
         {
-            for (int i = 0; i < _carSaIRatingByIdx.Length; i++)
+            string token = string.IsNullOrWhiteSpace(_currentSessionToken) ? "na" : _currentSessionToken;
+            if (!string.Equals(_carSaDriverInfoCacheSessionToken, token, StringComparison.Ordinal))
             {
-                _carSaIRatingByIdx[i] = 0;
-                _carSaCarClassEstLapTimeSecByIdx[i] = double.NaN;
+                _carSaDriverInfoCacheSessionToken = token;
+                for (int i = 0; i < _carSaIRatingByIdx.Length; i++)
+                {
+                    _carSaIRatingByIdx[i] = 0;
+                    _carSaCarClassEstLapTimeSecByIdx[i] = double.NaN;
+                }
+                _carSaDriverInfoCacheHoldActive = false;
+            }
+
+            var nextIRatingByIdx = new int[CarSAEngine.MaxCars];
+            var nextClassEstLapByIdx = new double[CarSAEngine.MaxCars];
+            for (int i = 0; i < nextClassEstLapByIdx.Length; i++)
+            {
+                nextClassEstLapByIdx[i] = double.NaN;
             }
 
             bool populated = false;
@@ -14395,14 +14444,27 @@ namespace LaunchPlugin
                     continue;
                 }
 
-                _carSaIRatingByIdx[idx] = GetInt(pluginManager, $"{basePath}.IRating", 0);
-                _carSaCarClassEstLapTimeSecByIdx[idx] = SanitizeCarSaLapTimeSec(
+                nextIRatingByIdx[idx] = GetInt(pluginManager, $"{basePath}.IRating", 0);
+                nextClassEstLapByIdx[idx] = SanitizeCarSaLapTimeSec(
                     SafeReadDouble(pluginManager, $"{basePath}.CarClassEstLapTime", double.NaN));
             }
 
             if (populated)
             {
+                Array.Copy(nextIRatingByIdx, _carSaIRatingByIdx, CarSAEngine.MaxCars);
+                Array.Copy(nextClassEstLapByIdx, _carSaCarClassEstLapTimeSecByIdx, CarSAEngine.MaxCars);
+                if (_carSaDriverInfoCacheHoldActive)
+                {
+                    _carSaDriverInfoCacheHoldActive = false;
+                    SimHub.Logging.Current.Info("[LalaPlugin:CarSA] Driver info cache hold cleared; Drivers metadata recovered.");
+                }
                 return;
+            }
+
+            if (!_carSaDriverInfoCacheHoldActive)
+            {
+                _carSaDriverInfoCacheHoldActive = true;
+                SimHub.Logging.Current.Info("[LalaPlugin:CarSA] Driver info cache hold active; retaining last valid Drivers-derived iRating/est-lap values during hydration gap.");
             }
         }
 
@@ -16622,8 +16684,39 @@ namespace LaunchPlugin
         private bool IsCarSaIdentitySourceReady(PluginManager pluginManager)
         {
             if (pluginManager == null) return false;
-            int driversIdx = GetInt(pluginManager, "DataCorePlugin.GameRawData.SessionData.DriverInfo.Drivers01.CarIdx", int.MinValue);
-            return driversIdx != int.MinValue;
+            for (int i = 1; i <= 64; i++)
+            {
+                string basePath = $"DataCorePlugin.GameRawData.SessionData.DriverInfo.Drivers{i:00}";
+                int driversIdx = GetInt(pluginManager, $"{basePath}.CarIdx", int.MinValue);
+                if (driversIdx == int.MinValue)
+                {
+                    continue;
+                }
+
+                string userName = (GetString(pluginManager, $"{basePath}.UserName") ?? string.Empty).Trim();
+                string abbrevName = (GetString(pluginManager, $"{basePath}.AbbrevName") ?? string.Empty).Trim();
+                string carNumber = (GetString(pluginManager, $"{basePath}.CarNumber") ?? string.Empty).Trim();
+                string classShort = (GetString(pluginManager, $"{basePath}.CarClassShortName") ?? string.Empty).Trim();
+                if (!string.IsNullOrWhiteSpace(userName)
+                    || !string.IsNullOrWhiteSpace(abbrevName)
+                    || !string.IsNullOrWhiteSpace(carNumber)
+                    || !string.IsNullOrWhiteSpace(classShort))
+                {
+                    if (_carSaIdentityReadinessHoldLogged)
+                    {
+                        _carSaIdentityReadinessHoldLogged = false;
+                        SimHub.Logging.Current.Info("[LalaPlugin:CarSA] Identity readiness recovered from Drivers metadata.");
+                    }
+                    return true;
+                }
+            }
+
+            if (!_carSaIdentityReadinessHoldLogged)
+            {
+                _carSaIdentityReadinessHoldLogged = true;
+                SimHub.Logging.Current.Info("[LalaPlugin:CarSA] Identity readiness hold active; waiting for usable Drivers metadata.");
+            }
+            return false;
         }
 
         private void UpdateOpponentsAndPitExit(GameData data, PluginManager pluginManager, int completedLaps, string sessionTypeToken)
@@ -17866,6 +17959,7 @@ namespace LaunchPlugin
 
             _classLeaderTransientMissStreak = 0;
             _classLeaderHoldActive = false;
+            int previousLeaderCarIdx = ClassLeaderCarIdx;
             ClassLeaderCarIdx = classLeaderCarIdx;
             double classLeaderBestLapSec = (classLeaderCarIdx >= 0 && classLeaderCarIdx < _carSaBestLapTimeSecByIdx.Length)
                 ? _carSaBestLapTimeSecByIdx[classLeaderCarIdx]
@@ -17873,18 +17967,43 @@ namespace LaunchPlugin
             ClassLeaderBestLapTimeSec = IsValidCarSaLapTimeSec(classLeaderBestLapSec) ? classLeaderBestLapSec : 0.0;
             ClassLeaderBestLapTime = IsValidCarSaLapTimeSec(classLeaderBestLapSec) ? FormatLapTime(classLeaderBestLapSec) : "-";
 
-            ClassLeaderName = string.Empty;
-            ClassLeaderCarNumber = string.Empty;
+            bool isSameLeaderCar = previousLeaderCarIdx == classLeaderCarIdx;
+            bool hadLeaderIdentity = !string.IsNullOrWhiteSpace(ClassLeaderName)
+                || !string.IsNullOrWhiteSpace(ClassLeaderCarNumber)
+                || !string.IsNullOrWhiteSpace(ClassLeaderAbbrevName);
+            if (!isSameLeaderCar)
+            {
+                ClassLeaderName = string.Empty;
+                ClassLeaderCarNumber = string.Empty;
+                ClassLeaderAbbrevName = string.Empty;
+            }
             if (TryGetCarIdentityFromSessionInfo(pluginManager, classLeaderCarIdx, out string name, out string carNumber, out _))
             {
-                ClassLeaderName = name ?? string.Empty;
-                ClassLeaderCarNumber = carNumber ?? string.Empty;
+                if (!string.IsNullOrWhiteSpace(name))
+                {
+                    ClassLeaderName = name;
+                }
+                if (!string.IsNullOrWhiteSpace(carNumber))
+                {
+                    ClassLeaderCarNumber = carNumber;
+                }
             }
 
-            ClassLeaderAbbrevName = string.Empty;
             if (TryGetCarDriverInfo(pluginManager, classLeaderCarIdx, out _, out _, out _, out _, out _, out _, out string abbrevName, out _, out _, out _))
             {
-                ClassLeaderAbbrevName = abbrevName ?? string.Empty;
+                if (!string.IsNullOrWhiteSpace(abbrevName))
+                {
+                    ClassLeaderAbbrevName = abbrevName;
+                }
+            }
+
+            if (isSameLeaderCar
+                && hadLeaderIdentity
+                && string.IsNullOrWhiteSpace(ClassLeaderName)
+                && string.IsNullOrWhiteSpace(ClassLeaderCarNumber)
+                && string.IsNullOrWhiteSpace(ClassLeaderAbbrevName))
+            {
+                SimHub.Logging.Current.Info("[LalaPlugin:ClassLeader] identity hold active; retaining last valid Drivers-derived identity during hydration gap.");
             }
 
             double resolvedPaceReferenceSec = IsValidCarSaLapTimeSec(paceReferenceSec)
@@ -17921,16 +18040,22 @@ namespace LaunchPlugin
             double playerBestLapSec,
             double playerLastLapSec)
         {
+            string previousClassBestName = ClassBestName;
+            string previousClassBestCarNumber = ClassBestCarNumber;
+            string previousClassBestAbbrevName = ClassBestAbbrevName;
+            int previousClassBestCarIdx = ClassBestCarIdx;
             ResetClassBestExports();
 
             if (!IsOpponentsEligibleSession(sessionTypeName))
             {
+                _classBestIdentityHoldLogActive = false;
                 return;
             }
 
             int classBestCarIdx = FindResolvedClassBestCarIdx(pluginManager, playerCarIdx);
             if (classBestCarIdx < 0)
             {
+                _classBestIdentityHoldLogActive = false;
                 return;
             }
 
@@ -17941,15 +18066,55 @@ namespace LaunchPlugin
             ClassBestBestLapTimeSec = IsValidCarSaLapTimeSec(classBestLapSec) ? classBestLapSec : 0.0;
             ClassBestBestLapTime = IsValidCarSaLapTimeSec(classBestLapSec) ? FormatLapTime(classBestLapSec) : "-";
 
+            bool isSameCarAsPrevious = previousClassBestCarIdx == classBestCarIdx;
+            bool hadClassBestIdentity = !string.IsNullOrWhiteSpace(previousClassBestName)
+                || !string.IsNullOrWhiteSpace(previousClassBestCarNumber)
+                || !string.IsNullOrWhiteSpace(previousClassBestAbbrevName);
+            if (!isSameCarAsPrevious)
+            {
+                ClassBestName = string.Empty;
+                ClassBestCarNumber = string.Empty;
+                ClassBestAbbrevName = string.Empty;
+            }
             if (TryGetCarIdentityFromSessionInfo(pluginManager, classBestCarIdx, out string name, out string carNumber, out _))
             {
-                ClassBestName = name ?? string.Empty;
-                ClassBestCarNumber = carNumber ?? string.Empty;
+                if (!string.IsNullOrWhiteSpace(name))
+                {
+                    ClassBestName = name;
+                }
+                if (!string.IsNullOrWhiteSpace(carNumber))
+                {
+                    ClassBestCarNumber = carNumber;
+                }
             }
 
             if (TryGetCarDriverInfo(pluginManager, classBestCarIdx, out _, out _, out _, out _, out _, out _, out string abbrevName, out _, out _, out _))
             {
-                ClassBestAbbrevName = abbrevName ?? string.Empty;
+                if (!string.IsNullOrWhiteSpace(abbrevName))
+                {
+                    ClassBestAbbrevName = abbrevName;
+                }
+            }
+
+            if (isSameCarAsPrevious
+                && hadClassBestIdentity
+                && string.IsNullOrWhiteSpace(ClassBestName)
+                && string.IsNullOrWhiteSpace(ClassBestCarNumber)
+                && string.IsNullOrWhiteSpace(ClassBestAbbrevName))
+            {
+                ClassBestName = previousClassBestName ?? string.Empty;
+                ClassBestCarNumber = previousClassBestCarNumber ?? string.Empty;
+                ClassBestAbbrevName = previousClassBestAbbrevName ?? string.Empty;
+                if (!_classBestIdentityHoldLogActive)
+                {
+                    _classBestIdentityHoldLogActive = true;
+                    SimHub.Logging.Current.Info("[LalaPlugin:ClassBest] identity hold active; retaining last valid Drivers-derived identity during hydration gap.");
+                }
+            }
+            else if (_classBestIdentityHoldLogActive)
+            {
+                _classBestIdentityHoldLogActive = false;
+                SimHub.Logging.Current.Info("[LalaPlugin:ClassBest] identity hold cleared; Drivers metadata recovered.");
             }
 
             double resolvedPaceReferenceSec = IsValidCarSaLapTimeSec(paceReferenceSec)

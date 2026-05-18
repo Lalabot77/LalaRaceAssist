@@ -1,3 +1,12 @@
+- 2026-05-18: PR #737 review bugfix follow-up (hydration holds correctness).
+  - ClassLeader/ClassBest identity hold now applies only when the resolved leader/best `CarIdx` is unchanged; car changes clear identity fields to prevent mismatched car-vs-name exports.
+  - CarSA class-rank and driver-info cache holds now clear on session-token change (no cross-session hold leakage); same-session hydration holds remain.
+  - ClassBest identity hold logging is now transition-latched (single enter/clear diagnostics, no per-tick spam).
+
+- 2026-05-18: Drivers## metadata hydration hold/readiness follow-up landed.
+  - Added Drivers-only hydration hold behavior for ClassLeader/ClassBest identity fields, CarSA iRating/class-est-lap cache, and CarSA class-rank map so short Drivers table gaps no longer clear metadata to blank/0/NaN.
+  - `IsCarSaIdentitySourceReady()` now scans Drivers01..Drivers64 for any usable row identity/class metadata instead of relying only on `Drivers01.CarIdx` presence.
+  - Added bounded one-time transition diagnostics for hold/recovery states; no `CompetingDrivers` fallback restored and no denominator ownership/count paths changed.
 - 2026-05-18: Tyre learning correction instrumentation pass validated (diagnostic-only, save-path unchanged).
   - Added one compact `[LalaPlugin:Tyre Learn] sample ...` line per clean all-four candidate, reporting raw all-four-clear timing, fixed `+6.0s` correction, derived-tail `+1.0s` correction (when derivable), per-wheel clear offsets, pit service status/flags, stall-exit sample, and pit-stop elapsed sample.
   - Follow-up diagnostics now also report wheel clear order, per-wheel clear timestamps, interval statistics (`d1/d2/d3`, avg, median), per-tyre estimate, corrected 4-tyre estimate, retained saved tyre time, and pit entry/exit timestamps for future per-tyre model validation.
