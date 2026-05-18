@@ -5,7 +5,8 @@
   - Ordering fix: in `ServiceStarted`, per-wheel `1->0` clear transitions and first/last clear timestamps are now captured before evaluating `allFourCleared`, ensuring the final-wheel tick sample includes complete wheel order/interval metrics.
   - Optional tidy: sample offset fields now print `NA` when a wheel timestamp is unavailable instead of negative offset artifacts.
   - Diagnostic context fix: pit-entry edge now clears prior stop `pitExit` sample context; `savedNow` now reads direct runtime/profile stored tyre time (no tyre-selection-gated resolver), preventing stale-exit carry-over and false `savedNow=0` on all-four-clear samples.
-  - Persisted tyre-time learner save path remains unchanged (existing accepted candidate still uses raw all-four-clear timing in this pass).
+  - Safety follow-up for PR #734: raw all-four-clear candidate path is now diagnostic-only and no longer persists `candidateSec` to `TireChangeTime`; sample logging remains active and now emits `diagnostic-only: raw candidate not persisted.` on valid candidate path.
+  - `savedNow` diagnostic source preference now uses persisted profile value first (`ActiveProfile.TireChangeTime` when valid), then runtime fallback (`FuelCalculator.TireChangeTime`), else `0.0`.
 
 - 2026-05-17: Strategy Planner profile fuel preview stale-label fix + Property Snapshot include alignment.
   - fixed track/profile clear/reload UI refresh so Profile-mode AVG/ECO/MAX preview labels immediately clear to neutral (`-`) when selected profile/track fuel data is missing/cleared, without requiring a Live Snapshot -> Profile toggle.
