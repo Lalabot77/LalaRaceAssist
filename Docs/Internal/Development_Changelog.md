@@ -1,3 +1,8 @@
+- 2026-05-18: DATA LIVE BUILD fallback authority/provenance fix landed.
+  - `ResolveDataGovernedBurnAndPaceBasis(...)` no longer takes Strategy Planner `FuelCalculator.FuelPerLap` as DATA LIVE burn authority during BUILD fallback; LIVE now falls back burn authority in order: LIVE stable -> PROFILE stable/profile baseline -> SIMH (`DataCorePlugin.Computed.Fuel_LitersPerLap`) -> DEFAULT.
+  - DATA LIVE BUILD now reports truthful burn provenance (`Fuel.Refuel.BurnSource=PROFILE` when profile burn is used), keeps lap PROFILE precedence in BUILD, and no longer requires Strategy-tab live/profile toggles to refresh in-use runtime burn authority.
+  - SIMH fallback is now reachable and surfaced as runtime authority (`BurnSource=SIM`, `Pit.FuelControl.DataText=SIMH`) when profile burn is unavailable but SimHub computed burn is valid.
+
 - 2026-05-17: Strategy Planner profile fuel preview stale-label fix + Property Snapshot include alignment.
   - fixed track/profile clear/reload UI refresh so Profile-mode AVG/ECO/MAX preview labels immediately clear to neutral (`-`) when selected profile/track fuel data is missing/cleared, without requiring a Live Snapshot -> Profile toggle.
   - root cause: `ResetTrackScopedProfileData()` reset display fields but did not raise `PropertyChanged` for `ProfileAvgFuelDisplay`/related AVG row bindings, allowing stale text to remain until a later mode-driven refresh.

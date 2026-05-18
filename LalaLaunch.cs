@@ -1199,19 +1199,18 @@ namespace LaunchPlugin
             if (!usePlanData)
             {
                 if (stableFuel > 0.0 && IsFuelStableSourceLive(stableFuelSource)) { fuelPerLap = stableFuel; fuelSource = "LIVE"; }
-                else if (planFuel > 0.0) { fuelPerLap = planFuel; fuelSource = "PLAN"; }
                 else if (stableFuel > 0.0 && IsFuelStableSourceProfile(stableFuelSource)) { fuelPerLap = stableFuel; fuelSource = "PROFILE"; }
                 else if (runtimeFuel > 0.0 && IsFuelStableSourceLive(stableFuelSource)) { fuelPerLap = runtimeFuel; fuelSource = "LIVE"; }
                 else if (profileFuel > 0.0) { fuelPerLap = profileFuel; fuelSource = "PROFILE"; }
-                else if (fallbackFuelPerLap > 0.0) { fuelPerLap = fallbackFuelPerLap; fuelSource = "DEFAULT"; }
+                else if (fallbackFuelPerLap > 0.0) { fuelPerLap = fallbackFuelPerLap; fuelSource = "SIM"; }
 
                 if (stableLap > 0.0 && IsProjectionStableSourceLive(stableLapSource)) { lapSeconds = stableLap; lapSource = "LIVE"; }
-                else if (stableLap > 0.0 && IsProjectionStableSourcePlan(stableLapSource)) { lapSeconds = stableLap; lapSource = "PLAN"; }
-                else if (planLap > 0.0) { lapSeconds = planLap; lapSource = "PLAN"; }
                 else if (stableLap > 0.0 && IsProjectionStableSourceProfile(stableLapSource)) { lapSeconds = stableLap; lapSource = "PROFILE"; }
                 else if (profileLap > 0.0) { lapSeconds = profileLap; lapSource = "PROFILE"; }
                 else if (stableLap > 0.0 && IsProjectionStableSourceSim(stableLapSource)) { lapSeconds = stableLap; lapSource = "SIM"; }
                 else if (simLap > 0.0) { lapSeconds = simLap; lapSource = "SIM"; }
+                else if (stableLap > 0.0 && IsProjectionStableSourcePlan(stableLapSource)) { lapSeconds = stableLap; lapSource = "PLAN"; }
+                else if (planLap > 0.0) { lapSeconds = planLap; lapSource = "PLAN"; }
                 else { lapSource = "DEFAULT"; }
             }
             else

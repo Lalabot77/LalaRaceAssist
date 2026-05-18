@@ -1439,3 +1439,4 @@ Branch: work
   - Race Basis microcopy now consistently frames owner semantics (Preset/Lap-Limited/Time-Limited/Live Detect) and clarifies Live Detect is non-destructive to saved preset/profile state.
   - Preset reapply (`↻`) tooltip now explicitly describes deliberate preset-value reapply action.
   - Docs now clarify modified-badge semantics: calc-affecting preset divergence only, PreRace-only differences excluded, and Live Detect/manual owner divergence does not imply preset overwrite.
+- 2026-05-18: DATA LIVE BUILD/SIMH fallback authority audit validated (runtime BUILD no longer uses planner default burn; SIMH burn fallback reachable and correctly surfaced as SIMH authority when profile burn is unavailable).
