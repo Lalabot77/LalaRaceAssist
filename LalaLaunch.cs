@@ -13721,8 +13721,27 @@ namespace LaunchPlugin
         private static string ResolvePropertySnapshotGroup(string propertyName)
         {
             if (propertyName.StartsWith("Car.Debug.", StringComparison.Ordinal)) return "RawDebug";
-            if (propertyName.StartsWith("Fuel.", StringComparison.Ordinal) || propertyName.StartsWith("Strategy", StringComparison.Ordinal)) return "FuelStrategy";
-            if (propertyName.StartsWith("Car.", StringComparison.Ordinal) || propertyName.StartsWith("Opp.", StringComparison.Ordinal) || propertyName.StartsWith("H2H", StringComparison.Ordinal) || propertyName.StartsWith("LapRef.", StringComparison.Ordinal)) return "CarOppH2H";
+
+            if (propertyName.StartsWith("Fuel.", StringComparison.Ordinal)
+                || propertyName.StartsWith("Strategy", StringComparison.Ordinal)
+                || propertyName.StartsWith("Pace.", StringComparison.Ordinal)
+                || propertyName.StartsWith("Surface.", StringComparison.Ordinal))
+            {
+                return "FuelStrategy";
+            }
+
+            if (propertyName.StartsWith("Car.", StringComparison.Ordinal)
+                || propertyName.StartsWith("Opp.", StringComparison.Ordinal)
+                || propertyName.StartsWith("H2H", StringComparison.Ordinal)
+                || propertyName.StartsWith("LapRef.", StringComparison.Ordinal)
+                || propertyName.StartsWith("Race.", StringComparison.Ordinal)
+                || propertyName.StartsWith("RaceFinish.", StringComparison.Ordinal)
+                || propertyName.StartsWith("ClassBest.", StringComparison.Ordinal)
+                || propertyName.StartsWith("ClassLeader.", StringComparison.Ordinal))
+            {
+                return "CarOppH2H";
+            }
+
             if (propertyName.StartsWith("Pit.", StringComparison.Ordinal) || propertyName.StartsWith("PitExit.", StringComparison.Ordinal)) return "PitPitExit";
             if (propertyName.StartsWith("ShiftAssist.", StringComparison.Ordinal)) return "ShiftAssist";
             if (propertyName.StartsWith("MSG", StringComparison.Ordinal) || propertyName.StartsWith("Message", StringComparison.Ordinal)) return "MessageSystem";
