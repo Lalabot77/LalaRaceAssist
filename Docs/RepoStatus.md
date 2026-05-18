@@ -1,5 +1,6 @@
 - 2026-05-18: Tyre learning correction instrumentation pass validated (diagnostic-only, save-path unchanged).
   - Added one compact `[LalaPlugin:Tyre Learn] sample ...` line per clean all-four candidate, reporting raw all-four-clear timing, fixed `+6.0s` correction, derived-tail `+1.0s` correction (when derivable), per-wheel clear offsets, pit service status/flags, stall-exit sample, and pit-stop elapsed sample.
+  - Follow-up diagnostics now also report wheel clear order, per-wheel clear timestamps, interval statistics (`d1/d2/d3`, avg, median), per-tyre estimate, corrected 4-tyre estimate, retained saved tyre time, and pit entry/exit timestamps for future per-tyre model validation.
   - Added per-wheel clear timestamp capture (`LF/RF/LR/RR`) plus first/last clear tracking inside tyre learner runtime state.
   - Existing accepted/rejected candidate semantics and persisted `TireChangeTime` save basis remain unchanged in this pass.
 
