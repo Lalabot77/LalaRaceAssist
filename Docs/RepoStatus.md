@@ -1,3 +1,10 @@
+- 2026-05-18: Property Snapshot grouping audit + contract guardrail validated.
+  - audited Property Snapshot group mapping against current plugin export surface (`AttachCore`/`AttachVerbose`) and internal inventory/changelog references.
+  - expanded grouping coverage so `Race.*`, `RaceFinish.*`, `ClassBest.*`, and `ClassLeader.*` capture under `Car/Opp/H2H` instead of defaulting to `Raw Debug`.
+  - grouped `Pace.*` and `Surface.*` under `Fuel/Strategy` for planning/fuel-context snapshot visibility.
+  - no export/property names changed and no runtime subsystem logic changed.
+  - `Docs/Internal/CODEX_CONTRACT.txt` now includes a standing mandatory rule: any task that adds/removes/renames/behavior-changes SimHub exports/properties must review/update Property Snapshot grouping and explicitly report `Property Snapshot list reviewed: yes/no, with reason.`
+
 - 2026-05-17: Strategy Planner profile preview stale-label regression fix validated.
   - Profile-mode AVG/ECO/MAX preview row now clears immediately on missing/deleted track fuel context (no Live Snapshot toggle required).
   - fix is UI-refresh scoped (`PropertyChanged` on profile preview display fields during track-scoped reset); no runtime DATA authority, pit command behavior, or refuel-formula behavior changes.

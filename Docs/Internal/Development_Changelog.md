@@ -1,3 +1,10 @@
+- 2026-05-18: Property Snapshot group audit + Codex contract guardrail.
+  - audited Property Snapshot grouping against current `AttachCore`/`AttachVerbose` export surface and inventory/changelog references;
+  - updated snapshot grouping coverage so `Race.*`, `RaceFinish.*`, `ClassBest.*`, and `ClassLeader.*` map into `Car/Opp/H2H` (instead of defaulting to `Raw Debug`);
+  - grouped `Pace.*` and `Surface.*` into `Fuel/Strategy` to keep race-planning fuel/pace observability aligned with existing snapshot semantics;
+  - no export names changed and no runtime subsystem calculations were modified;
+  - added mandatory `CODEX_CONTRACT` rule requiring same-task Property Snapshot review whenever SimHub exports/properties are added/removed/renamed/behavior-changed, with required verification line: `Property Snapshot list reviewed: yes/no, with reason.`
+
 - 2026-05-17: Strategy Planner profile fuel preview stale-label fix + Property Snapshot include alignment.
   - fixed track/profile clear/reload UI refresh so Profile-mode AVG/ECO/MAX preview labels immediately clear to neutral (`-`) when selected profile/track fuel data is missing/cleared, without requiring a Live Snapshot -> Profile toggle.
   - root cause: `ResetTrackScopedProfileData()` reset display fields but did not raise `PropertyChanged` for `ProfileAvgFuelDisplay`/related AVG row bindings, allowing stale text to remain until a later mode-driven refresh.
