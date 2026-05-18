@@ -5904,7 +5904,12 @@ namespace LaunchPlugin
             {
                 playerClass = SafeReadStringProperty("DataCorePlugin.GameRawData.SessionData.DriverInfo.DriverCarClass");
             }
-            if (string.IsNullOrWhiteSpace(playerClass)) return 0;
+            int playerClassId = SafeReadIntProperty("DataCorePlugin.GameRawData.Telemetry.PlayerCarClassID", int.MinValue);
+            if (playerClassId == int.MinValue)
+            {
+                playerClassId = SafeReadIntProperty("DataCorePlugin.GameRawData.SessionData.DriverInfo.DriverCarClassID", int.MinValue);
+            }
+            if (string.IsNullOrWhiteSpace(playerClass) && playerClassId == int.MinValue) return 0;
 
             int count = 0;
             for (int i = 1; i <= 64; i++)
@@ -5920,7 +5925,11 @@ namespace LaunchPlugin
                 {
                     cls = SafeReadStringProperty(basePath + ".CarClassName");
                 }
-                if (!string.IsNullOrWhiteSpace(cls) && string.Equals(cls, playerClass, StringComparison.OrdinalIgnoreCase))
+                int rowClassId = SafeReadIntProperty(basePath + ".CarClassID", int.MinValue);
+                bool classMatchById = playerClassId != int.MinValue && rowClassId != int.MinValue && rowClassId == playerClassId;
+                bool classMatchByName = !string.IsNullOrWhiteSpace(cls) && !string.IsNullOrWhiteSpace(playerClass)
+                    && string.Equals(cls, playerClass, StringComparison.OrdinalIgnoreCase);
+                if (classMatchById || classMatchByName)
                 {
                     count++;
                 }
@@ -9050,10 +9059,15 @@ namespace LaunchPlugin
         private int CountValidCompetingDriverRowsExcludingPaceCar()
         {
             int count = 0;
-            for (int i = 0; i < 64; i++)
+            for (int i = 1; i <= 64; i++)
             {
-                string basePath = GetCompetingDriverBasePath(i);
-                if (!IsCompetingDriverRowValid(basePath) || IsDriverRowPaceCar(basePath, i))
+                string basePath = $"DataCorePlugin.GameRawData.SessionData.DriverInfo.Drivers{i:00}";
+                int carIdx = SafeReadIntProperty(basePath + ".CarIdx", -1);
+                int userId = SafeReadIntProperty(basePath + ".UserID");
+                string userName = SafeReadStringProperty(basePath + ".UserName");
+                string carNumber = SafeReadStringProperty(basePath + ".CarNumber");
+                bool rowValid = carIdx >= 0 || userId > 0 || !string.IsNullOrWhiteSpace(userName) || !string.IsNullOrWhiteSpace(carNumber);
+                if (!rowValid || IsDriversRowPaceCar(basePath))
                 {
                     continue;
                 }
@@ -9076,96 +9090,6 @@ namespace LaunchPlugin
             return GetNativePlayerClassDriverCount();
         }
 
-        private bool IsCompetingDriverRowValid(string basePath)
-        {
-            int carIdx = ReadCompetingDriverIntWithFallback(basePath, ".CarIdx", -1);
-            int userId = ReadCompetingDriverIntWithFallback(basePath, ".UserID");
-            string userName = ReadCompetingDriverStringWithFallback(basePath, ".UserName");
-            string carNumber = ReadCompetingDriverStringWithFallback(basePath, ".CarNumber");
-            return carIdx >= 0 || userId > 0 || !string.IsNullOrWhiteSpace(userName) || !string.IsNullOrWhiteSpace(carNumber);
-        }
-
-        private bool IsDriverRowPaceCar(string basePath, int rowIndex)
-        {
-            if (SafeReadBool(PluginManager, basePath + ".IsPaceCar", false))
-            {
-                return true;
-            }
-
-            string numberedCompetingPath = GetCompetingDriverBasePathNumbered(rowIndex);
-            if (!string.Equals(numberedCompetingPath, basePath, StringComparison.Ordinal)
-                && SafeReadBool(PluginManager, numberedCompetingPath + ".IsPaceCar", false))
-            {
-                return true;
-            }
-
-            string driversBasePath = $"DataCorePlugin.GameRawData.SessionData.DriverInfo.Drivers{(rowIndex + 1):00}";
-            return SafeReadBool(PluginManager, driversBasePath + ".IsPaceCar", false);
-        }
-
-        private static string GetCompetingDriverBasePath(int rowIndex)
-        {
-            return $"DataCorePlugin.GameRawData.SessionData.DriverInfo.CompetingDrivers[{rowIndex}]";
-        }
-
-        private static string GetCompetingDriverBasePathNumbered(int rowIndex)
-        {
-            return $"DataCorePlugin.GameRawData.SessionData.DriverInfo.CompetingDrivers{(rowIndex + 1):00}";
-        }
-
-        private int ReadCompetingDriverIntWithFallback(string bracketBasePath, string suffix, int fallback = 0)
-        {
-            int value = SafeReadIntProperty(bracketBasePath + suffix, int.MinValue);
-            if (value != int.MinValue)
-            {
-                return value;
-            }
-
-            int rowIndex = ExtractCompetingDriverRowIndex(bracketBasePath);
-            if (rowIndex < 0)
-            {
-                return fallback;
-            }
-
-            string numberedBasePath = GetCompetingDriverBasePathNumbered(rowIndex);
-            return SafeReadIntProperty(numberedBasePath + suffix, fallback);
-        }
-
-        private string ReadCompetingDriverStringWithFallback(string bracketBasePath, string suffix)
-        {
-            string value = SafeReadStringProperty(bracketBasePath + suffix);
-            if (!string.IsNullOrWhiteSpace(value))
-            {
-                return value;
-            }
-
-            int rowIndex = ExtractCompetingDriverRowIndex(bracketBasePath);
-            if (rowIndex < 0)
-            {
-                return string.Empty;
-            }
-
-            string numberedBasePath = GetCompetingDriverBasePathNumbered(rowIndex);
-            return SafeReadStringProperty(numberedBasePath + suffix);
-        }
-
-        private static int ExtractCompetingDriverRowIndex(string basePath)
-        {
-            if (string.IsNullOrWhiteSpace(basePath))
-            {
-                return -1;
-            }
-
-            int open = basePath.LastIndexOf("[", StringComparison.Ordinal);
-            int close = basePath.LastIndexOf("]", StringComparison.Ordinal);
-            if (open < 0 || close <= open)
-            {
-                return -1;
-            }
-
-            string token = basePath.Substring(open + 1, close - open - 1);
-            return int.TryParse(token, NumberStyles.Integer, CultureInfo.InvariantCulture, out int rowIndex) ? rowIndex : -1;
-        }
 
         private string ResolvePlayerNativeClassName()
         {
@@ -12711,13 +12635,13 @@ namespace LaunchPlugin
             }
 
             var relSpeedByColor = new Dictionary<string, double>(StringComparer.OrdinalIgnoreCase);
-            for (int i = 0; i < 64; i++)
+            for (int i = 1; i <= 64; i++)
             {
-                string basePath = $"DataCorePlugin.GameRawData.SessionData.DriverInfo.CompetingDrivers[{i}]";
+                string basePath = $"DataCorePlugin.GameRawData.SessionData.DriverInfo.Drivers{i:00}";
                 int carIdx = GetInt(pluginManager, $"{basePath}.CarIdx", int.MinValue);
                 if (carIdx == int.MinValue)
                 {
-                    break;
+                    continue;
                 }
 
                 string classColor = GetCarClassColorHex(pluginManager, $"{basePath}.CarClassColor");
@@ -12740,18 +12664,18 @@ namespace LaunchPlugin
 
             if (relSpeedByColor.Count > 0)
             {
-                source = "DriverInfo.CompetingDrivers.CarClassRelSpeed";
+                source = "DriverInfo.Drivers.CarClassRelSpeed";
                 return BuildCarSaClassRankMap(relSpeedByColor, descending: true);
             }
 
             var estLapByColor = new Dictionary<string, double>(StringComparer.OrdinalIgnoreCase);
-            for (int i = 0; i < 64; i++)
+            for (int i = 1; i <= 64; i++)
             {
-                string basePath = $"DataCorePlugin.GameRawData.SessionData.DriverInfo.CompetingDrivers[{i}]";
+                string basePath = $"DataCorePlugin.GameRawData.SessionData.DriverInfo.Drivers{i:00}";
                 int carIdx = GetInt(pluginManager, $"{basePath}.CarIdx", int.MinValue);
                 if (carIdx == int.MinValue)
                 {
-                    break;
+                    continue;
                 }
 
                 string classColor = GetCarClassColorHex(pluginManager, $"{basePath}.CarClassColor");
@@ -12774,7 +12698,7 @@ namespace LaunchPlugin
 
             if (estLapByColor.Count > 0)
             {
-                source = "DriverInfo.CompetingDrivers.CarClassEstLapTime";
+                source = "DriverInfo.Drivers.CarClassEstLapTime";
                 return BuildCarSaClassRankMap(estLapByColor, descending: false);
             }
 
@@ -13981,25 +13905,6 @@ namespace LaunchPlugin
             if (populated)
             {
                 return;
-            }
-
-            for (int i = 0; i < 64; i++)
-            {
-                string basePath = $"DataCorePlugin.GameRawData.SessionData.DriverInfo.CompetingDrivers[{i}]";
-                int idx = GetInt(pluginManager, $"{basePath}.CarIdx", int.MinValue);
-                if (idx == int.MinValue)
-                {
-                    break;
-                }
-
-                if (idx < 0 || idx >= CarSAEngine.MaxCars)
-                {
-                    continue;
-                }
-
-                _carSaIRatingByIdx[idx] = GetInt(pluginManager, $"{basePath}.IRating", 0);
-                _carSaCarClassEstLapTimeSecByIdx[idx] = SanitizeCarSaLapTimeSec(
-                    SafeReadDouble(pluginManager, $"{basePath}.CarClassEstLapTime", double.NaN));
             }
         }
 
@@ -15657,12 +15562,7 @@ namespace LaunchPlugin
                 return false;
             }
 
-            if (TryResolveCarIdxByIdentityFromDriversTable(pluginManager, requestedKey, out carIdx))
-            {
-                return true;
-            }
-
-            return TryResolveCarIdxByIdentityFromCompetingDrivers(pluginManager, requestedKey, out carIdx);
+            return TryResolveCarIdxByIdentityFromDriversTable(pluginManager, requestedKey, out carIdx);
         }
 
         private bool TryResolveCarIdxByIdentityFromDriversTable(PluginManager pluginManager, string requestedKey, out int carIdx)
@@ -15699,30 +15599,6 @@ namespace LaunchPlugin
             return false;
         }
 
-        private bool TryResolveCarIdxByIdentityFromCompetingDrivers(PluginManager pluginManager, string requestedKey, out int carIdx)
-        {
-            carIdx = -1;
-            for (int i = 0; i < 64; i++)
-            {
-                string basePath = $"DataCorePlugin.GameRawData.SessionData.DriverInfo.CompetingDrivers[{i}]";
-                int candidateCarIdx = GetInt(pluginManager, $"{basePath}.CarIdx", int.MinValue);
-                if (candidateCarIdx == int.MinValue)
-                {
-                    break;
-                }
-
-                string candidateCarNumber = GetString(pluginManager, $"{basePath}.CarNumber") ?? string.Empty;
-                string candidateClassColor = GetCarClassColorHex(pluginManager, $"{basePath}.CarClassColor");
-                string candidateKey = MakeH2HIdentityKey(candidateClassColor, candidateCarNumber);
-                if (string.Equals(candidateKey, requestedKey, StringComparison.OrdinalIgnoreCase))
-                {
-                    carIdx = candidateCarIdx;
-                    return true;
-                }
-            }
-
-            return false;
-        }
 
         private string MakeH2HIdentityKey(string classColor, string carNumber)
         {
@@ -15975,12 +15851,7 @@ namespace LaunchPlugin
                 return false;
             }
 
-            if (TryGetCarIdentityFromDriversTable(pluginManager, carIdx, out name, out carNumber, out classColor))
-            {
-                return true;
-            }
-
-            return TryGetCarIdentityFromCompetingDrivers(pluginManager, carIdx, out name, out carNumber, out classColor);
+            return TryGetCarIdentityFromDriversTable(pluginManager, carIdx, out name, out carNumber, out classColor);
         }
 
         private bool TryGetCarIdentityFromDriversTable(PluginManager pluginManager, int carIdx, out string name, out string carNumber, out string classColor)
@@ -16022,37 +15893,6 @@ namespace LaunchPlugin
             return false;
         }
 
-        private bool TryGetCarIdentityFromCompetingDrivers(PluginManager pluginManager, int carIdx, out string name, out string carNumber, out string classColor)
-        {
-            name = string.Empty;
-            carNumber = string.Empty;
-            classColor = string.Empty;
-
-            for (int i = 0; i < 64; i++)
-            {
-                int idx = GetInt(pluginManager, $"DataCorePlugin.GameRawData.SessionData.DriverInfo.CompetingDrivers[{i}].CarIdx", int.MinValue);
-                if (idx == int.MinValue)
-                {
-                    break;
-                }
-
-                if (idx != carIdx)
-                {
-                    continue;
-                }
-
-                name = GetString(pluginManager, $"DataCorePlugin.GameRawData.SessionData.DriverInfo.CompetingDrivers[{i}].UserName") ?? string.Empty;
-                if (string.IsNullOrWhiteSpace(name))
-                {
-                    name = GetString(pluginManager, $"DataCorePlugin.GameRawData.SessionData.DriverInfo.CompetingDrivers[{i}].TeamName") ?? string.Empty;
-                }
-                carNumber = GetString(pluginManager, $"DataCorePlugin.GameRawData.SessionData.DriverInfo.CompetingDrivers[{i}].CarNumber") ?? string.Empty;
-                classColor = GetCarClassColorHex(pluginManager, $"DataCorePlugin.GameRawData.SessionData.DriverInfo.CompetingDrivers[{i}].CarClassColor");
-                return true;
-            }
-
-            return false;
-        }
 
         private bool TryGetCarDriverInfo(PluginManager pluginManager, int carIdx, out string className, out string classColorHex, out int iRating, out string licString,
             out string classShortName, out string initials, out string abbrevName, out int licLevel, out int userId, out int teamId)
@@ -16073,13 +15913,7 @@ namespace LaunchPlugin
                 return false;
             }
 
-            if (TryGetCarDriverInfoFromDriversTable(pluginManager, carIdx, out className, out classColorHex, out iRating, out licString,
-                out classShortName, out initials, out abbrevName, out licLevel, out userId, out teamId))
-            {
-                return true;
-            }
-
-            return TryGetCarDriverInfoFromCompetingDrivers(pluginManager, carIdx, out className, out classColorHex, out iRating, out licString,
+            return TryGetCarDriverInfoFromDriversTable(pluginManager, carIdx, out className, out classColorHex, out iRating, out licString,
                 out classShortName, out initials, out abbrevName, out licLevel, out userId, out teamId);
         }
 
@@ -16127,54 +15961,6 @@ namespace LaunchPlugin
             return false;
         }
 
-        private bool TryGetCarDriverInfoFromCompetingDrivers(PluginManager pluginManager, int carIdx, out string className, out string classColorHex, out int iRating,
-            out string licString, out string classShortName, out string initials, out string abbrevName, out int licLevel, out int userId, out int teamId)
-        {
-            className = string.Empty;
-            classColorHex = string.Empty;
-            iRating = 0;
-            licString = string.Empty;
-            classShortName = string.Empty;
-            initials = string.Empty;
-            abbrevName = string.Empty;
-            licLevel = 0;
-            userId = 0;
-            teamId = 0;
-
-            for (int i = 0; i < 64; i++)
-            {
-                string basePath = $"DataCorePlugin.GameRawData.SessionData.DriverInfo.CompetingDrivers[{i}]";
-                int idx = GetInt(pluginManager, $"{basePath}.CarIdx", int.MinValue);
-                if (idx == int.MinValue)
-                {
-                    break;
-                }
-
-                if (idx != carIdx)
-                {
-                    continue;
-                }
-
-                classShortName = GetString(pluginManager, $"{basePath}.CarClassShortName") ?? string.Empty;
-                className = classShortName;
-                if (string.IsNullOrWhiteSpace(className))
-                {
-                    className = GetString(pluginManager, $"{basePath}.CarClassName") ?? string.Empty;
-                }
-
-                classColorHex = GetCarClassColorHexHash(pluginManager, $"{basePath}.CarClassColor");
-                iRating = GetInt(pluginManager, $"{basePath}.IRating", 0);
-                licString = GetString(pluginManager, $"{basePath}.LicString") ?? string.Empty;
-                initials = GetString(pluginManager, $"{basePath}.Initials") ?? string.Empty;
-                abbrevName = GetString(pluginManager, $"{basePath}.AbbrevName") ?? string.Empty;
-                licLevel = GetInt(pluginManager, $"{basePath}.LicLevel", 0);
-                userId = GetInt(pluginManager, $"{basePath}.UserID", 0);
-                teamId = GetInt(pluginManager, $"{basePath}.TeamID", 0);
-                return true;
-            }
-
-            return false;
-        }
 
         private static string GetCarClassColorHex(PluginManager pluginManager, string propertyName)
         {
@@ -16339,10 +16125,7 @@ namespace LaunchPlugin
         {
             if (pluginManager == null) return false;
             int driversIdx = GetInt(pluginManager, "DataCorePlugin.GameRawData.SessionData.DriverInfo.Drivers01.CarIdx", int.MinValue);
-            if (driversIdx != int.MinValue) return true;
-
-            int competingIdx = GetInt(pluginManager, "DataCorePlugin.GameRawData.SessionData.DriverInfo.CompetingDrivers[0].CarIdx", int.MinValue);
-            return competingIdx != int.MinValue;
+            return driversIdx != int.MinValue;
         }
 
         private void UpdateOpponentsAndPitExit(GameData data, PluginManager pluginManager, int completedLaps, string sessionTypeToken)
@@ -17246,30 +17029,6 @@ namespace LaunchPlugin
                 string basePath = $"DataCorePlugin.GameRawData.SessionData.DriverInfo.Drivers{i:00}";
                 int idx = GetInt(pluginManager, $"{basePath}.CarIdx", int.MinValue);
                 if (idx == int.MinValue || idx != carIdx)
-                {
-                    continue;
-                }
-
-                string classShort = GetString(pluginManager, $"{basePath}.CarClassShortName");
-                if (!string.IsNullOrWhiteSpace(classShort))
-                {
-                    return classShort.Trim();
-                }
-
-                string className = GetString(pluginManager, $"{basePath}.CarClassName");
-                return className?.Trim() ?? string.Empty;
-            }
-
-            for (int i = 0; i < 64; i++)
-            {
-                string basePath = $"DataCorePlugin.GameRawData.SessionData.DriverInfo.CompetingDrivers[{i}]";
-                int idx = GetInt(pluginManager, $"{basePath}.CarIdx", int.MinValue);
-                if (idx == int.MinValue)
-                {
-                    break;
-                }
-
-                if (idx != carIdx)
                 {
                     continue;
                 }
