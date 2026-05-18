@@ -1,3 +1,27 @@
+- 2026-05-18 final tidy: aligned active docs/contracts with Drivers-only identity and renamed Drivers-row counter helpers for clarity.
+  - Active ClassLeader/ClassBest docs now describe `DriverInfo.Drivers##` identity seams only (no CompetingDrivers fallback contract).
+  - Renamed denominator support helpers to `CountValidDriversRowsExcludingPaceCar` / `CountPlayerClassDriversRowsExcludingPaceCar` to match current `Drivers##` data source usage.
+
+- 2026-05-18 PR follow-up: removed remaining `DriverInfo.CompetingDrivers` runtime reliance and hardened native class-match identity for denominator fallback.
+  - Race and League denominator support paths now consume `DriverInfo.Drivers##` only (including roster count, CarSA class-rank map source, identity and driver-info resolution helpers, and class-short resolution fallback).
+  - `GetNativePlayerClassDriverCount()` now matches by native class ID (`PlayerCarClassID`/`DriverCarClassID` + row `CarClassID`) with class-name fallback, reducing short-name/id mismatch zero-count risk.
+
+- 2026-05-18: League race class denominator source corrected to strict `DriverInfo.Drivers##` subclass cohort for League ON.
+  - `GetLeagueClassPlayerDriverCount()` and `ResolveCanonicalPlayerClassRaceDenominator()` support paths now use strict current-session `DriverInfo.Drivers##` row scanning/resolution for League subclass counts (pace-car excluded), with no CSV membership fallback as race denominator authority.
+  - `Race.PlayerClassFieldSize` / `RaceFinish.PlayerClassFieldSize` canonical seam now uses strict League subclass count when available, else native/session fallback only; RaceDenom hot-path logging remains bounded without full roster recount.
+
+- 2026-05-18: Fixed League subclass diagnostic row scan fallback identity coverage and removed RaceDenom hot-path recount.
+  - `GetLeagueClassPlayerDriverCount()` no longer rejects rows before reading fallback identity fields (`UserNameRaw` / `UserNameProcessed`), and now counts valid rows when any usable identity (`UserID`, `UserName`, `CarIdx`, `CarNumber`) is present; pace-car exclusion and bounded diagnostics retained.
+  - `LogRaceDenominatorResolution()` no longer calls `GetLeagueClassPlayerDriverCount()`; removed misleading `csvDriverCount` payload to avoid per-tick full roster recount from RaceDenom diagnostics.
+
+- 2026-05-17: Added bounded League subclass current-session count diagnostics in `GetLeagueClassPlayerDriverCount()`.
+  - New `[LalaPlugin:LeagueSubclassCount]` log reports session-row vs CSV fallback counts (valid/pace/resolved/matching/unresolved) and emits only when signature changes, to prove whether current-session cohort counting is available or falling back to CSV membership.
+
+- 2026-05-17: Fixed live `Race.PlayerClassFieldSize` attach path to call canonical race denominator helper directly.
+  - Removed the remaining indirection method for live export so League-enabled live publish cannot take a stale/legacy override path; `RaceFinish.PlayerClassFieldSize` freeze path and denominator helper logic unchanged.
+
+- 2026-05-16: Added bounded race denominator branch diagnostics in `LalaLaunch` for `Race.PlayerClassFieldSize` / `RaceFinish.PlayerClassFieldSize` investigation.
+  - New `[LalaPlugin:RaceDenom]` info log emits only when denominator branch/signature/result changes, including branch, league toggle, roster/native/opponent counters, and player native/effective class context.
 - 2026-05-18: Property Snapshot group audit + Codex contract guardrail.
   - audited Property Snapshot grouping against current `AttachCore`/`AttachVerbose` export surface and inventory/changelog references;
   - updated snapshot grouping coverage so `Race.*`, `RaceFinish.*`, `ClassBest.*`, and `ClassLeader.*` map into `Car/Opp/H2H` (instead of defaulting to `Raw Debug`);
