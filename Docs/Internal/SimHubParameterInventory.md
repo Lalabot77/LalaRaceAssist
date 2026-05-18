@@ -433,6 +433,7 @@ Pit action surface note (Controls & Events): plugin-owned pit actions include `P
 * `CarSA_Debug_YYYY-MM-DD_HH-mm-ss_<TrackName>.csv` includes an `EventFired` column immediately after `SessionTimeSec`, populated with `1`/`0` based on the event marker pulse state.【F:LalaLaunch.cs†L5189-L5222】【F:LalaLaunch.cs†L6220-L6242】
 * `OffTrackDebugLogChangesOnly` (settings) can be enabled to write `OffTrackDebug_*.csv` rows only when the snapshot changes, reducing file size during steady-state runs.【F:LalaLaunch.cs†L5485-L5554】
 * `PropertySnapshot_<UTC>_Sess<SessionTimeSec>.csv` is written when `Enable Property Snapshot` is on and Event Marker is pressed; columns: `SimHubProperty,InternalSource,Value,GroupType` with optional `ChangedVsPrevious` column.
+  - Pit/PitExit group include coverage explicitly includes: `Pit.FuelControl.Data`, `Pit.FuelControl.DataText`, `Pit.FuelControl.DataColor`, `Pit.FuelControl.Source`, `Pit.FuelControl.SourceText`, `Pit.FuelControl.TargetLitres`, `Pit.FuelControl.TargetText`.
 * Optional rolling append file `PropertySnapshot_Rolling.csv` writes one row per property per marker with `SnapshotUtc,SessionTimeSec` prefixes.
 
 - 2026-04-30 Phase 1 League Race Class infrastructure: no new public runtime exports yet; existing export semantics unchanged in this phase.

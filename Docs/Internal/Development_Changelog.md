@@ -1,3 +1,8 @@
+- 2026-05-17: Strategy Planner profile fuel preview stale-label fix + Property Snapshot include alignment.
+  - fixed track/profile clear/reload UI refresh so Profile-mode AVG/ECO/MAX preview labels immediately clear to neutral (`-`) when selected profile/track fuel data is missing/cleared, without requiring a Live Snapshot -> Profile toggle.
+  - root cause: `ResetTrackScopedProfileData()` reset display fields but did not raise `PropertyChanged` for `ProfileAvgFuelDisplay`/related AVG row bindings, allowing stale text to remain until a later mode-driven refresh.
+  - Property Snapshot group/include docs now explicitly include new Pit Fuel Control export surface from PR #727 (`Pit.FuelControl.Data`, `DataText`, `DataColor`, `Source`, `SourceText`, `TargetLitres`, `TargetText`).
+
 - 2026-05-17: PR #730 follow-up fixed tyre-time value/lock copy parity in profile clone paths.
   - `NewProfile()` default-seed clone now copies `TireChangeTime` together with `TireChangeTimeLocked`.
   - `CopyProfileProperties(...)` now copies `TireChangeTime` together with `TireChangeTimeLocked`.
