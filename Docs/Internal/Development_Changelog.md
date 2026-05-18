@@ -1,3 +1,10 @@
+- 2026-05-18: Property Snapshot rolling automation modes (Part 2) validated.
+  - added rolling capture modes via debug settings: `MANUAL` (0), `FREQUENCY` (1), `PER LAP` (2), with `START`/`STOP` state control and guarded frequency setting (`default 1 Hz`, capped `max 5 Hz`).
+  - Event Marker behavior remains manual capture trigger; manual captures still write one-shot snapshot files and optional rolling snapshots per existing toggle.
+  - automatic rolling captures now run only when rolling output is enabled and START is active: FREQUENCY uses capped interval timing; PER LAP reuses existing lap-cross seam and de-duplicates by completed lap number.
+  - added `RESET ROLLING CSV` UI/action path that deletes only `PropertySnapshot_Rolling.csv` (primary + fallback path) with bounded info/warn logging.
+  - preserved existing group filters, select-all sync, rolling wide schema, changed-vs-previous behavior, and one-shot folder semantics.
+
 - 2026-05-18: Property Snapshot group audit + Codex contract guardrail.
   - audited Property Snapshot grouping against current `AttachCore`/`AttachVerbose` export surface and inventory/changelog references;
   - updated snapshot grouping coverage so `Race.*`, `RaceFinish.*`, `ClassBest.*`, and `ClassLeader.*` map into `Car/Opp/H2H` (instead of defaulting to `Raw Debug`);
