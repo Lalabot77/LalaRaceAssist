@@ -21,6 +21,59 @@
   - `ResolveDataGovernedBurnAndPaceBasis(...)` no longer takes Strategy Planner `FuelCalculator.FuelPerLap` as DATA LIVE burn authority during BUILD fallback; LIVE now falls back burn authority in order: LIVE stable -> PROFILE stable/profile baseline -> SIMH (`DataCorePlugin.Computed.Fuel_LitersPerLap`) -> DEFAULT.
   - DATA LIVE BUILD now reports truthful burn provenance (`Fuel.Refuel.BurnSource=PROFILE` when profile burn is used), keeps lap PROFILE precedence in BUILD, and no longer requires Strategy-tab live/profile toggles to refresh in-use runtime burn authority.
   - SIMH fallback is now reachable and surfaced as runtime authority (`BurnSource=SIM`, `Pit.FuelControl.DataText=SIMH`) when profile burn is unavailable but SimHub computed burn is valid.
+- 2026-05-18: Tyre learning correction instrumentation pass landed (diagnostic-only).
+  - Added bounded one-line `[LalaPlugin:Tyre Learn] sample ...` diagnostics on clean all-four tyre candidates, including service start, per-wheel clear timestamps/offsets, first/last clear, pit service status/flags snapshots, pit-stop elapsed sample, and corrected-estimate comparisons (`+6.0s` fixed tail and derived-tail `+1.0s` jack allowance when derivable).
+  - Added per-wheel clear timestamp capture within the tyre learner state machine for LF/RF/LR/RR clear events.
+  - Follow-up expanded sample payload with wheel clear order (`LF/RF/LR/RR`), explicit clear timestamps (`tLF/tRF/tLR/tRR`), derived intervals (`d1/d2/d3`), avg/median interval metrics, per-tyre estimate, corrected 4-tyre estimate, retained current saved tyre time, and pit entry/exit timestamps.
+  - Ordering fix: in `ServiceStarted`, per-wheel `1->0` clear transitions and first/last clear timestamps are now captured before evaluating `allFourCleared`, ensuring the final-wheel tick sample includes complete wheel order/interval metrics.
+  - Optional tidy: sample offset fields now print `NA` when a wheel timestamp is unavailable instead of negative offset artifacts.
+  - Diagnostic context fix: pit-entry edge now clears prior stop `pitExit` sample context; `savedNow` now reads direct runtime/profile stored tyre time (no tyre-selection-gated resolver), preventing stale-exit carry-over and false `savedNow=0` on all-four-clear samples.
+  - Safety follow-up for PR #734: raw all-four-clear candidate path is now diagnostic-only and no longer persists `candidateSec` to `TireChangeTime`; sample logging remains active and now emits `diagnostic-only: raw candidate not persisted.` on valid candidate path.
+  - `savedNow` diagnostic source preference now uses persisted profile value first (`ActiveProfile.TireChangeTime` when valid), then runtime fallback (`FuelCalculator.TireChangeTime`), else `0.0`.
+- 2026-05-18: Property Snapshot rolling automation hardening follow-up (PR #736 review).
+  - rolling START/STOP state is now runtime-only; persisted `PropertySnapshotRollingActive` is forcibly cleared false on first runtime tick so automation cannot silently resume after restart/reload.
+  - START now hard-guards on `Soft Debug`, `Enable Property Snapshot`, and `Write rolling combined CSV`; when any gate is off, START is ignored with bounded warning.
+  - reduced FREQUENCY cap from 5 Hz to 2 Hz because rolling wide writer rewrites/parses the whole CSV each capture; START log now explicitly documents this IO cost/cap rationale.
+  - auto-capture logging is now throttled/heartbeat-only; full snapshot summary + rolling success logs remain on manual marker captures.
+  - Property Snapshot rolling mode ComboBox binding switched to `SelectedIndex` for robust int binding semantics (`MANUAL/FREQUENCY/PER LAP` => `0/1/2`).
+
+- 2026-05-18: Property Snapshot rolling automation modes (Part 2) validated.
+  - added rolling capture modes via debug settings: `MANUAL` (0), `FREQUENCY` (1), `PER LAP` (2), with `START`/`STOP` state control and guarded frequency setting (`default 1 Hz`, capped `max 5 Hz`).
+  - Event Marker behavior remains manual capture trigger; manual captures still write one-shot snapshot files and optional rolling snapshots per existing toggle.
+  - automatic rolling captures now run only when rolling output is enabled and START is active: FREQUENCY uses capped interval timing; PER LAP reuses existing lap-cross seam and de-duplicates by completed lap number.
+  - added `RESET ROLLING CSV` UI/action path that deletes only `PropertySnapshot_Rolling.csv` (primary + fallback path) with bounded info/warn logging.
+  - preserved existing group filters, select-all sync, rolling wide schema, changed-vs-previous behavior, and one-shot folder semantics.
+
+- 2026-05-18 final tidy: aligned active docs/contracts with Drivers-only identity and renamed Drivers-row counter helpers for clarity.
+  - Active ClassLeader/ClassBest docs now describe `DriverInfo.Drivers##` identity seams only (no CompetingDrivers fallback contract).
+  - Renamed denominator support helpers to `CountValidDriversRowsExcludingPaceCar` / `CountPlayerClassDriversRowsExcludingPaceCar` to match current `Drivers##` data source usage.
+
+- 2026-05-18 PR follow-up: removed remaining `DriverInfo.CompetingDrivers` runtime reliance and hardened native class-match identity for denominator fallback.
+  - Race and League denominator support paths now consume `DriverInfo.Drivers##` only (including roster count, CarSA class-rank map source, identity and driver-info resolution helpers, and class-short resolution fallback).
+  - `GetNativePlayerClassDriverCount()` now matches by native class ID (`PlayerCarClassID`/`DriverCarClassID` + row `CarClassID`) with class-name fallback, reducing short-name/id mismatch zero-count risk.
+
+- 2026-05-18: League race class denominator source corrected to strict `DriverInfo.Drivers##` subclass cohort for League ON.
+  - `GetLeagueClassPlayerDriverCount()` and `ResolveCanonicalPlayerClassRaceDenominator()` support paths now use strict current-session `DriverInfo.Drivers##` row scanning/resolution for League subclass counts (pace-car excluded), with no CSV membership fallback as race denominator authority.
+  - `Race.PlayerClassFieldSize` / `RaceFinish.PlayerClassFieldSize` canonical seam now uses strict League subclass count when available, else native/session fallback only; RaceDenom hot-path logging remains bounded without full roster recount.
+
+- 2026-05-18: Fixed League subclass diagnostic row scan fallback identity coverage and removed RaceDenom hot-path recount.
+  - `GetLeagueClassPlayerDriverCount()` no longer rejects rows before reading fallback identity fields (`UserNameRaw` / `UserNameProcessed`), and now counts valid rows when any usable identity (`UserID`, `UserName`, `CarIdx`, `CarNumber`) is present; pace-car exclusion and bounded diagnostics retained.
+  - `LogRaceDenominatorResolution()` no longer calls `GetLeagueClassPlayerDriverCount()`; removed misleading `csvDriverCount` payload to avoid per-tick full roster recount from RaceDenom diagnostics.
+
+- 2026-05-17: Added bounded League subclass current-session count diagnostics in `GetLeagueClassPlayerDriverCount()`.
+  - New `[LalaPlugin:LeagueSubclassCount]` log reports session-row vs CSV fallback counts (valid/pace/resolved/matching/unresolved) and emits only when signature changes, to prove whether current-session cohort counting is available or falling back to CSV membership.
+
+- 2026-05-17: Fixed live `Race.PlayerClassFieldSize` attach path to call canonical race denominator helper directly.
+  - Removed the remaining indirection method for live export so League-enabled live publish cannot take a stale/legacy override path; `RaceFinish.PlayerClassFieldSize` freeze path and denominator helper logic unchanged.
+
+- 2026-05-16: Added bounded race denominator branch diagnostics in `LalaLaunch` for `Race.PlayerClassFieldSize` / `RaceFinish.PlayerClassFieldSize` investigation.
+  - New `[LalaPlugin:RaceDenom]` info log emits only when denominator branch/signature/result changes, including branch, league toggle, roster/native/opponent counters, and player native/effective class context.
+- 2026-05-18: Property Snapshot group audit + Codex contract guardrail.
+  - audited Property Snapshot grouping against current `AttachCore`/`AttachVerbose` export surface and inventory/changelog references;
+  - updated snapshot grouping coverage so `Race.*`, `RaceFinish.*`, `ClassBest.*`, and `ClassLeader.*` map into `Car/Opp/H2H` (instead of defaulting to `Raw Debug`);
+  - grouped `Pace.*` and `Surface.*` into `Fuel/Strategy` to keep race-planning fuel/pace observability aligned with existing snapshot semantics;
+  - no export names changed and no runtime subsystem calculations were modified;
+  - added mandatory `CODEX_CONTRACT` rule requiring same-task Property Snapshot review whenever SimHub exports/properties are added/removed/renamed/behavior-changed, with required verification line: `Property Snapshot list reviewed: yes/no, with reason.`
 
 - 2026-05-17: Strategy Planner profile fuel preview stale-label fix + Property Snapshot include alignment.
   - fixed track/profile clear/reload UI refresh so Profile-mode AVG/ECO/MAX preview labels immediately clear to neutral (`-`) when selected profile/track fuel data is missing/cleared, without requiring a Live Snapshot -> Profile toggle.

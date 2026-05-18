@@ -233,6 +233,7 @@ Branch: work
 - `GlobalSettingsView.xaml` `Shift Assist Debug CSV` tooltip explains per-tick diagnostic CSV logging.
 - `GlobalSettingsView.xaml` `Shift Assist Debug Max Hz` textbox tooltip documents valid range (1..60 Hz).
 - `GlobalSettingsView.xaml` `Enable Property Snapshot` toggle writes one CSV snapshot per Event Marker press (when debug mode is enabled), with group checkboxes, optional changed-vs-previous column, and optional rolling combined CSV output.
+- Property Snapshot debug controls now also include rolling mode selector (`MANUAL`/`FREQUENCY`/`PER LAP`), frequency input (used/capped for FREQUENCY mode), and explicit `START`, `STOP`, and `RESET ROLLING CSV` buttons for rolling automation control only.
 
 ## OverviewTabView.xaml
 - Top-level `OVERVIEW` tab is now the plugin landing/front-door page before `STRATEGY`.

@@ -81,6 +81,8 @@ Contract notes:
 - Does not globally force every driver into League mapping when unresolved.
 - Unresolved drivers can remain native.
 - CSV registered class membership is configuration data, not race denominator authority for `Race.PlayerClassFieldSize` / `RaceFinish.PlayerClassFieldSize`; those denominators are current-session cohort/native fallback resolved.
+- Current-session League subclass cohort counting for race denominators is sourced from `DataCorePlugin.GameRawData.SessionData.DriverInfo.Drivers01..Drivers64` rows (not `CompetingDrivers`).
+- League ON denominator fallback rule: if strict current-session subclass count is unavailable/zero, fallback is native/session denominator only; CSV membership is never used as a race/class denominator.
 
 ## 10) Troubleshooting
 - **CSV loaded but driver unresolved:** check identity keys (`UserID`/name path), mode, and class-definition validity.

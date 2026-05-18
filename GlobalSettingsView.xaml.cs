@@ -51,6 +51,21 @@ namespace LaunchPlugin
             SyncPropertySnapshotSelectAllFromGroups();
         }
 
+        private void PropertySnapshotStartRolling_Click(object sender, RoutedEventArgs e)
+        {
+            Plugin?.StartPropertySnapshotRolling();
+        }
+
+        private void PropertySnapshotStopRolling_Click(object sender, RoutedEventArgs e)
+        {
+            Plugin?.StopPropertySnapshotRolling();
+        }
+
+        private void PropertySnapshotResetRollingCsv_Click(object sender, RoutedEventArgs e)
+        {
+            Plugin?.ResetPropertySnapshotRollingCsv();
+        }
+
         private void SyncPropertySnapshotSelectAllFromGroups()
         {
             if (Plugin?.Settings == null)
