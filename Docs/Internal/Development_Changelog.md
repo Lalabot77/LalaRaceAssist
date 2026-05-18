@@ -1,3 +1,8 @@
+- 2026-05-18: Tyre learn Phase 2 corrected persistence landed.
+  - Replaced diagnostic-only all-four tyre learner completion path with corrected persistence to `TireChangeTime` using lock-aware `SaveTireChangeTimeToActiveProfile(...)`.
+  - Preferred correction uses per-wheel clear ordered intervals (`d1/d2/d3`) with median-per-tyre derived model: `(firstClear-start) + 4*medianInterval`; fallback uses fixed-tail `raw+6.0s` only when derived validation fails.
+  - Keeps conservative all-four-only gating, bounded rejection logs, and existing lock semantics (`locked suppress overwrite`, `locked first-fill allowed when no usable stored value`).
+
 - 2026-05-18: PR #737 review bugfix follow-up (hydration holds correctness).
   - ClassLeader/ClassBest identity hold now applies only when the resolved leader/best `CarIdx` is unchanged; car changes clear identity fields to prevent mismatched car-vs-name exports.
   - CarSA class-rank and driver-info cache holds now clear on session-token change (no cross-session hold leakage); same-session hydration holds remain.

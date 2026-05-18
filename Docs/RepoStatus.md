@@ -1,3 +1,7 @@
+- 2026-05-18: Tyre learn Phase 2 corrected persistence validated.
+  - clean all-four candidates now persist corrected tyre service-time (derived median-interval preferred, fixed-tail fallback) instead of diagnostic-only raw candidate handling.
+  - lock-aware save semantics and runtime/profile tyre-time ownership unchanged; accepted logs now explicitly report corrected vs raw method.
+
 - 2026-05-18: PR #737 review bugfix follow-up (hydration holds correctness).
   - ClassLeader/ClassBest identity hold now applies only when the resolved leader/best `CarIdx` is unchanged; car changes clear identity fields to prevent mismatched car-vs-name exports.
   - CarSA class-rank and driver-info cache holds now clear on session-token change (no cross-session hold leakage); same-session hydration holds remain.
