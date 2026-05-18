@@ -1,3 +1,7 @@
+- 2026-05-18: Fixed League subclass diagnostic row scan fallback identity coverage and removed RaceDenom hot-path recount.
+  - `GetLeagueClassPlayerDriverCount()` no longer rejects rows before reading fallback identity fields (`UserNameRaw` / `UserNameProcessed`), and now counts valid rows when any usable identity (`UserID`, `UserName`, `CarIdx`, `CarNumber`) is present; pace-car exclusion and bounded diagnostics retained.
+  - `LogRaceDenominatorResolution()` no longer calls `GetLeagueClassPlayerDriverCount()`; removed misleading `csvDriverCount` payload to avoid per-tick full roster recount from RaceDenom diagnostics.
+
 - 2026-05-17: Added bounded League subclass current-session count diagnostics in `GetLeagueClassPlayerDriverCount()`.
   - New `[LalaPlugin:LeagueSubclassCount]` log reports session-row vs CSV fallback counts (valid/pace/resolved/matching/unresolved) and emits only when signature changes, to prove whether current-session cohort counting is available or falling back to CSV membership.
 

@@ -5745,11 +5745,6 @@ namespace LaunchPlugin
                 {
                     string basePath = $"DataCorePlugin.GameRawData.SessionData.DriverInfo.CompetingDrivers[{i}]";
                     sessionRows++;
-                    if (!IsCompetingDriverRowValid(basePath))
-                    {
-                        continue;
-                    }
-                    validRows++;
                     if (IsDriverRowPaceCar(basePath, i))
                     {
                         paceCars++;
@@ -5761,13 +5756,33 @@ namespace LaunchPlugin
                     string name = ReadCompetingDriverStringWithFallback(basePath, ".UserName");
                     if (string.IsNullOrWhiteSpace(name))
                     {
-                        name = SafeReadStringProperty(basePath + ".UserNameRaw");
+                        name = ReadCompetingDriverStringWithFallback(basePath, ".UserNameRaw");
                     }
                     if (string.IsNullOrWhiteSpace(name))
                     {
-                        name = SafeReadStringProperty(basePath + ".UserNameProcessed");
+                        name = ReadCompetingDriverStringWithFallback(basePath, ".UserNameProcessed");
                     }
-                    if (userId <= 0 && string.IsNullOrWhiteSpace(name)) continue;
+                    string carNumber = ReadCompetingDriverStringWithFallback(basePath, ".CarNumber");
+                    bool hasUsableIdentity = (userId > 0)
+                        || !string.IsNullOrWhiteSpace(name)
+                        || carIdx >= 0
+                        || !string.IsNullOrWhiteSpace(carNumber);
+                    if (!hasUsableIdentity)
+                    {
+                        continue;
+                    }
+
+                    validRows++;
+                    if (userId <= 0 && string.IsNullOrWhiteSpace(name))
+                    {
+                        unresolvedRows++;
+                        if (unresolvedRows <= 3)
+                        {
+                            unresolvedSamples += (unresolvedSamples.Length > 0 ? ", " : string.Empty)
+                                + $"{(carIdx >= 0 ? ("carIdx:" + carIdx.ToString(CultureInfo.InvariantCulture)) : "carIdx:-1")}:{(carNumber ?? string.Empty)}";
+                        }
+                        continue;
+                    }
 
                     bool isPlayerRow = playerCarIdx >= 0 && carIdx == playerCarIdx;
                     if (!isPlayerRow && userId > 0)
@@ -8995,14 +9010,13 @@ namespace LaunchPlugin
         {
             int leagueOn = (Settings?.LeagueClassEnabled == true) ? 1 : 0;
             int gameOpp = SafeReadInt(pluginManager, "DataCorePlugin.GameData.OpponentsCount", int.MinValue);
-            int csvDriverCount = GetLeagueClassPlayerDriverCount();
             string playerNative = ResolvePlayerNativeClassName() ?? string.Empty;
             var playerLeague = ResolveLivePlayerLeagueClassInfo();
             string playerLeagueName = playerLeague.Valid && !string.IsNullOrWhiteSpace(playerLeague.Name) ? playerLeague.Name : string.Empty;
 
             string signature = string.Format(
                 CultureInfo.InvariantCulture,
-                "branch={0}|league={1}|roster={2}|native={3}|gamePlayerClassOpp={4}|telemetryOppInClass={5}|simHubNewDataOppInClass={6}|gameOpp={7}|csvDriverCount={8}|playerNative={9}|playerLeague={10}",
+                "branch={0}|league={1}|roster={2}|native={3}|gamePlayerClassOpp={4}|telemetryOppInClass={5}|simHubNewDataOppInClass={6}|gameOpp={7}|playerNative={8}|playerLeague={9}",
                 branch,
                 leagueOn,
                 rosterCount,
@@ -9011,7 +9025,6 @@ namespace LaunchPlugin
                 telemetryOppInClass,
                 simHubNewDataOppInClass,
                 gameOpp,
-                csvDriverCount,
                 playerNative,
                 playerLeagueName);
 
