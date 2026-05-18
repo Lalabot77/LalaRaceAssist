@@ -1,3 +1,8 @@
+- 2026-05-18: Tyre learning correction instrumentation pass validated (diagnostic-only, save-path unchanged).
+  - Added one compact `[LalaPlugin:Tyre Learn] sample ...` line per clean all-four candidate, reporting raw all-four-clear timing, fixed `+6.0s` correction, derived-tail `+1.0s` correction (when derivable), per-wheel clear offsets, pit service status/flags, stall-exit sample, and pit-stop elapsed sample.
+  - Added per-wheel clear timestamp capture (`LF/RF/LR/RR`) plus first/last clear tracking inside tyre learner runtime state.
+  - Existing accepted/rejected candidate semantics and persisted `TireChangeTime` save basis remain unchanged in this pass.
+
 - 2026-05-17: Strategy Planner profile preview stale-label regression fix validated.
   - Profile-mode AVG/ECO/MAX preview row now clears immediately on missing/deleted track fuel context (no Live Snapshot toggle required).
   - fix is UI-refresh scoped (`PropertyChanged` on profile preview display fields during track-scoped reset); no runtime DATA authority, pit command behavior, or refuel-formula behavior changes.

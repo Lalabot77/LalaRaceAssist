@@ -125,6 +125,7 @@ Scope: Info/Warn logs emitted via `SimHub.Logging.Current.Info(...)` and `SimHub
 - **`[LalaPlugin:Tyre Learn] candidate armed (all four tyres selected).`** — Tyre-time learner armed only when per-wheel tyre MFD flags (`dpLFTireChange/dpRFTireChange/dpLRTireChange/dpRRTireChange`) indicate all four selected.
 - **`[LalaPlugin:Tyre Learn] service start confirmed.`** — Tyre-time learner confirmed in-box service start in valid pit-stall service context.
 - **`[LalaPlugin:Tyre Learn] accepted/persisted tyre change time ...`** — Valid all-four candidate accepted and persisted to car profile `TireChangeTime`.
+- **`[LalaPlugin:Tyre Learn] sample raw=... correctedFixed=... correctedDerived=... tailDerived=... start=... firstClear=... lastClear=... offsets=LF:...,RF:...,LR:...,RR:... stallExit=... pitSvStatus=... pitSvFlags=... pitStopElapsed=...`** — One compact per-candidate diagnostic line for four-tyre samples; compares raw all-four-clear timing with fixed/derived corrected estimates without changing persisted learner behavior.
 - **`[LalaPlugin:Tyre Learn] rejected: ...`** — Candidate rejected for bounded reasons (partial selection, out-of-bounds time, telemetry gap, no profile, or leaving pit before completion).
 - **`[LalaPlugin:Tyre Learn] locked overwrite suppressed ...`** / **`locked first-fill allowed ...`** — Lock guard outcome for `TireChangeTimeLocked` using refuel-like semantics.
 - **`[LalaPlugin:Pit Lite] ...`** — See PitCycleLite section below for entry/exit/out-lap/publish logs.

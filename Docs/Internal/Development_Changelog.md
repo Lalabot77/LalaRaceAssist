@@ -1,3 +1,8 @@
+- 2026-05-18: Tyre learning correction instrumentation pass landed (diagnostic-only).
+  - Added bounded one-line `[LalaPlugin:Tyre Learn] sample ...` diagnostics on clean all-four tyre candidates, including service start, per-wheel clear timestamps/offsets, first/last clear, pit service status/flags snapshots, pit-stop elapsed sample, and corrected-estimate comparisons (`+6.0s` fixed tail and derived-tail `+1.0s` jack allowance when derivable).
+  - Added per-wheel clear timestamp capture within the tyre learner state machine for LF/RF/LR/RR clear events.
+  - Persisted tyre-time learner save path remains unchanged (existing accepted candidate still uses raw all-four-clear timing in this pass).
+
 - 2026-05-17: Strategy Planner profile fuel preview stale-label fix + Property Snapshot include alignment.
   - fixed track/profile clear/reload UI refresh so Profile-mode AVG/ECO/MAX preview labels immediately clear to neutral (`-`) when selected profile/track fuel data is missing/cleared, without requiring a Live Snapshot -> Profile toggle.
   - root cause: `ResetTrackScopedProfileData()` reset display fields but did not raise `PropertyChanged` for `ProfileAvgFuelDisplay`/related AVG row bindings, allowing stale text to remain until a later mode-driven refresh.

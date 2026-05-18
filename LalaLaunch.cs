@@ -6332,6 +6332,18 @@ namespace LaunchPlugin
         private TyreLearnState _tyreLearnState = TyreLearnState.Idle;
         private double _tyreLearnStartSessionTimeSec = 0.0;
         private string _tyreLearnLastProfileName = string.Empty;
+        private double _tyreLearnLfClearSessionTimeSec = 0.0;
+        private double _tyreLearnRfClearSessionTimeSec = 0.0;
+        private double _tyreLearnLrClearSessionTimeSec = 0.0;
+        private double _tyreLearnRrClearSessionTimeSec = 0.0;
+        private double _tyreLearnFirstClearSessionTimeSec = 0.0;
+        private double _tyreLearnLastClearSessionTimeSec = 0.0;
+        private bool _tyreLearnPrevLfSelected = false;
+        private bool _tyreLearnPrevRfSelected = false;
+        private bool _tyreLearnPrevLrSelected = false;
+        private bool _tyreLearnPrevRrSelected = false;
+        private const double TyreLearnFixedTailSeconds = 6.0;
+        private const double TyreLearnDerivedJackAllowanceSeconds = 1.0;
         private const double TyreLearnMinSeconds = 5.0;
         private const double TyreLearnMaxSeconds = 60.0;
 
@@ -9345,6 +9357,7 @@ namespace LaunchPlugin
             _tyreLearnState = TyreLearnState.Idle;
             _tyreLearnStartSessionTimeSec = 0.0;
             _tyreLearnLastProfileName = string.Empty;
+            ResetTyreLearnTimingSamples();
 
             FuelCalculator?.ForceProfileDataReload();
 
@@ -10680,6 +10693,7 @@ namespace LaunchPlugin
             {
                 _tyreLearnState = TyreLearnState.Idle;
                 _tyreLearnStartSessionTimeSec = 0.0;
+                ResetTyreLearnTimingSamples();
             }
             _tyreLearnLastProfileName = activeProfileName;
 
@@ -10688,12 +10702,17 @@ namespace LaunchPlugin
                 SimHub.Logging.Current.Info("[LalaPlugin:Tyre Learn] rejected: left pit before completion.");
                 _tyreLearnState = TyreLearnState.Idle;
                 _tyreLearnStartSessionTimeSec = 0.0;
+                ResetTyreLearnTimingSamples();
             }
             else if (_tyreLearnState == TyreLearnState.Idle)
             {
                 if (inPitRoadNow && allFourSelected)
                 {
                     _tyreLearnState = TyreLearnState.Armed;
+                    _tyreLearnPrevLfSelected = tyreLf ?? false;
+                    _tyreLearnPrevRfSelected = tyreRf ?? false;
+                    _tyreLearnPrevLrSelected = tyreLr ?? false;
+                    _tyreLearnPrevRrSelected = tyreRr ?? false;
                     SimHub.Logging.Current.Info("[LalaPlugin:Tyre Learn] candidate armed (all four tyres selected).");
                 }
             }
@@ -10703,11 +10722,18 @@ namespace LaunchPlugin
                 {
                     SimHub.Logging.Current.Info("[LalaPlugin:Tyre Learn] rejected: partial tyre selection before service start.");
                     _tyreLearnState = TyreLearnState.Idle;
+                    _tyreLearnStartSessionTimeSec = 0.0;
+                    ResetTyreLearnTimingSamples();
                 }
                 else if (inPitBoxServiceContext)
                 {
                     _tyreLearnStartSessionTimeSec = sessionTime;
                     _tyreLearnState = TyreLearnState.ServiceStarted;
+                    ResetTyreLearnTimingSamples();
+                    _tyreLearnPrevLfSelected = tyreLf ?? false;
+                    _tyreLearnPrevRfSelected = tyreRf ?? false;
+                    _tyreLearnPrevLrSelected = tyreLr ?? false;
+                    _tyreLearnPrevRrSelected = tyreRr ?? false;
                     SimHub.Logging.Current.Info("[LalaPlugin:Tyre Learn] service start confirmed.");
                 }
             }
@@ -10718,10 +10744,35 @@ namespace LaunchPlugin
                     SimHub.Logging.Current.Info("[LalaPlugin:Tyre Learn] rejected: telemetry gap on tyre flags.");
                     _tyreLearnState = TyreLearnState.Idle;
                     _tyreLearnStartSessionTimeSec = 0.0;
+                    ResetTyreLearnTimingSamples();
                 }
                 else if (allFourCleared)
                 {
                     double candidateSec = Math.Max(0.0, sessionTime - _tyreLearnStartSessionTimeSec);
+                    double? pitStopElapsedSec = _pit?.PitStopElapsedSec;
+                    int pitSvStatus = TryReadNullableInt(pluginManager.GetPropertyValue("DataCorePlugin.GameRawData.Telemetry.PlayerCarPitSvStatus")) ?? -1;
+                    int pitSvFlags = TryReadNullableInt(pluginManager.GetPropertyValue("DataCorePlugin.GameRawData.Telemetry.PlayerCarPitSvFlags")) ?? -1;
+                    double firstClear = _tyreLearnFirstClearSessionTimeSec > 0.0 ? _tyreLearnFirstClearSessionTimeSec : sessionTime;
+                    double lastClear = _tyreLearnLastClearSessionTimeSec > 0.0 ? _tyreLearnLastClearSessionTimeSec : sessionTime;
+                    double rawSec = candidateSec;
+                    double correctedFixedSec = rawSec + TyreLearnFixedTailSeconds;
+                    double? derivedTailSec = null;
+                    if (_tyreLearnLfClearSessionTimeSec > 0.0 && _tyreLearnRfClearSessionTimeSec > 0.0 && _tyreLearnLrClearSessionTimeSec > 0.0 && _tyreLearnRrClearSessionTimeSec > 0.0)
+                    {
+                        double[] clears = new[] { _tyreLearnLfClearSessionTimeSec, _tyreLearnRfClearSessionTimeSec, _tyreLearnLrClearSessionTimeSec, _tyreLearnRrClearSessionTimeSec };
+                        Array.Sort(clears);
+                        double a = Math.Max(0.0, clears[1] - clears[0]);
+                        double b = Math.Max(0.0, clears[2] - clears[1]);
+                        double c = Math.Max(0.0, clears[3] - clears[2]);
+                        derivedTailSec = (a + b + c) / 3.0;
+                    }
+                    string derivedTailText = derivedTailSec.HasValue ? derivedTailSec.Value.ToString("F1", CultureInfo.InvariantCulture) : "NA";
+                    string correctedDerivedText = derivedTailSec.HasValue
+                        ? (rawSec + derivedTailSec.Value + TyreLearnDerivedJackAllowanceSeconds).ToString("F1", CultureInfo.InvariantCulture)
+                        : "NA";
+                    string stallExitText = inPitStallNow ? "NA" : sessionTime.ToString("F2", CultureInfo.InvariantCulture);
+                    SimHub.Logging.Current.Info(
+                        $"[LalaPlugin:Tyre Learn] sample raw={rawSec:F1}s correctedFixed={correctedFixedSec:F1}s correctedDerived={correctedDerivedText}s tailDerived={derivedTailText}s start={_tyreLearnStartSessionTimeSec:F2} firstClear={firstClear:F2} lastClear={lastClear:F2} offsets=LF:{(_tyreLearnLfClearSessionTimeSec - _tyreLearnStartSessionTimeSec):F2},RF:{(_tyreLearnRfClearSessionTimeSec - _tyreLearnStartSessionTimeSec):F2},LR:{(_tyreLearnLrClearSessionTimeSec - _tyreLearnStartSessionTimeSec):F2},RR:{(_tyreLearnRrClearSessionTimeSec - _tyreLearnStartSessionTimeSec):F2} stallExit={stallExitText} pitSvStatus={pitSvStatus} pitSvFlags={pitSvFlags} pitStopElapsed={(pitStopElapsedSec.HasValue ? pitStopElapsedSec.Value.ToString(\"F2\", CultureInfo.InvariantCulture) : \"NA\")}");
                     if (candidateSec <= TyreLearnMinSeconds || candidateSec > TyreLearnMaxSeconds)
                     {
                         SimHub.Logging.Current.Info($"[LalaPlugin:Tyre Learn] rejected: candidate out of bounds ({candidateSec:F1}s).");
@@ -10746,6 +10797,48 @@ namespace LaunchPlugin
 
                     _tyreLearnState = TyreLearnState.Idle;
                     _tyreLearnStartSessionTimeSec = 0.0;
+                    ResetTyreLearnTimingSamples();
+                }
+                else
+                {
+                    if (_tyreLearnPrevLfSelected && !tyreLf.Value)
+                    {
+                        _tyreLearnLfClearSessionTimeSec = sessionTime;
+                    }
+                    if (_tyreLearnPrevRfSelected && !tyreRf.Value)
+                    {
+                        _tyreLearnRfClearSessionTimeSec = sessionTime;
+                    }
+                    if (_tyreLearnPrevLrSelected && !tyreLr.Value)
+                    {
+                        _tyreLearnLrClearSessionTimeSec = sessionTime;
+                    }
+                    if (_tyreLearnPrevRrSelected && !tyreRr.Value)
+                    {
+                        _tyreLearnRrClearSessionTimeSec = sessionTime;
+                    }
+
+                    if (_tyreLearnFirstClearSessionTimeSec <= 0.0)
+                    {
+                        double firstSeen = 0.0;
+                        if (_tyreLearnLfClearSessionTimeSec > 0.0) firstSeen = _tyreLearnLfClearSessionTimeSec;
+                        if (_tyreLearnRfClearSessionTimeSec > 0.0) firstSeen = firstSeen <= 0.0 ? _tyreLearnRfClearSessionTimeSec : Math.Min(firstSeen, _tyreLearnRfClearSessionTimeSec);
+                        if (_tyreLearnLrClearSessionTimeSec > 0.0) firstSeen = firstSeen <= 0.0 ? _tyreLearnLrClearSessionTimeSec : Math.Min(firstSeen, _tyreLearnLrClearSessionTimeSec);
+                        if (_tyreLearnRrClearSessionTimeSec > 0.0) firstSeen = firstSeen <= 0.0 ? _tyreLearnRrClearSessionTimeSec : Math.Min(firstSeen, _tyreLearnRrClearSessionTimeSec);
+                        _tyreLearnFirstClearSessionTimeSec = firstSeen;
+                    }
+
+                    double lastSeen = 0.0;
+                    if (_tyreLearnLfClearSessionTimeSec > 0.0) lastSeen = Math.Max(lastSeen, _tyreLearnLfClearSessionTimeSec);
+                    if (_tyreLearnRfClearSessionTimeSec > 0.0) lastSeen = Math.Max(lastSeen, _tyreLearnRfClearSessionTimeSec);
+                    if (_tyreLearnLrClearSessionTimeSec > 0.0) lastSeen = Math.Max(lastSeen, _tyreLearnLrClearSessionTimeSec);
+                    if (_tyreLearnRrClearSessionTimeSec > 0.0) lastSeen = Math.Max(lastSeen, _tyreLearnRrClearSessionTimeSec);
+                    _tyreLearnLastClearSessionTimeSec = lastSeen;
+
+                    _tyreLearnPrevLfSelected = tyreLf.Value;
+                    _tyreLearnPrevRfSelected = tyreRf.Value;
+                    _tyreLearnPrevLrSelected = tyreLr.Value;
+                    _tyreLearnPrevRrSelected = tyreRr.Value;
                 }
             }
 
@@ -18372,6 +18465,20 @@ namespace LaunchPlugin
             double tireTime = GetEffectiveTireChangeTimeSeconds();
             double modeledServiceSec = Math.Max(fuelTime, tireTime);
             return modeledServiceSec + PitBoxModeledServiceOverheadSeconds;
+        }
+
+        private void ResetTyreLearnTimingSamples()
+        {
+            _tyreLearnLfClearSessionTimeSec = 0.0;
+            _tyreLearnRfClearSessionTimeSec = 0.0;
+            _tyreLearnLrClearSessionTimeSec = 0.0;
+            _tyreLearnRrClearSessionTimeSec = 0.0;
+            _tyreLearnFirstClearSessionTimeSec = 0.0;
+            _tyreLearnLastClearSessionTimeSec = 0.0;
+            _tyreLearnPrevLfSelected = false;
+            _tyreLearnPrevRfSelected = false;
+            _tyreLearnPrevLrSelected = false;
+            _tyreLearnPrevRrSelected = false;
         }
 
         private double CalculatePitBoxRepairRemainingSeconds()
