@@ -13747,8 +13747,15 @@ namespace LaunchPlugin
                 return;
             }
 
-            WritePropertySnapshotCsv(sessionTimeSec, includeOneShot: false, includeRolling: true, captureReason: "auto-perlap", detailedLogs: false);
-            _propertySnapshotLastLapCaptured = completedLaps;
+            try
+            {
+                WritePropertySnapshotCsv(sessionTimeSec, includeOneShot: false, includeRolling: true, captureReason: "auto-perlap", detailedLogs: false);
+                _propertySnapshotLastLapCaptured = completedLaps;
+            }
+            catch (Exception ex)
+            {
+                SimHub.Logging.Current.Warn($"[LalaPlugin:Debug] Property snapshot per-lap export failed for completed lap {completedLaps}: {ex.Message}");
+            }
         }
 
         private void WritePropertySnapshotCsv(double sessionTimeSec, bool includeOneShot, bool includeRolling, string captureReason, bool detailedLogs)

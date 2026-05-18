@@ -8,6 +8,10 @@
   - `savedNow` in diagnostics now prefers persisted profile value first, then runtime fallback, with invalid values sanitized to `0.0`.
   - Added per-wheel clear timestamp capture (`LF/RF/LR/RR`) plus first/last clear tracking inside tyre learner runtime state.
   - Candidate detection/state-machine shape and reject-path semantics remain unchanged; only diagnostic context/safety behavior changed.
+- 2026-05-18: PR #736 review follow-up hardened Property Snapshot PER LAP write path with local exception guard.
+  - wrapped `MaybeWritePropertySnapshotPerLap(...)` rolling write in `try/catch` and downgraded write failures to bounded warning logging, preserving lap-tick processing continuity and existing manual/frequency error-handling behavior.
+
+
 - 2026-05-18: Property Snapshot rolling automation hardening validated (PR #736 follow-up).
   - automation active state no longer persists across restart/reload (runtime-only + persisted flag clear-on-init).
   - START now refuses to arm unless Soft Debug + Property Snapshot + Rolling CSV toggles are all enabled.
