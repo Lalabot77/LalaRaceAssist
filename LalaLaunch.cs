@@ -5729,132 +5729,132 @@ namespace LaunchPlugin
             var player = ResolveLivePlayerLeagueClassInfo();
             if ((Settings?.LeagueClassEnabled == true) && player.Valid && !string.IsNullOrWhiteSpace(player.Name))
             {
-                int count = 0;
-                int sessionRows = 0;
-                int validRows = 0;
-                int paceCars = 0;
-                int resolvedRows = 0;
-                int unresolvedRows = 0;
-                int playerCarIdx = ResolveLivePlayerCarIdxForLeagueCount();
-                int? playerUserId;
-                string playerName;
-                TryGetLivePlayerIdentityPreview(out playerUserId, out playerName);
-                string matchSamples = string.Empty;
-                string unresolvedSamples = string.Empty;
-                for (int i = 0; i < 64; i++)
+                int strictCount;
+                if (TryCountCurrentSessionLeagueSubclassFromDrivers(player, out strictCount))
                 {
-                    string basePath = $"DataCorePlugin.GameRawData.SessionData.DriverInfo.CompetingDrivers[{i}]";
-                    sessionRows++;
-                    if (IsDriverRowPaceCar(basePath, i))
-                    {
-                        paceCars++;
-                        continue;
-                    }
-
-                    int carIdx = ReadCompetingDriverIntWithFallback(basePath, ".CarIdx", -1);
-                    int userId = ReadCompetingDriverIntWithFallback(basePath, ".UserID");
-                    string name = ReadCompetingDriverStringWithFallback(basePath, ".UserName");
-                    if (string.IsNullOrWhiteSpace(name))
-                    {
-                        name = ReadCompetingDriverStringWithFallback(basePath, ".UserNameRaw");
-                    }
-                    if (string.IsNullOrWhiteSpace(name))
-                    {
-                        name = ReadCompetingDriverStringWithFallback(basePath, ".UserNameProcessed");
-                    }
-                    string carNumber = ReadCompetingDriverStringWithFallback(basePath, ".CarNumber");
-                    bool hasUsableIdentity = (userId > 0)
-                        || !string.IsNullOrWhiteSpace(name)
-                        || carIdx >= 0
-                        || !string.IsNullOrWhiteSpace(carNumber);
-                    if (!hasUsableIdentity)
-                    {
-                        continue;
-                    }
-
-                    validRows++;
-                    if (userId <= 0 && string.IsNullOrWhiteSpace(name))
-                    {
-                        unresolvedRows++;
-                        if (unresolvedRows <= 3)
-                        {
-                            unresolvedSamples += (unresolvedSamples.Length > 0 ? ", " : string.Empty)
-                                + $"{(carIdx >= 0 ? ("carIdx:" + carIdx.ToString(CultureInfo.InvariantCulture)) : "carIdx:-1")}:{(carNumber ?? string.Empty)}";
-                        }
-                        continue;
-                    }
-
-                    bool isPlayerRow = playerCarIdx >= 0 && carIdx == playerCarIdx;
-                    if (!isPlayerRow && userId > 0)
-                    {
-                        int? fallbackPlayerUserId;
-                        TryGetLivePlayerIdentityPreview(out fallbackPlayerUserId, out _);
-
-                        isPlayerRow = fallbackPlayerUserId.HasValue
-                            && fallbackPlayerUserId.Value > 0
-                            && fallbackPlayerUserId.Value == userId;
-                    }
-
-                    EffectiveRaceClassInfo info = isPlayerRow
-                        ? ResolveLivePlayerLeagueClassInfo()
-                        : ResolveLeagueClassDriverInfo(userId > 0 ? (int?)userId : null, name);
-
-                    if (!info.Valid || string.IsNullOrWhiteSpace(info.Name))
-                    {
-                        unresolvedRows++;
-                        if (unresolvedRows <= 3)
-                        {
-                            unresolvedSamples += (unresolvedSamples.Length > 0 ? ", " : string.Empty)
-                                + $"{(userId > 0 ? userId.ToString(CultureInfo.InvariantCulture) : "0")}:{(name ?? string.Empty)}";
-                        }
-                        continue;
-                    }
-
-                    resolvedRows++;
-                    if (string.Equals(info.Name, player.Name, StringComparison.OrdinalIgnoreCase))
-                    {
-                        count++;
-                        if (count <= 3)
-                        {
-                            matchSamples += (matchSamples.Length > 0 ? ", " : string.Empty)
-                                + $"{(userId > 0 ? userId.ToString(CultureInfo.InvariantCulture) : "0")}:{(name ?? string.Empty)}";
-                        }
-                    }
+                    return strictCount;
                 }
 
-                if (count > 0)
-                {
-                    LogLeagueSubclassCountDiagnostics(player.Name, playerUserId, sessionRows, validRows, paceCars, resolvedRows, count, 0, unresolvedRows, matchSamples, unresolvedSamples, "session_rows");
-                    return count;
-                }
-
-                // Fallback path: when live competing-driver identity rows are unavailable,
-                // still provide player effective-class cohort size from valid CSV mappings.
-                var mode = (LeagueClassMode)(Settings?.LeagueClassMode ?? (int)LeagueClassMode.Disabled);
-                bool allowCsvFallback = mode == LeagueClassMode.CsvOnly || mode == LeagueClassMode.CsvThenName;
-                if (!allowCsvFallback)
-                {
-                    return 0;
-                }
-
-                int csvClassCount = _leagueClassResolver != null
-                    ? _leagueClassResolver.CountValidCsvDriversInClass(Settings, player.Name)
-                    : 0;
-                bool playerAlreadyRepresentedInCsv = _leagueClassResolver != null
-                    && _leagueClassResolver.HasValidCsvMembership(Settings, playerUserId, player.Name);
-
-                // Preserve live-path cohort semantics: player is part of their own effective cohort,
-                // but only when CSV fallback semantics are active for the current mode.
-                if (!playerAlreadyRepresentedInCsv)
-                {
-                    csvClassCount += 1;
-                }
-
-                LogLeagueSubclassCountDiagnostics(player.Name, playerUserId, sessionRows, validRows, paceCars, resolvedRows, 0, csvClassCount, unresolvedRows, matchSamples, unresolvedSamples, "csv_fallback");
-                return csvClassCount > 0 ? csvClassCount : 0;
+                return 0;
             }
 
             return GetNativePlayerClassDriverCount();
+        }
+
+        private bool TryCountCurrentSessionLeagueSubclassFromDrivers(EffectiveRaceClassInfo player, out int strictCount)
+        {
+            strictCount = 0;
+            if (player == null || !player.Valid || string.IsNullOrWhiteSpace(player.Name))
+            {
+                LogLeagueSubclassCountDiagnostics(string.Empty, null, 0, 0, 0, 0, 0, 0, 0, string.Empty, "player_unresolved", "drivers_rows");
+                return false;
+            }
+
+            int count = 0;
+            int sessionRows = 0;
+            int validRows = 0;
+            int paceCars = 0;
+            int resolvedRows = 0;
+            int unresolvedRows = 0;
+            int playerCarIdx = ResolveLivePlayerCarIdxForLeagueCount();
+            int? playerUserId;
+            string playerName;
+            TryGetLivePlayerIdentityPreview(out playerUserId, out playerName);
+            string matchSamples = string.Empty;
+            string unresolvedSamples = string.Empty;
+
+            for (int i = 1; i <= 64; i++)
+            {
+                string basePath = $"DataCorePlugin.GameRawData.SessionData.DriverInfo.Drivers{i:00}";
+                sessionRows++;
+                if (IsDriversRowPaceCar(basePath))
+                {
+                    paceCars++;
+                    continue;
+                }
+
+                int carIdx = SafeReadIntProperty(basePath + ".CarIdx", -1);
+                int userId = SafeReadIntProperty(basePath + ".UserID");
+                if (userId <= 0)
+                {
+                    userId = SafeReadIntProperty(basePath + ".CustomerId");
+                }
+                if (userId <= 0)
+                {
+                    userId = SafeReadIntProperty(basePath + ".CustomerID");
+                }
+                string name = SafeReadStringProperty(basePath + ".UserName");
+                if (string.IsNullOrWhiteSpace(name))
+                {
+                    name = SafeReadStringProperty(basePath + ".AbbrevName");
+                }
+                string carNumber = SafeReadStringProperty(basePath + ".CarNumber");
+
+                bool hasUsableIdentity = userId > 0 || !string.IsNullOrWhiteSpace(name) || carIdx >= 0 || !string.IsNullOrWhiteSpace(carNumber);
+                if (!hasUsableIdentity)
+                {
+                    continue;
+                }
+
+                validRows++;
+                if (userId <= 0 && string.IsNullOrWhiteSpace(name))
+                {
+                    unresolvedRows++;
+                    if (unresolvedRows <= 3)
+                    {
+                        unresolvedSamples += (unresolvedSamples.Length > 0 ? ", " : string.Empty)
+                            + $"{(carIdx >= 0 ? ("carIdx:" + carIdx.ToString(CultureInfo.InvariantCulture)) : "carIdx:-1")}:{(carNumber ?? string.Empty)}";
+                    }
+                    continue;
+                }
+
+                bool isPlayerRow = playerCarIdx >= 0 && carIdx == playerCarIdx;
+                if (!isPlayerRow && userId > 0 && playerUserId.HasValue && playerUserId.Value > 0)
+                {
+                    isPlayerRow = playerUserId.Value == userId;
+                }
+
+                EffectiveRaceClassInfo info = isPlayerRow
+                    ? player
+                    : ResolveLeagueClassDriverInfo(userId > 0 ? (int?)userId : null, name);
+
+                if (!info.Valid || string.IsNullOrWhiteSpace(info.Name))
+                {
+                    unresolvedRows++;
+                    if (unresolvedRows <= 3)
+                    {
+                        unresolvedSamples += (unresolvedSamples.Length > 0 ? ", " : string.Empty)
+                            + $"{(userId > 0 ? userId.ToString(CultureInfo.InvariantCulture) : "0")}:{(name ?? string.Empty)}";
+                    }
+                    continue;
+                }
+
+                resolvedRows++;
+                if (string.Equals(info.Name, player.Name, StringComparison.OrdinalIgnoreCase))
+                {
+                    count++;
+                    if (count <= 3)
+                    {
+                        matchSamples += (matchSamples.Length > 0 ? ", " : string.Empty)
+                            + $"{(userId > 0 ? userId.ToString(CultureInfo.InvariantCulture) : "0")}:{(name ?? string.Empty)}";
+                    }
+                }
+            }
+
+            LogLeagueSubclassCountDiagnostics(player.Name, playerUserId, sessionRows, validRows, paceCars, resolvedRows, count, 0, unresolvedRows, matchSamples, unresolvedSamples, count > 0 ? "strict_match" : "strict_no_match", "drivers_rows");
+            strictCount = count;
+            return count > 0;
+        }
+
+        private bool IsDriversRowPaceCar(string driversBasePath)
+        {
+            if (SafeReadBool(PluginManager, driversBasePath + ".IsPaceCar", false))
+            {
+                return true;
+            }
+
+            string userName = SafeReadStringProperty(driversBasePath + ".UserName");
+            return string.Equals((userName ?? string.Empty).Trim(), "Pace Car", StringComparison.OrdinalIgnoreCase);
         }
 
         private void LogLeagueSubclassCountDiagnostics(
@@ -5869,11 +5869,13 @@ namespace LaunchPlugin
             int unresolvedRows,
             string sampleMatches,
             string sampleUnresolved,
-            string source)
+            string source,
+            string rowSource)
         {
             string signature = string.Format(
                 CultureInfo.InvariantCulture,
-                "playerClass={0}|playerUserId={1}|sessionRows={2}|validRows={3}|paceCars={4}|resolvedRows={5}|matchingRows={6}|csvRegisteredClassCount={7}|unresolvedRows={8}|source={9}",
+                "rowSource={0}|playerClass={1}|playerUserId={2}|sessionRows={3}|validRows={4}|paceCars={5}|resolvedRows={6}|matchingRows={7}|csvRegisteredClassCount={8}|unresolvedRows={9}|source={10}",
+                rowSource ?? string.Empty,
                 playerClassName ?? string.Empty,
                 playerUserId.HasValue ? playerUserId.Value.ToString(CultureInfo.InvariantCulture) : "0",
                 sessionRows,
@@ -5892,7 +5894,7 @@ namespace LaunchPlugin
 
             _leagueSubclassCountDebugSignature = signature;
             SimHub.Logging.Current.Info(
-                $"[LalaPlugin:LeagueSubclassCount] playerClass='{playerClassName ?? string.Empty}' playerUserId={(playerUserId ?? 0)} sessionRows={sessionRows} validRows={validRows} paceCars={paceCars} resolvedRows={resolvedRows} matchingRows={matchingRows} csvRegisteredClassCount={csvRegisteredClassCount} unresolvedRows={unresolvedRows} source={source} sampleMatches='{sampleMatches ?? string.Empty}' sampleUnresolved='{sampleUnresolved ?? string.Empty}'");
+                $"[LalaPlugin:LeagueSubclassCount] source={source} rowSource={rowSource} playerClass='{playerClassName ?? string.Empty}' playerUserId={(playerUserId ?? 0)} sessionRows={sessionRows} validRows={validRows} paceCars={paceCars} resolvedRows={resolvedRows} matchingRows={matchingRows} csvRegisteredClassCount={csvRegisteredClassCount} unresolvedRows={unresolvedRows} sampleMatches='{sampleMatches ?? string.Empty}' sampleUnresolved='{sampleUnresolved ?? string.Empty}'");
         }
 
         private int GetNativePlayerClassDriverCount()
@@ -5905,12 +5907,18 @@ namespace LaunchPlugin
             if (string.IsNullOrWhiteSpace(playerClass)) return 0;
 
             int count = 0;
-            for (int i = 0; i < 64; i++)
+            for (int i = 1; i <= 64; i++)
             {
-                string cls = SafeReadStringProperty($"DataCorePlugin.GameRawData.SessionData.DriverInfo.CompetingDrivers[{i}].CarClassShortName");
+                string basePath = $"DataCorePlugin.GameRawData.SessionData.DriverInfo.Drivers{i:00}";
+                if (IsDriversRowPaceCar(basePath))
+                {
+                    continue;
+                }
+
+                string cls = SafeReadStringProperty(basePath + ".CarClassShortName");
                 if (string.IsNullOrWhiteSpace(cls))
                 {
-                    cls = SafeReadStringProperty($"DataCorePlugin.GameRawData.SessionData.DriverInfo.CompetingDrivers[{i}].CarClassName");
+                    cls = SafeReadStringProperty(basePath + ".CarClassName");
                 }
                 if (!string.IsNullOrWhiteSpace(cls) && string.Equals(cls, playerClass, StringComparison.OrdinalIgnoreCase))
                 {
@@ -9060,63 +9068,12 @@ namespace LaunchPlugin
         {
             var player = ResolveLivePlayerLeagueClassInfo();
             bool useLeagueClass = (Settings?.LeagueClassEnabled == true) && player.Valid && !string.IsNullOrWhiteSpace(player.Name);
-            string playerNativeClass = useLeagueClass ? string.Empty : ResolvePlayerNativeClassName();
-            if (!useLeagueClass && string.IsNullOrWhiteSpace(playerNativeClass))
+            if (useLeagueClass)
             {
-                return 0;
+                return GetLeagueClassPlayerDriverCount();
             }
 
-            int count = 0;
-            int playerCarIdx = ResolveLivePlayerCarIdxForLeagueCount();
-            int? fallbackPlayerUserId;
-            string _;
-            TryGetLivePlayerIdentityPreview(out fallbackPlayerUserId, out _);
-
-            for (int i = 0; i < 64; i++)
-            {
-                string basePath = GetCompetingDriverBasePath(i);
-                if (!IsCompetingDriverRowValid(basePath) || IsDriverRowPaceCar(basePath, i))
-                {
-                    continue;
-                }
-
-                if (useLeagueClass)
-                {
-                    int carIdx = SafeReadIntProperty(basePath + ".CarIdx", -1);
-                    int userId = SafeReadIntProperty(basePath + ".UserID");
-                    string name = SafeReadStringProperty(basePath + ".UserName");
-                    bool isPlayerRow = playerCarIdx >= 0 && carIdx == playerCarIdx;
-                    if (!isPlayerRow && userId > 0 && fallbackPlayerUserId.HasValue && fallbackPlayerUserId.Value > 0)
-                    {
-                        isPlayerRow = fallbackPlayerUserId.Value == userId;
-                    }
-
-                    EffectiveRaceClassInfo info = isPlayerRow
-                        ? ResolveLivePlayerLeagueClassInfo()
-                        : ResolveLeagueClassDriverInfo(userId > 0 ? (int?)userId : null, name);
-
-                    if (info.Valid && !string.IsNullOrWhiteSpace(info.Name)
-                        && string.Equals(info.Name, player.Name, StringComparison.OrdinalIgnoreCase))
-                    {
-                        count++;
-                    }
-                }
-                else
-                {
-                    string rowClassShort = ReadCompetingDriverStringWithFallback(basePath, ".CarClassShortName");
-                    string rowClassName = ReadCompetingDriverStringWithFallback(basePath, ".CarClassName");
-                    bool classMatch =
-                        (!string.IsNullOrWhiteSpace(rowClassShort) && string.Equals(rowClassShort, playerNativeClass, StringComparison.OrdinalIgnoreCase)) ||
-                        (!string.IsNullOrWhiteSpace(rowClassName) && string.Equals(rowClassName, playerNativeClass, StringComparison.OrdinalIgnoreCase)) ||
-                        IsSingleNativeClassRoster();
-                    if (classMatch)
-                    {
-                        count++;
-                    }
-                }
-            }
-
-            return count;
+            return GetNativePlayerClassDriverCount();
         }
 
         private bool IsCompetingDriverRowValid(string basePath)

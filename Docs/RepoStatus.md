@@ -1,3 +1,7 @@
+- 2026-05-18: League race class denominator source corrected to strict `DriverInfo.Drivers##` subclass cohort for League ON.
+  - `GetLeagueClassPlayerDriverCount()` and `ResolveCanonicalPlayerClassRaceDenominator()` support paths now use strict current-session `DriverInfo.Drivers##` row scanning/resolution for League subclass counts (pace-car excluded), with no CSV membership fallback as race denominator authority.
+  - `Race.PlayerClassFieldSize` / `RaceFinish.PlayerClassFieldSize` canonical seam now uses strict League subclass count when available, else native/session fallback only; RaceDenom hot-path logging remains bounded without full roster recount.
+
 - 2026-05-18: Fixed League subclass diagnostic row scan fallback identity coverage and removed RaceDenom hot-path recount.
   - `GetLeagueClassPlayerDriverCount()` no longer rejects rows before reading fallback identity fields (`UserNameRaw` / `UserNameProcessed`), and now counts valid rows when any usable identity (`UserID`, `UserName`, `CarIdx`, `CarNumber`) is present; pace-car exclusion and bounded diagnostics retained.
   - `LogRaceDenominatorResolution()` no longer calls `GetLeagueClassPlayerDriverCount()`; removed misleading `csvDriverCount` payload to avoid per-tick full roster recount from RaceDenom diagnostics.
