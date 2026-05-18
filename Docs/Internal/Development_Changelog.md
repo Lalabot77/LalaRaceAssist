@@ -1,3 +1,8 @@
+- 2026-05-18: Tyre learn corrected persistence jack/drop allowance tuning landed.
+  - Added `TyreLearnJackDropAllowanceSeconds=1.0` to corrected tyre learner outputs so persisted full-service estimates include observed post-service jack/drop release transition.
+  - Derived path now computes `(firstClear-start) + 4*medianInterval + 1.0`; fixed-tail fallback now computes `raw + 6.0 + 1.0` when derived validation fails.
+  - Existing bounds (>5s and <=60s), lock semantics, candidate gating, and non-tyre learning subsystems remain unchanged.
+
 - 2026-05-18: Tyre learn Phase 2 corrected persistence landed.
   - Replaced diagnostic-only all-four tyre learner completion path with corrected persistence to `TireChangeTime` using lock-aware `SaveTireChangeTimeToActiveProfile(...)`.
   - Preferred correction uses per-wheel clear ordered intervals (`d1/d2/d3`) with median-per-tyre derived model: `(firstClear-start) + 4*medianInterval`; fallback uses fixed-tail `raw+6.0s` only when derived validation fails.

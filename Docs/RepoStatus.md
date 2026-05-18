@@ -1,3 +1,8 @@
+- 2026-05-18: Tyre learn corrected persistence jack/drop allowance validated.
+  - corrected persisted tyre-service learner now adds fixed `+1.0s` jack/drop allowance to both derived and fixed-tail corrected candidates.
+  - derived formula is now `(firstClear-start) + 4*medianInterval + 1.0`; fallback is now `raw + 6.0 + 1.0`.
+  - lock behavior, candidate bounds, and all-four-only gating remain unchanged.
+
 - 2026-05-18: Tyre learn Phase 2 corrected persistence validated.
   - clean all-four candidates now persist corrected tyre service-time (derived median-interval preferred, fixed-tail fallback) instead of diagnostic-only raw candidate handling.
   - lock-aware save semantics and runtime/profile tyre-time ownership unchanged; accepted logs now explicitly report corrected vs raw method.
