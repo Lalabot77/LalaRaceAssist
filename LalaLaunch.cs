@@ -1219,12 +1219,10 @@ namespace LaunchPlugin
             }
             else
             {
-                if (planFuel > 0.0) { fuelPerLap = planFuel; fuelSource = "PLAN"; }
-                else if (profileFuel > 0.0) { fuelPerLap = profileFuel; fuelSource = "PROFILE"; }
+                if (profileFuel > 0.0) { fuelPerLap = profileFuel; fuelSource = "PROFILE"; }
                 else if (fallbackFuelPerLap > 0.0) { fuelPerLap = fallbackFuelPerLap; fuelSource = "DEFAULT"; }
 
-                if (planLap > 0.0) { lapSeconds = planLap; lapSource = "PLAN"; }
-                else if (profileLap > 0.0) { lapSeconds = profileLap; lapSource = "PROFILE"; }
+                if (profileLap > 0.0) { lapSeconds = profileLap; lapSource = "PROFILE"; }
                 else { lapSource = "DEFAULT"; }
             }
         }
@@ -5143,6 +5141,57 @@ namespace LaunchPlugin
             return SaveRefuelRateToActiveProfile(rateLps, out ignoredRuntimeRate) == RefuelRateSaveOutcome.Saved;
         }
 
+        private enum TireChangeTimeSaveOutcome
+        {
+            Invalid = 0,
+            Saved = 1,
+            BlockedLocked = 2
+        }
+
+        private bool IsUsableStoredTireChangeTime(double seconds)
+        {
+            if (double.IsNaN(seconds) || double.IsInfinity(seconds))
+            {
+                return false;
+            }
+
+            return seconds > 0.0 && seconds <= TyreLearnMaxSeconds;
+        }
+
+        private TireChangeTimeSaveOutcome SaveTireChangeTimeToActiveProfile(double seconds, out double runtimeSeconds)
+        {
+            runtimeSeconds = seconds;
+            try
+            {
+                if (seconds > 0.0 && ActiveProfile != null)
+                {
+                    bool storedUsable = IsUsableStoredTireChangeTime(ActiveProfile.TireChangeTime);
+                    if (ActiveProfile.TireChangeTimeLocked)
+                    {
+                        if (storedUsable)
+                        {
+                            runtimeSeconds = ActiveProfile.TireChangeTime;
+                            SimHub.Logging.Current.Info($"[LalaPlugin:Tyre Learn] locked overwrite suppressed for '{ActiveProfile.ProfileName}' (candidate {seconds:F1}s).");
+                            return TireChangeTimeSaveOutcome.BlockedLocked;
+                        }
+
+                        SimHub.Logging.Current.Info($"[LalaPlugin:Tyre Learn] locked first-fill allowed for '{ActiveProfile.ProfileName}' (candidate {seconds:F1}s).");
+                    }
+
+                    ActiveProfile.TireChangeTime = seconds;
+                    ProfilesViewModel?.SaveProfiles();
+                    runtimeSeconds = ActiveProfile.TireChangeTime;
+                    return TireChangeTimeSaveOutcome.Saved;
+                }
+            }
+            catch (Exception ex)
+            {
+                SimHub.Logging.Current.Warn($"[LalaPlugin:Tyre Learn] profile save failed: {ex.Message}");
+            }
+
+            return TireChangeTimeSaveOutcome.Invalid;
+        }
+
         public string CurrentTrackKey { get; private set; } = string.Empty;
 
         public enum ProfileEditMode { ActiveCar, CarProfile, Template }
@@ -6386,6 +6435,17 @@ namespace LaunchPlugin
 
         private const double EmaAlpha = 0.35;             // 0..1; higher = follow raw rate more
         private const double LearnCooldownSec = 20.0;     // block new learn saves for N seconds
+        private enum TyreLearnState
+        {
+            Idle = 0,
+            Armed = 1,
+            ServiceStarted = 2
+        }
+        private TyreLearnState _tyreLearnState = TyreLearnState.Idle;
+        private double _tyreLearnStartSessionTimeSec = 0.0;
+        private string _tyreLearnLastProfileName = string.Empty;
+        private const double TyreLearnMinSeconds = 5.0;
+        private const double TyreLearnMaxSeconds = 60.0;
 
         private const int ShiftAssistCooldownMsDefault = 500;
         private const int ShiftAssistResetHysteresisRpmDefault = 200;
@@ -7309,8 +7369,9 @@ namespace LaunchPlugin
             AttachCore("Pit.Command.LastAction", () => _pitCommandEngine.LastAction);
             AttachCore("Pit.Command.LastRaw", () => _pitCommandEngine.LastRaw);
             AttachCore("Pit.Command.FuelSetMaxToggleState", () => _pitCommandEngine.FuelSetMaxToggleState);
-            AttachCore("Pit.FuelControl.Data", () => (int)_pitFuelControlEngine.Data);
-            AttachCore("Pit.FuelControl.DataText", () => _pitFuelControlEngine.DataText);
+            AttachCore("Pit.FuelControl.Data", () => (int)ResolvePitFuelControlDataAuthorityState(_currentTickGameData).Code);
+            AttachCore("Pit.FuelControl.DataText", () => ResolvePitFuelControlDataAuthorityState(_currentTickGameData).Text);
+            AttachCore("Pit.FuelControl.DataColor", () => ResolvePitFuelControlDataAuthorityState(_currentTickGameData).ColorHex);
             AttachCore("Pit.FuelControl.Source", () => (int)_pitFuelControlEngine.Source);
             AttachCore("Pit.FuelControl.SourceText", () => _pitFuelControlEngine.SourceText);
             AttachCore("Pit.FuelControl.Mode", () => (int)_pitFuelControlEngine.Mode);
@@ -9301,6 +9362,9 @@ namespace LaunchPlugin
             _refuelLastRiseTime = 0.0;
             _refuelLastFuel = 0.0;
             _lastFuel = 0.0;
+            _tyreLearnState = TyreLearnState.Idle;
+            _tyreLearnStartSessionTimeSec = 0.0;
+            _tyreLearnLastProfileName = string.Empty;
 
             FuelCalculator?.ForceProfileDataReload();
 
@@ -9538,23 +9602,79 @@ namespace LaunchPlugin
             return true;
         }
 
+        
+        private enum PitFuelDataAuthorityCode
+        {
+            Live = 0,
+            Build = 1,
+            Saved = 2,
+            Simh = 3,
+            Dfalt = 4,
+            Fail = 5
+        }
+
+        private struct PitFuelDataAuthorityState
+        {
+            public PitFuelDataAuthorityCode Code;
+            public string Text;
+            public string ColorHex;
+        }
+
+        private PitFuelDataAuthorityState ResolvePitFuelControlDataAuthorityState(GameData data)
+        {
+            double fallbackFuelPerLap = IsFinitePositive(LiveFuelPerLap_Stable) ? LiveFuelPerLap_Stable : 0.0;
+            if (ResolveRuntimeRefuelBasis(data, fallbackFuelPerLap, out double selectedBurn, out double lapSeconds, out string burnSource, out string lapSource))
+            {
+                string source = ClassifyRefuelSourceToken(burnSource);
+                var selectedData = _pitFuelControlEngine?.Data ?? PitFuelControlData.Live;
+                if (selectedData == PitFuelControlData.Live)
+                {
+                    if (source == "LIVE") return MakePitFuelDataAuthorityState(PitFuelDataAuthorityCode.Live);
+                    if (source == "PROFILE" || source == "PLAN") return MakePitFuelDataAuthorityState(PitFuelDataAuthorityCode.Build);
+                    if (source == "SIM") return MakePitFuelDataAuthorityState(PitFuelDataAuthorityCode.Simh);
+                    if (source == "DEFAULT") return MakePitFuelDataAuthorityState(PitFuelDataAuthorityCode.Dfalt);
+                }
+                else
+                {
+                    if (source == "PROFILE" || source == "PLAN") return MakePitFuelDataAuthorityState(PitFuelDataAuthorityCode.Saved);
+                    if (source == "SIM") return MakePitFuelDataAuthorityState(PitFuelDataAuthorityCode.Simh);
+                    if (source == "DEFAULT") return MakePitFuelDataAuthorityState(PitFuelDataAuthorityCode.Dfalt);
+                }
+            }
+
+            return MakePitFuelDataAuthorityState(PitFuelDataAuthorityCode.Fail);
+        }
+
+        private static PitFuelDataAuthorityState MakePitFuelDataAuthorityState(PitFuelDataAuthorityCode code)
+        {
+            switch (code)
+            {
+                case PitFuelDataAuthorityCode.Live: return new PitFuelDataAuthorityState { Code = code, Text = "LIVE", ColorHex = "#FF00FF" };
+                case PitFuelDataAuthorityCode.Build: return new PitFuelDataAuthorityState { Code = code, Text = "BUILD", ColorHex = "#FFFF00" };
+                case PitFuelDataAuthorityCode.Saved: return new PitFuelDataAuthorityState { Code = code, Text = "SAVED", ColorHex = "#00FFFF" };
+                case PitFuelDataAuthorityCode.Simh: return new PitFuelDataAuthorityState { Code = code, Text = "SIMH", ColorHex = "#FFA500" };
+                case PitFuelDataAuthorityCode.Dfalt: return new PitFuelDataAuthorityState { Code = code, Text = "DFALT", ColorHex = "#FFA500" };
+                default: return new PitFuelDataAuthorityState { Code = PitFuelDataAuthorityCode.Fail, Text = "FAIL", ColorHex = "#FF0000" };
+            }
+        }
+
         private static string PitFuelControlDataToText(PitFuelControlData data)
         {
-            return data == PitFuelControlData.Plan ? "PLAN" : "LIVE";
+            return data == PitFuelControlData.Plan ? "SAVED" : "LIVE";
         }
 
         private static string ClassifyStrategyDashBurnSourceTag(string source)
         {
             if (string.IsNullOrWhiteSpace(source)) return string.Empty;
             string token = source.Trim().ToUpperInvariant();
-            return token == "LIVE" || token == "PLAN" || token == "PROFILE" || token == "SIM" || token == "DEFAULT" ? token : string.Empty;
+            return token == "LIVE" || token == "SAVED" || token == "PLAN" || token == "PROFILE" || token == "SIM" || token == "DEFAULT" ? token : string.Empty;
         }
 
         private static string ClassifyRefuelSourceToken(string source)
         {
             if (string.IsNullOrWhiteSpace(source)) return "DEFAULT";
             string token = source.Trim().ToUpperInvariant();
-            return token == "LIVE" || token == "PLAN" || token == "PROFILE" || token == "SIM" || token == "DEFAULT" ? token : "DEFAULT";
+            return token == "LIVE" || token == "SAVED" || token == "PLAN" || token == "PROFILE" || token == "SIM" || token == "DEFAULT" ? token : "DEFAULT";
         }
 
         private static string GetRefuelBurnModeText(PitFuelControlSource source)
@@ -9698,10 +9818,10 @@ namespace LaunchPlugin
                     selectedBurn = PushFuelPerLap;
                     burnSource = "LIVE";
                 }
-                else if (normFuelSource == "PLAN" && FuelCalculator != null && FuelCalculator.FuelPerLap > 0.0 && hasProfilePushSave && profilePushBurn > 0.0)
+                else if ((normFuelSource == "PLAN" || normFuelSource == "PROFILE") && hasProfilePushSave && profilePushBurn > 0.0)
                 {
                     selectedBurn = profilePushBurn;
-                    burnSource = "PLAN";
+                    burnSource = normFuelSource == "PROFILE" ? "PROFILE" : "PLAN";
                 }
                 else if (hasProfilePushSave && profilePushBurn > 0.0)
                 {
@@ -9721,10 +9841,10 @@ namespace LaunchPlugin
                     selectedBurn = FuelSaveFuelPerLap;
                     burnSource = "LIVE";
                 }
-                else if (normFuelSource == "PLAN" && FuelCalculator != null && FuelCalculator.FuelPerLap > 0.0 && hasProfilePushSave && profileSaveBurn > 0.0)
+                else if ((normFuelSource == "PLAN" || normFuelSource == "PROFILE") && hasProfilePushSave && profileSaveBurn > 0.0)
                 {
                     selectedBurn = profileSaveBurn;
-                    burnSource = "PLAN";
+                    burnSource = normFuelSource == "PROFILE" ? "PROFILE" : "PLAN";
                 }
                 else if (hasProfilePushSave && profileSaveBurn > 0.0)
                 {
@@ -9779,7 +9899,7 @@ namespace LaunchPlugin
             Fuel_Refuel_NextText = "CHECK FUEL";
             Fuel_Refuel_BurnSource = "DEFAULT";
             Fuel_Refuel_LapSource = "DEFAULT";
-            Fuel_Refuel_DataMode = (_pitFuelControlEngine?.Data ?? PitFuelControlData.Live) == PitFuelControlData.Plan ? "PLAN" : "LIVE";
+            Fuel_Refuel_DataMode = (_pitFuelControlEngine?.Data ?? PitFuelControlData.Live) == PitFuelControlData.Plan ? "SAVED" : "LIVE";
             Fuel_Refuel_BurnMode = GetRefuelBurnModeText(_pitFuelControlEngine?.Source ?? PitFuelControlSource.Stby);
             Fuel_Refuel_SelectedBurnPerLap = 0.0;
             Fuel_Live_RemainingStints = 0.0;
@@ -9797,7 +9917,7 @@ namespace LaunchPlugin
             double multiStopDisplayAddCapLitres,
             ResolvedContingency contingency)
         {
-            Fuel_Refuel_DataMode = (_pitFuelControlEngine?.Data ?? PitFuelControlData.Live) == PitFuelControlData.Plan ? "PLAN" : "LIVE";
+            Fuel_Refuel_DataMode = (_pitFuelControlEngine?.Data ?? PitFuelControlData.Live) == PitFuelControlData.Plan ? "SAVED" : "LIVE";
             var sourceMode = _pitFuelControlEngine?.Source ?? PitFuelControlSource.Stby;
             Fuel_Refuel_BurnMode = GetRefuelBurnModeText(sourceMode);
 
@@ -10561,6 +10681,92 @@ namespace LaunchPlugin
             {
                 _opponentsEngine?.NotifyPitExitLine(completedLaps, sessionTime, trackPct);
                 // LogPitExitPitOutSnapshot(sessionTime, completedLaps + 1, pitTripActive);
+            }
+
+            // === TYRE CHANGE TIME LEARNING (all four tyre flags only) ===
+            bool? tyreLf = TryReadNullableBool(pluginManager.GetPropertyValue("DataCorePlugin.GameRawData.Telemetry.dpLFTireChange"));
+            bool? tyreRf = TryReadNullableBool(pluginManager.GetPropertyValue("DataCorePlugin.GameRawData.Telemetry.dpRFTireChange"));
+            bool? tyreLr = TryReadNullableBool(pluginManager.GetPropertyValue("DataCorePlugin.GameRawData.Telemetry.dpLRTireChange"));
+            bool? tyreRr = TryReadNullableBool(pluginManager.GetPropertyValue("DataCorePlugin.GameRawData.Telemetry.dpRRTireChange"));
+            bool hasAllTyreFlags = tyreLf.HasValue && tyreRf.HasValue && tyreLr.HasValue && tyreRr.HasValue;
+            bool allFourSelected = hasAllTyreFlags && tyreLf.Value && tyreRf.Value && tyreLr.Value && tyreRr.Value;
+            bool allFourCleared = hasAllTyreFlags && !tyreLf.Value && !tyreRf.Value && !tyreLr.Value && !tyreRr.Value;
+            bool inPitRoadNow = (data.NewData?.IsInPitLane ?? 0) != 0;
+            bool inPitStallNow = Convert.ToBoolean(pluginManager.GetPropertyValue("DataCorePlugin.GameRawData.Telemetry.PlayerCarInPitStall") ?? false);
+            bool inPitBoxServiceContext = inPitRoadNow && inPitStallNow && _pit != null && _pit.CurrentPitPhase == PitPhase.InBox;
+            string activeProfileName = ActiveProfile?.ProfileName ?? string.Empty;
+            bool profileChanged = !string.Equals(_tyreLearnLastProfileName, activeProfileName, StringComparison.Ordinal);
+            if (profileChanged)
+            {
+                _tyreLearnState = TyreLearnState.Idle;
+                _tyreLearnStartSessionTimeSec = 0.0;
+            }
+            _tyreLearnLastProfileName = activeProfileName;
+
+            if (!inPitRoadNow && _tyreLearnState != TyreLearnState.Idle)
+            {
+                SimHub.Logging.Current.Info("[LalaPlugin:Tyre Learn] rejected: left pit before completion.");
+                _tyreLearnState = TyreLearnState.Idle;
+                _tyreLearnStartSessionTimeSec = 0.0;
+            }
+            else if (_tyreLearnState == TyreLearnState.Idle)
+            {
+                if (inPitRoadNow && allFourSelected)
+                {
+                    _tyreLearnState = TyreLearnState.Armed;
+                    SimHub.Logging.Current.Info("[LalaPlugin:Tyre Learn] candidate armed (all four tyres selected).");
+                }
+            }
+            else if (_tyreLearnState == TyreLearnState.Armed)
+            {
+                if (!allFourSelected)
+                {
+                    SimHub.Logging.Current.Info("[LalaPlugin:Tyre Learn] rejected: partial tyre selection before service start.");
+                    _tyreLearnState = TyreLearnState.Idle;
+                }
+                else if (inPitBoxServiceContext)
+                {
+                    _tyreLearnStartSessionTimeSec = sessionTime;
+                    _tyreLearnState = TyreLearnState.ServiceStarted;
+                    SimHub.Logging.Current.Info("[LalaPlugin:Tyre Learn] service start confirmed.");
+                }
+            }
+            else if (_tyreLearnState == TyreLearnState.ServiceStarted)
+            {
+                if (!hasAllTyreFlags)
+                {
+                    SimHub.Logging.Current.Info("[LalaPlugin:Tyre Learn] rejected: telemetry gap on tyre flags.");
+                    _tyreLearnState = TyreLearnState.Idle;
+                    _tyreLearnStartSessionTimeSec = 0.0;
+                }
+                else if (allFourCleared)
+                {
+                    double candidateSec = Math.Max(0.0, sessionTime - _tyreLearnStartSessionTimeSec);
+                    if (candidateSec <= TyreLearnMinSeconds || candidateSec > TyreLearnMaxSeconds)
+                    {
+                        SimHub.Logging.Current.Info($"[LalaPlugin:Tyre Learn] rejected: candidate out of bounds ({candidateSec:F1}s).");
+                    }
+                    else if (ActiveProfile == null)
+                    {
+                        SimHub.Logging.Current.Info("[LalaPlugin:Tyre Learn] rejected: no active profile.");
+                    }
+                    else
+                    {
+                        double runtimeTyreTimeSec;
+                        var tyreSaveOutcome = SaveTireChangeTimeToActiveProfile(candidateSec, out runtimeTyreTimeSec);
+                        if (tyreSaveOutcome == TireChangeTimeSaveOutcome.Saved)
+                        {
+                            if (FuelCalculator != null)
+                            {
+                                FuelCalculator.TireChangeTime = runtimeTyreTimeSec;
+                            }
+                            SimHub.Logging.Current.Info($"[LalaPlugin:Tyre Learn] accepted/persisted tyre change time {runtimeTyreTimeSec:F1}s (candidate {candidateSec:F1}s).");
+                        }
+                    }
+
+                    _tyreLearnState = TyreLearnState.Idle;
+                    _tyreLearnStartSessionTimeSec = 0.0;
+                }
             }
 
             // === AUTO-LEARN REFUEL RATE FROM PIT BOX (hardened) ===
@@ -13535,8 +13741,27 @@ namespace LaunchPlugin
         private static string ResolvePropertySnapshotGroup(string propertyName)
         {
             if (propertyName.StartsWith("Car.Debug.", StringComparison.Ordinal)) return "RawDebug";
-            if (propertyName.StartsWith("Fuel.", StringComparison.Ordinal) || propertyName.StartsWith("Strategy", StringComparison.Ordinal)) return "FuelStrategy";
-            if (propertyName.StartsWith("Car.", StringComparison.Ordinal) || propertyName.StartsWith("Opp.", StringComparison.Ordinal) || propertyName.StartsWith("H2H", StringComparison.Ordinal) || propertyName.StartsWith("LapRef.", StringComparison.Ordinal)) return "CarOppH2H";
+
+            if (propertyName.StartsWith("Fuel.", StringComparison.Ordinal)
+                || propertyName.StartsWith("Strategy", StringComparison.Ordinal)
+                || propertyName.StartsWith("Pace.", StringComparison.Ordinal)
+                || propertyName.StartsWith("Surface.", StringComparison.Ordinal))
+            {
+                return "FuelStrategy";
+            }
+
+            if (propertyName.StartsWith("Car.", StringComparison.Ordinal)
+                || propertyName.StartsWith("Opp.", StringComparison.Ordinal)
+                || propertyName.StartsWith("H2H", StringComparison.Ordinal)
+                || propertyName.StartsWith("LapRef.", StringComparison.Ordinal)
+                || propertyName.StartsWith("Race.", StringComparison.Ordinal)
+                || propertyName.StartsWith("RaceFinish.", StringComparison.Ordinal)
+                || propertyName.StartsWith("ClassBest.", StringComparison.Ordinal)
+                || propertyName.StartsWith("ClassLeader.", StringComparison.Ordinal))
+            {
+                return "CarOppH2H";
+            }
+
             if (propertyName.StartsWith("Pit.", StringComparison.Ordinal) || propertyName.StartsWith("PitExit.", StringComparison.Ordinal)) return "PitPitExit";
             if (propertyName.StartsWith("ShiftAssist.", StringComparison.Ordinal)) return "ShiftAssist";
             if (propertyName.StartsWith("MSG", StringComparison.Ordinal) || propertyName.StartsWith("Message", StringComparison.Ordinal)) return "MessageSystem";

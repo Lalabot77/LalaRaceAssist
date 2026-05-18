@@ -108,6 +108,20 @@ namespace LaunchPlugin
 
         private double _tireChangeTime = 22;
         public double TireChangeTime { get => _tireChangeTime; set { if (_tireChangeTime != value) { _tireChangeTime = value; OnPropertyChanged(); } } }
+        private bool _tireChangeTimeLocked;
+        [JsonProperty]
+        public bool TireChangeTimeLocked
+        {
+            get => _tireChangeTimeLocked;
+            set
+            {
+                if (_tireChangeTimeLocked != value)
+                {
+                    _tireChangeTimeLocked = value;
+                    OnPropertyChanged();
+                }
+            }
+        }
 
         // --- NEW Per-Car Property ---
         private double _refuelRate = 2.7;

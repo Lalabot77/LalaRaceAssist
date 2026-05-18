@@ -122,6 +122,11 @@ Scope: Info/Warn logs emitted via `SimHub.Logging.Current.Info(...)` and `SimHub
 - **`[LalaPlugin:Pit Cycle] Pit Lite Data used for DTL.`** — Consumed PitLite out-lap candidate to save pit loss.【F:LalaLaunch.cs†L3004-L3035】
 - **`[LalaPlugin:Refuel Rate] Learned refuel rate ... Cooldown until ...`** — Refuel EMA learning completed and was applied/saved (unlocked, or locked first-fill when no usable stored rate existed). 【F:LalaLaunch.cs†L3488-L3507】
 - **`[LalaPlugin:Refuel Rate] Locked; blocked learned overwrite for '...' (candidate ... L/s).`** — Verbose-debug-only line emitted when a valid learned refuel-rate candidate is intentionally ignored because the active profile has `RefuelRateLocked=true`.
+- **`[LalaPlugin:Tyre Learn] candidate armed (all four tyres selected).`** — Tyre-time learner armed only when per-wheel tyre MFD flags (`dpLFTireChange/dpRFTireChange/dpLRTireChange/dpRRTireChange`) indicate all four selected.
+- **`[LalaPlugin:Tyre Learn] service start confirmed.`** — Tyre-time learner confirmed in-box service start in valid pit-stall service context.
+- **`[LalaPlugin:Tyre Learn] accepted/persisted tyre change time ...`** — Valid all-four candidate accepted and persisted to car profile `TireChangeTime`.
+- **`[LalaPlugin:Tyre Learn] rejected: ...`** — Candidate rejected for bounded reasons (partial selection, out-of-bounds time, telemetry gap, no profile, or leaving pit before completion).
+- **`[LalaPlugin:Tyre Learn] locked overwrite suppressed ...`** / **`locked first-fill allowed ...`** — Lock guard outcome for `TireChangeTimeLocked` using refuel-like semantics.
 - **`[LalaPlugin:Pit Lite] ...`** — See PitCycleLite section below for entry/exit/out-lap/publish logs.
 - **`[LalaPlugin:Pit Cycle] ...`** — See PitEngine section below for DTL/direct computations and pit-lap captures.
 

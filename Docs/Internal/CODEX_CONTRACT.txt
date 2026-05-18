@@ -134,6 +134,15 @@ Do NOT change any of the following without updating docs:
 
 All changes must be reflected in canonical docs in the same task.
 
+Property Snapshot contract (mandatory when SimHub exports/properties change):
+
+* If a task adds, removes, renames, or behavior-changes any SimHub export/property, review `LalaLaunch.ResolvePropertySnapshotGroup(...)` in the same task.
+* Add newly introduced exports to the appropriate existing Property Snapshot group.
+* Remove snapshot-group expectations only when the underlying export/property is actually removed.
+* Confirm group ownership remains correct (Fuel/Strategy, Car/Opp/H2H, Pit/PitExit, Shift Assist, Message System, League Class, Raw Debug).
+* If snapshot behavior/UI wording/contracts changed, update relevant docs in the same task (`SimHubParameterInventory`, `Plugin_UI_Tooltips`, `Development_Changelog`, `RepoStatus`, and any affected subsystem/user docs).
+* Verification output must explicitly state: `Property Snapshot list reviewed: yes/no, with reason.`
+
 ---
 
 ## 8. C# and Dependency Rules

@@ -71,6 +71,7 @@ These planner inputs persist on the selected `TrackStats` record rather than on 
 - contingency mode (`laps` vs `litres`)
 
 The current car profile still owns per-car items such as refuel rate, refuel-rate lock, base tank, tyre-change time, and pit-entry settings, but the four planner controls above are now **track-only**. With refuel-rate lock enabled and a usable stored value, planner/runtime keep using that stored value instead of applying later learned overwrite candidates (except the one-time locked first-fill fail-safe when no usable stored rate exists yet).
+Tyre-change time follows the same car-level lock philosophy: `TireChangeTime` remains car-scoped and live tyre-time learning can update it only while unlocked (or one-time locked first-fill when no usable stored tyre time exists).
 
 Planner inputs persist until explicitly changed by the user or reset by session identity change.
 
@@ -326,10 +327,12 @@ Reset semantics are shared with the Fuel Model and documented centrally in:
 - Live Detect refresh now runs on session context transitions (session id/type changes) when Live Detect is selected, in addition to normal periodic polling.
 
 - Strategy race-basis ownership now uses explicit owner modes (Preset/Lap/Time/Live Detect) with last-selected owner winning race type/length authority.
-- Refresh Calcs is recompute-only and no longer reloads profile/live ownership state.
+- Refresh Calcs is recompute-only: it recalculates strategy outputs and stint breakdown from current effective inputs, and does not reload profile/live data, reapply presets, or reset owner/source state.
 - Preset modified badge now ignores PreRace-mode-only differences to avoid implying core strategy-output change.
 
 - Preset row now includes a compact reapply button (`↻`) that reapplies the currently selected preset explicitly; same-item ComboBox reselection is no longer required.
 - When Race Basis owner is `Preset` and no preset is selected/applied, planner outputs stay invalid with explicit validation (`Select a race preset`) rather than silently using stale race length.
 
 - Owner-mode helpers (`IsRaceBasis*`) are UI ownership flags; effective helpers (`IsEffective*`, `EffectiveRaceBasisValid`) mirror the basis actually consumed by strategy calculations and dependent preset dirty/save logic.
+
+- Live Detect owns race basis only while selected; invalid/no declared race definition intentionally invalidates strategy outputs (no silent fallback to manual race length) while preserving selected/applied preset state.

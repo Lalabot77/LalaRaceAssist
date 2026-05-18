@@ -176,13 +176,13 @@ If Strategy looks repeatedly wrong, the usual causes are:
 - Race-definition ownership is now exclusive:
   - `Live Detect`: race length controls remain telemetry-owned while selected; preset/profile/manual setup state is preserved.
   - Live Detect no longer clears selected/applied preset state; switching owners preserves preset/profile/manual setup values and only changes race-basis authority while selected.
-  - Presets remain one-shot initializers: selecting a preset sets race type + race length once, then manual edits can diverge and show `(modified)`.
+  - `Preset` owner keeps race type/length aligned to the selected/applied preset; use the `↻` reapply button for a deliberate reset of preset-owned values.
 
 - PreRace fuel-needed basis now follows active contingency (`base race fuel + active contingency litres`) instead of the prior hardcoded `+2 laps` buffer.
 - StrategyDash V2 adds pre-green advice exports only; race-running fuel/pit/control contracts remain on existing runtime seams.
 
 - Strategy Race Basis now explicitly selects owner: Preset, Lap-Limited, Time-Limited, or Live Detect.
 - Live Detect only owns race type/length while selected; preset/manual setup values are retained.
-- Refresh Calcs now recomputes outputs only and does not change owner/preset/source selections.
+- Refresh Calcs now recomputes calculated strategy outputs/stints from current effective inputs only; it does not reload profile/live data, reapply presets, or change owner/source selections.
 
 - Owner mode and effective basis are now treated separately in planner internals: owner radios (`Preset`/`Lap`/`Time`/`Live Detect`) select authority, while strategy calculations, preset dirty state, and preset serialization use the resolved effective race basis.
