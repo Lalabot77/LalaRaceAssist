@@ -1,3 +1,17 @@
+- 2026-05-18: Property Snapshot rolling automation hardening follow-up (PR #736 review).
+  - rolling START/STOP state is now runtime-only; persisted `PropertySnapshotRollingActive` is forcibly cleared false on first runtime tick so automation cannot silently resume after restart/reload.
+  - START now hard-guards on `Soft Debug`, `Enable Property Snapshot`, and `Write rolling combined CSV`; when any gate is off, START is ignored with bounded warning.
+  - reduced FREQUENCY cap from 5 Hz to 2 Hz because rolling wide writer rewrites/parses the whole CSV each capture; START log now explicitly documents this IO cost/cap rationale.
+  - auto-capture logging is now throttled/heartbeat-only; full snapshot summary + rolling success logs remain on manual marker captures.
+  - Property Snapshot rolling mode ComboBox binding switched to `SelectedIndex` for robust int binding semantics (`MANUAL/FREQUENCY/PER LAP` => `0/1/2`).
+
+- 2026-05-18: Property Snapshot rolling automation modes (Part 2) validated.
+  - added rolling capture modes via debug settings: `MANUAL` (0), `FREQUENCY` (1), `PER LAP` (2), with `START`/`STOP` state control and guarded frequency setting (`default 1 Hz`, capped `max 5 Hz`).
+  - Event Marker behavior remains manual capture trigger; manual captures still write one-shot snapshot files and optional rolling snapshots per existing toggle.
+  - automatic rolling captures now run only when rolling output is enabled and START is active: FREQUENCY uses capped interval timing; PER LAP reuses existing lap-cross seam and de-duplicates by completed lap number.
+  - added `RESET ROLLING CSV` UI/action path that deletes only `PropertySnapshot_Rolling.csv` (primary + fallback path) with bounded info/warn logging.
+  - preserved existing group filters, select-all sync, rolling wide schema, changed-vs-previous behavior, and one-shot folder semantics.
+
 - 2026-05-18 final tidy: aligned active docs/contracts with Drivers-only identity and renamed Drivers-row counter helpers for clarity.
   - Active ClassLeader/ClassBest docs now describe `DriverInfo.Drivers##` identity seams only (no CompetingDrivers fallback contract).
   - Renamed denominator support helpers to `CountValidDriversRowsExcludingPaceCar` / `CountPlayerClassDriversRowsExcludingPaceCar` to match current `Drivers##` data source usage.

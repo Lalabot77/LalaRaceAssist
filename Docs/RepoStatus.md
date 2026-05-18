@@ -1,3 +1,14 @@
+- 2026-05-18: Property Snapshot rolling automation hardening validated (PR #736 follow-up).
+  - automation active state no longer persists across restart/reload (runtime-only + persisted flag clear-on-init).
+  - START now refuses to arm unless Soft Debug + Property Snapshot + Rolling CSV toggles are all enabled.
+  - FREQUENCY mode cap reduced to 2 Hz due to full-file rolling wide rewrite cost; auto logging throttled to prevent debug log spam.
+
+- 2026-05-18: Property Snapshot rolling automation modes + controls validated (Part 2).
+  - Debug Options > Property Snapshot now includes rolling mode selector (`MANUAL`/`FREQUENCY`/`PER LAP`), frequency setting, and explicit `START`/`STOP`/`RESET ROLLING CSV` controls.
+  - Manual Event Marker semantics preserved; manual captures still write one-shot snapshot files and optional rolling column append.
+  - Automatic rolling capture is gated by START + rolling-enabled toggle: FREQUENCY uses guarded 1..5 Hz cadence (default 1), PER LAP reuses existing lap-cross seam and prevents duplicate same-lap capture.
+  - Rolling reset clears only `PropertySnapshot_Rolling.csv` (primary + fallback), without touching one-shot files, group settings, or snapshot include-changed behavior.
+
 - 2026-05-18 final tidy: aligned active docs/contracts with Drivers-only identity and renamed Drivers-row counter helpers for clarity.
   - Active ClassLeader/ClassBest docs now describe `DriverInfo.Drivers##` identity seams only (no CompetingDrivers fallback contract).
   - Renamed denominator support helpers to `CountValidDriversRowsExcludingPaceCar` / `CountPlayerClassDriversRowsExcludingPaceCar` to match current `Drivers##` data source usage.
