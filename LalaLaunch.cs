@@ -3762,6 +3762,7 @@ namespace LaunchPlugin
             {
                 // Guard with CompletedLaps so we only process fully completed race laps
                 int completedLapsNow = Convert.ToInt32(data.NewData?.CompletedLaps ?? 0);
+                MaybeWritePropertySnapshotPerLap(sessionTime, lapCrossed, completedLapsNow);
                 if (completedLapsNow > _lastCompletedFuelLap)
                 {
                     // --- Lap-time / pace tracking (clean laps only) ---
@@ -10540,7 +10541,7 @@ namespace LaunchPlugin
 
             _carPlayerTrackPct = SanitizeTrackPercent(trackPct);
             double sessionTimeSec = ResolveShiftAssistSessionTimeSec(pluginManager);
-            MaybeWritePropertySnapshot(sessionTimeSec, lapCrossed, completedLaps);
+            MaybeWritePropertySnapshot(sessionTimeSec);
             double sessionTimeRemainingSec = SafeReadDouble(pluginManager, "DataCorePlugin.GameRawData.Telemetry.SessionTimeRemain", double.NaN);
             int sessionState = SafeReadInt(pluginManager, "DataCorePlugin.GameRawData.Telemetry.SessionState", 0);
             string sessionTypeName = !string.IsNullOrWhiteSpace(currentSessionTypeForConfidence)
@@ -13664,7 +13665,7 @@ namespace LaunchPlugin
             return hz;
         }
 
-        private void MaybeWritePropertySnapshot(double sessionTimeSec, bool lapCrossed, int completedLaps)
+        private void MaybeWritePropertySnapshot(double sessionTimeSec)
         {
             bool snapshotSettingEnabled = Settings?.EnablePropertySnapshot == true;
             bool enabled = SoftDebugEnabled && snapshotSettingEnabled;
@@ -13711,17 +13712,43 @@ namespace LaunchPlugin
                         _propertySnapshotLastAutoCaptureUtc = DateTime.UtcNow;
                     }
                 }
-                else if (mode == 2 && lapCrossed && completedLaps > 0 && completedLaps != _propertySnapshotLastLapCaptured)
-                {
-                    WritePropertySnapshotCsv(sessionTimeSec, includeOneShot: false, includeRolling: true, captureReason: "auto-perlap", detailedLogs: false);
-                    _propertySnapshotLastLapCaptured = completedLaps;
-                }
             }
             catch (Exception ex)
             {
                 _propertySnapshotLastProcessedPressCount = pressCount;
                 SimHub.Logging.Current.Warn($"[LalaPlugin:Debug] Property snapshot export failed for marker count {pressCount}: {ex.Message}");
             }
+        }
+
+        private void MaybeWritePropertySnapshotPerLap(double sessionTimeSec, bool lapCrossed, int completedLaps)
+        {
+            if (!lapCrossed || completedLaps <= 0)
+            {
+                return;
+            }
+
+            if (!SoftDebugEnabled || Settings?.EnablePropertySnapshot != true)
+            {
+                return;
+            }
+
+            if (Settings?.PropertySnapshotRollingCombinedCsv != true || !_propertySnapshotRollingActiveRuntime)
+            {
+                return;
+            }
+
+            if (NormalizePropertySnapshotRollingMode() != 2)
+            {
+                return;
+            }
+
+            if (completedLaps == _propertySnapshotLastLapCaptured)
+            {
+                return;
+            }
+
+            WritePropertySnapshotCsv(sessionTimeSec, includeOneShot: false, includeRolling: true, captureReason: "auto-perlap", detailedLogs: false);
+            _propertySnapshotLastLapCaptured = completedLaps;
         }
 
         private void WritePropertySnapshotCsv(double sessionTimeSec, bool includeOneShot, bool includeRolling, string captureReason, bool detailedLogs)

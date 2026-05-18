@@ -2510,3 +2510,7 @@ The public user-facing release history is maintained in the root `CHANGELOG.md`.
 - Classification: **both** (driver-facing wording clarity + docs contract alignment; no behavior/logic changes).
 - Updated Strategy UI tooltips for `Refresh Calcs`, Race Basis owner radios, Live Detect owner semantics, and preset reapply (`↻`) to match active owner/effective-basis behavior.
 - Aligned Strategy docs + tooltip inventory wording with current semantics: recompute-only Refresh Calcs, explicit Race Basis ownership, non-destructive Live Detect, and modified-badge divergence meaning.
+- 2026-05-18: Property Snapshot PER LAP wiring compile-fix validated (PR #736 follow-up).
+  - removed out-of-scope `MaybeWritePropertySnapshot(sessionTimeSec, lapCrossed, completedLaps)` call from `DataUpdate(...)`; manual marker + FREQUENCY automation remain owned there.
+  - added narrow `MaybeWritePropertySnapshotPerLap(sessionTimeSec, lapCrossed, completedLaps)` seam called from `UpdateLiveFuelCalcs(...)` immediately after existing lap-cross detection/CompletedLaps context is available.
+  - PER LAP automation remains rolling-only, de-duped by completed lap, and reuses existing `DetectLapCrossing(...)` seam (no second lap detector, no fuel/pit/projection logic changes).

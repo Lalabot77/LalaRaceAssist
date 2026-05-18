@@ -1496,3 +1496,7 @@ Branch: work
 - 2026-05-18: PR #733 SIM provenance guard follow-up: burn `SIM`/`SIMH` now requires genuine DataCore computed fallback provenance; synthetic/plugin fallback now reports `DEFAULT`/`DFALT` (no authority-chain or refuel-math change).
 - 2026-05-18: PR #733 runtime refuel provenance propagation follow-up: runtime refuel basis now preserves genuine DataCore fallback provenance (`SIM`/`SIMH`) while plugin-held synthetic fallback remains `DEFAULT`/`DFALT` (no authority-order or math/send behavior change).
 - 2026-05-18: PR #733 same-tick provenance alignment follow-up: `Pit.FuelControl.DataText` now shares runtime refuel fallback provenance, eliminating SIM/DFALT contradiction on the same tick (no authority-order or math/send behavior change).
+- 2026-05-18: Property Snapshot PER LAP compile wiring fix validated.
+  - `DataUpdate(...)` now runs Property Snapshot manual-marker + FREQUENCY automation only (session-time in scope).
+  - PER LAP automation is now triggered from `UpdateLiveFuelCalcs(...)` at the existing `DetectLapCrossing(...)` seam where `lapCrossed` + `CompletedLaps` context is valid.
+  - Behavior invariants preserved: manual marker still writes one-shot (+optional rolling), automation remains rolling-only, PER LAP remains one capture per completed lap.
