@@ -1,3 +1,6 @@
+- 2026-05-17: Added bounded League subclass current-session count diagnostics in `GetLeagueClassPlayerDriverCount()`.
+  - New `[LalaPlugin:LeagueSubclassCount]` log reports session-row vs CSV fallback counts (valid/pace/resolved/matching/unresolved) and emits only when signature changes, to prove whether current-session cohort counting is available or falling back to CSV membership.
+
 - 2026-05-17: Fixed live `Race.PlayerClassFieldSize` attach path to call canonical race denominator helper directly.
   - Removed the remaining indirection method for live export so League-enabled live publish cannot take a stale/legacy override path; `RaceFinish.PlayerClassFieldSize` freeze path and denominator helper logic unchanged.
 

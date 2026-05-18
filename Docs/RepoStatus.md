@@ -1,3 +1,6 @@
+- 2026-05-17: Added bounded diagnostics to prove current-session League subclass cohort count availability.
+  - `GetLeagueClassPlayerDriverCount()` now logs `[LalaPlugin:LeagueSubclassCount]` on signature change with session-row/resolution stats and CSV fallback comparison; behavior/output semantics unchanged.
+
 - 2026-05-17: Live race class denominator publish path tightened.
   - `Race.PlayerClassFieldSize` now attaches directly to `ResolveCanonicalPlayerClassRaceDenominator(...)`; no League-specific live override path remains. `RaceFinish.PlayerClassFieldSize` path unchanged.
 

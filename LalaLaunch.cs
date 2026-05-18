@@ -853,6 +853,7 @@ namespace LaunchPlugin
         private int _raceFinishPlayerClassFieldSize;
         private string _raceDenominatorDebugSignature = string.Empty;
         private int _raceDenominatorDebugResult = int.MinValue;
+        private string _leagueSubclassCountDebugSignature = string.Empty;
         private int _playerCarIdxLastTick = -1;
         private double _lastClassLeaderLapPct = double.NaN;
         private double _lastOverallLeaderLapPct = double.NaN;
@@ -5729,10 +5730,32 @@ namespace LaunchPlugin
             if ((Settings?.LeagueClassEnabled == true) && player.Valid && !string.IsNullOrWhiteSpace(player.Name))
             {
                 int count = 0;
+                int sessionRows = 0;
+                int validRows = 0;
+                int paceCars = 0;
+                int resolvedRows = 0;
+                int unresolvedRows = 0;
                 int playerCarIdx = ResolveLivePlayerCarIdxForLeagueCount();
+                int? playerUserId;
+                string playerName;
+                TryGetLivePlayerIdentityPreview(out playerUserId, out playerName);
+                string matchSamples = string.Empty;
+                string unresolvedSamples = string.Empty;
                 for (int i = 0; i < 64; i++)
                 {
                     string basePath = $"DataCorePlugin.GameRawData.SessionData.DriverInfo.CompetingDrivers[{i}]";
+                    sessionRows++;
+                    if (!IsCompetingDriverRowValid(basePath))
+                    {
+                        continue;
+                    }
+                    validRows++;
+                    if (IsDriverRowPaceCar(basePath, i))
+                    {
+                        paceCars++;
+                        continue;
+                    }
+
                     int carIdx = ReadCompetingDriverIntWithFallback(basePath, ".CarIdx", -1);
                     int userId = ReadCompetingDriverIntWithFallback(basePath, ".UserID");
                     string name = ReadCompetingDriverStringWithFallback(basePath, ".UserName");
@@ -5761,12 +5784,32 @@ namespace LaunchPlugin
                         ? ResolveLivePlayerLeagueClassInfo()
                         : ResolveLeagueClassDriverInfo(userId > 0 ? (int?)userId : null, name);
 
-                    if (!info.Valid || string.IsNullOrWhiteSpace(info.Name)) continue;
-                    if (string.Equals(info.Name, player.Name, StringComparison.OrdinalIgnoreCase)) count++;
+                    if (!info.Valid || string.IsNullOrWhiteSpace(info.Name))
+                    {
+                        unresolvedRows++;
+                        if (unresolvedRows <= 3)
+                        {
+                            unresolvedSamples += (unresolvedSamples.Length > 0 ? ", " : string.Empty)
+                                + $"{(userId > 0 ? userId.ToString(CultureInfo.InvariantCulture) : "0")}:{(name ?? string.Empty)}";
+                        }
+                        continue;
+                    }
+
+                    resolvedRows++;
+                    if (string.Equals(info.Name, player.Name, StringComparison.OrdinalIgnoreCase))
+                    {
+                        count++;
+                        if (count <= 3)
+                        {
+                            matchSamples += (matchSamples.Length > 0 ? ", " : string.Empty)
+                                + $"{(userId > 0 ? userId.ToString(CultureInfo.InvariantCulture) : "0")}:{(name ?? string.Empty)}";
+                        }
+                    }
                 }
 
                 if (count > 0)
                 {
+                    LogLeagueSubclassCountDiagnostics(player.Name, playerUserId, sessionRows, validRows, paceCars, resolvedRows, count, 0, unresolvedRows, matchSamples, unresolvedSamples, "session_rows");
                     return count;
                 }
 
@@ -5782,10 +5825,6 @@ namespace LaunchPlugin
                 int csvClassCount = _leagueClassResolver != null
                     ? _leagueClassResolver.CountValidCsvDriversInClass(Settings, player.Name)
                     : 0;
-
-                int? playerUserId;
-                string playerName;
-                TryGetLivePlayerIdentityPreview(out playerUserId, out playerName);
                 bool playerAlreadyRepresentedInCsv = _leagueClassResolver != null
                     && _leagueClassResolver.HasValidCsvMembership(Settings, playerUserId, player.Name);
 
@@ -5796,10 +5835,49 @@ namespace LaunchPlugin
                     csvClassCount += 1;
                 }
 
+                LogLeagueSubclassCountDiagnostics(player.Name, playerUserId, sessionRows, validRows, paceCars, resolvedRows, 0, csvClassCount, unresolvedRows, matchSamples, unresolvedSamples, "csv_fallback");
                 return csvClassCount > 0 ? csvClassCount : 0;
             }
 
             return GetNativePlayerClassDriverCount();
+        }
+
+        private void LogLeagueSubclassCountDiagnostics(
+            string playerClassName,
+            int? playerUserId,
+            int sessionRows,
+            int validRows,
+            int paceCars,
+            int resolvedRows,
+            int matchingRows,
+            int csvRegisteredClassCount,
+            int unresolvedRows,
+            string sampleMatches,
+            string sampleUnresolved,
+            string source)
+        {
+            string signature = string.Format(
+                CultureInfo.InvariantCulture,
+                "playerClass={0}|playerUserId={1}|sessionRows={2}|validRows={3}|paceCars={4}|resolvedRows={5}|matchingRows={6}|csvRegisteredClassCount={7}|unresolvedRows={8}|source={9}",
+                playerClassName ?? string.Empty,
+                playerUserId.HasValue ? playerUserId.Value.ToString(CultureInfo.InvariantCulture) : "0",
+                sessionRows,
+                validRows,
+                paceCars,
+                resolvedRows,
+                matchingRows,
+                csvRegisteredClassCount,
+                unresolvedRows,
+                source ?? string.Empty);
+
+            if (string.Equals(signature, _leagueSubclassCountDebugSignature, StringComparison.Ordinal))
+            {
+                return;
+            }
+
+            _leagueSubclassCountDebugSignature = signature;
+            SimHub.Logging.Current.Info(
+                $"[LalaPlugin:LeagueSubclassCount] playerClass='{playerClassName ?? string.Empty}' playerUserId={(playerUserId ?? 0)} sessionRows={sessionRows} validRows={validRows} paceCars={paceCars} resolvedRows={resolvedRows} matchingRows={matchingRows} csvRegisteredClassCount={csvRegisteredClassCount} unresolvedRows={unresolvedRows} source={source} sampleMatches='{sampleMatches ?? string.Empty}' sampleUnresolved='{sampleUnresolved ?? string.Empty}'");
         }
 
         private int GetNativePlayerClassDriverCount()
