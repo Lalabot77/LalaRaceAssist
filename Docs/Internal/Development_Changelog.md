@@ -1,3 +1,7 @@
+- 2026-05-18: Property Snapshot rolling status stale-refresh follow-up (PR #740 review).
+  - Wired status refresh callback to `Enable debugging mode` (`Settings.EnableSoftDebug`) and `Enable Property Snapshot` master toggle so `ROLLING CSV: OFF/READY/RECORDING` updates immediately when status gates change.
+  - Existing refresh hooks for rolling CSV toggle, mode selector, START/STOP/RESET, group toggle interactions, and view init remain unchanged.
+
 - 2026-05-18: Property Snapshot rolling status exports + DataCore fuel capture rows added (debug observability only).
   - Added core exports `Debug.PropertySnapshot.RollingStatusText` (`OFF`/`READY`/`RECORDING`) and `Debug.PropertySnapshot.RollingModeText` (`MANUAL`/`FREQUENCY`/`PER LAP`) from existing snapshot rolling gates/runtime state.
   - Added Property Snapshot external capture rows (Fuel/Strategy group only) via direct `PluginManager.GetPropertyValue(...)` reads for `DataCorePlugin.Computed.Fuel_LitersPerLap`, `Fuel_LastLapConsumption`, `Fuel_CurrentLapConsumption`, plus optional `Fuel_CurrentLapValidForTracking` and `Fuel_RemainingLaps`; missing values remain blank-safe.

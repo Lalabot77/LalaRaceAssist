@@ -396,6 +396,7 @@
                 <styles:SHToggleCheckbox x:Name="DebugMasterToggle"
                                          Content="Enable debugging mode"
                                          Margin="0,10,0,0"
+                                         Click="PropertySnapshotRollingStatusRefresh_Click"
                                          IsChecked="{Binding Settings.EnableSoftDebug, Mode=TwoWay}"
                                          ToolTip="Master toggle that enables debug UI and debug processing."/>
                 <TextBlock Margin="0,6,0,0"
@@ -432,6 +433,7 @@
                         <StackPanel Orientation="Vertical" Margin="0,10,0,0">
                             <styles:SHToggleCheckbox x:Name="PropertySnapshotToggle"
                                                      Content="Enable Property Snapshot"
+                                                     Click="PropertySnapshotRollingStatusRefresh_Click"
                                                      IsChecked="{Binding Settings.EnablePropertySnapshot, Mode=TwoWay}"
                                                      ToolTip="When enabled, pressing Event Marker writes a CSV snapshot of plugin properties."/>
                             <WrapPanel Margin="22,6,0,0"

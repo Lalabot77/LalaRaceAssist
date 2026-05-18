@@ -1,3 +1,6 @@
+- 2026-05-18: Property Snapshot rolling status UI refresh coverage follow-up validated.
+  - `ROLLING CSV` status label now refreshes immediately when `Enable debugging mode` (Soft Debug) or `Enable Property Snapshot` toggles change, preventing stale OFF/READY/RECORDING display between rolling-control interactions.
+
 - 2026-05-18: Property Snapshot observability follow-up validated.
   - Added debug exports `Debug.PropertySnapshot.RollingStatusText` and `Debug.PropertySnapshot.RollingModeText` for dashboard/plugin-state visibility of rolling capture readiness and active recording state.
   - Property Snapshot capture now also records selected external DataCore fuel properties directly (`DataCorePlugin.Computed.Fuel_*`) under Fuel/Strategy group gating, blank-safe when unavailable.
