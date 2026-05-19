@@ -2595,8 +2595,7 @@ namespace LaunchPlugin
         var avg = GetProfileAverageFuelPerLapForCurrentCondition();
         if (avg.HasValue)
         {
-            FuelPerLap = avg.Value;
-            FuelPerLapSourceInfo = FormatConditionSourceLabel("Profile avg");
+            ApplyProfileFuelBasis(avg.Value, "Profile avg");
         }
     }
 
@@ -2605,8 +2604,7 @@ namespace LaunchPlugin
         var min = GetProfileFuelSaveForCurrentCondition();
         if (min.HasValue)
         {
-            FuelPerLap = min.Value;
-            FuelPerLapSourceInfo = FormatConditionSourceLabel("Profile eco");
+            ApplyProfileFuelBasis(min.Value, "Profile eco");
         }
     }
 
@@ -2615,8 +2613,7 @@ namespace LaunchPlugin
         var max = GetProfileFuelMaxForCurrentCondition();
         if (max.HasValue)
         {
-            FuelPerLap = max.Value;
-            FuelPerLapSourceInfo = FormatConditionSourceLabel("Profile max");
+            ApplyProfileFuelBasis(max.Value, "Profile max");
         }
     }
     public double TotalFuelNeeded { get => _totalFuelNeeded; private set { _totalFuelNeeded = value; OnPropertyChanged("TotalFuelNeeded"); } }
@@ -4256,6 +4253,143 @@ namespace LaunchPlugin
     public void ForceProfileDataReload()
     {
         LoadProfileData();
+    }
+
+    public void NotifyActiveTrackFuelProfileUpdated(bool persistedWet, CarProfile persistedProfile, TrackStats persistedTrackStats)
+    {
+        var disp = Application.Current?.Dispatcher;
+        if (disp == null || disp.CheckAccess())
+        {
+            ApplyActiveTrackFuelProfileUpdated(persistedWet, persistedProfile, persistedTrackStats);
+        }
+        else
+        {
+            disp.Invoke(() => ApplyActiveTrackFuelProfileUpdated(persistedWet, persistedProfile, persistedTrackStats));
+        }
+    }
+
+    private void ApplyActiveTrackFuelProfileUpdated(bool persistedWet, CarProfile persistedProfile, TrackStats persistedTrackStats)
+    {
+        var ts = SelectedTrackStats ?? ResolveSelectedTrackStats();
+        if (ts == null)
+        {
+            return;
+        }
+
+        if (!ReferenceEquals(SelectedCarProfile, persistedProfile))
+        {
+            return;
+        }
+
+        if (!ReferenceEquals(ts, persistedTrackStats))
+        {
+            return;
+        }
+
+        bool hadValidProfileFuelForCurrentCondition = IsWet
+            ? (_profileWetFuelAvg > 0 || _profileWetFuelMin > 0 || _profileWetFuelMax > 0)
+            : (_profileDryFuelAvg > 0 || _profileDryFuelMin > 0 || _profileDryFuelMax > 0);
+
+        bool wetAvgUsesDerivedFromDry = IsWet
+            && IsProfileAverageFuelChoiceActive
+            && !(ts.AvgFuelPerLapWet > 0)
+            && (ts.AvgFuelPerLapDry > 0);
+        bool wetEcoUsesDerivedFromDry = IsWet
+            && IsProfileEcoFuelChoiceActive
+            && !(ts.MinFuelPerLapWet > 0)
+            && (ts.MinFuelPerLapDry > 0);
+        bool wetMaxUsesDerivedFromDry = IsWet
+            && IsProfileMaxFuelChoiceActive
+            && !(ts.MaxFuelPerLapWet > 0)
+            && (ts.MaxFuelPerLapDry > 0);
+        bool wetFallbackAppliesForActiveChoice = wetAvgUsesDerivedFromDry
+            || wetEcoUsesDerivedFromDry
+            || wetMaxUsesDerivedFromDry;
+        bool updateCurrentCondition = (persistedWet && IsWet)
+            || (!persistedWet && IsDry)
+            || (!persistedWet && wetFallbackAppliesForActiveChoice);
+
+        _profileDryFuelAvg = ts.AvgFuelPerLapDry ?? 0;
+        _profileDryFuelMin = ts.MinFuelPerLapDry ?? 0;
+        _profileDryFuelMax = ts.MaxFuelPerLapDry ?? 0;
+        _profileDrySamples = ts.DryFuelSampleCount ?? 0;
+        _profileWetFuelAvg = ts.AvgFuelPerLapWet ?? 0;
+        _profileWetFuelMin = ts.MinFuelPerLapWet ?? 0;
+        _profileWetFuelMax = ts.MaxFuelPerLapWet ?? 0;
+        _profileWetSamples = ts.WetFuelSampleCount ?? 0;
+
+        if (_profileDryFuelAvg > 0)
+        {
+            _baseDryFuelPerLap = _profileDryFuelAvg;
+        }
+
+        HasProfileFuelPerLap = (ts.AvgFuelPerLapDry > 0) || (ts.AvgFuelPerLapWet > 0);
+        UpdateProfileAverageDisplaysForCondition(ts);
+        UpdateProfileFuelChoiceDisplays();
+        UpdateFuelBurnSummaries();
+
+        bool isProfileSource = FuelPerLapSourceInfo?.IndexOf("Profile", StringComparison.OrdinalIgnoreCase) >= 0;
+        bool shouldRefreshActiveProfileFuelBasis = SelectedPlanningSourceMode == PlanningSourceMode.Profile
+            && updateCurrentCondition
+            && !IsFuelPerLapManual
+            && (isProfileSource || !hadValidProfileFuelForCurrentCondition);
+
+        if (shouldRefreshActiveProfileFuelBasis)
+        {
+            bool applied = false;
+            if (IsProfileEcoFuelChoiceActive)
+            {
+                var eco = GetProfileFuelSaveForCurrentCondition();
+                if (eco.HasValue)
+                {
+                    applied = ApplyProfileFuelBasis(eco.Value, "Profile eco");
+                }
+            }
+            else if (IsProfileMaxFuelChoiceActive)
+            {
+                var max = GetProfileFuelMaxForCurrentCondition();
+                if (max.HasValue)
+                {
+                    applied = ApplyProfileFuelBasis(max.Value, "Profile max");
+                }
+            }
+
+            if (!applied)
+            {
+                var avg = GetProfileAverageFuelPerLapForCurrentCondition();
+                if (avg.HasValue)
+                {
+                    applied = ApplyProfileFuelBasis(avg.Value, "Profile avg");
+                }
+            }
+
+            if (applied)
+            {
+                RequestStrategyRecalc();
+            }
+        }
+
+        CommandManager.InvalidateRequerySuggested();
+    }
+
+    private bool ApplyProfileFuelBasis(double value, string sourceBaseLabel)
+    {
+        if (!(value > 0))
+        {
+            return false;
+        }
+
+        ApplySourceUpdate(() =>
+        {
+            FuelPerLap = value;
+            _fuelPerLapText = value.ToString("0.00", CultureInfo.InvariantCulture);
+            OnPropertyChanged(nameof(FuelPerLapText));
+
+            IsFuelPerLapManual = false;
+            FuelPerLapSourceInfo = FormatConditionSourceLabel(sourceBaseLabel);
+        });
+
+        return true;
     }
 
         public void RefreshPlannerView()

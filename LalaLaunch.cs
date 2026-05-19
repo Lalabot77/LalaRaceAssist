@@ -4123,6 +4123,7 @@ namespace LaunchPlugin
                                 ?? ActiveProfile.ResolveTrackByNameOrKey(CurrentTrackName);
                             if (trackRecord != null)
                             {
+                                bool persistedFuelStats = false;
                                 if (lapConditionWet)
                                 {
                                     trackRecord.WetFuelSampleCount = _validWetLaps;
@@ -4132,6 +4133,7 @@ namespace LaunchPlugin
                                         if (_minWetFuelPerLap > 0) trackRecord.MinFuelPerLapWet = _minWetFuelPerLap;
                                         if (_avgWetFuelPerLap > 0) trackRecord.AvgFuelPerLapWet = _avgWetFuelPerLap;
                                         if (_maxWetFuelPerLap > 0) trackRecord.MaxFuelPerLapWet = _maxWetFuelPerLap;
+                                        persistedFuelStats = true;
                                         trackRecord.MarkFuelUpdatedWet("Telemetry");
                                         if (!_wetFuelPersistLogged)
                                         {
@@ -4152,6 +4154,7 @@ namespace LaunchPlugin
                                         if (_minDryFuelPerLap > 0) trackRecord.MinFuelPerLapDry = _minDryFuelPerLap;
                                         if (_avgDryFuelPerLap > 0) trackRecord.AvgFuelPerLapDry = _avgDryFuelPerLap;
                                         if (_maxDryFuelPerLap > 0) trackRecord.MaxFuelPerLapDry = _maxDryFuelPerLap;
+                                        persistedFuelStats = true;
                                         trackRecord.MarkFuelUpdatedDry("Telemetry");
                                         if (!_dryFuelPersistLogged)
                                         {
@@ -4162,6 +4165,11 @@ namespace LaunchPlugin
                                             _dryFuelPersistLogged = true;
                                         }
                                     }
+                                }
+
+                                if (persistedFuelStats)
+                                {
+                                    FuelCalculator?.NotifyActiveTrackFuelProfileUpdated(lapConditionWet, ActiveProfile, trackRecord);
                                 }
 
                             }

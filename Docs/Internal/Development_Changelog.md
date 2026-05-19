@@ -2554,3 +2554,39 @@ The public user-facing release history is maintained in the root `CHANGELOG.md`.
   - removed out-of-scope `MaybeWritePropertySnapshot(sessionTimeSec, lapCrossed, completedLaps)` call from `DataUpdate(...)`; manual marker + FREQUENCY automation remain owned there.
   - added narrow `MaybeWritePropertySnapshotPerLap(sessionTimeSec, lapCrossed, completedLaps)` seam called from `UpdateLiveFuelCalcs(...)` immediately after existing lap-cross detection/CompletedLaps context is available.
   - PER LAP automation remains rolling-only, de-duped by completed lap, and reuses existing `DetectLapCrossing(...)` seam (no second lap detector, no fuel/pit/projection logic changes).
+
+## 2026-05-18 — Strategy Profile fuel preview live-refresh after telemetry learning
+- Classification: **both** (Strategy tab Profile-mode UI refresh correctness + internal notification-path fix).
+- Added a narrow telemetry-to-planner refresh seam: after profile fuel stats are persisted to active `TrackStats` in `LalaLaunch`, runtime now notifies `FuelCalcs` via `NotifyActiveTrackFuelProfileUpdated(...)`.
+- `FuelCalcs` now refreshes Profile fuel preview labels (AVG/ECO/MAX), profile fuel-choice availability/button states, and source-dependent strategy recalc eligibility in-place for active track/condition without requiring mode toggle, track reselection, or manual Refresh Calcs.
+- Auto-apply guard remains ownership-safe: Fuel-per-lap is auto-updated to profile AVG only when Strategy is in Profile mode and either profile-avg choice is active or profile source had no prior valid profile fuel for that condition.
+
+## 2026-05-19 — PR #744 follow-up: Strategy Profile fuel auto-apply gate widening
+- Classification: **both** (Strategy Profile-mode live-refresh ownership correction + user-visible textbox/source update correctness).
+- Replaced the prior AVG-only live-refresh auto-apply gate with active-choice-aware profile basis refresh logic in `FuelCalcs.ApplyActiveTrackFuelProfileUpdated(...)`.
+- Cold-start fix: when current condition previously had no valid profile fuel, first learned profile fuel now becomes active in Profile mode even if source text was not already Profile (manual entry still protected).
+- Wet derived-fallback fix: while in wet Profile mode with no direct wet saved value, dry telemetry persistence is now treated as relevant and can refresh/re-apply the active wet profile basis derived from dry × wet factor.
+- Active choice fix: live refresh now re-applies active Profile fuel basis by choice (`Profile avg`, `Profile eco`, `Profile max`) instead of forcing AVG when ECO/MAX is active.
+- No DATA authority, Fuel.Refuel, Pit.FuelControl, pit command, or persistence-schema changes.
+
+## 2026-05-19 — PR #744 follow-up #2: source-tracking + identity guard hardening
+- Classification: **both** (Strategy live-refresh ownership correctness + cross-track/profile safety hardening).
+- `NotifyActiveTrackFuelProfileUpdated(...)` now carries persisted identity (`CarProfile`, `TrackStats`) and `FuelCalcs` now returns early unless the currently selected Strategy profile+track row matches the persisted row by reference.
+- Auto-applied Profile fuel refresh now uses a non-manual-safe helper (`ApplyProfileFuelBasis(...)`) that runs under `ApplySourceUpdate(...)`, syncs textbox text, and explicitly keeps `IsFuelPerLapManual=false` while setting `FuelPerLapSourceInfo` to Profile avg/eco/max.
+- Preserved behavior boundaries: manual user edits still own manual mode; Live Snapshot unchanged; no DATA authority/Fuel.Refuel/Pit.FuelControl/pit-command/schema changes.
+
+## 2026-05-19 — PR #744 follow-up #3: Profile button source-safe manual-state fix
+- Classification: **both** (Strategy Profile button ownership correctness + telemetry-refresh continuity).
+- Updated `UseProfileFuelPerLap`, `UseProfileFuelSave`, and `UseProfileFuelMax` to route through `ApplyProfileFuelBasis(...)` instead of direct `FuelPerLap` assignment.
+- Profile button selections now preserve non-manual ownership (`IsFuelPerLapManual=false`) while keeping Profile avg/eco/max source labels, so later telemetry profile refresh can continue re-applying the active Profile basis.
+- Manual typed textbox entry semantics remain unchanged (manual edits still own `IsFuelPerLapManual=true` and block auto-refresh as intended).
+- No DATA authority/Fuel.Refuel/Pit.FuelControl/pit-command/persistence-schema changes.
+
+## 2026-05-19 — PR #744 follow-up #4: wet derived-choice relevance + precision-safe profile text sync
+- Classification: **both** (Strategy Profile wet-fallback refresh correctness + numeric precision safety).
+- Refined dry-persist relevance while wet Profile mode is active to be choice-specific:
+  - AVG choice: dry persistence is relevant only when wet AVG is missing and dry AVG exists.
+  - ECO choice: dry persistence is relevant only when wet ECO/min is missing and dry min exists.
+  - MAX choice: dry persistence is relevant only when wet MAX is missing and dry max exists.
+- Updated `ApplyProfileFuelBasis(...)` to preserve exact numeric `FuelPerLap` by setting rounded display text via backing field + `PropertyChanged` (no `FuelPerLapText` setter parse-back), while keeping `IsFuelPerLapManual=false` and Profile source labels.
+- Manual textbox typing semantics unchanged; DATA/Fuel.Refuel/Pit.FuelControl/pit-command/schema unchanged.

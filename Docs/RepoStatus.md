@@ -1537,3 +1537,8 @@ Branch: work
   - `DataUpdate(...)` now runs Property Snapshot manual-marker + FREQUENCY automation only (session-time in scope).
   - PER LAP automation is now triggered from `UpdateLiveFuelCalcs(...)` at the existing `DetectLapCrossing(...)` seam where `lapCrossed` + `CompletedLaps` context is valid.
   - Behavior invariants preserved: manual marker still writes one-shot (+optional rolling), automation remains rolling-only, PER LAP remains one capture per completed lap.
+- 2026-05-18: Strategy Profile-mode fuel preview now live-refreshes after telemetry fuel persistence for the active track/condition (AVG/ECO/MAX labels + button availability refresh without mode/track toggle; profile-avg textbox auto-apply remains source-ownership guarded).
+- 2026-05-19: PR #744 follow-up landed: Strategy Profile telemetry-refresh now re-applies active Profile fuel choice (AVG/ECO/MAX), covers cold no-profile first-learn auto-apply, and updates wet derived-from-dry fallback paths without DATA/Fuel.Refuel/Pit-control contract changes.
+- 2026-05-19: PR #744 follow-up #2 landed: telemetry profile-fuel refresh now requires selected Strategy profile+track identity match and preserves non-manual source tracking when auto-applying Profile AVG/ECO/MAX.
+- 2026-05-19: PR #744 follow-up #3 landed: Profile AVG/ECO/MAX button handlers now use source-safe non-manual apply path, preserving telemetry-refresh eligibility for active Profile choice.
+- 2026-05-19: PR #744 follow-up #4 landed: wet derived-from-dry relevance now applies per active Profile choice (AVG/ECO/MAX) and profile fuel text sync no longer rounds numeric `FuelPerLap` through textbox parse-back.
