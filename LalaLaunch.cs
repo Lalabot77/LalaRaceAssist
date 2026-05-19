@@ -1629,8 +1629,17 @@ namespace LaunchPlugin
                 (forecastRaceLaps > 0.0 && preRaceFuelPerLap > 0.0)
                     ? forecastRaceLaps * preRaceFuelPerLap
                     : 0.0;
+            double formationLapFuelLitres = 0.0;
+            if (!isRaceRunning)
+            {
+                double plannerFormationFuel = FuelCalculator?.FormationLapFuelLiters ?? 0.0;
+                if (!double.IsNaN(plannerFormationFuel) && !double.IsInfinity(plannerFormationFuel))
+                {
+                    formationLapFuelLitres = Math.Max(0.0, plannerFormationFuel);
+                }
+            }
             PreRace_TotalFuelNeeded =
-                baseRaceFuelLitres + contingencyLitres;
+                baseRaceFuelLitres + contingencyLitres + formationLapFuelLitres;
 
             PreRace_Stints = usableTank > 0.0
                 ? Math.Round(Math.Max(0.0, PreRace_TotalFuelNeeded / usableTank), 1)

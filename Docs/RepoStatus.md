@@ -1,3 +1,8 @@
+- 2026-05-19: PreRace/StrategyDash formation-fuel adapter parity fix validated.
+  - `LalaLaunch.UpdatePreRaceOutputs(...)` now includes planner formation fuel (`FuelCalculator.FormationLapFuelLiters`, clamped non-negative) exactly once in pre-race total fuel need when not race-running.
+  - This makes `LalaLaunch.PreRace.*` and `StrategyDash.*` pre-green fuel guidance formation-aware (`TotalFuelNeeded`, stints/delta/status, start-fuel required/advice/status, next-refuel target/delta/advice/status, required stops pre-green).
+  - Runtime race-running families remain intentionally unchanged and formation-excluded (`Fuel.Refuel.*`, `Fuel.Delta.*`, `Fuel.RequiredBurnToEnd*`, `Fuel.Pit.*`, `Pit.FuelControl.*`) to avoid double-count after formation burn.
+
 
 - 2026-05-19 PR #745 review follow-up validated:
   - Preset edit/clone/copy now hydrate/save explicit tyre intent from resolved compatibility state (`ResolvedTyreStopExpected`) instead of nullable raw field.
