@@ -4237,23 +4237,33 @@ namespace LaunchPlugin
         LoadProfileData();
     }
 
-    public void NotifyActiveTrackFuelProfileUpdated(bool persistedWet)
+    public void NotifyActiveTrackFuelProfileUpdated(bool persistedWet, CarProfile persistedProfile, TrackStats persistedTrackStats)
     {
         var disp = Application.Current?.Dispatcher;
         if (disp == null || disp.CheckAccess())
         {
-            ApplyActiveTrackFuelProfileUpdated(persistedWet);
+            ApplyActiveTrackFuelProfileUpdated(persistedWet, persistedProfile, persistedTrackStats);
         }
         else
         {
-            disp.Invoke(() => ApplyActiveTrackFuelProfileUpdated(persistedWet));
+            disp.Invoke(() => ApplyActiveTrackFuelProfileUpdated(persistedWet, persistedProfile, persistedTrackStats));
         }
     }
 
-    private void ApplyActiveTrackFuelProfileUpdated(bool persistedWet)
+    private void ApplyActiveTrackFuelProfileUpdated(bool persistedWet, CarProfile persistedProfile, TrackStats persistedTrackStats)
     {
         var ts = SelectedTrackStats ?? ResolveSelectedTrackStats();
         if (ts == null)
+        {
+            return;
+        }
+
+        if (!ReferenceEquals(SelectedCarProfile, persistedProfile))
+        {
+            return;
+        }
+
+        if (!ReferenceEquals(ts, persistedTrackStats))
         {
             return;
         }
@@ -4302,9 +4312,7 @@ namespace LaunchPlugin
                 var eco = GetProfileFuelSaveForCurrentCondition();
                 if (eco.HasValue)
                 {
-                    FuelPerLap = eco.Value;
-                    FuelPerLapSourceInfo = FormatConditionSourceLabel("Profile eco");
-                    applied = true;
+                    applied = ApplyProfileFuelBasis(eco.Value, "Profile eco");
                 }
             }
             else if (IsProfileMaxFuelChoiceActive)
@@ -4312,9 +4320,7 @@ namespace LaunchPlugin
                 var max = GetProfileFuelMaxForCurrentCondition();
                 if (max.HasValue)
                 {
-                    FuelPerLap = max.Value;
-                    FuelPerLapSourceInfo = FormatConditionSourceLabel("Profile max");
-                    applied = true;
+                    applied = ApplyProfileFuelBasis(max.Value, "Profile max");
                 }
             }
 
@@ -4323,9 +4329,7 @@ namespace LaunchPlugin
                 var avg = GetProfileAverageFuelPerLapForCurrentCondition();
                 if (avg.HasValue)
                 {
-                    FuelPerLap = avg.Value;
-                    FuelPerLapSourceInfo = FormatConditionSourceLabel("Profile avg");
-                    applied = true;
+                    applied = ApplyProfileFuelBasis(avg.Value, "Profile avg");
                 }
             }
 
@@ -4336,6 +4340,33 @@ namespace LaunchPlugin
         }
 
         CommandManager.InvalidateRequerySuggested();
+    }
+
+    private bool ApplyProfileFuelBasis(double value, string sourceBaseLabel)
+    {
+        if (!(value > 0))
+        {
+            return false;
+        }
+
+        ApplySourceUpdate(() =>
+        {
+            FuelPerLap = value;
+            _suppressFuelTextSync = true;
+            try
+            {
+                FuelPerLapText = value.ToString("0.00", CultureInfo.InvariantCulture);
+            }
+            finally
+            {
+                _suppressFuelTextSync = false;
+            }
+
+            IsFuelPerLapManual = false;
+            FuelPerLapSourceInfo = FormatConditionSourceLabel(sourceBaseLabel);
+        });
+
+        return true;
     }
 
         public void RefreshPlannerView()

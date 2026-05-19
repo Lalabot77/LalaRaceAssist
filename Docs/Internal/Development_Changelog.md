@@ -2549,3 +2549,9 @@ The public user-facing release history is maintained in the root `CHANGELOG.md`.
 - Wet derived-fallback fix: while in wet Profile mode with no direct wet saved value, dry telemetry persistence is now treated as relevant and can refresh/re-apply the active wet profile basis derived from dry × wet factor.
 - Active choice fix: live refresh now re-applies active Profile fuel basis by choice (`Profile avg`, `Profile eco`, `Profile max`) instead of forcing AVG when ECO/MAX is active.
 - No DATA authority, Fuel.Refuel, Pit.FuelControl, pit command, or persistence-schema changes.
+
+## 2026-05-19 — PR #744 follow-up #2: source-tracking + identity guard hardening
+- Classification: **both** (Strategy live-refresh ownership correctness + cross-track/profile safety hardening).
+- `NotifyActiveTrackFuelProfileUpdated(...)` now carries persisted identity (`CarProfile`, `TrackStats`) and `FuelCalcs` now returns early unless the currently selected Strategy profile+track row matches the persisted row by reference.
+- Auto-applied Profile fuel refresh now uses a non-manual-safe helper (`ApplyProfileFuelBasis(...)`) that runs under `ApplySourceUpdate(...)`, syncs textbox text, and explicitly keeps `IsFuelPerLapManual=false` while setting `FuelPerLapSourceInfo` to Profile avg/eco/max.
+- Preserved behavior boundaries: manual user edits still own manual mode; Live Snapshot unchanged; no DATA authority/Fuel.Refuel/Pit.FuelControl/pit-command/schema changes.

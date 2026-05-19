@@ -4169,7 +4169,7 @@ namespace LaunchPlugin
 
                                 if (persistedFuelStats)
                                 {
-                                    FuelCalculator?.NotifyActiveTrackFuelProfileUpdated(lapConditionWet);
+                                    FuelCalculator?.NotifyActiveTrackFuelProfileUpdated(lapConditionWet, ActiveProfile, trackRecord);
                                 }
 
                             }

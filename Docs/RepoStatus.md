@@ -1522,3 +1522,4 @@ Branch: work
   - Behavior invariants preserved: manual marker still writes one-shot (+optional rolling), automation remains rolling-only, PER LAP remains one capture per completed lap.
 - 2026-05-18: Strategy Profile-mode fuel preview now live-refreshes after telemetry fuel persistence for the active track/condition (AVG/ECO/MAX labels + button availability refresh without mode/track toggle; profile-avg textbox auto-apply remains source-ownership guarded).
 - 2026-05-19: PR #744 follow-up landed: Strategy Profile telemetry-refresh now re-applies active Profile fuel choice (AVG/ECO/MAX), covers cold no-profile first-learn auto-apply, and updates wet derived-from-dry fallback paths without DATA/Fuel.Refuel/Pit-control contract changes.
+- 2026-05-19: PR #744 follow-up #2 landed: telemetry profile-fuel refresh now requires selected Strategy profile+track identity match and preserves non-manual source tracking when auto-applying Profile AVG/ECO/MAX.
