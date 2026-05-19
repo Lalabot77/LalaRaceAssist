@@ -1260,7 +1260,12 @@ namespace LaunchPlugin
             double profileFuel = _isWetMode ? profileFuelWet : profileFuelDry;
             double profileLap = GetProfileAvgLapSeconds();
 
-            double simLap = hasGameData ? ((data.NewData?.LastLapTime ?? TimeSpan.Zero).TotalSeconds) : 0.0;
+            double simLap = hasGameData
+                ? SafeReadDouble(
+                    PluginManager,
+                    "DataCorePlugin.GameRawData.SessionData.DriverInfo.DriverCarEstLapTime",
+                    0.0)
+                : 0.0;
             bool usePlanData = (_pitFuelControlEngine?.Data ?? PitFuelControlData.Live) == PitFuelControlData.Plan;
 
             fuelPerLap = 0.0;

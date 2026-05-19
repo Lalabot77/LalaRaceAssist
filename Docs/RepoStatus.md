@@ -1,3 +1,18 @@
+- 2026-05-19: PR #748 follow-up #2 validated (first live-load SimHub guard window + wet basis preservation).
+  - Strategy planner SimHub fallback guard now accepts pending live identity during `ApplyLiveSession` pre-activation window, enabling immediate first live no-profile fallback (`SimHub est`/`SimHub`) when identities match.
+  - Stale/disconnected/unmatched SimHub cached fallback remains blocked (no active/pending identity match -> fallback to Default paths).
+  - Missing dry avg no longer zeroes wet-usable basis when wet avg exists; wet profile fuel now remains stable across wet-factor/condition refresh paths.
+
+- 2026-05-19: PR #748 follow-up validated (Strategy fallback branch/guard fixes).
+  - Fixed Strategy Profile fuel fallback branch placement so no-profile tracks now execute `PROFILE -> SIMHUB -> DEFAULT` even when dry profile avg is missing.
+  - Added live-context guard to planner SimHub fallbacks (lap+fuel): requires active live session and planner selected car/track identity match; otherwise SimHub fallback is blocked and defaults apply.
+  - Prevents stale/disconnected cached SimHub/DataCore values from appearing as planner fallback inputs.
+
+- 2026-05-19: Strategy planner SimHub fallback cleanup + DATA LIVE lap SIM parity validated.
+  - Strategy Profile-mode no-profile load now uses truthful fallback chains (`Lap: PROFILE -> SIMHUB EST -> DEFAULT`, `Fuel: PROFILE -> SIMHUB -> DEFAULT`) and no longer surfaces stale/manual-looking lap labels on auto load.
+  - Strategy source helper text now aligns with actual fallback provenance (`SimHub est`/`SimHub`/`Default`); default 2.8 fuel fallback no longer reports `profile`.
+  - Runtime DATA LIVE lap SIM fallback now uses `DataCorePlugin.GameRawData.SessionData.DriverInfo.DriverCarEstLapTime`, enabling `DATA LIVE | LAP SIM / BURN SIM` when both SimHub fallbacks are available.
+  - DATA SAVED authority contract unchanged.
 - 2026-05-19: PR #750 follow-up (Option B) validated — live tyre prediction decoupled from Strategy slider.
   - `Fuel.Live.TireChangeTime_S` full-4 basis now reads active profile `TireChangeTime` (sanitized non-negative) instead of planner slider value.
   - Strategy slider remains planner what-if only (still seeded/refreshed from profile), and no longer mutates live boxed tyre-time prediction basis.
