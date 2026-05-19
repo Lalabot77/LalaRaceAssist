@@ -4237,6 +4237,67 @@ namespace LaunchPlugin
         LoadProfileData();
     }
 
+    public void NotifyActiveTrackFuelProfileUpdated(bool persistedWet)
+    {
+        var disp = Application.Current?.Dispatcher;
+        if (disp == null || disp.CheckAccess())
+        {
+            ApplyActiveTrackFuelProfileUpdated(persistedWet);
+        }
+        else
+        {
+            disp.Invoke(() => ApplyActiveTrackFuelProfileUpdated(persistedWet));
+        }
+    }
+
+    private void ApplyActiveTrackFuelProfileUpdated(bool persistedWet)
+    {
+        var ts = SelectedTrackStats ?? ResolveSelectedTrackStats();
+        if (ts == null)
+        {
+            return;
+        }
+
+        bool updateCurrentCondition = (persistedWet && IsWet) || (!persistedWet && IsDry);
+        bool hadValidProfileFuelForCondition = persistedWet
+            ? (_profileWetFuelAvg > 0 || _profileWetFuelMin > 0 || _profileWetFuelMax > 0)
+            : (_profileDryFuelAvg > 0 || _profileDryFuelMin > 0 || _profileDryFuelMax > 0);
+
+        _profileDryFuelAvg = ts.AvgFuelPerLapDry ?? 0;
+        _profileDryFuelMin = ts.MinFuelPerLapDry ?? 0;
+        _profileDryFuelMax = ts.MaxFuelPerLapDry ?? 0;
+        _profileDrySamples = ts.DryFuelSampleCount ?? 0;
+        _profileWetFuelAvg = ts.AvgFuelPerLapWet ?? 0;
+        _profileWetFuelMin = ts.MinFuelPerLapWet ?? 0;
+        _profileWetFuelMax = ts.MaxFuelPerLapWet ?? 0;
+        _profileWetSamples = ts.WetFuelSampleCount ?? 0;
+
+        if (_profileDryFuelAvg > 0)
+        {
+            _baseDryFuelPerLap = _profileDryFuelAvg;
+        }
+
+        HasProfileFuelPerLap = (ts.AvgFuelPerLapDry > 0) || (ts.AvgFuelPerLapWet > 0);
+        UpdateProfileAverageDisplaysForCondition(ts);
+        UpdateProfileFuelChoiceDisplays();
+        UpdateFuelBurnSummaries();
+
+        bool isProfileSource = FuelPerLapSourceInfo?.IndexOf("Profile", StringComparison.OrdinalIgnoreCase) >= 0;
+        bool isProfileAvgChoiceActive = IsProfileAverageFuelChoiceActive;
+        bool shouldAutoApplyProfileAvg = SelectedPlanningSourceMode == PlanningSourceMode.Profile
+            && updateCurrentCondition
+            && !IsFuelPerLapManual
+            && (isProfileAvgChoiceActive || (isProfileSource && !hadValidProfileFuelForCondition));
+
+        if (shouldAutoApplyProfileAvg)
+        {
+            ApplyPlanningSourceToAutoFields(applyLapTime: false, applyFuel: true);
+            RequestStrategyRecalc();
+        }
+
+        CommandManager.InvalidateRequerySuggested();
+    }
+
         public void RefreshPlannerView()
         {
             _suppressPlannerDirtyUpdates = true;

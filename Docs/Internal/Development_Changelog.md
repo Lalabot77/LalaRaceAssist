@@ -2535,3 +2535,9 @@ The public user-facing release history is maintained in the root `CHANGELOG.md`.
   - removed out-of-scope `MaybeWritePropertySnapshot(sessionTimeSec, lapCrossed, completedLaps)` call from `DataUpdate(...)`; manual marker + FREQUENCY automation remain owned there.
   - added narrow `MaybeWritePropertySnapshotPerLap(sessionTimeSec, lapCrossed, completedLaps)` seam called from `UpdateLiveFuelCalcs(...)` immediately after existing lap-cross detection/CompletedLaps context is available.
   - PER LAP automation remains rolling-only, de-duped by completed lap, and reuses existing `DetectLapCrossing(...)` seam (no second lap detector, no fuel/pit/projection logic changes).
+
+## 2026-05-18 — Strategy Profile fuel preview live-refresh after telemetry learning
+- Classification: **both** (Strategy tab Profile-mode UI refresh correctness + internal notification-path fix).
+- Added a narrow telemetry-to-planner refresh seam: after profile fuel stats are persisted to active `TrackStats` in `LalaLaunch`, runtime now notifies `FuelCalcs` via `NotifyActiveTrackFuelProfileUpdated(...)`.
+- `FuelCalcs` now refreshes Profile fuel preview labels (AVG/ECO/MAX), profile fuel-choice availability/button states, and source-dependent strategy recalc eligibility in-place for active track/condition without requiring mode toggle, track reselection, or manual Refresh Calcs.
+- Auto-apply guard remains ownership-safe: Fuel-per-lap is auto-updated to profile AVG only when Strategy is in Profile mode and either profile-avg choice is active or profile source had no prior valid profile fuel for that condition.
