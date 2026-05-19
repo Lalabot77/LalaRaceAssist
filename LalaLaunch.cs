@@ -18654,41 +18654,23 @@ namespace LaunchPlugin
 
         private int ResolveLiveSelectedTireChangeCount(PluginManager pluginManager)
         {
-            bool sawFlag = false;
-            int count = 0;
-            string[] selectors = new[]
-            {
-                "DataCorePlugin.GameRawData.Telemetry.dpLFTireChange",
-                "DataCorePlugin.GameRawData.Telemetry.dpRFTireChange",
-                "DataCorePlugin.GameRawData.Telemetry.dpLRTireChange",
-                "DataCorePlugin.GameRawData.Telemetry.dpRRTireChange"
-            };
+            bool? lf = TryReadNullableBool(pluginManager.GetPropertyValue("DataCorePlugin.GameRawData.Telemetry.dpLFTireChange"));
+            bool? rf = TryReadNullableBool(pluginManager.GetPropertyValue("DataCorePlugin.GameRawData.Telemetry.dpRFTireChange"));
+            bool? lr = TryReadNullableBool(pluginManager.GetPropertyValue("DataCorePlugin.GameRawData.Telemetry.dpLRTireChange"));
+            bool? rr = TryReadNullableBool(pluginManager.GetPropertyValue("DataCorePlugin.GameRawData.Telemetry.dpRRTireChange"));
 
-            foreach (var name in selectors)
+            bool allFlagsAvailable = lf.HasValue && rf.HasValue && lr.HasValue && rr.HasValue;
+            if (!allFlagsAvailable)
             {
-                try
-                {
-                    var raw = pluginManager.GetPropertyValue(name);
-                    if (raw != null)
-                    {
-                        sawFlag = true;
-                        if (Convert.ToBoolean(raw))
-                        {
-                            count++;
-                        }
-                    }
-                }
-                catch
-                {
-                    // ignore and keep looking
-                }
-            }
-
-            if (!sawFlag)
-            {
-                // Conservative fail-open fallback when telemetry flags are unavailable.
+                // Conservative fail-open fallback when tyre flags are unavailable or partially unavailable.
                 return 4;
             }
+
+            int count = 0;
+            if (lf.Value) count++;
+            if (rf.Value) count++;
+            if (lr.Value) count++;
+            if (rr.Value) count++;
 
             if (count < 0) return 0;
             if (count > 4) return 4;
