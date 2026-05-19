@@ -3479,6 +3479,11 @@ namespace LaunchPlugin
 
     private TimeSpan? GetSimHubEstimatedLapTime()
     {
+        if (!IsPlannerLiveContextActiveForSimHubFallback())
+        {
+            return null;
+        }
+
         var pluginManager = _plugin?.PluginManager;
         if (pluginManager == null)
         {
@@ -3500,6 +3505,11 @@ namespace LaunchPlugin
 
     private double? GetSimHubComputedFuelPerLap()
     {
+        if (!IsPlannerLiveContextActiveForSimHubFallback())
+        {
+            return null;
+        }
+
         var pluginManager = _plugin?.PluginManager;
         if (pluginManager == null)
         {
@@ -3513,6 +3523,32 @@ namespace LaunchPlugin
         }
 
         return simFuelPerLap;
+    }
+
+    private bool IsPlannerLiveContextActiveForSimHubFallback()
+    {
+        if (!IsLiveSessionActive)
+        {
+            return false;
+        }
+
+        string selectedCar = (SelectedCarProfile?.ProfileName ?? string.Empty).Trim();
+        string selectedTrack = (SelectedTrackStats?.Key ?? SelectedTrack ?? string.Empty).Trim();
+        string liveCar = (_activeLiveCarKey ?? string.Empty).Trim();
+        string liveTrack = (_activeLiveTrackKey ?? string.Empty).Trim();
+
+        if (string.IsNullOrWhiteSpace(selectedCar) || string.IsNullOrWhiteSpace(selectedTrack))
+        {
+            return false;
+        }
+
+        if (string.IsNullOrWhiteSpace(liveCar) || string.IsNullOrWhiteSpace(liveTrack))
+        {
+            return false;
+        }
+
+        return string.Equals(selectedCar, liveCar, StringComparison.OrdinalIgnoreCase)
+            && string.Equals(selectedTrack, liveTrack, StringComparison.OrdinalIgnoreCase);
     }
 
     private double? GetProfileAverageFuelPerLapForCurrentCondition()
@@ -4567,63 +4603,78 @@ namespace LaunchPlugin
                         });
                     }
                 }
-                else
-                {
-                    var simHubFuel = GetSimHubComputedFuelPerLap();
-                    if (simHubFuel.HasValue)
-                    {
-                        ApplySourceUpdate(() =>
-                        {
-                            FuelPerLap = simHubFuel.Value;
-                            FuelPerLapSourceInfo = "SimHub";
-                        });
-                    }
-                    else
-                    {
-                        // Handle case where track exists but has no fuel data.
-                        // Reset to the global default value and update the source text.
-                        var defaultProfile = _plugin.ProfilesViewModel.GetProfileForCar("Default Settings");
-                        var defaultFuel = defaultProfile?.TrackStats?["default"]?.AvgFuelPerLapDry ?? 2.8;
-                        ApplySourceUpdate(() =>
-                        {
-                            FuelPerLap = defaultFuel;
-                            FuelPerLapSourceInfo = "Default";
-                        });
-                    }
-                }
-
                 if (ts?.PitLaneLossSeconds is double pll && pll > 0)
                 {
                     PitLaneTimeLoss = pll;
                     SetLastPitDriveThroughSeconds(PitLaneTimeLoss);
                 }
 
-                // --- CONSOLIDATED: Populate all display properties ---
-                var dryLap = ts?.AvgLapTimeDry;
-                var wetLap = ts?.AvgLapTimeWet;
-                var dryFuel = ts?.AvgFuelPerLapDry;
-                var wetFuel = ts?.AvgFuelPerLapWet;
+            }
+            else
+            {
+                _baseDryFuelPerLap = 0.0;
+            }
 
-                UpdateProfileAverageDisplays();
+            bool hasProfileFuel = TryGetProfileFuelForCondition(IsWet, out var profileFuelForCondition, out var profileFuelSourceForCondition);
+            if (hasProfileFuel)
+            {
+                ApplySourceUpdate(() =>
+                {
+                    FuelPerLap = profileFuelForCondition;
+                    FuelPerLapSourceInfo = profileFuelSourceForCondition;
+                });
+            }
+            else
+            {
+                var simHubFuel = GetSimHubComputedFuelPerLap();
+                if (simHubFuel.HasValue)
+                {
+                    ApplySourceUpdate(() =>
+                    {
+                        FuelPerLap = simHubFuel.Value;
+                        FuelPerLapSourceInfo = "SimHub";
+                    });
+                }
+                else
+                {
+                    // Handle case where track exists but has no fuel data.
+                    // Reset to the global default value and update the source text.
+                    var defaultProfile = _plugin.ProfilesViewModel.GetProfileForCar("Default Settings");
+                    var defaultFuel = defaultProfile?.TrackStats?["default"]?.AvgFuelPerLapDry ?? 2.8;
+                    ApplySourceUpdate(() =>
+                    {
+                        FuelPerLap = defaultFuel;
+                        FuelPerLapSourceInfo = "Default";
+                    });
+                }
+            }
 
-                ProfileAvgDryLapTimeDisplay = (dryLap.HasValue && dryLap.Value > 0)
-                    ? TimeSpan.FromMilliseconds(dryLap.Value).ToString(@"m\:ss\.fff")
-                    : "-";
+            // --- CONSOLIDATED: Populate all display properties ---
+            var dryLap = ts?.AvgLapTimeDry;
+            var wetLap = ts?.AvgLapTimeWet;
+            var dryFuel = ts?.AvgFuelPerLapDry;
+            var wetFuel = ts?.AvgFuelPerLapWet;
 
-                ProfileAvgDryFuelDisplay = (dryFuel.HasValue && dryFuel.Value > 0)
-                    ? dryFuel.Value.ToString("F2") + "L"
-                    : "-";
+            UpdateProfileAverageDisplays();
 
-                HasProfileFuelPerLap = ts?.AvgFuelPerLapDry > 0 || ts?.AvgFuelPerLapWet > 0;
+            ProfileAvgDryLapTimeDisplay = (dryLap.HasValue && dryLap.Value > 0)
+                ? TimeSpan.FromMilliseconds(dryLap.Value).ToString(@"m\:ss\.fff")
+                : "-";
 
-                _profileDryFuelAvg = ts?.AvgFuelPerLapDry ?? 0;
-                _profileDryFuelMin = ts?.MinFuelPerLapDry ?? 0;
-                _profileDryFuelMax = ts?.MaxFuelPerLapDry ?? 0;
-                _profileDrySamples = ts?.DryFuelSampleCount ?? 0;
-                _profileWetFuelAvg = ts?.AvgFuelPerLapWet ?? 0;
-                _profileWetFuelMin = ts?.MinFuelPerLapWet ?? 0;
-                _profileWetFuelMax = ts?.MaxFuelPerLapWet ?? 0;
-                _profileWetSamples = ts?.WetFuelSampleCount ?? 0;
+            ProfileAvgDryFuelDisplay = (dryFuel.HasValue && dryFuel.Value > 0)
+                ? dryFuel.Value.ToString("F2") + "L"
+                : "-";
+
+            HasProfileFuelPerLap = ts?.AvgFuelPerLapDry > 0 || ts?.AvgFuelPerLapWet > 0;
+
+            _profileDryFuelAvg = ts?.AvgFuelPerLapDry ?? 0;
+            _profileDryFuelMin = ts?.MinFuelPerLapDry ?? 0;
+            _profileDryFuelMax = ts?.MaxFuelPerLapDry ?? 0;
+            _profileDrySamples = ts?.DryFuelSampleCount ?? 0;
+            _profileWetFuelAvg = ts?.AvgFuelPerLapWet ?? 0;
+            _profileWetFuelMin = ts?.MinFuelPerLapWet ?? 0;
+            _profileWetFuelMax = ts?.MaxFuelPerLapWet ?? 0;
+            _profileWetSamples = ts?.WetFuelSampleCount ?? 0;
 
                 UpdateProfileFuelChoiceDisplays();
                 UpdateFuelBurnSummaries();

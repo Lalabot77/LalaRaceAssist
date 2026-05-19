@@ -1,3 +1,8 @@
+- 2026-05-19: PR #748 follow-up validated (Strategy fallback branch/guard fixes).
+  - Fixed Strategy Profile fuel fallback branch placement so no-profile tracks now execute `PROFILE -> SIMHUB -> DEFAULT` even when dry profile avg is missing.
+  - Added live-context guard to planner SimHub fallbacks (lap+fuel): requires active live session and planner selected car/track identity match; otherwise SimHub fallback is blocked and defaults apply.
+  - Prevents stale/disconnected cached SimHub/DataCore values from appearing as planner fallback inputs.
+
 - 2026-05-19: Strategy planner SimHub fallback cleanup + DATA LIVE lap SIM parity validated.
   - Strategy Profile-mode no-profile load now uses truthful fallback chains (`Lap: PROFILE -> SIMHUB EST -> DEFAULT`, `Fuel: PROFILE -> SIMHUB -> DEFAULT`) and no longer surfaces stale/manual-looking lap labels on auto load.
   - Strategy source helper text now aligns with actual fallback provenance (`SimHub est`/`SimHub`/`Default`); default 2.8 fuel fallback no longer reports `profile`.
