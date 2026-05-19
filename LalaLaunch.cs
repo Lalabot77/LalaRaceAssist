@@ -18751,7 +18751,7 @@ namespace LaunchPlugin
 
         private double GetEffectiveTireChangeTimeSeconds()
         {
-            double full4 = FuelCalculator?.TireChangeTime ?? 0.0;
+            double full4 = ActiveProfile?.TireChangeTime ?? 0.0;
             if (double.IsNaN(full4) || double.IsInfinity(full4) || full4 < 0.0)
             {
                 full4 = 0.0;

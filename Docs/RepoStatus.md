@@ -1,3 +1,7 @@
+- 2026-05-19: PR #750 follow-up (Option B) validated — live tyre prediction decoupled from Strategy slider.
+  - `Fuel.Live.TireChangeTime_S` full-4 basis now reads active profile `TireChangeTime` (sanitized non-negative) instead of planner slider value.
+  - Strategy slider remains planner what-if only (still seeded/refreshed from profile), and no longer mutates live boxed tyre-time prediction basis.
+
 - 2026-05-19: Tyre timing refresh + boxed tyre-count latch + preset checkbox-state follow-up validated.
   - Strategy tyre-time basis now refreshes from active profile tyre time on profile load/switch and active profile tyre-learn updates (no manual slider move needed).
   - Boxed pit target modeling now latches pre-service selected tyre count on in-box activation; in-service DP tyre-flag clear-down no longer reduces active boxed `Pit.Box.TargetSec` / modeled total stop loss.
