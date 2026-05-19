@@ -245,3 +245,9 @@ Branch: work
 - `Updates` section shows installed version, latest release tag, status (`Up to date`/`Update available`/`Unable to check`), and `Check Now`/`Open Releases` actions.
 - `Dashboard Previews` section now provides placeholder cards with exact expected file paths (`Assets/Overview/*.png`) so preview images can be dropped in later without layout changes.
 - `Help / Notes` section contains concise driver reminders for touch vs bindings, Next/Previous screen behavior, Primary Dash Mode manual-recovery usage, and optional `TractionLoss` export setup.
+
+
+### Strategy tyre intent separation (May 2026)
+- Strategy tab: `TYRES EXPECTED` toggle tooltip explains planner intent gate (ON includes tyre service, OFF uses 0s).
+- Strategy tab: `TYRE TIME (s)` slider tooltip explains profile-seeded/manual what-if timing ownership.
+- Preset Manager: `Tyres Expected` tooltip explains preset intent-only ownership and that tyre seconds are no longer preset-owned.

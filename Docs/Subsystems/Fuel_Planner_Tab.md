@@ -62,6 +62,8 @@ These are **authoritative** once set by the user:
   - The Strategy tab keeps the inline preset combo as the active apply/select control.
   - The adjacent `Presets...` button opens the modal Preset Manager for create/rename/delete/edit/save-current flows without introducing a second preset-editing path.
   - Preset load/open paths now defensively skip null preset entries before binding the modal editor so malformed persisted rows do not hard-fail the popup open flow.
+- **Preset tyre intent ownership:** presets now store `TyreStopExpected` intent only (include tyres vs no tyres in planned stop math). Presets no longer own tyre timing seconds.
+- **Strategy tyre timing ownership:** `TireChangeTime` stays profile/strategy-slider owned; planner uses `EffectiveStrategyTyreTimeSeconds = StrategyTyresExpected ? TireChangeTime : 0` for strategy calculations only.
 
 ### Track-scoped planner persistence
 These planner inputs persist on the selected `TrackStats` record rather than on the car profile:

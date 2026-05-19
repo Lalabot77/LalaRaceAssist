@@ -1,3 +1,11 @@
+
+- 2026-05-19: Strategy preset tyre intent separation implemented.
+  - Added preset field `TyreStopExpected` with compatibility resolution from legacy `TireChangeTimeSec` (`>0 => true`, `==0 => false`, missing/invalid => `true`).
+  - Preset apply no longer overwrites Strategy `TireChangeTime` slider seconds; apply now sets tyre intent only.
+  - Strategy stop calculations now gate tyre time through `EffectiveStrategyTyreTimeSeconds` (`TyresExpected ? TireChangeTime : 0`).
+  - Main Strategy UI adds `TYRES EXPECTED` toggle; Preset Manager now edits tyre intent instead of preset tyre seconds.
+  - Live pit prediction seams (`Fuel.Live.TireChangeTime_S`, `Fuel.Live.TotalStopLoss`, boxed-service model) intentionally unchanged.
+
 - 2026-05-18: Property Snapshot rolling recording indicator visual polish landed.
   - Debug UI now shows rolling status in a bordered state pill beside rolling controls using existing resolver output (`OFF`/`READY`/`RECORDING`) with explicit visual emphasis (`OFF` neutral grey, `READY` cyan/blue standby, `RECORDING` bright green active).
   - Added status-driven button enablement polish in-plugin only: `START` disabled during `RECORDING`; `STOP` disabled when inactive.

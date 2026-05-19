@@ -1,3 +1,10 @@
+
+- 2026-05-19 Strategy tyre intent separation landed:
+  - Presets now own tyre-stop intent (`TyreStopExpected`) rather than tyre timing seconds.
+  - Strategy apply/reapply no longer mutates planner tyre slider seconds from preset legacy timing fields.
+  - Strategy stop math now uses intent-gated effective tyre time (`OFF=0s`, `ON=slider`).
+  - Live pit prediction/export seams remain unchanged (`Fuel.Live.TireChangeTime_S`, `Fuel.Live.TotalStopLoss`).
+
 - 2026-05-18: Property Snapshot rolling recording visual indicator polish validated.
   - Debug Options > Property Snapshot now renders rolling status as a bordered pill beside rolling controls using existing status resolver values (`OFF`/`READY`/`RECORDING`) with distinct emphasis states (grey/blue/green) for immediate in-plugin visibility.
   - Rolling controls now reflect status state in UI: `START` disables while `RECORDING`; `STOP` disables while inactive (`OFF`/`READY`).

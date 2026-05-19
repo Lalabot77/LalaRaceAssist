@@ -893,9 +893,8 @@ namespace LaunchPlugin
 
         SelectedPreRaceMode = NormalizePitStrategyValue(p.PreRaceMode);
 
-        // Tyre change time: only when specified
-        if (p.TireChangeTimeSec.HasValue)
-            TireChangeTime = p.TireChangeTimeSec.Value;
+        // Preset tyre intent only: no preset ownership of tyre timing seconds.
+        StrategyTyresExpected = p.ResolvedTyreStopExpected;
 
         // Max fuel override: only when specified
         if (SelectedPlanningSourceMode == PlanningSourceMode.Profile)
@@ -970,8 +969,7 @@ namespace LaunchPlugin
             : (_appliedPreset.RaceLaps ?? 0.0);
         bool durDiff = !hasEffectiveBasis || Math.Abs(appliedLength - effectiveLength) > 0.05;
 
-        bool tyreDiff = _appliedPreset.TireChangeTimeSec.HasValue &&
-                        Math.Abs(_appliedPreset.TireChangeTimeSec.Value - TireChangeTime) > 0.05;
+        bool tyreIntentDiff = _appliedPreset.ResolvedTyreStopExpected != StrategyTyresExpected;
 
         var appliedMaxFuel = SelectedPlanningSourceMode == PlanningSourceMode.Profile
             ? GetPresetMaxFuelOverrideLitres(_appliedPreset)
@@ -984,7 +982,7 @@ namespace LaunchPlugin
             (_appliedPreset.ContingencyInLaps != IsContingencyInLaps) ||
             Math.Abs(_appliedPreset.ContingencyValue - ContingencyValue) > 0.05;
 
-        return typeDiff || durDiff || tyreDiff || fuelDiff || contDiff;
+        return typeDiff || durDiff || tyreIntentDiff || fuelDiff || contDiff;
     }
 
     private void RaisePresetStateChanged()
@@ -2232,6 +2230,26 @@ namespace LaunchPlugin
         }
     }
 
+    private bool _strategyTyresExpected = true;
+    public bool StrategyTyresExpected
+    {
+        get => _strategyTyresExpected;
+        set
+        {
+            if (_strategyTyresExpected != value)
+            {
+                _strategyTyresExpected = value;
+                OnPropertyChanged(nameof(StrategyTyresExpected));
+                OnPropertyChanged(nameof(EffectiveStrategyTyreTimeSeconds));
+                RequestStrategyRecalc();
+                RaisePresetStateChanged();
+                MarkPlannerDirty();
+            }
+        }
+    }
+
+    public double EffectiveStrategyTyreTimeSeconds => StrategyTyresExpected ? TireChangeTime : 0.0;
+
     public double TireChangeTime
     {
         get => _tireChangeTime;
@@ -2241,6 +2259,7 @@ namespace LaunchPlugin
             {
                 _tireChangeTime = value;
                 OnPropertyChanged("TireChangeTime");
+                OnPropertyChanged(nameof(EffectiveStrategyTyreTimeSeconds));
                 OnPropertyChanged(nameof(TimingParameters));
                 RequestStrategyRecalc();
                 RaisePresetStateChanged();
@@ -2953,6 +2972,7 @@ namespace LaunchPlugin
         target.RaceMinutes = source.RaceMinutes;
         target.RaceLaps = source.RaceLaps;
         target.PreRaceMode = NormalizePitStrategyValue(source.PreRaceMode);
+        target.TyreStopExpected = source.TyreStopExpected;
         target.TireChangeTimeSec = source.TireChangeTimeSec;
         target.MaxFuelPercent = source.MaxFuelPercent;
         target.LegacyMaxFuelLitres = source.LegacyMaxFuelLitres;
@@ -2971,6 +2991,7 @@ namespace LaunchPlugin
             RaceMinutes = source.RaceMinutes,
             RaceLaps = source.RaceLaps,
             PreRaceMode = NormalizePitStrategyValue(source.PreRaceMode),
+            TyreStopExpected = source.TyreStopExpected,
             TireChangeTimeSec = source.TireChangeTimeSec,
             MaxFuelPercent = source.MaxFuelPercent,
             LegacyMaxFuelLitres = source.LegacyMaxFuelLitres,
@@ -3099,7 +3120,7 @@ namespace LaunchPlugin
             RaceLaps = isTimeLimitedEffective ? null : (int?)roundedLength,
 
             PreRaceMode = NormalizePitStrategyValue(SelectedPreRaceMode),
-            TireChangeTimeSec = TireChangeTime,
+            TyreStopExpected = StrategyTyresExpected,
             MaxFuelPercent = ConvertMaxFuelOverrideToPercent(MaxFuelOverride),
             LegacyMaxFuelLitres = null,
 
@@ -3117,7 +3138,7 @@ namespace LaunchPlugin
             RaceLaps = null,
             RaceMinutes = 40,
             PreRaceMode = (int)PreRaceMode.SingleStop,
-            TireChangeTimeSec = 23,
+            TyreStopExpected = true,
             MaxFuelPercent = 100,
             LegacyMaxFuelLitres = null,
             ContingencyInLaps = true,
@@ -4857,7 +4878,7 @@ namespace LaunchPlugin
                 {
                     num9++;
                     num8 = num7;
-                    double num12 = (double)num7 * (num + TireChangeTime);
+                    double num12 = (double)num7 * (num + EffectiveStrategyTyreTimeSeconds);
                     double num13 = num11 - num12;
                     if (num13 < 0.0)
                     {
@@ -5195,17 +5216,17 @@ namespace LaunchPlugin
 
             // Calculate pit stop time for this specific stop
             double refuelTime = ComputeRefuelSeconds(fuelToAdd);
-            double stationaryTime = Math.Max(this.TireChangeTime, refuelTime);
-            double totalStopTime = pitLaneTimeLoss + Math.Max(this.TireChangeTime, refuelTime);
-            // ... STOP line (now using BuildStopSuffix(this.TireChangeTime, refuelTime)) ...
+            double stationaryTime = Math.Max(this.EffectiveStrategyTyreTimeSeconds, refuelTime);
+            double totalStopTime = pitLaneTimeLoss + Math.Max(this.EffectiveStrategyTyreTimeSeconds, refuelTime);
+            // ... STOP line (now using BuildStopSuffix(this.EffectiveStrategyTyreTimeSeconds, refuelTime)) ...
             if (i == 1) { result.FirstStopTimeLoss = totalStopTime; }
             totalPitTime += totalStopTime;
 
             // STOP line (one line, hh:mm:ss total + components) + clear suffix
             var stopTs = TimeSpan.FromSeconds(totalStopTime);
             body.AppendLine();
-            string stopSuffix = BuildStopSuffix(this.TireChangeTime, refuelTime);
-            body.AppendLine($"STOP {i}:   Est {totalStopTime:F1}s   Lane {pitLaneTimeLoss:F1}s   Tyres {this.TireChangeTime:F1}s   Fuel {refuelTime:F1}s  {stopSuffix}");
+            string stopSuffix = BuildStopSuffix(this.EffectiveStrategyTyreTimeSeconds, refuelTime);
+            body.AppendLine($"STOP {i}:   Est {totalStopTime:F1}s   Lane {pitLaneTimeLoss:F1}s   Tyres {this.EffectiveStrategyTyreTimeSeconds:F1}s   Fuel {refuelTime:F1}s  {stopSuffix}");
             body.AppendLine();
 
             // Next stint length in laps — robustly clamped to [0, lapsRemaining]

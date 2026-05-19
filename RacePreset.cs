@@ -46,7 +46,35 @@ namespace LaunchPlugin
             set { PreRaceMode = value ? 1 : 2; }
         }
 
-        // Tyre change time (seconds). null => leave current UI value unchanged.
+        // Preset tyre-stop intent. null => resolve from legacy TireChangeTimeSec compatibility rules.
+        public bool? TyreStopExpected { get; set; }
+
+        // Tyre-stop intent resolver (compatibility):
+        // - explicit TyreStopExpected when present
+        // - legacy TireChangeTimeSec > 0 => true
+        // - legacy TireChangeTimeSec == 0 => false
+        // - missing/invalid legacy => true
+        [JsonIgnore]
+        public bool ResolvedTyreStopExpected
+        {
+            get
+            {
+                if (TyreStopExpected.HasValue) return TyreStopExpected.Value;
+                if (TireChangeTimeSec.HasValue)
+                {
+                    double legacy = TireChangeTimeSec.Value;
+                    if (!double.IsNaN(legacy) && !double.IsInfinity(legacy))
+                    {
+                        if (legacy > 0.0) return true;
+                        if (legacy == 0.0) return false;
+                    }
+                }
+                return true;
+            }
+        }
+
+        // Legacy preset tyre timing field retained for backward compatibility read/write.
+        // Preset intent now lives in TyreStopExpected.
         public double? TireChangeTimeSec { get; set; }
 
         // Max fuel override (% of base tank). null => leave current UI value unchanged.

@@ -625,14 +625,19 @@
                             </ui:TitledSlider.ToolTip>
                         </ui:TitledSlider>
 
+                        <StackPanel Orientation="Horizontal" Margin="0,0,0,6">
+                            <TextBlock Text="TYRES EXPECTED:" VerticalAlignment="Center" Margin="0,0,10,0" ToolTip="When ON, planned strategy stops include tyre service time. When OFF, planned strategy tyre time is 0s."/>
+                            <CheckBox IsChecked="{Binding StrategyTyresExpected, Mode=TwoWay}" VerticalAlignment="Center" ToolTip="Preset controls this intent. Tyre time seconds remain profile/strategy-slider owned."/>
+                        </StackPanel>
+
                         <ui:TitledSlider
-                            Title="Tyre Change Time (s): [Default is 22s]"
+                            Title="TYRE TIME (s): [Profile default 22s]"
                             Minimum="0" Maximum="60"
                             Value="{Binding TireChangeTime, Mode=TwoWay}">
                             <ui:TitledSlider.ToolTip>
                                 <ToolTip>
-                                    <TextBlock Text="Additional stationary time if tyres are changed. Set to 0s for a drive-through-only stop."
-                                        TextWrapping="Wrap" Width="260"/>
+                                    <TextBlock Text="Planner tyre-time input used when Tyres Expected is ON. This slider is seeded from profile tyre time and can be overridden for what-if planning."
+                                        TextWrapping="Wrap" Width="300"/>
                                 </ToolTip>
                             </ui:TitledSlider.ToolTip>
                         </ui:TitledSlider>
