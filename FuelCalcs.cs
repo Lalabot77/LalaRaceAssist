@@ -4739,7 +4739,7 @@ namespace LaunchPlugin
 
                 _lastLoadedCarProfile = car;
                 _lastLoadedTrackKey = trackKey;
-            }
+            
         }
         finally
         {
