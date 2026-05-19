@@ -275,11 +275,12 @@
                         </ComboBox>
                     </StackPanel>
 
-                    <!-- Tyre Change Time (s) -->
-                    <ui:TitledSlider Title="Tyre Change Time (s):"
-                           Minimum="0" Maximum="60"
-                           Value="{Binding TireChangeTimeSec, Mode=TwoWay}"
-                           ToolTip="Additional stop time when changing tyres (sec)."/>
+                    <StackPanel Orientation="Horizontal" Margin="0,10,0,8">
+                        <TextBlock Text="Tyres Expected:" VerticalAlignment="Center" Margin="0,0,10,0"
+                                   ToolTip="Preset intent only. ON includes tyre service in planned strategy stops; OFF excludes tyre service time."/>
+                        <CheckBox IsChecked="{Binding TyreStopExpected, Mode=TwoWay}" VerticalAlignment="Center"
+                                  ToolTip="Preset no longer owns tyre timing seconds. Actual tyre-time value comes from profile/Strategy slider."/>
+                    </StackPanel>
 
                     <!-- Max Fuel Override (percent) -->
                     <ui:TitledSlider Title="Max Fuel Override (% of max tank):"

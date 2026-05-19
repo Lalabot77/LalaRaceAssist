@@ -186,3 +186,10 @@ If Strategy looks repeatedly wrong, the usual causes are:
 - Refresh Calcs now recomputes calculated strategy outputs/stints from current effective inputs only; it does not reload profile/live data, reapply presets, or change owner/source selections.
 
 - Owner mode and effective basis are now treated separately in planner internals: owner radios (`Preset`/`Lap`/`Time`/`Live Detect`) select authority, while strategy calculations, preset dirty state, and preset serialization use the resolved effective race basis.
+
+
+## 12. Tyre-stop intent ownership (May 2026)
+- Presets now own only **Tyres Expected** intent (whether planned stops include tyre service).
+- Tyre timing seconds are not preset-owned; they come from profile-seeded Strategy tyre slider and can be manually overridden for what-if planning.
+- Strategy stop math gates tyre time with Tyres Expected (OFF = 0s, ON = slider value).
+- Live pit prediction/export seams remain unchanged in this Strategy task.
