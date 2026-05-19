@@ -1583,7 +1583,8 @@ namespace LaunchPlugin
             bool allowSetupFallback,
             bool isRaceRunning,
             bool isGridOrFormation,
-            bool isOnTrackCar)
+            bool isOnTrackCar,
+            int sessionStateNumeric)
         {
             int selectedStrategy = NormalizeStrategyMode(FuelCalculator?.SelectedPreRaceMode ?? 2);
             PreRace_Selected = selectedStrategy;
@@ -1630,7 +1631,7 @@ namespace LaunchPlugin
                     ? forecastRaceLaps * preRaceFuelPerLap
                     : 0.0;
             double formationLapFuelLitres = 0.0;
-            if (!isRaceRunning)
+            if (sessionStateNumeric > 0 && sessionStateNumeric < 3)
             {
                 double plannerFormationFuel = FuelCalculator?.FormationLapFuelLiters ?? 0.0;
                 if (!double.IsNaN(plannerFormationFuel) && !double.IsInfinity(plannerFormationFuel))
@@ -1736,7 +1737,7 @@ namespace LaunchPlugin
                 if (selectedBurn > 0.0)
                 {
                     double selectedContingency = Math.Max(0.0, ResolveActiveContingency(selectedBurn).Litres);
-                    double selectedTotalNeeded = (forecastRaceLaps * selectedBurn) + selectedContingency;
+                    double selectedTotalNeeded = (forecastRaceLaps * selectedBurn) + selectedContingency + formationLapFuelLitres;
                     oneStopTarget = Math.Max(0.0, selectedTotalNeeded - currentFuel);
                 }
             }
@@ -4427,7 +4428,8 @@ namespace LaunchPlugin
                     allowSetupFallback: isGridOrFormation,
                     isRaceRunning: isRaceRunning,
                     isGridOrFormation: isGridOrFormation,
-                    isOnTrackCar: isOnTrackCar);
+                    isOnTrackCar: isOnTrackCar,
+                    sessionStateNumeric: sessionStateNumeric);
 
                 Fuel_Delta_LitresCurrent = 0;
                 Fuel_Delta_LitresPlan = 0;
@@ -4627,7 +4629,8 @@ namespace LaunchPlugin
                     allowSetupFallback: isGridOrFormation,
                     isRaceRunning: isRaceRunning,
                     isGridOrFormation: isGridOrFormation,
-                    isOnTrackCar: isOnTrackCar);
+                    isOnTrackCar: isOnTrackCar,
+                    sessionStateNumeric: sessionStateNumeric);
 
                 PitStopsRequiredByFuel = Math.Max(0, stopsRequiredByFuel);
                 PitStopsRequiredByPlan = plannedStops;
