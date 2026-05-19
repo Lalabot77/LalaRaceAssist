@@ -4269,12 +4269,24 @@ namespace LaunchPlugin
             ? (_profileWetFuelAvg > 0 || _profileWetFuelMin > 0 || _profileWetFuelMax > 0)
             : (_profileDryFuelAvg > 0 || _profileDryFuelMin > 0 || _profileDryFuelMax > 0);
 
-        bool wetUsesDerivedFromDry = IsWet
+        bool wetAvgUsesDerivedFromDry = IsWet
+            && IsProfileAverageFuelChoiceActive
             && !(ts.AvgFuelPerLapWet > 0)
             && (ts.AvgFuelPerLapDry > 0);
+        bool wetEcoUsesDerivedFromDry = IsWet
+            && IsProfileEcoFuelChoiceActive
+            && !(ts.MinFuelPerLapWet > 0)
+            && (ts.MinFuelPerLapDry > 0);
+        bool wetMaxUsesDerivedFromDry = IsWet
+            && IsProfileMaxFuelChoiceActive
+            && !(ts.MaxFuelPerLapWet > 0)
+            && (ts.MaxFuelPerLapDry > 0);
+        bool wetFallbackAppliesForActiveChoice = wetAvgUsesDerivedFromDry
+            || wetEcoUsesDerivedFromDry
+            || wetMaxUsesDerivedFromDry;
         bool updateCurrentCondition = (persistedWet && IsWet)
             || (!persistedWet && IsDry)
-            || (!persistedWet && wetUsesDerivedFromDry);
+            || (!persistedWet && wetFallbackAppliesForActiveChoice);
 
         _profileDryFuelAvg = ts.AvgFuelPerLapDry ?? 0;
         _profileDryFuelMin = ts.MinFuelPerLapDry ?? 0;
@@ -4349,15 +4361,8 @@ namespace LaunchPlugin
         ApplySourceUpdate(() =>
         {
             FuelPerLap = value;
-            _suppressFuelTextSync = true;
-            try
-            {
-                FuelPerLapText = value.ToString("0.00", CultureInfo.InvariantCulture);
-            }
-            finally
-            {
-                _suppressFuelTextSync = false;
-            }
+            _fuelPerLapText = value.ToString("0.00", CultureInfo.InvariantCulture);
+            OnPropertyChanged(nameof(FuelPerLapText));
 
             IsFuelPerLapManual = false;
             FuelPerLapSourceInfo = FormatConditionSourceLabel(sourceBaseLabel);

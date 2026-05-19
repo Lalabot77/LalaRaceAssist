@@ -2562,3 +2562,12 @@ The public user-facing release history is maintained in the root `CHANGELOG.md`.
 - Profile button selections now preserve non-manual ownership (`IsFuelPerLapManual=false`) while keeping Profile avg/eco/max source labels, so later telemetry profile refresh can continue re-applying the active Profile basis.
 - Manual typed textbox entry semantics remain unchanged (manual edits still own `IsFuelPerLapManual=true` and block auto-refresh as intended).
 - No DATA authority/Fuel.Refuel/Pit.FuelControl/pit-command/persistence-schema changes.
+
+## 2026-05-19 — PR #744 follow-up #4: wet derived-choice relevance + precision-safe profile text sync
+- Classification: **both** (Strategy Profile wet-fallback refresh correctness + numeric precision safety).
+- Refined dry-persist relevance while wet Profile mode is active to be choice-specific:
+  - AVG choice: dry persistence is relevant only when wet AVG is missing and dry AVG exists.
+  - ECO choice: dry persistence is relevant only when wet ECO/min is missing and dry min exists.
+  - MAX choice: dry persistence is relevant only when wet MAX is missing and dry max exists.
+- Updated `ApplyProfileFuelBasis(...)` to preserve exact numeric `FuelPerLap` by setting rounded display text via backing field + `PropertyChanged` (no `FuelPerLapText` setter parse-back), while keeping `IsFuelPerLapManual=false` and Profile source labels.
+- Manual textbox typing semantics unchanged; DATA/Fuel.Refuel/Pit.FuelControl/pit-command/schema unchanged.
