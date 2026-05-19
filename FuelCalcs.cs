@@ -4255,6 +4255,16 @@ namespace LaunchPlugin
         LoadProfileData();
     }
 
+    private static double SanitizeProfileTireChangeTimeSeconds(double seconds)
+    {
+        if (double.IsNaN(seconds) || double.IsInfinity(seconds) || seconds < 0.0)
+        {
+            return 0.0;
+        }
+
+        return seconds;
+    }
+
     public void NotifyActiveTrackFuelProfileUpdated(bool persistedWet, CarProfile persistedProfile, TrackStats persistedTrackStats)
     {
         var disp = Application.Current?.Dispatcher;
@@ -4449,6 +4459,7 @@ namespace LaunchPlugin
             if (carChanged || _lastLoadedCarProfile == null)
             {
                 ApplyRefuelRateFromProfile(car.RefuelRate);
+                TireChangeTime = SanitizeProfileTireChangeTimeSeconds(car.TireChangeTime);
                 this.SelectedPreRaceMode = NormalizePitStrategyValue(car.PreRaceMode);
             }
 

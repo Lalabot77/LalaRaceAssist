@@ -701,6 +701,23 @@ namespace LaunchPlugin
         {
             // When any property on the ActiveProfile changes, mark it as dirty.
             IsActiveProfileDirty = true;
+
+            if (FuelCalculator == null || ActiveProfile == null)
+            {
+                return;
+            }
+
+            if (string.IsNullOrEmpty(e?.PropertyName)
+                || e.PropertyName == nameof(CarProfile.TireChangeTime))
+            {
+                double updated = ActiveProfile.TireChangeTime;
+                if (double.IsNaN(updated) || double.IsInfinity(updated) || updated < 0.0)
+                {
+                    updated = 0.0;
+                }
+
+                FuelCalculator.TireChangeTime = updated;
+            }
         }
         public bool CanReturnToDefaults => ActiveProfile?.ProfileName != "Default Settings";
 
@@ -6424,6 +6441,8 @@ namespace LaunchPlugin
         private double _pitBoxTargetSec = 0.0;
         private double _pitBoxLatchedTargetSec = 0.0;
         private bool _pitBoxTargetLatched = false;
+        private int _pitBoxLatchedTireChangeCount = 4;
+        private bool _pitBoxTireCountLatched = false;
         private double _pitBoxLastDeltaSec = 0.0;
         private const double PitBoxTargetLatchSettleSeconds = 1.0;
         private const double PitBoxModeledServiceOverheadSeconds = 1.0;
@@ -18720,15 +18739,25 @@ namespace LaunchPlugin
             }
         }
 
+        private int GetSelectedTireChangeCountForPrediction()
+        {
+            if (_pitBoxCountdownActive && _pitBoxTireCountLatched)
+            {
+                return _pitBoxLatchedTireChangeCount;
+            }
+
+            return _liveTireChangeCount;
+        }
+
         private double GetEffectiveTireChangeTimeSeconds()
         {
-            double full4 = FuelCalculator?.TireChangeTime ?? 0.0;
+            double full4 = ActiveProfile?.TireChangeTime ?? 0.0;
             if (double.IsNaN(full4) || double.IsInfinity(full4) || full4 < 0.0)
             {
                 full4 = 0.0;
             }
 
-            int selectedCount = _liveTireChangeCount;
+            int selectedCount = GetSelectedTireChangeCountForPrediction();
             if (selectedCount <= 0)
             {
                 return 0.0;
@@ -18815,6 +18844,8 @@ namespace LaunchPlugin
             _pitBoxTargetSec = 0.0;
             _pitBoxLatchedTargetSec = 0.0;
             _pitBoxTargetLatched = false;
+            _pitBoxLatchedTireChangeCount = 4;
+            _pitBoxTireCountLatched = false;
         }
 
         private bool IsInValidPitBoxServiceState()
@@ -18938,6 +18969,11 @@ namespace LaunchPlugin
             if (!wasActive)
             {
                 _pitBoxLastDeltaSec = 0.0;
+                int preServiceSelectedCount = _liveTireChangeCount;
+                if (preServiceSelectedCount < 0) preServiceSelectedCount = 0;
+                if (preServiceSelectedCount > 4) preServiceSelectedCount = 4;
+                _pitBoxLatchedTireChangeCount = preServiceSelectedCount;
+                _pitBoxTireCountLatched = true;
             }
 
             double modeledTargetSec = CalculatePitBoxModeledTargetSeconds();
