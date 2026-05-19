@@ -36,7 +36,7 @@ Out of scope:
 
 - **Learned/stored pit lane loss is drive-through baseline only** (clean limiter-speed pass through pit lane, no box stop).
 - Boxed-stop runtime predictions add stopped-box components separately:
-  - boxed service model (`max(fuelTime, tireTime) + 1.0s` stationary service overhead, repair-aware),
+  - boxed service model (`max(fuelTime, tireTime) + 1.0s` stationary service overhead, repair-aware), where runtime `tireTime` is now selected-tyre-count aware (`Fuel.Live.TireChangeCount` + scaled `Fuel.Live.TireChangeTime_S`, fail-open to 4 tyres if tyre flags are unavailable or partial),
   - fixed pit-box transition allowance `+2.00s` (slow-in/settle/launch-out to limiter).
 
 Canonical boxed-stop prediction contract:

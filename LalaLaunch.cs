@@ -1063,7 +1063,7 @@ namespace LaunchPlugin
         public string StrategyDash_BurnPlanText { get; private set; } = "NORM";
         public string StrategyDash_ContingencyText { get; private set; } = "CONT 0";
         private bool _isRefuelSelected = true;
-        private bool _isTireChangeSelected = true;
+        private int _liveTireChangeCount = 4;
         public double LiveCarMaxFuel { get; private set; }
         public double EffectiveLiveMaxTank { get; private set; }
         private double _lastValidLiveMaxFuel = 0.0;
@@ -7150,6 +7150,7 @@ namespace LaunchPlugin
             AttachCore("Fuel.PitStopsRequiredByPlan", () => PitStopsRequiredByPlan);
             AttachCore("Fuel.Pit.StopsRequiredToEnd", () => Pit_StopsRequiredToEnd);
             AttachCore("Fuel.Live.RefuelRate_Lps", () => FuelCalculator?.EffectiveRefuelRateLps ?? 0.0);
+            AttachCore("Fuel.Live.TireChangeCount", () => _liveTireChangeCount);
             AttachCore("Fuel.Live.TireChangeTime_S", () => GetEffectiveTireChangeTimeSeconds());
             AttachCore("Fuel.Live.PitLaneLoss_S", () =>
             {
@@ -10244,7 +10245,9 @@ namespace LaunchPlugin
             if (!data.GameRunning || data.NewData == null) return;
 
             _isRefuelSelected = IsRefuelSelected(pluginManager);
-            _isTireChangeSelected = IsAnyTireChangeSelected(pluginManager);
+            _liveTireChangeCount = ResolveLiveSelectedTireChangeCount(pluginManager);
+            if (_liveTireChangeCount < 0) _liveTireChangeCount = 0;
+            if (_liveTireChangeCount > 4) _liveTireChangeCount = 4;
 
             // Pull raw session time from SimHub property engine so projections and refuel learning share the same values.
             double sessionTime = 0.0;
@@ -13788,6 +13791,12 @@ namespace LaunchPlugin
                 AddPropertySnapshotExternalRow(rows, currentValues, "DataCorePlugin.Computed.Fuel_CurrentLapConsumption", "FuelStrategy");
                 AddPropertySnapshotExternalRow(rows, currentValues, "DataCorePlugin.Computed.Fuel_CurrentLapValidForTracking", "FuelStrategy");
                 AddPropertySnapshotExternalRow(rows, currentValues, "DataCorePlugin.Computed.Fuel_RemainingLaps", "FuelStrategy");
+                AddPropertySnapshotExternalRow(rows, currentValues, "LalaLaunch.Fuel.Live.TireChangeCount", "FuelStrategy");
+                AddPropertySnapshotExternalRow(rows, currentValues, "LalaLaunch.Fuel.Live.TireChangeTime_S", "FuelStrategy");
+                AddPropertySnapshotExternalRow(rows, currentValues, "LalaLaunch.Fuel.Live.TotalStopLoss", "FuelStrategy");
+                AddPropertySnapshotExternalRow(rows, currentValues, "LalaLaunch.Pit.Box.TargetSec", "FuelStrategy");
+                AddPropertySnapshotExternalRow(rows, currentValues, "LalaLaunch.Pit.Box.RemainingSec", "FuelStrategy");
+                AddPropertySnapshotExternalRow(rows, currentValues, "LalaLaunch.Pit.Box.ElapsedSec", "FuelStrategy");
             }
 
             rows.Sort((a, b) => string.CompareOrdinal(a.Item1, b.Item1));
@@ -18657,49 +18666,70 @@ namespace LaunchPlugin
             return true;
         }
 
-        private bool IsAnyTireChangeSelected(PluginManager pluginManager)
+        private int ResolveLiveSelectedTireChangeCount(PluginManager pluginManager)
         {
-            bool sawFlag = false;
-            string[] selectors = new[]
-            {
-                "DataCorePlugin.GameRawData.Telemetry.dpLFTireChange",
-                "DataCorePlugin.GameRawData.Telemetry.dpRFTireChange",
-                "DataCorePlugin.GameRawData.Telemetry.dpLRTireChange",
-                "DataCorePlugin.GameRawData.Telemetry.dpRRTireChange"
-            };
+            bool? lf = TryReadDpTyreFlag(pluginManager, "DataCorePlugin.GameRawData.Telemetry.dpLFTireChange");
+            bool? rf = TryReadDpTyreFlag(pluginManager, "DataCorePlugin.GameRawData.Telemetry.dpRFTireChange");
+            bool? lr = TryReadDpTyreFlag(pluginManager, "DataCorePlugin.GameRawData.Telemetry.dpLRTireChange");
+            bool? rr = TryReadDpTyreFlag(pluginManager, "DataCorePlugin.GameRawData.Telemetry.dpRRTireChange");
 
-            foreach (var name in selectors)
+            bool allFlagsAvailable = lf.HasValue && rf.HasValue && lr.HasValue && rr.HasValue;
+            if (!allFlagsAvailable)
             {
-                try
-                {
-                    var raw = pluginManager.GetPropertyValue(name);
-                    if (raw != null)
-                    {
-                        sawFlag = true;
-                        if (Convert.ToBoolean(raw))
-                        {
-                            return true;
-                        }
-                    }
-                }
-                catch
-                {
-                    // ignore and keep looking
-                }
+                // Conservative fail-open fallback when tyre flags are unavailable or partially unavailable.
+                return 4;
             }
 
-            return !sawFlag;
+            int count = 0;
+            if (lf.Value) count++;
+            if (rf.Value) count++;
+            if (lr.Value) count++;
+            if (rr.Value) count++;
+
+            if (count < 0) return 0;
+            if (count > 4) return 4;
+            return count;
+        }
+
+        private static bool? TryReadDpTyreFlag(PluginManager pluginManager, string propertyName)
+        {
+            if (pluginManager == null || string.IsNullOrWhiteSpace(propertyName))
+            {
+                return null;
+            }
+
+            try
+            {
+                return TryReadNullableBool(pluginManager.GetPropertyValue(propertyName));
+            }
+            catch
+            {
+                return null;
+            }
         }
 
         private double GetEffectiveTireChangeTimeSeconds()
         {
-            double baseTime = FuelCalculator?.TireChangeTime ?? 0.0;
-            if (!_isTireChangeSelected)
+            double full4 = FuelCalculator?.TireChangeTime ?? 0.0;
+            if (double.IsNaN(full4) || double.IsInfinity(full4) || full4 < 0.0)
+            {
+                full4 = 0.0;
+            }
+
+            int selectedCount = _liveTireChangeCount;
+            if (selectedCount <= 0)
             {
                 return 0.0;
             }
 
-            return baseTime < 0.0 ? 0.0 : baseTime;
+            if (selectedCount >= 4)
+            {
+                return full4;
+            }
+
+            const double shared = 1.0;
+            double variable = Math.Max(0.0, full4 - shared);
+            return shared + (variable * selectedCount / 4.0);
         }
 
         private double CalculatePitBoxModeledTargetSeconds()

@@ -149,6 +149,7 @@ Using current fuel, stable burn, projection laps, runtime tank-cap authority, an
 - fuel to add,
 - stops required,
 - current-stint burn target and burn band.
+- live tyre-service estimate (`Fuel.Live.TireChangeTime_S`) and runtime selected tyre count (`Fuel.Live.TireChangeCount`) from per-wheel DP tyre flags (fail-open to 4 tyres when flags are unavailable or partial).
 
 
 Runtime tank-cap ownership:

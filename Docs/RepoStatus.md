@@ -1,4 +1,13 @@
 
+- 2026-05-19: Property Snapshot Fuel/Strategy capture follow-up for live pit-tyre prediction seams.
+  - Added explicit Fuel/Strategy external snapshot rows for `LalaLaunch.Fuel.Live.TireChangeCount`, `LalaLaunch.Fuel.Live.TireChangeTime_S`, `LalaLaunch.Fuel.Live.TotalStopLoss`, `LalaLaunch.Pit.Box.TargetSec`, `LalaLaunch.Pit.Box.RemainingSec`, and `LalaLaunch.Pit.Box.ElapsedSec`.
+  - This is a snapshot observability-only update (no runtime pit/strategy formula changes).
+
+- 2026-05-19: Phase 3B runtime selected-tyre live pit prediction implemented.
+  - Added new runtime export `Fuel.Live.TireChangeCount` (`0..4`) from DP per-wheel tyre flags (`dpLFTireChange/dpRFTireChange/dpLRTireChange/dpRRTireChange`) with conservative fail-open fallback to `4` when flags are unavailable or partial.
+  - Updated `Fuel.Live.TireChangeTime_S` semantics from all-or-nothing gate to selected-count estimate: `count<=0 => 0`, `count>=4 => full4`, else `shared=1.0 + scaled variable` from learned full-4 tyre time.
+  - `Fuel.Live.TotalStopLoss` and boxed target contracts remain unchanged, but now consume the improved live tyre estimate; Strategy `TyresExpected`/preset intent ownership remains planner-only and untouched.
+
 - 2026-05-19 PR #745 review follow-up validated:
   - Preset edit/clone/copy now hydrate/save explicit tyre intent from resolved compatibility state (`ResolvedTyreStopExpected`) instead of nullable raw field.
   - Legacy preset open/save behavior now deterministic in Preset Manager; strategy/live seams unchanged.
