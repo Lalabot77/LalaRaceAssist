@@ -13783,6 +13783,12 @@ namespace LaunchPlugin
                 AddPropertySnapshotExternalRow(rows, currentValues, "DataCorePlugin.Computed.Fuel_CurrentLapConsumption", "FuelStrategy");
                 AddPropertySnapshotExternalRow(rows, currentValues, "DataCorePlugin.Computed.Fuel_CurrentLapValidForTracking", "FuelStrategy");
                 AddPropertySnapshotExternalRow(rows, currentValues, "DataCorePlugin.Computed.Fuel_RemainingLaps", "FuelStrategy");
+                AddPropertySnapshotExternalRow(rows, currentValues, "LalaLaunch.Fuel.Live.TireChangeCount", "FuelStrategy");
+                AddPropertySnapshotExternalRow(rows, currentValues, "LalaLaunch.Fuel.Live.TireChangeTime_S", "FuelStrategy");
+                AddPropertySnapshotExternalRow(rows, currentValues, "LalaLaunch.Fuel.Live.TotalStopLoss", "FuelStrategy");
+                AddPropertySnapshotExternalRow(rows, currentValues, "LalaLaunch.Pit.Box.TargetSec", "FuelStrategy");
+                AddPropertySnapshotExternalRow(rows, currentValues, "LalaLaunch.Pit.Box.RemainingSec", "FuelStrategy");
+                AddPropertySnapshotExternalRow(rows, currentValues, "LalaLaunch.Pit.Box.ElapsedSec", "FuelStrategy");
             }
 
             rows.Sort((a, b) => string.CompareOrdinal(a.Item1, b.Item1));
