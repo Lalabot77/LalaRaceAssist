@@ -2972,7 +2972,7 @@ namespace LaunchPlugin
         target.RaceMinutes = source.RaceMinutes;
         target.RaceLaps = source.RaceLaps;
         target.PreRaceMode = NormalizePitStrategyValue(source.PreRaceMode);
-        target.TyreStopExpected = source.TyreStopExpected;
+        target.TyreStopExpected = source.ResolvedTyreStopExpected;
         target.TireChangeTimeSec = source.TireChangeTimeSec;
         target.MaxFuelPercent = source.MaxFuelPercent;
         target.LegacyMaxFuelLitres = source.LegacyMaxFuelLitres;
@@ -2991,7 +2991,7 @@ namespace LaunchPlugin
             RaceMinutes = source.RaceMinutes,
             RaceLaps = source.RaceLaps,
             PreRaceMode = NormalizePitStrategyValue(source.PreRaceMode),
-            TyreStopExpected = source.TyreStopExpected,
+            TyreStopExpected = source.ResolvedTyreStopExpected,
             TireChangeTimeSec = source.TireChangeTimeSec,
             MaxFuelPercent = source.MaxFuelPercent,
             LegacyMaxFuelLitres = source.LegacyMaxFuelLitres,

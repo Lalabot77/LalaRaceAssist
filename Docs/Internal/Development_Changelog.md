@@ -1,4 +1,10 @@
 
+- 2026-05-19: PR #745 review follow-up fixed preset editor intent hydration for legacy presets.
+  - Preset clone/copy paths now persist explicit edit/save intent via `source.ResolvedTyreStopExpected` instead of nullable `source.TyreStopExpected`.
+  - Preset Manager checkbox now opens legacy presets with resolved checked state (`>0` true, `==0` false, missing/invalid true) and saves explicit `TyreStopExpected`.
+  - Strategy math and live pit prediction/export seams unchanged.
+
+
 - 2026-05-19: Strategy preset tyre intent separation implemented.
   - Added preset field `TyreStopExpected` with compatibility resolution from legacy `TireChangeTimeSec` (`>0 => true`, `==0 => false`, missing/invalid => `true`).
   - Preset apply no longer overwrites Strategy `TireChangeTime` slider seconds; apply now sets tyre intent only.

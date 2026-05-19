@@ -1,4 +1,9 @@
 
+- 2026-05-19 PR #745 review follow-up validated:
+  - Preset edit/clone/copy now hydrate/save explicit tyre intent from resolved compatibility state (`ResolvedTyreStopExpected`) instead of nullable raw field.
+  - Legacy preset open/save behavior now deterministic in Preset Manager; strategy/live seams unchanged.
+
+
 - 2026-05-19 Strategy tyre intent separation landed:
   - Presets now own tyre-stop intent (`TyreStopExpected`) rather than tyre timing seconds.
   - Strategy apply/reapply no longer mutates planner tyre slider seconds from preset legacy timing fields.
