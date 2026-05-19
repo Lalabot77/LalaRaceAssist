@@ -18654,10 +18654,10 @@ namespace LaunchPlugin
 
         private int ResolveLiveSelectedTireChangeCount(PluginManager pluginManager)
         {
-            bool? lf = TryReadNullableBool(pluginManager.GetPropertyValue("DataCorePlugin.GameRawData.Telemetry.dpLFTireChange"));
-            bool? rf = TryReadNullableBool(pluginManager.GetPropertyValue("DataCorePlugin.GameRawData.Telemetry.dpRFTireChange"));
-            bool? lr = TryReadNullableBool(pluginManager.GetPropertyValue("DataCorePlugin.GameRawData.Telemetry.dpLRTireChange"));
-            bool? rr = TryReadNullableBool(pluginManager.GetPropertyValue("DataCorePlugin.GameRawData.Telemetry.dpRRTireChange"));
+            bool? lf = TryReadDpTyreFlag(pluginManager, "DataCorePlugin.GameRawData.Telemetry.dpLFTireChange");
+            bool? rf = TryReadDpTyreFlag(pluginManager, "DataCorePlugin.GameRawData.Telemetry.dpRFTireChange");
+            bool? lr = TryReadDpTyreFlag(pluginManager, "DataCorePlugin.GameRawData.Telemetry.dpLRTireChange");
+            bool? rr = TryReadDpTyreFlag(pluginManager, "DataCorePlugin.GameRawData.Telemetry.dpRRTireChange");
 
             bool allFlagsAvailable = lf.HasValue && rf.HasValue && lr.HasValue && rr.HasValue;
             if (!allFlagsAvailable)
@@ -18675,6 +18675,23 @@ namespace LaunchPlugin
             if (count < 0) return 0;
             if (count > 4) return 4;
             return count;
+        }
+
+        private static bool? TryReadDpTyreFlag(PluginManager pluginManager, string propertyName)
+        {
+            if (pluginManager == null || string.IsNullOrWhiteSpace(propertyName))
+            {
+                return null;
+            }
+
+            try
+            {
+                return TryReadNullableBool(pluginManager.GetPropertyValue(propertyName));
+            }
+            catch
+            {
+                return null;
+            }
         }
 
         private double GetEffectiveTireChangeTimeSeconds()
