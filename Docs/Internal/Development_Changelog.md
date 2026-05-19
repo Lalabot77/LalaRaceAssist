@@ -2541,3 +2541,11 @@ The public user-facing release history is maintained in the root `CHANGELOG.md`.
 - Added a narrow telemetry-to-planner refresh seam: after profile fuel stats are persisted to active `TrackStats` in `LalaLaunch`, runtime now notifies `FuelCalcs` via `NotifyActiveTrackFuelProfileUpdated(...)`.
 - `FuelCalcs` now refreshes Profile fuel preview labels (AVG/ECO/MAX), profile fuel-choice availability/button states, and source-dependent strategy recalc eligibility in-place for active track/condition without requiring mode toggle, track reselection, or manual Refresh Calcs.
 - Auto-apply guard remains ownership-safe: Fuel-per-lap is auto-updated to profile AVG only when Strategy is in Profile mode and either profile-avg choice is active or profile source had no prior valid profile fuel for that condition.
+
+## 2026-05-19 — PR #744 follow-up: Strategy Profile fuel auto-apply gate widening
+- Classification: **both** (Strategy Profile-mode live-refresh ownership correction + user-visible textbox/source update correctness).
+- Replaced the prior AVG-only live-refresh auto-apply gate with active-choice-aware profile basis refresh logic in `FuelCalcs.ApplyActiveTrackFuelProfileUpdated(...)`.
+- Cold-start fix: when current condition previously had no valid profile fuel, first learned profile fuel now becomes active in Profile mode even if source text was not already Profile (manual entry still protected).
+- Wet derived-fallback fix: while in wet Profile mode with no direct wet saved value, dry telemetry persistence is now treated as relevant and can refresh/re-apply the active wet profile basis derived from dry × wet factor.
+- Active choice fix: live refresh now re-applies active Profile fuel basis by choice (`Profile avg`, `Profile eco`, `Profile max`) instead of forcing AVG when ECO/MAX is active.
+- No DATA authority, Fuel.Refuel, Pit.FuelControl, pit command, or persistence-schema changes.

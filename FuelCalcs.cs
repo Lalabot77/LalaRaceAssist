@@ -4258,10 +4258,16 @@ namespace LaunchPlugin
             return;
         }
 
-        bool updateCurrentCondition = (persistedWet && IsWet) || (!persistedWet && IsDry);
-        bool hadValidProfileFuelForCondition = persistedWet
+        bool hadValidProfileFuelForCurrentCondition = IsWet
             ? (_profileWetFuelAvg > 0 || _profileWetFuelMin > 0 || _profileWetFuelMax > 0)
             : (_profileDryFuelAvg > 0 || _profileDryFuelMin > 0 || _profileDryFuelMax > 0);
+
+        bool wetUsesDerivedFromDry = IsWet
+            && !(ts.AvgFuelPerLapWet > 0)
+            && (ts.AvgFuelPerLapDry > 0);
+        bool updateCurrentCondition = (persistedWet && IsWet)
+            || (!persistedWet && IsDry)
+            || (!persistedWet && wetUsesDerivedFromDry);
 
         _profileDryFuelAvg = ts.AvgFuelPerLapDry ?? 0;
         _profileDryFuelMin = ts.MinFuelPerLapDry ?? 0;
@@ -4283,16 +4289,50 @@ namespace LaunchPlugin
         UpdateFuelBurnSummaries();
 
         bool isProfileSource = FuelPerLapSourceInfo?.IndexOf("Profile", StringComparison.OrdinalIgnoreCase) >= 0;
-        bool isProfileAvgChoiceActive = IsProfileAverageFuelChoiceActive;
-        bool shouldAutoApplyProfileAvg = SelectedPlanningSourceMode == PlanningSourceMode.Profile
+        bool shouldRefreshActiveProfileFuelBasis = SelectedPlanningSourceMode == PlanningSourceMode.Profile
             && updateCurrentCondition
             && !IsFuelPerLapManual
-            && (isProfileAvgChoiceActive || (isProfileSource && !hadValidProfileFuelForCondition));
+            && (isProfileSource || !hadValidProfileFuelForCurrentCondition);
 
-        if (shouldAutoApplyProfileAvg)
+        if (shouldRefreshActiveProfileFuelBasis)
         {
-            ApplyPlanningSourceToAutoFields(applyLapTime: false, applyFuel: true);
-            RequestStrategyRecalc();
+            bool applied = false;
+            if (IsProfileEcoFuelChoiceActive)
+            {
+                var eco = GetProfileFuelSaveForCurrentCondition();
+                if (eco.HasValue)
+                {
+                    FuelPerLap = eco.Value;
+                    FuelPerLapSourceInfo = FormatConditionSourceLabel("Profile eco");
+                    applied = true;
+                }
+            }
+            else if (IsProfileMaxFuelChoiceActive)
+            {
+                var max = GetProfileFuelMaxForCurrentCondition();
+                if (max.HasValue)
+                {
+                    FuelPerLap = max.Value;
+                    FuelPerLapSourceInfo = FormatConditionSourceLabel("Profile max");
+                    applied = true;
+                }
+            }
+
+            if (!applied)
+            {
+                var avg = GetProfileAverageFuelPerLapForCurrentCondition();
+                if (avg.HasValue)
+                {
+                    FuelPerLap = avg.Value;
+                    FuelPerLapSourceInfo = FormatConditionSourceLabel("Profile avg");
+                    applied = true;
+                }
+            }
+
+            if (applied)
+            {
+                RequestStrategyRecalc();
+            }
         }
 
         CommandManager.InvalidateRequerySuggested();
