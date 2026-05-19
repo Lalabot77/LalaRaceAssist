@@ -1063,7 +1063,7 @@ namespace LaunchPlugin
         public string StrategyDash_BurnPlanText { get; private set; } = "NORM";
         public string StrategyDash_ContingencyText { get; private set; } = "CONT 0";
         private bool _isRefuelSelected = true;
-        private bool _isTireChangeSelected = true;
+        private int _liveTireChangeCount = 4;
         public double LiveCarMaxFuel { get; private set; }
         public double EffectiveLiveMaxTank { get; private set; }
         private double _lastValidLiveMaxFuel = 0.0;
@@ -7142,6 +7142,7 @@ namespace LaunchPlugin
             AttachCore("Fuel.PitStopsRequiredByPlan", () => PitStopsRequiredByPlan);
             AttachCore("Fuel.Pit.StopsRequiredToEnd", () => Pit_StopsRequiredToEnd);
             AttachCore("Fuel.Live.RefuelRate_Lps", () => FuelCalculator?.EffectiveRefuelRateLps ?? 0.0);
+            AttachCore("Fuel.Live.TireChangeCount", () => _liveTireChangeCount);
             AttachCore("Fuel.Live.TireChangeTime_S", () => GetEffectiveTireChangeTimeSeconds());
             AttachCore("Fuel.Live.PitLaneLoss_S", () =>
             {
@@ -10236,7 +10237,9 @@ namespace LaunchPlugin
             if (!data.GameRunning || data.NewData == null) return;
 
             _isRefuelSelected = IsRefuelSelected(pluginManager);
-            _isTireChangeSelected = IsAnyTireChangeSelected(pluginManager);
+            _liveTireChangeCount = ResolveLiveSelectedTireChangeCount(pluginManager);
+            if (_liveTireChangeCount < 0) _liveTireChangeCount = 0;
+            if (_liveTireChangeCount > 4) _liveTireChangeCount = 4;
 
             // Pull raw session time from SimHub property engine so projections and refuel learning share the same values.
             double sessionTime = 0.0;
@@ -18649,9 +18652,10 @@ namespace LaunchPlugin
             return true;
         }
 
-        private bool IsAnyTireChangeSelected(PluginManager pluginManager)
+        private int ResolveLiveSelectedTireChangeCount(PluginManager pluginManager)
         {
             bool sawFlag = false;
+            int count = 0;
             string[] selectors = new[]
             {
                 "DataCorePlugin.GameRawData.Telemetry.dpLFTireChange",
@@ -18670,7 +18674,7 @@ namespace LaunchPlugin
                         sawFlag = true;
                         if (Convert.ToBoolean(raw))
                         {
-                            return true;
+                            count++;
                         }
                     }
                 }
@@ -18680,18 +18684,39 @@ namespace LaunchPlugin
                 }
             }
 
-            return !sawFlag;
+            if (!sawFlag)
+            {
+                // Conservative fail-open fallback when telemetry flags are unavailable.
+                return 4;
+            }
+
+            if (count < 0) return 0;
+            if (count > 4) return 4;
+            return count;
         }
 
         private double GetEffectiveTireChangeTimeSeconds()
         {
-            double baseTime = FuelCalculator?.TireChangeTime ?? 0.0;
-            if (!_isTireChangeSelected)
+            double full4 = FuelCalculator?.TireChangeTime ?? 0.0;
+            if (double.IsNaN(full4) || double.IsInfinity(full4) || full4 < 0.0)
+            {
+                full4 = 0.0;
+            }
+
+            int selectedCount = _liveTireChangeCount;
+            if (selectedCount <= 0)
             {
                 return 0.0;
             }
 
-            return baseTime < 0.0 ? 0.0 : baseTime;
+            if (selectedCount >= 4)
+            {
+                return full4;
+            }
+
+            const double shared = 1.0;
+            double variable = Math.Max(0.0, full4 - shared);
+            return shared + (variable * selectedCount / 4.0);
         }
 
         private double CalculatePitBoxModeledTargetSeconds()

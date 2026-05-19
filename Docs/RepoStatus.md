@@ -1,4 +1,9 @@
 
+- 2026-05-19: Phase 3B runtime selected-tyre live pit prediction implemented.
+  - Added new runtime export `Fuel.Live.TireChangeCount` (`0..4`) from DP per-wheel tyre flags (`dpLFTireChange/dpRFTireChange/dpLRTireChange/dpRRTireChange`) with conservative fail-open fallback to `4` when flags are unavailable.
+  - Updated `Fuel.Live.TireChangeTime_S` semantics from all-or-nothing gate to selected-count estimate: `count<=0 => 0`, `count>=4 => full4`, else `shared=1.0 + scaled variable` from learned full-4 tyre time.
+  - `Fuel.Live.TotalStopLoss` and boxed target contracts remain unchanged, but now consume the improved live tyre estimate; Strategy `TyresExpected`/preset intent ownership remains planner-only and untouched.
+
 - 2026-05-19 PR #745 review follow-up validated:
   - Preset edit/clone/copy now hydrate/save explicit tyre intent from resolved compatibility state (`ResolvedTyreStopExpected`) instead of nullable raw field.
   - Legacy preset open/save behavior now deterministic in Preset Manager; strategy/live seams unchanged.
