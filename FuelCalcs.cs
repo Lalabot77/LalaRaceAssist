@@ -223,6 +223,9 @@ namespace LaunchPlugin
     private string _liveTrackName = "—";
     private string _activeLiveCarKey;
     private string _activeLiveTrackKey;
+    private bool _isApplyingLiveSessionSelection;
+    private string _pendingLiveCarKey;
+    private string _pendingLiveTrackKey;
     private string _liveSurfaceModeDisplay = "Dry";
     private string _liveFuelTankSizeDisplay = "-";
     private string _dryLapTimeSummary = "-";
@@ -3527,28 +3530,32 @@ namespace LaunchPlugin
 
     private bool IsPlannerLiveContextActiveForSimHubFallback()
     {
-        if (!IsLiveSessionActive)
-        {
-            return false;
-        }
-
         string selectedCar = (SelectedCarProfile?.ProfileName ?? string.Empty).Trim();
         string selectedTrack = (SelectedTrackStats?.Key ?? SelectedTrack ?? string.Empty).Trim();
-        string liveCar = (_activeLiveCarKey ?? string.Empty).Trim();
-        string liveTrack = (_activeLiveTrackKey ?? string.Empty).Trim();
-
         if (string.IsNullOrWhiteSpace(selectedCar) || string.IsNullOrWhiteSpace(selectedTrack))
         {
             return false;
         }
 
-        if (string.IsNullOrWhiteSpace(liveCar) || string.IsNullOrWhiteSpace(liveTrack))
+        bool activeContextReady = IsLiveSessionActive
+            && !string.IsNullOrWhiteSpace(_activeLiveCarKey)
+            && !string.IsNullOrWhiteSpace(_activeLiveTrackKey);
+        if (activeContextReady)
         {
-            return false;
+            return string.Equals(selectedCar, _activeLiveCarKey.Trim(), StringComparison.OrdinalIgnoreCase)
+                && string.Equals(selectedTrack, _activeLiveTrackKey.Trim(), StringComparison.OrdinalIgnoreCase);
         }
 
-        return string.Equals(selectedCar, liveCar, StringComparison.OrdinalIgnoreCase)
-            && string.Equals(selectedTrack, liveTrack, StringComparison.OrdinalIgnoreCase);
+        bool pendingContextReady = _isApplyingLiveSessionSelection
+            && !string.IsNullOrWhiteSpace(_pendingLiveCarKey)
+            && !string.IsNullOrWhiteSpace(_pendingLiveTrackKey);
+        if (pendingContextReady)
+        {
+            return string.Equals(selectedCar, _pendingLiveCarKey.Trim(), StringComparison.OrdinalIgnoreCase)
+                && string.Equals(selectedTrack, _pendingLiveTrackKey.Trim(), StringComparison.OrdinalIgnoreCase);
+        }
+
+        return false;
     }
 
     private double? GetProfileAverageFuelPerLapForCurrentCondition()
@@ -4190,6 +4197,9 @@ namespace LaunchPlugin
 
         string normalizedCar = hasCar ? carName?.Trim() : null;
         string normalizedTrack = hasTrack ? liveTrackKey?.Trim() : null;
+        _isApplyingLiveSessionSelection = hasCar && hasTrack;
+        _pendingLiveCarKey = _isApplyingLiveSessionSelection ? normalizedCar : null;
+        _pendingLiveTrackKey = _isApplyingLiveSessionSelection ? normalizedTrack : null;
 
         bool comboChanged = IsLiveSessionActive
             && (!string.Equals(normalizedCar, _activeLiveCarKey, StringComparison.OrdinalIgnoreCase)
@@ -4226,9 +4236,18 @@ namespace LaunchPlugin
                 .FirstOrDefault(t => t.DisplayName?.Equals(trackName, StringComparison.OrdinalIgnoreCase) == true);
 
         // 4) Select it by instance (this triggers LoadProfileData via SelectedTrackStats setter)
-        if (ts != null && !ReferenceEquals(this.SelectedTrackStats, ts))
+        try
         {
-            this.SelectedTrackStats = ts;
+            if (ts != null && !ReferenceEquals(this.SelectedTrackStats, ts))
+            {
+                this.SelectedTrackStats = ts;
+            }
+        }
+        finally
+        {
+            _isApplyingLiveSessionSelection = false;
+            _pendingLiveCarKey = null;
+            _pendingLiveTrackKey = null;
         }
 
         LiveCarName = hasCar ? carName : "-";
@@ -4612,7 +4631,17 @@ namespace LaunchPlugin
             }
             else
             {
-                _baseDryFuelPerLap = 0.0;
+                // Preserve a non-zero wet basis when dry profile avg is missing so later
+                // wet refreshes/ApplyWetFactor paths do not collapse to zero.
+                if (ts?.AvgFuelPerLapWet is double wetAvg && wetAvg > 0.0)
+                {
+                    double factor = WetFactorPercent / 100.0;
+                    _baseDryFuelPerLap = factor > 0.0 ? (wetAvg / factor) : wetAvg;
+                }
+                else
+                {
+                    _baseDryFuelPerLap = 0.0;
+                }
             }
 
             bool hasProfileFuel = TryGetProfileFuelForCondition(IsWet, out var profileFuelForCondition, out var profileFuelSourceForCondition);

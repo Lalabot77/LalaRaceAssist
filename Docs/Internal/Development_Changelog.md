@@ -2623,3 +2623,10 @@ The public user-facing release history is maintained in the root `CHANGELOG.md`.
 - Added active live-context guard for planner SimHub fallback reads (`GetSimHubEstimatedLapTime`, `GetSimHubComputedFuelPerLap`): SimHub fallback now requires `IsLiveSessionActive` and planner selected car/track identity match to current live session identity.
 - When disconnected/no-live/unmatched planner selection, SimHub fallbacks are blocked and planner falls through to `Default`, preventing stale cached DataCore values from being consumed.
 - DATA SAVED authority, runtime burn/refuel formulas, Pit Fuel Control, pit commands, manual-entry semantics, and persistence schema unchanged.
+
+## 2026-05-19 — PR #748 follow-up #2: first live-load SimHub guard window + wet-basis preservation
+- Classification: **both** (Strategy planner startup fallback correctness + wet-profile stability fix).
+- Updated planner SimHub fallback guard to accept a scoped pending live-session identity window during `ApplyLiveSession(...)` before `IsLiveSessionActive` flips, so first live no-profile Strategy load can use SimHub lap/fuel fallback immediately when selected planner identity matches incoming live identity.
+- Guard still blocks SimHub fallback when no active/pending live context match exists (disconnected/unmatched planner selection), preventing stale cached DataCore fallback usage.
+- Preserved wet fuel basis when dry avg is missing: `LoadProfileData()` no longer blindly zeroes `_baseDryFuelPerLap` in that case; when wet avg exists it now seeds a non-zero synthetic dry basis from wet/factor to prevent later `ApplyWetFactor`/condition-refresh paths from collapsing wet fuel to zero.
+- DATA SAVED authority, Fuel.Refuel math, Pit.FuelControl, pit commands, manual entry semantics, and profile schema unchanged.
