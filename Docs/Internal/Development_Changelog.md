@@ -2555,3 +2555,10 @@ The public user-facing release history is maintained in the root `CHANGELOG.md`.
 - `NotifyActiveTrackFuelProfileUpdated(...)` now carries persisted identity (`CarProfile`, `TrackStats`) and `FuelCalcs` now returns early unless the currently selected Strategy profile+track row matches the persisted row by reference.
 - Auto-applied Profile fuel refresh now uses a non-manual-safe helper (`ApplyProfileFuelBasis(...)`) that runs under `ApplySourceUpdate(...)`, syncs textbox text, and explicitly keeps `IsFuelPerLapManual=false` while setting `FuelPerLapSourceInfo` to Profile avg/eco/max.
 - Preserved behavior boundaries: manual user edits still own manual mode; Live Snapshot unchanged; no DATA authority/Fuel.Refuel/Pit.FuelControl/pit-command/schema changes.
+
+## 2026-05-19 — PR #744 follow-up #3: Profile button source-safe manual-state fix
+- Classification: **both** (Strategy Profile button ownership correctness + telemetry-refresh continuity).
+- Updated `UseProfileFuelPerLap`, `UseProfileFuelSave`, and `UseProfileFuelMax` to route through `ApplyProfileFuelBasis(...)` instead of direct `FuelPerLap` assignment.
+- Profile button selections now preserve non-manual ownership (`IsFuelPerLapManual=false`) while keeping Profile avg/eco/max source labels, so later telemetry profile refresh can continue re-applying the active Profile basis.
+- Manual typed textbox entry semantics remain unchanged (manual edits still own `IsFuelPerLapManual=true` and block auto-refresh as intended).
+- No DATA authority/Fuel.Refuel/Pit.FuelControl/pit-command/persistence-schema changes.

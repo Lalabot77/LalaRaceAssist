@@ -2576,8 +2576,7 @@ namespace LaunchPlugin
         var avg = GetProfileAverageFuelPerLapForCurrentCondition();
         if (avg.HasValue)
         {
-            FuelPerLap = avg.Value;
-            FuelPerLapSourceInfo = FormatConditionSourceLabel("Profile avg");
+            ApplyProfileFuelBasis(avg.Value, "Profile avg");
         }
     }
 
@@ -2586,8 +2585,7 @@ namespace LaunchPlugin
         var min = GetProfileFuelSaveForCurrentCondition();
         if (min.HasValue)
         {
-            FuelPerLap = min.Value;
-            FuelPerLapSourceInfo = FormatConditionSourceLabel("Profile eco");
+            ApplyProfileFuelBasis(min.Value, "Profile eco");
         }
     }
 
@@ -2596,8 +2594,7 @@ namespace LaunchPlugin
         var max = GetProfileFuelMaxForCurrentCondition();
         if (max.HasValue)
         {
-            FuelPerLap = max.Value;
-            FuelPerLapSourceInfo = FormatConditionSourceLabel("Profile max");
+            ApplyProfileFuelBasis(max.Value, "Profile max");
         }
     }
     public double TotalFuelNeeded { get => _totalFuelNeeded; private set { _totalFuelNeeded = value; OnPropertyChanged("TotalFuelNeeded"); } }
