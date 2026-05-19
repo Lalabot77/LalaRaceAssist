@@ -1,3 +1,9 @@
+- 2026-05-19: Strategy planner SimHub fallback cleanup + DATA LIVE lap SIM parity validated.
+  - Strategy Profile-mode no-profile load now uses truthful fallback chains (`Lap: PROFILE -> SIMHUB EST -> DEFAULT`, `Fuel: PROFILE -> SIMHUB -> DEFAULT`) and no longer surfaces stale/manual-looking lap labels on auto load.
+  - Strategy source helper text now aligns with actual fallback provenance (`SimHub est`/`SimHub`/`Default`); default 2.8 fuel fallback no longer reports `profile`.
+  - Runtime DATA LIVE lap SIM fallback now uses `DataCorePlugin.GameRawData.SessionData.DriverInfo.DriverCarEstLapTime`, enabling `DATA LIVE | LAP SIM / BURN SIM` when both SimHub fallbacks are available.
+  - DATA SAVED authority contract unchanged.
+
 - 2026-05-19: PreRace/StrategyDash formation-fuel adapter parity fix validated.
   - `LalaLaunch.UpdatePreRaceOutputs(...)` now includes planner formation fuel (`FuelCalculator.FormationLapFuelLiters`, clamped non-negative) exactly once in pre-race total fuel need when `SessionState < 3` (before formation starts).
   - This makes `LalaLaunch.PreRace.*` and `StrategyDash.*` pre-start actionable fuel guidance formation-aware (`TotalFuelNeeded`, stints/delta/status, start-fuel required/advice/status, next-refuel target/delta/advice/status, required stops pre-green).

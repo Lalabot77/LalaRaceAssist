@@ -3477,6 +3477,44 @@ namespace LaunchPlugin
         return null;
     }
 
+    private TimeSpan? GetSimHubEstimatedLapTime()
+    {
+        var pluginManager = _plugin?.PluginManager;
+        if (pluginManager == null)
+        {
+            return null;
+        }
+
+        double estLapSeconds = SafeReadDouble(
+            pluginManager,
+            "DataCorePlugin.GameRawData.SessionData.DriverInfo.DriverCarEstLapTime",
+            0.0);
+
+        if (double.IsNaN(estLapSeconds) || double.IsInfinity(estLapSeconds) || estLapSeconds <= 0.0)
+        {
+            return null;
+        }
+
+        return TimeSpan.FromSeconds(estLapSeconds);
+    }
+
+    private double? GetSimHubComputedFuelPerLap()
+    {
+        var pluginManager = _plugin?.PluginManager;
+        if (pluginManager == null)
+        {
+            return null;
+        }
+
+        double simFuelPerLap = SafeReadDouble(pluginManager, "DataCorePlugin.Computed.Fuel_LitersPerLap", 0.0);
+        if (double.IsNaN(simFuelPerLap) || double.IsInfinity(simFuelPerLap) || simFuelPerLap <= 0.0)
+        {
+            return null;
+        }
+
+        return simFuelPerLap;
+    }
+
     private double? GetProfileAverageFuelPerLapForCurrentCondition()
     {
         return TryGetProfileFuelForCondition(IsWet, out var fuel, out _) ? fuel : (double?)null;
@@ -4459,7 +4497,7 @@ namespace LaunchPlugin
             IsEstimatedLapTimeManual = false;
             IsFuelPerLapManual = false;
 
-            // --- Set the initial estimated lap time from the profile's condition average ---
+            // --- Set the initial estimated lap time with truthful fallback chain ---
             var initialLap = GetProfileAverageLapTimeForCurrentCondition();
             if (initialLap.HasValue)
             {
@@ -4471,12 +4509,23 @@ namespace LaunchPlugin
             }
             else
             {
-                // If there's no data at all, use the UI default
-                ApplySourceUpdate(() =>
+                var simHubLap = GetSimHubEstimatedLapTime();
+                if (simHubLap.HasValue)
                 {
-                    EstimatedLapTime = "2:45.500";
-                    LapTimeSourceInfo = "Manual (user entry)";
-                });
+                    ApplySourceUpdate(() =>
+                    {
+                        EstimatedLapTime = simHubLap.Value.ToString(@"m\:ss\.fff");
+                        LapTimeSourceInfo = "SimHub est";
+                    });
+                }
+                else
+                {
+                    ApplySourceUpdate(() =>
+                    {
+                        EstimatedLapTime = "2:45.500";
+                        LapTimeSourceInfo = "Default";
+                    });
+                }
             }
 
             // --- Load historical/track-specific data ---
@@ -4520,15 +4569,27 @@ namespace LaunchPlugin
                 }
                 else
                 {
-                    // Handle case where track exists but has no fuel data.
-                    // Reset to the global default value and update the source text.
-                    var defaultProfile = _plugin.ProfilesViewModel.GetProfileForCar("Default Settings");
-                    var defaultFuel = defaultProfile?.TrackStats?["default"]?.AvgFuelPerLapDry ?? 2.8;
-                    ApplySourceUpdate(() =>
+                    var simHubFuel = GetSimHubComputedFuelPerLap();
+                    if (simHubFuel.HasValue)
                     {
-                        FuelPerLap = defaultFuel;
-                        FuelPerLapSourceInfo = "Default";
-                    });
+                        ApplySourceUpdate(() =>
+                        {
+                            FuelPerLap = simHubFuel.Value;
+                            FuelPerLapSourceInfo = "SimHub";
+                        });
+                    }
+                    else
+                    {
+                        // Handle case where track exists but has no fuel data.
+                        // Reset to the global default value and update the source text.
+                        var defaultProfile = _plugin.ProfilesViewModel.GetProfileForCar("Default Settings");
+                        var defaultFuel = defaultProfile?.TrackStats?["default"]?.AvgFuelPerLapDry ?? 2.8;
+                        ApplySourceUpdate(() =>
+                        {
+                            FuelPerLap = defaultFuel;
+                            FuelPerLapSourceInfo = "Default";
+                        });
+                    }
                 }
 
                 if (ts?.PitLaneLossSeconds is double pll && pll > 0)

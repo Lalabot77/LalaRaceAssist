@@ -2605,3 +2605,13 @@ The public user-facing release history is maintained in the root `CHANGELOG.md`.
   - MAX choice: dry persistence is relevant only when wet MAX is missing and dry max exists.
 - Updated `ApplyProfileFuelBasis(...)` to preserve exact numeric `FuelPerLap` by setting rounded display text via backing field + `PropertyChanged` (no `FuelPerLapText` setter parse-back), while keeping `IsFuelPerLapManual=false` and Profile source labels.
 - Manual textbox typing semantics unchanged; DATA/Fuel.Refuel/Pit.FuelControl/pit-command/schema unchanged.
+
+## 2026-05-19 — Strategy planner SimHub fallback cleanup + DATA LIVE lap SIM parity
+- Classification: **both** (Strategy Profile-mode source/fallback correctness + runtime DATA LIVE lap-source fallback parity).
+- `FuelCalcs.LoadProfileData()` now applies truthful Profile-mode fallback chains instead of stale/manual-looking carryover labels on no-profile tracks:
+  - lap: `PROFILE -> SIMHUB EST (DriverCarEstLapTime) -> DEFAULT`,
+  - fuel: `PROFILE -> SIMHUB COMPUTED (Fuel_LitersPerLap) -> DEFAULT`.
+- Strategy helper/source labels now match actual provenance on load: `Profile avg (...)`, `SimHub est`, `SimHub`, or `Default`; no-profile default fuel no longer reports `profile`.
+- Removed misleading no-profile lap fallback label `Manual (user entry)` during auto-load path; `Manual` remains user-entry-only semantics.
+- `LalaLaunch.ResolveDataGovernedBurnAndPaceBasis(...)` SIM lap candidate for DATA LIVE now reads `DataCorePlugin.GameRawData.SessionData.DriverInfo.DriverCarEstLapTime` (instead of last-lap time), enabling `LAP SIM` startup parity with existing burn SIM fallback when available.
+- DATA SAVED behavior unchanged (`PLAN -> PROFILE -> DEFAULT`), and runtime burn authority/formulas/pit-control contracts unchanged.
