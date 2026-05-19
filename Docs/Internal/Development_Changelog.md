@@ -1,3 +1,9 @@
+## 2026-05-19 — PreRace/StrategyDash formation-fuel adapter parity
+- Classification: **both** (pre-green dash/export guidance behavior correction + docs alignment).
+- `LalaLaunch.UpdatePreRaceOutputs(...)` now adds planner formation fuel (`FuelCalculator.FormationLapFuelLiters`, non-negative clamp) exactly once into pre-race total fuel need when `SessionState < 3` (before formation starts).
+- Affected pre-green exports now inherit formation-aware totals: `LalaLaunch.PreRace.TotalFuelNeeded`, `LalaLaunch.PreRace.Stints`, `LalaLaunch.PreRace.FuelDelta`, pre-race status text/colour, and `StrategyDash.StartFuelRequiredLitres`/advice/status, `StrategyDash.NextRefuel*`, `StrategyDash.RequiredStopsPreGreen`.
+- Protected runtime families intentionally unchanged: `Fuel.Refuel.*`, `Fuel.Delta.*`, `Fuel.RequiredBurnToEnd*`, `Fuel.Pit.*`, `Pit.FuelControl.*` (no formation double-count after green).
+
 
 - 2026-05-19: Property Snapshot Fuel/Strategy capture follow-up for live pit-tyre prediction seams.
   - Added explicit Fuel/Strategy external snapshot rows for `LalaLaunch.Fuel.Live.TireChangeCount`, `LalaLaunch.Fuel.Live.TireChangeTime_S`, `LalaLaunch.Fuel.Live.TotalStopLoss`, `LalaLaunch.Pit.Box.TargetSec`, `LalaLaunch.Pit.Box.RemainingSec`, and `LalaLaunch.Pit.Box.ElapsedSec`.

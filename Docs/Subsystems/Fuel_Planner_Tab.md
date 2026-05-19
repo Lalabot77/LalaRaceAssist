@@ -177,6 +177,7 @@ Using planner-selected lap time + fuel per lap:
 - Dash-facing pre-race visibility uses `LalaLaunch.PreRace.Stints` instead of separate stop-count exports.
 
 - Dashboard guidance boundary: pre-grid/planning pages may keep using `StrategyDash.*` and `LalaLaunch.PreRace.*`; runtime race pages should use `Fuel.Refuel.*` for next-stop refuel guidance, `Fuel.RequiredBurnToEnd*` for burn-to-end widgets, `Fuel.Contingency.*` for reserve visibility, and `Fuel.Delta.*` for tactical finish deltas.
+- Pre-green adapter contract: `LalaLaunch.PreRace.*` and `StrategyDash.*` include Formation Lap Fuel exactly once in actionable pre-start/grid guidance before formation starts (`SessionState < 3`: race requirement + contingency + formation), while runtime `Fuel.*` tactical exports remain formation-excluded.
 - Pit add requirement.
 
 These values are **planner-only** and intentionally decoupled from live volatility.

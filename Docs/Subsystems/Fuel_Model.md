@@ -25,6 +25,7 @@ Canonical companion docs:
 - `Docs/Subsystems/Fuel_Planner_Tab.md`
 
 ## Scope and boundaries
+- Pre-green planning adapter (`LalaLaunch.PreRace.*` / `StrategyDash.*`) includes Formation Lap Fuel only for actionable pre-start/grid guidance before formation starts (`SessionState < 3`); runtime race-running families (`Fuel.Refuel.*`, `Fuel.Delta.*`, `Fuel.RequiredBurnToEnd*`, `Fuel.Pit.*`, `Pit.FuelControl.*`) intentionally do not add formation fuel again because current fuel already reflects that burn after formation.
 This doc covers the **runtime** fuel path:
 - lap acceptance,
 - rolling fuel windows,

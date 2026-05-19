@@ -58,6 +58,7 @@ This document is the canonical dash-facing contract layer. It does **not** redef
   - `Fuel.Delta.LitresCurrent/Plan/WillAdd` + Push/Save variants for tactical deltas.
   - `Fuel.Delta.AfterStop.Selected` for a single plugin-owned after-stop selected delta field (DATA governs basis, SOURCE governs NORM/PUSH/SAVE/STBY selection; STBY uses advisory NORM).
 - `Fuel.Refuel.*` is runtime tactical guidance and should be preferred over `StrategyDash.NextRefuel*` during race-running usage; StrategyDash next-refuel helpers remain pre-green/planning oriented (not obsolete).
+- `LalaLaunch.PreRace.*` and `StrategyDash.*` actionable pre-start/grid guidance (before formation starts) includes Formation Lap Fuel. `StrategyDash.StartFuelRequiredLitres` means fuel required to join grid/start with and is capped by effective tank capacity when published.
 - Export cleanup caution: no fuel-facing export should be removed until both checks are complete: dashboard JSON usage audit and internal C# reference/consumer audit.
 - Do not rebuild burn-to-end with dash-side NCALC formula chains from raw fuel/time/pace properties; use plugin-owned `Fuel.RequiredBurnToEnd`.
 - Tactical delta exports are contingency-aware on the required-to-finish side only; `Fuel.Pit.WillAdd` remains clamp mirror and should not be treated as reserve-augmented request.
