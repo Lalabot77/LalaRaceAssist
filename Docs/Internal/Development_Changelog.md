@@ -1,3 +1,8 @@
+- 2026-05-19: PR #745/#746 follow-up fixes validated (tyre timing refresh, boxed tyre-count latch, preset checkbox state).
+  - Strategy planner tyre timing now seeds from active profile `TireChangeTime` on profile load/switch and live-updates when active profile tyre time changes; no manual slider touch required.
+  - Boxed pit prediction now latches selected tyre count on in-box activation and uses the latched count for boxed target modeling, preventing during-service per-wheel clear-down (`4→0`) from reducing active boxed target.
+  - Preset Manager `Tyres Expected` editor checkbox is now explicitly two-state (`IsThreeState=False`), and preset edit clone/save paths normalize `TyreStopExpected` from resolved compatibility intent (no indeterminate/null editor state).
+
 ## 2026-05-19 — PreRace/StrategyDash formation-fuel adapter parity
 - Classification: **both** (pre-green dash/export guidance behavior correction + docs alignment).
 - `LalaLaunch.UpdatePreRaceOutputs(...)` now adds planner formation fuel (`FuelCalculator.FormationLapFuelLiters`, non-negative clamp) exactly once into pre-race total fuel need when `SessionState < 3` (before formation starts).

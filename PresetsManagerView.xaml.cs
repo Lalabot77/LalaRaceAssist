@@ -228,6 +228,7 @@ namespace LaunchPlugin
             RaceMinutes = p.RaceMinutes,
             RaceLaps = p.RaceLaps,
             PreRaceMode = p.PreRaceMode,
+            TyreStopExpected = p.ResolvedTyreStopExpected,
             TireChangeTimeSec = p.TireChangeTimeSec,
             MaxFuelPercent = p.MaxFuelPercent,
             LegacyMaxFuelLitres = p.LegacyMaxFuelLitres,
