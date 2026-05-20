@@ -13,6 +13,7 @@ The Fuel Planner (surfaced as the top-level **Strategy** tab in the plugin UI) i
 
 The planner does **not** replace the Fuel Model.
 It consumes the Fuel Model’s **live snapshot** and produces **explicit planning outputs** that are stable unless the user changes them.
+Live snapshot `Max Tank Limit` follows Fuel Model runtime live-cap authority, including early pre-grid DriverInfo restricted-cap detection when available.
 
 Preset management remains part of the same subsystem, but it is no longer a separate top-level navigation tab. The Strategy tab keeps the inline `Race Preset` selector and opens the existing preset editor via a modal **Preset Manager** dialog beside that selector. The Preset Manager still owns preset editing only; its `PreRace Mode` combo now reuses the same standard WPF ComboBox pattern already working on the main Strategy page so the selected value stays readable without breaking normal dropdown interaction.
 

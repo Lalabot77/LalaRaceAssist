@@ -1,3 +1,8 @@
+- 2026-05-20: Early pre-grid restricted max-tank authority seam validated.
+  - Runtime max-tank detection now prefers `DataCorePlugin.GameRawData.SessionData.DriverInfo.DriverCarFuelMaxLtr * DriverCarMaxFuelPct` when both are valid, so restricted caps can publish before `GameData.MaxFuel`/`CarSettings_MaxFUEL` hydrate.
+  - Added defensive normalization for `DriverCarMaxFuelPct` to support both fractional (`0..1`) and percent (`0..100`) inputs.
+  - `Fuel.Setup.FuelLevel` semantics remain unchanged and are not used as max-tank authority.
+
 - 2026-05-19: PR #748 follow-up #2 validated (first live-load SimHub guard window + wet basis preservation).
   - Strategy planner SimHub fallback guard now accepts pending live identity during `ApplyLiveSession` pre-activation window, enabling immediate first live no-profile fallback (`SimHub est`/`SimHub`) when identities match.
   - Stale/disconnected/unmatched SimHub cached fallback remains blocked (no active/pending identity match -> fallback to Default paths).

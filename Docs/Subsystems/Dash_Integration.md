@@ -64,6 +64,7 @@ This document is the canonical dash-facing contract layer. It does **not** redef
 - Tactical delta exports are contingency-aware on the required-to-finish side only; `Fuel.Pit.WillAdd` remains clamp mirror and should not be treated as reserve-augmented request.
 - Runtime pit-space exports are live-cap authoritative when available: `Fuel.Pit.TankSpaceAvailable` reflects live remaining capacity and `Fuel.Pit.WillAdd`/`Fuel.Pit.FuelOnExit` consume that runtime cap seam (not Strategy/Profile max-fuel override when live cap exists).
 - Setup fallback seam for pre-grid/pre-race: dashboards may consume `Fuel.Setup.FuelLevel`/`Fuel.Setup.FuelLevelValid`/`Fuel.Setup.FuelLevelSource` when live tank telemetry is zero/unavailable. This setup seam is read-only and does not replace runtime `Fuel.*` telemetry once live fuel is available.
+- Max-tank/runtime-cap dashboards (`Fuel.MaxTank`, Strategy `Max Tank Limit`) follow the live-cap authority seam, which now prefers early DriverInfo restricted-cap reads (`DriverCarFuelMaxLtr * DriverCarMaxFuelPct`) before later GameData max-fuel availability.
 
 ### Launch
 - Gate live launch widgets on `LaunchModeActive` and related launch-visible state.
