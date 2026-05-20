@@ -1,3 +1,8 @@
+- 2026-05-20: PR #748 post-merge follow-up #3 validated (planner fallback edge-case hardening).
+  - Strategy `ApplyLiveSession` now stores pending/active live track identity using canonical resolved `TrackStats.Key` when available (then `CurrentTrackKey`, then display name fallback), so planner live-context guard comparisons match selected track identity across key/display-name differences.
+  - No-profile planner fuel fallback now seeds `_baseDryFuelPerLap` from the active fallback basis (`SimHub` or `Default`) when profile fuel is unavailable, preventing later wet-factor/condition refresh paths from collapsing fallback fuel to `0`.
+  - Planner pit-lane loss now loads independently from dry-fuel profile availability and clears to safe `0` when unavailable; track-scoped reset also clears pit-lane loss, preventing stale previous-track carry-over on no-profile loads.
+
 - 2026-05-19: PR #750 follow-up (Option B) validated — live tyre prediction decoupled from Strategy slider.
   - `Fuel.Live.TireChangeTime_S` full-4 basis now reads active profile `TireChangeTime` (sanitized non-negative) instead of planner slider value.
   - Strategy slider remains planner what-if only (still seeded/refreshed from profile), and no longer mutates live boxed tyre-time prediction basis.

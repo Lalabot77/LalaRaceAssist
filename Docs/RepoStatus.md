@@ -1,3 +1,8 @@
+- 2026-05-20: PR #748 follow-up #3 (planner fallback edge cases) completed.
+  - Live-session pending/active track identity for planner SimHub fallback guard now uses canonical resolved track key precedence (`TrackStats.Key` -> `CurrentTrackKey` -> display name).
+  - No-profile fuel fallback (`SimHub`/`Default`) now seeds planner dry-basis for wet refresh stability.
+  - Pit-lane loss assignment now decoupled from dry-fuel availability and reset-safe for no-profile track switches (no stale carry-over).
+
 - 2026-05-19: PR #748 follow-up #2 validated (first live-load SimHub guard window + wet basis preservation).
   - Strategy planner SimHub fallback guard now accepts pending live identity during `ApplyLiveSession` pre-activation window, enabling immediate first live no-profile fallback (`SimHub est`/`SimHub`) when identities match.
   - Stale/disconnected/unmatched SimHub cached fallback remains blocked (no active/pending identity match -> fallback to Default paths).

@@ -4190,16 +4190,8 @@ namespace LaunchPlugin
             return;
         }
 
-        string liveTrackKey = (!string.IsNullOrWhiteSpace(_plugin.CurrentTrackKey)
-                               && !_plugin.CurrentTrackKey.Equals("Unknown", StringComparison.OrdinalIgnoreCase))
-            ? _plugin.CurrentTrackKey
-            : trackName;
-
         string normalizedCar = hasCar ? carName?.Trim() : null;
-        string normalizedTrack = hasTrack ? liveTrackKey?.Trim() : null;
-        _isApplyingLiveSessionSelection = hasCar && hasTrack;
-        _pendingLiveCarKey = _isApplyingLiveSessionSelection ? normalizedCar : null;
-        _pendingLiveTrackKey = _isApplyingLiveSessionSelection ? normalizedTrack : null;
+        string normalizedTrack = hasTrack ? trackName?.Trim() : null;
 
         bool comboChanged = IsLiveSessionActive
             && (!string.Equals(normalizedCar, _activeLiveCarKey, StringComparison.OrdinalIgnoreCase)
@@ -4234,6 +4226,25 @@ namespace LaunchPlugin
             SelectedCarProfile?.FindTrack(_plugin.CurrentTrackKey) ??
             SelectedCarProfile?.TrackStats?.Values
                 .FirstOrDefault(t => t.DisplayName?.Equals(trackName, StringComparison.OrdinalIgnoreCase) == true);
+
+        string resolvedTrackKey = null;
+        if (ts != null && !string.IsNullOrWhiteSpace(ts.Key))
+        {
+            resolvedTrackKey = ts.Key.Trim();
+        }
+        else if (!string.IsNullOrWhiteSpace(_plugin.CurrentTrackKey)
+            && !_plugin.CurrentTrackKey.Equals("Unknown", StringComparison.OrdinalIgnoreCase))
+        {
+            resolvedTrackKey = _plugin.CurrentTrackKey.Trim();
+        }
+        else if (hasTrack)
+        {
+            resolvedTrackKey = normalizedTrack;
+        }
+
+        _isApplyingLiveSessionSelection = hasCar && hasTrack;
+        _pendingLiveCarKey = _isApplyingLiveSessionSelection ? normalizedCar : null;
+        _pendingLiveTrackKey = _isApplyingLiveSessionSelection ? resolvedTrackKey : null;
 
         // 4) Select it by instance (this triggers LoadProfileData via SelectedTrackStats setter)
         try
@@ -4270,7 +4281,7 @@ namespace LaunchPlugin
         }
 
         _activeLiveCarKey = IsLiveSessionActive ? normalizedCar : null;
-        _activeLiveTrackKey = IsLiveSessionActive ? normalizedTrack : null;
+        _activeLiveTrackKey = IsLiveSessionActive ? resolvedTrackKey : null;
 
         UpdateTrackDerivedSummaries();
 
@@ -4633,12 +4644,6 @@ namespace LaunchPlugin
                         });
                     }
                 }
-                if (ts?.PitLaneLossSeconds is double pll && pll > 0)
-                {
-                    PitLaneTimeLoss = pll;
-                    SetLastPitDriveThroughSeconds(PitLaneTimeLoss);
-                }
-
             }
             else
             {
@@ -4653,6 +4658,19 @@ namespace LaunchPlugin
                 {
                     _baseDryFuelPerLap = 0.0;
                 }
+            }
+
+            if (ts?.PitLaneLossSeconds is double pll && pll > 0)
+            {
+                PitLaneTimeLoss = pll;
+                HasProfilePitLaneLoss = true;
+                SetLastPitDriveThroughSeconds(PitLaneTimeLoss);
+            }
+            else
+            {
+                PitLaneTimeLoss = 0.0;
+                HasProfilePitLaneLoss = false;
+                SetLastPitDriveThroughSeconds(0.0);
             }
 
             bool hasProfileFuel = TryGetProfileFuelForCondition(IsWet, out var profileFuelForCondition, out var profileFuelSourceForCondition);
@@ -4672,6 +4690,7 @@ namespace LaunchPlugin
                     ApplySourceUpdate(() =>
                     {
                         FuelPerLap = simHubFuel.Value;
+                        _baseDryFuelPerLap = simHubFuel.Value;
                         FuelPerLapSourceInfo = "SimHub";
                     });
                 }
@@ -4684,6 +4703,7 @@ namespace LaunchPlugin
                     ApplySourceUpdate(() =>
                     {
                         FuelPerLap = defaultFuel;
+                        _baseDryFuelPerLap = defaultFuel;
                         FuelPerLapSourceInfo = "Default";
                     });
                 }
@@ -4767,6 +4787,8 @@ namespace LaunchPlugin
         ProfileFuelMaxDisplay = "-";
         HasProfileFuelPerLap = false;
         HasProfilePitLaneLoss = false;
+        PitLaneTimeLoss = 0.0;
+        SetLastPitDriveThroughSeconds(0.0);
 
         OnPropertyChanged(nameof(ProfileAvgLapTimeDisplay));
         OnPropertyChanged(nameof(ProfileAvgFuelDisplay));
