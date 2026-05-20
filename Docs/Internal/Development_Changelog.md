@@ -1,3 +1,8 @@
+- 2026-05-20: Strategy Save All target-ownership fix validated (planner-selected profile/track).
+  - Fixed `FuelCalcs.SavePlannerDataToProfile()` to always persist Save All into the Strategy planner-selected target (`SelectedCarProfile` + `SelectedTrackStats/SelectedTrack`) instead of switching to live-session `ActiveProfile`/`CurrentTrackKey` when live telemetry is active.
+  - Confirmation dialog now reliably reports the actual planner-selected profile/track saved by this path.
+  - Preserved existing save scope split and fields (car-level + track-level planner persistence) and kept `Apply to Live Session` ownership unchanged.
+
 - 2026-05-19: PR #750 follow-up (Option B) validated — live tyre prediction decoupled from Strategy slider.
   - `Fuel.Live.TireChangeTime_S` full-4 basis now reads active profile `TireChangeTime` (sanitized non-negative) instead of planner slider value.
   - Strategy slider remains planner what-if only (still seeded/refreshed from profile), and no longer mutates live boxed tyre-time prediction basis.

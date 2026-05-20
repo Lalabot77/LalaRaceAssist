@@ -79,6 +79,14 @@ Tyre-change time follows the same car-level lock philosophy: `TireChangeTime` re
 
 Planner inputs persist until explicitly changed by the user or reset by session identity change.
 
+### Save All to Profile ownership (Strategy planner)
+- `Save All to Profile` persists planner state to the **currently selected Strategy planner target** only:
+  - car target: `FuelCalcs.SelectedCarProfile`,
+  - track target: `FuelCalcs.SelectedTrackStats` / selected planner track key.
+- This save path must not retarget to live runtime session identity (`LalaLaunch.ActiveProfile`, live car model, or live track key) unless those are already the selected planner objects.
+- Confirmation messaging reflects the actual planner-selected profile/track that were written.
+- `Apply to Live Session` remains a separate live-session action and does not redefine Save All ownership.
+
 ---
 
 ### Live snapshot inputs (read-only unless applied)

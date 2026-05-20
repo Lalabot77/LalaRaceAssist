@@ -2740,26 +2740,11 @@ namespace LaunchPlugin
 
     private void SavePlannerDataToProfile()
     {
-        // Get live and UI-selected car/track names for logic and auditing
-        string liveCarName = _plugin.CurrentCarModel;
-        string uiCarName = _selectedCarProfile?.ProfileName;
+        // Strategy planner ownership: Save All always targets planner-selected profile+track.
+        var targetProfile = _selectedCarProfile;
+        var selectedTs = ResolveSelectedTrackStats();
 
-        // 1) Decide which profile to save to
-        CarProfile targetProfile = null;
-        bool isLiveSession = !string.IsNullOrEmpty(liveCarName) && liveCarName != "Unknown";
-
-        if (isLiveSession)
-        {
-            // Live: always save to the live car’s profile (create if missing)
-            targetProfile = _plugin.ProfilesViewModel.EnsureCar(liveCarName);
-        }
-        else
-        {
-            // Non-live: save to the UI-selected profile
-            targetProfile = _selectedCarProfile;
-        }
-
-        // 2) Guard: we need a profile and a selected track string
+        // Guard: planner selection must resolve to a real profile+track target.
         if (targetProfile == null || string.IsNullOrEmpty(_selectedTrack))
         {
             MessageBox.Show("Please select a car and track profile first.", "No Profile Selected",
@@ -2767,17 +2752,11 @@ namespace LaunchPlugin
             return;
         }
 
-        // 3) Resolve the selected TrackStats and decide the key/display to save under
-        var selectedTs = ResolveSelectedTrackStats();
-
-        string keyToSave = isLiveSession && !string.IsNullOrWhiteSpace(_plugin.CurrentTrackKey) && _plugin.CurrentTrackKey != "Unknown"
-                            ? _plugin.CurrentTrackKey
-                            : (selectedTs?.Key ?? _selectedTrack); // fallback to the dropdown string if needed
-
+        string keyToSave = selectedTs?.Key ?? _selectedTrack;
         string nameToSave = selectedTs?.DisplayName ?? _selectedTrack;
 
-        // Non-live: if we still have no real key, stop the save so we don’t create junk
-        if (!isLiveSession && (selectedTs == null || string.IsNullOrWhiteSpace(selectedTs.Key)))
+        // Missing planner-track key: block save rather than falling back to live identity.
+        if (selectedTs == null || string.IsNullOrWhiteSpace(selectedTs.Key))
         {
             MessageBox.Show(
                 "This track doesn’t exist in the selected profile. Create it on the Profiles tab or start a live session first.",
@@ -2849,7 +2828,7 @@ namespace LaunchPlugin
 
         if (fuelStamped)
         {
-            var source = isLiveSession ? "Telemetry" : "Planner save";
+            var source = IsLiveSessionActive ? "Telemetry" : "Planner save";
             if (saveWet)
             {
                 trackRecord.MarkFuelUpdatedWet(source);

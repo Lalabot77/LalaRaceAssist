@@ -1,3 +1,8 @@
+- 2026-05-20: Strategy Save All ownership fix landed.
+  - Strategy `Save All to Profile` now saves strictly to planner-selected `SelectedCarProfile` + selected planner track (`SelectedTrackStats`/selected track key), including when a different live session car/track is active.
+  - Save path no longer retargets to live `ActiveProfile` / `CurrentTrackKey`; confirmation messaging now reflects the true planner-selected save target.
+  - `Apply to Live Session` remains separate live-action ownership; no runtime fuel/pit authority changes.
+
 - 2026-05-19: PR #748 follow-up #2 validated (first live-load SimHub guard window + wet basis preservation).
   - Strategy planner SimHub fallback guard now accepts pending live identity during `ApplyLiveSession` pre-activation window, enabling immediate first live no-profile fallback (`SimHub est`/`SimHub`) when identities match.
   - Stale/disconnected/unmatched SimHub cached fallback remains blocked (no active/pending identity match -> fallback to Default paths).
