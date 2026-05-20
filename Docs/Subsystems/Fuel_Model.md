@@ -155,6 +155,7 @@ Using current fuel, stable burn, projection laps, runtime tank-cap authority, an
 
 Runtime tank-cap ownership:
 - Runtime pit exports (`Fuel.Pit.TankSpaceAvailable`, `Fuel.Pit.WillAdd`, `Fuel.Pit.FuelOnExit`) now resolve tank cap from the live session authority seam first (`EffectiveLiveMaxTank` raw/fresh fallback path).
+- Live cap detection now prefers the earliest iRacing DriverInfo restricted seam when available: `DriverCarFuelMaxLtr * DriverCarMaxFuelPct` (with defensive `0..1` or `0..100` percent normalization). If DriverInfo is unavailable, fallback remains `GameData.MaxFuel/CarSettings_MaxFUEL` with pct applied.
 - Strategy/Profile `MaxFuelOverride` remains planner-owned and does not clamp these runtime pit exports when live cap authority exists.
 - If no live cap authority is currently available, runtime safely falls back to planner/profile cap (`MaxFuelOverride`) so outputs remain bounded instead of collapsing.
 

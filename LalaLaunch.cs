@@ -19680,20 +19680,53 @@ namespace LaunchPlugin
             return 0.0;
         }
 
+        private bool TryNormalizeDriverCarMaxFuelPct(double rawPct, out double normalizedPct)
+        {
+            normalizedPct = 0.0;
+            if (double.IsNaN(rawPct) || double.IsInfinity(rawPct) || rawPct <= 0.0)
+            {
+                return false;
+            }
+
+            // iRacing generally emits this as 0..1, but defensive support for 0..100
+            // prevents early-session authority loss if a percent-style value appears.
+            normalizedPct = rawPct > 1.0 ? (rawPct / 100.0) : rawPct;
+            if (double.IsNaN(normalizedPct) || double.IsInfinity(normalizedPct) || normalizedPct <= 0.0)
+            {
+                return false;
+            }
+
+            normalizedPct = Math.Min(1.0, Math.Max(0.01, normalizedPct));
+            return true;
+        }
+
         private double ComputeLiveMaxFuelFromSimhub(PluginManager pluginManager)
         {
-            double baseMaxFuel = SafeReadDouble(pluginManager, "DataCorePlugin.GameData.MaxFuel", 0.0);
-            if (double.IsNaN(baseMaxFuel) || baseMaxFuel <= 0.0)
+            double rawPct = SafeReadDouble(pluginManager, "DataCorePlugin.GameRawData.SessionData.DriverInfo.DriverCarMaxFuelPct", 0.0);
+            double normalizedPct;
+            bool hasPct = TryNormalizeDriverCarMaxFuelPct(rawPct, out normalizedPct);
+
+            // Earliest restricted-cap seam from DriverInfo (available pre-grid).
+            double driverInfoBaseMaxFuel = SafeReadDouble(pluginManager, "DataCorePlugin.GameRawData.SessionData.DriverInfo.DriverCarFuelMaxLtr", 0.0);
+            if (driverInfoBaseMaxFuel > 0.0 && hasPct)
+            {
+                double earlyRestricted = driverInfoBaseMaxFuel * normalizedPct;
+                return earlyRestricted > 0.0 ? earlyRestricted : 0.0;
+            }
+
+            // Later GameData seam remains valid fallback when DriverInfo is missing.
+            double gameDataBaseMaxFuel = SafeReadDouble(pluginManager, "DataCorePlugin.GameData.MaxFuel", 0.0);
+            if (gameDataBaseMaxFuel <= 0.0)
+            {
+                gameDataBaseMaxFuel = SafeReadDouble(pluginManager, "DataCorePlugin.GameData.CarSettings_MaxFUEL", 0.0);
+            }
+
+            if (double.IsNaN(gameDataBaseMaxFuel) || gameDataBaseMaxFuel <= 0.0)
                 return 0.0;
 
-            double bopPercent = SafeReadDouble(pluginManager, "DataCorePlugin.GameRawData.SessionData.DriverInfo.DriverCarMaxFuelPct", 1.0);
-            if (double.IsNaN(bopPercent) || bopPercent <= 0.0)
-                bopPercent = 1.0;
-
-            bopPercent = Math.Min(1.0, Math.Max(0.01, bopPercent));
-
-            double detected = baseMaxFuel * bopPercent;
-            return detected < 0.0 ? 0.0 : detected;
+            double fallbackPct = hasPct ? normalizedPct : 1.0;
+            double detected = gameDataBaseMaxFuel * fallbackPct;
+            return detected > 0.0 ? detected : 0.0;
         }
 
         public bool TryGetRuntimeLiveCapForStrategy(out double capLitres, out string source)

@@ -2,6 +2,19 @@
   - Strategy `Save All to Profile` now saves strictly to planner-selected `SelectedCarProfile` + selected planner track (`SelectedTrackStats`/selected track key), including when a different live session car/track is active.
   - Save path no longer retargets to live `ActiveProfile` / `CurrentTrackKey`; confirmation messaging now reflects the true planner-selected save target.
   - `Apply to Live Session` remains separate live-action ownership; no runtime fuel/pit authority changes.
+- 2026-05-20: Early pre-grid restricted max-tank authority seam validated.
+  - Runtime max-tank detection now prefers `DataCorePlugin.GameRawData.SessionData.DriverInfo.DriverCarFuelMaxLtr * DriverCarMaxFuelPct` when both are valid, so restricted caps can publish before `GameData.MaxFuel`/`CarSettings_MaxFUEL` hydrate.
+  - Added defensive normalization for `DriverCarMaxFuelPct` to support both fractional (`0..1`) and percent (`0..100`) inputs.
+  - `Fuel.Setup.FuelLevel` semantics remain unchanged and are not used as max-tank authority.
+- 2026-05-20: PR #752 follow-up applied before merge.
+  - Pending live context now arms before profile/track selection loads and promotes to canonical resolved track key before track-triggered reload.
+  - Combo change detection now compares canonical resolved live track key, so same-session key/display mismatches no longer retrigger new-combo snapshot clears.
+  - No-profile SimHub/Default fuel fallback now preserves dry-equivalent basis for wet-factor stability (no double wet-factor application).
+
+- 2026-05-20: PR #748 follow-up #3 (planner fallback edge cases) completed.
+  - Live-session pending/active track identity for planner SimHub fallback guard now uses canonical resolved track key precedence (`TrackStats.Key` -> `CurrentTrackKey` -> display name).
+  - No-profile fuel fallback (`SimHub`/`Default`) now seeds planner dry-basis for wet refresh stability.
+  - Pit-lane loss assignment now decoupled from dry-fuel availability and reset-safe for no-profile track switches (no stale carry-over).
 
 - 2026-05-19: PR #748 follow-up #2 validated (first live-load SimHub guard window + wet basis preservation).
   - Strategy planner SimHub fallback guard now accepts pending live identity during `ApplyLiveSession` pre-activation window, enabling immediate first live no-profile fallback (`SimHub est`/`SimHub`) when identities match.
