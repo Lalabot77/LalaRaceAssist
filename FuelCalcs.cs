@@ -3558,6 +3558,27 @@ namespace LaunchPlugin
         return false;
     }
 
+    private double ResolveDryEquivalentFuelBasis(double activeFuelPerLap)
+    {
+        if (!(activeFuelPerLap > 0.0))
+        {
+            return 0.0;
+        }
+
+        if (!IsWet)
+        {
+            return activeFuelPerLap;
+        }
+
+        double factor = WetFactorPercent / 100.0;
+        if (factor > 0.0)
+        {
+            return activeFuelPerLap / factor;
+        }
+
+        return activeFuelPerLap;
+    }
+
     private double? GetProfileAverageFuelPerLapForCurrentCondition()
     {
         return TryGetProfileFuelForCondition(IsWet, out var fuel, out _) ? fuel : (double?)null;
@@ -4192,12 +4213,21 @@ namespace LaunchPlugin
 
         string normalizedCar = hasCar ? carName?.Trim() : null;
         string normalizedTrack = hasTrack ? trackName?.Trim() : null;
+        string preliminaryTrackKey = null;
+        if (!string.IsNullOrWhiteSpace(_plugin.CurrentTrackKey)
+            && !_plugin.CurrentTrackKey.Equals("Unknown", StringComparison.OrdinalIgnoreCase))
+        {
+            preliminaryTrackKey = _plugin.CurrentTrackKey.Trim();
+        }
+        else if (hasTrack)
+        {
+            preliminaryTrackKey = normalizedTrack;
+        }
 
-        bool comboChanged = IsLiveSessionActive
-            && (!string.Equals(normalizedCar, _activeLiveCarKey, StringComparison.OrdinalIgnoreCase)
-                || !string.Equals(normalizedTrack, _activeLiveTrackKey, StringComparison.OrdinalIgnoreCase));
-
-        bool startingNewLiveSession = hasCar && hasTrack && (!IsLiveSessionActive || comboChanged);
+        // Keep pending live context active before any profile-selection mutation that can trigger LoadProfileData().
+        _isApplyingLiveSessionSelection = hasCar && hasTrack;
+        _pendingLiveCarKey = _isApplyingLiveSessionSelection ? normalizedCar : null;
+        _pendingLiveTrackKey = _isApplyingLiveSessionSelection ? preliminaryTrackKey : null;
 
         // 1) Make sure the car profile object is selected (this will also rebuild AvailableTracks once below)
         var carProfile = AvailableCarProfiles.FirstOrDefault(
@@ -4242,9 +4272,13 @@ namespace LaunchPlugin
             resolvedTrackKey = normalizedTrack;
         }
 
-        _isApplyingLiveSessionSelection = hasCar && hasTrack;
-        _pendingLiveCarKey = _isApplyingLiveSessionSelection ? normalizedCar : null;
         _pendingLiveTrackKey = _isApplyingLiveSessionSelection ? resolvedTrackKey : null;
+
+        bool comboChanged = IsLiveSessionActive
+            && (!string.Equals(normalizedCar, _activeLiveCarKey, StringComparison.OrdinalIgnoreCase)
+                || !string.Equals(resolvedTrackKey, _activeLiveTrackKey, StringComparison.OrdinalIgnoreCase));
+
+        bool startingNewLiveSession = hasCar && hasTrack && (!IsLiveSessionActive || comboChanged);
 
         // 4) Select it by instance (this triggers LoadProfileData via SelectedTrackStats setter)
         try
@@ -4690,7 +4724,7 @@ namespace LaunchPlugin
                     ApplySourceUpdate(() =>
                     {
                         FuelPerLap = simHubFuel.Value;
-                        _baseDryFuelPerLap = simHubFuel.Value;
+                        _baseDryFuelPerLap = ResolveDryEquivalentFuelBasis(simHubFuel.Value);
                         FuelPerLapSourceInfo = "SimHub";
                     });
                 }
@@ -4703,7 +4737,7 @@ namespace LaunchPlugin
                     ApplySourceUpdate(() =>
                     {
                         FuelPerLap = defaultFuel;
-                        _baseDryFuelPerLap = defaultFuel;
+                        _baseDryFuelPerLap = ResolveDryEquivalentFuelBasis(defaultFuel);
                         FuelPerLapSourceInfo = "Default";
                     });
                 }

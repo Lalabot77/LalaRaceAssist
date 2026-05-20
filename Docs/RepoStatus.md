@@ -1,3 +1,8 @@
+- 2026-05-20: PR #752 follow-up applied before merge.
+  - Pending live context now arms before profile/track selection loads and promotes to canonical resolved track key before track-triggered reload.
+  - Combo change detection now compares canonical resolved live track key, so same-session key/display mismatches no longer retrigger new-combo snapshot clears.
+  - No-profile SimHub/Default fuel fallback now preserves dry-equivalent basis for wet-factor stability (no double wet-factor application).
+
 - 2026-05-20: PR #748 follow-up #3 (planner fallback edge cases) completed.
   - Live-session pending/active track identity for planner SimHub fallback guard now uses canonical resolved track key precedence (`TrackStats.Key` -> `CurrentTrackKey` -> display name).
   - No-profile fuel fallback (`SimHub`/`Default`) now seeds planner dry-basis for wet refresh stability.

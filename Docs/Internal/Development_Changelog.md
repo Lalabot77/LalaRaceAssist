@@ -1,3 +1,8 @@
+- 2026-05-20: PR #752 follow-up validated (planner canonical combo + wet dry-basis + pending-context timing).
+  - `ApplyLiveSession` now sets pending live context before `SelectedCarProfile` mutations, then upgrades pending track identity to canonical resolved key before `SelectedTrackStats` selection so both load phases can use guarded SimHub fallback when identities match.
+  - Canonical track identity is now used consistently for combo-change detection and active context (`resolved TrackStats.Key` precedence), preventing repeated false new-combo detection from display-name/key mismatch.
+  - SimHub/Default no-profile fuel fallback now seeds `_baseDryFuelPerLap` as a dry-equivalent basis (`dry: value`, `wet: value / factor` with safe invalid-factor fallback), preventing wet-factor double-application drift.
+
 - 2026-05-20: PR #748 post-merge follow-up #3 validated (planner fallback edge-case hardening).
   - Strategy `ApplyLiveSession` now stores pending/active live track identity using canonical resolved `TrackStats.Key` when available (then `CurrentTrackKey`, then display name fallback), so planner live-context guard comparisons match selected track identity across key/display-name differences.
   - No-profile planner fuel fallback now seeds `_baseDryFuelPerLap` from the active fallback basis (`SimHub` or `Default`) when profile fuel is unavailable, preventing later wet-factor/condition refresh paths from collapsing fallback fuel to `0`.
