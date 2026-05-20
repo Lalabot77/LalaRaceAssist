@@ -1,3 +1,7 @@
+- 2026-05-20: Strategy Save All ownership fix landed.
+  - Strategy `Save All to Profile` now saves strictly to planner-selected `SelectedCarProfile` + selected planner track (`SelectedTrackStats`/selected track key), including when a different live session car/track is active.
+  - Save path no longer retargets to live `ActiveProfile` / `CurrentTrackKey`; confirmation messaging now reflects the true planner-selected save target.
+  - `Apply to Live Session` remains separate live-action ownership; no runtime fuel/pit authority changes.
 - 2026-05-20: Early pre-grid restricted max-tank authority seam validated.
   - Runtime max-tank detection now prefers `DataCorePlugin.GameRawData.SessionData.DriverInfo.DriverCarFuelMaxLtr * DriverCarMaxFuelPct` when both are valid, so restricted caps can publish before `GameData.MaxFuel`/`CarSettings_MaxFUEL` hydrate.
   - Added defensive normalization for `DriverCarMaxFuelPct` to support both fractional (`0..1`) and percent (`0..100`) inputs.

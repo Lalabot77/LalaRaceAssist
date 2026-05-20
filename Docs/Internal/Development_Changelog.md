@@ -1,3 +1,7 @@
+- 2026-05-20: Strategy Save All target-ownership fix validated (planner-selected profile/track).
+  - Fixed `FuelCalcs.SavePlannerDataToProfile()` to always persist Save All into the Strategy planner-selected target (`SelectedCarProfile` + `SelectedTrackStats/SelectedTrack`) instead of switching to live-session `ActiveProfile`/`CurrentTrackKey` when live telemetry is active.
+  - Confirmation dialog now reliably reports the actual planner-selected profile/track saved by this path.
+  - Preserved existing save scope split and fields (car-level + track-level planner persistence) and kept `Apply to Live Session` ownership unchanged.
 - 2026-05-20: Early pre-grid restricted max-tank authority seam validated.
   - Runtime max-tank detection now prefers `DataCorePlugin.GameRawData.SessionData.DriverInfo.DriverCarFuelMaxLtr * DriverCarMaxFuelPct` when both are valid, so restricted caps can publish before `GameData.MaxFuel`/`CarSettings_MaxFUEL` hydrate.
   - Added defensive normalization for `DriverCarMaxFuelPct` to support both fractional (`0..1`) and percent (`0..100`) inputs.
