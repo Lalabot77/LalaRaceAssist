@@ -10,6 +10,8 @@ Branch: work
 Scope: Info/Warn logs emitted via `SimHub.Logging.Current.Info(...)` and `SimHub.Logging.Current.Warn(...)`. Use the tag prefixes to filter in SimHub’s log view. Placeholder logs are noted; no deprecated messages are currently removed in code. Legacy/alternate copies of this list do not exist.
 
 ## How to read logs for debugging
+Workflow routing note: `Docs/Internal/Property_Snapshot_Debug_Workflow.md` owns debugging workflow/triage guidance; this page remains the canonical log-message/tag contract.
+
 - **Filter by tag prefix** (e.g., `[LalaPlugin:Fuel Burn]`, `[LalaPlugin:Pit Cycle]`, `[LalaPlugin:Finish]`) to isolate subsystems.
 - **Lap-coupled logs** (PACE/FUEL/RACE PROJECTION) appear once per completed lap and include acceptance reasons; correlate them with lap numbers.
 - **Pit-cycle logs** appear on pit entry/exit/out-lap completion. Use them with PitLite status exports.

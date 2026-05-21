@@ -67,6 +67,8 @@ If fuel values look wrong once, keep driving and let the session develop. If the
 4. Relearn only the affected value or condition if needed.
 5. Lock again only after the data has clearly settled.
 
+For debug workflows (manual snapshot, rolling capture, replay triage), use `Docs/Internal/Property_Snapshot_Debug_Workflow.md`.
+
 ## 8. Practical guidance
 
 - Expect the model to become better over several clean laps, not one.

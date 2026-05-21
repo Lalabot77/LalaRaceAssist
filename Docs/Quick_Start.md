@@ -148,3 +148,9 @@ That applies especially to:
 - [Launch System](Launch_System.md) for launch setup and review
 - [Rejoin Assist](Rejoin_Assist.md) and [Pit Assist](Pit_Assist.md) for driver aids
 - [H2H System](H2H_System.md) for race-context comparisons
+
+
+## Runtime vs Strategy boundary (release-readiness note)
+- **Strategy tab** is the driver planning surface.
+- **Fuel runtime** remains the live race authority for runtime fuel exports and pit guidance.
+- **PreRace** is an info layer and does not replace runtime race-running guidance during green-flag running.

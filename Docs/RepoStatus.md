@@ -1,3 +1,10 @@
+- 2026-05-20: Documentation sweep for release readiness completed (documentation-only).
+  - Added canonical internal workflow doc `Docs/Internal/Property_Snapshot_Debug_Workflow.md` for manual/rolling/replay snapshot operations, troubleshooting matrix, and escalation guidance.
+  - Clarified Project Index topic ownership, terminology mapping, and release-history ownership rubric.
+  - Clarified Fuel/Strategy/PreRace/runtime boundaries across user docs and subsystem references.
+  - RaceFinish ownership explicitly kept distributed (no new `Docs/Subsystems/RaceFinish.md`).
+  - No runtime files, exports, Property Snapshot grouping, log strings, or behavior changed.
+
 - 2026-05-20: Strategy Save All ownership fix landed.
   - Strategy `Save All to Profile` now saves strictly to planner-selected `SelectedCarProfile` + selected planner track (`SelectedTrackStats`/selected track key), including when a different live session car/track is active.
   - Save path no longer retargets to live `ActiveProfile` / `CurrentTrackKey`; confirmation messaging now reflects the true planner-selected save target.

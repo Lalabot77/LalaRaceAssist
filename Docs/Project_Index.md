@@ -73,6 +73,36 @@ These pages support maintainers, support work, and Codex tasks. They are not par
 - [Internal/Code_Snapshot.md](Internal/Code_Snapshot.md)
 - [Internal/Release_Checklist.md](Internal/Release_Checklist.md)
 - [Internal/Development_Changelog.md](Internal/Development_Changelog.md)
+- [Internal/Property_Snapshot_Debug_Workflow.md](Internal/Property_Snapshot_Debug_Workflow.md)
+
+
+## Topic owner matrix
+| Topic | Canonical owner doc |
+|---|---|
+| Runtime Fuel System | `Docs/Subsystems/Fuel_Model.md` |
+| Strategy planner behavior | `Docs/Subsystems/Fuel_Planner_Tab.md` |
+| User-facing fuel trust workflow | `Docs/Fuel_Model.md` |
+| Dash integration contract | `Docs/Subsystems/Dash_Integration.md` |
+| Dashboard user workflow | `Docs/Dashboards.md` |
+| Race end / finish lifecycle contract | `Docs/Internal/SimHubParameterInventory.md` (`RaceFinish.*`, `Race.EndPhase.*`) + `Docs/Internal/SimHubLogMessages.md` |
+| Property Snapshot debug workflow | `Docs/Internal/Property_Snapshot_Debug_Workflow.md` |
+
+## Terminology matrix
+| User term | Technical term | Canonical owner |
+|---|---|---|
+| Strategy | Fuel Planner / Strategy Tab | `Docs/Subsystems/Fuel_Planner_Tab.md` |
+| Fuel Model | Runtime Fuel System | `Docs/Subsystems/Fuel_Model.md` |
+| Pit Assist | Pit Entry + Pit Timing + Pit Commands/Fuel Control | `Docs/Subsystems/Pit_Entry_Assist.md`, `Docs/Subsystems/Pit_Timing_And_PitLoss.md`, `Docs/Subsystems/Pit_Commands_And_Fuel_Control.md` |
+| Dashboards | Dash Integration contract + dashboard package usage | `Docs/Subsystems/Dash_Integration.md` + `Docs/Dashboards.md` |
+| RaceFinish | Finish lifecycle / end-phase contract | `Docs/Internal/SimHubParameterInventory.md` + `Docs/Internal/SimHubLogMessages.md` |
+| League Class | Resolver system / effective class publication | `Docs/Subsystems/League_Class_System.md` |
+| Property Snapshot | Internal observability workflow | `Docs/Internal/Property_Snapshot_Debug_Workflow.md` |
+
+## Release-history ownership rubric
+- `README.md` = stable product overview and doc entry links.
+- `CHANGELOG.md` = public release notes.
+- `Docs/RepoStatus.md` = current validated repository truth.
+- `Docs/Internal/Development_Changelog.md` = internal implementation history between releases.
 
 ## v1 documentation notes
 - `README.md` is the public landing page.

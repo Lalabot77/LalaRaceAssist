@@ -22,6 +22,10 @@ User-facing docs should treat this as **Strategy**. Older “Fuel Planner” wor
 
 ## 2. Strategy vs live observation
 
+### Runtime boundary (important)
+Strategy owns planner intent and pre-race guidance inputs. Runtime race-running fuel authority remains in plugin-owned runtime exports (`Fuel.*`, `Fuel.Refuel.*`, `Fuel.Delta.*`, `Fuel.RequiredBurnToEnd*`). Dashboards consume these exports and do not replace plugin calculations.
+
+
 The plugin keeps a deliberate split between:
 
 - the **live fuel and pace systems**, which observe the current session and build confidence, and
