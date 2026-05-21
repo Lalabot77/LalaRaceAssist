@@ -208,3 +208,11 @@ For most drivers, this order works well:
 4. [Fuel Model](Fuel_Model.md)
 5. [Dashboards](Dashboards.md)
 6. Then the feature pages you use most: [Shift Assist](Shift_Assist.md), [Launch System](Launch_System.md), [Rejoin Assist](Rejoin_Assist.md), [Pit Assist](Pit_Assist.md), and [H2H System](H2H_System.md)
+
+
+## Documentation ownership quick reference
+- User workflow: this guide + feature pages in `Docs/`.
+- Technical behavior ownership: `Docs/Subsystems/*.md`.
+- Export contract owner: `Docs/Internal/SimHubParameterInventory.md`.
+- Log contract owner: `Docs/Internal/SimHubLogMessages.md`.
+- Property Snapshot workflow owner: `Docs/Internal/Property_Snapshot_Debug_Workflow.md`.

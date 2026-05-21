@@ -1,5 +1,8 @@
 # Dashboards
 
+> **Ownership reminder:** dashboards own presentation. Plugin/subsystems own logic, exports, and race calculations.
+
+
 This page is the main driver-facing guide to the Lala dashboard package.
 
 ## 1. Overview

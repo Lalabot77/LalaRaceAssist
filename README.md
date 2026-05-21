@@ -48,7 +48,7 @@ Version **1.0** documentation is now organized so GitHub readers can move from a
 
 ## Plugin vs Dashboard Responsibility
 
-The plugin owns the **learning, storage, calculations, and exports**. Dashboards are the presentation layer: they show those outputs and provide limited interaction, but they do not own strategy math, saved learning, H2H selection, or launch logic.
+The plugin owns the **learning, storage, calculations, and exports**. Dashboards are the presentation layer: they show those outputs and provide limited interaction, but they do not own strategy math, saved learning, H2H selection, launch logic, finish lifecycle math, or Property Snapshot grouping contracts.
 
 ## Dashboard Package
 
@@ -167,7 +167,7 @@ Presets are managed from **Strategy** through the **`Presets...`** modal flow. T
 
 ## Notes / Important Boundaries
 
-- **PreRace** is display-only. It does not replace the planner or change the live fuel model.
+- **PreRace** is display-only. It does not replace Strategy calculations and does not change live runtime fuel ownership (`Fuel.*`, `Fuel.Refuel.*`, `Fuel.Delta.*`).
 - **Live Snapshot** can auto-drive relevant planning values. When it is active, the corresponding manual controls are disabled.
 - Launch controls live under **Settings -> Launch Settings**. **Launch Analysis** remains the saved-run review tab.
 - The future/global message system is not documented here as an active user feature.

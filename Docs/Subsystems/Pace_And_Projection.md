@@ -175,3 +175,7 @@ Runtime-health handling is now expected to prefer targeted fuel/live-snapshot re
 
 ## v1 documentation note
 Use **Strategy** for the user-facing planning story, but keep **Pace & Projection** as the canonical runtime subsystem that feeds fuel math and stable live race-distance behavior.
+
+
+## Race End / Finish Lifecycle
+Race end/finish contract remains distributed by design: exports are owned by `Docs/Internal/SimHubParameterInventory.md` (`RaceFinish.*`, `Race.EndPhase.*`), observability is owned by `Docs/Internal/SimHubLogMessages.md`, and validated-change history belongs in `Docs/RepoStatus.md` and `Docs/Internal/Development_Changelog.md`. This subsystem references lifecycle behavior but is not the canonical contract owner for those internal finish exports/log tags.

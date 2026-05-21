@@ -1,3 +1,10 @@
+- 2026-05-20: Documentation sweep (release-readiness) completed; documentation-only.
+  - Added `Docs/Internal/Property_Snapshot_Debug_Workflow.md` as canonical internal workflow for Property Snapshot manual/rolling/replay usage, troubleshooting matrix, and escalation flow.
+  - Updated `Docs/Project_Index.md` with topic owner matrix, terminology matrix, and release-history ownership rubric.
+  - Clarified user-doc boundaries for Strategy vs runtime fuel authority and PreRace info-layer semantics.
+  - Added compact Race End / Finish Lifecycle clarification in existing subsystem docs; no standalone RaceFinish subsystem doc introduced.
+  - No runtime code/XAML/dashboard/settings/export/log-string changes.
+
 - 2026-05-20: Strategy Save All target-ownership fix validated (planner-selected profile/track).
   - Fixed `FuelCalcs.SavePlannerDataToProfile()` to always persist Save All into the Strategy planner-selected target (`SelectedCarProfile` + `SelectedTrackStats/SelectedTrack`) instead of switching to live-session `ActiveProfile`/`CurrentTrackKey` when live telemetry is active.
   - Confirmation dialog now reliably reports the actual planner-selected profile/track saved by this path.
