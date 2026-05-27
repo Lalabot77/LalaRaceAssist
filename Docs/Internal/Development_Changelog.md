@@ -2,6 +2,7 @@
   - Updated pit-window OPEN/status gating to include contingency on required side for PUSH/STD/ECO checks (`needAdd = lapsRemaining*burn + contingencyForMode - currentFuel`), preserving priority order `CLEAR PUSH > RACE PACE > FUEL SAVE > TANK SPACE`.
   - Litre contingency uses shared litres across checks; lap-based contingency resolves litres per burn basis (push/stable/save), aligned with existing contingency resolver semantics.
   - Protected domains unchanged: `Fuel.Refuel.*`, `Fuel.Delta.*`, `Fuel.Pit.NeedToAdd`, `Fuel.Pit.WillAdd`, `Fuel.Pit.FuelOnExit`, `Fuel.Pit.Box.*`, pit-box display/countdown logic, pit command/control, and runtime refuel target/send behavior.
+  - PR #758 follow-up: pit-window no-stop gate now checks reserve-protected shortfall before returning `N/A`; when base-distance no-stop is true but reserve is short, pit-window proceeds to contingency-aware feasibility states instead of exiting early.
 
 ## 2026-05-27 — PreRace status catalogue phase cleanup (next-stint advisory split)
 - Classification: **both** (pre-race status wording/semantics + docs/catalogue alignment).

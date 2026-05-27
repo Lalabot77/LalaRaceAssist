@@ -181,6 +181,7 @@ Typical states include:
 - Open feasibility (`CLEAR PUSH` / `RACE PACE` / `FUEL SAVE`) now evaluates contingency-aware required add per mode: `needAdd = lapsRemaining * burn + contingencyForMode - currentFuel`.
 - If contingency is configured in litres, the same litres value is applied across PUSH/STD/ECO pit-window checks.
 - If contingency is configured in laps, contingency litres are resolved per burn basis (PUSH uses push burn, RACE PACE uses stable burn, FUEL SAVE uses save burn).
+- Fuel-only `N/A` now means no stop is needed after reserve protection too; base-distance no-stop without reserve coverage still enters pit-window feasibility states.
 
 ## Outputs (exports + logs)
 ### Core exports
