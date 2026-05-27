@@ -1,5 +1,5 @@
 - 2026-05-27: PreRace strategy-status phase cleanup (next-stint advisory split) validated.
-  - Main `LalaLaunch.PreRace.StatusText` for required one-stop now keeps strategy/start-fuel validity focus during pre-grid/gridding: under-fuelled and next-stint-check branches publish `SINGLE STOP POSSIBLE` (orange) instead of next-stint refuel advisory strings.
+  - Main `LalaLaunch.PreRace.StatusText` for required one-stop now keeps strategy/start-fuel validity focus only during pre-grid/gridding: under-fuelled and next-stint-check branches publish `SINGLE STOP POSSIBLE` (orange) in Phase 1/2, while Phase 3/5 retains next-stint advisory text (`2 STINT PLAN REQUIRES MORE FUEL` / `CHECK NEXT STINT FUEL`).
   - `OVERFUELLED` remains unchanged/actionable when excess exceeds contingency threshold; one-stop feasibility hard-stop (`2 STINT PLAN NOT POSSIBLE`) remains unchanged.
   - `StrategyDash.NextRefuel*` target/delta/advice/status math and all runtime tactical families (`Fuel.Refuel.*`, `Fuel.Delta.*`, `Fuel.Pit.*`, `Pit.FuelControl.*`, `Fuel.RequiredBurnToEnd*`) remain unchanged.
 

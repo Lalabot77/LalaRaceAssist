@@ -1,8 +1,8 @@
 ## 2026-05-27 — PreRace status catalogue phase cleanup (next-stint advisory split)
 - Classification: **both** (pre-race status wording/semantics + docs/catalogue alignment).
 - Updated one-stop selected pre-race status decision so next-stint refuel setup advisories no longer dominate main pre-race strategy status in pre-grid/gridding:
-  - `2 STINT PLAN REQUIRES MORE FUEL` branch now maps to `SINGLE STOP POSSIBLE` (orange) for main status.
-  - `CHECK NEXT STINT FUEL` branch now maps to `SINGLE STOP POSSIBLE` (orange) for main status.
+  - Phase-routed split: in `PRE GRID`/`GRIDDING`, `2 STINT PLAN REQUIRES MORE FUEL` and `CHECK NEXT STINT FUEL` branches publish `SINGLE STOP POSSIBLE` (orange) as main status.
+  - In `START READY`/`RACE`, those same branches retain advisory text (`2 STINT PLAN REQUIRES MORE FUEL` / `CHECK NEXT STINT FUEL`).
 - Preserved unchanged behavior/invariants:
   - `OVERFUELLED` pre-race path unchanged (still actionable in main status when threshold is exceeded),
   - one-stop infeasible hard-stop `2 STINT PLAN NOT POSSIBLE` unchanged,
