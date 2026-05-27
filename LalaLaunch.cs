@@ -1387,7 +1387,8 @@ namespace LaunchPlugin
             double currentFuel,
             double effectiveMaxTank,
             double maxTankCapacity,
-            double contingencyLitres)
+            double contingencyLitres,
+            int strategyDashPhase)
         {
             int normalizedStrategy = NormalizeStrategyMode(selectedStrategy);
             bool selectedIsAuto = false;
@@ -1449,6 +1450,11 @@ namespace LaunchPlugin
 
                     if (oneStopUnderFuel)
                     {
+                        if (strategyDashPhase == 1 || strategyDashPhase == 2)
+                        {
+                            return new PreRaceStatusDecision { Text = "SINGLE STOP POSSIBLE", Colour = "orange" };
+                        }
+
                         return new PreRaceStatusDecision { Text = "2 STINT PLAN REQUIRES MORE FUEL", Colour = "orange" };
                     }
 
@@ -1459,6 +1465,11 @@ namespace LaunchPlugin
 
                     if (nextStintAdvisory)
                     {
+                        if (strategyDashPhase == 1 || strategyDashPhase == 2)
+                        {
+                            return new PreRaceStatusDecision { Text = "SINGLE STOP POSSIBLE", Colour = "orange" };
+                        }
+
                         return new PreRaceStatusDecision { Text = "CHECK NEXT STINT FUEL", Colour = "orange" };
                     }
 
@@ -1689,6 +1700,7 @@ namespace LaunchPlugin
                 PitFuelControlDataToText(_pitFuelControlEngine?.Data ?? PitFuelControlData.Live),
                 string.IsNullOrWhiteSpace(preRaceLapSource) ? "DEFAULT" : preRaceLapSource.Trim().ToUpperInvariant(),
                 string.IsNullOrWhiteSpace(preRaceFuelSource) ? "DEFAULT" : preRaceFuelSource.Trim().ToUpperInvariant());
+            int strategyDashPhase = ResolveStrategyDashPhase(isRaceRunning, isGridOrFormation, isOnTrackCar);
             var status = EvaluatePreRaceStatus(
                 selectedStrategy,
                 plannerMismatch: plannerMatchResult.HasComparableInputs && !plannerMatchResult.IsMatch,
@@ -1699,8 +1711,8 @@ namespace LaunchPlugin
                 currentFuel: currentFuel,
                 effectiveMaxTank: effectiveMaxTank,
                 maxTankCapacity: maxTankCapacity,
-                contingencyLitres: contingencyLitres);
-            int strategyDashPhase = ResolveStrategyDashPhase(isRaceRunning, isGridOrFormation, isOnTrackCar);
+                contingencyLitres: contingencyLitres,
+                strategyDashPhase: strategyDashPhase);
             string preRaceStatusText = status.Text;
             if (string.Equals(preRaceStatusText, "MAX START FUEL REQUIRED", StringComparison.Ordinal) &&
                 (strategyDashPhase == 3 || strategyDashPhase == 5))

@@ -5,13 +5,13 @@ Ref,PreRace message,Colour,Priority,Meaning (short),Phase 1 (Pre Grid),Phase 2 (
 4,SINGLE STINT POSSIBLE,orange,O4,Required no-stop but another strategy selected,✅,✅,X,X,Planning choice guidance; lower value once gridding.
 5,SINGLE STINT NOT POSSIBLE,red,R2,Required one-stop but no-stop selected,✅,✅,X,X,Important hard constraint warning in both phases.
 6,2 STINT PLAN NOT POSSIBLE,red,R3,One-stop selected but not feasible,✅,✅,X,X,Critical strategy invalidity; still important on grid.
-7,2 STINT PLAN REQUIRES MORE FUEL,orange,O3A,One-stop feasible but under-fuelled plan (refuel-settable),✅,✅,✅,✅,Advisory to verify next-stint refuel; high-priority orange, not hard-stop red when next-stop target fits tank space.
+7,2 STINT PLAN REQUIRES MORE FUEL,orange,O3A,One-stop feasible but under-fuelled plan (refuel-settable),X,X,✅,✅,Next-stint/pit-fuel setup advisory only; keep out of main pre-race strategy status in pre-grid/gridding.
 8,OVERFUELLED,orange,O6,One-stop selected with significant extra fuel,X,✅,✅,X,Mostly optimization; less critical once on grid.
-9,CHECK NEXT STINT FUEL,orange,O3,Refuel target likely too low / needs review,X,✅,✅,✅,Still useful on grid because refuel plan is phase-relevant.
+9,CHECK NEXT STINT FUEL,orange,O3,Refuel target likely too low / needs review,X,X,✅,✅,Next-stint/pit-fuel setup advisory only; keep out of main pre-race strategy status in pre-grid/gridding.
 10,SINGLE STOP OKAY,green,G2,One-stop selected and checks pass,✅,X,X,X,Good planning confidence cue; can be de-prioritized on grid.
 11,SINGLE STOP POSSIBLE,orange,O5,Required one-stop selected multi,✅,✅,✅,✅,Choice guidance less urgent than hard red alerts.
 12,MAX FUEL SET FOR MULTI STOP,green,G3,Multi-stop selected and at max start fuel,✅,X,X,X,Confirmation text; on grid you may prefer refuel-specific cueing.
 13,MAX START FUEL REQUIRED,orange,O2,Multi-stop selected need max start fuel,✅,✅,X,X,Start-fuel requirement before race start.
-14,SET MAX FUEL NEXT STINT,orange,O7,Multi-stop selected and next-stint refuel should be max,X,X,✅,✅,Late-grid/race refuel-set guidance.
+14,SET MAX FUEL NEXT STINT,orange,O7,Multi-stop selected and next-stint refuel should be max,X,X,✅,✅,Late-grid/race refuel-set guidance only (not main pre-grid strategy validity).
 15,MULTI STINTS REQUIRED,red,R4,Required multi-stop but one-stop selected,✅,✅,X,X,Critical strategy contradiction.
 16,MULTI STINTS REQUIRED,red,R5,Required multi-stop but no-stop selected,✅,✅,X,X,Critical strategy contradiction.

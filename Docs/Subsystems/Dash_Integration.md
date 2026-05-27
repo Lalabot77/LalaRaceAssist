@@ -36,7 +36,7 @@ This document is the canonical dash-facing contract layer. It does **not** redef
   - manual PreRace selections may still emit `live` when planner fuel value is active from live snapshot/runtime source labeling.
 - PreRace status is scenario-first (`required strategy` vs `selected strategy`) and fully partitioned:
   - required `No Stop` => `SINGLE STINT OKAY` or `ADD START FUEL FOR SINGLE STINT`; selecting stop strategies shows `SINGLE STINT POSSIBLE`,
-  - required `One Stop` => no-stop `SINGLE STINT NOT POSSIBLE`, one-stop feasibility (pit-stop refill-capacity gate, then orange advisory `2 STINT PLAN REQUIRES MORE FUEL` when under-fuelled-but-refuel-settable, `OVERFUELLED`, `CHECK NEXT STINT FUEL`, or `SINGLE STOP OKAY`), multi-stop `SINGLE STOP POSSIBLE`,
+  - required `One Stop` => no-stop `SINGLE STINT NOT POSSIBLE`, one-stop feasibility (pit-stop refill-capacity gate, then phase-routed next-stint advisory split: `PRE GRID`/`GRIDDING` publish `SINGLE STOP POSSIBLE`; `START READY`/`RACE` may publish `2 STINT PLAN REQUIRES MORE FUEL` or `CHECK NEXT STINT FUEL`; plus `OVERFUELLED` or `SINGLE STOP OKAY`), multi-stop `SINGLE STOP POSSIBLE`,
   - required `Multi Stop` => non-multi selections publish `MULTI STINTS REQUIRED`; multi-stop publishes `MAX FUEL SET FOR MULTI STOP` or max-fuel-required guidance.
 - If a widget is meant to represent runtime truth, prefer stable `Fuel.*` / pace outputs over UI-only text from elsewhere.
 - Race-end dash gating should consume plugin-owned finish-phase exports directly: `Race.EndPhase` / `Race.EndPhaseText` / `Race.EndPhaseConfidence` plus `Race.LastLapLikely`; dashboards must not infer leader finish from player white/checkered flags or track-disappearance heuristics.
