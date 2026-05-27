@@ -1449,7 +1449,7 @@ namespace LaunchPlugin
 
                     if (oneStopUnderFuel)
                     {
-                        return new PreRaceStatusDecision { Text = "2 STINT PLAN REQUIRES MORE FUEL", Colour = "orange" };
+                        return new PreRaceStatusDecision { Text = "SINGLE STOP POSSIBLE", Colour = "orange" };
                     }
 
                     if (oneStopOverFuel)
@@ -1459,7 +1459,7 @@ namespace LaunchPlugin
 
                     if (nextStintAdvisory)
                     {
-                        return new PreRaceStatusDecision { Text = "CHECK NEXT STINT FUEL", Colour = "orange" };
+                        return new PreRaceStatusDecision { Text = "SINGLE STOP POSSIBLE", Colour = "orange" };
                     }
 
                     return new PreRaceStatusDecision { Text = "SINGLE STOP OKAY", Colour = "green" };

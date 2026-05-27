@@ -1,3 +1,14 @@
+## 2026-05-27 — PreRace status catalogue phase cleanup (next-stint advisory split)
+- Classification: **both** (pre-race status wording/semantics + docs/catalogue alignment).
+- Updated one-stop selected pre-race status decision so next-stint refuel setup advisories no longer dominate main pre-race strategy status in pre-grid/gridding:
+  - `2 STINT PLAN REQUIRES MORE FUEL` branch now maps to `SINGLE STOP POSSIBLE` (orange) for main status.
+  - `CHECK NEXT STINT FUEL` branch now maps to `SINGLE STOP POSSIBLE` (orange) for main status.
+- Preserved unchanged behavior/invariants:
+  - `OVERFUELLED` pre-race path unchanged (still actionable in main status when threshold is exceeded),
+  - one-stop infeasible hard-stop `2 STINT PLAN NOT POSSIBLE` unchanged,
+  - no changes to StrategyDash next-refuel target/delta math or runtime tactical families (`Fuel.Refuel.*`, `Fuel.Delta.*`, `Fuel.Pit.*`, `Pit.FuelControl.*`, `Fuel.RequiredBurnToEnd*`),
+  - no export additions/removals/renames.
+
 - 2026-05-20: Documentation sweep (release-readiness) completed; documentation-only.
   - Added `Docs/Internal/Property_Snapshot_Debug_Workflow.md` as canonical internal workflow for Property Snapshot manual/rolling/replay usage, troubleshooting matrix, and escalation flow.
   - Updated `Docs/Project_Index.md` with topic owner matrix, terminology matrix, and release-history ownership rubric.
