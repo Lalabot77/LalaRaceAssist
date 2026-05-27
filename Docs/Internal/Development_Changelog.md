@@ -1,3 +1,8 @@
+- 2026-05-27: Pit-window contingency-aware feasibility update completed.
+  - Updated pit-window OPEN/status gating to include contingency on required side for PUSH/STD/ECO checks (`needAdd = lapsRemaining*burn + contingencyForMode - currentFuel`), preserving priority order `CLEAR PUSH > RACE PACE > FUEL SAVE > TANK SPACE`.
+  - Litre contingency uses shared litres across checks; lap-based contingency resolves litres per burn basis (push/stable/save), aligned with existing contingency resolver semantics.
+  - Protected domains unchanged: `Fuel.Refuel.*`, `Fuel.Delta.*`, `Fuel.Pit.NeedToAdd`, `Fuel.Pit.WillAdd`, `Fuel.Pit.FuelOnExit`, `Fuel.Pit.Box.*`, pit-box display/countdown logic, pit command/control, and runtime refuel target/send behavior.
+
 ## 2026-05-27 — PreRace status catalogue phase cleanup (next-stint advisory split)
 - Classification: **both** (pre-race status wording/semantics + docs/catalogue alignment).
 - Updated one-stop selected pre-race status decision so next-stint refuel setup advisories no longer dominate main pre-race strategy status in pre-grid/gridding:

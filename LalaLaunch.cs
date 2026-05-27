@@ -5025,9 +5025,13 @@ namespace LaunchPlugin
                 bool stdValid = stableLapsRemaining > 0.0 && stableFuelPerLap > 0.0;
                 bool ecoValid = stableLapsRemaining > 0.0 && FuelSaveFuelPerLap > 0.0;
 
-                double needAddPush = pushValid ? Math.Max(0.0, (stableLapsRemaining * PushFuelPerLap) - currentFuel) : 0.0;
-                double needAddStd = stdValid ? Math.Max(0.0, (stableLapsRemaining * stableFuelPerLap) - currentFuel) : 0.0;
-                double needAddEco = ecoValid ? Math.Max(0.0, (stableLapsRemaining * FuelSaveFuelPerLap) - currentFuel) : 0.0;
+                double pitWindowContingencyPush = contingencyLitresPush;
+                double pitWindowContingencyStd = contingencyLitresNormal;
+                double pitWindowContingencyEco = contingencyLitresSave;
+
+                double needAddPush = pushValid ? Math.Max(0.0, (stableLapsRemaining * PushFuelPerLap) + pitWindowContingencyPush - currentFuel) : 0.0;
+                double needAddStd = stdValid ? Math.Max(0.0, (stableLapsRemaining * stableFuelPerLap) + pitWindowContingencyStd - currentFuel) : 0.0;
+                double needAddEco = ecoValid ? Math.Max(0.0, (stableLapsRemaining * FuelSaveFuelPerLap) + pitWindowContingencyEco - currentFuel) : 0.0;
 
                 bool openPush = pushValid && tankSpace >= needAddPush;
                 bool openStd = stdValid && tankSpace >= needAddStd;
