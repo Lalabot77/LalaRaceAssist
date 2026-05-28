@@ -9,6 +9,7 @@ Branch: work
 - Runtime behavior unchanged in this pass: no code edits, no export additions/removals/renames, no calculation changes.
 - Canonical seam split remains unchanged: `Fuel.Refuel.*` runtime tactical guidance vs `StrategyDash.*`/`PreRace.*` pre-green planning guidance.
 - Property Snapshot list reviewed: yes (no export/property behavior change required).
+- PR #759 review-comment follow-up completed: corrected documentation export names to canonical SimHub property names (`Fuel.ProjectionLapTime_Stable*`, `LalaLaunch.PreRace.*`, `Fuel.Live.DriveTimeAfterZero`, `Fuel.Live.ProjectedDriveSecondsRemaining`).
 
 - 2026-05-27: Pit window contingency-awareness alignment landed (runtime fuel status semantics).
   - Pit-window open feasibility (`CLEAR PUSH`/`RACE PACE`/`FUEL SAVE`) now evaluates contingency-aware required add by mode (`lapsRemaining*burn + contingencyForMode - currentFuel`) before tank-space fit checks.

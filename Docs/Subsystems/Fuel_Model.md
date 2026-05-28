@@ -297,14 +297,14 @@ This section documents current **as-implemented** temporal semantics without cha
 | `Pit.Box.*` | live/raw + frozen-for-stop target (`TargetSec`) | Pit Timing | per-tick in box; reset on box exit/session reset | preferred in-box lifecycle seam | do not touch |
 | `Fuel.Live.TireChangeCount`, `Fuel.Live.TireChangeTime_S`, `Fuel.Live.TotalStopLoss`, `Fuel.Live.PitLaneLoss_S`, `Pit.LastPaceDeltaNetLoss` | mixed: live/raw and smoothed-display | Pit Timing + Fuel Model consumer seams | per pit lifecycle / 500 ms poll; reset/session transitions | preferred pit prediction/perf seams | high |
 | `Fuel.Live.RemainingStints`, `Fuel.MaxTank` | live/raw | Fuel Model | 500 ms poll; cap seam invalidation/reset | preferred runtime capacity context | high |
-| `PreRace.*`, `StrategyDash.*`, `Fuel.Setup.*` | planner-deterministic + helper-text + session-static fallback (`Fuel.Setup.*`) | Strategy Planner + PreRace adapter | per-tick/500 ms; session phase transitions; live/setup availability | preferred pre-green seams only | do not use for race-running refuel widgets |
-| `ProjectionLapTime_Stable`, `...Source` | stable-held + provenance/source-label | Pace & Projection | 500 ms poll; deadband hold; reset on runtime/session reset | preferred projection seam | do not touch |
-| `LiveProjectedDriveTimeAfterZero`, `LiveProjectedDriveSecondsRemaining`, `Fuel.After0.*` | live/raw + held-through-gap fallback between planner/live after-zero | Pace & Projection + Fuel Model | 500 ms poll; timer-zero/lap-cross transitions; reset | support/runtime projection seams; not primary dash headline | medium |
+| `LalaLaunch.PreRace.*`, `StrategyDash.*`, `Fuel.Setup.*` | planner-deterministic + helper-text + session-static fallback (`Fuel.Setup.*`) | Strategy Planner + PreRace adapter | per-tick/500 ms; session phase transitions; live/setup availability | preferred pre-green seams only | do not use for race-running refuel widgets |
+| `Fuel.ProjectionLapTime_Stable`, `Fuel.ProjectionLapTime_StableSource` | stable-held + provenance/source-label | Pace & Projection | 500 ms poll; deadband hold; reset on runtime/session reset | preferred projection seam | do not touch |
+| `Fuel.Live.DriveTimeAfterZero`, `Fuel.Live.ProjectedDriveSecondsRemaining`, `Fuel.After0.*` | live/raw + held-through-gap fallback between planner/live after-zero | Pace & Projection + Fuel Model | 500 ms poll; timer-zero/lap-cross transitions; reset | support/runtime projection seams; not primary dash headline | medium |
 | `Race.EndPhase*`, `Race.LastLapLikely` | debounced-state | RaceFinish lifecycle | per-tick with confidence/debounce; session/lifecycle reset | preferred finish-phase seam | do not touch |
 | `RaceFinish.*` | frozen-post-event + staged latch (class snapshot then player snapshot) | RaceFinish lifecycle | latch on finish triggers; reset when leaving finish lifecycle/session reset | preferred post-finish widgets | do not touch |
 
 ### Direct answers for Phase 3B questions
-1. Stable exports genuinely needed: `Fuel.LiveFuelPerLap_Stable`, `Fuel.LiveFuelPerLap_StableSource`, `Fuel.LiveFuelPerLap_StableConfidence`, `Fuel.LiveLapsRemainingInRace_Stable`, `ProjectionLapTime_Stable`, `ProjectionLapTime_StableSource`.
+1. Stable exports genuinely needed: `Fuel.LiveFuelPerLap_Stable`, `Fuel.LiveFuelPerLap_StableSource`, `Fuel.LiveFuelPerLap_StableConfidence`, `Fuel.LiveLapsRemainingInRace_Stable`, `Fuel.ProjectionLapTime_Stable`, `Fuel.ProjectionLapTime_StableSource`.
 2. `Fuel.LiveLapsRemainingInRace` is effectively already stable in current runtime flow, but should be treated as a compatibility mirror seam rather than the explicit contract anchor.
 3. `Fuel.LiveLapsRemainingInRace_Stable` adds explicit contract clarity/intent for dashboards/debug tools and isolates future rationalisation from the ambiguous non-suffixed name.
 4. `_Stable_S` adds EMA display smoothing only (visual anti-jitter), not new calculation authority.
@@ -315,7 +315,7 @@ This section documents current **as-implemented** temporal semantics without cha
    - frozen-post-event: `RaceFinish.*` snapshots.
    - held-through-gap: stable fuel/projection source/value holds, after-zero planner/live handoff holds.
    - debounced-state: pit-window state text transitions, `Race.EndPhase*` confidence staging.
-8. Preferred dashboard seams: runtime race work => `Fuel.Refuel.*`, `Fuel.RequiredBurnToEnd*`, `Fuel.Delta.*`, `Fuel.Contingency.*`, `Fuel.Pit.*`, `Pit.Box.*`, `ProjectionLapTime_Stable`, `Race.EndPhase*`, `RaceFinish.*`.
+8. Preferred dashboard seams: runtime race work => `Fuel.Refuel.*`, `Fuel.RequiredBurnToEnd*`, `Fuel.Delta.*`, `Fuel.Contingency.*`, `Fuel.Pit.*`, `Pit.Box.*`, `Fuel.ProjectionLapTime_Stable`, `Race.EndPhase*`, `RaceFinish.*`.
 9. Debug/provenance/internal-first seams: `...StableSource`, `...StableConfidence`, `Fuel.Refuel.BurnSource/LapSource/DataMode/BurnMode/SelectedBurnPerLap`, most explicit helper text fields.
 10. Future rationalisation candidates (not removal now): redundant mirror pairs around `LiveLapsRemainingInRace` vs `_Stable`, overlapping `_S` smoothing duplicates, helper/provenance naming consistency across fuel/projection families.
 

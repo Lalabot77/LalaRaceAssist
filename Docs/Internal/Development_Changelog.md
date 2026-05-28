@@ -1,5 +1,13 @@
 
 ## 2026-05-28 — Fuel Revamp Phase 3B temporal semantics/lifecycle classification (documentation-only)
+
+- 2026-05-28: PR #759 review-comment follow-up (documentation-only naming correction).
+  - Corrected Phase 3B temporal-semantics section export names to use actual SimHub properties:
+    - `Fuel.ProjectionLapTime_Stable` / `Fuel.ProjectionLapTime_StableSource` (instead of unqualified projection names),
+    - `LalaLaunch.PreRace.*` (instead of `PreRace.*`),
+    - `Fuel.Live.DriveTimeAfterZero` / `Fuel.Live.ProjectedDriveSecondsRemaining` (instead of unqualified names).
+  - No runtime code/behavior changes; documentation contract accuracy fix only.
+
 - Classification: **internal-only** (analysis + documentation alignment only).
 - Added explicit temporal semantics/lifecycle classification matrix for fuel/pit/prerace/strategydash/projection/finish export families in `Docs/Subsystems/Fuel_Model.md`.
 - Added direct answers for stable-vs-smoothed export usage (`LiveLapsRemainingInRace*`, `_S`, `_Stable_S`) and dashboard seam preferences.
