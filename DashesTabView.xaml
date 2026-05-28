@@ -31,6 +31,10 @@
                                        FriendlyName="Plugin Quick Reset"
                                        Margin="0,8,0,0"
                                        ToolTip="Bind to allow rapid plugin reset if any plugin or dash data issues." />
+                    <ui:ControlsEditor ActionName="LalaLaunch.StrategyDash.ModeToggle"
+                                       FriendlyName="Toggle Strategy Dash Mode"
+                                       Margin="0,8,0,0"
+                                       ToolTip="Assign a button to toggle the Strategy Dash between Advanced and Simple mode. The current state is exported as LalaLaunch.StrategyDash.AdvancedMode (true = Advanced, false = Simple)." />
                     <ui:ControlsEditor ActionName="LalaLaunch.DeclutterMode"
                                        FriendlyName="Cycle Declutter Mode"
                                        Margin="0,8,0,0"

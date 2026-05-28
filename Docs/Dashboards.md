@@ -42,6 +42,17 @@ On the Primary Driver Dash, the normal page flow is driven by:
 
 You can use touch only, but physical bindings are strongly recommended for race use.
 
+### Strategy Dash mode binding
+
+The plugin exposes a **Strategy Dash Mode** binding in **Dash Control → Bindings**. Bind it to dashboard touch, a wheel button, or hardware control when you want the Strategy Dash to switch presentation between Advanced and Simple mode.
+
+Dashboard status is plugin-owned:
+
+- `LalaLaunch.StrategyDash.AdvancedMode` = `true` for Advanced, `false` for Simple.
+- `LalaLaunch.StrategyDash.ModeText` = `ADVANCED` or `SIMPLE`.
+
+Dashboards should use those exports only for presentation/visibility. Strategy math, fuel advice, and PreRace logic remain owned by the plugin.
+
 ### Binding scope in SimHub
 
 Depending on how you organise your SimHub setup, those bindings can be configured:
@@ -71,7 +82,7 @@ Overlays are **temporary surfaces**, not part of the normal left/right page loop
 - Some dashboard behavior depends on optional SimHub-side configuration or optional exports; if those are not configured, related indicators may be missing.
 - Wheelspin / traction-loss indications depend on optional ShakeIt Motors export setup (`TractionLoss` property).
 - Primary Dash navigation behavior is still being refined and may evolve over upcoming releases.
-- In plugin UI, **Primary Dash Mode** binding is currently a placeholder and does not perform an action.
+- Dash Control bindings include **Strategy Dash Mode** for toggling the Strategy Dash between Advanced and Simple presentation. The dashboard-readable status is `LalaLaunch.StrategyDash.AdvancedMode` (`true` = Advanced, `false` = Simple), with `LalaLaunch.StrategyDash.ModeText` available for labels.
 
 ## 5. Primary Driver Dash
 

@@ -1,7 +1,7 @@
 # Dash Integration
 
 Validated against commit: HEAD
-Last updated: 2026-04-23
+Last updated: 2026-05-28
 Branch: work
 
 ## Purpose
@@ -59,6 +59,7 @@ This document is the canonical dash-facing contract layer. It does **not** redef
   - `Fuel.Delta.AfterStop.Selected` for a single plugin-owned after-stop selected delta field (DATA governs basis, SOURCE governs NORM/PUSH/SAVE/STBY selection; STBY uses advisory NORM).
 - `Fuel.Refuel.*` is runtime tactical guidance and should be preferred over `StrategyDash.NextRefuel*` during race-running usage; StrategyDash next-refuel helpers remain pre-green/planning oriented (not obsolete).
 - `LalaLaunch.PreRace.*` and `StrategyDash.*` actionable pre-start/grid guidance (before formation starts) includes Formation Lap Fuel. `StrategyDash.StartFuelRequiredLitres` means fuel required to join grid/start with and is capped by effective tank capacity when published.
+- `StrategyDash.AdvancedMode` / `StrategyDash.ModeText` are presentation-mode status exports only. `StrategyDash.ModeToggle` flips Advanced/Simple dash presentation state; it must not be used as a strategy/fuel calculation input.
 - Export cleanup caution: no fuel-facing export should be removed until both checks are complete: dashboard JSON usage audit and internal C# reference/consumer audit.
 - Do not rebuild burn-to-end with dash-side NCALC formula chains from raw fuel/time/pace properties; use plugin-owned `Fuel.RequiredBurnToEnd`.
 - Tactical delta exports are contingency-aware on the required-to-finish side only; `Fuel.Pit.WillAdd` remains clamp mirror and should not be treated as reserve-augmented request.
@@ -195,6 +196,17 @@ For dashboards that use the v1 message engine:
 - avoid recreating priority resolution in dash expressions.
 
 The subsystem docs own message-system behavior; dashboards should remain consumers only.
+
+## Strategy Dash mode integration
+### Stable exports for dashboards
+- `LalaLaunch.StrategyDash.AdvancedMode`
+- `LalaLaunch.StrategyDash.ModeText`
+
+### Binding and consumption rules
+- Bind **Strategy Dash Mode** through the plugin action `LalaLaunch.StrategyDash.ModeToggle`.
+- `AdvancedMode=true` means Advanced presentation; `false` means Simple presentation.
+- `ModeText` is label-only (`ADVANCED` / `SIMPLE`).
+- This mode is a presentation seam only. Strategy, fuel, PreRace, and pit/refuel calculations remain owned by the plugin/subsystems and must not be reimplemented in dashboard expressions.
 
 ## Dark Mode integration
 ### Stable exports for dashboards

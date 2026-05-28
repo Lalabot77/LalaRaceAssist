@@ -155,6 +155,18 @@ namespace LaunchPlugin
             ManualRecoveryReset("PrimaryDashMode action");
         }
 
+        public void StrategyDashModeToggle()
+        {
+            if (Settings == null)
+            {
+                return;
+            }
+
+            Settings.StrategyDashAdvancedMode = !Settings.StrategyDashAdvancedMode;
+            SaveSettings();
+            SimHub.Logging.Current.Info($"[LalaPlugin:Dash] StrategyDashModeToggle action fired -> Advanced={Settings.StrategyDashAdvancedMode}.");
+        }
+
         public void TriggerManualRecoveryReset(string reason)
         {
             ManualRecoveryReset(reason);
@@ -7012,6 +7024,7 @@ namespace LaunchPlugin
             this.AddAction("Pit.FuelAdd", (a, b) => PitFuelAdd1());
             this.AddAction("Pit.FuelRemove", (a, b) => PitFuelRemove1());
             this.AddAction("PrimaryDashMode", (a, b) => PrimaryDashMode());
+            this.AddAction("StrategyDash.ModeToggle", (a, b) => StrategyDashModeToggle());
             this.AddAction("DeclutterMode", (a, b) => DeclutterMode0());
             this.AddAction("ToggleDarkMode", (a, b) => ToggleDarkMode());
             this.AddAction("EventMarker", (a, b) => EventMarker());
@@ -7317,6 +7330,8 @@ namespace LaunchPlugin
             AttachCore("StrategyDash.NextRefuelStatus", () => StrategyDash_NextRefuelStatus);
             AttachCore("StrategyDash.BurnPlanText", () => StrategyDash_BurnPlanText);
             AttachCore("StrategyDash.ContingencyText", () => StrategyDash_ContingencyText);
+            AttachCore("StrategyDash.AdvancedMode", () => Settings?.StrategyDashAdvancedMode ?? true);
+            AttachCore("StrategyDash.ModeText", () => Settings?.StrategyDashAdvancedMode == false ? "SIMPLE" : "ADVANCED");
             AttachCore("Fuel.ProjectionLapTime_Stable", () => ProjectionLapTime_Stable);
             AttachCore("Fuel.ProjectionLapTime_StableSource", () => ProjectionLapTime_StableSource);
             AttachCore("Fuel.ProjectionLapTime_StableSourceText", () => GetProjectionLapTimeStableSourceText(ProjectionLapTime_StableSource));
@@ -21965,6 +21980,17 @@ namespace LaunchPlugin
         }
         public double PitFuelPushSaveProfileGuardPct { get; set; } = 10.0;
         public bool EnableAutoDashSwitch { get; set; } = true;
+        private bool _strategyDashAdvancedMode = true;
+        public bool StrategyDashAdvancedMode
+        {
+            get { return _strategyDashAdvancedMode; }
+            set
+            {
+                if (_strategyDashAdvancedMode == value) return;
+                _strategyDashAdvancedMode = value;
+                OnPropertyChanged(nameof(StrategyDashAdvancedMode));
+            }
+        }
         private bool _leagueClassEnabled = false;
         public bool LeagueClassEnabled
         {

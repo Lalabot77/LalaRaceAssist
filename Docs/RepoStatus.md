@@ -5,6 +5,12 @@ Last updated: 2026-05-28
 Branch: work
 
 ## Current status
+- 2026-05-28: Strategy Dash Advanced/Simple mode binding landed.
+  - Added plugin action `StrategyDash.ModeToggle` for SimHub Controls & Events / Dash Studio bindings.
+  - Added persisted dashboard status exports `LalaLaunch.StrategyDash.AdvancedMode` (`true` = Advanced, `false` = Simple) and `LalaLaunch.StrategyDash.ModeText` (`ADVANCED`/`SIMPLE`).
+  - Strategy/fuel calculations, StrategyDash advice math, PreRace behavior, telemetry timing, and dashboard navigation are unchanged; the new seam is presentation-mode state only.
+  - Property Snapshot list reviewed: yes (new `StrategyDash.*` exports are covered by the existing Fuel/Strategy snapshot group prefix).
+
 - 2026-05-28: League-aware `Car.iRatingSOF` cohort update validated.
   - League Class enabled + resolved player effective class: SOF now averages positive iRating values for current-session `DriverInfo.Drivers##` rows in the player effective subclass cohort.
   - League Class disabled/unresolved fallback preserved: SOF remains full-field positive iRating average.

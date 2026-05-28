@@ -7,6 +7,7 @@ For internal between-release development history, see `Docs/Internal/Development
 ## v1.1 (Unreleased)
 
 ### Added
+- Strategy Dash Advanced/Simple mode toggle binding with dashboard-readable status exports (`LalaLaunch.StrategyDash.AdvancedMode`, `LalaLaunch.StrategyDash.ModeText`).
 - Pit Fuel Control DATA selector (`LIVE`/`PLAN`) with data actions/exports for dash and hardware bindings.
 - **Overview tab** as the plugin front door for quick links, release-check visibility, and at-a-glance status.
 - **Plugin-owned pit/custom command workflow** with built-in pit actions, custom-message slots, and in-plugin transport selection.
