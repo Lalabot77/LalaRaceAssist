@@ -1643,5 +1643,5 @@ Branch: work
 
 - 2026-05-28 Strategy Live Detect default + non-destructive preset apply landed:
   - Strategy now prefers Live Detect as startup/default race-basis owner once live session context is active (without changing offline/manual defaults).
-  - Race Preset selector/reapply controls remain visible while Live Detect owner is selected.
+  - Race Preset selector/reapply controls are visible only in Preset or Live Detect owner modes (not manual Lap/Time), and remain available in Live Detect.
   - Selecting/reapplying presets while Live Detect is active applies setup values without stealing race-basis ownership or clearing live-detect helper/cache state.

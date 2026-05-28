@@ -147,6 +147,8 @@ namespace LaunchPlugin
     private RaceType _raceType;
     private RaceBasisMode _raceBasisMode = RaceBasisMode.TimeLimited;
     private bool _hasAutoSelectedLiveDetectDefault;
+    private bool _raceBasisModeUserTouched;
+    private bool _suppressRaceBasisUserTouch;
     private RaceType? _liveDetectedRaceType;
     private string _liveDetectHelperText = "Live Detect: no declared race found";
     private double _lastLiveDetectedRaceLaps;
@@ -851,6 +853,7 @@ namespace LaunchPlugin
     }
 
     public bool ShowRacePresetControls => IsRaceBasisPreset;
+    public bool ShowRacePresetSetupControls => IsRaceBasisPreset || IsRaceBasisLiveDetect;
 
     // Pit-lane live detection not implemented yet; hide the button for now
     public bool IsLivePitLaneLossAvailable => false;
@@ -1011,6 +1014,7 @@ namespace LaunchPlugin
             OnPropertyChanged(nameof(IsTimeLimitedRace));
             OnPropertyChanged(nameof(IsRaceLengthEditable));
             OnPropertyChanged(nameof(ShowRacePresetControls));
+            OnPropertyChanged(nameof(ShowRacePresetSetupControls));
         }
 
         OnPropertyChanged(nameof(ShowEffectiveLapLimitedRace));
@@ -1194,6 +1198,10 @@ namespace LaunchPlugin
         {
             if (_raceBasisMode == value) return;
             _raceBasisMode = value;
+            if (!_suppressRaceBasisUserTouch)
+            {
+                _raceBasisModeUserTouched = true;
+            }
             if (_raceBasisMode == RaceBasisMode.LapLimited) _raceType = RaceType.LapLimited;
             else if (_raceBasisMode == RaceBasisMode.TimeLimited) _raceType = RaceType.TimeLimited;
             else if (_raceBasisMode == RaceBasisMode.LiveDetect) _raceType = RaceType.LiveDetect;
@@ -4320,14 +4328,30 @@ namespace LaunchPlugin
         if (_hasAutoSelectedLiveDetectDefault) return;
         if (!IsLiveSessionActive) return;
 
-        // Startup-default preference only: do not override explicit preset ownership.
-        if (SelectedRaceBasisMode == RaceBasisMode.Preset) return;
+        // Startup-default preference only before any explicit user owner selection.
+        if (_raceBasisModeUserTouched) return;
+
+        // Do not override explicit Preset owner, and never steal from explicit manual owner choices.
+        if (SelectedRaceBasisMode == RaceBasisMode.Preset
+            || SelectedRaceBasisMode == RaceBasisMode.LapLimited
+            || SelectedRaceBasisMode == RaceBasisMode.TimeLimited)
+        {
+            return;
+        }
 
         bool liveDetectHasDefinition = _liveDetectedRaceType.HasValue;
         if (liveDetectHasDefinition || IsLiveSessionActive)
         {
-            SelectedRaceBasisMode = RaceBasisMode.LiveDetect;
-            _hasAutoSelectedLiveDetectDefault = true;
+            _suppressRaceBasisUserTouch = true;
+            try
+            {
+                SelectedRaceBasisMode = RaceBasisMode.LiveDetect;
+                _hasAutoSelectedLiveDetectDefault = true;
+            }
+            finally
+            {
+                _suppressRaceBasisUserTouch = false;
+            }
         }
     }
 
@@ -4337,6 +4361,9 @@ namespace LaunchPlugin
         _raceLaps = 20.0;
         _raceMinutes = 40.0;
         _raceType = RaceType.TimeLimited;
+        _raceBasisMode = RaceBasisMode.TimeLimited;
+        _raceBasisModeUserTouched = false;
+        _hasAutoSelectedLiveDetectDefault = false;
         _estimatedLapTime = "2:45.500";
         FuelPerLap = 2.8; // ensures _baseDryFuelPerLap is set
         _maxFuelOverride = 120.0;
