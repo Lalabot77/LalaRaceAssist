@@ -350,3 +350,7 @@ Reset semantics are shared with the Fuel Model and documented centrally in:
 - Owner-mode helpers (`IsRaceBasis*`) are UI ownership flags; effective helpers (`IsEffective*`, `EffectiveRaceBasisValid`) mirror the basis actually consumed by strategy calculations and dependent preset dirty/save logic.
 
 - Live Detect owns race basis only while selected; invalid/no declared race definition intentionally invalidates strategy outputs (no silent fallback to manual race length) while preserving selected/applied preset state.
+
+- Preset selector/reapply controls are shown for `Preset` and `Live Detect` owner modes only; they stay available in `Live Detect` so drivers can apply setup values without changing race-basis owner.
+- Selecting/reapplying presets while `Live Detect` is active applies non-race-basis setup fields only (contingency, tyre intent, PreRace mode, profile-mode max fuel, and other existing setup fields); race type/length authority remains Live Detect and helper/cache state is preserved.
+- Strategy startup now prefers `Live Detect` as initial race-basis owner once a live session context is active only while the startup/default owner is still untouched; explicit Preset/Lap/Time owner choices and manual Race Minutes/Laps edits are preserved.

@@ -197,3 +197,7 @@ If Strategy looks repeatedly wrong, the usual causes are:
 - Tyre timing seconds are not preset-owned; they come from profile-seeded Strategy tyre slider and can be manually overridden for what-if planning.
 - Strategy stop math gates tyre time with Tyres Expected (OFF = 0s, ON = slider value).
 - Live pit prediction/export seams remain unchanged in this Strategy task.
+
+
+- Live Detect startup default: when a live session context is active, Strategy now prefers Live Detect as the initial race-basis owner only before the driver has explicitly chosen Preset, Lap-Limited, or Time-Limited or edited Race Minutes/Laps.
+- Preset apply while Live Detect is selected now updates setup values without forcing race-basis ownership away from Live Detect.

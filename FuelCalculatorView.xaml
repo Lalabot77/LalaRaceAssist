@@ -491,7 +491,7 @@
 
                             <!-- Race Preset selector (inline, auto-apply) -->
                             <Grid Margin="0,10,0,10"
-                                  Visibility="{Binding IsRaceBasisPreset, Converter={StaticResource BooleanToVisibilityConverter}}">
+                                  Visibility="{Binding ShowRacePresetSetupControls, Converter={StaticResource BooleanToVisibilityConverter}}">
                                 <Grid.ColumnDefinitions>
                                     <ColumnDefinition Width="Auto"/>
                                     <ColumnDefinition Width="Auto"/>

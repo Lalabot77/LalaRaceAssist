@@ -1644,3 +1644,9 @@ Branch: work
   - documented mirror/smoothing consumer migration strategy and explicit no-change decisions for stable/source/confidence helpers;
   - no export removed/renamed; no C# or dashboard `.djson` changes performed in this phase;
   - implementation checklist/validation matrix prepared for future dashboard migration task once `.djson` package files are available in-repo for direct edits.
+
+
+- 2026-05-28 Strategy Live Detect default + non-destructive preset apply landed:
+  - Strategy now prefers Live Detect as startup/default race-basis owner once live session context is active only while the owner is untouched; explicit Preset/Lap/Time selections and manual Race Minutes/Laps edits are preserved.
+  - Race Preset selector/reapply controls are visible only in Preset or Live Detect owner modes (not manual Lap/Time), and remain available in Live Detect.
+  - Selecting/reapplying/updating applied presets while Live Detect is active applies setup values without stealing race-basis ownership or clearing live-detect helper/cache state.
