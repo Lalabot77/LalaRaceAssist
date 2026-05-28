@@ -268,3 +268,64 @@ Use **Strategy** terminology for GitHub-facing explanations. Treat older “Fuel
 
 - `LalaLaunch.PreRace.TotalFuelNeeded` now uses active contingency litres (`base race fuel + active contingency`) and no longer applies the legacy hardcoded `+2 laps` PreRace buffer.
 - Added additive `StrategyDash.*` pre-green advice seam; it does not replace runtime `Fuel.*`, `Fuel.Pit.*`, `Fuel.Delta.*`, `Fuel.RequiredBurnToEnd*`, or `Pit.FuelControl.*` ownership.
+
+
+## Fuel Revamp Phase 3B — Temporal semantics and lifecycle classification (analysis snapshot)
+
+This section documents current **as-implemented** temporal semantics without changing runtime behavior.
+
+### Canonical seam split (unchanged)
+- `Fuel.Refuel.*` = runtime next-stop tactical guidance seam (race-running authority).
+- `StrategyDash.*` + `LalaLaunch.PreRace.*` = pre-green/planning guidance seam.
+- These seams are intentionally separate and must not be merged.
+
+### Lifecycle map by family
+| Family / export group | Temporal type | Owner | Reset / invalidation trigger | Dash preference | Risk if changed |
+|---|---|---|---|---|---|
+| `Fuel.LiveFuelPerLap` | live/raw | Fuel Model | 500 ms poll; session/runtime reset; next valid sample | support/debug input; not primary UI value | medium |
+| `Fuel.LiveFuelPerLap_Stable` | stable-held | Fuel Model | 500 ms poll with deadband hold; reset on session/runtime reset | preferred fuel-burn seam | do not touch |
+| `Fuel.LiveFuelPerLap_StableSource`, `...StableConfidence` | provenance/source-label | Fuel Model | updates with stable authority transitions | debug/provenance + trust widgets | high |
+| `Fuel.LiveLapsRemainingInRace` | stable-held (runtime mirror) | Fuel Model + Pace & Projection input | 500 ms poll; projection invalidation/reset | use only if `_Stable` unavailable; otherwise treat as compatibility mirror | medium |
+| `Fuel.LiveLapsRemainingInRace_Stable` | stable-held | Fuel Model | 500 ms poll; reset/invalidation follows projection validity | preferred numeric laps-to-end seam | do not touch |
+| `Fuel.LiveLapsRemainingInRace_S`, `Fuel.LiveLapsRemainingInRace_Stable_S` | smoothed-display | Dashboard helper (Fuel model EMA state) | 500 ms poll EMA; reset when projection invalid or runtime reset | display-only widgets; do not use for control logic | high |
+| `Fuel.RequiredBurnToEnd*` | live/raw + debounced-state (state text/classification) | Fuel Model | 500 ms poll; invalid when basis missing | preferred tactical burn-to-end seam | do not touch |
+| `Fuel.Refuel.*` | live/raw + provenance labels + command-context mirrors (`DataMode`,`BurnMode`) | Fuel Model (with Pit Fuel Control DATA/SOURCE selector inputs) | 500 ms poll; invalid on missing basis/cap context; reset on runtime/session reset | preferred runtime next-stop seam | do not touch |
+| `Fuel.Delta.*` incl `AfterStop.Selected` | live/raw (selected seam includes source selection) | Fuel Model | 500 ms poll; selected variant follows SOURCE each tick | preferred tactical delta seams | high |
+| `Fuel.Contingency.*` | live/raw + provenance/source-label | Fuel Model (+ planner/profile fallback) | 500 ms poll; changes on planner/profile/manual contingency changes | preferred reserve visibility seam | high |
+| `Fuel.StintBurnTarget*`, `Fuel.FuelBurnPredictor*` | live/raw + helper-text/source labels | Fuel Model | 500 ms poll; reset on session/runtime reset | secondary guidance; useful on strategy pages | medium |
+| `Fuel.Pit.*` | mixed: live/raw + smoothed-display + latched (`Fuel.Pit.Box.*`) | Fuel Model + Pit Timing | 500 ms poll; box variants per-tick; box latches reset on deselect/box exit | runtime pit widgets should use these directly | do not touch |
+| `Pit.Box.*` | live/raw + frozen-for-stop target (`TargetSec`) | Pit Timing | per-tick in box; reset on box exit/session reset | preferred in-box lifecycle seam | do not touch |
+| `Fuel.Live.TireChangeCount`, `Fuel.Live.TireChangeTime_S`, `Fuel.Live.TotalStopLoss`, `Fuel.Live.PitLaneLoss_S`, `Pit.LastPaceDeltaNetLoss` | mixed: live/raw and smoothed-display | Pit Timing + Fuel Model consumer seams | per pit lifecycle / 500 ms poll; reset/session transitions | preferred pit prediction/perf seams | high |
+| `Fuel.Live.RemainingStints`, `Fuel.MaxTank` | live/raw | Fuel Model | 500 ms poll; cap seam invalidation/reset | preferred runtime capacity context | high |
+| `LalaLaunch.PreRace.*`, `StrategyDash.*`, `Fuel.Setup.*` | planner-deterministic + helper-text + session-static fallback (`Fuel.Setup.*`) | Strategy Planner + PreRace adapter | per-tick/500 ms; session phase transitions; live/setup availability | preferred pre-green seams only | do not use for race-running refuel widgets |
+| `Fuel.ProjectionLapTime_Stable`, `Fuel.ProjectionLapTime_StableSource` | stable-held + provenance/source-label | Pace & Projection | 500 ms poll; deadband hold; reset on runtime/session reset | preferred projection seam | do not touch |
+| `Fuel.Live.DriveTimeAfterZero`, `Fuel.Live.ProjectedDriveSecondsRemaining`, `Fuel.After0.*` | live/raw + held-through-gap fallback between planner/live after-zero | Pace & Projection + Fuel Model | 500 ms poll; timer-zero/lap-cross transitions; reset | support/runtime projection seams; not primary dash headline | medium |
+| `Race.EndPhase*`, `Race.LastLapLikely` | debounced-state | RaceFinish lifecycle | per-tick with confidence/debounce; session/lifecycle reset | preferred finish-phase seam | do not touch |
+| `RaceFinish.*` | frozen-post-event + staged latch (class snapshot then player snapshot) | RaceFinish lifecycle | latch on finish triggers; reset when leaving finish lifecycle/session reset | preferred post-finish widgets | do not touch |
+
+### Direct answers for Phase 3B questions
+1. Stable exports genuinely needed: `Fuel.LiveFuelPerLap_Stable`, `Fuel.LiveFuelPerLap_StableSource`, `Fuel.LiveFuelPerLap_StableConfidence`, `Fuel.LiveLapsRemainingInRace_Stable`, `Fuel.ProjectionLapTime_Stable`, `Fuel.ProjectionLapTime_StableSource`.
+2. `Fuel.LiveLapsRemainingInRace` is effectively already stable in current runtime flow, but should be treated as a compatibility mirror seam rather than the explicit contract anchor.
+3. `Fuel.LiveLapsRemainingInRace_Stable` adds explicit contract clarity/intent for dashboards/debug tools and isolates future rationalisation from the ambiguous non-suffixed name.
+4. `_Stable_S` adds EMA display smoothing only (visual anti-jitter), not new calculation authority.
+5. Dashboards should prefer `Fuel.LiveLapsRemainingInRace_Stable` for numeric logic, `_Stable_S` only for visual text/needle smoothing.
+6. `_S` display-smoothing families include `Fuel.LiveLapsRemainingInRace_S`, `Fuel.LiveLapsRemainingInRace_Stable_S`, plus other `_S` pit display exports (for example `Fuel.Pit.TotalNeededToEnd_S`, pit delta `_S` variants, `Fuel.Live.PitLaneLoss_S`, `Fuel.Live.TireChangeTime_S`).
+7. Latched/frozen/held/debounced examples:
+   - latched: `Fuel.Pit.Box.EntryFuel`, `Fuel.Pit.Box.WillAddLatched`, boxed stop target `Pit.Box.TargetSec`.
+   - frozen-post-event: `RaceFinish.*` snapshots.
+   - held-through-gap: stable fuel/projection source/value holds, after-zero planner/live handoff holds.
+   - debounced-state: pit-window state text transitions, `Race.EndPhase*` confidence staging.
+8. Preferred dashboard seams: runtime race work => `Fuel.Refuel.*`, `Fuel.RequiredBurnToEnd*`, `Fuel.Delta.*`, `Fuel.Contingency.*`, `Fuel.Pit.*`, `Pit.Box.*`, `Fuel.ProjectionLapTime_Stable`, `Race.EndPhase*`, `RaceFinish.*`.
+9. Debug/provenance/internal-first seams: `...StableSource`, `...StableConfidence`, `Fuel.Refuel.BurnSource/LapSource/DataMode/BurnMode/SelectedBurnPerLap`, most explicit helper text fields.
+10. Future rationalisation candidates (not removal now): redundant mirror pairs around `LiveLapsRemainingInRace` vs `_Stable`, overlapping `_S` smoothing duplicates, helper/provenance naming consistency across fuel/projection families.
+
+### Do-not-touch-yet list (high coupling)
+- `Fuel.Refuel.*` runtime next-stop contract.
+- `Fuel.RequiredBurnToEnd*` state classification contract.
+- `Fuel.Delta.*` tactical contingency-protected semantics.
+- `Fuel.Pit.Box.*` latch lifecycle.
+- `Race.EndPhase*` and `RaceFinish.*` finish lifecycle exports.
+
+### Property Snapshot contract check
+- Property Snapshot list reviewed: **yes**.
+- Reason: this task documents semantics only and does not add/remove/rename/change behavior of any export/property, so snapshot group membership remains unchanged.
