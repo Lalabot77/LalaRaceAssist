@@ -2718,7 +2718,7 @@ The public user-facing release history is maintained in the root `CHANGELOG.md`.
 
 ## 2026-05-28 — Strategy Live Detect default + non-destructive preset apply
 - Classification: **both** (Strategy startup/default UX + Live Detect/preset ownership correctness + docs alignment).
-- Strategy startup now prefers Live Detect race-basis owner when live session context is active only while the owner is untouched; explicit Preset/Lap/Time selections are preserved.
+- Strategy startup now prefers Live Detect race-basis owner when live session context is active only while the owner is untouched; explicit Preset/Lap/Time selections and manual Race Minutes/Laps edits are preserved.
 - Race Preset selector/reapply controls are visible only in Preset or Live Detect owner modes (not manual Lap/Time), and remain available in Live Detect.
 - Selecting/reapplying/updating applied presets while Live Detect is selected now applies setup values without stealing race-basis ownership away from Live Detect.
 - Refresh Calcs semantics unchanged (recompute-only); no runtime fuel model/pit command/telemetry ownership changes.

@@ -199,5 +199,5 @@ If Strategy looks repeatedly wrong, the usual causes are:
 - Live pit prediction/export seams remain unchanged in this Strategy task.
 
 
-- Live Detect startup default: when a live session context is active, Strategy now prefers Live Detect as the initial race-basis owner only before the driver has explicitly chosen Preset, Lap-Limited, or Time-Limited.
+- Live Detect startup default: when a live session context is active, Strategy now prefers Live Detect as the initial race-basis owner only before the driver has explicitly chosen Preset, Lap-Limited, or Time-Limited or edited Race Minutes/Laps.
 - Preset apply while Live Detect is selected now updates setup values without forcing race-basis ownership away from Live Detect.

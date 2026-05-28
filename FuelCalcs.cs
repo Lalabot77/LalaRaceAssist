@@ -147,7 +147,8 @@ namespace LaunchPlugin
     private RaceType _raceType;
     private RaceBasisMode _raceBasisMode = RaceBasisMode.TimeLimited;
     private bool _hasAutoSelectedLiveDetectDefault;
-    private bool _raceBasisOwnerTouchedByUser;
+    private bool _raceBasisPlannerTouchedByUser;
+    private bool _suppressRaceBasisPlannerTouch;
     private RaceType? _liveDetectedRaceType;
     private string _liveDetectHelperText = "Live Detect: no declared race found";
     private double _lastLiveDetectedRaceLaps;
@@ -898,8 +899,17 @@ namespace LaunchPlugin
         // (preset select / preset reapply) that activate Preset ownership.
         if (activatePresetOwner)
         {
-            if (p.Type == RacePresetType.TimeLimited && p.RaceMinutes.HasValue) RaceMinutes = p.RaceMinutes.Value;
-            if (p.Type == RacePresetType.LapLimited && p.RaceLaps.HasValue) RaceLaps = p.RaceLaps.Value;
+            bool previousRaceBasisPlannerTouchSuppression = _suppressRaceBasisPlannerTouch;
+            _suppressRaceBasisPlannerTouch = true;
+            try
+            {
+                if (p.Type == RacePresetType.TimeLimited && p.RaceMinutes.HasValue) RaceMinutes = p.RaceMinutes.Value;
+                if (p.Type == RacePresetType.LapLimited && p.RaceLaps.HasValue) RaceLaps = p.RaceLaps.Value;
+            }
+            finally
+            {
+                _suppressRaceBasisPlannerTouch = previousRaceBasisPlannerTouchSuppression;
+            }
         }
 
         SelectedPreRaceMode = NormalizePitStrategyValue(p.PreRaceMode);
@@ -1205,7 +1215,7 @@ namespace LaunchPlugin
     {
         if (markUserTouched)
         {
-            _raceBasisOwnerTouchedByUser = true;
+            _raceBasisPlannerTouchedByUser = true;
         }
 
         if (_raceBasisMode == value) return;
@@ -1270,6 +1280,10 @@ namespace LaunchPlugin
         {
             if (_raceLaps != value)
             {
+                if (!_suppressRaceBasisPlannerTouch)
+                {
+                    _raceBasisPlannerTouchedByUser = true;
+                }
                 _raceLaps = value;
                 OnPropertyChanged("RaceLaps");
                 RaiseRaceBasisStateChanged(includeOwner: false);
@@ -1285,6 +1299,10 @@ namespace LaunchPlugin
         {
             if (_raceMinutes != value)
             {
+                if (!_suppressRaceBasisPlannerTouch)
+                {
+                    _raceBasisPlannerTouchedByUser = true;
+                }
                 _raceMinutes = value;
                 OnPropertyChanged("RaceMinutes");
                 RaiseRaceBasisStateChanged(includeOwner: false);
@@ -2734,9 +2752,18 @@ namespace LaunchPlugin
         // Reset race-specific parameters to sensible defaults
         if (!preserveRaceDuration)
         {
-            SetRaceBasisMode(RaceBasisMode.TimeLimited, markUserTouched: false);
-            this.RaceLaps = 20;
-            this.RaceMinutes = 40;
+            bool previousRaceBasisPlannerTouchSuppression = _suppressRaceBasisPlannerTouch;
+            _suppressRaceBasisPlannerTouch = true;
+            try
+            {
+                SetRaceBasisMode(RaceBasisMode.TimeLimited, markUserTouched: false);
+                this.RaceLaps = 20;
+                this.RaceMinutes = 40;
+            }
+            finally
+            {
+                _suppressRaceBasisPlannerTouch = previousRaceBasisPlannerTouchSuppression;
+            }
         }
         if (!preservePreRaceMode)
         {
@@ -4337,7 +4364,7 @@ namespace LaunchPlugin
         if (!IsLiveSessionActive) return;
 
         // Startup-default preference only before any explicit user owner selection.
-        if (_raceBasisOwnerTouchedByUser) return;
+        if (_raceBasisPlannerTouchedByUser) return;
 
         // Allow the untouched initial TimeLimited default to move to LiveDetect, but do not
         // override any other internally/restored owner state before user intent exists.
@@ -4362,7 +4389,8 @@ namespace LaunchPlugin
         _raceMinutes = 40.0;
         _raceType = RaceType.TimeLimited;
         _raceBasisMode = RaceBasisMode.TimeLimited;
-        _raceBasisOwnerTouchedByUser = false;
+        _raceBasisPlannerTouchedByUser = false;
+        _suppressRaceBasisPlannerTouch = false;
         _hasAutoSelectedLiveDetectDefault = false;
         _estimatedLapTime = "2:45.500";
         FuelPerLap = 2.8; // ensures _baseDryFuelPerLap is set
@@ -5749,7 +5777,16 @@ namespace LaunchPlugin
             RaiseRaceBasisStateChanged(includeOwner: false);
             if (IsLiveDetectRace && Math.Abs(RaceLaps - _lastLiveDetectedRaceLaps) > 0.001)
             {
-                RaceLaps = _lastLiveDetectedRaceLaps;
+                bool previousRaceBasisPlannerTouchSuppression = _suppressRaceBasisPlannerTouch;
+                _suppressRaceBasisPlannerTouch = true;
+                try
+                {
+                    RaceLaps = _lastLiveDetectedRaceLaps;
+                }
+                finally
+                {
+                    _suppressRaceBasisPlannerTouch = previousRaceBasisPlannerTouchSuppression;
+                }
                 shouldRecalculate = false; // RaceLaps setter already recalculates
             }
             string helperText = string.Format(
@@ -5780,7 +5817,16 @@ namespace LaunchPlugin
             RaiseRaceBasisStateChanged(includeOwner: false);
             if (IsLiveDetectRace && Math.Abs(RaceMinutes - _lastLiveDetectedRaceMinutes) > 0.001)
             {
-                RaceMinutes = _lastLiveDetectedRaceMinutes;
+                bool previousRaceBasisPlannerTouchSuppression = _suppressRaceBasisPlannerTouch;
+                _suppressRaceBasisPlannerTouch = true;
+                try
+                {
+                    RaceMinutes = _lastLiveDetectedRaceMinutes;
+                }
+                finally
+                {
+                    _suppressRaceBasisPlannerTouch = previousRaceBasisPlannerTouchSuppression;
+                }
                 shouldRecalculate = false; // RaceMinutes setter already recalculates
             }
             string helperText = string.Format(
