@@ -5,6 +5,11 @@ Last updated: 2026-05-28
 Branch: work
 
 ## Current status
+- 2026-05-28: League-aware `Car.iRatingSOF` cohort update validated.
+  - League Class enabled + resolved player effective class: SOF now averages positive iRating values for current-session `DriverInfo.Drivers##` rows in the player effective subclass cohort.
+  - League Class disabled/unresolved fallback preserved: SOF remains full-field positive iRating average.
+  - Property Snapshot list reviewed: yes (no export add/remove/rename; behavior-only update for existing `Car.iRatingSOF`).
+
 - Documentation alignment update completed for Fuel Revamp Phase 3B temporal semantics/lifecycle classification (documentation-only).
 - Runtime behavior unchanged in this pass: no code edits, no export additions/removals/renames, no calculation changes.
 - Canonical seam split remains unchanged: `Fuel.Refuel.*` runtime tactical guidance vs `StrategyDash.*`/`PreRace.*` pre-green planning guidance.

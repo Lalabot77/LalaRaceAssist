@@ -204,7 +204,7 @@ System:
 - `Car.Source` (`CarIdxTruth`)
 - `Car.SlotsAhead` (5)
 - `Car.SlotsBehind` (5)
-- `Car.iRatingSOF`
+- `Car.iRatingSOF` (League-aware when League Class is enabled+resolved: averages iRating over the player effective-class cohort; otherwise full-field average fallback)
 - `Car.Ahead01P.Gap.Sec`
 - `Car.Behind01P.Gap.Sec`
 - `Car.Player.PaceFlagsRaw`

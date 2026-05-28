@@ -45,6 +45,7 @@ Major affected families:
 - `Opp.Ahead1..5.*` / `Opp.Behind1..5.*`
 - `LeagueClass.Player.*`
 - `PitExit.*` class-facing fields (`Ahead/Behind.ClassColor`, class-cohort prediction fields)
+- `Car.iRatingSOF` (League ON + resolved: player effective-class cohort average iRating; fallback remains full-field when unresolved/disabled).
 
 Contract notes:
 - `ClassName` presentation prefers effective League `ShortName`, then effective League `Name`.
