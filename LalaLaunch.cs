@@ -4977,7 +4977,7 @@ namespace LaunchPlugin
                 reserveAwarePitWindowNeeded = false;
                 if (LiveLapsRemainingInRace_Stable > 0.0 && LiveFuelPerLap_Stable > 0.0)
                 {
-                    double reserveAwareShortfall = Math.Max(0.0, (LiveLapsRemainingInRace_Stable * LiveFuelPerLap_Stable) + contingencyLitresNormal - currentFuel);
+                    double reserveAwareShortfall = Math.Max(0.0,(LiveLapsRemainingInRace_Stable * LiveFuelPerLap_Stable)+ Contingency_Litres- currentFuel);
                     reserveAwarePitWindowNeeded = reserveAwareShortfall > 0.0;
                 }
             }
@@ -5035,9 +5035,9 @@ namespace LaunchPlugin
                 bool stdValid = stableLapsRemaining > 0.0 && stableFuelPerLap > 0.0;
                 bool ecoValid = stableLapsRemaining > 0.0 && FuelSaveFuelPerLap > 0.0;
 
-                double pitWindowContingencyPush = contingencyLitresPush;
-                double pitWindowContingencyStd = contingencyLitresNormal;
-                double pitWindowContingencyEco = contingencyLitresSave;
+                double pitWindowContingencyPush = Contingency_Litres;
+                double pitWindowContingencyStd = Contingency_Litres;
+                double pitWindowContingencyEco = Contingency_Litres;
 
                 double needAddPush = pushValid ? Math.Max(0.0, (stableLapsRemaining * PushFuelPerLap) + pitWindowContingencyPush - currentFuel) : 0.0;
                 double needAddStd = stdValid ? Math.Max(0.0, (stableLapsRemaining * stableFuelPerLap) + pitWindowContingencyStd - currentFuel) : 0.0;
