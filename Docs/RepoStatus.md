@@ -1,3 +1,15 @@
+# Repo Status
+
+Validated against commit: HEAD
+Last updated: 2026-05-28
+Branch: work
+
+## Current status
+- Documentation alignment update completed for Fuel Revamp Phase 3B temporal semantics/lifecycle classification (documentation-only).
+- Runtime behavior unchanged in this pass: no code edits, no export additions/removals/renames, no calculation changes.
+- Canonical seam split remains unchanged: `Fuel.Refuel.*` runtime tactical guidance vs `StrategyDash.*`/`PreRace.*` pre-green planning guidance.
+- Property Snapshot list reviewed: yes (no export/property behavior change required).
+
 - 2026-05-27: Pit window contingency-awareness alignment landed (runtime fuel status semantics).
   - Pit-window open feasibility (`CLEAR PUSH`/`RACE PACE`/`FUEL SAVE`) now evaluates contingency-aware required add by mode (`lapsRemaining*burn + contingencyForMode - currentFuel`) before tank-space fit checks.
   - Litre-configured contingency applies shared litres across modes; lap-configured contingency resolves litres per mode burn basis (push/stable/save).

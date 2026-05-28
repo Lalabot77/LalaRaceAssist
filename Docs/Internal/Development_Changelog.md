@@ -1,3 +1,12 @@
+
+## 2026-05-28 — Fuel Revamp Phase 3B temporal semantics/lifecycle classification (documentation-only)
+- Classification: **internal-only** (analysis + documentation alignment only).
+- Added explicit temporal semantics/lifecycle classification matrix for fuel/pit/prerace/strategydash/projection/finish export families in `Docs/Subsystems/Fuel_Model.md`.
+- Added direct answers for stable-vs-smoothed export usage (`LiveLapsRemainingInRace*`, `_S`, `_Stable_S`) and dashboard seam preferences.
+- Added explicit future rationalisation candidate list and do-not-touch-yet export families.
+- Confirmed no runtime code, export names, calculations, or dashboard contracts changed; documentation clarifies current behavior only.
+- Property Snapshot list reviewed: yes (no export/property contract changes in this task).
+
 - 2026-05-27: Pit-window contingency-aware feasibility update completed.
   - Updated pit-window OPEN/status gating to include contingency on required side for PUSH/STD/ECO checks (`needAdd = lapsRemaining*burn + contingencyForMode - currentFuel`), preserving priority order `CLEAR PUSH > RACE PACE > FUEL SAVE > TANK SPACE`.
   - Litre contingency uses shared litres across checks; lap-based contingency resolves litres per burn basis (push/stable/save), aligned with existing contingency resolver semantics.
