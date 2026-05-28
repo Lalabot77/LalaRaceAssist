@@ -1639,3 +1639,9 @@ Branch: work
   - documented mirror/smoothing consumer migration strategy and explicit no-change decisions for stable/source/confidence helpers;
   - no export removed/renamed; no C# or dashboard `.djson` changes performed in this phase;
   - implementation checklist/validation matrix prepared for future dashboard migration task once `.djson` package files are available in-repo for direct edits.
+
+- 2026-05-28: Fuel Revamp Phase 3F low-risk dashboard formula migration implemented.
+  - Dashboard-only `.djson` edits in `Dash Files/pit fuel.djson` and `Dash Files/Lala Strategy Secondary Dash.djson` migrated max-tank recompositions to `LalaLaunch.Fuel.MaxTank` where visually equivalent.
+  - `Dash Files/LalaAlerts-Msg.djson` required no changes for this scope.
+  - No plugin/C# runtime logic changes, no export rename/removal, no XAML/layout/widget-structure change.
+  - `_S` and `_Stable` seams, thresholding, timing, phase gating, and warning semantics preserved.

@@ -283,3 +283,22 @@ For each `.djson` dashboard file:
 3. Propose new export only when visual equivalence is expected.
 4. Validate across: pre-grid, formation, race running, pit entry, in-box, pit exit, final stint, surplus, deficit, contingency transitions, and finish/post-finish if touched.
 5. Mark risk (`low/medium/high`) and keep compatibility export when risk is not low.
+
+## Fuel Revamp Phase 3F — low-risk dashboard formula migration (implemented)
+
+Date: 2026-05-28
+
+Implementation outcome:
+- Dashboard consumers that previously recomposed effective max tank from `DataCorePlugin.GameData.MaxFuel * DriverCarMaxFuelPct` were migrated (low-risk only) to plugin-owned canonical seam `LalaLaunch.Fuel.MaxTank` where used as runtime effective max-cap for gauges/text/threshold checks.
+- No dashboard migration was applied to seams intentionally representing raw native/setup max values.
+- No plugin runtime/export registration changes were required.
+
+Applied replacements:
+- `Dash Files/pit fuel.djson`: gauge `Maximum` + max text formula consumers now use `LalaLaunch.Fuel.MaxTank`.
+- `Dash Files/Lala Strategy Secondary Dash.djson`: start-fuel required-vs-max threshold now uses `LalaLaunch.Fuel.MaxTank`.
+
+Preserved by contract:
+- `_S` / `_Stable` display seams and anti-flicker behavior,
+- source/confidence helper seams,
+- existing colour thresholds, visibility timing, phase gating, and warning/caution semantics,
+- no changes to canonical tactical/lifecycle families (`Fuel.Refuel.*`, `Fuel.RequiredBurnToEnd*`, `Fuel.Delta.*`, `Fuel.Contingency.*`, `Fuel.Pit.*`, `Pit.Box.*`, `RaceFinish.*`, `Race.EndPhase*`, `Race.LastLapLikely`).

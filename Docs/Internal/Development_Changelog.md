@@ -2714,3 +2714,11 @@ The public user-facing release history is maintained in the root `CHANGELOG.md`.
 - Added Phase 3E dashboard migration design matrix and checklist to `Docs/Subsystems/Dash_Integration.md`.
 - Current workspace note: repository does not currently contain dashboard `.djson` files under `Docs/Dash Files/`; exact widget/formula replacement edits remain deferred to implementation phase with dashboard package files present.
 - Runtime boundaries preserved: no C# changes, no runtime formula changes, no export registration changes, no dashboard JSON edits.
+
+## 2026-05-28 — Fuel Revamp Phase 3F Dashboard Formula Migration (low-risk dashboard-only)
+- Classification: **internal-only** (dashboard formula consumer migration; no runtime/plugin export changes).
+- Applied low-risk `.djson` formula replacements to consume plugin-owned `LalaLaunch.Fuel.MaxTank` seam where previous formulas recomposed effective max tank.
+- Updated `Dash Files/pit fuel.djson` max gauge/text caps from `DataCorePlugin.GameData.MaxFuel * DriverCarMaxFuelPct` recomposition to `LalaLaunch.Fuel.MaxTank`.
+- Updated `Dash Files/Lala Strategy Secondary Dash.djson` start-fuel threshold check from recomposed max-tank comparison to `LalaLaunch.Fuel.MaxTank` equivalent seam.
+- Preserved all `_S`/`_Stable` seams, colour thresholds, visibility timing, phase gating, warning/caution semantics, and plugin export registration.
+- No C# runtime calculations changed; no XAML changed; no export names changed.
