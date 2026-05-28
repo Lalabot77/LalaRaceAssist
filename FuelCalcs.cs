@@ -146,6 +146,7 @@ namespace LaunchPlugin
     private string _selectedTrack;
     private RaceType _raceType;
     private RaceBasisMode _raceBasisMode = RaceBasisMode.TimeLimited;
+    private bool _hasAutoSelectedLiveDetectDefault;
     private RaceType? _liveDetectedRaceType;
     private string _liveDetectHelperText = "Live Detect: no declared race found";
     private double _lastLiveDetectedRaceLaps;
@@ -815,7 +816,7 @@ namespace LaunchPlugin
                 OnPropertyChanged(nameof(HasSelectedPreset));
 
                 // Auto-apply on selection change (removes need for an Apply button)
-                ApplySelectedPreset();
+                ApplySelectedPreset(activatePresetOwner: !IsLiveDetectRace);
             }
         }
     }
@@ -947,7 +948,7 @@ namespace LaunchPlugin
     {
         if (_selectedPreset != null)
         {
-            ApplyPresetValues(_selectedPreset, activatePresetOwner: true);
+            ApplyPresetValues(_selectedPreset, activatePresetOwner: !IsLiveDetectRace);
         }
     }
 
@@ -4281,6 +4282,7 @@ namespace LaunchPlugin
         SeenCarName = LiveCarName;
         SeenTrackName = LiveTrackName;
         IsLiveSessionActive = hasCar && hasTrack;
+        TryAutoSelectLiveDetectRaceBasisDefault();
         SeenSessionSummary = (hasCar || hasTrack)
             ? $"Live: {FormatLabel(displayCarName, "-")} @ {FormatLabel(displayTrackName, "-")}"
             : "No Live Data";
@@ -4309,6 +4311,23 @@ namespace LaunchPlugin
         else
         {
             LiveSurfaceModeDisplay = "-";
+        }
+    }
+
+
+    private void TryAutoSelectLiveDetectRaceBasisDefault()
+    {
+        if (_hasAutoSelectedLiveDetectDefault) return;
+        if (!IsLiveSessionActive) return;
+
+        // Startup-default preference only: do not override explicit preset ownership.
+        if (SelectedRaceBasisMode == RaceBasisMode.Preset) return;
+
+        bool liveDetectHasDefinition = _liveDetectedRaceType.HasValue;
+        if (liveDetectHasDefinition || IsLiveSessionActive)
+        {
+            SelectedRaceBasisMode = RaceBasisMode.LiveDetect;
+            _hasAutoSelectedLiveDetectDefault = true;
         }
     }
 

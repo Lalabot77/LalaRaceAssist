@@ -2714,3 +2714,11 @@ The public user-facing release history is maintained in the root `CHANGELOG.md`.
 - Added Phase 3E dashboard migration design matrix and checklist to `Docs/Subsystems/Dash_Integration.md`.
 - Current workspace note: repository does not currently contain dashboard `.djson` files under `Docs/Dash Files/`; exact widget/formula replacement edits remain deferred to implementation phase with dashboard package files present.
 - Runtime boundaries preserved: no C# changes, no runtime formula changes, no export registration changes, no dashboard JSON edits.
+
+
+## 2026-05-28 — Strategy Live Detect default + non-destructive preset apply
+- Classification: **both** (Strategy startup/default UX + Live Detect/preset ownership correctness + docs alignment).
+- Strategy startup now prefers Live Detect race-basis owner when live session context is active (without changing offline/manual defaults).
+- Race Preset selector/reapply controls remain available while Live Detect is selected.
+- Selecting/reapplying preset while Live Detect is selected now applies setup values without stealing race-basis ownership away from Live Detect.
+- Refresh Calcs semantics unchanged (recompute-only); no runtime fuel model/pit command/telemetry ownership changes.
