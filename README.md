@@ -82,7 +82,7 @@ The dashboard docs now include a dedicated Primary Driver Dash guide covering th
 - Some dashboard behaviors depend on optional SimHub-side setup and optional dashboard exports. If those are not configured, affected indicators or overlays may be missing while core plugin systems still work.
 - Wheelspin / traction-loss indicators depend on optional **ShakeIt Motors** export setup (`TractionLoss` property). Without that optional export, those indicators are unavailable.
 - Primary Dash navigation behavior is still evolving as the dashboard package is refined for early testers.
-- In plugin UI, **Primary Dash Mode** binding is currently a future placeholder and does not perform an action yet.
+- Dash Control bindings include **Strategy Dash Mode** for toggling the Strategy Dash between Advanced and Simple presentation; dashboards can read `LalaLaunch.StrategyDash.AdvancedMode` (`true` = Advanced, `false` = Simple).
 - Legacy `RSC.iRacingExtraProperties.dll` fallback paths are removed from active runtime code.
 
 ## Support and Feedback

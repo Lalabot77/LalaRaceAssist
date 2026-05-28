@@ -1,7 +1,7 @@
 ﻿# Plugin UI Tooltips
 
 Validated against commit: HEAD
-Last updated: 2026-04-21
+Last updated: 2026-05-28
 Branch: work
 
 ## CopyProfileDialog.xaml
@@ -16,9 +16,10 @@ Branch: work
 
 ## DashesTabView.xaml
 - Dash Control now uses three expander-based main sections: `Bindings`, `Global Dash Functions`, and `Dash Visibility`; all default to expanded so the existing content remains immediately visible while matching the Settings-tab tidy-up pattern.
-- `Bindings` contains only the true dash bindings for `Cancel Msg Button`, `Toggle Pit Screen Popup`, `Change Primary Dash Mode`, `Cycle Declutter Mode`, plus `League Class Toggle` (existing plugin action `LalaLaunch.LeagueClass.ToggleEnabled`).
+- `Bindings` contains only the true dash bindings for `Cancel Msg Button`, `Toggle Pit Screen Popup`, `Plugin Quick Reset` (`LalaLaunch.PrimaryDashMode`), `Toggle Strategy Dash Mode` (`LalaLaunch.StrategyDash.ModeToggle`), `Cycle Declutter Mode`, `Toggle Dark Mode`, plus `League Class Toggle` (existing plugin action `LalaLaunch.LeagueClass.ToggleEnabled`).
+- `Toggle Strategy Dash Mode` tooltip says the binding toggles the Strategy Dash between Advanced and Simple and that current state is exported as `LalaLaunch.StrategyDash.AdvancedMode` (`true` = Advanced, `false` = Simple).
 - League Class resolver precedence, fallback behavior, and cohort semantics are documented canonically in `Docs/Subsystems/League_Class_System.md` (tooltips should stay workflow-focused).
-- `Change Primary Dash Mode` binding is currently repurposed as a manual plugin recovery trigger (runtime re-arm/reset seam) while preserving the existing binding/action name for compatibility.
+- `Plugin Quick Reset` / `PrimaryDashMode` binding is a manual plugin recovery trigger (runtime re-arm/reset seam) while preserving the existing action name for compatibility.
 - `Global Dash Functions` -> General: `Auto screen selection at session start` automatically switches dash screens when a session starts based on context.
 - `Global Dash Functions` -> Dark Mode: `Dark Mode` selector uses Off / Manual / Auto, `Dark Mode Brightness` sets base brightness, `Use Lovely True Dark` follows Lovely when available, and `Toggle Dark Mode` remains here as the dark-mode-specific binding row.
 - `Global Dash Functions` -> Fuel: `Fuel Ready Confidence` sets the live-fuel readiness threshold, `Pit-in Fuel Reserve` sets the stint reserve margin, `Fuel Data Plan Mode` is a two-state toggle for Pit Fuel Control DATA (OFF=`LIVE`, ON=`PLAN` for PUSH/SAVE memory/profile assumptions), and `DATA PLAN Push/Save Guard (%)` clamps DATA PLAN PUSH/SAVE burn around live stable NORM burn.

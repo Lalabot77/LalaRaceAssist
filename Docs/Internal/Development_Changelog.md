@@ -6,6 +6,13 @@
   - CarSA slot selection/order/hysteresis and other League subsystem ownership boundaries unchanged.
 
 
+## 2026-05-28 — Strategy Dash Advanced/Simple mode binding
+- Classification: **both** (new user-facing binding/status exports plus internal contract/docs alignment).
+- Added `StrategyDash.ModeToggle` as a plugin-owned SimHub action exposed in Dash Control → Bindings.
+- Added persisted status exports `LalaLaunch.StrategyDash.AdvancedMode` (`true` = Advanced, `false` = Simple) and `LalaLaunch.StrategyDash.ModeText` (`ADVANCED`/`SIMPLE`) so dashboards can switch presentation without owning strategy logic.
+- Behavior change is additive only: no StrategyDash advice math, fuel calculations, PreRace workflow, telemetry polling, or navigation behavior changed.
+- Property Snapshot list reviewed: yes; the new `StrategyDash.*` exports resolve to the existing Fuel/Strategy snapshot group.
+
 ## 2026-05-28 — Fuel Revamp Phase 3B temporal semantics/lifecycle classification (documentation-only)
 
 - 2026-05-28: PR #759 review-comment follow-up (documentation-only naming correction).

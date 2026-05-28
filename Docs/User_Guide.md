@@ -110,6 +110,8 @@ Those tags are mainly for **awareness and presentation** on supported nearby-car
 
 The dashboard package is designed around SimHub's **Next Dash** and **Previous Dash** navigation model, with matching left/right touch areas on the Primary Driver Dash. Those bindings can be set up per dash, per device, or globally in SimHub, depending on your hardware and workflow.
 
+Dash Control → Bindings also includes **Strategy Dash Mode**. Bind it when you want a two-way Strategy Dash presentation toggle: `LalaLaunch.StrategyDash.AdvancedMode` is `true` for Advanced mode and `false` for Simple mode, while `LalaLaunch.StrategyDash.ModeText` provides a readable label.
+
 Practical expectations for the current Primary Dash package:
 
 - **Track Situational Awareness** and **Racing Standings Awareness** are the main race-facing pages.
