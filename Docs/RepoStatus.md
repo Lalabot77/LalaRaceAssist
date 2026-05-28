@@ -1,3 +1,9 @@
+- 2026-05-27: Pit window contingency-awareness alignment landed (runtime fuel status semantics).
+  - Pit-window open feasibility (`CLEAR PUSH`/`RACE PACE`/`FUEL SAVE`) now evaluates contingency-aware required add by mode (`lapsRemaining*burn + contingencyForMode - currentFuel`) before tank-space fit checks.
+  - Litre-configured contingency applies shared litres across modes; lap-configured contingency resolves litres per mode burn basis (push/stable/save).
+  - Preserved invariants: no changes to `Fuel.Refuel.*`, `Fuel.Delta.*`, `Fuel.Pit.NeedToAdd`, `Fuel.Pit.WillAdd`, `Fuel.Pit.FuelOnExit`, `Fuel.Pit.Box.*`, pit-box distance/time logic, `Pit.FuelControl.*`, or command send behavior.
+  - PR #758 follow-up: base no-stop (`PitStopsRequiredByFuel<=0`) no longer forces pit-window `N/A` when reserve-protected shortfall exists; reserve-short cases now continue into contingency-aware pit-window feasibility states.
+
 - 2026-05-27: PreRace strategy-status phase cleanup (next-stint advisory split) validated.
   - Main `LalaLaunch.PreRace.StatusText` for required one-stop now keeps strategy/start-fuel validity focus only during pre-grid/gridding: under-fuelled and next-stint-check branches publish `SINGLE STOP POSSIBLE` (orange) in Phase 1/2, while Phase 3/5 retains next-stint advisory text (`2 STINT PLAN REQUIRES MORE FUEL` / `CHECK NEXT STINT FUEL`).
   - `OVERFUELLED` remains unchanged/actionable when excess exceeds contingency threshold; one-stop feasibility hard-stop (`2 STINT PLAN NOT POSSIBLE`) remains unchanged.

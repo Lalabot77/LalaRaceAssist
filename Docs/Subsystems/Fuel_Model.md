@@ -170,7 +170,7 @@ For pit-popup gauge stability, a dedicated boxed-refuel seam now exports:
 Latch semantics are lifecycle-based (not `WillAdd`-driven): within valid boxed service, `WillAddLatched` latches immediately when refuel is selected so boxed UI targets are available on box entry, while `EntryFuel` still latches on first refuel-flow detection (`fuel rise` or refuel-learning active seam). If refuel is deselected while still boxed, boxed refuel latches clear to zero immediately (`EntryFuel`, `WillAddLatched`, `AddedSoFar`, `WillAddRemaining`) so no stale pending-fuel countdown remains. Values also reset when boxed service ends. This keeps dashboard logic simple and avoids clamp-driven active-state twitching.
 
 ### 7) Pit-window state machine
-Pit window state is race-only and depends on both stable confidence and tank feasibility.
+Pit window state is race-only and depends on stable confidence plus contingency-aware tank feasibility.
 Typical states include:
 - `N/A`
 - `NO DATA YET`
@@ -178,6 +178,10 @@ Typical states include:
 - `TANK ERROR`
 - open-window states such as `CLEAR PUSH`, `RACE PACE`, or `FUEL SAVE`
 - `TANK SPACE` when required fuel cannot fit under the current assumptions.
+- Open feasibility (`CLEAR PUSH` / `RACE PACE` / `FUEL SAVE`) now evaluates contingency-aware required add per mode: `needAdd = lapsRemaining * burn + contingencyForMode - currentFuel`.
+- If contingency is configured in litres, the same litres value is applied across PUSH/STD/ECO pit-window checks.
+- If contingency is configured in laps, contingency litres are resolved per burn basis (PUSH uses push burn, RACE PACE uses stable burn, FUEL SAVE uses save burn).
+- Fuel-only `N/A` now means no stop is needed after reserve protection too; base-distance no-stop without reserve coverage still enters pit-window feasibility states.
 
 ## Outputs (exports + logs)
 ### Core exports

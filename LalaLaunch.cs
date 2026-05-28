@@ -4971,6 +4971,16 @@ namespace LaunchPlugin
             double fuelPerLapForPitWindow = LiveFuelPerLap_Stable > 0.0 ? LiveFuelPerLap_Stable : fuelPerLapForCalc;
             int pitWindowClosingLap = 0;
             double fuelReadyConfidence = GetFuelReadyConfidenceThreshold();
+            bool reserveAwarePitWindowNeeded = true;
+            if (PitStopsRequiredByFuel <= 0)
+            {
+                reserveAwarePitWindowNeeded = false;
+                if (LiveLapsRemainingInRace_Stable > 0.0 && LiveFuelPerLap_Stable > 0.0)
+                {
+                    double reserveAwareShortfall = Math.Max(0.0, (LiveLapsRemainingInRace_Stable * LiveFuelPerLap_Stable) + contingencyLitresNormal - currentFuel);
+                    reserveAwarePitWindowNeeded = reserveAwareShortfall > 0.0;
+                }
+            }
 
             // Step 1 — Race-only gate FIRST (so Qualifying always shows N/A)
             if (!isRaceSession || !sessionRunning)
@@ -4981,8 +4991,8 @@ namespace LaunchPlugin
                 pitWindowOpeningLap = 0;
                 pitWindowClosingLap = 0;
             }
-            // Step 1b — Inhibit when no more fuel stops required
-            else if (PitStopsRequiredByFuel <= 0)
+            // Step 1b — Fuel-window applicability gate (after reserve protection)
+            else if (!reserveAwarePitWindowNeeded)
             {
                 pitWindowState = 6;
                 pitWindowLabel = "N/A";
@@ -4990,7 +5000,7 @@ namespace LaunchPlugin
                 pitWindowOpeningLap = 0;
                 pitWindowClosingLap = 0;
             }
-            // Step 0/2 — Confidence gate (now only applies in-race)
+            // Step 0/2 — Confidence gate (now only applies in-race when fuel window is needed)
             else if (LiveFuelPerLap_StableConfidence < fuelReadyConfidence)
             {
                 pitWindowState = 5;
@@ -5025,9 +5035,13 @@ namespace LaunchPlugin
                 bool stdValid = stableLapsRemaining > 0.0 && stableFuelPerLap > 0.0;
                 bool ecoValid = stableLapsRemaining > 0.0 && FuelSaveFuelPerLap > 0.0;
 
-                double needAddPush = pushValid ? Math.Max(0.0, (stableLapsRemaining * PushFuelPerLap) - currentFuel) : 0.0;
-                double needAddStd = stdValid ? Math.Max(0.0, (stableLapsRemaining * stableFuelPerLap) - currentFuel) : 0.0;
-                double needAddEco = ecoValid ? Math.Max(0.0, (stableLapsRemaining * FuelSaveFuelPerLap) - currentFuel) : 0.0;
+                double pitWindowContingencyPush = contingencyLitresPush;
+                double pitWindowContingencyStd = contingencyLitresNormal;
+                double pitWindowContingencyEco = contingencyLitresSave;
+
+                double needAddPush = pushValid ? Math.Max(0.0, (stableLapsRemaining * PushFuelPerLap) + pitWindowContingencyPush - currentFuel) : 0.0;
+                double needAddStd = stdValid ? Math.Max(0.0, (stableLapsRemaining * stableFuelPerLap) + pitWindowContingencyStd - currentFuel) : 0.0;
+                double needAddEco = ecoValid ? Math.Max(0.0, (stableLapsRemaining * FuelSaveFuelPerLap) + pitWindowContingencyEco - currentFuel) : 0.0;
 
                 bool openPush = pushValid && tankSpace >= needAddPush;
                 bool openStd = stdValid && tankSpace >= needAddStd;
