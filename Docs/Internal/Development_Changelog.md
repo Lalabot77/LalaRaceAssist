@@ -2698,3 +2698,19 @@ The public user-facing release history is maintained in the root `CHANGELOG.md`.
 - Guard still blocks SimHub fallback when no active/pending live context match exists (disconnected/unmatched planner selection), preventing stale cached DataCore fallback usage.
 - Preserved wet fuel basis when dry avg is missing: `LoadProfileData()` no longer blindly zeroes `_baseDryFuelPerLap` in that case; when wet avg exists it now seeds a non-zero synthetic dry basis from wet/factor to prevent later `ApplyWetFactor`/condition-refresh paths from collapsing wet fuel to zero.
 - DATA SAVED authority, Fuel.Refuel math, Pit.FuelControl, pit commands, manual entry semantics, and profile schema unchanged.
+
+## 2026-05-28 — Fuel Revamp Phase 3C Export Rationalisation design pass (analysis-only)
+- Classification: **internal-only** (analysis/docs only; no runtime or dashboard package edits).
+- Completed Phase 3C export-consumer mapping for temporal duplicate families across fuel/pit/strategy/projection seams.
+- Confirmed core guard remains enforced: no export removal/rename is allowed until both are mapped per export family:
+  - dashboard JSON/package consumer usage,
+  - internal C# consumer usage.
+- Current repo dashboard-package status for this branch: no dashboard JSON / Dash Studio package files are present in-repo to edit; dashboard contract mapping is therefore based on canonical dash integration/parameter docs and exported attach surface inventory.
+- Runtime boundaries preserved: no C# runtime math changes, no export attach changes, no compatibility cleanup/refactor, and no Property Snapshot grouping change required in this analysis pass.
+
+## 2026-05-28 — Fuel Revamp Phase 3E Dashboard Migration Design pass (no export removal)
+- Classification: **internal-only** (design/planning documentation only).
+- Reconfirmed strict migration rule: no export removal/rename until both mappings are complete and dashboard usage is migrated + validated.
+- Added Phase 3E dashboard migration design matrix and checklist to `Docs/Subsystems/Dash_Integration.md`.
+- Current workspace note: repository does not currently contain dashboard `.djson` files under `Docs/Dash Files/`; exact widget/formula replacement edits remain deferred to implementation phase with dashboard package files present.
+- Runtime boundaries preserved: no C# changes, no runtime formula changes, no export registration changes, no dashboard JSON edits.

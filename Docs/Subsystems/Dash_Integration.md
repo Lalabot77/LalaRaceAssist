@@ -250,3 +250,36 @@ The v1 GitHub docs now present dashboards as the presentation layer across all s
 
 ## Fuel PROFILE provenance contract
 When `Fuel.LiveFuelPerLap_StableSource` resolves to `Profile`, runtime numeric fuel burn consumed by fuel outputs is profile-backed for that condition; SimHub/DataCore fallback must not be used in parallel as numeric authority.
+
+## Fuel Revamp Phase 3E — Dashboard migration design pass (no JSON edits)
+
+Date: 2026-05-28
+
+Design-only outcome:
+- No dashboard `.djson` files are currently present in this repository working tree under `Docs/Dash Files/` (or elsewhere), so exact widget/formula-line replacement edits cannot be executed in-repo in this phase.
+- Migration plan below is therefore a **pre-implementation checklist** anchored to canonical export semantics and the Phase 3D consumer findings referenced by task context.
+- No plugin exports are removed/renamed in this phase.
+
+### Phase 3E mirror/smoothing decision matrix
+| Current export consumer | Role intent | Smoothing display-critical? | Proposed action | Replacement status |
+|---|---|---:|---|---|
+| `Fuel.LiveLapsRemainingInRace_Stable_S` | anti-flicker numeric/text display | Yes | Keep current usage until implementation validation proves equivalent visual stability | Defer migration |
+| `Fuel.LiveLapsRemainingInRace_Stable` | stable numeric seam | Yes (stable) | Keep as canonical stable numeric seam where already used | No change |
+| `Fuel.LiveFuelPerLap_Stable` | stable burn display and pacing basis | Yes | Keep as canonical stable burn seam | No change |
+| `Fuel.LiveFuelPerLap_StableSource` | provenance/debug label | N/A | Keep helper usage for source text; do not replace with inferred dash logic | No change |
+| `Fuel.LiveFuelPerLap_StableConfidence` | confidence/state gating | Usually yes | Keep helper usage for confidence colours/visibility gates | No change |
+| `_S` mirrors (general) | display smoothing wrappers | Case-by-case | Migrate only where replay validation shows no flicker/regression | Conditional future |
+
+### Safe future replacement rules (implementation-phase only)
+- Prefer keeping `_Stable` over raw live exports for tactical fuel widgets.
+- Treat `_S` fields as display helpers, not math authority; remove only if equivalent anti-flicker behavior is proven in replay/live validation.
+- Preserve existing caution/warning thresholds, colour bands, and visibility timing during any property swap.
+- Do not migrate or reinterpret canonical tactical/lifecycle families (`Fuel.Refuel.*`, `Fuel.RequiredBurnToEnd*`, `Fuel.Delta.*`, `Fuel.Contingency.*`, `Fuel.Pit.*`, `Pit.Box.*`, `RaceFinish.*`, `Race.EndPhase*`, `Race.LastLapLikely`).
+
+### Per-dashboard migration checklist template (for later implementation)
+For each `.djson` dashboard file:
+1. Record widget id/name and formula path.
+2. Capture old export reference and intended visual role (text/colour/visibility/gauge/control).
+3. Propose new export only when visual equivalence is expected.
+4. Validate across: pre-grid, formation, race running, pit entry, in-box, pit exit, final stint, surplus, deficit, contingency transitions, and finish/post-finish if touched.
+5. Mark risk (`low/medium/high`) and keep compatibility export when risk is not low.
