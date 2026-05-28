@@ -4971,6 +4971,16 @@ namespace LaunchPlugin
             double fuelPerLapForPitWindow = LiveFuelPerLap_Stable > 0.0 ? LiveFuelPerLap_Stable : fuelPerLapForCalc;
             int pitWindowClosingLap = 0;
             double fuelReadyConfidence = GetFuelReadyConfidenceThreshold();
+            bool reserveAwarePitWindowNeeded = true;
+            if (PitStopsRequiredByFuel <= 0)
+            {
+                reserveAwarePitWindowNeeded = false;
+                if (LiveLapsRemainingInRace_Stable > 0.0 && LiveFuelPerLap_Stable > 0.0)
+                {
+                    double reserveAwareShortfall = Math.Max(0.0, (LiveLapsRemainingInRace_Stable * LiveFuelPerLap_Stable) + contingencyLitresNormal - currentFuel);
+                    reserveAwarePitWindowNeeded = reserveAwareShortfall > 0.0;
+                }
+            }
 
             // Step 1 — Race-only gate FIRST (so Qualifying always shows N/A)
             if (!isRaceSession || !sessionRunning)
@@ -4980,28 +4990,6 @@ namespace LaunchPlugin
                 IsPitWindowOpen = false;
                 pitWindowOpeningLap = 0;
                 pitWindowClosingLap = 0;
-            }
-            // Step 1b — Inhibit only when no reserve-protected shortfall exists
-            else if (PitStopsRequiredByFuel <= 0)
-            {
-                double reserveAwareShortfall = 0.0;
-                if (LiveLapsRemainingInRace_Stable > 0.0 && LiveFuelPerLap_Stable > 0.0)
-                {
-                    reserveAwareShortfall = Math.Max(0.0, (LiveLapsRemainingInRace_Stable * LiveFuelPerLap_Stable) + contingencyLitresNormal - currentFuel);
-                }
-
-                if (reserveAwareShortfall <= 0.0)
-                {
-                    pitWindowState = 6;
-                    pitWindowLabel = "N/A";
-                    IsPitWindowOpen = false;
-                    pitWindowOpeningLap = 0;
-                    pitWindowClosingLap = 0;
-                }
-                else
-                {
-                    goto PitWindowFeasibilityChecks;
-                }
             }
             // Step 0/2 — Confidence gate (now only applies in-race)
             else if (LiveFuelPerLap_StableConfidence < fuelReadyConfidence)
@@ -5028,9 +5016,16 @@ namespace LaunchPlugin
                 pitWindowOpeningLap = 0;
                 pitWindowClosingLap = 0;
             }
+            else if (!reserveAwarePitWindowNeeded)
+            {
+                pitWindowState = 6;
+                pitWindowLabel = "N/A";
+                IsPitWindowOpen = false;
+                pitWindowOpeningLap = 0;
+                pitWindowClosingLap = 0;
+            }
             else
             {
-PitWindowFeasibilityChecks:
 
                 double stableLapsRemaining = LiveLapsRemainingInRace_Stable;
                 double stableFuelPerLap = LiveFuelPerLap_Stable;
