@@ -4991,7 +4991,16 @@ namespace LaunchPlugin
                 pitWindowOpeningLap = 0;
                 pitWindowClosingLap = 0;
             }
-            // Step 0/2 — Confidence gate (now only applies in-race)
+            // Step 1b — Fuel-window applicability gate (after reserve protection)
+            else if (!reserveAwarePitWindowNeeded)
+            {
+                pitWindowState = 6;
+                pitWindowLabel = "N/A";
+                IsPitWindowOpen = false;
+                pitWindowOpeningLap = 0;
+                pitWindowClosingLap = 0;
+            }
+            // Step 0/2 — Confidence gate (now only applies in-race when fuel window is needed)
             else if (LiveFuelPerLap_StableConfidence < fuelReadyConfidence)
             {
                 pitWindowState = 5;
@@ -5012,14 +5021,6 @@ namespace LaunchPlugin
             {
                 pitWindowState = 8;
                 pitWindowLabel = "TANK ERROR";
-                IsPitWindowOpen = false;
-                pitWindowOpeningLap = 0;
-                pitWindowClosingLap = 0;
-            }
-            else if (!reserveAwarePitWindowNeeded)
-            {
-                pitWindowState = 6;
-                pitWindowLabel = "N/A";
                 IsPitWindowOpen = false;
                 pitWindowOpeningLap = 0;
                 pitWindowClosingLap = 0;
