@@ -14527,6 +14527,11 @@ namespace LaunchPlugin
             string normalizedPlayerClass = playerClassInfo.Name.Trim();
             var filtered = new int[CarSAEngine.MaxCars];
             bool matched = false;
+            int playerCarIdx = ResolveLivePlayerCarIdxForLeagueCount();
+            int? playerUserId;
+            string playerName;
+            TryGetLivePlayerIdentityPreview(out playerUserId, out playerName);
+
             for (int i = 1; i <= 64; i++)
             {
                 string basePath = $"DataCorePlugin.GameRawData.SessionData.DriverInfo.Drivers{i:00}";
@@ -14543,8 +14548,34 @@ namespace LaunchPlugin
                 }
 
                 int userId = GetInt(pluginManager, $"{basePath}.UserID", 0);
+                if (userId <= 0)
+                {
+                    userId = GetInt(pluginManager, $"{basePath}.CustomerId", 0);
+                }
+                if (userId <= 0)
+                {
+                    userId = GetInt(pluginManager, $"{basePath}.CustomerID", 0);
+                }
+
                 string driverName = GetString(pluginManager, $"{basePath}.UserName") ?? string.Empty;
-                var driverClassInfo = ResolveLeagueClassDriverInfo(userId > 0 ? (int?)userId : null, driverName);
+                if (string.IsNullOrWhiteSpace(driverName))
+                {
+                    driverName = GetString(pluginManager, $"{basePath}.AbbrevName") ?? string.Empty;
+                }
+
+                bool isPlayerRow = playerCarIdx >= 0 && carIdx == playerCarIdx;
+                if (!isPlayerRow && userId > 0 && playerUserId.HasValue && playerUserId.Value > 0)
+                {
+                    isPlayerRow = userId == playerUserId.Value;
+                }
+                if (!isPlayerRow && !string.IsNullOrWhiteSpace(driverName) && !string.IsNullOrWhiteSpace(playerName))
+                {
+                    isPlayerRow = string.Equals(driverName.Trim(), playerName.Trim(), StringComparison.OrdinalIgnoreCase);
+                }
+
+                var driverClassInfo = isPlayerRow
+                    ? ResolveLeagueClassPlayerInfo(userId > 0 ? (int?)userId : null, driverName)
+                    : ResolveLeagueClassDriverInfo(userId > 0 ? (int?)userId : null, driverName);
                 if (!driverClassInfo.Valid || string.IsNullOrWhiteSpace(driverClassInfo.Name))
                 {
                     continue;

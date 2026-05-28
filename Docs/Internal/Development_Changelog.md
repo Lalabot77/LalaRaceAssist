@@ -2,6 +2,7 @@
   - `Car.iRatingSOF` now respects League Class effective cohort semantics when League Class is enabled and the player effective class resolves valid: SOF is averaged from current-session `Drivers##` rows whose resolved effective class matches the player effective class.
   - Fallbacks preserved: when League Class is disabled, player effective class is unresolved, or cohort rows are not resolvable, SOF remains the prior full-field positive-iRating average.
   - Player cohort authority now uses the live-player resolver path (same seam as other League player exports), so manual player override is honored for SOF cohort selection.
+  - Per-row League SOF resolution now mirrors existing Drivers identity fallbacks (`UserID` -> `CustomerId`/`CustomerID`, `UserName` -> `AbbrevName`) and special-cases live player rows through the player resolver seam so the player iRating remains included under manual override cohorts.
   - CarSA slot selection/order/hysteresis and other League subsystem ownership boundaries unchanged.
 
 
