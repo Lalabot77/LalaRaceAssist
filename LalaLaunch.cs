@@ -14503,7 +14503,79 @@ namespace LaunchPlugin
             }
 
             UpdateCarSaDriverInfoCache(pluginManager);
-            _carSaEngine?.UpdateIRatingSof(_carSaIRatingByIdx);
+            _carSaEngine?.UpdateIRatingSof(BuildCarSaIRatingSofArray(pluginManager));
+        }
+
+        private int[] BuildCarSaIRatingSofArray(PluginManager pluginManager)
+        {
+            if (_carSaIRatingByIdx == null || _carSaIRatingByIdx.Length == 0)
+            {
+                return _carSaIRatingByIdx;
+            }
+
+            if (Settings?.LeagueClassEnabled != true)
+            {
+                return _carSaIRatingByIdx;
+            }
+
+            int playerCarIdx = GetInt(pluginManager, "DataCorePlugin.GameData.NewData.PlayerCarIdx", -1);
+            if (playerCarIdx < 0 || playerCarIdx >= CarSAEngine.MaxCars)
+            {
+                return _carSaIRatingByIdx;
+            }
+
+            int playerUserId = 0;
+            string playerName = string.Empty;
+            for (int i = 1; i <= 64; i++)
+            {
+                string basePath = $"DataCorePlugin.GameRawData.SessionData.DriverInfo.Drivers{i:00}";
+                int rowCarIdx = GetInt(pluginManager, $"{basePath}.CarIdx", int.MinValue);
+                if (rowCarIdx != playerCarIdx)
+                {
+                    continue;
+                }
+
+                playerUserId = GetInt(pluginManager, $"{basePath}.UserID", 0);
+                playerName = GetString(pluginManager, $"{basePath}.UserName", string.Empty);
+                break;
+            }
+
+            var playerClassInfo = ResolveLeagueClassDriverInfo(playerUserId > 0 ? (int?)playerUserId : null, playerName);
+            if (!playerClassInfo.Valid || string.IsNullOrWhiteSpace(playerClassInfo.Name))
+            {
+                return _carSaIRatingByIdx;
+            }
+
+            var filtered = new int[CarSAEngine.MaxCars];
+            bool matched = false;
+            for (int i = 1; i <= 64; i++)
+            {
+                string basePath = $"DataCorePlugin.GameRawData.SessionData.DriverInfo.Drivers{i:00}";
+                int carIdx = GetInt(pluginManager, $"{basePath}.CarIdx", int.MinValue);
+                if (carIdx < 0 || carIdx >= CarSAEngine.MaxCars)
+                {
+                    continue;
+                }
+
+                int rating = _carSaIRatingByIdx[carIdx];
+                if (rating <= 0)
+                {
+                    continue;
+                }
+
+                int userId = GetInt(pluginManager, $"{basePath}.UserID", 0);
+                string driverName = GetString(pluginManager, $"{basePath}.UserName", string.Empty);
+                var driverClassInfo = ResolveLeagueClassDriverInfo(userId > 0 ? (int?)userId : null, driverName);
+                if (!driverClassInfo.Valid || !string.Equals(driverClassInfo.Name, playerClassInfo.Name, StringComparison.OrdinalIgnoreCase))
+                {
+                    continue;
+                }
+
+                filtered[carIdx] = rating;
+                matched = true;
+            }
+
+            return matched ? filtered : _carSaIRatingByIdx;
         }
 
         private void UpdateCarSaDriverInfoCache(PluginManager pluginManager)

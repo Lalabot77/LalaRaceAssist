@@ -1,3 +1,8 @@
+- 2026-05-28: CarSA SOF League-aware cohort alignment landed.
+  - `Car.iRatingSOF` now respects League Class effective cohort semantics when League Class is enabled and the player effective class resolves valid: SOF is averaged from current-session `Drivers##` rows whose resolved effective class matches the player effective class.
+  - Fallbacks preserved: when League Class is disabled, player effective class is unresolved, or cohort rows are not resolvable, SOF remains the prior full-field positive-iRating average.
+  - CarSA slot selection/order/hysteresis and other League subsystem ownership boundaries unchanged.
+
 
 ## 2026-05-28 — Fuel Revamp Phase 3B temporal semantics/lifecycle classification (documentation-only)
 
