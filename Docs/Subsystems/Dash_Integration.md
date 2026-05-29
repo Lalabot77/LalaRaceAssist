@@ -1,7 +1,7 @@
 # Dash Integration
 
 Validated against commit: HEAD
-Last updated: 2026-05-28
+Last updated: 2026-05-29
 Branch: work
 
 ## Purpose
@@ -18,6 +18,7 @@ This document is the canonical dash-facing contract layer. It does **not** redef
 - **Use explicit visibility gates** instead of guessing from text/value presence.
 - **Do not renormalize plugin units** unless the dash needs purely visual scaling.
 - **Clear state aggressively on session transitions** so stale visuals do not linger.
+- Use single plugin-qualified public names in dashboard formulas. For example, use `LalaLaunch.PreRace.StatusText` and `LalaLaunch.Friends.Count`; do not bind accidental double-prefix names such as `LalaLaunch.LalaLaunch.PreRace.*`.
 
 ## High-level dash ownership map
 ### Strategy / fuel / pace

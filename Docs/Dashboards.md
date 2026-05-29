@@ -53,6 +53,8 @@ Dashboard status is plugin-owned:
 
 Dashboards should use those exports only for presentation/visibility. Strategy math, fuel advice, and PreRace logic remain owned by the plugin.
 
+When manually editing dashboard formulas, use the single plugin-qualified property prefix only (for example `LalaLaunch.PreRace.StatusText`, not `LalaLaunch.LalaLaunch.PreRace.StatusText`).
+
 ### Binding scope in SimHub
 
 Depending on how you organise your SimHub setup, those bindings can be configured:

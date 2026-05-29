@@ -207,6 +207,11 @@ Dashboard package audit found 120 string references in `.simhubdash` archives. A
 - Docs updated: yes, this audit report plus repo index/status/changelog references.
 - Property Snapshot list reviewed: yes. No SimHub export/property was added, removed, renamed, or behavior-changed, so `LalaLaunch.ResolvePropertySnapshotGroup(...)` did not require changes.
 
+## Follow-up: double-prefix export cleanup
+
+- 2026-05-29 follow-up removed the code-side source of accidental public `LalaLaunch.LalaLaunch.*` names by registering PreRace/Friends exports internally as `PreRace.*` and `Friends.Count`. Public SimHub dashboard formulas should use `LalaLaunch.PreRace.*` and `LalaLaunch.Friends.Count`.
+- Dashboard package JSON was still not edited; any existing `LalaLaunch.LalaLaunch.*` dashboard bindings remain manual Dash Studio fixes.
+
 ## Remaining risks and manual follow-up
 
 1. Manually fix active `pitpopup.djson` action buttons in each affected dashboard package through SimHub Dash Studio.

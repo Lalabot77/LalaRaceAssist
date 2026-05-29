@@ -1,5 +1,11 @@
 # Development Changelog
 
+## 2026-05-29 — Double-prefix LalaLaunch export registration cleanup
+- Classification: **both** (dashboard-facing export naming fix + internal Property Snapshot grouping alignment).
+- Changed the PreRace/Friends `AttachCore` registrations from literal `LalaLaunch.*` names to unqualified internal names (`PreRace.*`, `Friends.Count`), preventing accidental public `LalaLaunch.LalaLaunch.*` properties.
+- Intended dashboard-facing names remain single-prefixed (`LalaLaunch.PreRace.*`, `LalaLaunch.Friends.Count`); dashboard package JSON files were not edited.
+- Property Snapshot list reviewed: yes; `PreRace.*` now resolves to Fuel/Strategy and `Friends.*` to Car/Opp/H2H.
+
 ## 2026-05-29 — iRacingExtraProperties dependency audit
 - Classification: **internal-only** (audit/report documentation; no runtime code, dashboard package, export, or behavior changes).
 - Added `Docs/Internal/iRacingExtraProperties_Dependency_Audit.md` as the detailed audit record for remaining code/docs/dashboard references.

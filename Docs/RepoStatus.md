@@ -5,6 +5,11 @@ Last updated: 2026-05-29
 Branch: work
 
 ## Current status
+- 2026-05-29: Double-prefix LalaLaunch export registration cleanup landed.
+  - PreRace and Friends exports now register internally as `PreRace.*` / `Friends.Count`, preventing accidental public `LalaLaunch.LalaLaunch.*` names while preserving intended public dashboard names (`LalaLaunch.PreRace.*`, `LalaLaunch.Friends.Count`).
+  - No dashboard package JSON files were edited; existing double-prefix dash bindings remain manual Dash Studio fixes.
+  - Property Snapshot list reviewed: yes (`PreRace.*` maps to Fuel/Strategy; `Friends.*` maps to Car/Opp/H2H).
+
 - 2026-05-29: iRacingExtraProperties dependency audit completed (documentation-only).
   - Added `Docs/Internal/iRacingExtraProperties_Dependency_Audit.md` with code/docs findings, replacement map, and a dashboard manual-fix report for packaged `.simhubdash` references.
   - No C# runtime dependency on optional `IRacingExtraProperties` reads was found; remaining code hits are bounded warnings/comments documenting removed fallbacks.
