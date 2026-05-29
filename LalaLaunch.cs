@@ -19481,6 +19481,9 @@ namespace LaunchPlugin
             PreRace_SelectedText = "Single Stop";
             PreRace_Stints = 0;
             PreRace_TotalFuelNeeded = 0;
+            PreRace_FormationFuelPlanned = 0.0;
+            PreRace_FormationFuelRemaining = 0.0;
+            ResetPreRaceFormationFuelBaseline();
             PreRace_FuelDelta = 0;
             PreRace_FuelSource = "DEFAULT";
             PreRace_LapTimeSource = "DEFAULT";
