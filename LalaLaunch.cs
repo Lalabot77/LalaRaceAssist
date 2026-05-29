@@ -7140,7 +7140,7 @@ namespace LaunchPlugin
             this.AddAction("ShiftAssist_ToggleLock_G7", (a, b) => ExecuteShiftAssistLockAction(7, current => !current, "ShiftAssist_ToggleLock_G7"));
             this.AddAction("ShiftAssist_ToggleLock_G8", (a, b) => ExecuteShiftAssistLockAction(8, current => !current, "ShiftAssist_ToggleLock_G8"));
             
-            AttachCore("LalaLaunch.Friends.Count", () => _friendsCount);
+            AttachCore("Friends.Count", () => _friendsCount);
 
             // --- DELEGATES FOR LIVE FUEL CALCULATOR (CORE) ---
             AttachCore("Fuel.LiveFuelPerLap", () => LiveFuelPerLap);
@@ -7307,16 +7307,16 @@ namespace LaunchPlugin
             AttachCore("Fuel.After0.PlannerSeconds", () => AfterZeroPlannerSeconds);
             AttachCore("Fuel.After0.LiveEstimateSeconds", () => AfterZeroLiveEstimateSeconds);
             AttachCore("Fuel.After0.Source", () => AfterZeroSource);
-            AttachCore("LalaLaunch.PreRace.Selected", () => PreRace_Selected);
-            AttachCore("LalaLaunch.PreRace.SelectedText", () => PreRace_SelectedText);
-            AttachCore("LalaLaunch.PreRace.Stints", () => PreRace_Stints);
-            AttachCore("LalaLaunch.PreRace.TotalFuelNeeded", () => PreRace_TotalFuelNeeded);
-            AttachCore("LalaLaunch.PreRace.FuelDelta", () => PreRace_FuelDelta);
-            AttachCore("LalaLaunch.PreRace.FuelSource", () => PreRace_FuelSource);
-            AttachCore("LalaLaunch.PreRace.LapTimeSource", () => PreRace_LapTimeSource);
-            AttachCore("LalaLaunch.PreRace.LiveFacingBasisText", () => PreRace_LiveFacingBasisText);
-            AttachCore("LalaLaunch.PreRace.StatusText", () => PreRace_StatusText);
-            AttachCore("LalaLaunch.PreRace.StatusColour", () => PreRace_StatusColour);
+            AttachCore("PreRace.Selected", () => PreRace_Selected);
+            AttachCore("PreRace.SelectedText", () => PreRace_SelectedText);
+            AttachCore("PreRace.Stints", () => PreRace_Stints);
+            AttachCore("PreRace.TotalFuelNeeded", () => PreRace_TotalFuelNeeded);
+            AttachCore("PreRace.FuelDelta", () => PreRace_FuelDelta);
+            AttachCore("PreRace.FuelSource", () => PreRace_FuelSource);
+            AttachCore("PreRace.LapTimeSource", () => PreRace_LapTimeSource);
+            AttachCore("PreRace.LiveFacingBasisText", () => PreRace_LiveFacingBasisText);
+            AttachCore("PreRace.StatusText", () => PreRace_StatusText);
+            AttachCore("PreRace.StatusColour", () => PreRace_StatusColour);
             AttachCore("StrategyDash.Phase", () => StrategyDash_Phase);
             AttachCore("StrategyDash.PhaseText", () => StrategyDash_PhaseText);
             AttachCore("StrategyDash.RequiredStopsPreGreen", () => StrategyDash_RequiredStopsPreGreen);
@@ -14167,6 +14167,7 @@ namespace LaunchPlugin
 
             if (propertyName.StartsWith("Fuel.", StringComparison.Ordinal)
                 || propertyName.StartsWith("Strategy", StringComparison.Ordinal)
+                || propertyName.StartsWith("PreRace.", StringComparison.Ordinal)
                 || propertyName.StartsWith("Pace.", StringComparison.Ordinal)
                 || propertyName.StartsWith("Surface.", StringComparison.Ordinal))
             {
@@ -14180,7 +14181,8 @@ namespace LaunchPlugin
                 || propertyName.StartsWith("Race.", StringComparison.Ordinal)
                 || propertyName.StartsWith("RaceFinish.", StringComparison.Ordinal)
                 || propertyName.StartsWith("ClassBest.", StringComparison.Ordinal)
-                || propertyName.StartsWith("ClassLeader.", StringComparison.Ordinal))
+                || propertyName.StartsWith("ClassLeader.", StringComparison.Ordinal)
+                || propertyName.StartsWith("Friends.", StringComparison.Ordinal))
             {
                 return "CarOppH2H";
             }
