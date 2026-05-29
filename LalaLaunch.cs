@@ -1063,6 +1063,8 @@ namespace LaunchPlugin
         public string PreRace_SelectedText { get; private set; } = "Single Stop";
         public double PreRace_Stints { get; private set; }
         public double PreRace_TotalFuelNeeded { get; private set; }
+        public double PreRace_FormationFuelPlanned { get; private set; }
+        public double PreRace_FormationFuelRemaining { get; private set; }
         public double PreRace_FuelDelta { get; private set; }
         public string PreRace_FuelSource { get; private set; } = "DEFAULT";
         public string PreRace_LapTimeSource { get; private set; } = "DEFAULT";
@@ -1615,6 +1617,92 @@ namespace LaunchPlugin
                 : contingencyText;
         }
 
+        private double ResolvePreRaceAfterZeroSeconds()
+        {
+            double runtimeAfterZero = _afterZeroUsedSeconds;
+            if (!double.IsNaN(runtimeAfterZero) && !double.IsInfinity(runtimeAfterZero) && runtimeAfterZero > 0.0)
+            {
+                return runtimeAfterZero;
+            }
+
+            double plannerAfterZero = FuelCalculator?.StrategyDriverExtraSecondsAfterZero ?? 0.0;
+            if (!double.IsNaN(plannerAfterZero) && !double.IsInfinity(plannerAfterZero) && plannerAfterZero > 0.0)
+            {
+                return plannerAfterZero;
+            }
+
+            return 0.0;
+        }
+
+        private double ResolvePreRaceFormationFuelPlannedLitres()
+        {
+            double planned = FuelCalculator?.FormationLapFuelLiters ?? 0.0;
+            if (double.IsNaN(planned) || double.IsInfinity(planned) || planned <= 0.0)
+            {
+                return 0.0;
+            }
+
+            return planned;
+        }
+
+        private double ResolvePreRaceFormationFuelRemainingLitres(double plannedLitres, double liveCurrentFuel, int sessionStateNumeric)
+        {
+            if (plannedLitres <= 0.0 || double.IsNaN(plannedLitres) || double.IsInfinity(plannedLitres))
+            {
+                ResetPreRaceFormationFuelBaseline();
+                return 0.0;
+            }
+
+            if (sessionStateNumeric <= 0 || sessionStateNumeric >= 4)
+            {
+                ResetPreRaceFormationFuelBaseline();
+                return 0.0;
+            }
+
+            if (sessionStateNumeric == 3)
+            {
+                if (liveCurrentFuel > 0.0 && !double.IsNaN(liveCurrentFuel) && !double.IsInfinity(liveCurrentFuel))
+                {
+                    if (!_preRaceFormationBaselineValid ||
+                        double.IsNaN(_preRaceFormationBaselineFuelLitres) ||
+                        liveCurrentFuel > _preRaceFormationBaselineFuelLitres + 0.25)
+                    {
+                        _preRaceFormationBaselineFuelLitres = liveCurrentFuel;
+                        _preRaceFormationBaselineValid = true;
+                    }
+
+                    double consumed = Math.Max(0.0, _preRaceFormationBaselineFuelLitres - liveCurrentFuel);
+                    return ClampLitres(plannedLitres - consumed, 0.0, plannedLitres);
+                }
+
+                double heldRemaining = PreRace_FormationFuelRemaining > 0.0
+                    ? PreRace_FormationFuelRemaining
+                    : plannedLitres;
+                return ClampLitres(heldRemaining, 0.0, plannedLitres);
+            }
+
+            ResetPreRaceFormationFuelBaseline();
+            return plannedLitres;
+        }
+
+        private void ResetPreRaceFormationFuelBaseline()
+        {
+            _preRaceFormationBaselineFuelLitres = double.NaN;
+            _preRaceFormationBaselineValid = false;
+        }
+
+        private static double ClampLitres(double value, double minimum, double maximum)
+        {
+            if (double.IsNaN(value) || double.IsInfinity(value))
+            {
+                return minimum;
+            }
+
+            if (value < minimum) return minimum;
+            if (value > maximum) return maximum;
+            return value;
+        }
+
         private void UpdatePreRaceOutputs(
             GameData data,
             double liveCurrentFuel,
@@ -1656,9 +1744,10 @@ namespace LaunchPlugin
             ResolveDataGovernedBurnAndPaceBasis(data, fallbackFuelPerLap, fallbackFuelIsSimHub: true, out preRaceFuelPerLap, out preRaceProjectionLapSeconds, out preRaceFuelSource, out preRaceLapSource);
 
             double forecastRaceLaps = 0.0;
+            double afterZeroSecondsForPreRace = ResolvePreRaceAfterZeroSeconds();
             if (raceSessionDurationSeconds > 0.0 && preRaceProjectionLapSeconds > 0.0)
             {
-                forecastRaceLaps = Math.Max(0.0, (raceSessionDurationSeconds + _afterZeroUsedSeconds) / preRaceProjectionLapSeconds);
+                forecastRaceLaps = Math.Max(0.0, (raceSessionDurationSeconds + afterZeroSecondsForPreRace) / preRaceProjectionLapSeconds);
             }
             else if (raceSessionLaps > 0)
             {
@@ -1675,17 +1764,13 @@ namespace LaunchPlugin
                 (forecastRaceLaps > 0.0 && preRaceFuelPerLap > 0.0)
                     ? forecastRaceLaps * preRaceFuelPerLap
                     : 0.0;
-            double formationLapFuelLitres = 0.0;
-            if (sessionStateNumeric > 0 && sessionStateNumeric < 3)
-            {
-                double plannerFormationFuel = FuelCalculator?.FormationLapFuelLiters ?? 0.0;
-                if (!double.IsNaN(plannerFormationFuel) && !double.IsInfinity(plannerFormationFuel))
-                {
-                    formationLapFuelLitres = Math.Max(0.0, plannerFormationFuel);
-                }
-            }
+            PreRace_FormationFuelPlanned = ResolvePreRaceFormationFuelPlannedLitres();
+            PreRace_FormationFuelRemaining = ResolvePreRaceFormationFuelRemainingLitres(
+                PreRace_FormationFuelPlanned,
+                liveCurrentFuel,
+                sessionStateNumeric);
             PreRace_TotalFuelNeeded =
-                baseRaceFuelLitres + contingencyLitres + formationLapFuelLitres;
+                baseRaceFuelLitres + contingencyLitres + PreRace_FormationFuelRemaining;
 
             PreRace_Stints = usableTank > 0.0
                 ? Math.Round(Math.Max(0.0, PreRace_TotalFuelNeeded / usableTank), 1)
@@ -1783,7 +1868,7 @@ namespace LaunchPlugin
                 if (selectedBurn > 0.0)
                 {
                     double selectedContingency = Math.Max(0.0, ResolveActiveContingency(selectedBurn).Litres);
-                    double selectedTotalNeeded = (forecastRaceLaps * selectedBurn) + selectedContingency + formationLapFuelLitres;
+                    double selectedTotalNeeded = (forecastRaceLaps * selectedBurn) + selectedContingency + PreRace_FormationFuelRemaining;
                     oneStopTarget = Math.Max(0.0, selectedTotalNeeded - currentFuel);
                 }
             }
@@ -1879,6 +1964,8 @@ namespace LaunchPlugin
         private bool _smoothedProjectionValid = false;
         private bool _smoothedPitValid = false;
         private bool _pendingSmoothingReset = true;
+        private double _preRaceFormationBaselineFuelLitres = double.NaN;
+        private bool _preRaceFormationBaselineValid = false;
         private const double SmoothedAlpha = 0.35; // ~1–2s response at 500ms tick
         internal const double FuelReadyConfidenceDefault = 60.0;
         internal const int StintFuelMarginPctDefault = 10;
@@ -7311,6 +7398,8 @@ namespace LaunchPlugin
             AttachCore("PreRace.SelectedText", () => PreRace_SelectedText);
             AttachCore("PreRace.Stints", () => PreRace_Stints);
             AttachCore("PreRace.TotalFuelNeeded", () => PreRace_TotalFuelNeeded);
+            AttachCore("PreRace.FormationFuelPlanned", () => PreRace_FormationFuelPlanned);
+            AttachCore("PreRace.FormationFuelRemaining", () => PreRace_FormationFuelRemaining);
             AttachCore("PreRace.FuelDelta", () => PreRace_FuelDelta);
             AttachCore("PreRace.FuelSource", () => PreRace_FuelSource);
             AttachCore("PreRace.LapTimeSource", () => PreRace_LapTimeSource);

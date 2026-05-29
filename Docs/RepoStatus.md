@@ -5,6 +5,12 @@ Last updated: 2026-05-29
 Branch: work
 
 ## Current status
+- 2026-05-29: PreRace formation fuel exports and total-fuel refinement landed.
+  - Added `LalaLaunch.PreRace.FormationFuelPlanned` and `LalaLaunch.PreRace.FormationFuelRemaining` for planner allowance vs remaining formation allowance.
+  - `LalaLaunch.PreRace.TotalFuelNeeded` now consumes `FormationFuelRemaining` (`base race fuel + active contingency + remaining formation fuel`) and uses runtime after-zero when available with planner after-zero fallback for timed PreRace projection.
+  - `Fuel.Pit.TotalNeededToEnd`, `Fuel.Refuel.*`, `Fuel.Delta.*`, `Fuel.RequiredBurnToEnd*`, pit command/send behavior, and dashboard JSON files remain unchanged.
+  - Property Snapshot list reviewed: yes (`PreRace.*` remains covered by the existing Fuel/Strategy group prefix).
+
 - 2026-05-29: Double-prefix LalaLaunch export registration cleanup landed.
   - PreRace and Friends exports now register internally as `PreRace.*` / `Friends.Count`, preventing accidental public `LalaLaunch.LalaLaunch.*` names while preserving intended public dashboard names (`LalaLaunch.PreRace.*`, `LalaLaunch.Friends.Count`).
   - No dashboard package JSON files were edited; existing double-prefix dash bindings remain manual Dash Studio fixes.
