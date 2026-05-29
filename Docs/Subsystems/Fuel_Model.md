@@ -25,7 +25,7 @@ Canonical companion docs:
 - `Docs/Subsystems/Fuel_Planner_Tab.md`
 
 ## Scope and boundaries
-- Pre-green planning adapter (`LalaLaunch.PreRace.*` / `StrategyDash.*`) includes Formation Lap Fuel only for actionable pre-start/grid guidance before formation starts (`SessionState < 3`); runtime race-running families (`Fuel.Refuel.*`, `Fuel.Delta.*`, `Fuel.RequiredBurnToEnd*`, `Fuel.Pit.*`, `Pit.FuelControl.*`) intentionally do not add formation fuel again because current fuel already reflects that burn after formation.
+- Pre-green planning adapter (`LalaLaunch.PreRace.*` / `StrategyDash.*`) includes Formation Lap Fuel only for actionable pre-start/grid/formation guidance. `LalaLaunch.PreRace.FormationFuelPlanned` mirrors the planner setting, `LalaLaunch.PreRace.FormationFuelRemaining` is planned before formation (`SessionState 1/2`), burns down from a live-fuel baseline during formation (`SessionState 3`) when valid fuel telemetry exists, and becomes `0` once race-running starts (`SessionState >=4`). Runtime race-running families (`Fuel.Refuel.*`, `Fuel.Delta.*`, `Fuel.RequiredBurnToEnd*`, `Fuel.Pit.*`, `Pit.FuelControl.*`) intentionally do not add formation fuel again because current fuel already reflects that burn after formation.
 This doc covers the **runtime** fuel path:
 - lap acceptance,
 - rolling fuel windows,
@@ -197,8 +197,9 @@ The full authoritative export list lives in `Docs/Internal/SimHubParameterInvent
 - `Fuel.Setup.*` (read-only setup-session fallback export family for pre-grid/pre-race when live tank telemetry is unavailable/zero)
 - `Fuel.StintBurnTarget*`
 - `Fuel.Live.ProjectedDriveSecondsRemaining`
-- `LalaLaunch.PreRace.*` as the separate pre-race/on-grid info layer (Auto uses live race-definition authority first: `_SessionTime` for timed races, `_SessionLaps` for lap-limited races)
+- `LalaLaunch.PreRace.*` as the separate pre-race/on-grid info layer (Auto uses live race-definition authority first: `_SessionTime` for timed races, `_SessionLaps` for lap-limited races; timed totals add runtime after-zero when available, else planner after-zero, else `0`)
 - `LalaLaunch.PreRace.*` current-fuel basis uses a narrow fallback seam for pre-grid telemetry gaps: live current fuel when valid/positive; setup fallback (`Fuel.Setup.FuelLevel` when valid) is allowed only during pre-race/grid/formation phases (SessionState `<4`); active race-running (SessionState `==4`) stays live-fuel authoritative even if live fuel is `0`; otherwise `0`.
+- `LalaLaunch.PreRace.TotalFuelNeeded` is the driver-facing pre-race/start requirement seam: base race fuel + active contingency + `LalaLaunch.PreRace.FormationFuelRemaining`. `FormationFuelRemaining` is `0` for invalid/unknown session state and race-running/post-race, so runtime pit/refuel seams stay formation-excluded.
 
 Setup-fuel fallback export semantics:
 - `Fuel.Setup.FuelLevel` publishes setup-derived litres when a valid setup value is available, else `0`.
@@ -266,7 +267,7 @@ Driving → Race transitions can seed race state from the just-learned baseline 
 ## v1 documentation note
 Use **Strategy** terminology for GitHub-facing explanations. Treat older “Fuel tab” wording as legacy technical language only; the canonical UI story is now the Strategy tab plus the separate runtime Fuel Model.
 
-- `LalaLaunch.PreRace.TotalFuelNeeded` now uses active contingency litres (`base race fuel + active contingency`) and no longer applies the legacy hardcoded `+2 laps` PreRace buffer.
+- `LalaLaunch.PreRace.TotalFuelNeeded` uses active contingency litres and the PreRace formation seam (`base race fuel + active contingency + FormationFuelRemaining`) and no longer applies the legacy hardcoded `+2 laps` PreRace buffer.
 - Added additive `StrategyDash.*` pre-green advice seam; it does not replace runtime `Fuel.*`, `Fuel.Pit.*`, `Fuel.Delta.*`, `Fuel.RequiredBurnToEnd*`, or `Pit.FuelControl.*` ownership.
 
 

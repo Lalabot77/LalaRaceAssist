@@ -1,5 +1,12 @@
 # Development Changelog
 
+## 2026-05-29 — PreRace formation fuel exports and total-fuel refinement
+- Classification: **both** (dashboard-facing PreRace export contract additions plus internal fuel/PreRace seam documentation).
+- Added `LalaLaunch.PreRace.FormationFuelPlanned` and `LalaLaunch.PreRace.FormationFuelRemaining`; planned mirrors `FuelCalculator.FormationLapFuelLiters`, while remaining is clamped from planned before formation, burn-down during formation when live fuel is valid, and `0` once race-running starts.
+- Refined `LalaLaunch.PreRace.TotalFuelNeeded` to use `base race fuel + active contingency + FormationFuelRemaining`; timed PreRace projection uses the runtime after-zero seam when available and falls back to planner after-zero when the runtime projection has not populated yet.
+- No runtime pit/refuel behavior changed: `Fuel.Pit.TotalNeededToEnd`, `Fuel.Refuel.*`, `Fuel.Delta.*`, `Fuel.RequiredBurnToEnd*`, and pit command/send paths remain formation-excluded and untouched.
+- Property Snapshot list reviewed: yes; new `PreRace.*` exports resolve to the existing Fuel/Strategy snapshot group.
+
 ## 2026-05-29 — Double-prefix LalaLaunch export registration cleanup
 - Classification: **both** (dashboard-facing export naming fix + internal Property Snapshot grouping alignment).
 - Changed the PreRace/Friends `AttachCore` registrations from literal `LalaLaunch.*` names to unqualified internal names (`PreRace.*`, `Friends.Count`), preventing accidental public `LalaLaunch.LalaLaunch.*` properties.
