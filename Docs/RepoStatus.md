@@ -1,10 +1,16 @@
 # Repo Status
 
 Validated against commit: HEAD
-Last updated: 2026-05-28
+Last updated: 2026-05-29
 Branch: work
 
 ## Current status
+- 2026-05-29: iRacingExtraProperties dependency audit completed (documentation-only).
+  - Added `Docs/Internal/iRacingExtraProperties_Dependency_Audit.md` with code/docs findings, replacement map, and a dashboard manual-fix report for packaged `.simhubdash` references.
+  - No C# runtime dependency on optional `IRacingExtraProperties` reads was found; remaining code hits are bounded warnings/comments documenting removed fallbacks.
+  - Dashboard packages were audited but intentionally not modified.
+  - Property Snapshot list reviewed: yes (no SimHub export/property add/remove/rename/behavior change).
+
 - 2026-05-28: Strategy Dash Advanced/Simple mode binding landed.
   - Added plugin action `StrategyDash.ModeToggle` for SimHub Controls & Events / Dash Studio bindings.
   - Added persisted dashboard status exports `LalaLaunch.StrategyDash.AdvancedMode` (`true` = Advanced, `false` = Simple) and `LalaLaunch.StrategyDash.ModeText` (`ADVANCED`/`SIMPLE`).

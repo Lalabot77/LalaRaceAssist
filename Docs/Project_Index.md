@@ -1,7 +1,7 @@
 # Project Index
 
 Validated against commit: HEAD
-Last updated: 2026-05-28
+Last updated: 2026-05-29
 Branch: work
 
 ## What this repo is
@@ -74,6 +74,7 @@ These pages support maintainers, support work, and Codex tasks. They are not par
 - [Internal/Release_Checklist.md](Internal/Release_Checklist.md)
 - [Internal/Development_Changelog.md](Internal/Development_Changelog.md)
 - [Internal/Property_Snapshot_Debug_Workflow.md](Internal/Property_Snapshot_Debug_Workflow.md)
+- [Internal/iRacingExtraProperties_Dependency_Audit.md](Internal/iRacingExtraProperties_Dependency_Audit.md)
 
 
 ## Topic owner matrix

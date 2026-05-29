@@ -1,3 +1,12 @@
+# Development Changelog
+
+## 2026-05-29 — iRacingExtraProperties dependency audit
+- Classification: **internal-only** (audit/report documentation; no runtime code, dashboard package, export, or behavior changes).
+- Added `Docs/Internal/iRacingExtraProperties_Dependency_Audit.md` as the detailed audit record for remaining code/docs/dashboard references.
+- Confirmed no active C# runtime reads or fallback dependencies on optional `IRacingExtraProperties` remain; remaining C# hits are warning strings/comments documenting removed fallback behavior.
+- Dashboard `.simhubdash` packages were searched and reported for manual Dash Studio fixes only; no dashboard JSON/layout files were changed.
+- Property Snapshot list reviewed: yes (no SimHub export/property add/remove/rename/behavior change).
+
 - 2026-05-28: CarSA SOF League-aware cohort alignment landed.
   - `Car.iRatingSOF` now respects League Class effective cohort semantics when League Class is enabled and the player effective class resolves valid: SOF is averaged from current-session `Drivers##` rows whose resolved effective class matches the player effective class.
   - Fallbacks preserved: when League Class is disabled, player effective class is unresolved, or cohort rows are not resolvable, SOF remains the prior full-field positive-iRating average.
