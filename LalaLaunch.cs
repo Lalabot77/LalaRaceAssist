@@ -1314,7 +1314,11 @@ namespace LaunchPlugin
             }
         }
 
-        private PlannerLiveSessionMatchSnapshot BuildLiveSessionMatchSnapshot(double raceSessionDurationSeconds, long raceSessionLaps)
+        private PlannerLiveSessionMatchSnapshot BuildLiveSessionMatchSnapshot(
+            bool? detectedLapLimited,
+            double? detectedRaceLaps,
+            bool? detectedTimeLimited,
+            double? detectedRaceMinutes)
         {
             string liveCarIdentity = !string.IsNullOrWhiteSpace(CurrentCarModel) && !CurrentCarModel.Equals("Unknown", StringComparison.OrdinalIgnoreCase)
                 ? CurrentCarModel
@@ -1329,19 +1333,19 @@ namespace LaunchPlugin
                 LiveTrack = liveTrackKeyIdentity
             };
 
-            if (raceSessionDurationSeconds > 0.0)
-            {
-                snapshot.HasLiveBasis = true;
-                snapshot.LiveBasisIsTimeLimited = true;
-                snapshot.HasLiveRaceLength = true;
-                snapshot.LiveRaceLengthValue = raceSessionDurationSeconds / 60.0;
-            }
-            else if (raceSessionLaps > 0)
+            if (detectedLapLimited == true && detectedRaceLaps.HasValue && detectedRaceLaps.Value > 0.0)
             {
                 snapshot.HasLiveBasis = true;
                 snapshot.LiveBasisIsTimeLimited = false;
                 snapshot.HasLiveRaceLength = true;
-                snapshot.LiveRaceLengthValue = raceSessionLaps;
+                snapshot.LiveRaceLengthValue = detectedRaceLaps.Value;
+            }
+            else if (detectedTimeLimited == true && detectedRaceMinutes.HasValue && detectedRaceMinutes.Value > 0.0)
+            {
+                snapshot.HasLiveBasis = true;
+                snapshot.LiveBasisIsTimeLimited = true;
+                snapshot.HasLiveRaceLength = true;
+                snapshot.LiveRaceLengthValue = detectedRaceMinutes.Value;
             }
             else
             {
@@ -1354,6 +1358,7 @@ namespace LaunchPlugin
             return snapshot;
         }
 
+        private const double PreRacePlannerTimeRaceLengthToleranceMinutes = 0.01;
         private const double PreRacePlannerLapRaceLengthToleranceLaps = 0.001;
 
         private bool TryResolvePlannerAuthoritativePreRaceTotal(
@@ -1385,16 +1390,17 @@ namespace LaunchPlugin
                 return false;
             }
 
-            if (!plannerMatchSnapshot.LiveBasisIsTimeLimited &&
-                Math.Abs(plannerMatchSnapshot.LiveRaceLengthValue - plannerMatchSnapshot.PlannerRaceLengthValue) > PreRacePlannerLapRaceLengthToleranceLaps)
+            double authorityRaceLengthTolerance = plannerMatchSnapshot.LiveBasisIsTimeLimited
+                ? PreRacePlannerTimeRaceLengthToleranceMinutes
+                : PreRacePlannerLapRaceLengthToleranceLaps;
+            if (Math.Abs(plannerMatchSnapshot.LiveRaceLengthValue - plannerMatchSnapshot.PlannerRaceLengthValue) > authorityRaceLengthTolerance)
             {
                 return false;
             }
 
             if (FuelCalculator != null &&
                 !FuelCalculator.IsTrackConditionAuto &&
-                hasKnownLiveCondition &&
-                FuelCalculator.IsEffectiveWetCondition != liveConditionIsWet)
+                (!hasKnownLiveCondition || FuelCalculator.IsEffectiveWetCondition != liveConditionIsWet))
             {
                 return false;
             }
@@ -1768,7 +1774,8 @@ namespace LaunchPlugin
             bool isOnTrackCar,
             int sessionStateNumeric,
             bool hasKnownLiveCondition,
-            bool liveConditionIsWet)
+            bool liveConditionIsWet,
+            PlannerLiveSessionMatchSnapshot liveMatchSnapshot)
         {
             int selectedStrategy = NormalizeStrategyMode(FuelCalculator?.SelectedPreRaceMode ?? 2);
             PreRace_Selected = selectedStrategy;
@@ -1778,7 +1785,7 @@ namespace LaunchPlugin
             double usableTank = effectiveMaxTank > 0.0 ? effectiveMaxTank : maxTankCapacity;
 
             double plannedSingleStopRefuel = Math.Max(0.0, pitWindowRequestedAdd);
-            var liveMatchSnapshot = BuildLiveSessionMatchSnapshot(raceSessionDurationSeconds, raceSessionLaps);
+            liveMatchSnapshot = liveMatchSnapshot ?? new PlannerLiveSessionMatchSnapshot();
             var plannerMatchSnapshot = FuelCalculator?.GetPlannerSessionMatchSnapshot() ?? new PlannerLiveSessionMatchSnapshot();
             plannerMatchSnapshot.LiveCar = liveMatchSnapshot.LiveCar;
             plannerMatchSnapshot.LiveTrack = liveMatchSnapshot.LiveTrack;
@@ -3705,6 +3712,7 @@ namespace LaunchPlugin
                 }
             }
             FuelCalculator?.UpdateLiveDetectedRaceDefinition(detectedSessionName, detectedLapLimited, detectedRaceLaps, detectedTimeLimited, detectedRaceMinutes);
+            var preRaceLiveMatchSnapshot = BuildLiveSessionMatchSnapshot(detectedLapLimited, detectedRaceLaps, detectedTimeLimited, detectedRaceMinutes);
 
             string liveDetectBasis = detectedLapLimited == true ? "lap" : (detectedTimeLimited == true ? "time" : "none");
             double liveDetectValue = detectedLapLimited == true
@@ -4625,7 +4633,8 @@ namespace LaunchPlugin
                     isOnTrackCar: isOnTrackCar,
                     sessionStateNumeric: sessionStateNumeric,
                     hasKnownLiveCondition: hasTyreSignal,
-                    liveConditionIsWet: _isWetMode);
+                    liveConditionIsWet: _isWetMode,
+                    liveMatchSnapshot: preRaceLiveMatchSnapshot);
 
                 Fuel_Delta_LitresCurrent = 0;
                 Fuel_Delta_LitresPlan = 0;
@@ -4828,7 +4837,8 @@ namespace LaunchPlugin
                     isOnTrackCar: isOnTrackCar,
                     sessionStateNumeric: sessionStateNumeric,
                     hasKnownLiveCondition: hasTyreSignal,
-                    liveConditionIsWet: _isWetMode);
+                    liveConditionIsWet: _isWetMode,
+                    liveMatchSnapshot: preRaceLiveMatchSnapshot);
 
                 PitStopsRequiredByFuel = Math.Max(0, stopsRequiredByFuel);
                 PitStopsRequiredByPlan = plannedStops;

@@ -5,6 +5,12 @@ Last updated: 2026-05-30
 Branch: work
 
 ## Current status
+- 2026-05-31: PR #767 PreRace planner-authority review follow-up landed.
+  - Manual Dry/Wet planner authority now requires a known matching live condition; unknown live condition falls back safely.
+  - Timed authority now applies a strict `0.01`-minute PreRace-specific tolerance alongside the existing strict `0.001`-lap tolerance without changing the shared coarse planner/live comparison helper.
+  - PreRace authority matching now consumes the already resolved Live Detect race-definition seam (`IsLimitedSessionLaps` / `IsLimitedTime`, compatibility fields, and `SessionsXX` fallback) instead of rebuilding from raw underscore fields. Existing fallback math, formation behavior, runtime pit/refuel families, and dashboard JSON remain unchanged.
+  - Property Snapshot list reviewed: yes (behavior refinement stays within existing `PreRace.*` and indirectly affected `StrategyDash.*` Fuel/Strategy groups; no export list change required).
+
 - 2026-05-30: PreRace total-fuel planner authority gate landed.
   - `LalaLaunch.PreRace.TotalFuelNeeded` now anchors to `FuelCalculator.TotalFuelNeeded - FormationFuelPlanned + FormationFuelRemaining` only when planner total, car, canonical track key, race basis, race length, and manually forced wet/dry gates match live session context; lap-limited authority uses a strict `0.001`-lap tolerance.
   - When any hard gate fails, `PreRace.TotalFuelNeeded` retains the existing live/session fallback calculation (`base race fuel + active contingency + FormationFuelRemaining`).

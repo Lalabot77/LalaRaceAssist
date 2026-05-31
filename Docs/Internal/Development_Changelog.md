@@ -1,5 +1,12 @@
 # Development Changelog
 
+## 2026-05-31 — PR #767 PreRace planner-authority review follow-up
+- Classification: **both** (dashboard-facing PreRace authority correctness plus internal seam documentation).
+- Manual Dry/Wet planner authority now rejects unknown live condition as well as known conflicts; automatic condition mode remains allowed.
+- Added a PreRace-specific strict `0.01`-minute timed-race tolerance alongside the existing strict `0.001`-lap check without changing the shared coarse planner/live match helper.
+- Reused the existing resolved Live Detect race-definition seam for PreRace authority matching (`IsLimitedSessionLaps` / `IsLimitedTime`, compatibility fields, and `SessionsXX` fallback), preventing raw positive `_SessionTime` from misclassifying lap-limited authority.
+- Existing fallback calculation, formation allowance/burn-down, runtime pit/refuel families, dashboard JSON, and export list remain unchanged. Property Snapshot list reviewed: yes; existing Fuel/Strategy groups remain correct.
+
 ## 2026-05-30 — PreRace total-fuel planner authority gate
 - Classification: **both** (dashboard-facing PreRace correction plus internal planner/PreRace seam documentation).
 - Added a narrow PreRace total authority selector: matching planner total is used only when planner total, finite formation values, normalized car identity, canonical track key, race basis, race length, and manually forced wet/dry gates pass. Lap-limited authority adds a strict `0.001`-lap tolerance on top of the existing planner/live comparison seam.
