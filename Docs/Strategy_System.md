@@ -182,7 +182,7 @@ If Strategy looks repeatedly wrong, the usual causes are:
   - Live Detect no longer clears selected/applied preset state; switching owners preserves preset/profile/manual setup values and only changes race-basis authority while selected.
   - `Preset` owner keeps race type/length aligned to the selected/applied preset; use the `↻` reapply button for a deliberate reset of preset-owned values.
 
-- PreRace fuel-needed basis now follows active contingency (`base race fuel + active contingency litres`) instead of the prior hardcoded `+2 laps` buffer.
+- PreRace fuel-needed basis uses the matching Strategy planner total when planner/live car, track, resolved Live Detect race basis, strict race length, and any manually forced wet/dry condition agree; manual Dry/Wet also requires a known live condition. It dynamically replaces planned formation fuel with remaining formation fuel. If those gates do not pass, PreRace keeps its live/session fallback calculation rather than trusting a mismatched plan.
 - StrategyDash V2 adds pre-green advice exports only; race-running fuel/pit/control contracts remain on existing runtime seams.
 
 - Strategy Race Basis now explicitly selects owner: Preset, Lap-Limited, Time-Limited, or Live Detect.
