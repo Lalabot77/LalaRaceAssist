@@ -197,9 +197,9 @@ The full authoritative export list lives in `Docs/Internal/SimHubParameterInvent
 - `Fuel.Setup.*` (read-only setup-session fallback export family for pre-grid/pre-race when live tank telemetry is unavailable/zero)
 - `Fuel.StintBurnTarget*`
 - `Fuel.Live.ProjectedDriveSecondsRemaining`
-- `LalaLaunch.PreRace.*` as the separate pre-race/on-grid info layer (Auto uses live race-definition authority first: `_SessionTime` for timed races, `_SessionLaps` for lap-limited races; timed totals add runtime after-zero when available, else planner after-zero, else `0`)
+- `LalaLaunch.PreRace.*` as the separate pre-race/on-grid info layer. PreRace planner-authority matching consumes the resolved Live Detect race-definition seam (`IsLimitedSessionLaps` / `IsLimitedTime`, compatibility fields, then `SessionsXX` fallback) rather than independently interpreting raw session fields.
 - `LalaLaunch.PreRace.*` current-fuel basis uses a narrow fallback seam for pre-grid telemetry gaps: live current fuel when valid/positive; setup fallback (`Fuel.Setup.FuelLevel` when valid) is allowed only during pre-race/grid/formation phases (SessionState `<4`); active race-running (SessionState `==4`) stays live-fuel authoritative even if live fuel is `0`; otherwise `0`.
-- `LalaLaunch.PreRace.TotalFuelNeeded` is the driver-facing pre-race/start requirement seam: base race fuel + active contingency + `LalaLaunch.PreRace.FormationFuelRemaining`. `FormationFuelRemaining` is `0` for invalid/unknown session state and race-running/post-race, so runtime pit/refuel seams stay formation-excluded.
+- `LalaLaunch.PreRace.TotalFuelNeeded` is the driver-facing pre-race/start requirement seam. It first uses gated Strategy planner authority when planner total is valid and planner/live car, canonical track key, resolved Live Detect race basis, strict race length, and manually forced Dry/Wet condition gates pass; manual Dry/Wet requires a known matching live condition. The accepted path is `max(0, FuelCalculator.TotalFuelNeeded - FormationFuelPlanned + FormationFuelRemaining)`. If any authority gate fails, the rejected path retains `base race fuel + active contingency + FormationFuelRemaining`. `FormationFuelRemaining` is `0` for invalid/unknown session state and race-running/post-race, so runtime fuel families remain formation-excluded and unchanged.
 
 Setup-fuel fallback export semantics:
 - `Fuel.Setup.FuelLevel` publishes setup-derived litres when a valid setup value is available, else `0`.
@@ -267,7 +267,7 @@ Driving → Race transitions can seed race state from the just-learned baseline 
 ## v1 documentation note
 Use **Strategy** terminology for GitHub-facing explanations. Treat older “Fuel tab” wording as legacy technical language only; the canonical UI story is now the Strategy tab plus the separate runtime Fuel Model.
 
-- `LalaLaunch.PreRace.TotalFuelNeeded` uses active contingency litres and the PreRace formation seam (`base race fuel + active contingency + FormationFuelRemaining`) and no longer applies the legacy hardcoded `+2 laps` PreRace buffer.
+- `LalaLaunch.PreRace.TotalFuelNeeded` first uses the gated Strategy planner total with dynamic formation replacement (`max(0, FuelCalculator.TotalFuelNeeded - FormationFuelPlanned + FormationFuelRemaining)`); rejected authority retains the live/session fallback (`base race fuel + active contingency + FormationFuelRemaining`). It no longer applies the legacy hardcoded `+2 laps` PreRace buffer.
 - Added additive `StrategyDash.*` pre-green advice seam; it does not replace runtime `Fuel.*`, `Fuel.Pit.*`, `Fuel.Delta.*`, `Fuel.RequiredBurnToEnd*`, or `Pit.FuelControl.*` ownership.
 
 
