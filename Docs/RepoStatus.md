@@ -1,10 +1,16 @@
 # Repo Status
 
 Validated against commit: HEAD
-Last updated: 2026-05-29
+Last updated: 2026-05-30
 Branch: work
 
 ## Current status
+- 2026-05-30: PreRace total-fuel planner authority gate landed.
+  - `LalaLaunch.PreRace.TotalFuelNeeded` now anchors to `FuelCalculator.TotalFuelNeeded - FormationFuelPlanned + FormationFuelRemaining` only when planner total, car, canonical track key, race basis, race length, and manually forced wet/dry gates match live session context; lap-limited authority uses a strict `0.001`-lap tolerance.
+  - When any hard gate fails, `PreRace.TotalFuelNeeded` retains the existing live/session fallback calculation (`base race fuel + active contingency + FormationFuelRemaining`).
+  - `FormationFuelPlanned`, `FormationFuelRemaining`, `Fuel.Pit.TotalNeededToEnd`, `Fuel.Refuel.*`, `Fuel.Delta.*`, `Fuel.RequiredBurnToEnd*`, `Pit.FuelControl.*`, runtime pit/refuel behavior, and dashboard JSON files remain unchanged. Existing `StrategyDash.*` start-fuel helpers inherit the corrected PreRace total through their existing adapter path.
+  - Property Snapshot list reviewed: yes (`PreRace.*` and indirectly affected `StrategyDash.*` remain covered by the existing Fuel/Strategy group prefixes; no export list change required).
+
 - 2026-05-29: PreRace formation fuel exports and total-fuel refinement landed.
   - Added `LalaLaunch.PreRace.FormationFuelPlanned` and `LalaLaunch.PreRace.FormationFuelRemaining` for planner allowance vs remaining formation allowance.
   - `LalaLaunch.PreRace.TotalFuelNeeded` now consumes `FormationFuelRemaining` (`base race fuel + active contingency + remaining formation fuel`) and uses runtime after-zero when available with planner after-zero fallback for timed PreRace projection.

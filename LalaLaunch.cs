@@ -1354,6 +1354,55 @@ namespace LaunchPlugin
             return snapshot;
         }
 
+        private const double PreRacePlannerLapRaceLengthToleranceLaps = 0.001;
+
+        private bool TryResolvePlannerAuthoritativePreRaceTotal(
+            PlannerLiveSessionMatchSnapshot plannerMatchSnapshot,
+            PlannerLiveSessionMatchResult plannerMatchResult,
+            double formationFuelPlanned,
+            double formationFuelRemaining,
+            bool hasKnownLiveCondition,
+            bool liveConditionIsWet,
+            out double totalFuelNeeded)
+        {
+            totalFuelNeeded = 0.0;
+
+            double plannerTotalFuelNeeded = FuelCalculator?.TotalFuelNeeded ?? 0.0;
+            bool hasValidPlannerTotal =
+                plannerTotalFuelNeeded > 0.0 &&
+                !double.IsNaN(plannerTotalFuelNeeded) &&
+                !double.IsInfinity(plannerTotalFuelNeeded);
+            bool hasValidFormationValues =
+                formationFuelPlanned >= 0.0 &&
+                formationFuelRemaining >= 0.0 &&
+                !double.IsNaN(formationFuelPlanned) &&
+                !double.IsInfinity(formationFuelPlanned) &&
+                !double.IsNaN(formationFuelRemaining) &&
+                !double.IsInfinity(formationFuelRemaining);
+
+            if (!hasValidPlannerTotal || !hasValidFormationValues || plannerMatchSnapshot == null || plannerMatchResult == null || !plannerMatchResult.IsMatch)
+            {
+                return false;
+            }
+
+            if (!plannerMatchSnapshot.LiveBasisIsTimeLimited &&
+                Math.Abs(plannerMatchSnapshot.LiveRaceLengthValue - plannerMatchSnapshot.PlannerRaceLengthValue) > PreRacePlannerLapRaceLengthToleranceLaps)
+            {
+                return false;
+            }
+
+            if (FuelCalculator != null &&
+                !FuelCalculator.IsTrackConditionAuto &&
+                hasKnownLiveCondition &&
+                FuelCalculator.IsEffectiveWetCondition != liveConditionIsWet)
+            {
+                return false;
+            }
+
+            totalFuelNeeded = Math.Max(0.0, plannerTotalFuelNeeded - formationFuelPlanned + formationFuelRemaining);
+            return true;
+        }
+
         private static bool IsAtEffectiveMaxStartFuel(double currentFuel, double effectiveMaxTank, double maxTankCapacity)
         {
             double targetMax = effectiveMaxTank > 0.0 ? effectiveMaxTank : maxTankCapacity;
@@ -1717,7 +1766,9 @@ namespace LaunchPlugin
             bool isRaceRunning,
             bool isGridOrFormation,
             bool isOnTrackCar,
-            int sessionStateNumeric)
+            int sessionStateNumeric,
+            bool hasKnownLiveCondition,
+            bool liveConditionIsWet)
         {
             int selectedStrategy = NormalizeStrategyMode(FuelCalculator?.SelectedPreRaceMode ?? 2);
             PreRace_Selected = selectedStrategy;
@@ -1769,8 +1820,18 @@ namespace LaunchPlugin
                 PreRace_FormationFuelPlanned,
                 liveCurrentFuel,
                 sessionStateNumeric);
-            PreRace_TotalFuelNeeded =
+            double fallbackTotalFuelNeeded =
                 baseRaceFuelLitres + contingencyLitres + PreRace_FormationFuelRemaining;
+            PreRace_TotalFuelNeeded = TryResolvePlannerAuthoritativePreRaceTotal(
+                plannerMatchSnapshot,
+                plannerMatchResult,
+                PreRace_FormationFuelPlanned,
+                PreRace_FormationFuelRemaining,
+                hasKnownLiveCondition,
+                liveConditionIsWet,
+                out double plannerAuthoritativeTotalFuelNeeded)
+                    ? plannerAuthoritativeTotalFuelNeeded
+                    : Math.Max(0.0, fallbackTotalFuelNeeded);
 
             PreRace_Stints = usableTank > 0.0
                 ? Math.Round(Math.Max(0.0, PreRace_TotalFuelNeeded / usableTank), 1)
@@ -4562,7 +4623,9 @@ namespace LaunchPlugin
                     isRaceRunning: isRaceRunning,
                     isGridOrFormation: isGridOrFormation,
                     isOnTrackCar: isOnTrackCar,
-                    sessionStateNumeric: sessionStateNumeric);
+                    sessionStateNumeric: sessionStateNumeric,
+                    hasKnownLiveCondition: hasTyreSignal,
+                    liveConditionIsWet: _isWetMode);
 
                 Fuel_Delta_LitresCurrent = 0;
                 Fuel_Delta_LitresPlan = 0;
@@ -4763,7 +4826,9 @@ namespace LaunchPlugin
                     isRaceRunning: isRaceRunning,
                     isGridOrFormation: isGridOrFormation,
                     isOnTrackCar: isOnTrackCar,
-                    sessionStateNumeric: sessionStateNumeric);
+                    sessionStateNumeric: sessionStateNumeric,
+                    hasKnownLiveCondition: hasTyreSignal,
+                    liveConditionIsWet: _isWetMode);
 
                 PitStopsRequiredByFuel = Math.Max(0, stopsRequiredByFuel);
                 PitStopsRequiredByPlan = plannedStops;

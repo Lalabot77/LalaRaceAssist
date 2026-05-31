@@ -329,7 +329,7 @@ Reset semantics are shared with the Fuel Model and documented centrally in:
 - Fuel-per-lap source/helper text now renders below the input to avoid narrow-width clipping.
 - Track Condition now has explicit `Auto` / `Dry` / `Wet` ownership states. Auto clears manual override and shows `Automatic (dry|wet)`; manual states show `Manual override: dry|wet`.
 - Race Type now includes persistent `Live Detect` ownership. While selected, race type/length consume declared race metadata (`SessionInfo.SessionsXX` where `IsRace==true`) and race-length controls are read-only.
-- PreRace adapter semantics update: `LalaLaunch.PreRace.TotalFuelNeeded` now uses active contingency litres instead of the old hardcoded `+2 laps` reserve.
+- PreRace adapter semantics update: `LalaLaunch.PreRace.TotalFuelNeeded` uses matching Strategy planner authority when planner total, car, canonical track key, race basis, race length, and any manually forced wet/dry condition match live session context. In that path it publishes `max(0, Strategy total - planned formation fuel + remaining formation fuel)`. If any hard gate fails, it retains the live/session fallback calculation (`base race fuel + active contingency litres + remaining formation fuel`).
 - Added additive `StrategyDash.*` pre-green advice exports; planner ownership and runtime fuel ownership boundaries remain unchanged.
 - Live Detect now shows helper text under Race Type (`current race/session, basis, value`; `race found, no valid length`; or `no declared race found`) and never silently defaults the UI to Lap-Limited when no valid declared race definition is available.
 - Strategy calculation now resolves an explicit effective race basis/length seam:
