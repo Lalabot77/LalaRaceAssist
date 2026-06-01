@@ -997,8 +997,8 @@ namespace LaunchPlugin
 
         public bool Fuel_Burn_DisplayAnalysis { get; private set; }
         public double Fuel_Burn_Analysis_LastLap => _burnAnalysisLastLap;
-        public double Fuel_Burn_Analysis_Avg3 => GetRollingAverage(_burnAnalysisRecentAcceptedFuelLaps, 3) ?? 0.0;
-        public double Fuel_Burn_Analysis_Avg5 => GetRollingAverage(_burnAnalysisRecentAcceptedFuelLaps, 5) ?? 0.0;
+        public double Fuel_Burn_Analysis_Avg3 => AverageAvailableRecentSamples(_burnAnalysisRecentAcceptedFuelLaps, 3);
+        public double Fuel_Burn_Analysis_Avg5 => AverageAvailableRecentSamples(_burnAnalysisRecentAcceptedFuelLaps, 5);
         public double Fuel_Burn_Analysis_CurrentStint => _burnAnalysisCurrentStintCount > 0 ? _burnAnalysisCurrentStintSum / _burnAnalysisCurrentStintCount : 0.0;
         public double Fuel_Burn_Analysis_SessionAvg => _burnAnalysisSessionCount > 0 ? _burnAnalysisSessionSum / _burnAnalysisSessionCount : 0.0;
         public double Fuel_Burn_Analysis_MaxObserved => _burnAnalysisMaxObserved;
@@ -19829,6 +19829,23 @@ namespace LaunchPlugin
             LiveFuelPerLap_Stable = _stableFuelPerLap;
             LiveFuelPerLap_StableSource = _stableFuelPerLapSource;
             LiveFuelPerLap_StableConfidence = _stableFuelPerLapConfidence;
+        }
+
+        private static double AverageAvailableRecentSamples(List<double> samples, int requestedCount)
+        {
+            if (samples == null || samples.Count == 0 || requestedCount <= 0)
+            {
+                return 0.0;
+            }
+
+            int sampleCount = Math.Min(samples.Count, requestedCount);
+            double sum = 0.0;
+            for (int i = samples.Count - sampleCount; i < samples.Count; i++)
+            {
+                sum += samples[i];
+            }
+
+            return sum / sampleCount;
         }
 
         private static double? GetRollingAverage(List<double> samples, int sampleCount)
