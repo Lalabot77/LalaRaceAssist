@@ -69,6 +69,7 @@ Out of scope:
 - `Fuel.Burn.Analysis.*` is an additive dashboard-analysis observer fed only by the existing accepted-fuel-lap insertion seam.
 - Analysis samples are one combined chronological fresh accepted-lap stream across wet and dry; seeded profile/race-start model values are intentionally excluded.
 - Independently resettable backing groups preserve action semantics: Avg3/Avg5 rolling list, current-stint sum/count, session-average sum/count (also `SampleCount`), and max-observed value. `LastLap` updates on every accepted fuel lap and has no manual reset action.
+- One dedicated burn-analysis lock protects accepted-sample recording, scoped resets, lifecycle reset, and property reads so aggregate pairs cannot be observed mid-update or mid-reset.
 - `CurrentStint` resets on the existing confirmed pit-exit edge. Temporary telemetry gaps retain the last accepted analysis state, matching the broader Fuel Model lifecycle behavior.
 
 ### Stable burn state

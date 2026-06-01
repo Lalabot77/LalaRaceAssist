@@ -3,7 +3,7 @@
 ## 2026-06-01 — Fuel burn analysis popup docs + rolling-list synchronization follow-up
 - Classification: **both** (public dashboard binding discoverability plus internal list-read safety hardening).
 - Added short public guidance for `LalaLaunch.Fuel.Burn.DisplayAnalysis`, `LalaLaunch.BurnDisplayToggle`, the optional scoped reset actions, and direct `LalaLaunch.Fuel.Burn.Analysis.*` dashboard consumption.
-- Protected the burn-analysis Avg3/Avg5 rolling list with one dedicated lock across accepted-sample append/trim, averages reset clear, and Avg3/Avg5 property evaluation so a dashboard read cannot race `BurnAnalysisResetAverages`.
+- Protected all `Fuel.Burn.Analysis.*` backing state with one dedicated lock across accepted-sample recording, scoped resets, lifecycle reset, and property evaluation. This keeps `CurrentStint` sum/count, `SessionAvg` sum/count plus `SampleCount`, `MaxObserved`, `LastLap`, and Avg3/Avg5 reads consistent during concurrent dashboard reads and reset actions.
 - Preserved available-sample averaging, accepted-lap gating, all other reset semantics, `Fuel.LiveFuelPerLap*`, `Fuel.FuelBurnPredictor*`, Strategy planner, pit/refuel math, dashboard JSON, and XAML.
 
 ## 2026-06-01 — Fuel burn analysis popup plugin exports and actions

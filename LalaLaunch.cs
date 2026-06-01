@@ -987,7 +987,7 @@ namespace LaunchPlugin
         private const int FuelPersistMinLaps = 2; // guard against early garbage in live persistence
 
         // Fuel burn analysis is a fresh accepted-lap observer only. It intentionally does not consume seeded model windows.
-        private readonly object _burnAnalysisRecentAcceptedFuelLapsLock = new object();
+        private readonly object _burnAnalysisLock = new object();
         private readonly List<double> _burnAnalysisRecentAcceptedFuelLaps = new List<double>();
         private double _burnAnalysisLastLap;
         private double _burnAnalysisCurrentStintSum;
@@ -997,13 +997,13 @@ namespace LaunchPlugin
         private double _burnAnalysisMaxObserved;
 
         public bool Fuel_Burn_DisplayAnalysis { get; private set; }
-        public double Fuel_Burn_Analysis_LastLap => _burnAnalysisLastLap;
+        public double Fuel_Burn_Analysis_LastLap => GetBurnAnalysisLastLap();
         public double Fuel_Burn_Analysis_Avg3 => GetBurnAnalysisAverageAvailableRecentSamples(3);
         public double Fuel_Burn_Analysis_Avg5 => GetBurnAnalysisAverageAvailableRecentSamples(5);
-        public double Fuel_Burn_Analysis_CurrentStint => _burnAnalysisCurrentStintCount > 0 ? _burnAnalysisCurrentStintSum / _burnAnalysisCurrentStintCount : 0.0;
-        public double Fuel_Burn_Analysis_SessionAvg => _burnAnalysisSessionCount > 0 ? _burnAnalysisSessionSum / _burnAnalysisSessionCount : 0.0;
-        public double Fuel_Burn_Analysis_MaxObserved => _burnAnalysisMaxObserved;
-        public int Fuel_Burn_Analysis_SampleCount => _burnAnalysisSessionCount;
+        public double Fuel_Burn_Analysis_CurrentStint => GetBurnAnalysisCurrentStint();
+        public double Fuel_Burn_Analysis_SessionAvg => GetBurnAnalysisSessionAvg();
+        public double Fuel_Burn_Analysis_MaxObserved => GetBurnAnalysisMaxObserved();
+        public int Fuel_Burn_Analysis_SampleCount => GetBurnAnalysisSampleCount();
 
         private double _avgDryFuelPerLap = 0.0;
         private double _avgWetFuelPerLap = 0.0;
@@ -3161,29 +3161,29 @@ namespace LaunchPlugin
 
         private void RecordAcceptedBurnAnalysisSample(double fuelUsed)
         {
-            _burnAnalysisLastLap = fuelUsed;
-            lock (_burnAnalysisRecentAcceptedFuelLapsLock)
+            lock (_burnAnalysisLock)
             {
+                _burnAnalysisLastLap = fuelUsed;
                 _burnAnalysisRecentAcceptedFuelLaps.Add(fuelUsed);
                 while (_burnAnalysisRecentAcceptedFuelLaps.Count > FuelWindowSize)
                 {
                     _burnAnalysisRecentAcceptedFuelLaps.RemoveAt(0);
                 }
-            }
 
-            _burnAnalysisCurrentStintSum += fuelUsed;
-            _burnAnalysisCurrentStintCount++;
-            _burnAnalysisSessionSum += fuelUsed;
-            _burnAnalysisSessionCount++;
-            if (fuelUsed > _burnAnalysisMaxObserved)
-            {
-                _burnAnalysisMaxObserved = fuelUsed;
+                _burnAnalysisCurrentStintSum += fuelUsed;
+                _burnAnalysisCurrentStintCount++;
+                _burnAnalysisSessionSum += fuelUsed;
+                _burnAnalysisSessionCount++;
+                if (fuelUsed > _burnAnalysisMaxObserved)
+                {
+                    _burnAnalysisMaxObserved = fuelUsed;
+                }
             }
         }
 
         private void ResetBurnAnalysisAverages()
         {
-            lock (_burnAnalysisRecentAcceptedFuelLapsLock)
+            lock (_burnAnalysisLock)
             {
                 _burnAnalysisRecentAcceptedFuelLaps.Clear();
             }
@@ -3191,28 +3191,42 @@ namespace LaunchPlugin
 
         private void ResetBurnAnalysisCurrentStint()
         {
-            _burnAnalysisCurrentStintSum = 0.0;
-            _burnAnalysisCurrentStintCount = 0;
+            lock (_burnAnalysisLock)
+            {
+                _burnAnalysisCurrentStintSum = 0.0;
+                _burnAnalysisCurrentStintCount = 0;
+            }
         }
 
         private void ResetBurnAnalysisSessionAverage()
         {
-            _burnAnalysisSessionSum = 0.0;
-            _burnAnalysisSessionCount = 0;
+            lock (_burnAnalysisLock)
+            {
+                _burnAnalysisSessionSum = 0.0;
+                _burnAnalysisSessionCount = 0;
+            }
         }
 
         private void ResetBurnAnalysisMaxObserved()
         {
-            _burnAnalysisMaxObserved = 0.0;
+            lock (_burnAnalysisLock)
+            {
+                _burnAnalysisMaxObserved = 0.0;
+            }
         }
 
         private void ResetBurnAnalysisForFuelModelLifecycle()
         {
-            _burnAnalysisLastLap = 0.0;
-            ResetBurnAnalysisAverages();
-            ResetBurnAnalysisCurrentStint();
-            ResetBurnAnalysisSessionAverage();
-            ResetBurnAnalysisMaxObserved();
+            lock (_burnAnalysisLock)
+            {
+                _burnAnalysisLastLap = 0.0;
+                _burnAnalysisRecentAcceptedFuelLaps.Clear();
+                _burnAnalysisCurrentStintSum = 0.0;
+                _burnAnalysisCurrentStintCount = 0;
+                _burnAnalysisSessionSum = 0.0;
+                _burnAnalysisSessionCount = 0;
+                _burnAnalysisMaxObserved = 0.0;
+            }
         }
 
         private void ResetLiveFuelModelForNewSession(string newSessionType, bool applySeeds)
@@ -19838,11 +19852,51 @@ namespace LaunchPlugin
             LiveFuelPerLap_StableConfidence = _stableFuelPerLapConfidence;
         }
 
+        private double GetBurnAnalysisLastLap()
+        {
+            lock (_burnAnalysisLock)
+            {
+                return _burnAnalysisLastLap;
+            }
+        }
+
         private double GetBurnAnalysisAverageAvailableRecentSamples(int requestedCount)
         {
-            lock (_burnAnalysisRecentAcceptedFuelLapsLock)
+            lock (_burnAnalysisLock)
             {
                 return AverageAvailableRecentSamples(_burnAnalysisRecentAcceptedFuelLaps, requestedCount);
+            }
+        }
+
+        private double GetBurnAnalysisCurrentStint()
+        {
+            lock (_burnAnalysisLock)
+            {
+                return _burnAnalysisCurrentStintCount > 0 ? _burnAnalysisCurrentStintSum / _burnAnalysisCurrentStintCount : 0.0;
+            }
+        }
+
+        private double GetBurnAnalysisSessionAvg()
+        {
+            lock (_burnAnalysisLock)
+            {
+                return _burnAnalysisSessionCount > 0 ? _burnAnalysisSessionSum / _burnAnalysisSessionCount : 0.0;
+            }
+        }
+
+        private double GetBurnAnalysisMaxObserved()
+        {
+            lock (_burnAnalysisLock)
+            {
+                return _burnAnalysisMaxObserved;
+            }
+        }
+
+        private int GetBurnAnalysisSampleCount()
+        {
+            lock (_burnAnalysisLock)
+            {
+                return _burnAnalysisSessionCount;
             }
         }
 

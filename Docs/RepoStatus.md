@@ -7,7 +7,7 @@ Branch: work
 ## Current status
 - 2026-06-01: Fuel burn analysis popup review follow-up landed.
   - Added brief public dashboard/fuel-model guidance for `LalaLaunch.Fuel.Burn.DisplayAnalysis`, `LalaLaunch.BurnDisplayToggle`, optional reset actions, and direct `LalaLaunch.Fuel.Burn.Analysis.*` consumption.
-  - Synchronized the burn-analysis Avg3/Avg5 rolling list with a dedicated lock across accepted-sample append/trim, averages reset, and property reads. Existing partial-window averaging, acceptance logic, other reset semantics, fuel math, Strategy, pit/refuel behavior, dashboard JSON, and XAML remain unchanged.
+  - Synchronized all `Fuel.Burn.Analysis.*` backing state with one dedicated lock across accepted-sample recording, scoped resets, lifecycle reset, and property reads. Aggregate pairs (`CurrentStint`, `SessionAvg`/`SampleCount`) cannot be observed mid-update or mid-reset. Existing partial-window averaging, reset semantics, acceptance logic, fuel math, Strategy, pit/refuel behavior, dashboard JSON, and XAML remain unchanged.
 
 - 2026-06-01: Fuel burn analysis popup plugin support landed.
   - Added presentation export `Fuel.Burn.DisplayAnalysis`, plugin toggle action `LalaLaunch.BurnDisplayToggle`, and fresh accepted-lap analysis exports `Fuel.Burn.Analysis.LastLap`, `Avg3`, `Avg5`, `CurrentStint`, `SessionAvg`, `MaxObserved`, and `SampleCount`.
