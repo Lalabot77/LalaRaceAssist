@@ -1,7 +1,7 @@
 # Fuel Model
 
 Validated against commit: HEAD
-Last updated: 2026-04-22
+Last updated: 2026-06-01
 Branch: work
 
 ## Purpose
@@ -64,6 +64,12 @@ Out of scope:
 - Separate dry and wet accepted-lap windows.
 - Per-session max-burn tracking with spike protection.
 - Seed markers so carry-over baseline values are not immediately evicted on a session transition.
+
+### Fuel burn analysis popup state
+- `Fuel.Burn.Analysis.*` is an additive dashboard-analysis observer fed only by the existing accepted-fuel-lap insertion seam.
+- Analysis samples are one combined chronological fresh accepted-lap stream across wet and dry; seeded profile/race-start model values are intentionally excluded.
+- Independently resettable backing groups preserve action semantics: Avg3/Avg5 rolling list, current-stint sum/count, session-average sum/count (also `SampleCount`), and max-observed value. `LastLap` updates on every accepted fuel lap and has no manual reset action.
+- `CurrentStint` resets on the existing confirmed pit-exit edge. Temporary telemetry gaps retain the last accepted analysis state, matching the broader Fuel Model lifecycle behavior.
 
 ### Stable burn state
 - A continuously evaluated candidate burn.
@@ -187,6 +193,8 @@ Typical states include:
 ### Core exports
 The full authoritative export list lives in `Docs/Internal/SimHubParameterInventory.md`. The key Fuel Model families are:
 - `Fuel.LiveFuelPerLap*`
+- `Fuel.Burn.DisplayAnalysis` (presentation-only popup/page state toggled by `LalaLaunch.BurnDisplayToggle`)
+- `Fuel.Burn.Analysis.*` (fresh accepted-lap popup analysis: `LastLap`, `Avg3`, `Avg5`, `CurrentStint`, `SessionAvg`, `MaxObserved`, `SampleCount`)
 - `Fuel.LiveLapsRemainingInRace*`
 - `Fuel.LapsRemainingInTank`
 - `Fuel.RequiredBurnToEnd*`
@@ -254,7 +262,15 @@ Runtime recovery now distinguishes between:
 Planner-safe targeted recovery is intended to rebuild live-cap/runtime truth without silently clearing Strategy manual overrides or preset intent.
 Manual recovery may short-circuit on planner-safe success only while an active live session is present; outside active live session, manual reset continues into the broad reset path.
 
-Driving → Race transitions can seed race state from the just-learned baseline instead of forcing a full cold start.
+Driving → Race transitions can seed race state from the just-learned baseline instead of forcing a full cold start. Those seeds intentionally do not enter `Fuel.Burn.Analysis.*`, which remains fresh-sample-only.
+
+Fuel-burn popup analysis reset rules:
+- normal Fuel Model lifecycle reset clears `LastLap`, Avg3/Avg5, `CurrentStint`, `SessionAvg`, `SampleCount`, and `MaxObserved`,
+- confirmed pit exit clears only `CurrentStint`,
+- `LalaLaunch.BurnAnalysisResetAverages` clears only Avg3/Avg5,
+- `LalaLaunch.BurnAnalysisResetCurrentStint` clears only `CurrentStint`,
+- `LalaLaunch.BurnAnalysisResetSessionAverage` clears only `SessionAvg` and `SampleCount`,
+- `LalaLaunch.BurnAnalysisResetMaxObserved` clears only `MaxObserved`.
 
 ## Failure modes / edge cases
 - **Replay timing anomalies:** acceptance/projection behavior may need log verification.

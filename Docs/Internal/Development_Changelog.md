@@ -1,5 +1,13 @@
 # Development Changelog
 
+## 2026-06-01 — Fuel burn analysis popup plugin exports and actions
+- Classification: **both** (new dashboard-facing plugin export/action contract plus internal Fuel Model observer state).
+- Added presentation-only `Fuel.Burn.DisplayAnalysis` with `LalaLaunch.BurnDisplayToggle`, plus `Fuel.Burn.Analysis.LastLap`, `Avg3`, `Avg5`, `CurrentStint`, `SessionAvg`, `MaxObserved`, and `SampleCount`.
+- New analysis state observes the existing accepted-fuel-lap insertion seam only: one combined chronological fresh accepted stream across wet/dry, excluding seeded model values and all laps already rejected by existing Fuel Model gating.
+- Added independently scoped reset actions: `LalaLaunch.BurnAnalysisResetAverages`, `LalaLaunch.BurnAnalysisResetCurrentStint`, `LalaLaunch.BurnAnalysisResetSessionAverage`, and `LalaLaunch.BurnAnalysisResetMaxObserved`. Current-stint analysis also clears on the existing confirmed pit-exit edge; normal Fuel Model lifecycle resets clear the full analysis state.
+- Existing accepted-lap logic, `Fuel.LiveFuelPerLap*`, `Fuel.FuelBurnPredictor*`, Strategy planner, pit/refuel math, dashboard JSON, and XAML remain unchanged.
+- Property Snapshot list reviewed: yes; new `Fuel.Burn.*` properties route into the existing Fuel/Strategy group through the existing `Fuel.*` prefix rule.
+
 ## 2026-05-31 — Opponents CarSA checkpoint seam same-tick overwrite fix
 
 - Fixed the ordinary `UpdateLiveProperties(...)` Opponents refresh so it passes the existing CarSA `TryGetCheckpointGapSec` delegate when CarSA is available instead of overwriting a same-tick preferred `Opp.Ahead1` / `Opp.Behind1` checkpoint gap with native progress fallback.
