@@ -5,6 +5,12 @@ Last updated: 2026-06-01
 Branch: work
 
 ## Current status
+- 2026-06-01: CarSA slot-01 precision-gap freshness fix landed.
+  - `Car.Ahead01P.Gap.Sec` / `Car.Behind01P.Gap.Sec` now require gate truth within the existing freshness limit instead of publishing stale raw truth indefinitely.
+  - Precision gaps preserve sharper textual/number-display behavior with `fresh truth -> defensible filtered -> track fallback -> invalid`, without adopting `Gap.RelativeSec` sticky hold or changing RelativeSec publication.
+  - Preserved physical slot selection, Opponents/H2H behavior, dashboard contracts, and all export names.
+  - Property Snapshot list reviewed: yes, no group change required because no exports were added, removed, renamed, or re-grouped.
+
 - 2026-06-01: CarSA checkpoint adjacent-lap runtime-scale fix landed.
   - `TryGetCheckpointGapSec(...)` now uses a CarSA runtime-owned lap-time scale for adjacent-lap correction instead of reading `_outputs.Debug.LapTimeUsedSec`.
   - The runtime scale is assigned from the existing `SelectLapTimeUsed(...)` result independently of System Debug state and is cleared with the existing gate-gap caches.

@@ -1986,12 +1986,11 @@ namespace LaunchPlugin
 
         private void UpdateSlot01PrecisionGaps(double sessionTimeSec, double lapTimeMapSec)
         {
-            _ = sessionTimeSec;
-            _outputs.Ahead01PrecisionGapSec = ComputeSlotPrecisionGap(_outputs.AheadSlots, lapTimeMapSec, true);
-            _outputs.Behind01PrecisionGapSec = ComputeSlotPrecisionGap(_outputs.BehindSlots, lapTimeMapSec, false);
+            _outputs.Ahead01PrecisionGapSec = ComputeSlotPrecisionGap(_outputs.AheadSlots, sessionTimeSec, lapTimeMapSec, true);
+            _outputs.Behind01PrecisionGapSec = ComputeSlotPrecisionGap(_outputs.BehindSlots, sessionTimeSec, lapTimeMapSec, false);
         }
 
-        private double ComputeSlotPrecisionGap(CarSASlot[] slots, double lapTimeUsed, bool isAhead)
+        private double ComputeSlotPrecisionGap(CarSASlot[] slots, double sessionTimeSec, double lapTimeUsed, bool isAhead)
         {
             if (slots == null || slots.Length == 0)
             {
@@ -2010,12 +2009,22 @@ namespace LaunchPlugin
                 return double.NaN;
             }
 
+            double truthAgeSec = sessionTimeSec - _gateGapLastTruthTimeSecByCar[carIdx];
+            bool truthFresh = _gateGapTruthValidByCar[carIdx]
+                && !double.IsNaN(_gateGapTruthSecByCar[carIdx]) && !double.IsInfinity(_gateGapTruthSecByCar[carIdx])
+                && !double.IsNaN(truthAgeSec) && !double.IsInfinity(truthAgeSec)
+                && truthAgeSec >= 0.0 && truthAgeSec <= GateGapTruthMaxAgeSec;
+            bool filteredEligible = IsValidLapTimeSec(lapTimeUsed)
+                && _gateGapFilteredValidByCar[carIdx]
+                && !double.IsNaN(_gateGapFilteredSecByCar[carIdx]) && !double.IsInfinity(_gateGapFilteredSecByCar[carIdx])
+                && (_gateGapRateValidByCar[carIdx] || truthFresh);
+
             double candidate;
-            if (_gateGapTruthValidByCar[carIdx])
+            if (truthFresh)
             {
                 candidate = _gateGapTruthSecByCar[carIdx];
             }
-            else if (_gateGapFilteredValidByCar[carIdx])
+            else if (filteredEligible)
             {
                 candidate = _gateGapFilteredSecByCar[carIdx];
             }

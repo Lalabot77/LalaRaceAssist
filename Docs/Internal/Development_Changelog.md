@@ -1,5 +1,12 @@
 # Development Changelog
 
+## 2026-06-01 — CarSA slot-01 precision-gap freshness fix
+- Classification: **internal-only** (existing CarSA precision export correctness refinement; no export name, UI, dashboard, or user-workflow contract changes).
+- `Car.Ahead01P.Gap.Sec` / `Car.Behind01P.Gap.Sec` no longer publish stale raw gate truth indefinitely: precision publication now requires truth age within the existing `GateGapTruthMaxAgeSec` limit.
+- Precision gaps retain their sharper textual/number-display intent with source order `fresh truth -> defensible filtered -> track fallback -> invalid`; they do not inherit `Gap.RelativeSec` smoothing priority or sticky-hold semantics.
+- Reused the existing filtered-cache defensibility rules (`valid lap-time map`, `filtered cache valid`, and `rate valid || truth fresh`) without changing `Gap.RelativeSec`, slot selection, Opponents, H2H, dashboards, or export names.
+- Property Snapshot list reviewed: yes, no group change required because no exports were added, removed, renamed, or re-grouped.
+
 ## 2026-06-01 — CarSA checkpoint adjacent-lap runtime-scale fix
 - Classification: **internal-only** (CarSA checkpoint seam runtime dependency correction; no export, UI, dashboard, or user-workflow contract changes).
 - `TryGetCheckpointGapSec(...)` now uses a CarSA runtime-owned lap-time scale for adjacent-lap correction instead of reading `_outputs.Debug.LapTimeUsedSec`.
