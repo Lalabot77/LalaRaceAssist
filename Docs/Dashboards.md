@@ -53,6 +53,12 @@ Dashboard status is plugin-owned:
 
 Dashboards should use those exports only for presentation/visibility. Strategy math, fuel advice, and PreRace logic remain owned by the plugin.
 
+### Strategy Dash fuel-burn analysis binding
+
+A Strategy Dash fuel-burn popup or page can use the plugin-owned `LalaLaunch.Fuel.Burn.DisplayAnalysis` state. Toggle it with `LalaLaunch.BurnDisplayToggle`.
+
+Optional reset actions are `LalaLaunch.BurnAnalysisResetAverages`, `LalaLaunch.BurnAnalysisResetCurrentStint`, `LalaLaunch.BurnAnalysisResetSessionAverage`, and `LalaLaunch.BurnAnalysisResetMaxObserved`. Dashboards should consume `LalaLaunch.Fuel.Burn.Analysis.*` directly because the plugin owns accepted-lap filtering and analysis values.
+
 When manually editing dashboard formulas, use the single plugin-qualified property prefix only (for example `LalaLaunch.PreRace.StatusText`, not `LalaLaunch.LalaLaunch.PreRace.StatusText`).
 
 ### Binding scope in SimHub

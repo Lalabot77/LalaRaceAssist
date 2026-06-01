@@ -172,6 +172,31 @@ namespace LaunchPlugin
             ManualRecoveryReset(reason);
         }
 
+        public void BurnDisplayToggle()
+        {
+            Fuel_Burn_DisplayAnalysis = !Fuel_Burn_DisplayAnalysis;
+        }
+
+        public void BurnAnalysisResetAverages()
+        {
+            ResetBurnAnalysisAverages();
+        }
+
+        public void BurnAnalysisResetCurrentStint()
+        {
+            ResetBurnAnalysisCurrentStint();
+        }
+
+        public void BurnAnalysisResetSessionAverage()
+        {
+            ResetBurnAnalysisSessionAverage();
+        }
+
+        public void BurnAnalysisResetMaxObserved()
+        {
+            ResetBurnAnalysisMaxObserved();
+        }
+
 
         // Exposed dash mode value: 0,1,2
         public int DeclutterMode { get; private set; } = 0;
@@ -960,6 +985,25 @@ namespace LaunchPlugin
         private readonly List<double> _recentWetFuelLaps = new List<double>();
         private const int FuelWindowSize = 5; // keep last N valid laps per mode
         private const int FuelPersistMinLaps = 2; // guard against early garbage in live persistence
+
+        // Fuel burn analysis is a fresh accepted-lap observer only. It intentionally does not consume seeded model windows.
+        private readonly object _burnAnalysisLock = new object();
+        private readonly List<double> _burnAnalysisRecentAcceptedFuelLaps = new List<double>();
+        private double _burnAnalysisLastLap;
+        private double _burnAnalysisCurrentStintSum;
+        private int _burnAnalysisCurrentStintCount;
+        private double _burnAnalysisSessionSum;
+        private int _burnAnalysisSessionCount;
+        private double _burnAnalysisMaxObserved;
+
+        public bool Fuel_Burn_DisplayAnalysis { get; private set; }
+        public double Fuel_Burn_Analysis_LastLap => GetBurnAnalysisLastLap();
+        public double Fuel_Burn_Analysis_Avg3 => GetBurnAnalysisAverageAvailableRecentSamples(3);
+        public double Fuel_Burn_Analysis_Avg5 => GetBurnAnalysisAverageAvailableRecentSamples(5);
+        public double Fuel_Burn_Analysis_CurrentStint => GetBurnAnalysisCurrentStint();
+        public double Fuel_Burn_Analysis_SessionAvg => GetBurnAnalysisSessionAvg();
+        public double Fuel_Burn_Analysis_MaxObserved => GetBurnAnalysisMaxObserved();
+        public int Fuel_Burn_Analysis_SampleCount => GetBurnAnalysisSampleCount();
 
         private double _avgDryFuelPerLap = 0.0;
         private double _avgWetFuelPerLap = 0.0;
@@ -3115,9 +3159,80 @@ namespace LaunchPlugin
             _lastProjectionLapSecondsUsed = 0.0;
         }
 
+        private void RecordAcceptedBurnAnalysisSample(double fuelUsed)
+        {
+            lock (_burnAnalysisLock)
+            {
+                _burnAnalysisLastLap = fuelUsed;
+                _burnAnalysisRecentAcceptedFuelLaps.Add(fuelUsed);
+                while (_burnAnalysisRecentAcceptedFuelLaps.Count > FuelWindowSize)
+                {
+                    _burnAnalysisRecentAcceptedFuelLaps.RemoveAt(0);
+                }
+
+                _burnAnalysisCurrentStintSum += fuelUsed;
+                _burnAnalysisCurrentStintCount++;
+                _burnAnalysisSessionSum += fuelUsed;
+                _burnAnalysisSessionCount++;
+                if (fuelUsed > _burnAnalysisMaxObserved)
+                {
+                    _burnAnalysisMaxObserved = fuelUsed;
+                }
+            }
+        }
+
+        private void ResetBurnAnalysisAverages()
+        {
+            lock (_burnAnalysisLock)
+            {
+                _burnAnalysisRecentAcceptedFuelLaps.Clear();
+            }
+        }
+
+        private void ResetBurnAnalysisCurrentStint()
+        {
+            lock (_burnAnalysisLock)
+            {
+                _burnAnalysisCurrentStintSum = 0.0;
+                _burnAnalysisCurrentStintCount = 0;
+            }
+        }
+
+        private void ResetBurnAnalysisSessionAverage()
+        {
+            lock (_burnAnalysisLock)
+            {
+                _burnAnalysisSessionSum = 0.0;
+                _burnAnalysisSessionCount = 0;
+            }
+        }
+
+        private void ResetBurnAnalysisMaxObserved()
+        {
+            lock (_burnAnalysisLock)
+            {
+                _burnAnalysisMaxObserved = 0.0;
+            }
+        }
+
+        private void ResetBurnAnalysisForFuelModelLifecycle()
+        {
+            lock (_burnAnalysisLock)
+            {
+                _burnAnalysisLastLap = 0.0;
+                _burnAnalysisRecentAcceptedFuelLaps.Clear();
+                _burnAnalysisCurrentStintSum = 0.0;
+                _burnAnalysisCurrentStintCount = 0;
+                _burnAnalysisSessionSum = 0.0;
+                _burnAnalysisSessionCount = 0;
+                _burnAnalysisMaxObserved = 0.0;
+            }
+        }
+
         private void ResetLiveFuelModelForNewSession(string newSessionType, bool applySeeds)
         {
             ResetProjectionFallbackState();
+            ResetBurnAnalysisForFuelModelLifecycle();
 
             // Clear per-lap / model state
             ResetLiveMaxFuelTracking();
@@ -4247,6 +4362,7 @@ namespace LaunchPlugin
                             _freshDrySamplesInWindow++;
 
                         window.Add(fuelUsed);
+                        RecordAcceptedBurnAnalysisSample(fuelUsed);
                         SessionSummaryRuntime.OnValidFuelLap(_currentSessionToken, fuelUsed);
                         while (window.Count > FuelWindowSize)
                         {
@@ -7187,6 +7303,11 @@ namespace LaunchPlugin
             this.AddAction("Pit.FuelRemove", (a, b) => PitFuelRemove1());
             this.AddAction("PrimaryDashMode", (a, b) => PrimaryDashMode());
             this.AddAction("StrategyDash.ModeToggle", (a, b) => StrategyDashModeToggle());
+            this.AddAction("BurnDisplayToggle", (a, b) => BurnDisplayToggle());
+            this.AddAction("BurnAnalysisResetAverages", (a, b) => BurnAnalysisResetAverages());
+            this.AddAction("BurnAnalysisResetCurrentStint", (a, b) => BurnAnalysisResetCurrentStint());
+            this.AddAction("BurnAnalysisResetSessionAverage", (a, b) => BurnAnalysisResetSessionAverage());
+            this.AddAction("BurnAnalysisResetMaxObserved", (a, b) => BurnAnalysisResetMaxObserved());
             this.AddAction("DeclutterMode", (a, b) => DeclutterMode0());
             this.AddAction("ToggleDarkMode", (a, b) => ToggleDarkMode());
             this.AddAction("EventMarker", (a, b) => EventMarker());
@@ -7309,6 +7430,14 @@ namespace LaunchPlugin
             AttachCore("Fuel.LiveFuelPerLap_Stable", () => LiveFuelPerLap_Stable);
             AttachCore("Fuel.LiveFuelPerLap_StableSource", () => LiveFuelPerLap_StableSource);
             AttachCore("Fuel.LiveFuelPerLap_StableConfidence", () => LiveFuelPerLap_StableConfidence);
+            AttachCore("Fuel.Burn.DisplayAnalysis", () => Fuel_Burn_DisplayAnalysis);
+            AttachCore("Fuel.Burn.Analysis.LastLap", () => Fuel_Burn_Analysis_LastLap);
+            AttachCore("Fuel.Burn.Analysis.Avg3", () => Fuel_Burn_Analysis_Avg3);
+            AttachCore("Fuel.Burn.Analysis.Avg5", () => Fuel_Burn_Analysis_Avg5);
+            AttachCore("Fuel.Burn.Analysis.CurrentStint", () => Fuel_Burn_Analysis_CurrentStint);
+            AttachCore("Fuel.Burn.Analysis.SessionAvg", () => Fuel_Burn_Analysis_SessionAvg);
+            AttachCore("Fuel.Burn.Analysis.MaxObserved", () => Fuel_Burn_Analysis_MaxObserved);
+            AttachCore("Fuel.Burn.Analysis.SampleCount", () => Fuel_Burn_Analysis_SampleCount);
             AttachCore("Surface.TrackWetness", () => TrackWetness);
             AttachCore("Surface.TrackWetnessLabel", () => TrackWetnessLabel);
             AttachCore("Fuel.FuelReadyConfidenceThreshold", () => GetFuelReadyConfidenceThreshold());
@@ -10936,6 +11065,7 @@ namespace LaunchPlugin
 
             if (pitExitEdge)
             {
+                ResetBurnAnalysisCurrentStint();
                 _tyreLearnLastPitExitSessionTimeSec = sessionTime;
                 _opponentsEngine?.NotifyPitExitLine(completedLaps, sessionTime, trackPct);
                 // LogPitExitPitOutSnapshot(sessionTime, completedLaps + 1, pitTripActive);
@@ -19720,6 +19850,71 @@ namespace LaunchPlugin
             LiveFuelPerLap_Stable = _stableFuelPerLap;
             LiveFuelPerLap_StableSource = _stableFuelPerLapSource;
             LiveFuelPerLap_StableConfidence = _stableFuelPerLapConfidence;
+        }
+
+        private double GetBurnAnalysisLastLap()
+        {
+            lock (_burnAnalysisLock)
+            {
+                return _burnAnalysisLastLap;
+            }
+        }
+
+        private double GetBurnAnalysisAverageAvailableRecentSamples(int requestedCount)
+        {
+            lock (_burnAnalysisLock)
+            {
+                return AverageAvailableRecentSamples(_burnAnalysisRecentAcceptedFuelLaps, requestedCount);
+            }
+        }
+
+        private double GetBurnAnalysisCurrentStint()
+        {
+            lock (_burnAnalysisLock)
+            {
+                return _burnAnalysisCurrentStintCount > 0 ? _burnAnalysisCurrentStintSum / _burnAnalysisCurrentStintCount : 0.0;
+            }
+        }
+
+        private double GetBurnAnalysisSessionAvg()
+        {
+            lock (_burnAnalysisLock)
+            {
+                return _burnAnalysisSessionCount > 0 ? _burnAnalysisSessionSum / _burnAnalysisSessionCount : 0.0;
+            }
+        }
+
+        private double GetBurnAnalysisMaxObserved()
+        {
+            lock (_burnAnalysisLock)
+            {
+                return _burnAnalysisMaxObserved;
+            }
+        }
+
+        private int GetBurnAnalysisSampleCount()
+        {
+            lock (_burnAnalysisLock)
+            {
+                return _burnAnalysisSessionCount;
+            }
+        }
+
+        private static double AverageAvailableRecentSamples(List<double> samples, int requestedCount)
+        {
+            if (samples == null || samples.Count == 0 || requestedCount <= 0)
+            {
+                return 0.0;
+            }
+
+            int sampleCount = Math.Min(samples.Count, requestedCount);
+            double sum = 0.0;
+            for (int i = samples.Count - sampleCount; i < samples.Count; i++)
+            {
+                sum += samples[i];
+            }
+
+            return sum / sampleCount;
         }
 
         private static double? GetRollingAverage(List<double> samples, int sampleCount)

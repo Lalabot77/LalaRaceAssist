@@ -209,6 +209,23 @@ The subsystem docs own message-system behavior; dashboards should remain consume
 - `ModeText` is label-only (`ADVANCED` / `SIMPLE`).
 - This mode is a presentation seam only. Strategy, fuel, PreRace, and pit/refuel calculations remain owned by the plugin/subsystems and must not be reimplemented in dashboard expressions.
 
+## Fuel burn analysis popup integration
+### Stable exports for dashboards
+- `LalaLaunch.Fuel.Burn.DisplayAnalysis`
+- `LalaLaunch.Fuel.Burn.Analysis.LastLap`
+- `LalaLaunch.Fuel.Burn.Analysis.Avg3`
+- `LalaLaunch.Fuel.Burn.Analysis.Avg5`
+- `LalaLaunch.Fuel.Burn.Analysis.CurrentStint`
+- `LalaLaunch.Fuel.Burn.Analysis.SessionAvg`
+- `LalaLaunch.Fuel.Burn.Analysis.MaxObserved`
+- `LalaLaunch.Fuel.Burn.Analysis.SampleCount`
+
+### Binding and consumption rules
+- Bind the popup/page toggle through plugin action `LalaLaunch.BurnDisplayToggle`; `Fuel.Burn.DisplayAnalysis=false` means normal fuel-burn display and `true` means analysis display.
+- Optional popup reset controls bind to `LalaLaunch.BurnAnalysisResetAverages`, `LalaLaunch.BurnAnalysisResetCurrentStint`, `LalaLaunch.BurnAnalysisResetSessionAverage`, and `LalaLaunch.BurnAnalysisResetMaxObserved`.
+- Analysis values are plugin-owned fresh accepted-fuel-lap summaries across wet/dry. Dashes must consume them as published and must not rebuild lap acceptance, averaging, session counting, stint reset, or max tracking in expressions.
+- This is an additive analysis/presentation seam only. Existing tactical fuel display and calculation consumers continue to use the existing canonical `Fuel.LiveFuelPerLap_Stable`, `Fuel.Refuel.*`, `Fuel.RequiredBurnToEnd*`, and `Fuel.Pit.*` families as appropriate.
+
 ## Dark Mode integration
 ### Stable exports for dashboards
 - `LalaLaunch.Dash.DarkMode.Mode`
