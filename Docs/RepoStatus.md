@@ -1,10 +1,16 @@
 # Repo Status
 
 Validated against commit: HEAD
-Last updated: 2026-05-31
+Last updated: 2026-06-01
 Branch: work
 
 ## Current status
+- 2026-06-01: CarSA checkpoint adjacent-lap runtime-scale fix landed.
+  - `TryGetCheckpointGapSec(...)` now uses a CarSA runtime-owned lap-time scale for adjacent-lap correction instead of reading `_outputs.Debug.LapTimeUsedSec`.
+  - The runtime scale is assigned from the existing `SelectLapTimeUsed(...)` result independently of System Debug state and is cleared with the existing gate-gap caches.
+  - Preserved `SelectLapTimeUsed(...)` order, adjacent-lap formula/sign and `abs(lapDeltaAtGate) <= 1` guard, same-lap behavior, invalid-scale return-false behavior, native downstream fallback, subsystem ownership, and all export names.
+  - Property Snapshot list reviewed: yes, no group change required because no exports were added, removed, renamed, or re-grouped.
+
 - 2026-05-31: Opponents CarSA checkpoint seam same-tick overwrite wiring fix validated.
   - The ordinary `UpdateLiveProperties(...)` Opponents refresh now passes the CarSA `TryGetCheckpointGapSec` delegate when CarSA is available, so valid `Opp.Ahead1` / `Opp.Behind1` preferred checkpoint gaps are no longer replaced by same-tick native progress fallback before export.
   - Preserved duplicate refresh timing, native fallback behavior, Opponents ordering, pit-exit behavior, League Class matching, H2H selector ownership, and all export names.

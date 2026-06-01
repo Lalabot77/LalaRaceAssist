@@ -197,6 +197,7 @@ namespace LaunchPlugin
         private readonly double[] _gateGapLastPublishedSecByCar = new double[MaxCars];
         private readonly double[] _gateGapLastPublishedTimeSecByCar = new double[MaxCars];
         private double _trackGapLastGoodScaleSec = double.NaN;
+        private double _checkpointGapLapTimeUsedSec = double.NaN;
         private bool _hadValidTick;
         private bool _hasMultipleClassOpponents;
         private readonly FixedSectorCacheEntry[] _fixedSectorCacheByCar = new FixedSectorCacheEntry[MaxCars];
@@ -521,7 +522,7 @@ namespace LaunchPlugin
             double rawGapSec = playerGateTime - targetGateTime;
             if (lapDeltaAtGate != 0)
             {
-                double lapTimeUsed = _outputs?.Debug?.LapTimeUsedSec ?? double.NaN;
+                double lapTimeUsed = _checkpointGapLapTimeUsedSec;
                 if (double.IsNaN(lapTimeUsed) || double.IsInfinity(lapTimeUsed) || lapTimeUsed <= 0.0)
                 {
                     return false;
@@ -719,6 +720,9 @@ namespace LaunchPlugin
             int filteredHalfLapAhead = 0;
             int filteredHalfLapBehind = 0;
             double lapTimeUsed = SelectLapTimeUsed(playerBestLapTimeSec, lapTimeEstimateSec, classEstLapTimeSec);
+            _checkpointGapLapTimeUsedSec = IsValidLapTimeSec(lapTimeUsed)
+                ? lapTimeUsed
+                : double.NaN;
             bool lapTimeUsedValid = IsValidLapTimeSec(lapTimeUsed);
             double trackGapScaleSec = SelectTrackGapScaleSec(lapTimeUsed, classEstLapTimeSec);
             bool trackGapScaleValid = IsValidLapTimeSec(trackGapScaleSec);
@@ -3474,6 +3478,7 @@ namespace LaunchPlugin
         private void ClearGateGapCaches()
         {
             _trackGapLastGoodScaleSec = double.NaN;
+            _checkpointGapLapTimeUsedSec = double.NaN;
             for (int i = 0; i < _playerGateTimeSecByGate.Length; i++)
             {
                 _playerGateTimeSecByGate[i] = double.NaN;
