@@ -218,12 +218,16 @@ The subsystem docs own message-system behavior; dashboards should remain consume
 - `LalaLaunch.Fuel.Burn.Analysis.CurrentStint`
 - `LalaLaunch.Fuel.Burn.Analysis.SessionAvg`
 - `LalaLaunch.Fuel.Burn.Analysis.MaxObserved`
-- `LalaLaunch.Fuel.Burn.Analysis.SampleCount`
+- `LalaLaunch.Fuel.Burn.Analysis.AvgSampleCount`
+- `LalaLaunch.Fuel.Burn.Analysis.StintSampleCount`
+- `LalaLaunch.Fuel.Burn.Analysis.SessionSampleCount`
+- `LalaLaunch.Fuel.Burn.Analysis.SampleCount` (compatibility alias of `SessionSampleCount`)
 
 ### Binding and consumption rules
 - Bind the popup/page toggle through plugin action `LalaLaunch.BurnDisplayToggle`; `Fuel.Burn.DisplayAnalysis=false` means normal fuel-burn display and `true` means analysis display.
 - Optional popup reset controls bind to `LalaLaunch.BurnAnalysisResetAverages`, `LalaLaunch.BurnAnalysisResetCurrentStint`, `LalaLaunch.BurnAnalysisResetSessionAverage`, and `LalaLaunch.BurnAnalysisResetMaxObserved`.
 - Analysis values are plugin-owned fresh accepted-fuel-lap summaries across wet/dry. Dashes must consume them as published and must not rebuild lap acceptance, averaging, session counting, stint reset, or max tracking in expressions.
+- Use `AvgSampleCount >= 3` for Avg3 confidence colouring and `AvgSampleCount >= 5` for Avg5 confidence colouring. Use `StintSampleCount` for `CurrentStint` readiness and `SessionSampleCount` for `SessionAvg` readiness. Keep `SampleCount` only as the session-count compatibility alias.
 - This is an additive analysis/presentation seam only. Existing tactical fuel display and calculation consumers continue to use the existing canonical `Fuel.LiveFuelPerLap_Stable`, `Fuel.Refuel.*`, `Fuel.RequiredBurnToEnd*`, and `Fuel.Pit.*` families as appropriate.
 
 ## Dark Mode integration

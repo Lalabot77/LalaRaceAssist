@@ -28,6 +28,13 @@
 - The runtime scale is assigned from the existing `SelectLapTimeUsed(...)` result regardless of System Debug state and is cleared with the existing gate-gap caches.
 - Preserved `SelectLapTimeUsed(...)` order, adjacent-lap formula/sign and `abs(lapDeltaAtGate) <= 1` guard, same-lap behavior, invalid-scale return-false behavior, native downstream fallback, Opponents/H2H/League Class boundaries, and all export names.
 - Property Snapshot list reviewed: yes, no group change required because no exports were added, removed, renamed, or re-grouped.
+## 2026-06-01 — Fuel burn analysis sample-count split
+- Classification: **both** (additive dashboard-facing readiness exports plus internal Fuel Model contract documentation).
+- Added `Fuel.Burn.Analysis.AvgSampleCount`, `StintSampleCount`, and `SessionSampleCount` from the existing synchronized burn-analysis rolling list, current-stint count, and session count. Existing `Fuel.Burn.Analysis.SampleCount` remains present as a compatibility alias of `SessionSampleCount`.
+- Dashboard guidance now maps Avg3/Avg5 readiness to `AvgSampleCount`, `CurrentStint` readiness to `StintSampleCount`, and `SessionAvg` readiness to `SessionSampleCount`.
+- Preserved accepted-lap gating, all burn-analysis value calculations, existing reset actions, Fuel Model lifecycle resets, `Fuel.LiveFuelPerLap*`, `Fuel.FuelBurnPredictor*`, Strategy planner, pit/refuel math, dashboard JSON, and XAML.
+- Property Snapshot list reviewed: yes; the new `Fuel.Burn.Analysis.*` properties route through the existing `Fuel.*` prefix into the Fuel/Strategy group.
+
 ## 2026-06-01 — Fuel burn analysis popup docs + rolling-list synchronization follow-up
 - Classification: **both** (public dashboard binding discoverability plus internal list-read safety hardening).
 - Added short public guidance for `LalaLaunch.Fuel.Burn.DisplayAnalysis`, `LalaLaunch.BurnDisplayToggle`, the optional scoped reset actions, and direct `LalaLaunch.Fuel.Burn.Analysis.*` dashboard consumption.
