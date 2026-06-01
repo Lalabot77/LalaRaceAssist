@@ -29,6 +29,11 @@ Branch: work
   - The runtime scale is assigned from the existing `SelectLapTimeUsed(...)` result independently of System Debug state and is cleared with the existing gate-gap caches.
   - Preserved `SelectLapTimeUsed(...)` order, adjacent-lap formula/sign and `abs(lapDeltaAtGate) <= 1` guard, same-lap behavior, invalid-scale return-false behavior, native downstream fallback, subsystem ownership, and all export names.
   - Property Snapshot list reviewed: yes, no group change required because no exports were added, removed, renamed, or re-grouped.
+- 2026-06-01: Fuel burn analysis sample-count split landed.
+  - Added `Fuel.Burn.Analysis.AvgSampleCount`, `StintSampleCount`, and `SessionSampleCount` so dashboard readiness colouring can use the matching rolling-average, current-stint, or session-average context. Existing `Fuel.Burn.Analysis.SampleCount` remains present as a compatibility alias of `SessionSampleCount`.
+  - Reused the existing synchronized burn-analysis backing state and dedicated lock. Accepted-lap gating, value calculations, scoped reset behavior, Fuel Model lifecycle reset behavior, `Fuel.LiveFuelPerLap*`, predictor, Strategy, pit/refuel math, dashboard JSON, and XAML remain unchanged.
+  - Property Snapshot list reviewed: yes; all new `Fuel.Burn.Analysis.*` exports continue to route through the existing `Fuel.*` prefix into the Fuel/Strategy group.
+
 - 2026-06-01: Fuel burn analysis popup review follow-up landed.
   - Added brief public dashboard/fuel-model guidance for `LalaLaunch.Fuel.Burn.DisplayAnalysis`, `LalaLaunch.BurnDisplayToggle`, optional reset actions, and direct `LalaLaunch.Fuel.Burn.Analysis.*` consumption.
   - Synchronized all `Fuel.Burn.Analysis.*` backing state with one dedicated lock across accepted-sample recording, scoped resets, lifecycle reset, and property reads. Aggregate pairs (`CurrentStint`, `SessionAvg`/`SampleCount`) cannot be observed mid-update or mid-reset. Existing partial-window averaging, reset semantics, acceptance logic, fuel math, Strategy, pit/refuel behavior, dashboard JSON, and XAML remain unchanged.

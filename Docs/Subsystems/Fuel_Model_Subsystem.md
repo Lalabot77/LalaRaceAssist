@@ -68,7 +68,7 @@ Out of scope:
 ### Fuel burn analysis popup state
 - `Fuel.Burn.Analysis.*` is an additive dashboard-analysis observer fed only by the existing accepted-fuel-lap insertion seam.
 - Analysis samples are one combined chronological fresh accepted-lap stream across wet and dry; seeded profile/race-start model values are intentionally excluded.
-- Independently resettable backing groups preserve action semantics: Avg3/Avg5 rolling list, current-stint sum/count, session-average sum/count (also `SampleCount`), and max-observed value. `LastLap` updates on every accepted fuel lap and has no manual reset action.
+- Independently resettable backing groups preserve action semantics: Avg3/Avg5 rolling list (also `AvgSampleCount`), current-stint sum/count (also `StintSampleCount`), session-average sum/count (also `SessionSampleCount` and compatibility alias `SampleCount`), and max-observed value. `LastLap` updates on every accepted fuel lap and has no manual reset action.
 - One dedicated burn-analysis lock protects accepted-sample recording, scoped resets, lifecycle reset, and property reads so aggregate pairs cannot be observed mid-update or mid-reset.
 - `CurrentStint` resets on the existing confirmed pit-exit edge. Temporary telemetry gaps retain the last accepted analysis state, matching the broader Fuel Model lifecycle behavior.
 
@@ -195,7 +195,7 @@ Typical states include:
 The full authoritative export list lives in `Docs/Internal/SimHubParameterInventory.md`. The key Fuel Model families are:
 - `Fuel.LiveFuelPerLap*`
 - `Fuel.Burn.DisplayAnalysis` (presentation-only popup/page state toggled by `LalaLaunch.BurnDisplayToggle`)
-- `Fuel.Burn.Analysis.*` (fresh accepted-lap popup analysis: `LastLap`, `Avg3`, `Avg5`, `CurrentStint`, `SessionAvg`, `MaxObserved`, `SampleCount`)
+- `Fuel.Burn.Analysis.*` (fresh accepted-lap popup analysis: `LastLap`, `Avg3`, `Avg5`, `CurrentStint`, `SessionAvg`, `MaxObserved`, `AvgSampleCount`, `StintSampleCount`, `SessionSampleCount`, and compatibility alias `SampleCount`)
 - `Fuel.LiveLapsRemainingInRace*`
 - `Fuel.LapsRemainingInTank`
 - `Fuel.RequiredBurnToEnd*`
@@ -266,11 +266,11 @@ Manual recovery may short-circuit on planner-safe success only while an active l
 Driving → Race transitions can seed race state from the just-learned baseline instead of forcing a full cold start. Those seeds intentionally do not enter `Fuel.Burn.Analysis.*`, which remains fresh-sample-only.
 
 Fuel-burn popup analysis reset rules:
-- normal Fuel Model lifecycle reset clears `LastLap`, Avg3/Avg5, `CurrentStint`, `SessionAvg`, `SampleCount`, and `MaxObserved`,
-- confirmed pit exit clears only `CurrentStint`,
-- `LalaLaunch.BurnAnalysisResetAverages` clears only Avg3/Avg5,
-- `LalaLaunch.BurnAnalysisResetCurrentStint` clears only `CurrentStint`,
-- `LalaLaunch.BurnAnalysisResetSessionAverage` clears only `SessionAvg` and `SampleCount`,
+- normal Fuel Model lifecycle reset clears `LastLap`, Avg3/Avg5, `AvgSampleCount`, `CurrentStint`, `StintSampleCount`, `SessionAvg`, `SessionSampleCount`, compatibility alias `SampleCount`, and `MaxObserved`,
+- confirmed pit exit clears only `CurrentStint` and `StintSampleCount`,
+- `LalaLaunch.BurnAnalysisResetAverages` clears only Avg3/Avg5 and `AvgSampleCount`,
+- `LalaLaunch.BurnAnalysisResetCurrentStint` clears only `CurrentStint` and `StintSampleCount`,
+- `LalaLaunch.BurnAnalysisResetSessionAverage` clears only `SessionAvg`, `SessionSampleCount`, and compatibility alias `SampleCount`,
 - `LalaLaunch.BurnAnalysisResetMaxObserved` clears only `MaxObserved`.
 
 ## Failure modes / edge cases

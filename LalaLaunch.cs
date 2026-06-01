@@ -1003,7 +1003,10 @@ namespace LaunchPlugin
         public double Fuel_Burn_Analysis_CurrentStint => GetBurnAnalysisCurrentStint();
         public double Fuel_Burn_Analysis_SessionAvg => GetBurnAnalysisSessionAvg();
         public double Fuel_Burn_Analysis_MaxObserved => GetBurnAnalysisMaxObserved();
-        public int Fuel_Burn_Analysis_SampleCount => GetBurnAnalysisSampleCount();
+        public int Fuel_Burn_Analysis_AvgSampleCount => GetBurnAnalysisAvgSampleCount();
+        public int Fuel_Burn_Analysis_StintSampleCount => GetBurnAnalysisStintSampleCount();
+        public int Fuel_Burn_Analysis_SessionSampleCount => GetBurnAnalysisSessionSampleCount();
+        public int Fuel_Burn_Analysis_SampleCount => GetBurnAnalysisSessionSampleCount();
 
         private double _avgDryFuelPerLap = 0.0;
         private double _avgWetFuelPerLap = 0.0;
@@ -7437,6 +7440,9 @@ namespace LaunchPlugin
             AttachCore("Fuel.Burn.Analysis.CurrentStint", () => Fuel_Burn_Analysis_CurrentStint);
             AttachCore("Fuel.Burn.Analysis.SessionAvg", () => Fuel_Burn_Analysis_SessionAvg);
             AttachCore("Fuel.Burn.Analysis.MaxObserved", () => Fuel_Burn_Analysis_MaxObserved);
+            AttachCore("Fuel.Burn.Analysis.AvgSampleCount", () => Fuel_Burn_Analysis_AvgSampleCount);
+            AttachCore("Fuel.Burn.Analysis.StintSampleCount", () => Fuel_Burn_Analysis_StintSampleCount);
+            AttachCore("Fuel.Burn.Analysis.SessionSampleCount", () => Fuel_Burn_Analysis_SessionSampleCount);
             AttachCore("Fuel.Burn.Analysis.SampleCount", () => Fuel_Burn_Analysis_SampleCount);
             AttachCore("Surface.TrackWetness", () => TrackWetness);
             AttachCore("Surface.TrackWetnessLabel", () => TrackWetnessLabel);
@@ -19896,7 +19902,23 @@ namespace LaunchPlugin
             }
         }
 
-        private int GetBurnAnalysisSampleCount()
+        private int GetBurnAnalysisAvgSampleCount()
+        {
+            lock (_burnAnalysisLock)
+            {
+                return _burnAnalysisRecentAcceptedFuelLaps.Count;
+            }
+        }
+
+        private int GetBurnAnalysisStintSampleCount()
+        {
+            lock (_burnAnalysisLock)
+            {
+                return _burnAnalysisCurrentStintCount;
+            }
+        }
+
+        private int GetBurnAnalysisSessionSampleCount()
         {
             lock (_burnAnalysisLock)
             {
