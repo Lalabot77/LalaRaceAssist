@@ -1,5 +1,12 @@
 # Development Changelog
 
+## 2026-06-01 — CarSA direct checkpoint seam pit-state gating
+- Classification: **internal-only** (CarSA checkpoint-seam eligibility correction; no export name, UI, dashboard, or user-workflow contract changes).
+- `TryGetCheckpointGapSec(...)` now fails closed unless both current car states are on-track, not on pit road, and explicitly report `TrackSurfaceRaw == OnTrack`; pit lane, pit stall/tow, off-track, NotInWorld, unknown, and invalid states fall back downstream.
+- Added narrow per-car direct-checkpoint cache hygiene: ineligible cars clear `_carGateTimeSecByCarGate` / `_carGateLapByCarGate`, and new direct timestamps are not recorded while ineligible, preventing old pre-entry samples from becoming eligible immediately after pit exit.
+- Preserved the existing 15-second rule for eligible cars, same-lap/adjacent-lap correction math, CarSA slot ordering, `Gap.RelativeSec`, slot-01 precision gaps, Opponents native fallback/race ordering, H2H, dashboards, and export names.
+- Property Snapshot list reviewed: yes, no group change required because no exports were added, removed, renamed, or re-grouped.
+
 ## 2026-06-01 — CarSA slot-01 precision-gap freshness fix
 - Classification: **internal-only** (existing CarSA precision export correctness refinement; no export name, UI, dashboard, or user-workflow contract changes).
 - `Car.Ahead01P.Gap.Sec` / `Car.Behind01P.Gap.Sec` no longer publish stale raw gate truth indefinitely: precision publication now requires truth age within the existing `GateGapTruthMaxAgeSec` limit.

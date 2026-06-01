@@ -466,6 +466,11 @@ namespace LaunchPlugin
                 return false;
             }
 
+            if (!IsCheckpointGapEligibleCar(playerCarIdx) || !IsCheckpointGapEligibleCar(targetCarIdx))
+            {
+                return false;
+            }
+
             double now = _lastSessionTimeSec;
             if (double.IsNaN(now) || double.IsInfinity(now))
             {
@@ -1257,6 +1262,12 @@ namespace LaunchPlugin
                 bool hasLapPct = !double.IsNaN(state.LapDistPct) && state.LapDistPct >= 0.0 && state.LapDistPct < 1.0;
                 bool hasPlayerPct = !double.IsNaN(playerLapPct) && playerLapPct >= 0.0 && playerLapPct < 1.0;
 
+                bool checkpointGapEligible = IsCheckpointGapEligibleCar(carIdx);
+                if (!checkpointGapEligible)
+                {
+                    ClearDirectCheckpointCacheForCar(carIdx);
+                }
+
                 bool inWorldNow = state.TrackSurfaceRaw != TrackSurfaceNotInWorld;
                 bool pitAreaNow = state.IsOnPitRoad
                     || IsPitLaneSurface(state.TrackSurfaceRaw)
@@ -1459,8 +1470,11 @@ namespace LaunchPlugin
                         if (checkpointCrossed >= 0 && checkpointCrossed < MiniSectorCheckpointCount)
                         {
                             _anyCheckpointCrossedThisTick = true;
-                            _carGateTimeSecByCarGate[carIdx, checkpointCrossed] = sessionTimeSec;
-                            _carGateLapByCarGate[carIdx, checkpointCrossed] = state.Lap;
+                            if (checkpointGapEligible)
+                            {
+                                _carGateTimeSecByCarGate[carIdx, checkpointCrossed] = sessionTimeSec;
+                                _carGateLapByCarGate[carIdx, checkpointCrossed] = state.Lap;
+                            }
                             double playerGateTimeSec = _playerGateTimeSecByGate[checkpointCrossed];
                             int playerGateLap = _playerGateLapByGate[checkpointCrossed];
                             if (!double.IsNaN(playerGateTimeSec)
@@ -3484,6 +3498,34 @@ namespace LaunchPlugin
             UpdateStatusEText(slot);
         }
 
+        private bool IsCheckpointGapEligibleCar(int carIdx)
+        {
+            if (carIdx < 0 || carIdx >= _carStates.Length)
+            {
+                return false;
+            }
+
+            CarSA_CarState state = _carStates[carIdx];
+            return state != null
+                && state.IsOnTrack
+                && !state.IsOnPitRoad
+                && state.TrackSurfaceRaw == TrackSurfaceOnTrack;
+        }
+
+        private void ClearDirectCheckpointCacheForCar(int carIdx)
+        {
+            if (carIdx < 0 || carIdx >= MaxCars)
+            {
+                return;
+            }
+
+            for (int gate = 0; gate < MiniSectorCheckpointCount; gate++)
+            {
+                _carGateTimeSecByCarGate[carIdx, gate] = double.NaN;
+                _carGateLapByCarGate[carIdx, gate] = int.MinValue;
+            }
+        }
+
         private void ClearGateGapCaches()
         {
             _trackGapLastGoodScaleSec = double.NaN;
@@ -3509,11 +3551,7 @@ namespace LaunchPlugin
                 _gateGapLastPredictTimeSecByCar[carIdx] = double.NaN;
                 _gateGapLastPublishedSecByCar[carIdx] = double.NaN;
                 _gateGapLastPublishedTimeSecByCar[carIdx] = double.NaN;
-                for (int gate = 0; gate < MiniSectorCheckpointCount; gate++)
-                {
-                    _carGateTimeSecByCarGate[carIdx, gate] = double.NaN;
-                    _carGateLapByCarGate[carIdx, gate] = int.MinValue;
-                }
+                ClearDirectCheckpointCacheForCar(carIdx);
             }
         }
 

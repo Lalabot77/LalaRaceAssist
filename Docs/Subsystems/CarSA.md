@@ -13,6 +13,7 @@ LapRef (`LapRef.*`) also consumes the same fixed-6-sector cache as a read-only p
 `H2HRace.*` still uses CarSA only as a bounded local live-session fallback when a known Opponents-selected identity needs help re-resolving `CarIdx`; selector ownership remains in Opponents.
 Opponents also consumes a narrow timing seam (`TryGetCheckpointGapSec(playerCarIdx, targetCarIdx, out signedGapSec)`) to improve `Opp.Ahead1/Behind1.GapToPlayerSec` with checkpoint-time-derived true gaps; Opponents keeps neighbor selection ownership.
 - The direct checkpoint seam uses a CarSA runtime-owned lap-time scale for adjacent-lap correction. It no longer depends on debug publication state, so System Debug ON/OFF does not change checkpoint-gap availability. Same-lap handling, invalid-scale rejection, and downstream native fallback behavior remain unchanged.
+- Direct checkpoint lookup requires both cars to be currently on-track with `TrackSurfaceRaw == OnTrack` and not on pit road. Ineligible per-car direct lookup timestamps are cleared and are not recorded while ineligible, preventing pit-entry/pit-exit stale reuse; Opponents retains native progress/pace fallback when the seam returns false.
 
 ## Truth source
 - **Primary:** `CarIdx*` telemetry arrays (CarIdxLapDistPct, CarIdxLap, CarIdxTrackSurface, CarIdxOnPitRoad).
