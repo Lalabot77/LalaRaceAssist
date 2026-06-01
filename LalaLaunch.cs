@@ -10707,7 +10707,12 @@ namespace LaunchPlugin
                 : (data.NewData?.SessionTypeName ?? string.Empty);
             bool debugMaster = IsDebugOnForLogic;
             bool verboseLogs = IsVerboseDebugLoggingOn;
-            _opponentsEngine?.Update(data, pluginManager, isOpponentsEligibleSessionNow, isRaceSessionNow, completedLaps, myPaceSec, pitLossSec, pitTripActive, inLane, trackPct, sessionTimeSec, sessionTimeRemainingSec, verboseLogs, null, BuildRaceContextLeagueClassMatchDelegate());
+            OpponentsEngine.TryGetCheckpointGapSec checkpointGapReader = null;
+            if (_carSaEngine != null)
+            {
+                checkpointGapReader = _carSaEngine.TryGetCheckpointGapSec;
+            }
+            _opponentsEngine?.Update(data, pluginManager, isOpponentsEligibleSessionNow, isRaceSessionNow, completedLaps, myPaceSec, pitLossSec, pitTripActive, inLane, trackPct, sessionTimeSec, sessionTimeRemainingSec, verboseLogs, checkpointGapReader, BuildRaceContextLeagueClassMatchDelegate());
             UpdatePitExitTimeToExitSec(pluginManager, inLane, speedKph);
             int[] carIdxLap = SafeReadIntArray(pluginManager, "DataCorePlugin.GameRawData.Telemetry.CarIdxLap");
             int[] carIdxTrackSurface = SafeReadIntArray(pluginManager, "DataCorePlugin.GameRawData.Telemetry.CarIdxTrackSurface");

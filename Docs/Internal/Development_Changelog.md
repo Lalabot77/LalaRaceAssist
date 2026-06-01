@@ -1,5 +1,12 @@
 # Development Changelog
 
+## 2026-05-31 — Opponents CarSA checkpoint seam same-tick overwrite fix
+
+- Fixed the ordinary `UpdateLiveProperties(...)` Opponents refresh so it passes the existing CarSA `TryGetCheckpointGapSec` delegate when CarSA is available instead of overwriting a same-tick preferred `Opp.Ahead1` / `Opp.Behind1` checkpoint gap with native progress fallback.
+- Preserved the existing duplicate refresh timing, Opponents RaceProgress-first target selection, native fallback rules, pit-exit behavior, League Class matching, H2H selector ownership, and all export names.
+- Changelog impact: internal runtime correctness fix; no public release-note update in this task.
+- Property Snapshot list reviewed: yes, no group change required because existing `Opp.*` exports remain in the same `CarOppH2H` group and no property names changed.
+
 ## 2026-05-31 — PR #767 PreRace planner-authority review follow-up
 - Classification: **both** (dashboard-facing PreRace authority correctness plus internal seam documentation).
 - Manual Dry/Wet planner authority now rejects unknown live condition as well as known conflicts; automatic condition mode remains allowed.
