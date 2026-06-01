@@ -28,6 +28,19 @@
 - The runtime scale is assigned from the existing `SelectLapTimeUsed(...)` result regardless of System Debug state and is cleared with the existing gate-gap caches.
 - Preserved `SelectLapTimeUsed(...)` order, adjacent-lap formula/sign and `abs(lapDeltaAtGate) <= 1` guard, same-lap behavior, invalid-scale return-false behavior, native downstream fallback, Opponents/H2H/League Class boundaries, and all export names.
 - Property Snapshot list reviewed: yes, no group change required because no exports were added, removed, renamed, or re-grouped.
+## 2026-06-01 — Fuel burn analysis popup docs + rolling-list synchronization follow-up
+- Classification: **both** (public dashboard binding discoverability plus internal list-read safety hardening).
+- Added short public guidance for `LalaLaunch.Fuel.Burn.DisplayAnalysis`, `LalaLaunch.BurnDisplayToggle`, the optional scoped reset actions, and direct `LalaLaunch.Fuel.Burn.Analysis.*` dashboard consumption.
+- Protected all `Fuel.Burn.Analysis.*` backing state with one dedicated lock across accepted-sample recording, scoped resets, lifecycle reset, and property evaluation. This keeps `CurrentStint` sum/count, `SessionAvg` sum/count plus `SampleCount`, `MaxObserved`, `LastLap`, and Avg3/Avg5 reads consistent during concurrent dashboard reads and reset actions.
+- Preserved available-sample averaging, accepted-lap gating, all other reset semantics, `Fuel.LiveFuelPerLap*`, `Fuel.FuelBurnPredictor*`, Strategy planner, pit/refuel math, dashboard JSON, and XAML.
+
+## 2026-06-01 — Fuel burn analysis popup plugin exports and actions
+- Classification: **both** (new dashboard-facing plugin export/action contract plus internal Fuel Model observer state).
+- Added presentation-only `Fuel.Burn.DisplayAnalysis` with `LalaLaunch.BurnDisplayToggle`, plus `Fuel.Burn.Analysis.LastLap`, `Avg3`, `Avg5`, `CurrentStint`, `SessionAvg`, `MaxObserved`, and `SampleCount`.
+- New analysis state observes the existing accepted-fuel-lap insertion seam only: one combined chronological fresh accepted stream across wet/dry, excluding seeded model values and all laps already rejected by existing Fuel Model gating.
+- Added independently scoped reset actions: `LalaLaunch.BurnAnalysisResetAverages`, `LalaLaunch.BurnAnalysisResetCurrentStint`, `LalaLaunch.BurnAnalysisResetSessionAverage`, and `LalaLaunch.BurnAnalysisResetMaxObserved`. Current-stint analysis also clears on the existing confirmed pit-exit edge; normal Fuel Model lifecycle resets clear the full analysis state.
+- Existing accepted-lap logic, `Fuel.LiveFuelPerLap*`, `Fuel.FuelBurnPredictor*`, Strategy planner, pit/refuel math, dashboard JSON, and XAML remain unchanged.
+- Property Snapshot list reviewed: yes; new `Fuel.Burn.*` properties route into the existing Fuel/Strategy group through the existing `Fuel.*` prefix rule.
 
 ## 2026-05-31 — Opponents CarSA checkpoint seam same-tick overwrite fix
 

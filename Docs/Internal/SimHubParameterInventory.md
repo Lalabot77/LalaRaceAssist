@@ -3,8 +3,8 @@
 **CANONICAL CONTRACT**
 
 Validated against: HEAD
-Last reviewed: 2026-05-29
-Last updated: 2026-05-29
+Last reviewed: 2026-06-01
+Last updated: 2026-06-01
 Branch: work
 
 - All exports are attached in `LalaLaunch.cs` during `Init()` via `AttachCore`/`AttachVerbose`. Core values are refreshed in `DataUpdate` (500 ms poll for fuel/pace/pit via `_poll500ms`; per-tick for launch/dash/messaging). Verbose rows require `SimhubPublish.VERBOSE`.【F:LalaLaunch.cs†L2644-L3120】【F:LalaLaunch.cs†L3411-L3775】
@@ -24,6 +24,12 @@ Branch: work
 | --- | --- | --- | --- | --- |
 | Fuel.LiveFuelPerLap | double | Rolling average burn per accepted lap (wet/dry windows, rejects pit/warmup/off-track/outliers). When accepted laps are unavailable, runtime uses profile condition burn before SimHub/DataCore fallback. | 500 ms poll (`UpdateLiveFuelCalcs`). | `LalaLaunch.cs` — `UpdateLiveFuelCalcs` + `AttachCore`【F:LalaLaunch.cs†L1895-L2143】【F:LalaLaunch.cs†L2672-L2955】 |
 | Fuel.LiveFuelPerLap_Stable / StableSource / StableConfidence | double/string/double | Smoothed burn chosen from live/profile (deadband hold; confidence aligned to source). | 500 ms poll. | `LalaLaunch.cs` — `UpdateStableFuelPerLap` + `AttachCore`【F:LalaLaunch.cs†L4180-L4254】【F:LalaLaunch.cs†L2672-L2955】 |
+| Fuel.Burn.DisplayAnalysis | bool | Presentation-only Strategy Dash burn-popup/page state. `false` = normal burn display; `true` = analysis display. Toggled by plugin action `LalaLaunch.BurnDisplayToggle`; it is not a fuel-math input. | On action. | `LalaLaunch.cs` — action handler + `AttachCore`. |
+| Fuel.Burn.Analysis.LastLap | double | Most recent fresh accepted fuel-lap burn across wet/dry. Seeded model values and rejected laps are excluded. Zero before the first accepted sample after Fuel Model lifecycle reset. | Per accepted fuel lap. | `LalaLaunch.cs` — accepted-fuel observer + `AttachCore`. |
+| Fuel.Burn.Analysis.Avg3 / Avg5 | double/double | Average of the last 3 / 5 post-reset fresh accepted fuel laps across wet/dry, using the available count when fewer exist. Both publish `0.0` with no post-reset samples and share only their dedicated rolling analysis list. | Per accepted fuel lap or `LalaLaunch.BurnAnalysisResetAverages`. | `LalaLaunch.cs` — accepted-fuel observer + reset action + `AttachCore`. |
+| Fuel.Burn.Analysis.CurrentStint | double | Average fresh accepted fuel burn since confirmed pit exit, normal Fuel Model lifecycle reset, or `LalaLaunch.BurnAnalysisResetCurrentStint`. Publishes `0.0` with no current-stint samples. | Per accepted fuel lap; reset on pit exit/action/lifecycle. | `LalaLaunch.cs` — accepted-fuel observer + pit-exit/reset seams + `AttachCore`. |
+| Fuel.Burn.Analysis.SessionAvg / SampleCount | double/int | Average and count of fresh accepted fuel samples since normal Fuel Model lifecycle reset or `LalaLaunch.BurnAnalysisResetSessionAverage`. They share a dedicated sum/count context and publish `0.0` / `0` safely when empty. | Per accepted fuel lap or session-average reset action/lifecycle. | `LalaLaunch.cs` — accepted-fuel observer + reset action + `AttachCore`. |
+| Fuel.Burn.Analysis.MaxObserved | double | Highest fresh accepted fuel-lap burn since normal Fuel Model lifecycle reset or `LalaLaunch.BurnAnalysisResetMaxObserved`. Publishes `0.0` when empty/reset. | Per accepted fuel lap or max reset action/lifecycle. | `LalaLaunch.cs` — accepted-fuel observer + reset action + `AttachCore`. |
 | Surface.TrackWetness | int | Raw iRacing track wetness (0–3/4 depending on telemetry); informational only. | 500 ms poll. | `LalaLaunch.cs` — `ReadTrackWetness` + `AttachCore`【F:LalaLaunch.cs†L1402-L1426】【F:LalaLaunch.cs†L6095-L6134】【F:LalaLaunch.cs†L2996-L3003】 |
 | Surface.TrackWetnessLabel | string | Human label for track wetness (“Dry/Damp/Light Wet/Mod Wet/Very Wet/Unknown”). | 500 ms poll. | `LalaLaunch.cs` — `MapWetnessLabel` + `AttachCore`【F:LalaLaunch.cs†L1402-L1426】【F:LalaLaunch.cs†L6115-L6134】【F:LalaLaunch.cs†L2996-L3003】 |
 | Fuel.FuelReadyConfidenceThreshold | double | Confidence threshold gating fuel readiness and pit window. | 500 ms poll. | `LalaLaunch.cs` — `GetFuelReadyConfidenceThreshold` + `AttachCore`【F:LalaLaunch.cs†L2672-L2955】 |
@@ -411,6 +417,7 @@ Shift Assist runtime/settings notes:
 | OverlayDashShowLaunchScreen / OverlayDashShowPitLimiter / OverlayDashShowPitScreen / OverlayDashShowRejoinAssist / OverlayDashShowVerboseMessaging / OverlayDashShowRaceFlags / OverlayDashShowRadioMessages / OverlayDashShowTraffic | bool | User visibility toggles for overlay dash. | Per tick. | `LaunchPluginSettings` persisted values + `AttachCore`【F:LalaLaunch.cs†L3197-L3205】 |
 
 Strategy Dash binding note: `StrategyDash.ModeToggle` is a plugin-owned action for Controls & Events / Dash Studio. It toggles the persisted `StrategyDash.AdvancedMode` status only; dashboards use that status for Advanced/Simple presentation and must not move strategy/fuel calculations into dash-side scripts.
+Fuel burn analysis binding note: `BurnDisplayToggle`, `BurnAnalysisResetAverages`, `BurnAnalysisResetCurrentStint`, `BurnAnalysisResetSessionAverage`, and `BurnAnalysisResetMaxObserved` are plugin-owned actions for Controls & Events / Dash Studio. They drive only `Fuel.Burn.DisplayAnalysis` presentation state or the explicitly scoped `Fuel.Burn.Analysis.*` backing group; they do not alter accepted-lap gating, stable fuel, predictor, Strategy planner, or pit/refuel math.
 
 Dark Mode binding warning: When `Use Lovely True Dark` is enabled and Lovely is available, Lovely controls `DarkMode.Active` even if Mode is `Off`, and `BrightnessPct` stays on the user slider value (no auto scaling while Lovely drives). `OpacityPct` remains the final dim value published to dashes. `ModeText` remains tied to `Mode` only (`Off`/`Manual`/`Auto`). `LalaLaunch.ToggleDarkMode` is ignored to prevent conflicting toggles. Do not bind both Lovely and LalaLaunch dark-mode toggles to the same physical input.
 

@@ -29,6 +29,14 @@ Branch: work
   - The runtime scale is assigned from the existing `SelectLapTimeUsed(...)` result independently of System Debug state and is cleared with the existing gate-gap caches.
   - Preserved `SelectLapTimeUsed(...)` order, adjacent-lap formula/sign and `abs(lapDeltaAtGate) <= 1` guard, same-lap behavior, invalid-scale return-false behavior, native downstream fallback, subsystem ownership, and all export names.
   - Property Snapshot list reviewed: yes, no group change required because no exports were added, removed, renamed, or re-grouped.
+- 2026-06-01: Fuel burn analysis popup review follow-up landed.
+  - Added brief public dashboard/fuel-model guidance for `LalaLaunch.Fuel.Burn.DisplayAnalysis`, `LalaLaunch.BurnDisplayToggle`, optional reset actions, and direct `LalaLaunch.Fuel.Burn.Analysis.*` consumption.
+  - Synchronized all `Fuel.Burn.Analysis.*` backing state with one dedicated lock across accepted-sample recording, scoped resets, lifecycle reset, and property reads. Aggregate pairs (`CurrentStint`, `SessionAvg`/`SampleCount`) cannot be observed mid-update or mid-reset. Existing partial-window averaging, reset semantics, acceptance logic, fuel math, Strategy, pit/refuel behavior, dashboard JSON, and XAML remain unchanged.
+
+- 2026-06-01: Fuel burn analysis popup plugin support landed.
+  - Added presentation export `Fuel.Burn.DisplayAnalysis`, plugin toggle action `LalaLaunch.BurnDisplayToggle`, and fresh accepted-lap analysis exports `Fuel.Burn.Analysis.LastLap`, `Avg3`, `Avg5`, `CurrentStint`, `SessionAvg`, `MaxObserved`, and `SampleCount`.
+  - Added independently scoped reset actions for rolling averages, current stint, session average/sample count, and max observed. `CurrentStint` also resets on the existing confirmed pit-exit edge; Fuel Model lifecycle resets clear all analysis values. Fresh accepted laps only are observed across wet/dry, and seeded race-start model values remain excluded.
+  - Preserved existing accepted-lap checks, `Fuel.LiveFuelPerLap*`, `Fuel.FuelBurnPredictor*`, Strategy planner, pit/refuel math, dashboard JSON, and XAML. Property Snapshot list reviewed: yes; all new `Fuel.Burn.*` exports resolve through the existing `Fuel.*` prefix into the Fuel/Strategy group.
 
 - 2026-05-31: Opponents CarSA checkpoint seam same-tick overwrite wiring fix validated.
   - The ordinary `UpdateLiveProperties(...)` Opponents refresh now passes the CarSA `TryGetCheckpointGapSec` delegate when CarSA is available, so valid `Opp.Ahead1` / `Opp.Behind1` preferred checkpoint gaps are no longer replaced by same-tick native progress fallback before export.
