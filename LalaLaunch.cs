@@ -987,6 +987,7 @@ namespace LaunchPlugin
         private const int FuelPersistMinLaps = 2; // guard against early garbage in live persistence
 
         // Fuel burn analysis is a fresh accepted-lap observer only. It intentionally does not consume seeded model windows.
+        private readonly object _burnAnalysisRecentAcceptedFuelLapsLock = new object();
         private readonly List<double> _burnAnalysisRecentAcceptedFuelLaps = new List<double>();
         private double _burnAnalysisLastLap;
         private double _burnAnalysisCurrentStintSum;
@@ -997,8 +998,8 @@ namespace LaunchPlugin
 
         public bool Fuel_Burn_DisplayAnalysis { get; private set; }
         public double Fuel_Burn_Analysis_LastLap => _burnAnalysisLastLap;
-        public double Fuel_Burn_Analysis_Avg3 => AverageAvailableRecentSamples(_burnAnalysisRecentAcceptedFuelLaps, 3);
-        public double Fuel_Burn_Analysis_Avg5 => AverageAvailableRecentSamples(_burnAnalysisRecentAcceptedFuelLaps, 5);
+        public double Fuel_Burn_Analysis_Avg3 => GetBurnAnalysisAverageAvailableRecentSamples(3);
+        public double Fuel_Burn_Analysis_Avg5 => GetBurnAnalysisAverageAvailableRecentSamples(5);
         public double Fuel_Burn_Analysis_CurrentStint => _burnAnalysisCurrentStintCount > 0 ? _burnAnalysisCurrentStintSum / _burnAnalysisCurrentStintCount : 0.0;
         public double Fuel_Burn_Analysis_SessionAvg => _burnAnalysisSessionCount > 0 ? _burnAnalysisSessionSum / _burnAnalysisSessionCount : 0.0;
         public double Fuel_Burn_Analysis_MaxObserved => _burnAnalysisMaxObserved;
@@ -3161,10 +3162,13 @@ namespace LaunchPlugin
         private void RecordAcceptedBurnAnalysisSample(double fuelUsed)
         {
             _burnAnalysisLastLap = fuelUsed;
-            _burnAnalysisRecentAcceptedFuelLaps.Add(fuelUsed);
-            while (_burnAnalysisRecentAcceptedFuelLaps.Count > FuelWindowSize)
+            lock (_burnAnalysisRecentAcceptedFuelLapsLock)
             {
-                _burnAnalysisRecentAcceptedFuelLaps.RemoveAt(0);
+                _burnAnalysisRecentAcceptedFuelLaps.Add(fuelUsed);
+                while (_burnAnalysisRecentAcceptedFuelLaps.Count > FuelWindowSize)
+                {
+                    _burnAnalysisRecentAcceptedFuelLaps.RemoveAt(0);
+                }
             }
 
             _burnAnalysisCurrentStintSum += fuelUsed;
@@ -3179,7 +3183,10 @@ namespace LaunchPlugin
 
         private void ResetBurnAnalysisAverages()
         {
-            _burnAnalysisRecentAcceptedFuelLaps.Clear();
+            lock (_burnAnalysisRecentAcceptedFuelLapsLock)
+            {
+                _burnAnalysisRecentAcceptedFuelLaps.Clear();
+            }
         }
 
         private void ResetBurnAnalysisCurrentStint()
@@ -19829,6 +19836,14 @@ namespace LaunchPlugin
             LiveFuelPerLap_Stable = _stableFuelPerLap;
             LiveFuelPerLap_StableSource = _stableFuelPerLapSource;
             LiveFuelPerLap_StableConfidence = _stableFuelPerLapConfidence;
+        }
+
+        private double GetBurnAnalysisAverageAvailableRecentSamples(int requestedCount)
+        {
+            lock (_burnAnalysisRecentAcceptedFuelLapsLock)
+            {
+                return AverageAvailableRecentSamples(_burnAnalysisRecentAcceptedFuelLaps, requestedCount);
+            }
         }
 
         private static double AverageAvailableRecentSamples(List<double> samples, int requestedCount)
