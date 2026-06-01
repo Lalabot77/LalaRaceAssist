@@ -5,6 +5,13 @@ Last updated: 2026-06-01
 Branch: work
 
 ## Current status
+- 2026-06-01: PR #770 current-tick checkpoint gating and precision filtered-expiry follow-up landed.
+  - Direct checkpoint eligibility is refreshed from current `CarIdxTrackSurface` / `CarIdxOnPitRoad` telemetry immediately before both Opponents publication paths and synchronized during normal CarSA update, removing the prior-tick pit-entry/off-track seam window.
+  - Ineligible direct caches still clear fail-closed; eligible-car 15-second lookup and same-lap/adjacent-lap math remain unchanged.
+  - Slot-01 precision filtered fallback now expires when the last truth observation exceeds the existing freshness limit, retaining `fresh truth -> recently defensible filtered -> track fallback -> invalid` without sticky hold.
+  - Preserved CarSA physical slots, `Gap.RelativeSec`, Opponents ordering/fallback, H2H, dashboards, JSON, and export names.
+  - Property Snapshot list reviewed: yes, no group change required because no exports were added, removed, renamed, or re-grouped.
+
 - 2026-06-01: CarSA direct checkpoint seam pit-state gating landed.
   - `TryGetCheckpointGapSec(...)` now requires both current cars to be on-track, not on pit road, and explicitly `TrackSurfaceRaw == OnTrack`; pit lane, pit stall/tow, off-track, NotInWorld, unknown, and invalid states fail closed to the existing downstream fallback.
   - Ineligible cars clear their narrow direct-checkpoint timestamp/lap arrays and do not record new direct timestamps until eligible, preventing pre-entry timestamp reuse immediately after pit exit.

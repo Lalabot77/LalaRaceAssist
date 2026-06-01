@@ -1,5 +1,13 @@
 # Development Changelog
 
+## 2026-06-01 — PR #770 follow-up: current-tick checkpoint gating + precision filtered expiry
+- Classification: **internal-only** (CarSA checkpoint/precision correctness follow-up; no export name, UI, dashboard, or user-workflow contract changes).
+- Added `CarSAEngine.RefreshDirectCheckpointEligibility(...)` and invoked it immediately before both Opponents refresh paths so `TryGetCheckpointGapSec(...)` consumes current-tick `CarIdxTrackSurface` / `CarIdxOnPitRoad` eligibility instead of prior-tick `_carStates`; the normal CarSA update synchronizes the same fail-closed cache.
+- Preserved direct-cache hygiene: ineligible cars still clear narrow direct timestamp/lap arrays and cannot record direct timestamps until eligible, removing the one-tick pit-entry/off-track seam window without changing Opponents fallback or ordering.
+- Bounded slot-01 precision filtered fallback by the existing `GateGapTruthMaxAgeSec` truth-observation freshness window, preserving `fresh truth -> recently defensible filtered -> track fallback -> invalid` without adding sticky hold or mirroring `Gap.RelativeSec`.
+- Preserved eligible-car 15-second direct lookup rule, same-lap/adjacent-lap formula, CarSA physical slots, `Gap.RelativeSec`, Opponents/H2H behavior, dashboards, JSON, and export names.
+- Property Snapshot list reviewed: yes, no group change required because no exports were added, removed, renamed, or re-grouped.
+
 ## 2026-06-01 — CarSA direct checkpoint seam pit-state gating
 - Classification: **internal-only** (CarSA checkpoint-seam eligibility correction; no export name, UI, dashboard, or user-workflow contract changes).
 - `TryGetCheckpointGapSec(...)` now fails closed unless both current car states are on-track, not on pit road, and explicitly report `TrackSurfaceRaw == OnTrack`; pit lane, pit stall/tow, off-track, NotInWorld, unknown, and invalid states fall back downstream.

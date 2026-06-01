@@ -10707,17 +10707,18 @@ namespace LaunchPlugin
                 : (data.NewData?.SessionTypeName ?? string.Empty);
             bool debugMaster = IsDebugOnForLogic;
             bool verboseLogs = IsVerboseDebugLoggingOn;
-            OpponentsEngine.TryGetCheckpointGapSec checkpointGapReader = null;
-            if (_carSaEngine != null)
-            {
-                checkpointGapReader = _carSaEngine.TryGetCheckpointGapSec;
-            }
-            _opponentsEngine?.Update(data, pluginManager, isOpponentsEligibleSessionNow, isRaceSessionNow, completedLaps, myPaceSec, pitLossSec, pitTripActive, inLane, trackPct, sessionTimeSec, sessionTimeRemainingSec, verboseLogs, checkpointGapReader, BuildRaceContextLeagueClassMatchDelegate());
-            UpdatePitExitTimeToExitSec(pluginManager, inLane, speedKph);
             int[] carIdxLap = SafeReadIntArray(pluginManager, "DataCorePlugin.GameRawData.Telemetry.CarIdxLap");
             int[] carIdxTrackSurface = SafeReadIntArray(pluginManager, "DataCorePlugin.GameRawData.Telemetry.CarIdxTrackSurface");
             int[] carIdxTrackSurfaceMaterial = SafeReadIntArray(pluginManager, "DataCorePlugin.GameRawData.Telemetry.CarIdxTrackSurfaceMaterial");
             bool[] carIdxOnPitRoad = SafeReadBoolArray(pluginManager, "DataCorePlugin.GameRawData.Telemetry.CarIdxOnPitRoad");
+            OpponentsEngine.TryGetCheckpointGapSec checkpointGapReader = null;
+            if (_carSaEngine != null)
+            {
+                _carSaEngine.RefreshDirectCheckpointEligibility(carIdxTrackSurface, carIdxOnPitRoad);
+                checkpointGapReader = _carSaEngine.TryGetCheckpointGapSec;
+            }
+            _opponentsEngine?.Update(data, pluginManager, isOpponentsEligibleSessionNow, isRaceSessionNow, completedLaps, myPaceSec, pitLossSec, pitTripActive, inLane, trackPct, sessionTimeSec, sessionTimeRemainingSec, verboseLogs, checkpointGapReader, BuildRaceContextLeagueClassMatchDelegate());
+            UpdatePitExitTimeToExitSec(pluginManager, inLane, speedKph);
             UpdatePlayerLapInvalidState(pluginManager, sessionTimeSec, playerCarIdx, carIdxLap);
             int[] carIdxSessionFlags = null;
             _ = TryReadTelemetryIntArray(pluginManager, "CarIdxSessionFlags", out carIdxSessionFlags, out _, out _);
@@ -17150,6 +17151,9 @@ namespace LaunchPlugin
             OpponentsEngine.TryGetCheckpointGapSec checkpointGapReader = null;
             if (_carSaEngine != null)
             {
+                int[] carIdxTrackSurfaceForOpp = SafeReadIntArray(pluginManager, "DataCorePlugin.GameRawData.Telemetry.CarIdxTrackSurface");
+                bool[] carIdxOnPitRoadForOpp = SafeReadBoolArray(pluginManager, "DataCorePlugin.GameRawData.Telemetry.CarIdxOnPitRoad");
+                _carSaEngine.RefreshDirectCheckpointEligibility(carIdxTrackSurfaceForOpp, carIdxOnPitRoadForOpp);
                 checkpointGapReader = _carSaEngine.TryGetCheckpointGapSec;
             }
             _opponentsEngine.Update(
