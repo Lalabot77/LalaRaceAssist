@@ -1,5 +1,33 @@
 # Development Changelog
 
+## 2026-06-01 — PR #770 follow-up: current-tick checkpoint gating + precision filtered expiry
+- Classification: **internal-only** (CarSA checkpoint/precision correctness follow-up; no export name, UI, dashboard, or user-workflow contract changes).
+- Added `CarSAEngine.RefreshDirectCheckpointEligibility(...)` and invoked it immediately before both Opponents refresh paths so `TryGetCheckpointGapSec(...)` consumes current-tick `CarIdxTrackSurface` / `CarIdxOnPitRoad` eligibility instead of prior-tick `_carStates`; the normal CarSA update synchronizes the same fail-closed cache.
+- Preserved direct-cache hygiene: ineligible cars still clear narrow direct timestamp/lap arrays and cannot record direct timestamps until eligible, removing the one-tick pit-entry/off-track seam window without changing Opponents fallback or ordering.
+- Bounded slot-01 precision filtered fallback by the existing `GateGapTruthMaxAgeSec` truth-observation freshness window, preserving `fresh truth -> recently defensible filtered -> track fallback -> invalid` without adding sticky hold or mirroring `Gap.RelativeSec`.
+- Preserved eligible-car 15-second direct lookup rule, same-lap/adjacent-lap formula, CarSA physical slots, `Gap.RelativeSec`, Opponents/H2H behavior, dashboards, JSON, and export names.
+- Property Snapshot list reviewed: yes, no group change required because no exports were added, removed, renamed, or re-grouped.
+
+## 2026-06-01 — CarSA direct checkpoint seam pit-state gating
+- Classification: **internal-only** (CarSA checkpoint-seam eligibility correction; no export name, UI, dashboard, or user-workflow contract changes).
+- `TryGetCheckpointGapSec(...)` now fails closed unless both current car states are on-track, not on pit road, and explicitly report `TrackSurfaceRaw == OnTrack`; pit lane, pit stall/tow, off-track, NotInWorld, unknown, and invalid states fall back downstream.
+- Added narrow per-car direct-checkpoint cache hygiene: ineligible cars clear `_carGateTimeSecByCarGate` / `_carGateLapByCarGate`, and new direct timestamps are not recorded while ineligible, preventing old pre-entry samples from becoming eligible immediately after pit exit.
+- Preserved the existing 15-second rule for eligible cars, same-lap/adjacent-lap correction math, CarSA slot ordering, `Gap.RelativeSec`, slot-01 precision gaps, Opponents native fallback/race ordering, H2H, dashboards, and export names.
+- Property Snapshot list reviewed: yes, no group change required because no exports were added, removed, renamed, or re-grouped.
+
+## 2026-06-01 — CarSA slot-01 precision-gap freshness fix
+- Classification: **internal-only** (existing CarSA precision export correctness refinement; no export name, UI, dashboard, or user-workflow contract changes).
+- `Car.Ahead01P.Gap.Sec` / `Car.Behind01P.Gap.Sec` no longer publish stale raw gate truth indefinitely: precision publication now requires truth age within the existing `GateGapTruthMaxAgeSec` limit.
+- Precision gaps retain their sharper textual/number-display intent with source order `fresh truth -> defensible filtered -> track fallback -> invalid`; they do not inherit `Gap.RelativeSec` smoothing priority or sticky-hold semantics.
+- Reused the existing filtered-cache defensibility rules (`valid lap-time map`, `filtered cache valid`, and `rate valid || truth fresh`) without changing `Gap.RelativeSec`, slot selection, Opponents, H2H, dashboards, or export names.
+- Property Snapshot list reviewed: yes, no group change required because no exports were added, removed, renamed, or re-grouped.
+
+## 2026-06-01 — CarSA checkpoint adjacent-lap runtime-scale fix
+- Classification: **internal-only** (CarSA checkpoint seam runtime dependency correction; no export, UI, dashboard, or user-workflow contract changes).
+- `TryGetCheckpointGapSec(...)` now uses a CarSA runtime-owned lap-time scale for adjacent-lap correction instead of reading `_outputs.Debug.LapTimeUsedSec`.
+- The runtime scale is assigned from the existing `SelectLapTimeUsed(...)` result regardless of System Debug state and is cleared with the existing gate-gap caches.
+- Preserved `SelectLapTimeUsed(...)` order, adjacent-lap formula/sign and `abs(lapDeltaAtGate) <= 1` guard, same-lap behavior, invalid-scale return-false behavior, native downstream fallback, Opponents/H2H/League Class boundaries, and all export names.
+- Property Snapshot list reviewed: yes, no group change required because no exports were added, removed, renamed, or re-grouped.
 ## 2026-06-01 — Fuel burn analysis popup docs + rolling-list synchronization follow-up
 - Classification: **both** (public dashboard binding discoverability plus internal list-read safety hardening).
 - Added short public guidance for `LalaLaunch.Fuel.Burn.DisplayAnalysis`, `LalaLaunch.BurnDisplayToggle`, the optional scoped reset actions, and direct `LalaLaunch.Fuel.Burn.Analysis.*` dashboard consumption.

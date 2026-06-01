@@ -5,6 +5,30 @@ Last updated: 2026-06-01
 Branch: work
 
 ## Current status
+- 2026-06-01: PR #770 current-tick checkpoint gating and precision filtered-expiry follow-up landed.
+  - Direct checkpoint eligibility is refreshed from current `CarIdxTrackSurface` / `CarIdxOnPitRoad` telemetry immediately before both Opponents publication paths and synchronized during normal CarSA update, removing the prior-tick pit-entry/off-track seam window.
+  - Ineligible direct caches still clear fail-closed; eligible-car 15-second lookup and same-lap/adjacent-lap math remain unchanged.
+  - Slot-01 precision filtered fallback now expires when the last truth observation exceeds the existing freshness limit, retaining `fresh truth -> recently defensible filtered -> track fallback -> invalid` without sticky hold.
+  - Preserved CarSA physical slots, `Gap.RelativeSec`, Opponents ordering/fallback, H2H, dashboards, JSON, and export names.
+  - Property Snapshot list reviewed: yes, no group change required because no exports were added, removed, renamed, or re-grouped.
+
+- 2026-06-01: CarSA direct checkpoint seam pit-state gating landed.
+  - `TryGetCheckpointGapSec(...)` now requires both current cars to be on-track, not on pit road, and explicitly `TrackSurfaceRaw == OnTrack`; pit lane, pit stall/tow, off-track, NotInWorld, unknown, and invalid states fail closed to the existing downstream fallback.
+  - Ineligible cars clear their narrow direct-checkpoint timestamp/lap arrays and do not record new direct timestamps until eligible, preventing pre-entry timestamp reuse immediately after pit exit.
+  - Preserved the existing 15-second rule for eligible cars, same-lap/adjacent-lap correction math, CarSA physical slots, `Gap.RelativeSec`, slot-01 precision gaps, Opponents/H2H behavior, dashboards, and export names.
+  - Property Snapshot list reviewed: yes, no group change required because no exports were added, removed, renamed, or re-grouped.
+
+- 2026-06-01: CarSA slot-01 precision-gap freshness fix landed.
+  - `Car.Ahead01P.Gap.Sec` / `Car.Behind01P.Gap.Sec` now require gate truth within the existing freshness limit instead of publishing stale raw truth indefinitely.
+  - Precision gaps preserve sharper textual/number-display behavior with `fresh truth -> defensible filtered -> track fallback -> invalid`, without adopting `Gap.RelativeSec` sticky hold or changing RelativeSec publication.
+  - Preserved physical slot selection, Opponents/H2H behavior, dashboard contracts, and all export names.
+  - Property Snapshot list reviewed: yes, no group change required because no exports were added, removed, renamed, or re-grouped.
+
+- 2026-06-01: CarSA checkpoint adjacent-lap runtime-scale fix landed.
+  - `TryGetCheckpointGapSec(...)` now uses a CarSA runtime-owned lap-time scale for adjacent-lap correction instead of reading `_outputs.Debug.LapTimeUsedSec`.
+  - The runtime scale is assigned from the existing `SelectLapTimeUsed(...)` result independently of System Debug state and is cleared with the existing gate-gap caches.
+  - Preserved `SelectLapTimeUsed(...)` order, adjacent-lap formula/sign and `abs(lapDeltaAtGate) <= 1` guard, same-lap behavior, invalid-scale return-false behavior, native downstream fallback, subsystem ownership, and all export names.
+  - Property Snapshot list reviewed: yes, no group change required because no exports were added, removed, renamed, or re-grouped.
 - 2026-06-01: Fuel burn analysis popup review follow-up landed.
   - Added brief public dashboard/fuel-model guidance for `LalaLaunch.Fuel.Burn.DisplayAnalysis`, `LalaLaunch.BurnDisplayToggle`, optional reset actions, and direct `LalaLaunch.Fuel.Burn.Analysis.*` consumption.
   - Synchronized all `Fuel.Burn.Analysis.*` backing state with one dedicated lock across accepted-sample recording, scoped resets, lifecycle reset, and property reads. Aggregate pairs (`CurrentStint`, `SessionAvg`/`SampleCount`) cannot be observed mid-update or mid-reset. Existing partial-window averaging, reset semantics, acceptance logic, fuel math, Strategy, pit/refuel behavior, dashboard JSON, and XAML remain unchanged.
