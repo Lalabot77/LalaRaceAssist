@@ -197,6 +197,11 @@ namespace LaunchPlugin
             ResetBurnAnalysisMaxObserved();
         }
 
+        public void BurnAnalysisResetMinObserved()
+        {
+            ResetBurnAnalysisMinObserved();
+        }
+
 
         // Exposed dash mode value: 0,1,2
         public int DeclutterMode { get; private set; } = 0;
@@ -989,20 +994,26 @@ namespace LaunchPlugin
         // Fuel burn analysis is a fresh accepted-lap observer only. It intentionally does not consume seeded model windows.
         private readonly object _burnAnalysisLock = new object();
         private readonly List<double> _burnAnalysisRecentAcceptedFuelLaps = new List<double>();
+        private const int BurnAnalysisWindowSize = 10;
         private double _burnAnalysisLastLap;
         private double _burnAnalysisCurrentStintSum;
         private int _burnAnalysisCurrentStintCount;
         private double _burnAnalysisSessionSum;
         private int _burnAnalysisSessionCount;
         private double _burnAnalysisMaxObserved;
+        private double _burnAnalysisMinObserved;
 
         public bool Fuel_Burn_DisplayAnalysis { get; private set; }
         public double Fuel_Burn_Analysis_LastLap => GetBurnAnalysisLastLap();
         public double Fuel_Burn_Analysis_Avg3 => GetBurnAnalysisAverageAvailableRecentSamples(3);
         public double Fuel_Burn_Analysis_Avg5 => GetBurnAnalysisAverageAvailableRecentSamples(5);
+        public double Fuel_Burn_Analysis_Avg10 => GetBurnAnalysisAverageAvailableRecentSamples(10);
         public double Fuel_Burn_Analysis_CurrentStint => GetBurnAnalysisCurrentStint();
         public double Fuel_Burn_Analysis_SessionAvg => GetBurnAnalysisSessionAvg();
         public double Fuel_Burn_Analysis_MaxObserved => GetBurnAnalysisMaxObserved();
+        public double Fuel_Burn_Analysis_MinObserved => GetBurnAnalysisMinObserved();
+        public double Fuel_Burn_Analysis_RemainingLapsMin => GetBurnAnalysisRemainingLaps(true);
+        public double Fuel_Burn_Analysis_RemainingLapsMax => GetBurnAnalysisRemainingLaps(false);
         public int Fuel_Burn_Analysis_AvgSampleCount => GetBurnAnalysisAvgSampleCount();
         public int Fuel_Burn_Analysis_StintSampleCount => GetBurnAnalysisStintSampleCount();
         public int Fuel_Burn_Analysis_SessionSampleCount => GetBurnAnalysisSessionSampleCount();
@@ -3168,7 +3179,7 @@ namespace LaunchPlugin
             {
                 _burnAnalysisLastLap = fuelUsed;
                 _burnAnalysisRecentAcceptedFuelLaps.Add(fuelUsed);
-                while (_burnAnalysisRecentAcceptedFuelLaps.Count > FuelWindowSize)
+                while (_burnAnalysisRecentAcceptedFuelLaps.Count > BurnAnalysisWindowSize)
                 {
                     _burnAnalysisRecentAcceptedFuelLaps.RemoveAt(0);
                 }
@@ -3180,6 +3191,10 @@ namespace LaunchPlugin
                 if (fuelUsed > _burnAnalysisMaxObserved)
                 {
                     _burnAnalysisMaxObserved = fuelUsed;
+                }
+                if (_burnAnalysisMinObserved <= 0.0 || fuelUsed < _burnAnalysisMinObserved)
+                {
+                    _burnAnalysisMinObserved = fuelUsed;
                 }
             }
         }
@@ -3218,6 +3233,14 @@ namespace LaunchPlugin
             }
         }
 
+        private void ResetBurnAnalysisMinObserved()
+        {
+            lock (_burnAnalysisLock)
+            {
+                _burnAnalysisMinObserved = 0.0;
+            }
+        }
+
         private void ResetBurnAnalysisForFuelModelLifecycle()
         {
             lock (_burnAnalysisLock)
@@ -3229,6 +3252,7 @@ namespace LaunchPlugin
                 _burnAnalysisSessionSum = 0.0;
                 _burnAnalysisSessionCount = 0;
                 _burnAnalysisMaxObserved = 0.0;
+                _burnAnalysisMinObserved = 0.0;
             }
         }
 
@@ -7311,6 +7335,7 @@ namespace LaunchPlugin
             this.AddAction("BurnAnalysisResetCurrentStint", (a, b) => BurnAnalysisResetCurrentStint());
             this.AddAction("BurnAnalysisResetSessionAverage", (a, b) => BurnAnalysisResetSessionAverage());
             this.AddAction("BurnAnalysisResetMaxObserved", (a, b) => BurnAnalysisResetMaxObserved());
+            this.AddAction("BurnAnalysisResetMinObserved", (a, b) => BurnAnalysisResetMinObserved());
             this.AddAction("DeclutterMode", (a, b) => DeclutterMode0());
             this.AddAction("ToggleDarkMode", (a, b) => ToggleDarkMode());
             this.AddAction("EventMarker", (a, b) => EventMarker());
@@ -7437,9 +7462,13 @@ namespace LaunchPlugin
             AttachCore("Fuel.Burn.Analysis.LastLap", () => Fuel_Burn_Analysis_LastLap);
             AttachCore("Fuel.Burn.Analysis.Avg3", () => Fuel_Burn_Analysis_Avg3);
             AttachCore("Fuel.Burn.Analysis.Avg5", () => Fuel_Burn_Analysis_Avg5);
+            AttachCore("Fuel.Burn.Analysis.Avg10", () => Fuel_Burn_Analysis_Avg10);
             AttachCore("Fuel.Burn.Analysis.CurrentStint", () => Fuel_Burn_Analysis_CurrentStint);
             AttachCore("Fuel.Burn.Analysis.SessionAvg", () => Fuel_Burn_Analysis_SessionAvg);
             AttachCore("Fuel.Burn.Analysis.MaxObserved", () => Fuel_Burn_Analysis_MaxObserved);
+            AttachCore("Fuel.Burn.Analysis.MinObserved", () => Fuel_Burn_Analysis_MinObserved);
+            AttachCore("Fuel.Burn.Analysis.RemainingLapsMin", () => Fuel_Burn_Analysis_RemainingLapsMin);
+            AttachCore("Fuel.Burn.Analysis.RemainingLapsMax", () => Fuel_Burn_Analysis_RemainingLapsMax);
             AttachCore("Fuel.Burn.Analysis.AvgSampleCount", () => Fuel_Burn_Analysis_AvgSampleCount);
             AttachCore("Fuel.Burn.Analysis.StintSampleCount", () => Fuel_Burn_Analysis_StintSampleCount);
             AttachCore("Fuel.Burn.Analysis.SessionSampleCount", () => Fuel_Burn_Analysis_SessionSampleCount);
@@ -19900,6 +19929,31 @@ namespace LaunchPlugin
             {
                 return _burnAnalysisMaxObserved;
             }
+        }
+
+        private double GetBurnAnalysisMinObserved()
+        {
+            lock (_burnAnalysisLock)
+            {
+                return _burnAnalysisMinObserved;
+            }
+        }
+
+        private double GetBurnAnalysisRemainingLaps(bool useMaxObserved)
+        {
+            lock (_burnAnalysisLock)
+            {
+                double currentFuel = _lastFuelLevel;
+                double observedBurn = useMaxObserved ? _burnAnalysisMaxObserved : _burnAnalysisMinObserved;
+                return IsPositiveFinite(currentFuel) && IsPositiveFinite(observedBurn)
+                    ? currentFuel / observedBurn
+                    : 0.0;
+            }
+        }
+
+        private static bool IsPositiveFinite(double value)
+        {
+            return value > 0.0 && !double.IsNaN(value) && !double.IsInfinity(value);
         }
 
         private int GetBurnAnalysisAvgSampleCount()

@@ -51,7 +51,7 @@ The fuel model and Strategy work together, but they are not the same thing.
 
 If the live fuel model is still weak, Strategy may still be better served by saved profile values until the live session becomes trustworthy.
 
-For dashboard analysis pages, the plugin publishes `LalaLaunch.Fuel.Burn.Analysis.*` from accepted laps. A popup or page can be toggled with `LalaLaunch.BurnDisplayToggle` through `LalaLaunch.Fuel.Burn.DisplayAnalysis`; dashboards should display those plugin-owned values rather than rebuild accepted-lap filtering or averages. Readiness colouring should use the matching plugin-owned count: `AvgSampleCount` for Avg3/Avg5, `StintSampleCount` for `CurrentStint`, and `SessionSampleCount` for `SessionAvg`; legacy `SampleCount` remains a session-count alias.
+For dashboard analysis pages, the plugin publishes `LalaLaunch.Fuel.Burn.Analysis.*` from accepted laps. A popup or page can be toggled with `LalaLaunch.BurnDisplayToggle` through `LalaLaunch.Fuel.Burn.DisplayAnalysis`; dashboards should display those plugin-owned values rather than rebuild accepted-lap filtering, Avg3/Avg5/Avg10 averages, min/max tracking, or the conservative/optimistic remaining-laps range. Readiness colouring should use the matching plugin-owned count: `AvgSampleCount` for Avg3/Avg5/Avg10, `StintSampleCount` for `CurrentStint`, and `SessionSampleCount` for `SessionAvg`; legacy `SampleCount` remains a session-count alias. `LalaLaunch.BurnAnalysisResetMaxObserved` and `LalaLaunch.BurnAnalysisResetMinObserved` reset their extrema independently.
 
 ## 6. Why users should trust it once learned and locked
 

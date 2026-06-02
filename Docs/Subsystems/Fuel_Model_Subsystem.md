@@ -1,7 +1,7 @@
 # Fuel Model
 
 Validated against commit: HEAD
-Last updated: 2026-06-01
+Last updated: 2026-06-02
 Branch: work
 
 ## Purpose
@@ -68,8 +68,9 @@ Out of scope:
 ### Fuel burn analysis popup state
 - `Fuel.Burn.Analysis.*` is an additive dashboard-analysis observer fed only by the existing accepted-fuel-lap insertion seam.
 - Analysis samples are one combined chronological fresh accepted-lap stream across wet and dry; seeded profile/race-start model values are intentionally excluded.
-- Independently resettable backing groups preserve action semantics: Avg3/Avg5 rolling list (also `AvgSampleCount`), current-stint sum/count (also `StintSampleCount`), session-average sum/count (also `SessionSampleCount` and compatibility alias `SampleCount`), and max-observed value. `LastLap` updates on every accepted fuel lap and has no manual reset action.
-- One dedicated burn-analysis lock protects accepted-sample recording, scoped resets, lifecycle reset, and property reads so aggregate pairs cannot be observed mid-update or mid-reset.
+- Independently resettable backing groups preserve action semantics: Avg3/Avg5/Avg10 rolling list (also `AvgSampleCount`), current-stint sum/count (also `StintSampleCount`), session-average sum/count (also `SessionSampleCount` and compatibility alias `SampleCount`), max-observed value, and min-observed value. `LastLap` updates on every accepted fuel lap and has no manual reset action.
+- `RemainingLapsMin` is the conservative `current fuel litres / MaxObserved` bound; `RemainingLapsMax` is the optimistic `current fuel litres / MinObserved` bound. They reuse the existing runtime fuel cache and publish `0.0` when current fuel or the matching observed burn is invalid, non-finite, empty, or non-positive.
+- One dedicated burn-analysis lock protects accepted-sample recording, scoped resets, lifecycle reset, and property reads so aggregate pairs and remaining-laps bound reads cannot be observed mid-update or mid-reset.
 - `CurrentStint` resets on the existing confirmed pit-exit edge. Temporary telemetry gaps retain the last accepted analysis state, matching the broader Fuel Model lifecycle behavior.
 
 ### Stable burn state

@@ -1,7 +1,7 @@
 # Dash Integration
 
 Validated against commit: HEAD
-Last updated: 2026-05-29
+Last updated: 2026-06-02
 Branch: work
 
 ## Purpose
@@ -215,9 +215,13 @@ The subsystem docs own message-system behavior; dashboards should remain consume
 - `LalaLaunch.Fuel.Burn.Analysis.LastLap`
 - `LalaLaunch.Fuel.Burn.Analysis.Avg3`
 - `LalaLaunch.Fuel.Burn.Analysis.Avg5`
+- `LalaLaunch.Fuel.Burn.Analysis.Avg10`
 - `LalaLaunch.Fuel.Burn.Analysis.CurrentStint`
 - `LalaLaunch.Fuel.Burn.Analysis.SessionAvg`
 - `LalaLaunch.Fuel.Burn.Analysis.MaxObserved`
+- `LalaLaunch.Fuel.Burn.Analysis.MinObserved`
+- `LalaLaunch.Fuel.Burn.Analysis.RemainingLapsMin`
+- `LalaLaunch.Fuel.Burn.Analysis.RemainingLapsMax`
 - `LalaLaunch.Fuel.Burn.Analysis.AvgSampleCount`
 - `LalaLaunch.Fuel.Burn.Analysis.StintSampleCount`
 - `LalaLaunch.Fuel.Burn.Analysis.SessionSampleCount`
@@ -225,9 +229,10 @@ The subsystem docs own message-system behavior; dashboards should remain consume
 
 ### Binding and consumption rules
 - Bind the popup/page toggle through plugin action `LalaLaunch.BurnDisplayToggle`; `Fuel.Burn.DisplayAnalysis=false` means normal fuel-burn display and `true` means analysis display.
-- Optional popup reset controls bind to `LalaLaunch.BurnAnalysisResetAverages`, `LalaLaunch.BurnAnalysisResetCurrentStint`, `LalaLaunch.BurnAnalysisResetSessionAverage`, and `LalaLaunch.BurnAnalysisResetMaxObserved`.
-- Analysis values are plugin-owned fresh accepted-fuel-lap summaries across wet/dry. Dashes must consume them as published and must not rebuild lap acceptance, averaging, session counting, stint reset, or max tracking in expressions.
-- Use `AvgSampleCount >= 3` for Avg3 confidence colouring and `AvgSampleCount >= 5` for Avg5 confidence colouring. Use `StintSampleCount` for `CurrentStint` readiness and `SessionSampleCount` for `SessionAvg` readiness. Keep `SampleCount` only as the session-count compatibility alias.
+- Optional popup reset controls bind to `LalaLaunch.BurnAnalysisResetAverages`, `LalaLaunch.BurnAnalysisResetCurrentStint`, `LalaLaunch.BurnAnalysisResetSessionAverage`, `LalaLaunch.BurnAnalysisResetMaxObserved`, and `LalaLaunch.BurnAnalysisResetMinObserved`. The max/min reset actions are independent.
+- Analysis values are plugin-owned fresh accepted-fuel-lap summaries across wet/dry. Dashes must consume them as published and must not rebuild lap acceptance, averaging, session counting, stint reset, extrema tracking, or remaining-laps range math in expressions.
+- Use `AvgSampleCount >= 3` for Avg3 confidence colouring, `AvgSampleCount >= 5` for Avg5 confidence colouring, and `AvgSampleCount >= 10` when full-window Avg10 readiness matters. Use `StintSampleCount` for `CurrentStint` readiness and `SessionSampleCount` for `SessionAvg` readiness. Keep `SampleCount` only as the session-count compatibility alias.
+- `RemainingLapsMin` is conservative (`current fuel / MaxObserved`); `RemainingLapsMax` is optimistic (`current fuel / MinObserved`). Both fail safe to `0.0` when their inputs are invalid or empty.
 - This is an additive analysis/presentation seam only. Existing tactical fuel display and calculation consumers continue to use the existing canonical `Fuel.LiveFuelPerLap_Stable`, `Fuel.Refuel.*`, `Fuel.RequiredBurnToEnd*`, and `Fuel.Pit.*` families as appropriate.
 
 ## Dark Mode integration
