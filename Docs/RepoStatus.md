@@ -1,10 +1,17 @@
 # Repo Status
 
 Validated against commit: HEAD
-Last updated: 2026-06-01
+Last updated: 2026-06-02
 Branch: work
 
 ## Current status
+- 2026-06-02: Fuel burn analysis Avg10, minimum burn, and remaining-laps range support landed.
+  - Added `Fuel.Burn.Analysis.Avg10`, `MinObserved`, `RemainingLapsMin`, and `RemainingLapsMax`, plus independent `BurnAnalysisResetMinObserved`.
+  - Avg10 reuses the fresh accepted-lap observer with partial-window behavior and a 10-sample rolling list; Avg3/Avg5 continue to average only their latest 3/5 samples. `MinObserved` records only fresh accepted samples and remains independent from `MaxObserved`.
+  - Remaining-laps bounds reuse the existing runtime current-fuel cache under the burn-analysis synchronization strategy: conservative `current fuel / MaxObserved`, optimistic `current fuel / MinObserved`, with safe `0.0` publication for invalid, empty, non-finite, or non-positive inputs.
+  - Preserved accepted-lap gating, seeded-value exclusion, scoped sample counts, pit-exit stint reset, lifecycle reset behavior, `Fuel.LiveFuelPerLap*`, predictor, Strategy, pit/refuel math, dashboard JSON, and XAML.
+  - Property Snapshot list reviewed: yes; all new `Fuel.Burn.Analysis.*` exports continue to route through the existing `Fuel.*` prefix into the Fuel/Strategy group.
+
 - 2026-06-01: PR #770 current-tick checkpoint gating and precision filtered-expiry follow-up landed.
   - Direct checkpoint eligibility is refreshed from current `CarIdxTrackSurface` / `CarIdxOnPitRoad` telemetry immediately before both Opponents publication paths and synchronized during normal CarSA update, removing the prior-tick pit-entry/off-track seam window.
   - Ineligible direct caches still clear fail-closed; eligible-car 15-second lookup and same-lap/adjacent-lap math remain unchanged.

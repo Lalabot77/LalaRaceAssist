@@ -1,5 +1,13 @@
 # Development Changelog
 
+## 2026-06-02 — Fuel burn analysis Avg10, minimum burn, and remaining-laps range
+- Classification: **both** (additive dashboard-facing analysis exports/action plus internal Fuel Model contract documentation).
+- Added `Fuel.Burn.Analysis.Avg10` from the existing fresh accepted-lap observer. Its backing rolling list now retains the latest 10 samples, while Avg3/Avg5 continue to select only their latest 3/5 and retain partial-window behavior.
+- Added independent fresh accepted-lap `Fuel.Burn.Analysis.MinObserved` tracking and `BurnAnalysisResetMinObserved`; existing max reset continues to clear only `MaxObserved`. Lifecycle resets clear both extrema and the rolling Avg10 state.
+- Added synchronized range exports: conservative `Fuel.Burn.Analysis.RemainingLapsMin = current runtime fuel / MaxObserved` and optimistic `Fuel.Burn.Analysis.RemainingLapsMax = current runtime fuel / MinObserved`, with safe `0.0` fallback for invalid, empty, non-finite, or non-positive inputs.
+- Preserved accepted-lap gating, seeded-value exclusion, scoped count/reset behavior, `Fuel.LiveFuelPerLap*`, `Fuel.FuelBurnPredictor*`, Strategy planner, pit/refuel math, dashboard JSON, and XAML.
+- Property Snapshot list reviewed: yes; the new `Fuel.Burn.Analysis.*` properties route through the existing `Fuel.*` prefix into the Fuel/Strategy group.
+
 ## 2026-06-01 — PR #770 follow-up: current-tick checkpoint gating + precision filtered expiry
 - Classification: **internal-only** (CarSA checkpoint/precision correctness follow-up; no export name, UI, dashboard, or user-workflow contract changes).
 - Added `CarSAEngine.RefreshDirectCheckpointEligibility(...)` and invoked it immediately before both Opponents refresh paths so `TryGetCheckpointGapSec(...)` consumes current-tick `CarIdxTrackSurface` / `CarIdxOnPitRoad` eligibility instead of prior-tick `_carStates`; the normal CarSA update synchronizes the same fail-closed cache.
