@@ -5,6 +5,11 @@ Last updated: 2026-06-03
 Branch: work
 
 ## Current status
+- 2026-06-03: Fuel burn target SESSION MFD-add follow-up landed.
+  - SESSION target now uses the actual MFD/requested add seam (`Fuel.Pit.WillAdd`, including existing tank-space clamp) instead of plugin-recommended `Fuel.Refuel.NextLitresCeil` guidance.
+  - Zero requested fuel therefore evaluates SESSION from current fuel only; over-space requests inherit existing `Fuel.Pit.WillAdd` clamp behavior. STINT/END phase rules, invalid-basis gating, `Fuel.Refuel.*`, pit/refuel math, dashboard JSON, and XAML remain unchanged.
+  - Property Snapshot list reviewed: yes; no export names or groups changed, and `Fuel.Burn.*` remains in Fuel/Strategy via the existing `Fuel.*` prefix.
+
 - 2026-06-03: Fuel burn target selector invalid-basis follow-up landed.
   - `Fuel.Burn.Target*` now fails closed when the runtime refuel/stints basis is invalid (`Fuel.Refuel.Valid=false`) instead of interpreting reset/default `Fuel.Live.RemainingStints=0.0` as END.
   - Valid zero/low remaining stints still select END when the runtime basis is valid and `Fuel.RequiredBurnToEnd` is positive. STINT and SESSION phase rules and SESSION math remain unchanged.
@@ -13,7 +18,7 @@ Branch: work
 
 - 2026-06-03: Fuel burn target selector support landed.
   - Added plugin-owned dashboard exports `Fuel.Burn.Target`, `Fuel.Burn.TargetText`, and `Fuel.Burn.TargetValid` in the Fuel Model runtime seam.
-  - Selector uses `Fuel.Live.RemainingStints`: `>2` selects STINT from existing `Fuel.StintBurnTarget`, `>1` and `<=2` selects SESSION from current fuel plus MFD requested fuel capped by runtime max tank and reduced by active contingency, and `<=1` selects END from existing `Fuel.RequiredBurnToEnd`.
+  - Selector uses `Fuel.Live.RemainingStints`: `>2` selects STINT from existing `Fuel.StintBurnTarget`, `>1` and `<=2` selects SESSION from current fuel plus the actual MFD/requested add seam (`Fuel.Pit.WillAdd`, with existing tank-space clamp) capped by runtime max tank and reduced by active contingency, and `<=1` selects END from existing `Fuel.RequiredBurnToEnd`.
   - SESSION divides reserve-adjusted available fuel by numeric `Fuel.LiveLapsRemainingInRace_Stable`; planner fuel values and `_Stable_S` display output are not calculation inputs. Invalid selected inputs publish `0.0` / `INVALID` / `false`.
   - Preserved existing `Fuel.StintBurnTarget`, `Fuel.RequiredBurnToEnd*`, `Fuel.Refuel.*`, `Fuel.Live.RemainingStints`, contingency resolver, Strategy planner, pit/refuel math, dashboard JSON, and XAML behavior.
   - Property Snapshot list reviewed: yes; `Fuel.Burn.*` exports route through the existing `Fuel.*` prefix into the Fuel/Strategy group.

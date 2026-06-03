@@ -1,5 +1,11 @@
 # Development Changelog
 
+## 2026-06-03 — Fuel burn target SESSION actual MFD add
+- Classification: **both** (dashboard-facing SESSION target correctness plus internal Fuel Model seam documentation).
+- SESSION target now uses the actual MFD/requested add seam (`Fuel.Pit.WillAdd`, preserving its existing tank-space clamp) instead of plugin-recommended `Fuel.Refuel.NextLitresCeil` guidance.
+- Zero requested fuel now evaluates SESSION from current fuel only, and over-space requests inherit existing `Fuel.Pit.WillAdd` clamp behavior. STINT/END phase rules, invalid-basis gating, `Fuel.Refuel.*`, pit/refuel math, dashboard JSON, and XAML remain unchanged.
+- Property Snapshot list reviewed: yes; no export names or snapshot groups changed, and `Fuel.Burn.*` remains in Fuel/Strategy through the existing `Fuel.*` prefix rule.
+
 ## 2026-06-03 — Fuel burn target selector invalid-basis guard
 - Classification: **both** (dashboard-facing target validity clarification plus internal fail-closed selector fix).
 - `Fuel.Burn.Target*` now gates phase selection on the valid runtime refuel/stints basis (`Fuel.Refuel.Valid=true`) before interpreting `Fuel.Live.RemainingStints`; invalid refuel/runtime basis resets the target family to `0.0` / `INVALID` / `false`.
@@ -10,7 +16,7 @@
 - Classification: **both** (additive dashboard-facing target exports plus internal Fuel Model seam documentation).
 - Added plugin-owned `Fuel.Burn.Target`, `Fuel.Burn.TargetText`, and `Fuel.Burn.TargetValid` exports so dashboards can consume one tactical burn target family instead of owning phase-selection formulas.
 - Selector phases are driven only by `Fuel.Live.RemainingStints`: `>2` publishes `STINT` from existing `Fuel.StintBurnTarget`; `>1` and `<=2` publishes `SESSION`; `<=1` publishes `END` from existing `Fuel.RequiredBurnToEnd`. Invalid selected sources publish `Target=0.0`, `TargetText=INVALID`, and `TargetValid=false`.
-- SESSION target uses current runtime fuel plus MFD requested fuel (`Fuel.Refuel.NextLitresCeil`), capped by runtime max tank (`Fuel.MaxTank` / effective runtime tank seam), minus active contingency litres, divided by numeric `Fuel.LiveLapsRemainingInRace_Stable`. It intentionally does not use Strategy planner fuel values or `Fuel.LiveLapsRemainingInRace_Stable_S`.
+- SESSION target uses current runtime fuel plus the actual MFD/requested add seam (`Fuel.Pit.WillAdd`, preserving its existing tank-space clamp), capped by runtime max tank (`Fuel.MaxTank` / effective runtime tank seam), minus active contingency litres, divided by numeric `Fuel.LiveLapsRemainingInRace_Stable`. It intentionally does not use Strategy planner fuel values, plugin-recommended `Fuel.Refuel.NextLitresCeil`, or `Fuel.LiveLapsRemainingInRace_Stable_S`.
 - Preserved existing `Fuel.StintBurnTarget`, `Fuel.RequiredBurnToEnd*`, `Fuel.Refuel.*`, `Fuel.Live.RemainingStints`, contingency resolver, Strategy planner, pit/refuel math, dashboard JSON, and XAML behavior.
 - Property Snapshot list reviewed: yes; new `Fuel.Burn.*` properties remain in the existing Fuel/Strategy group via the `Fuel.*` prefix rule.
 

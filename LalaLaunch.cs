@@ -10353,7 +10353,7 @@ namespace LaunchPlugin
             if (remainingStints > 1.0)
             {
                 double projectedLapsRemaining = LiveLapsRemainingInRace_Stable;
-                double requestedFuel = Fuel_Refuel_NextLitresCeil;
+                double actualMfdRequestedAdd = Pit_WillAdd;
                 double maxTank = Fuel_MaxTank > 0.0 ? Fuel_MaxTank : ResolveRuntimeLiveMaxTankCapacity();
                 double contingencyLitres = Contingency_Litres;
 
@@ -10361,12 +10361,12 @@ namespace LaunchPlugin
                     projectedLapsRemaining > 0.0 && !double.IsNaN(projectedLapsRemaining) && !double.IsInfinity(projectedLapsRemaining) &&
                     IsFiniteNonNegative(currentFuel) &&
                     maxTank > 0.0 && !double.IsNaN(maxTank) && !double.IsInfinity(maxTank) &&
-                    IsFiniteNonNegative(requestedFuel) &&
+                    IsFiniteNonNegative(actualMfdRequestedAdd) &&
                     IsFiniteNonNegative(contingencyLitres);
 
                 if (hasSessionBasis)
                 {
-                    double availableFuelToEnd = Math.Min(currentFuel + requestedFuel, maxTank) - contingencyLitres;
+                    double availableFuelToEnd = Math.Min(currentFuel + actualMfdRequestedAdd, maxTank) - contingencyLitres;
                     if (availableFuelToEnd > 0.0 && !double.IsNaN(availableFuelToEnd) && !double.IsInfinity(availableFuelToEnd))
                     {
                         Fuel_Burn_Target = availableFuelToEnd / projectedLapsRemaining;
