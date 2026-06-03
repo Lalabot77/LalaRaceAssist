@@ -229,6 +229,9 @@ namespace LaunchPlugin
             target.TeamID = row.TeamID;
             if (telemetryStale)
             {
+                target.GapTrackSec = double.NaN;
+                target.GapRelativeSec = double.NaN;
+                target.GapToPlayerSec = double.NaN;
                 return;
             }
 
@@ -997,48 +1000,67 @@ namespace LaunchPlugin
                 var result = new List<NativeCarRow>();
                 var seen = new HashSet<string>(StringComparer.Ordinal);
                 bool hasSessionTime = !double.IsNaN(sessionTimeSec) && !double.IsInfinity(sessionTimeSec);
+                var snapshotList = snapshotRows != null
+                    ? snapshotRows.Where(r => r != null && !string.IsNullOrWhiteSpace(r.IdentityKey)).ToList()
+                    : new List<NativeCarRow>();
+                var liveRowsByIdentity = new Dictionary<string, NativeCarRow>(StringComparer.Ordinal);
 
-                if (snapshotRows != null)
+                foreach (var row in snapshotList)
                 {
-                    foreach (var row in snapshotRows)
+                    if (row.IsConnected && row.HasValidLapDist && !liveRowsByIdentity.ContainsKey(row.IdentityKey))
                     {
-                        if (row == null || string.IsNullOrWhiteSpace(row.IdentityKey) || seen.Contains(row.IdentityKey))
-                        {
-                            continue;
-                        }
+                        liveRowsByIdentity[row.IdentityKey] = row;
+                    }
+                }
 
-                        bool isPlayer = string.Equals(row.IdentityKey, playerIdentityKey, StringComparison.Ordinal);
-                        bool liveUsable = row.IsConnected && row.HasValidLapDist;
-                        if (liveUsable)
-                        {
-                            row.TelemetryStale = false;
-                            result.Add(row);
-                            seen.Add(row.IdentityKey);
-                            if (!isPlayer && hasSessionTime)
-                            {
-                                _heldRowsByIdentity[row.IdentityKey] = new HeldOpponentRow(CloneRow(row), sessionTimeSec);
-                            }
-                            continue;
-                        }
+                foreach (var row in snapshotList)
+                {
+                    if (!liveRowsByIdentity.TryGetValue(row.IdentityKey, out NativeCarRow liveRow) || !object.ReferenceEquals(liveRow, row))
+                    {
+                        continue;
+                    }
 
-                        if (!isPlayer && IsHeldRowCarIdxMismatch(row.IdentityKey, row.CarIdx))
-                        {
-                            _heldRowsByIdentity.Remove(row.IdentityKey);
-                            seen.Add(row.IdentityKey);
-                            continue;
-                        }
+                    bool isPlayer = string.Equals(row.IdentityKey, playerIdentityKey, StringComparison.Ordinal);
+                    row.TelemetryStale = false;
+                    result.Add(row);
+                    seen.Add(row.IdentityKey);
+                    if (!isPlayer && hasSessionTime)
+                    {
+                        _heldRowsByIdentity[row.IdentityKey] = new HeldOpponentRow(CloneRow(row), sessionTimeSec);
+                    }
+                }
 
-                        if (row.IsConnected && !isPlayer)
-                        {
-                            TouchHeldRowMetadata(row);
-                        }
+                foreach (var row in snapshotList)
+                {
+                    if (seen.Contains(row.IdentityKey))
+                    {
+                        continue;
+                    }
 
-                        if (!isPlayer && TryGetHeldRow(row.IdentityKey, row.CarIdx, sessionTimeSec, out NativeCarRow heldRow))
-                        {
-                            MergeHeldRowMetadata(heldRow, row);
-                            result.Add(heldRow);
-                            seen.Add(heldRow.IdentityKey);
-                        }
+                    bool isPlayer = string.Equals(row.IdentityKey, playerIdentityKey, StringComparison.Ordinal);
+                    if (isPlayer)
+                    {
+                        seen.Add(row.IdentityKey);
+                        continue;
+                    }
+
+                    if (IsHeldRowCarIdxMismatch(row.IdentityKey, row.CarIdx))
+                    {
+                        _heldRowsByIdentity.Remove(row.IdentityKey);
+                        seen.Add(row.IdentityKey);
+                        continue;
+                    }
+
+                    if (row.IsConnected)
+                    {
+                        TouchHeldRowMetadata(row);
+                    }
+
+                    if (TryGetHeldRow(row.IdentityKey, row.CarIdx, sessionTimeSec, out NativeCarRow heldRow))
+                    {
+                        MergeHeldRowMetadata(heldRow, row);
+                        result.Add(heldRow);
+                        seen.Add(heldRow.IdentityKey);
                     }
                 }
 

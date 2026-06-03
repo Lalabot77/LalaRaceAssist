@@ -2646,6 +2646,7 @@ namespace LaunchPlugin
         {
             int slotCount = slots.Length;
             bool[] usedCarIdx = new bool[MaxCars];
+            int candidateCursor = 0;
             for (int slotIndex = 0; slotIndex < slotCount; slotIndex++)
             {
                 CarSASlot slot = slots[slotIndex];
@@ -2653,18 +2654,14 @@ namespace LaunchPlugin
                 {
                     blinkHeldSlots[slotIndex] = false;
                 }
-                int newIdx = candidateIdx[slotIndex];
-                double newDist = candidateDist[slotIndex];
+
+                AdvanceCandidateCursor(candidateIdx, usedCarIdx, ref candidateCursor);
+                int newIdx = GetCandidateIdx(candidateIdx, candidateCursor);
+                double newDist = GetCandidateDist(candidateDist, candidateCursor);
 
                 bool currentCarAlreadyUsed = slot.CarIdx >= 0
                     && slot.CarIdx < MaxCars
                     && usedCarIdx[slot.CarIdx];
-
-                if (newIdx >= 0 && newIdx < MaxCars && usedCarIdx[newIdx])
-                {
-                    newIdx = -1;
-                    newDist = double.MaxValue;
-                }
 
                 bool currentBlinkHoldEligible = ShouldHoldBlinkingSlot(slot, sessionTimeSec, carIdxLapDistPct, carIdxTrackSurface);
                 if (currentBlinkHoldEligible)
@@ -2685,6 +2682,7 @@ namespace LaunchPlugin
                     {
                         slot.BackwardDistPct = newDist;
                     }
+                    ConsumeCandidate(candidateIdx, candidateCursor, newIdx, ref candidateCursor);
                 }
                 else
                 {
@@ -2701,6 +2699,7 @@ namespace LaunchPlugin
                         if (newIdx != -1)
                         {
                             hysteresisReplacements++;
+                            ConsumeCandidate(candidateIdx, candidateCursor, newIdx, ref candidateCursor);
                         }
                     }
                     else if (newIdx != -1 && newDist < currentDist * HysteresisFactor)
@@ -2710,6 +2709,7 @@ namespace LaunchPlugin
                             slotCarIdxChanged++;
                         }
                         hysteresisReplacements++;
+                        ConsumeCandidate(candidateIdx, candidateCursor, newIdx, ref candidateCursor);
                     }
                     else
                     {
@@ -2720,6 +2720,10 @@ namespace LaunchPlugin
                         else
                         {
                             slot.BackwardDistPct = currentDist;
+                        }
+                        if (newIdx != -1)
+                        {
+                            ConsumeCandidate(candidateIdx, candidateCursor, newIdx, ref candidateCursor);
                         }
                     }
                 }
@@ -2734,6 +2738,53 @@ namespace LaunchPlugin
                 {
                     MarkSlotBlinkHeld(slot, isAhead);
                 }
+            }
+        }
+
+        private static void AdvanceCandidateCursor(int[] candidateIdx, bool[] usedCarIdx, ref int candidateCursor)
+        {
+            while (candidateIdx != null && candidateCursor < candidateIdx.Length)
+            {
+                int candidate = candidateIdx[candidateCursor];
+                if (candidate < 0 || candidate >= MaxCars || (usedCarIdx != null && usedCarIdx[candidate]))
+                {
+                    candidateCursor++;
+                    continue;
+                }
+
+                return;
+            }
+        }
+
+        private static int GetCandidateIdx(int[] candidateIdx, int candidateCursor)
+        {
+            if (candidateIdx == null || candidateCursor < 0 || candidateCursor >= candidateIdx.Length)
+            {
+                return -1;
+            }
+
+            return candidateIdx[candidateCursor];
+        }
+
+        private static double GetCandidateDist(double[] candidateDist, int candidateCursor)
+        {
+            if (candidateDist == null || candidateCursor < 0 || candidateCursor >= candidateDist.Length)
+            {
+                return double.MaxValue;
+            }
+
+            return candidateDist[candidateCursor];
+        }
+
+        private static void ConsumeCandidate(int[] candidateIdx, int candidateCursor, int consumedCarIdx, ref int nextCandidateCursor)
+        {
+            if (candidateIdx != null
+                && candidateCursor >= 0
+                && candidateCursor < candidateIdx.Length
+                && consumedCarIdx >= 0
+                && candidateIdx[candidateCursor] == consumedCarIdx)
+            {
+                nextCandidateCursor = candidateCursor + 1;
             }
         }
 

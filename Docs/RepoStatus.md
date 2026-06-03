@@ -1,5 +1,11 @@
 # Repo Status
 
+## 2026-06-03 — Blink-continuity deep stale-data review follow-up
+- PR #776 review follow-up tightened the bounded blink-continuity contract without changing export names or dashboard JSON.
+- CarSA now preserves the nearest live candidate behind a blink-held slot, preventing held A1/B1 identity continuity from hiding the next live target or forcing H2HTrack to skip to a farther live car.
+- Opponents now publishes telemetry-stale target gap exports as NaN and prefers any live usable same-identity row over an older held row during reconnect/DriverInfo churn; changed-`CarIdx` stale rows still fail closed.
+- Property Snapshot list reviewed: yes; no snapshot group change required because this task changed existing export values only within the existing Car/Opp/H2H contract.
+
 - 2026-06-03: H2HTrack blink-held CarSA selector fail-closed follow-up landed.
   - `BuildH2HTrackSelector(...)` now requires selected CarSA slots to be valid and on-track, so blink-held slots keep CarSA identity/cosmetics but cannot produce `H2HTrack.*.Valid=true` or live gap/timing during the held telemetry gap.
   - Normal valid on-track H2HTrack target selection, Opponents row hold behavior, H2HRace handling, export names, dashboard JSON, and fuel/pit/strategy/race-finish systems remain unchanged.

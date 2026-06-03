@@ -1,5 +1,12 @@
 # Development Changelog
 
+## 2026-06-03 — Blink-continuity deep stale-data review follow-up
+- Classification: **internal-only** (stale-data/candidate-preservation follow-up; no export names or dashboard JSON changed).
+- CarSA slot assignment now keeps a candidate cursor separate from held-slot identity preservation, so a blink-held A1/B1 does not consume or drop the nearest valid live candidate; following slots can still publish the next eligible live cars without duplicate `CarIdx` slots.
+- Opponents telemetry-stale targets now explicitly publish gap exports as NaN, and row continuity pre-scans for live usable canonical identities so live reconnect/DriverInfo duplicates win over older held rows.
+- Deep review confirmed H2HTrack remains fail-closed through `IsOnTrack` selector gating, H2HRace remains fail-closed through telemetry-stale `IsValid=false`/`CarIdx=-1` propagation, and pit-exit/checkpoint/lap-time ingestion continue to exclude telemetry-stale rows.
+- Property Snapshot list reviewed: yes; no exports/properties were added, removed, renamed, or regrouped.
+
 ## 2026-06-03 — H2HTrack blink-held CarSA selector fail-closed follow-up
 - Classification: **internal-only** (stale live-target suppression; no export names or dashboard JSON changed).
 - `BuildH2HTrackSelector(...)` now requires CarSA slots to be both valid and on-track, so blink-held slots (`IsOnTrack=false`) can preserve identity/cosmetics in CarSA exports without becoming live-valid H2HTrack timing targets.
