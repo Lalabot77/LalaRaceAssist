@@ -80,7 +80,7 @@ This is the canonical technical document for the pit/custom command stack and re
 - `SOURCE=PLAN` has been retired. The one-release compatibility action `Pit.FuelControl.SetPlan` now maps to `DATA=PLAN` + `SOURCE=STBY` and publishes `FUEL DATA PLAN`.
 - Legacy `Pit.FuelControl.PushSaveMode*` compatibility exports/actions were removed before public release; use `Pit.FuelControl.Data*` only.
 - `NORM` now follows DATA like `PUSH`/`SAVE`: `DATA LIVE` uses runtime/live stable normal target; `DATA PLAN` uses planner/profile normal target. `PUSH`/`SAVE` behavior is unchanged (`LIVE` selects live push/save targets; `PLAN` selects planner/profile memory push/save targets with the existing guarded fallback behavior).
-- Fault export state (`Pit.FuelControl.Fault`) for post-settle selector disagreement diagnostics only (`0/1/2/3` contract).
+- Fault export state (`Pit.FuelControl.Fault`) for post-settle selector disagreement diagnostics only (`0/1/2/3` contract). Plugin-owned requested-fuel expectations now have a bounded confirmation expiry: after the existing post-send suppression window plus a short confirmation allowance, a still-unconfirmed `PitSvFuel` mismatch is treated as external/manual MFD takeover, clearing the stale pending request and fault for that tick rather than latching a long-lived request fault.
 
 ### Tyre Control state
 - Mode state machine: `OFF -> DRY -> WET -> AUTO -> OFF`.
@@ -128,9 +128,9 @@ Canonical export names live in `Docs/Internal/SimHubParameterInventory.md`; key 
 - `Pit.TyreControl.*` (mode text/state + fault).
 
 Fault export contract (diagnostic/visual only):
-- `Pit.FuelControl.Fault`: `0=None`, `1=Mode fault`, `2=Source/request fault`, `3=Mode + Source/request fault`.
+- `Pit.FuelControl.Fault`: `0=None`, `1=Mode fault`, `2=Source/request fault`, `3=Mode + Source/request fault`. Stale plugin-owned requested-fuel expectations expire after the bounded confirmation window; expiry is handled as manual MFD authority takeover and clears the stale request/fault without changing fuel math or sending a command.
 - `Pit.TyreControl.Fault`: `0=None`, `1=Mode fault`, `2=Source/request fault`, `3=Mode + Source/request fault`.
-- Both exports intentionally suppress evaluation during each subsystem’s existing post-command settle/suppression windows to avoid normal latency flash.
+- Both exports intentionally suppress evaluation during each subsystem’s existing post-command settle/suppression windows to avoid normal latency flash. Pit Fuel Control also exposes MsgCx as a no-command recovery clear for stale pending fuel-control fault/request state.
 - Both exports compute from final post-tick state after mirror/remap/cancel handling; they are not latched from pre-remap state.
 - During intentional same-tick mirror/remap/cancel transitions (external mirror, truth-mirror, AUTO cancel), fault export is suppressed to `0` for that tick to avoid one-tick false non-zero flashes.
 - Fuel request-fault evaluation is ownership-gated (`AUTO`/armed ownership only), and external mirror/takeover handling clears pending owned mirror expectations so stale request ownership cannot leak after surrender.
