@@ -1,5 +1,14 @@
 # Development Changelog
 
+## 2026-06-03 — Fuel burn target SESSION pit-stop fuel credit
+- Classification: **both** (existing dashboard-facing `Fuel.Burn.Target` SESSION value changes; no export names or UI surfaces changed).
+- Refined only the `Fuel.Burn.Target` SESSION branch to add a fixed first-order pit-stop fuel-burn credit before calculating the session target: `ceil(validated Fuel.Live.RemainingStints) * 40.0s * (Fuel.Refuel.SelectedBurnPerLap / selected runtime refuel projection lap seconds)`.
+- Remaining stop-count source confirmed as existing plugin-owned validated `Fuel.Live.RemainingStints`, which is already computed from runtime refuel burn/projection context and normalized by runtime max-tank authority; it is rounded up conservatively because the source is exact tank-load/stint requirement.
+- Invalid/non-positive selected burn, projection lap seconds, or remaining stop count produce zero credit and preserve the previous SESSION calculation rather than invalidating SESSION.
+- Preserved STINT, END, INVALID, `Fuel.Burn.TargetText`, `Fuel.StintBurnTarget`, `Fuel.RequiredBurnToEnd`, `Fuel.Refuel.*`, `Fuel.Live.RemainingStints`, pit/refuel math, pit-loss learning, pit-window logic, Strategy planner, dashboard JSON, and XAML.
+- Property Snapshot list reviewed: yes; no group change required because existing `Fuel.Burn.*` exports remain covered by the `Fuel.*` Fuel/Strategy prefix.
+
+
 ## 2026-06-03 — Fuel burn target selector redesign
 - Classification: **both** (new dashboard-facing fuel target exports plus internal Fuel Model selector contract).
 - Phase 1 seam result: the clean raw driver-selected MFD fuel request seam exists at `DataCorePlugin.GameRawData.Telemetry.PitSvFuel`, with `dpFuelFill` indicating whether refuel is selected; `PitSvFuel` is upstream of tank-space clamp and is mirrored by Pit Fuel Control for both external/manual MFD changes and plugin-owned `#fuel` sends.
