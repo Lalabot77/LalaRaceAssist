@@ -1,5 +1,11 @@
 # Development Changelog
 
+## 2026-06-03 — Fuel burn target selector invalid-basis guard
+- Classification: **both** (dashboard-facing target validity clarification plus internal fail-closed selector fix).
+- `Fuel.Burn.Target*` now gates phase selection on the valid runtime refuel/stints basis (`Fuel.Refuel.Valid=true`) before interpreting `Fuel.Live.RemainingStints`; invalid refuel/runtime basis resets the target family to `0.0` / `INVALID` / `false`.
+- Preserved valid END selection for genuine valid `RemainingStints <= 1` when `Fuel.RequiredBurnToEnd` is positive. Existing STINT/SESSION thresholds, SESSION calculation, `Fuel.StintBurnTarget`, `Fuel.RequiredBurnToEnd*`, `Fuel.Refuel.*`, and `Fuel.Live.RemainingStints` behavior remain unchanged.
+- Property Snapshot list reviewed: yes; no export names or snapshot groups changed, and `Fuel.Burn.*` remains in Fuel/Strategy through the existing `Fuel.*` prefix rule.
+
 ## 2026-06-03 — Fuel burn target selector
 - Classification: **both** (additive dashboard-facing target exports plus internal Fuel Model seam documentation).
 - Added plugin-owned `Fuel.Burn.Target`, `Fuel.Burn.TargetText`, and `Fuel.Burn.TargetValid` exports so dashboards can consume one tactical burn target family instead of owning phase-selection formulas.

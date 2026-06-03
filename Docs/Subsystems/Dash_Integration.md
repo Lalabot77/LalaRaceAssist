@@ -243,7 +243,7 @@ The subsystem docs own message-system behavior; dashboards should remain consume
 
 ### Binding and consumption rules
 - Bind dashboard target-burn widgets to `Fuel.Burn.Target*` when the display needs the currently appropriate burn target. Dash Studio must not reimplement phase selection between stint, session-to-end, and end-of-race targets.
-- `TargetText` publishes `STINT`, `SESSION`, `END`, or `INVALID`. `TargetValid=false` means the selected source did not have defensible numeric inputs, and dashboards should treat `Target=0.0` as unavailable rather than a real burn target.
+- `TargetText` publishes `STINT`, `SESSION`, `END`, or `INVALID`. `TargetValid=false` means the runtime refuel/stints basis or selected source did not have defensible numeric inputs, and dashboards should treat `Target=0.0` as unavailable rather than a real burn target.
 - SESSION uses current fuel plus the MFD requested refuel amount (`Fuel.Refuel.NextLitresCeil`), capped by runtime max tank and reduced by active contingency, divided by numeric `Fuel.LiveLapsRemainingInRace_Stable`. Do not use planner fuel values or `Fuel.LiveLapsRemainingInRace_Stable_S` in dashboard formulas for this behavior.
 - Existing `Fuel.StintBurnTarget`, `Fuel.RequiredBurnToEnd*`, `Fuel.Refuel.*`, `Fuel.Live.RemainingStints`, pit/refuel, dashboard JSON, and XAML behavior remain unchanged; the new family is additive.
 

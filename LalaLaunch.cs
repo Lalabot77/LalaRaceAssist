@@ -10316,6 +10316,7 @@ namespace LaunchPlugin
             Fuel_Refuel_BurnMode = GetRefuelBurnModeText(_pitFuelControlEngine?.Source ?? PitFuelControlSource.Stby);
             Fuel_Refuel_SelectedBurnPerLap = 0.0;
             Fuel_Live_RemainingStints = 0.0;
+            ResetFuelBurnTargetSelector();
         }
 
         private void ResetFuelBurnTargetSelector()
@@ -10328,7 +10329,7 @@ namespace LaunchPlugin
         private void UpdateFuelBurnTargetSelector(double currentFuel)
         {
             double remainingStints = Fuel_Live_RemainingStints;
-            if (double.IsNaN(remainingStints) || double.IsInfinity(remainingStints))
+            if (!Fuel_Refuel_Valid || double.IsNaN(remainingStints) || double.IsInfinity(remainingStints))
             {
                 ResetFuelBurnTargetSelector();
                 return;
