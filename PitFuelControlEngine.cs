@@ -399,11 +399,9 @@ namespace LaunchPlugin
         public string DataText => DataToText(Data);
         public string ModeText => ModeToText(Mode);
 
-        public bool TryClearFaultOrStalePendingRequest(string reason)
+        public bool TryClearExpiredPendingOwnedRequest(string reason)
         {
-            bool clearForFault = Fault != 0;
-            bool clearForStalePending = !clearForFault && IsPendingOwnedRequestExpiredForCurrentTelemetry();
-            if (!clearForFault && !clearForStalePending)
+            if (!IsPendingOwnedRequestExpiredForCurrentTelemetry())
             {
                 return false;
             }
@@ -412,8 +410,7 @@ namespace LaunchPlugin
             Fault = 0;
 
             string safeReason = string.IsNullOrWhiteSpace(reason) ? "unspecified" : reason.Trim();
-            string clearReason = clearForFault ? "fault" : "stale-pending";
-            SimHub.Logging.Current.Info($"[LalaPlugin:PitFuelControl] stale pending/fault cleared reason={safeReason} clearReason={clearReason}");
+            SimHub.Logging.Current.Info($"[LalaPlugin:PitFuelControl] expired pending request cleared reason={safeReason}");
             return true;
         }
 
