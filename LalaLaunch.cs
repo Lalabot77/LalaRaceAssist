@@ -2370,11 +2370,6 @@ namespace LaunchPlugin
             Fuel_Burn_TargetValid = false;
         }
 
-        private static bool IsFiniteNonNegative(double value)
-        {
-            return value >= 0.0 && !double.IsNaN(value) && !double.IsInfinity(value);
-        }
-
         private bool TryReadRawMfdSelectedFuelRequestLitres(out double requestedLitres)
         {
             requestedLitres = 0.0;
