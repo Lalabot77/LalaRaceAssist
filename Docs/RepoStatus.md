@@ -7,7 +7,7 @@ Branch: work
 ## Current status
 - 2026-06-03: Pit Fuel Control stale request-fault expiry and MsgCx recovery landed.
   - Added a bounded confirmation expiry for plugin-owned requested-fuel expectations so a manual MFD fuel amount change absorbed during the post-send suppression window is treated as external/manual takeover instead of latching `Pit.FuelControl.Fault=2` indefinitely.
-  - MsgCx now invokes a no-command Pit Fuel Control recovery check after existing message-system notifications; it clears only pending requests that are already stale/expired by the confirmation-expiry rules, preserving live pending-command ownership, DATA/SOURCE/MODE semantics, and pit command transport behavior.
+  - MsgCx now invokes a no-command Pit Fuel Control recovery check after existing message-system notifications; when a pending request is already stale/expired by the confirmation-expiry rules, it routes through the same external/manual takeover handling as telemetry expiry, preserving live pending-command ownership, DATA/SOURCE/MODE semantics, and pit command transport behavior.
   - `Pit.FuelControl.Fault` values remain `0/1/2/3`; no exports were added, removed, or renamed.
   - Property Snapshot list reviewed: yes, no group change required because the existing `Pit.*` prefix still routes `Pit.FuelControl.*` into Pit/PitExit.
 
