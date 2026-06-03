@@ -2406,6 +2406,7 @@ namespace LaunchPlugin
             double currentFuel,
             double maxTankCapacity,
             double activeContingencyLitres,
+            bool hasRawMfdSelectedFuelRequest,
             double rawMfdSelectedFuelRequest)
         {
             if (!Fuel_Live_RemainingStintsValid ||
@@ -2430,7 +2431,7 @@ namespace LaunchPlugin
 
             if (remainingStints > 1.0)
             {
-                if (!IsFiniteNonNegative(rawMfdSelectedFuelRequest) || LiveLapsRemainingInRace_Stable <= 0.0)
+                if (!hasRawMfdSelectedFuelRequest || !IsFiniteNonNegative(rawMfdSelectedFuelRequest) || LiveLapsRemainingInRace_Stable <= 0.0)
                 {
                     ResetFuelBurnTargetSelector();
                     return;
@@ -5258,14 +5259,12 @@ namespace LaunchPlugin
                     }
                 }
 
-                if (hasRawMfdSelectedFuelRequest)
-                {
-                    UpdateFuelBurnTargetSelector(currentFuel, maxTankCapacity, Contingency_Litres, mfdSelectedFuelRequest);
-                }
-                else
-                {
-                    ResetFuelBurnTargetSelector();
-                }
+                UpdateFuelBurnTargetSelector(
+                    currentFuel,
+                    maxTankCapacity,
+                    Contingency_Litres,
+                    hasRawMfdSelectedFuelRequest,
+                    hasRawMfdSelectedFuelRequest ? mfdSelectedFuelRequest : 0.0);
 
                 double fuelPlanExit = currentFuel + requestedAddLitres;
                 double fuelWillAddExit = currentFuel + Pit_WillAdd;

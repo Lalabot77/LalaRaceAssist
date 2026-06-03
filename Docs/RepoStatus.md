@@ -4,6 +4,7 @@
   - Added plugin-owned `Fuel.Burn.Target`, `Fuel.Burn.TargetText`, and `Fuel.Burn.TargetValid` dashboard exports.
   - SESSION uses the raw driver-selected MFD fuel request seam (`PitSvFuel`, gated by `dpFuelFill`) before tank-space clamp and explicitly does not use `Fuel.Refuel.NextLitresCeil`, `Fuel.Pit.WillAdd`, plugin recommendations, planner fuel values, or tank-space-clamped add values.
   - Invalid/reset `Fuel.Live.RemainingStints=0` is not interpreted as END; the selector requires the internal remaining-stints validity basis and publishes `INVALID` when that basis is unavailable.
+  - Review follow-up: missing/unreadable `PitSvFuel` now invalidates only SESSION; STINT and END still publish from their own validated basis when the raw MFD request is unavailable.
   - END is guarded against reserve/contingency cases that still require another stop.
   - Preserved `Fuel.StintBurnTarget`, `Fuel.RequiredBurnToEnd`, `Fuel.Refuel.*`, pit/refuel math, dashboard JSON, and XAML.
   - Property Snapshot list reviewed: yes; new `Fuel.Burn.*` exports route through the existing `Fuel.*` prefix into the Fuel/Strategy group.

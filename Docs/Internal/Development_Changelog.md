@@ -10,6 +10,10 @@
 - Preserved `Fuel.StintBurnTarget`, `Fuel.RequiredBurnToEnd`, `Fuel.Refuel.*`, `Fuel.Pit.*`, Pit Fuel Control command/refuel math, dashboard JSON, and XAML.
 - Property Snapshot list reviewed: yes; new `Fuel.Burn.*` exports route through the existing `Fuel.*` prefix into the Fuel/Strategy group.
 
+### Review follow-up: do not gate STINT/END on raw MFD availability
+- Fixed selector invocation so missing/unreadable `PitSvFuel` invalidates only the SESSION branch. STINT and END now continue to publish from validated `Fuel.Live.RemainingStints`, `Fuel.StintBurnTarget`, and `Fuel.RequiredBurnToEnd` basis when raw MFD request telemetry is unavailable.
+- Preserved SESSION semantics: it still requires valid raw MFD-selected fuel request, still gates the value by `dpFuelFill`, and still does not use `Fuel.Refuel.NextLitresCeil`, `Fuel.Pit.WillAdd`, planner values, plugin recommendations, or tank-space-clamped add values.
+
 ## 2026-06-02 — Fuel burn analysis Avg10, minimum burn, and remaining-laps range
 - Classification: **both** (additive dashboard-facing analysis exports/action plus internal Fuel Model contract documentation).
 - Added `Fuel.Burn.Analysis.Avg10` from the existing fresh accepted-lap observer. Its backing rolling list now retains the latest 10 samples, while Avg3/Avg5 continue to select only their latest 3/5 and retain partial-window behavior.
