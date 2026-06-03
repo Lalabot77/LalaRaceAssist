@@ -1,5 +1,12 @@
 # Development Changelog
 
+## 2026-06-03 — Blink-hold precision suppression follow-up
+- Classification: **internal-only** (behavior precision fix; no export names or dashboard JSON changed).
+- Suppressed `Car.Ahead01P.Gap.Sec` / `Car.Behind01P.Gap.Sec` while the corresponding slot-01 blink hold is active, preventing recent gate truth from publishing as precision gap truth during a held telemetry gap.
+- Added a dedicated CarSA blink-hold eligibility timestamp so invalid-`LapDistPct` holds can last the intended 1.0 s window without being shortened by the existing 0.5 s LapPct delta/closing-cache grace.
+- Preserved existing LapPct cache grace, NotInWorld latch grace, valid live slot behavior, Opponents row hold behavior, export names, and dashboard JSON.
+- Property Snapshot list reviewed: yes, no group change required because no exports were added, removed, renamed, or regrouped.
+
 ## 2026-06-03 — CarSA/Opponents bounded opponent blink continuity
 - Classification: **internal-only** (runtime stability/observability behavior; no export names or dashboard JSON changed).
 - Added a 1.0 s CarSA physical-slot blink hold for existing ahead/behind `CarIdx` identities that briefly become NotInWorld or lose valid `LapDistPct`; identity/cosmetics are retained for target continuity while live gap truth is invalidated (`Gap.*` NaN/source 0, no checkpoint truth) until valid telemetry returns or the hold expires.

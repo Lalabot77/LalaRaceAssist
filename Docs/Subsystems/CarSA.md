@@ -33,7 +33,7 @@ CarSA keeps a car-centric shadow state per `CarIdx` that is authoritative for St
 - **Grace windows:**
   - **LapPct grace:** 0.5 s grace before clearing delta/closing data on invalid LapDistPct.
   - **Not-in-world grace:** 3.0 s before clearing latches if a car remains NotInWorld.
-  - **Blink slot hold:** existing ahead/behind slot identity can be retained for up to 1.0 s when the same `CarIdx` briefly becomes NotInWorld or loses valid `LapDistPct`. During this bounded hold the slot keeps identity/cosmetic fields for H2HTrack/dashboard continuity, but live gap truth is invalidated (`Gap.*` NaN/source 0), `IsOnTrack=false`, and direct checkpoint eligibility remains fail-closed. Valid telemetry for the same `CarIdx` resumes normal slot/gap behavior; timeout releases to normal candidate promotion.
+  - **Blink slot hold:** existing ahead/behind slot identity can be retained for up to 1.0 s when the same `CarIdx` briefly becomes NotInWorld or loses valid `LapDistPct`. During this bounded hold the slot keeps identity/cosmetic fields for H2HTrack/dashboard continuity, but live gap truth is invalidated (`Gap.*` NaN/source 0; slot-01 precision gap NaN when slot 01 is held), `IsOnTrack=false`, and direct checkpoint eligibility remains fail-closed. Valid telemetry for the same `CarIdx` resumes normal slot/gap behavior; timeout releases to normal candidate promotion.
 
 ## Fixed-6-sector cache
 CarSA owns the per-car fixed-6-sector cache consumed by H2H:

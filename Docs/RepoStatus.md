@@ -1,5 +1,11 @@
 # Repo Status
 
+- 2026-06-03: Blink-hold precision suppression follow-up landed.
+  - `Car.Ahead01P.Gap.Sec` / `Car.Behind01P.Gap.Sec` now publish `NaN` while the matching slot-01 blink hold is active, so precision outputs cannot leak recent gate truth during a held NotInWorld/invalid-LapDistPct gap.
+  - CarSA blink holds now use a dedicated eligibility timestamp instead of the delta-cache `LastValidSessionTime`, allowing invalid-`LapDistPct` holds to last the intended 1.0 s without changing the existing 0.5 s LapPct grace for delta/closing caches.
+  - Opponents row hold behavior, H2H selector ownership, export names, dashboard JSON, and Property Snapshot grouping remain unchanged.
+  - Property Snapshot list reviewed: yes, no group change required because no exports were added, removed, renamed, or regrouped.
+
 - 2026-06-03: CarSA/Opponents bounded opponent blink continuity landed.
   - CarSA now holds an existing physical ahead/behind slot identity for up to 1.0 s when the same `CarIdx` briefly becomes NotInWorld or loses valid `LapDistPct`; the hold preserves identity/cosmetics for H2HTrack/dashboard continuity but invalidates live gap truth and publishes not-on-track state until the same car returns or timeout releases normal promotion.
   - Opponents now holds known non-player race-order rows for up to 2.0 s across short NotInWorld/invalid-LapDistPct gaps, preserving the last RaceProgress anchor and avoiding immediate class re-rank; telemetry-stale rows skip the CarSA checkpoint seam and remain excluded from pit-exit prediction rows.

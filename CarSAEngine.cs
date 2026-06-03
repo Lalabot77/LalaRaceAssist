@@ -200,6 +200,7 @@ namespace LaunchPlugin
         private readonly double[] _gateGapLastPublishedSecByCar = new double[MaxCars];
         private readonly double[] _gateGapLastPublishedTimeSecByCar = new double[MaxCars];
         private readonly bool[] _directCheckpointEligibleByCar = new bool[MaxCars];
+        private readonly double[] _blinkHoldLastEligibleSessionTimeByCar = new double[MaxCars];
         private double _trackGapLastGoodScaleSec = double.NaN;
         private double _checkpointGapLapTimeUsedSec = double.NaN;
         private bool _hadValidTick;
@@ -1061,6 +1062,7 @@ namespace LaunchPlugin
             for (int i = 0; i < _carStates.Length; i++)
             {
                 _carStates[i].Reset(i);
+                _blinkHoldLastEligibleSessionTimeByCar[i] = double.NaN;
                 ClearFixedSectorCacheForCar(i);
             }
         }
@@ -1583,6 +1585,10 @@ namespace LaunchPlugin
                     state.LastGapPctAbs = gapPctAbs;
                     state.LastDeltaUpdateTime = sessionTimeSec;
                     state.LastValidSessionTime = sessionTimeSec;
+                    if (inWorldNow)
+                    {
+                        _blinkHoldLastEligibleSessionTimeByCar[carIdx] = sessionTimeSec;
+                    }
                 }
                 else
                 {
@@ -2031,8 +2037,17 @@ namespace LaunchPlugin
 
         private void UpdateSlot01PrecisionGaps(double sessionTimeSec, double lapTimeMapSec)
         {
-            _outputs.Ahead01PrecisionGapSec = ComputeSlotPrecisionGap(_outputs.AheadSlots, sessionTimeSec, lapTimeMapSec, true);
-            _outputs.Behind01PrecisionGapSec = ComputeSlotPrecisionGap(_outputs.BehindSlots, sessionTimeSec, lapTimeMapSec, false);
+            _outputs.Ahead01PrecisionGapSec = IsSlotBlinkHeld(_aheadSlotBlinkHeld, 0)
+                ? double.NaN
+                : ComputeSlotPrecisionGap(_outputs.AheadSlots, sessionTimeSec, lapTimeMapSec, true);
+            _outputs.Behind01PrecisionGapSec = IsSlotBlinkHeld(_behindSlotBlinkHeld, 0)
+                ? double.NaN
+                : ComputeSlotPrecisionGap(_outputs.BehindSlots, sessionTimeSec, lapTimeMapSec, false);
+        }
+
+        private static bool IsSlotBlinkHeld(bool[] blinkHeldSlots, int slotIndex)
+        {
+            return blinkHeldSlots != null && slotIndex >= 0 && slotIndex < blinkHeldSlots.Length && blinkHeldSlots[slotIndex];
         }
 
         private double ComputeSlotPrecisionGap(CarSASlot[] slots, double sessionTimeSec, double lapTimeUsed, bool isAhead)
@@ -2749,13 +2764,13 @@ namespace LaunchPlugin
                 return false;
             }
 
-            double lastValid = _carStates[carIdx].LastValidSessionTime;
-            if (double.IsNaN(lastValid) || double.IsInfinity(lastValid))
+            double lastBlinkEligible = _blinkHoldLastEligibleSessionTimeByCar[carIdx];
+            if (double.IsNaN(lastBlinkEligible) || double.IsInfinity(lastBlinkEligible))
             {
                 return false;
             }
 
-            double ageSec = sessionTimeSec - lastValid;
+            double ageSec = sessionTimeSec - lastBlinkEligible;
             return !double.IsNaN(ageSec) && !double.IsInfinity(ageSec) && ageSec >= 0.0 && ageSec <= BlinkSlotHoldSec;
         }
 
@@ -3682,6 +3697,7 @@ namespace LaunchPlugin
                 _gateGapLastPredictTimeSecByCar[carIdx] = double.NaN;
                 _gateGapLastPublishedSecByCar[carIdx] = double.NaN;
                 _gateGapLastPublishedTimeSecByCar[carIdx] = double.NaN;
+                _blinkHoldLastEligibleSessionTimeByCar[carIdx] = double.NaN;
                 SetDirectCheckpointEligibilityForCar(carIdx, false);
             }
         }
