@@ -10,6 +10,7 @@ namespace LaunchPlugin
     public class OpponentsEngine
     {
         private const int NeighborSlotCount = 5;
+        private const double BlinkRowHoldSec = 2.0;
         private const int TrackSurfaceOnTrack = 3;
 
         private readonly EntityCache _entityCache = new EntityCache();
@@ -86,7 +87,7 @@ namespace LaunchPlugin
 
             _playerIdentityKey = snapshot.PlayerIdentityKey;
             double validatedMyPace = SanitizePace(myPaceSec);
-            _raceModel.Build(snapshot, validatedMyPace, _entityCache, _isRaceContextClassMatch);
+            _raceModel.Build(snapshot, validatedMyPace, _entityCache, _isRaceContextClassMatch, sessionTimeSec);
             PublishRaceOutputs(validatedMyPace);
 
             if (isRaceSession)
@@ -229,6 +230,7 @@ namespace LaunchPlugin
             double preferredRelativeGapSec = trackGapSec;
 
             if (preferCarSaGap
+                && !row.TelemetryStale
                 && _tryGetCheckpointGapSec != null
                 && _raceModel.TryGetPlayerRow(out var playerRow)
                 && playerRow != null
@@ -254,7 +256,10 @@ namespace LaunchPlugin
             var entity = _entityCache.Touch(row.IdentityKey, row.Name, row.CarNumber, row.ClassColor);
             if (entity != null)
             {
-                entity.IngestLapTimes(row.LastLapSec, row.BestLapSec, row.IsInPit);
+                if (!row.TelemetryStale)
+                {
+                    entity.IngestLapTimes(row.LastLapSec, row.BestLapSec, row.IsInPit);
+                }
                 target.BlendedPaceSec = entity.GetBlendedPaceSec();
             }
 
@@ -848,6 +853,8 @@ namespace LaunchPlugin
             private readonly NativeCarRow[] _aheadSlots = new NativeCarRow[NeighborSlotCount];
             private readonly NativeCarRow[] _behindSlots = new NativeCarRow[NeighborSlotCount];
             private readonly Dictionary<int, int> _lastPitLapByCarIdx = new Dictionary<int, int>();
+            private readonly Dictionary<string, HeldOpponentRow> _heldRowsByIdentity = new Dictionary<string, HeldOpponentRow>(StringComparer.Ordinal);
+            private double _lastBuildSessionTimeSec = double.NaN;
 
             public NativeCarRow Player { get; private set; }
             public NativeCarRow Ahead1 => GetAheadSlot(0);
@@ -861,6 +868,8 @@ namespace LaunchPlugin
             {
                 ClearTransientState();
                 _lastPitLapByCarIdx.Clear();
+                _heldRowsByIdentity.Clear();
+                _lastBuildSessionTimeSec = double.NaN;
                 _paceReferenceSec = 120.0;
             }
 
@@ -872,11 +881,19 @@ namespace LaunchPlugin
                 Array.Clear(_behindSlots, 0, _behindSlots.Length);
             }
 
-            public void Build(NativeSnapshot snapshot, double myPaceSec, EntityCache cache, IsRaceContextClassMatch isRaceContextClassMatch)
+            public void Build(NativeSnapshot snapshot, double myPaceSec, EntityCache cache, IsRaceContextClassMatch isRaceContextClassMatch, double sessionTimeSec)
             {
                 ClearTransientState();
                 _raceContextClassMatchOverride = isRaceContextClassMatch;
-                _rows.AddRange(snapshot.Rows.Where(r => r != null && r.IsConnected && !string.IsNullOrWhiteSpace(r.IdentityKey)));
+                bool timeWentBackward = !double.IsNaN(_lastBuildSessionTimeSec)
+                    && !double.IsNaN(sessionTimeSec)
+                    && sessionTimeSec < _lastBuildSessionTimeSec;
+                if (timeWentBackward)
+                {
+                    _heldRowsByIdentity.Clear();
+                }
+                _lastBuildSessionTimeSec = sessionTimeSec;
+                _rows.AddRange(BuildRowsWithContinuity(snapshot.Rows, sessionTimeSec, snapshot.PlayerIdentityKey));
                 Player = _rows.FirstOrDefault(r => string.Equals(r.IdentityKey, snapshot.PlayerIdentityKey, StringComparison.Ordinal));
                 if (Player == null)
                 {
@@ -896,7 +913,10 @@ namespace LaunchPlugin
                     var entity = cache.Touch(row.IdentityKey, row.Name, row.CarNumber, row.ClassColor);
                     if (entity != null)
                     {
-                        entity.IngestLapTimes(row.LastLapSec, row.BestLapSec, row.IsInPit);
+                        if (!row.TelemetryStale)
+                        {
+                            entity.IngestLapTimes(row.LastLapSec, row.BestLapSec, row.IsInPit);
+                        }
                         row.BlendedPaceSec = entity.GetBlendedPaceSec();
                     }
                 }
@@ -963,6 +983,215 @@ namespace LaunchPlugin
                     ApplyGapToPlayer(Player, _aheadSlots[slotIndex]);
                     ApplyGapToPlayer(Player, _behindSlots[slotIndex]);
                 }
+            }
+
+
+            private List<NativeCarRow> BuildRowsWithContinuity(IEnumerable<NativeCarRow> snapshotRows, double sessionTimeSec, string playerIdentityKey)
+            {
+                var result = new List<NativeCarRow>();
+                var seen = new HashSet<string>(StringComparer.Ordinal);
+                bool hasSessionTime = !double.IsNaN(sessionTimeSec) && !double.IsInfinity(sessionTimeSec);
+
+                if (snapshotRows != null)
+                {
+                    foreach (var row in snapshotRows)
+                    {
+                        if (row == null || string.IsNullOrWhiteSpace(row.IdentityKey) || seen.Contains(row.IdentityKey))
+                        {
+                            continue;
+                        }
+
+                        bool isPlayer = string.Equals(row.IdentityKey, playerIdentityKey, StringComparison.Ordinal);
+                        bool liveUsable = row.IsConnected && row.HasValidLapDist;
+                        if (liveUsable)
+                        {
+                            row.TelemetryStale = false;
+                            result.Add(row);
+                            seen.Add(row.IdentityKey);
+                            if (!isPlayer && hasSessionTime)
+                            {
+                                _heldRowsByIdentity[row.IdentityKey] = new HeldOpponentRow(CloneRow(row), sessionTimeSec);
+                            }
+                            continue;
+                        }
+
+                        if (row.IsConnected && !isPlayer)
+                        {
+                            TouchHeldRowMetadata(row);
+                        }
+
+                        if (!isPlayer && TryGetHeldRow(row.IdentityKey, row.CarIdx, sessionTimeSec, out NativeCarRow heldRow))
+                        {
+                            MergeHeldRowMetadata(heldRow, row);
+                            result.Add(heldRow);
+                            seen.Add(heldRow.IdentityKey);
+                        }
+                    }
+                }
+
+                AddUnseenHeldRows(result, seen, sessionTimeSec);
+                PruneExpiredHeldRows(sessionTimeSec);
+                return result;
+            }
+
+            private void AddUnseenHeldRows(List<NativeCarRow> result, HashSet<string> seen, double sessionTimeSec)
+            {
+                if (result == null || seen == null || _heldRowsByIdentity.Count == 0 || double.IsNaN(sessionTimeSec) || double.IsInfinity(sessionTimeSec))
+                {
+                    return;
+                }
+
+                foreach (var kv in _heldRowsByIdentity)
+                {
+                    if (string.IsNullOrWhiteSpace(kv.Key) || seen.Contains(kv.Key))
+                    {
+                        continue;
+                    }
+
+                    if (TryGetHeldRow(kv.Key, -1, sessionTimeSec, out NativeCarRow heldRow))
+                    {
+                        result.Add(heldRow);
+                        seen.Add(kv.Key);
+                    }
+                }
+            }
+
+            private bool TryGetHeldRow(string identityKey, int currentCarIdx, double sessionTimeSec, out NativeCarRow heldRow)
+            {
+                heldRow = null;
+                if (string.IsNullOrWhiteSpace(identityKey) || double.IsNaN(sessionTimeSec) || double.IsInfinity(sessionTimeSec))
+                {
+                    return false;
+                }
+
+                if (!_heldRowsByIdentity.TryGetValue(identityKey, out HeldOpponentRow held) || held == null || held.Row == null)
+                {
+                    return false;
+                }
+
+                if (currentCarIdx >= 0 && held.Row.CarIdx >= 0 && currentCarIdx != held.Row.CarIdx)
+                {
+                    return false;
+                }
+
+                double ageSec = sessionTimeSec - held.LastLiveSessionTimeSec;
+                if (double.IsNaN(ageSec) || double.IsInfinity(ageSec) || ageSec < 0.0 || ageSec > BlinkRowHoldSec)
+                {
+                    return false;
+                }
+
+                heldRow = CloneRow(held.Row);
+                heldRow.TelemetryStale = true;
+                heldRow.IsConnected = true;
+                heldRow.IsOnTrack = false;
+                heldRow.IsInPit = false;
+                return true;
+            }
+
+            private void TouchHeldRowMetadata(NativeCarRow row)
+            {
+                if (row == null || string.IsNullOrWhiteSpace(row.IdentityKey))
+                {
+                    return;
+                }
+
+                if (_heldRowsByIdentity.TryGetValue(row.IdentityKey, out HeldOpponentRow held) && held != null && held.Row != null)
+                {
+                    MergeHeldRowMetadata(held.Row, row);
+                }
+            }
+
+            private void PruneExpiredHeldRows(double sessionTimeSec)
+            {
+                if (_heldRowsByIdentity.Count == 0 || double.IsNaN(sessionTimeSec) || double.IsInfinity(sessionTimeSec))
+                {
+                    return;
+                }
+
+                var staleKeys = _heldRowsByIdentity
+                    .Where(kv => kv.Value == null || kv.Value.Row == null || (sessionTimeSec - kv.Value.LastLiveSessionTimeSec) > BlinkRowHoldSec)
+                    .Select(kv => kv.Key)
+                    .ToList();
+                for (int i = 0; i < staleKeys.Count; i++)
+                {
+                    _heldRowsByIdentity.Remove(staleKeys[i]);
+                }
+            }
+
+            private static void MergeHeldRowMetadata(NativeCarRow heldRow, NativeCarRow currentRow)
+            {
+                if (heldRow == null || currentRow == null)
+                {
+                    return;
+                }
+
+                if (!string.IsNullOrWhiteSpace(currentRow.Name)) heldRow.Name = currentRow.Name;
+                if (!string.IsNullOrWhiteSpace(currentRow.AbbrevName)) heldRow.AbbrevName = currentRow.AbbrevName;
+                if (!string.IsNullOrWhiteSpace(currentRow.CarNumber)) heldRow.CarNumber = currentRow.CarNumber;
+                if (!string.IsNullOrWhiteSpace(currentRow.ClassColor)) heldRow.ClassColor = currentRow.ClassColor;
+                if (!string.IsNullOrWhiteSpace(currentRow.ClassName)) heldRow.ClassName = currentRow.ClassName;
+                if (currentRow.IRating > 0) heldRow.IRating = currentRow.IRating;
+                if (!string.IsNullOrWhiteSpace(currentRow.Licence)) heldRow.Licence = currentRow.Licence;
+                if (!double.IsNaN(currentRow.SafetyRating) && !double.IsInfinity(currentRow.SafetyRating)) heldRow.SafetyRating = currentRow.SafetyRating;
+                if (currentRow.LicLevel > 0) heldRow.LicLevel = currentRow.LicLevel;
+                if (currentRow.UserID > 0) heldRow.UserID = currentRow.UserID;
+                if (currentRow.TeamID > 0) heldRow.TeamID = currentRow.TeamID;
+                if (currentRow.OfficialPositionInClass > 0) heldRow.OfficialPositionInClass = currentRow.OfficialPositionInClass;
+                if (IsValidLapTimeSec(currentRow.BestLapSec)) heldRow.BestLapSec = currentRow.BestLapSec;
+                if (IsValidLapTimeSec(currentRow.LastLapSec)) heldRow.LastLapSec = currentRow.LastLapSec;
+            }
+
+            private static NativeCarRow CloneRow(NativeCarRow row)
+            {
+                if (row == null)
+                {
+                    return null;
+                }
+
+                return new NativeCarRow
+                {
+                    CarIdx = row.CarIdx,
+                    IdentityKey = row.IdentityKey,
+                    Name = row.Name,
+                    AbbrevName = row.AbbrevName,
+                    CarNumber = row.CarNumber,
+                    ClassColor = row.ClassColor,
+                    ClassName = row.ClassName,
+                    IRating = row.IRating,
+                    Licence = row.Licence,
+                    SafetyRating = row.SafetyRating,
+                    LicLevel = row.LicLevel,
+                    UserID = row.UserID,
+                    TeamID = row.TeamID,
+                    PositionOverall = row.PositionOverall,
+                    OfficialPositionInClass = row.OfficialPositionInClass,
+                    ProgressPositionInClass = row.ProgressPositionInClass,
+                    EffectivePositionInClass = row.EffectivePositionInClass,
+                    GapToPlayerSec = row.GapToPlayerSec,
+                    IsConnected = row.IsConnected,
+                    TelemetryStale = row.TelemetryStale,
+                    IsOnTrack = row.IsOnTrack,
+                    IsInPit = row.IsInPit,
+                    Lap = row.Lap,
+                    LapDistPct = row.LapDistPct,
+                    HasValidLapDist = row.HasValidLapDist,
+                    BestLapSec = row.BestLapSec,
+                    LastLapSec = row.LastLapSec,
+                    BlendedPaceSec = row.BlendedPaceSec,
+                    LapsSincePit = row.LapsSincePit
+                };
+            }
+
+            private sealed class HeldOpponentRow
+            {
+                public HeldOpponentRow(NativeCarRow row, double lastLiveSessionTimeSec)
+                {
+                    Row = row;
+                    LastLiveSessionTimeSec = lastLiveSessionTimeSec;
+                }
+
+                public NativeCarRow Row { get; private set; }
+                public double LastLiveSessionTimeSec { get; private set; }
             }
 
             private void PrunePitLapStateToVisibleRows()
@@ -1222,7 +1451,7 @@ namespace LaunchPlugin
                     return;
                 }
 
-                var classRows = raceModel.Rows.Where(r => raceModel.IsRaceContextClassMatch(player, r) && r.IsConnected && r.HasValidLapDist).ToList();
+                var classRows = raceModel.Rows.Where(r => raceModel.IsRaceContextClassMatch(player, r) && r.IsConnected && r.HasValidLapDist && !r.TelemetryStale).ToList();
                 if (classRows.Count == 0 || !player.HasValidLapDist)
                 {
                     SetInvalid(allowLogs);
@@ -1658,6 +1887,7 @@ namespace LaunchPlugin
             public int EffectivePositionInClass;
             public double GapToPlayerSec;
             public bool IsConnected;
+            public bool TelemetryStale;
             public bool IsOnTrack;
             public bool IsInPit;
             public int Lap;

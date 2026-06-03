@@ -1,7 +1,7 @@
 # Head-to-Head (H2H)
 
 Validated against commit: HEAD
-Last updated: 2026-05-06
+Last updated: 2026-06-03
 Branch: work
 
 ## Purpose
@@ -41,6 +41,7 @@ H2H sector publication is intentionally simple:
 - Scans CarSA ahead/behind slots and uses the nearest valid same-class local track target.
 - Can be more volatile than race mode because local on-track slots can swap as nearby cars change.
 - When the selected track target changes, H2H immediately republishes `S1..S6State` / `S1..S6DeltaSec` from the new target's existing CarSA cache if present. If the new target has no cached value for a sector, that sector naturally publishes `empty`/`0`. There is no bind-clear rebuild window.
+- Short CarSA blink holds can keep the same track-target identity through brief NotInWorld/invalid-LapDistPct gaps. H2H does not own that hold; it simply benefits from CarSA preserving the selector while H2H live timing/gap validity still follows usable current telemetry.
 
 ### H2HRace
 - Uses Opponents class-ahead / class-behind identity as the race selector input.
@@ -49,7 +50,7 @@ H2H sector publication is intentionally simple:
 - If direct session-info identity lookup misses for a known race target, H2H can use a narrow local live-session fallback by probing current CarSA slots: exact normalized H2H identity remains the first path, then a bounded car-number fallback can recover the live `CarIdx` when the nearby CarSA slot has the same car number and, when available, the same resolved driver name even if class-color identity differs. Selector ownership still stays in Opponents.
 - If the identity stays the same but the resolved `CarIdx` changes, the published `S1..S6State` / `S1..S6DeltaSec` outputs switch immediately to the newly resolved car's CarSA cache contents. If no cached sector exists yet, the row shows `empty`/`0` naturally.
 - If same-identity reverse resolution blips for a tick, H2H keeps the previous `CarIdx` binding/state instead of forcing a false selector reset.
-- If Opponents intentionally clears the race selector, H2H clears/inactivates the race target instead of reviving a stale previous identity.
+- Short Opponents blink holds can keep the same race selector through brief NotInWorld/invalid-LapDistPct gaps. H2H does not own that hold; if Opponents intentionally clears the race selector after hold expiry, H2H clears/inactivates the race target instead of reviving a stale previous identity.
 - If the target identity genuinely cannot currently be resolved, the identity/cosmetic fields can remain latched while `Valid` falls false.
 
 ## Numeric semantics

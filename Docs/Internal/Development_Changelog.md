@@ -1,5 +1,12 @@
 # Development Changelog
 
+## 2026-06-03 — CarSA/Opponents bounded opponent blink continuity
+- Classification: **internal-only** (runtime stability/observability behavior; no export names or dashboard JSON changed).
+- Added a 1.0 s CarSA physical-slot blink hold for existing ahead/behind `CarIdx` identities that briefly become NotInWorld or lose valid `LapDistPct`; identity/cosmetics are retained for target continuity while live gap truth is invalidated (`Gap.*` NaN/source 0, no checkpoint truth) until valid telemetry returns or the hold expires.
+- Added a 2.0 s Opponents row hold for known non-player race-order rows with the same canonical identity/`CarIdx`; held rows keep their last RaceProgress anchor, publish as not on track, skip the CarSA checkpoint preferred gap, and are excluded from pit-exit prediction rows to avoid expanding pit-exit behavior.
+- Message debounce intentionally deferred; the first fix is upstream data continuity, with MSGV1 debounce reserved for future captures showing sustained class-position oscillation after the row hold.
+- Property Snapshot list reviewed: yes, no group change required because no exports were added, removed, renamed, or regrouped.
+
 ## 2026-06-03 — Pit Fuel Control stale request-fault expiry
 - Classification: **both** (driver-facing recovery behavior + internal fault-lifecycle hardening).
 - Added a bounded pending-owned requested-fuel confirmation expiry in `PitFuelControlEngine`: after the existing 900 ms post-send suppression and short confirmation allowance, a still-mismatched valid `PitSvFuel` is treated as external/manual MFD takeover, clearing stale pending ownership and `Pit.FuelControl.Fault` for that tick.
