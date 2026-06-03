@@ -594,7 +594,7 @@ namespace LaunchPlugin
             _msgSystem?.TriggerMsgCx();
             _rejoinEngine?.TriggerMsgCxOverride();
             _msgV1Engine?.OnMsgCxPressed();
-            _pitFuelControlEngine?.ClearFaultAndPendingRequest("MsgCx");
+            _pitFuelControlEngine?.TryClearFaultOrStalePendingRequest("MsgCx");
 
             SimHub.Logging.Current.Info("[LalaPlugin:MsgCx] MsgCx action fired (pressed latched + engines notified + pit fuel fault recovery checked).");
         }

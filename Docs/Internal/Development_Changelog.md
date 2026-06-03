@@ -3,7 +3,7 @@
 ## 2026-06-03 — Pit Fuel Control stale request-fault expiry
 - Classification: **both** (driver-facing recovery behavior + internal fault-lifecycle hardening).
 - Added a bounded pending-owned requested-fuel confirmation expiry in `PitFuelControlEngine`: after the existing 900 ms post-send suppression and short confirmation allowance, a still-mismatched valid `PitSvFuel` is treated as external/manual MFD takeover, clearing stale pending ownership and `Pit.FuelControl.Fault` for that tick.
-- Added a MsgCx no-command recovery hook that clears stale Pit Fuel Control pending-owned request/fault state after existing message-system notifications; it does not send pit commands and does not change DATA selection.
+- Narrowed the MsgCx no-command recovery hook so it clears Pit Fuel Control pending-owned request/fault state only when `Pit.FuelControl.Fault` is non-zero or the pending request is already stale by the same confirmation-expiry rules; it does not send pit commands and does not change DATA selection.
 - Preserved `Pit.FuelControl.Fault` value contract (`0/1/2/3`), DATA/SOURCE/MODE semantics, fuel/refuel math, pit-command transport, Strategy planner math, dashboard JSON, and export names.
 - Property Snapshot list reviewed: yes, no grouping update needed because no exports changed and `Pit.FuelControl.*` remains under the existing `Pit.*` Pit/PitExit group.
 

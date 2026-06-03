@@ -399,17 +399,22 @@ namespace LaunchPlugin
         public string DataText => DataToText(Data);
         public string ModeText => ModeToText(Mode);
 
-        public void ClearFaultAndPendingRequest(string reason)
+        public bool TryClearFaultOrStalePendingRequest(string reason)
         {
-            bool hadState = Fault != 0 || _hasPendingOwnedRequestedFuelLitres || _hasPendingOwnedFuelFillEnabled;
+            bool clearForFault = Fault != 0;
+            bool clearForStalePending = !clearForFault && IsPendingOwnedRequestExpiredForCurrentTelemetry();
+            if (!clearForFault && !clearForStalePending)
+            {
+                return false;
+            }
+
             ClearPendingOwnedMirrorExpectations();
             Fault = 0;
 
-            if (hadState)
-            {
-                string safeReason = string.IsNullOrWhiteSpace(reason) ? "unspecified" : reason.Trim();
-                SimHub.Logging.Current.Info($"[LalaPlugin:PitFuelControl] stale pending/fault cleared reason={safeReason}");
-            }
+            string safeReason = string.IsNullOrWhiteSpace(reason) ? "unspecified" : reason.Trim();
+            string clearReason = clearForFault ? "fault" : "stale-pending";
+            SimHub.Logging.Current.Info($"[LalaPlugin:PitFuelControl] stale pending/fault cleared reason={safeReason} clearReason={clearReason}");
+            return true;
         }
 
         private void SetSource(PitFuelControlSource requestedSource, string actionName)
@@ -901,6 +906,32 @@ namespace LaunchPlugin
 
         private bool TryHandleExpiredPendingOwnedRequest(double currentRequestedRawLitres, int currentRequestedLitres, bool currentFuelFillEnabled)
         {
+            if (!IsPendingOwnedRequestExpired(currentRequestedRawLitres, currentRequestedLitres))
+            {
+                return false;
+            }
+
+            SimHub.Logging.Current.Info(
+                $"[LalaPlugin:PitFuelControl] stale owned fuel request expired pending={_pendingOwnedRequestedFuelLitres} current={currentRequestedLitres} ageMs={(DateTime.UtcNow - _pendingOwnedRequestedFuelLitresQueuedUtc).TotalMilliseconds:F0}");
+            HandleExternalMirrorChange(currentFuelFillEnabled, requestedFuelChanged: true);
+            return true;
+        }
+
+        private bool IsPendingOwnedRequestExpiredForCurrentTelemetry()
+        {
+            var snapshot = _snapshotProvider();
+            if (snapshot == null)
+            {
+                return false;
+            }
+
+            double currentRequestedRawLitres = snapshot.TelemetryRequestedFuelLitres;
+            int currentRequestedLitres = RoundUpLitres(currentRequestedRawLitres);
+            return IsPendingOwnedRequestExpired(currentRequestedRawLitres, currentRequestedLitres);
+        }
+
+        private bool IsPendingOwnedRequestExpired(double currentRequestedRawLitres, int currentRequestedLitres)
+        {
             if (!_hasPendingOwnedRequestedFuelLitres)
             {
                 return false;
@@ -935,9 +966,6 @@ namespace LaunchPlugin
                 return false;
             }
 
-            SimHub.Logging.Current.Info(
-                $"[LalaPlugin:PitFuelControl] stale owned fuel request expired pending={_pendingOwnedRequestedFuelLitres} current={currentRequestedLitres} ageMs={(DateTime.UtcNow - _pendingOwnedRequestedFuelLitresQueuedUtc).TotalMilliseconds:F0}");
-            HandleExternalMirrorChange(currentFuelFillEnabled, requestedFuelChanged: true);
             return true;
         }
 
