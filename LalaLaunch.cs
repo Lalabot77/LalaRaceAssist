@@ -16404,6 +16404,20 @@ namespace LaunchPlugin
                 userId = previousOutput.UserID;
             }
 
+            if (current != null && !current.IsValid)
+            {
+                return new H2HEngine.TargetSelector
+                {
+                    CarIdx = -1,
+                    IdentityKey = identityKey,
+                    Name = name,
+                    CarNumber = carNumber,
+                    ClassColor = NormalizeH2HClassColor(classColor),
+                    UserID = userId > 0 ? userId : 0,
+                    PositionInClass = positionInClass > 0 ? positionInClass : 0
+                };
+            }
+
             int carIdx = -1;
             if (TryResolveCarIdxByIdentityKey(pluginManager, identityKey, out int resolvedCarIdx))
             {

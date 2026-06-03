@@ -1,5 +1,11 @@
 # Repo Status
 
+- 2026-06-03: Blink-hold stale-data leak follow-up landed.
+  - CarSA blink-hold eligibility now runs before the same-candidate fast path, preventing cached LapPct-grace distances from publishing stale normal gaps during the first invalid-`LapDistPct` ticks.
+  - Opponents now fails closed when a held canonical identity appears at a different `CarIdx`, removing the old hold/marking the identity seen so `AddUnseenHeldRows` cannot resurrect the stale old row.
+  - Telemetry-stale Opponents targets now preserve identity/effective-position continuity but publish not live-valid (`IsValid=false`, `CarIdx=-1`, no live gap truth), and H2HRace selector propagation keeps stale identity with `CarIdx=-1` so H2H live timing/gap validity falls false.
+  - Property Snapshot list reviewed: yes, no group change required because no exports were added, removed, renamed, or regrouped.
+
 - 2026-06-03: Blink-hold precision suppression follow-up landed.
   - `Car.Ahead01P.Gap.Sec` / `Car.Behind01P.Gap.Sec` now publish `NaN` while the matching slot-01 blink hold is active, so precision outputs cannot leak recent gate truth during a held NotInWorld/invalid-LapDistPct gap.
   - CarSA blink holds now use a dedicated eligibility timestamp instead of the delta-cache `LastValidSessionTime`, allowing invalid-`LapDistPct` holds to last the intended 1.0 s without changing the existing 0.5 s LapPct grace for delta/closing caches.

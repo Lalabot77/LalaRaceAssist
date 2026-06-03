@@ -1,5 +1,12 @@
 # Development Changelog
 
+## 2026-06-03 — Blink-hold stale-data leak follow-up
+- Classification: **internal-only** (stale-data suppression follow-up; no export names or dashboard JSON changed).
+- CarSA now evaluates blink-hold eligibility before the same-candidate slot fast path, so invalid-`LapDistPct` starts the hold immediately and normal/precision gap fields publish invalid values from the first affected tick.
+- Opponents now removes/marks seen a held identity when the current snapshot reports the same canonical identity at a different `CarIdx`, preventing the old held row from being resurrected during reconnect/DriverInfo churn.
+- Telemetry-stale Opponents targets now preserve identity/effective-position continuity but publish as not live-valid (`IsValid=false`, `CarIdx=-1`, no live gap truth); H2HRace selector propagation keeps stale identity with `CarIdx=-1` so H2H live timing/gap validity falls false instead of resolving stale live timing.
+- Property Snapshot list reviewed: yes, no group change required because no exports were added, removed, renamed, or regrouped.
+
 ## 2026-06-03 — Blink-hold precision suppression follow-up
 - Classification: **internal-only** (behavior precision fix; no export names or dashboard JSON changed).
 - Suppressed `Car.Ahead01P.Gap.Sec` / `Car.Behind01P.Gap.Sec` while the corresponding slot-01 blink hold is active, preventing recent gate truth from publishing as precision gap truth during a held telemetry gap.

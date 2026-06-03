@@ -2666,7 +2666,16 @@ namespace LaunchPlugin
                     newDist = double.MaxValue;
                 }
 
-                if (!currentCarAlreadyUsed && newIdx == slot.CarIdx && slot.CarIdx >= 0)
+                bool currentBlinkHoldEligible = ShouldHoldBlinkingSlot(slot, sessionTimeSec, carIdxLapDistPct, carIdxTrackSurface);
+                if (currentBlinkHoldEligible)
+                {
+                    MarkSlotBlinkHeld(slot, isAhead);
+                    if (blinkHeldSlots != null && slotIndex < blinkHeldSlots.Length)
+                    {
+                        blinkHeldSlots[slotIndex] = true;
+                    }
+                }
+                else if (!currentCarAlreadyUsed && newIdx == slot.CarIdx && slot.CarIdx >= 0)
                 {
                     if (isAhead)
                     {
@@ -2683,16 +2692,7 @@ namespace LaunchPlugin
                     bool currentValid = !currentCarAlreadyUsed
                         && TryComputeDistance(playerCarIdx, playerLapPct, slot.CarIdx, carIdxLapDistPct, isAhead, out currentDist);
 
-                    bool currentBlinkHoldEligible = ShouldHoldBlinkingSlot(slot, sessionTimeSec, carIdxLapDistPct, carIdxTrackSurface);
-                    if (currentBlinkHoldEligible)
-                    {
-                        MarkSlotBlinkHeld(slot, isAhead);
-                        if (blinkHeldSlots != null && slotIndex < blinkHeldSlots.Length)
-                        {
-                            blinkHeldSlots[slotIndex] = true;
-                        }
-                    }
-                    else if (!currentValid)
+                    if (!currentValid)
                     {
                         if (ApplySlotAssignment(slot, newIdx, newDist, isAhead, sessionTimeSec))
                         {

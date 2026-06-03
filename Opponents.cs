@@ -204,28 +204,34 @@ namespace LaunchPlugin
                 return;
             }
 
+            bool telemetryStale = row.TelemetryStale;
             target.Name = row.Name ?? string.Empty;
             target.AbbrevName = row.AbbrevName ?? string.Empty;
             target.CarNumber = row.CarNumber ?? string.Empty;
-            target.CarIdx = row.CarIdx;
+            target.CarIdx = telemetryStale ? -1 : row.CarIdx;
             target.ClassName = row.ClassName ?? string.Empty;
             target.ClassColor = row.ClassColor ?? string.Empty;
             target.ClassColorHex = NormalizeClassColorHexHash(row.ClassColor);
-            target.IsValid = true;
-            target.IsOnTrack = row.IsOnTrack;
-            target.IsOnPitRoad = row.IsInPit;
+            target.IsValid = !telemetryStale;
+            target.IsOnTrack = !telemetryStale && row.IsOnTrack;
+            target.IsOnPitRoad = !telemetryStale && row.IsInPit;
             target.PositionInClass = row.EffectivePositionInClass > 0 ? row.EffectivePositionInClass : 0;
             target.LastLapTimeSec = row.LastLapSec;
             target.BestLapTimeSec = row.BestLapSec;
             target.LastLap = FormatLapTime(row.LastLapSec);
             target.BestLap = FormatLapTime(row.BestLapSec);
-            target.LapsSincePit = row.LapsSincePit;
+            target.LapsSincePit = telemetryStale ? -1 : row.LapsSincePit;
             target.IRating = row.IRating;
             target.SafetyRating = row.SafetyRating;
             target.Licence = row.Licence ?? string.Empty;
             target.LicLevel = row.LicLevel;
             target.UserID = row.UserID;
             target.TeamID = row.TeamID;
+            if (telemetryStale)
+            {
+                return;
+            }
+
             double trackGapSec = row.GapToPlayerSec;
             double preferredRelativeGapSec = trackGapSec;
 
@@ -1015,6 +1021,13 @@ namespace LaunchPlugin
                             continue;
                         }
 
+                        if (!isPlayer && IsHeldRowCarIdxMismatch(row.IdentityKey, row.CarIdx))
+                        {
+                            _heldRowsByIdentity.Remove(row.IdentityKey);
+                            seen.Add(row.IdentityKey);
+                            continue;
+                        }
+
                         if (row.IsConnected && !isPlayer)
                         {
                             TouchHeldRowMetadata(row);
@@ -1032,6 +1045,21 @@ namespace LaunchPlugin
                 AddUnseenHeldRows(result, seen, sessionTimeSec);
                 PruneExpiredHeldRows(sessionTimeSec);
                 return result;
+            }
+
+
+            private bool IsHeldRowCarIdxMismatch(string identityKey, int currentCarIdx)
+            {
+                if (string.IsNullOrWhiteSpace(identityKey) || currentCarIdx < 0)
+                {
+                    return false;
+                }
+
+                return _heldRowsByIdentity.TryGetValue(identityKey, out HeldOpponentRow held)
+                    && held != null
+                    && held.Row != null
+                    && held.Row.CarIdx >= 0
+                    && held.Row.CarIdx != currentCarIdx;
             }
 
             private void AddUnseenHeldRows(List<NativeCarRow> result, HashSet<string> seen, double sessionTimeSec)
