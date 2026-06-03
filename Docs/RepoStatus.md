@@ -1,10 +1,16 @@
 # Repo Status
 
 Validated against commit: HEAD
-Last updated: 2026-06-02
+Last updated: 2026-06-03
 Branch: work
 
 ## Current status
+- 2026-06-03: Pit Fuel Control stale request-fault expiry and MsgCx recovery landed.
+  - Added a bounded confirmation expiry for plugin-owned requested-fuel expectations so a manual MFD fuel amount change absorbed during the post-send suppression window is treated as external/manual takeover instead of latching `Pit.FuelControl.Fault=2` indefinitely.
+  - MsgCx now invokes a no-command Pit Fuel Control recovery check after existing message-system notifications; when a pending request is already stale/expired by the confirmation-expiry rules, it routes through the same external/manual takeover handling as telemetry expiry, preserving live pending-command ownership, DATA/SOURCE/MODE semantics, and pit command transport behavior.
+  - `Pit.FuelControl.Fault` values remain `0/1/2/3`; no exports were added, removed, or renamed.
+  - Property Snapshot list reviewed: yes, no group change required because the existing `Pit.*` prefix still routes `Pit.FuelControl.*` into Pit/PitExit.
+
 - 2026-06-02: Fuel burn analysis Avg10, minimum burn, and remaining-laps range support landed.
   - Added `Fuel.Burn.Analysis.Avg10`, `MinObserved`, `RemainingLapsMin`, and `RemainingLapsMax`, plus independent `BurnAnalysisResetMinObserved`.
   - Avg10 reuses the fresh accepted-lap observer with partial-window behavior and a 10-sample rolling list; Avg3/Avg5 continue to average only their latest 3/5 samples. `MinObserved` records only fresh accepted samples and remains independent from `MaxObserved`.
