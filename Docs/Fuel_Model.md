@@ -48,6 +48,7 @@ The fuel model and Strategy work together, but they are not the same thing.
 - The **fuel model** learns and stabilizes burn behavior.
 - **Strategy** uses that information, along with other planning inputs, to build a race plan.
 - Live tactical guidance includes plugin-owned burn-to-end and tactical fuel-delta exports, so dashboards do not need to rebuild end-of-race fuel math with custom formulas.
+- The plugin also publishes `LalaLaunch.Fuel.Burn.Target*` as the single dashboard-facing burn target selector: `STINT` for multi-stint current-stint management, `SESSION` when the current MFD refuel request is being judged against the session end, and `END` for final-stint burn-to-end management.
 
 If the live fuel model is still weak, Strategy may still be better served by saved profile values until the live session becomes trustworthy.
 

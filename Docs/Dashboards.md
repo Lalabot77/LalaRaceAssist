@@ -53,6 +53,10 @@ Dashboard status is plugin-owned:
 
 Dashboards should use those exports only for presentation/visibility. Strategy math, fuel advice, and PreRace logic remain owned by the plugin.
 
+### Fuel burn target selector
+
+For target-burn widgets, use the plugin-owned `LalaLaunch.Fuel.Burn.Target`, `LalaLaunch.Fuel.Burn.TargetText`, and `LalaLaunch.Fuel.Burn.TargetValid` exports. `TargetText` reports `STINT`, `SESSION`, `END`, or `INVALID`, so dashboards do not need to choose between stint, session-to-end, and burn-to-end formulas themselves. If `TargetValid` is false, treat `Target=0.0` as unavailable rather than a real burn target.
+
 ### Strategy Dash fuel-burn analysis binding
 
 A Strategy Dash fuel-burn popup or page can use the plugin-owned `LalaLaunch.Fuel.Burn.DisplayAnalysis` state. Toggle it with `LalaLaunch.BurnDisplayToggle`.

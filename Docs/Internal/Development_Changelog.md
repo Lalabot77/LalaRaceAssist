@@ -1,5 +1,13 @@
 # Development Changelog
 
+## 2026-06-03 — Fuel burn target selector
+- Classification: **both** (additive dashboard-facing target exports plus internal Fuel Model seam documentation).
+- Added plugin-owned `Fuel.Burn.Target`, `Fuel.Burn.TargetText`, and `Fuel.Burn.TargetValid` exports so dashboards can consume one tactical burn target family instead of owning phase-selection formulas.
+- Selector phases are driven only by `Fuel.Live.RemainingStints`: `>2` publishes `STINT` from existing `Fuel.StintBurnTarget`; `>1` and `<=2` publishes `SESSION`; `<=1` publishes `END` from existing `Fuel.RequiredBurnToEnd`. Invalid selected sources publish `Target=0.0`, `TargetText=INVALID`, and `TargetValid=false`.
+- SESSION target uses current runtime fuel plus MFD requested fuel (`Fuel.Refuel.NextLitresCeil`), capped by runtime max tank (`Fuel.MaxTank` / effective runtime tank seam), minus active contingency litres, divided by numeric `Fuel.LiveLapsRemainingInRace_Stable`. It intentionally does not use Strategy planner fuel values or `Fuel.LiveLapsRemainingInRace_Stable_S`.
+- Preserved existing `Fuel.StintBurnTarget`, `Fuel.RequiredBurnToEnd*`, `Fuel.Refuel.*`, `Fuel.Live.RemainingStints`, contingency resolver, Strategy planner, pit/refuel math, dashboard JSON, and XAML behavior.
+- Property Snapshot list reviewed: yes; new `Fuel.Burn.*` properties remain in the existing Fuel/Strategy group via the `Fuel.*` prefix rule.
+
 ## 2026-06-02 — Fuel burn analysis Avg10, minimum burn, and remaining-laps range
 - Classification: **both** (additive dashboard-facing analysis exports/action plus internal Fuel Model contract documentation).
 - Added `Fuel.Burn.Analysis.Avg10` from the existing fresh accepted-lap observer. Its backing rolling list now retains the latest 10 samples, while Avg3/Avg5 continue to select only their latest 3/5 and retain partial-window behavior.

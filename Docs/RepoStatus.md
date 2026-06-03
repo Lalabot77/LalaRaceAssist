@@ -1,10 +1,17 @@
 # Repo Status
 
 Validated against commit: HEAD
-Last updated: 2026-06-02
+Last updated: 2026-06-03
 Branch: work
 
 ## Current status
+- 2026-06-03: Fuel burn target selector support landed.
+  - Added plugin-owned dashboard exports `Fuel.Burn.Target`, `Fuel.Burn.TargetText`, and `Fuel.Burn.TargetValid` in the Fuel Model runtime seam.
+  - Selector uses `Fuel.Live.RemainingStints`: `>2` selects STINT from existing `Fuel.StintBurnTarget`, `>1` and `<=2` selects SESSION from current fuel plus MFD requested fuel capped by runtime max tank and reduced by active contingency, and `<=1` selects END from existing `Fuel.RequiredBurnToEnd`.
+  - SESSION divides reserve-adjusted available fuel by numeric `Fuel.LiveLapsRemainingInRace_Stable`; planner fuel values and `_Stable_S` display output are not calculation inputs. Invalid selected inputs publish `0.0` / `INVALID` / `false`.
+  - Preserved existing `Fuel.StintBurnTarget`, `Fuel.RequiredBurnToEnd*`, `Fuel.Refuel.*`, `Fuel.Live.RemainingStints`, contingency resolver, Strategy planner, pit/refuel math, dashboard JSON, and XAML behavior.
+  - Property Snapshot list reviewed: yes; `Fuel.Burn.*` exports route through the existing `Fuel.*` prefix into the Fuel/Strategy group.
+
 - 2026-06-02: Fuel burn analysis Avg10, minimum burn, and remaining-laps range support landed.
   - Added `Fuel.Burn.Analysis.Avg10`, `MinObserved`, `RemainingLapsMin`, and `RemainingLapsMax`, plus independent `BurnAnalysisResetMinObserved`.
   - Avg10 reuses the fresh accepted-lap observer with partial-window behavior and a 10-sample rolling list; Avg3/Avg5 continue to average only their latest 3/5 samples. `MinObserved` records only fresh accepted samples and remains independent from `MaxObserved`.

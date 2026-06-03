@@ -1175,6 +1175,9 @@ namespace LaunchPlugin
         public double FuelSaveFuelPerLap { get; private set; }
         public double StintBurnTarget { get; private set; }
         public string StintBurnTargetBand { get; private set; } = "current";
+        public double Fuel_Burn_Target { get; private set; }
+        public string Fuel_Burn_TargetText { get; private set; } = "INVALID";
+        public bool Fuel_Burn_TargetValid { get; private set; }
         public double FuelBurnPredictor { get; private set; }
         public string FuelBurnPredictorSource { get; private set; } = "SIMHUB";
 
@@ -4797,6 +4800,7 @@ namespace LaunchPlugin
                 FuelSaveFuelPerLap = 0;
                 StintBurnTarget = 0;
                 StintBurnTargetBand = "current";
+                ResetFuelBurnTargetSelector();
                 FuelBurnPredictor = 0;
                 FuelBurnPredictorSource = "SIMHUB";
                 RequiredBurnToEnd = 0;
@@ -5155,6 +5159,8 @@ namespace LaunchPlugin
                         StintBurnTargetBand = "OKAY";
                     }
                 }
+
+                UpdateFuelBurnTargetSelector(currentFuel);
 
                 double fuelPlanExit = currentFuel + requestedAddLitres;
                 double fuelWillAddExit = currentFuel + Pit_WillAdd;
@@ -7494,6 +7500,9 @@ namespace LaunchPlugin
             AttachCore("Fuel.FuelSavePerLap", () => FuelSaveFuelPerLap);
             AttachCore("Fuel.StintBurnTarget", () => StintBurnTarget);
             AttachCore("Fuel.StintBurnTargetBand", () => StintBurnTargetBand);
+            AttachCore("Fuel.Burn.Target", () => Fuel_Burn_Target);
+            AttachCore("Fuel.Burn.TargetText", () => Fuel_Burn_TargetText ?? "INVALID");
+            AttachCore("Fuel.Burn.TargetValid", () => Fuel_Burn_TargetValid);
             AttachCore("Fuel.FuelBurnPredictor", () => FuelBurnPredictor);
             AttachCore("Fuel.FuelBurnPredictorSource", () => FuelBurnPredictorSource);
             AttachCore("Fuel.DeltaLapsIfPush", () => DeltaLapsIfPush);
@@ -10307,6 +10316,83 @@ namespace LaunchPlugin
             Fuel_Refuel_BurnMode = GetRefuelBurnModeText(_pitFuelControlEngine?.Source ?? PitFuelControlSource.Stby);
             Fuel_Refuel_SelectedBurnPerLap = 0.0;
             Fuel_Live_RemainingStints = 0.0;
+        }
+
+        private void ResetFuelBurnTargetSelector()
+        {
+            Fuel_Burn_Target = 0.0;
+            Fuel_Burn_TargetText = "INVALID";
+            Fuel_Burn_TargetValid = false;
+        }
+
+        private void UpdateFuelBurnTargetSelector(double currentFuel)
+        {
+            double remainingStints = Fuel_Live_RemainingStints;
+            if (double.IsNaN(remainingStints) || double.IsInfinity(remainingStints))
+            {
+                ResetFuelBurnTargetSelector();
+                return;
+            }
+
+            if (remainingStints > 2.0)
+            {
+                if (StintBurnTarget > 0.0 && !double.IsNaN(StintBurnTarget) && !double.IsInfinity(StintBurnTarget))
+                {
+                    Fuel_Burn_Target = StintBurnTarget;
+                    Fuel_Burn_TargetText = "STINT";
+                    Fuel_Burn_TargetValid = true;
+                }
+                else
+                {
+                    ResetFuelBurnTargetSelector();
+                }
+                return;
+            }
+
+            if (remainingStints > 1.0)
+            {
+                double projectedLapsRemaining = LiveLapsRemainingInRace_Stable;
+                double requestedFuel = Fuel_Refuel_NextLitresCeil;
+                double maxTank = Fuel_MaxTank > 0.0 ? Fuel_MaxTank : ResolveRuntimeLiveMaxTankCapacity();
+                double contingencyLitres = Contingency_Litres;
+
+                bool hasSessionBasis =
+                    projectedLapsRemaining > 0.0 && !double.IsNaN(projectedLapsRemaining) && !double.IsInfinity(projectedLapsRemaining) &&
+                    IsFiniteNonNegative(currentFuel) &&
+                    maxTank > 0.0 && !double.IsNaN(maxTank) && !double.IsInfinity(maxTank) &&
+                    IsFiniteNonNegative(requestedFuel) &&
+                    IsFiniteNonNegative(contingencyLitres);
+
+                if (hasSessionBasis)
+                {
+                    double availableFuelToEnd = Math.Min(currentFuel + requestedFuel, maxTank) - contingencyLitres;
+                    if (availableFuelToEnd > 0.0 && !double.IsNaN(availableFuelToEnd) && !double.IsInfinity(availableFuelToEnd))
+                    {
+                        Fuel_Burn_Target = availableFuelToEnd / projectedLapsRemaining;
+                        Fuel_Burn_TargetText = "SESSION";
+                        Fuel_Burn_TargetValid = Fuel_Burn_Target > 0.0 && !double.IsNaN(Fuel_Burn_Target) && !double.IsInfinity(Fuel_Burn_Target);
+                        if (!Fuel_Burn_TargetValid)
+                        {
+                            ResetFuelBurnTargetSelector();
+                        }
+                        return;
+                    }
+                }
+
+                ResetFuelBurnTargetSelector();
+                return;
+            }
+
+            if (RequiredBurnToEnd > 0.0 && !double.IsNaN(RequiredBurnToEnd) && !double.IsInfinity(RequiredBurnToEnd))
+            {
+                Fuel_Burn_Target = RequiredBurnToEnd;
+                Fuel_Burn_TargetText = "END";
+                Fuel_Burn_TargetValid = true;
+            }
+            else
+            {
+                ResetFuelBurnTargetSelector();
+            }
         }
 
         private void ComputeRuntimeRefuelOutputs(
@@ -19706,6 +19792,7 @@ namespace LaunchPlugin
             Pit_StopsRequiredToEnd = 0;
             Fuel_Live_RemainingStints = 0;
             Fuel_MaxTank = 0;
+            ResetFuelBurnTargetSelector();
 
             Fuel_Delta_LitresCurrent = 0;
             Fuel_Delta_LitresPlan = 0;

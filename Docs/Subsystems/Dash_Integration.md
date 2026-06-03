@@ -1,7 +1,7 @@
 # Dash Integration
 
 Validated against commit: HEAD
-Last updated: 2026-06-02
+Last updated: 2026-06-03
 Branch: work
 
 ## Purpose
@@ -234,6 +234,18 @@ The subsystem docs own message-system behavior; dashboards should remain consume
 - Use `AvgSampleCount >= 3` for Avg3 confidence colouring, `AvgSampleCount >= 5` for Avg5 confidence colouring, and `AvgSampleCount >= 10` when full-window Avg10 readiness matters. Use `StintSampleCount` for `CurrentStint` readiness and `SessionSampleCount` for `SessionAvg` readiness. Keep `SampleCount` only as the session-count compatibility alias.
 - `RemainingLapsMin` is conservative (`current fuel / MaxObserved`); `RemainingLapsMax` is optimistic (`current fuel / MinObserved`). Both fail safe to `0.0` when their inputs are invalid or empty.
 - This is an additive analysis/presentation seam only. Existing tactical fuel display and calculation consumers continue to use the existing canonical `Fuel.LiveFuelPerLap_Stable`, `Fuel.Refuel.*`, `Fuel.RequiredBurnToEnd*`, and `Fuel.Pit.*` families as appropriate.
+
+## Fuel burn target selector integration
+### Stable exports for dashboards
+- `LalaLaunch.Fuel.Burn.Target`
+- `LalaLaunch.Fuel.Burn.TargetText`
+- `LalaLaunch.Fuel.Burn.TargetValid`
+
+### Binding and consumption rules
+- Bind dashboard target-burn widgets to `Fuel.Burn.Target*` when the display needs the currently appropriate burn target. Dash Studio must not reimplement phase selection between stint, session-to-end, and end-of-race targets.
+- `TargetText` publishes `STINT`, `SESSION`, `END`, or `INVALID`. `TargetValid=false` means the selected source did not have defensible numeric inputs, and dashboards should treat `Target=0.0` as unavailable rather than a real burn target.
+- SESSION uses current fuel plus the MFD requested refuel amount (`Fuel.Refuel.NextLitresCeil`), capped by runtime max tank and reduced by active contingency, divided by numeric `Fuel.LiveLapsRemainingInRace_Stable`. Do not use planner fuel values or `Fuel.LiveLapsRemainingInRace_Stable_S` in dashboard formulas for this behavior.
+- Existing `Fuel.StintBurnTarget`, `Fuel.RequiredBurnToEnd*`, `Fuel.Refuel.*`, `Fuel.Live.RemainingStints`, pit/refuel, dashboard JSON, and XAML behavior remain unchanged; the new family is additive.
 
 ## Dark Mode integration
 ### Stable exports for dashboards

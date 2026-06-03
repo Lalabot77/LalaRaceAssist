@@ -1,7 +1,7 @@
 # Fuel Model
 
 Validated against commit: HEAD
-Last updated: 2026-06-02
+Last updated: 2026-06-03
 Branch: work
 
 ## Purpose
@@ -72,6 +72,12 @@ Out of scope:
 - `RemainingLapsMin` is the conservative `current fuel litres / MaxObserved` bound; `RemainingLapsMax` is the optimistic `current fuel litres / MinObserved` bound. They reuse the existing runtime fuel cache and publish `0.0` when current fuel or the matching observed burn is invalid, non-finite, empty, or non-positive.
 - One dedicated burn-analysis lock protects accepted-sample recording, scoped resets, lifecycle reset, and property reads so aggregate pairs and remaining-laps bound reads cannot be observed mid-update or mid-reset.
 - `CurrentStint` resets on the existing confirmed pit-exit edge. Temporary telemetry gaps retain the last accepted analysis state, matching the broader Fuel Model lifecycle behavior.
+
+### Dashboard burn target selector state
+- `Fuel.Burn.Target`, `Fuel.Burn.TargetText`, and `Fuel.Burn.TargetValid` are additive Fuel Model runtime exports for dashboard-facing target selection. Dashboards should consume this family instead of choosing between `Fuel.StintBurnTarget`, `Fuel.RequiredBurnToEnd`, and session-to-end math in Dash Studio expressions.
+- The selector is owned by the Fuel Model runtime seam and uses `Fuel.Live.RemainingStints` as the phase signal: `>2` selects STINT/current-stint management, `>1` and `<=2` selects SESSION/final-stop-capable session-to-end management, and `<=1` selects END/final-stint burn-to-end management.
+- STINT validity requires the existing `Fuel.StintBurnTarget` to be positive. END validity requires the existing `Fuel.RequiredBurnToEnd` to be positive. Invalid selected inputs publish `Target=0.0`, `TargetText=INVALID`, and `TargetValid=false`.
+- SESSION validity requires positive numeric `Fuel.LiveLapsRemainingInRace_Stable`, valid non-negative current fuel, positive runtime max tank, non-negative MFD requested refuel (`Fuel.Refuel.NextLitresCeil`), non-negative active contingency litres, and positive reserve-adjusted available fuel. SESSION target math is `((min(current fuel + Fuel.Refuel.NextLitresCeil, Fuel.MaxTank) - Fuel.Contingency.Litres) / Fuel.LiveLapsRemainingInRace_Stable)`. It intentionally does not use planner fuel values or the `_Stable_S` display/smoothing export.
 
 ### Stable burn state
 - A continuously evaluated candidate burn.
@@ -197,6 +203,7 @@ The full authoritative export list lives in `Docs/Internal/SimHubParameterInvent
 - `Fuel.LiveFuelPerLap*`
 - `Fuel.Burn.DisplayAnalysis` (presentation-only popup/page state toggled by `LalaLaunch.BurnDisplayToggle`)
 - `Fuel.Burn.Analysis.*` (fresh accepted-lap popup analysis: `LastLap`, `Avg3`, `Avg5`, `CurrentStint`, `SessionAvg`, `MaxObserved`, `AvgSampleCount`, `StintSampleCount`, `SessionSampleCount`, and compatibility alias `SampleCount`)
+- `Fuel.Burn.Target*` (plugin-owned STINT / SESSION / END target selector for dashboards)
 - `Fuel.LiveLapsRemainingInRace*`
 - `Fuel.LapsRemainingInTank`
 - `Fuel.RequiredBurnToEnd*`

@@ -3,8 +3,8 @@
 **CANONICAL CONTRACT**
 
 Validated against: HEAD
-Last reviewed: 2026-06-02
-Last updated: 2026-06-02
+Last reviewed: 2026-06-03
+Last updated: 2026-06-03
 Branch: work
 
 - All exports are attached in `LalaLaunch.cs` during `Init()` via `AttachCore`/`AttachVerbose`. Core values are refreshed in `DataUpdate` (500 ms poll for fuel/pace/pit via `_poll500ms`; per-tick for launch/dash/messaging). Verbose rows require `SimhubPublish.VERBOSE`.【F:LalaLaunch.cs†L2644-L3120】【F:LalaLaunch.cs†L3411-L3775】
@@ -44,6 +44,7 @@ Branch: work
 | Fuel.Confidence | int | Fuel-model confidence from accepted window size/quality. | 500 ms poll. | `LalaLaunch.cs` — `ComputeFuelModelConfidence` + `AttachCore`【F:LalaLaunch.cs†L1830-L1890】【F:LalaLaunch.cs†L2688-L2691】 |
 | Fuel.PushFuelPerLap / Fuel.FuelSavePerLap | double | Push = max session burn or +2%; Save = min window burn or 97% fallback. | 500 ms poll. | `LalaLaunch.cs` — `UpdateLiveFuelCalcs` + `AttachCore`【F:LalaLaunch.cs†L2005-L2143】【F:LalaLaunch.cs†L2690-L2694】 |
 | Fuel.StintBurnTarget / Fuel.StintBurnTargetBand | double/string | Current-tank per-lap burn target plus band label (SAVE/PUSH/HOLD/OKAY) based on pit-in reserve percentage. | 500 ms poll. | `LalaLaunch.cs` — stint target block + `AttachCore`【F:LalaLaunch.cs†L2371-L2449】【F:LalaLaunch.cs†L3017-L3021】 |
+| Fuel.Burn.Target / Fuel.Burn.TargetText / Fuel.Burn.TargetValid | double/string/bool | Plugin-owned dashboard fuel-burn target selector. Uses `Fuel.Live.RemainingStints`: `>2` selects STINT (`Fuel.StintBurnTarget`), `>1` and `<=2` selects SESSION, and `<=1` selects END (`Fuel.RequiredBurnToEnd`). SESSION is MFD-aware: `min(current fuel + Fuel.Refuel.NextLitresCeil, Fuel.MaxTank) - Fuel.Contingency.Litres`, divided by numeric `Fuel.LiveLapsRemainingInRace_Stable`. Invalid selected inputs publish `0.0` / `INVALID` / `false`. Planner fuel values and `_Stable_S` display output are not calculation inputs. | 500 ms poll. | `LalaLaunch.cs` — `UpdateFuelBurnTargetSelector` + `AttachCore`. |
 | Fuel.FuelBurnPredictor / Fuel.FuelBurnPredictorSource | double/string | Predictor burn: stable burn until 5 valid laps, then rolling 3-lap average. Source labels: SIMHUB/PLUGIN/STINT/AVG3. | 500 ms poll. | `LalaLaunch.cs` — predictor outputs + `AttachCore`【F:LalaLaunch.cs†L5364-L5427】【F:LalaLaunch.cs†L3030-L3033】 |
 | Fuel.DeltaLapsIfPush / Fuel.CanAffordToPush | double/bool | Surplus/deficit if driving at push burn and affordability flag. | 500 ms poll. | `LalaLaunch.cs` — `UpdateLiveFuelCalcs` + `AttachCore`【F:LalaLaunch.cs†L2005-L2143】【F:LalaLaunch.cs†L2690-L2694】 |
 | Fuel.RequiredBurnToEnd / Valid / State / StateText / Source | double/bool/int/string/string | Driver tactical burn-to-end guidance. `RequiredBurnToEnd` is the clamped display value (`clamp(raw, FuelSavePerLap, PushFuelPerLap)`), while `State/StateText` use raw unbounded burn-to-end (`0=CRITICAL`, `1=SAVE`, `2=HOLD`, `3=PUSH`). `Valid` is numeric-basis only (`projected laps > 0`, `stable/save/push burns > 0`, usable current fuel). `Source` reflects burn/projection authority (`live`/`profile`/`fallback`/`invalid`). | 500 ms poll. | `LalaLaunch.cs` — `UpdateLiveFuelCalcs` BurnToEnd block + `AttachCore`. |
