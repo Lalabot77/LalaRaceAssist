@@ -46,6 +46,7 @@ namespace LaunchPlugin
         private const double OverrideArmStopsThreshold = 1.10;
         private const double OverrideDisarmStopsThreshold = 1.05;
         private const int PluginSendSuppressionMs = 900;
+        private const int PendingOwnedRequestConfirmationMs = 3000;
         private const int MaxFuelOvershootLitres = 500;
 
         private readonly Func<PitFuelControlSnapshot> _snapshotProvider;
@@ -60,6 +61,7 @@ namespace LaunchPlugin
         private bool _lastObservedFuelFillEnabled;
         private bool _hasPendingOwnedRequestedFuelLitres;
         private int _pendingOwnedRequestedFuelLitres = -1;
+        private DateTime _pendingOwnedRequestedFuelLitresQueuedUtc = DateTime.MinValue;
         private bool _hasPendingOwnedFuelFillEnabled;
         private bool _pendingOwnedFuelFillEnabled;
         private bool _telemetrySuppressionActive;
@@ -334,7 +336,8 @@ namespace LaunchPlugin
                 SimHub.Logging.Current.Info($"[LalaPlugin:PitFuelControl] telemetry suppression-cleared previousReason={_lastTelemetrySuppressionReason}");
             }
 
-            int currentRequestedLitres = RoundUpLitres(snapshot.TelemetryRequestedFuelLitres);
+            double currentRequestedRawLitres = snapshot.TelemetryRequestedFuelLitres;
+            int currentRequestedLitres = RoundUpLitres(currentRequestedRawLitres);
             bool currentFuelFillEnabled = snapshot.TelemetryFuelFillEnabled;
             bool remapAppliedThisTick = false;
             if (!_hasObservedRequestedFuelLitres || !_hasObservedFuelFillEnabled)
@@ -383,12 +386,35 @@ namespace LaunchPlugin
                 return;
             }
 
+            if (TryHandleExpiredPendingOwnedRequest(currentRequestedRawLitres, currentRequestedLitres, currentFuelFillEnabled))
+            {
+                Fault = 0;
+                return;
+            }
+
             Fault = ComputeFault(snapshot, currentRequestedLitres);
         }
 
         public string SourceText => SourceToText(Source);
         public string DataText => DataToText(Data);
         public string ModeText => ModeToText(Mode);
+
+        public bool TryClearExpiredPendingOwnedRequest(string reason)
+        {
+            var snapshot = _snapshotProvider();
+            if (snapshot == null)
+            {
+                return false;
+            }
+
+            double currentRequestedRawLitres = snapshot.TelemetryRequestedFuelLitres;
+            int currentRequestedLitres = RoundUpLitres(currentRequestedRawLitres);
+            return TryApplyExpiredPendingOwnedRequest(
+                currentRequestedRawLitres,
+                currentRequestedLitres,
+                snapshot.TelemetryFuelFillEnabled,
+                reason);
+        }
 
         private void SetSource(PitFuelControlSource requestedSource, string actionName)
         {
@@ -847,6 +873,7 @@ namespace LaunchPlugin
             _lastObservedFuelFillEnabled = false;
             _hasPendingOwnedRequestedFuelLitres = false;
             _pendingOwnedRequestedFuelLitres = -1;
+            _pendingOwnedRequestedFuelLitresQueuedUtc = DateTime.MinValue;
             _hasPendingOwnedFuelFillEnabled = false;
             _pendingOwnedFuelFillEnabled = false;
         }
@@ -857,6 +884,7 @@ namespace LaunchPlugin
             {
                 _hasPendingOwnedRequestedFuelLitres = true;
                 _pendingOwnedRequestedFuelLitres = Math.Max(0, requestedFuelLitres.Value);
+                _pendingOwnedRequestedFuelLitresQueuedUtc = DateTime.UtcNow;
             }
 
             if (fuelFillEnabled.HasValue)
@@ -870,8 +898,72 @@ namespace LaunchPlugin
         {
             _hasPendingOwnedRequestedFuelLitres = false;
             _pendingOwnedRequestedFuelLitres = -1;
+            _pendingOwnedRequestedFuelLitresQueuedUtc = DateTime.MinValue;
             _hasPendingOwnedFuelFillEnabled = false;
             _pendingOwnedFuelFillEnabled = false;
+        }
+
+        private bool TryHandleExpiredPendingOwnedRequest(double currentRequestedRawLitres, int currentRequestedLitres, bool currentFuelFillEnabled)
+        {
+            return TryApplyExpiredPendingOwnedRequest(
+                currentRequestedRawLitres,
+                currentRequestedLitres,
+                currentFuelFillEnabled,
+                "telemetry");
+        }
+
+        private bool TryApplyExpiredPendingOwnedRequest(double currentRequestedRawLitres, int currentRequestedLitres, bool currentFuelFillEnabled, string reason)
+        {
+            if (!IsPendingOwnedRequestExpired(currentRequestedRawLitres, currentRequestedLitres))
+            {
+                return false;
+            }
+
+            string safeReason = string.IsNullOrWhiteSpace(reason) ? "unspecified" : reason.Trim();
+            SimHub.Logging.Current.Info(
+                $"[LalaPlugin:PitFuelControl] stale owned fuel request expired reason={safeReason} pending={_pendingOwnedRequestedFuelLitres} current={currentRequestedLitres} ageMs={(DateTime.UtcNow - _pendingOwnedRequestedFuelLitresQueuedUtc).TotalMilliseconds:F0}");
+            HandleExternalMirrorChange(currentFuelFillEnabled, requestedFuelChanged: true);
+            Fault = 0;
+            return true;
+        }
+
+        private bool IsPendingOwnedRequestExpired(double currentRequestedRawLitres, int currentRequestedLitres)
+        {
+            if (!_hasPendingOwnedRequestedFuelLitres)
+            {
+                return false;
+            }
+
+            if (_pendingOwnedRequestedFuelLitresQueuedUtc == DateTime.MinValue)
+            {
+                _pendingOwnedRequestedFuelLitresQueuedUtc = DateTime.UtcNow;
+                return false;
+            }
+
+            if (DateTime.UtcNow < _suppressManualOverrideUntilUtc)
+            {
+                return false;
+            }
+
+            if (DateTime.UtcNow < _pendingOwnedRequestedFuelLitresQueuedUtc.AddMilliseconds(PendingOwnedRequestConfirmationMs))
+            {
+                return false;
+            }
+
+            if (double.IsNaN(currentRequestedRawLitres) || double.IsInfinity(currentRequestedRawLitres) || currentRequestedRawLitres < 0.0)
+            {
+                return false;
+            }
+
+            if (currentRequestedLitres == _pendingOwnedRequestedFuelLitres)
+            {
+                _hasPendingOwnedRequestedFuelLitres = false;
+                _pendingOwnedRequestedFuelLitres = -1;
+                _pendingOwnedRequestedFuelLitresQueuedUtc = DateTime.MinValue;
+                return false;
+            }
+
+            return true;
         }
 
         private void ExpireSatisfiedOwnedMirrorExpectations(int currentRequestedLitres, bool currentFuelFillEnabled, bool requestedFuelChanged, bool fuelFillChanged)
@@ -880,6 +972,7 @@ namespace LaunchPlugin
             {
                 _hasPendingOwnedRequestedFuelLitres = false;
                 _pendingOwnedRequestedFuelLitres = -1;
+                _pendingOwnedRequestedFuelLitresQueuedUtc = DateTime.MinValue;
             }
 
             if (!fuelFillChanged && _hasPendingOwnedFuelFillEnabled && currentFuelFillEnabled == _pendingOwnedFuelFillEnabled)
@@ -899,6 +992,7 @@ namespace LaunchPlugin
                 requestedOwned = true;
                 _hasPendingOwnedRequestedFuelLitres = false;
                 _pendingOwnedRequestedFuelLitres = -1;
+                _pendingOwnedRequestedFuelLitresQueuedUtc = DateTime.MinValue;
             }
 
             if (fuelFillChanged && _hasPendingOwnedFuelFillEnabled && currentFuelFillEnabled == _pendingOwnedFuelFillEnabled)

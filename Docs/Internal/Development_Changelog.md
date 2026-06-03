@@ -13,6 +13,12 @@
 ### Review follow-up: do not gate STINT/END on raw MFD availability
 - Fixed selector invocation so missing/unreadable `PitSvFuel` invalidates only the SESSION branch. STINT and END now continue to publish from validated `Fuel.Live.RemainingStints`, `Fuel.StintBurnTarget`, and `Fuel.RequiredBurnToEnd` basis when raw MFD request telemetry is unavailable.
 - Preserved SESSION semantics: it still requires valid raw MFD-selected fuel request, still gates the value by `dpFuelFill`, and still does not use `Fuel.Refuel.NextLitresCeil`, `Fuel.Pit.WillAdd`, planner values, plugin recommendations, or tank-space-clamped add values.
+## 2026-06-03 — Pit Fuel Control stale request-fault expiry
+- Classification: **both** (driver-facing recovery behavior + internal fault-lifecycle hardening).
+- Added a bounded pending-owned requested-fuel confirmation expiry in `PitFuelControlEngine`: after the existing 900 ms post-send suppression and short confirmation allowance, a still-mismatched valid `PitSvFuel` is treated as external/manual MFD takeover, clearing stale pending ownership and `Pit.FuelControl.Fault` for that tick.
+- Narrowed the MsgCx no-command recovery hook so it acts only when the pending request is already stale/expired by the same confirmation-expiry rules, then routes through the same external/manual takeover handling as telemetry expiry; it does not clear merely because `Pit.FuelControl.Fault` is non-zero, does not send pit commands, and does not change DATA selection.
+- Preserved `Pit.FuelControl.Fault` value contract (`0/1/2/3`), DATA/SOURCE/MODE semantics, fuel/refuel math, pit-command transport, Strategy planner math, dashboard JSON, and export names.
+- Property Snapshot list reviewed: yes, no grouping update needed because no exports changed and `Pit.FuelControl.*` remains under the existing `Pit.*` Pit/PitExit group.
 
 ## 2026-06-02 — Fuel burn analysis Avg10, minimum burn, and remaining-laps range
 - Classification: **both** (additive dashboard-facing analysis exports/action plus internal Fuel Model contract documentation).
