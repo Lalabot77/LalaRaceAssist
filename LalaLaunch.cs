@@ -2416,7 +2416,7 @@ namespace LaunchPlugin
                 return;
             }
 
-            double remainingStints = Fuel_Live_RemainingStints;
+            double remainingStints = Fuel_Live_RemainingStints + 1.0;
             if (remainingStints > 2.0)
             {
                 Fuel_Burn_Target = Math.Max(0.0, StintBurnTarget);
