@@ -1,5 +1,15 @@
 # Development Changelog
 
+## 2026-06-03 — Fuel burn target selector redesign
+- Classification: **both** (new dashboard-facing fuel target exports plus internal Fuel Model selector contract).
+- Phase 1 seam result: the clean raw driver-selected MFD fuel request seam exists at `DataCorePlugin.GameRawData.Telemetry.PitSvFuel`, with `dpFuelFill` indicating whether refuel is selected; `PitSvFuel` is upstream of tank-space clamp and is mirrored by Pit Fuel Control for both external/manual MFD changes and plugin-owned `#fuel` sends.
+- Added `Fuel.Burn.Target`, `Fuel.Burn.TargetText`, and `Fuel.Burn.TargetValid` as a plugin-owned dashboard selector for `STINT` / `SESSION` / `END` / `INVALID`.
+- SESSION uses the selected MFD request before tank-space clamp and intentionally does not use `Fuel.Refuel.NextLitresCeil`, `Fuel.Pit.WillAdd`, plugin-recommended refuel values, tank-space-clamped add values, or planner fuel values.
+- Added an internal validity bit for `Fuel.Live.RemainingStints` so reset/default `0` does not publish `END`.
+- Added a reserve-protected END guard: if the active guard burn/projection plus active contingency still exceeds current fuel plus one runtime max tank, the selector publishes `INVALID` rather than `END`.
+- Preserved `Fuel.StintBurnTarget`, `Fuel.RequiredBurnToEnd`, `Fuel.Refuel.*`, `Fuel.Pit.*`, Pit Fuel Control command/refuel math, dashboard JSON, and XAML.
+- Property Snapshot list reviewed: yes; new `Fuel.Burn.*` exports route through the existing `Fuel.*` prefix into the Fuel/Strategy group.
+
 ## 2026-06-02 — Fuel burn analysis Avg10, minimum burn, and remaining-laps range
 - Classification: **both** (additive dashboard-facing analysis exports/action plus internal Fuel Model contract documentation).
 - Added `Fuel.Burn.Analysis.Avg10` from the existing fresh accepted-lap observer. Its backing rolling list now retains the latest 10 samples, while Avg3/Avg5 continue to select only their latest 3/5 and retain partial-window behavior.

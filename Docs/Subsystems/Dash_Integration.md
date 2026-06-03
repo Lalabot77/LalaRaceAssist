@@ -1,7 +1,7 @@
 # Dash Integration
 
 Validated against commit: HEAD
-Last updated: 2026-06-02
+Last updated: 2026-06-03
 Branch: work
 
 ## Purpose
@@ -56,6 +56,7 @@ This document is the canonical dash-facing contract layer. It does **not** redef
   - `Fuel.RequiredBurnToEnd*` for burn-to-end guidance/state/source,
   - `Fuel.Contingency.*` for active reserve display/debug,
   - `Fuel.Refuel.*` for race-running next-stop refuel guidance (`NextLitres`, `NextLitresCeil`, `NextText`, `Valid`, and basis context),
+  - `Fuel.Burn.Target`, `Fuel.Burn.TargetText`, and `Fuel.Burn.TargetValid` for a plugin-owned STINT/SESSION/END burn target selector,
   - `Fuel.Delta.LitresCurrent/Plan/WillAdd` + Push/Save variants for tactical deltas.
   - `Fuel.Delta.AfterStop.Selected` for a single plugin-owned after-stop selected delta field (DATA governs basis, SOURCE governs NORM/PUSH/SAVE/STBY selection; STBY uses advisory NORM).
 - `Fuel.Refuel.*` is runtime tactical guidance and should be preferred over `StrategyDash.NextRefuel*` during race-running usage; StrategyDash next-refuel helpers remain pre-green/planning oriented (not obsolete).
@@ -64,6 +65,7 @@ This document is the canonical dash-facing contract layer. It does **not** redef
 - Export cleanup caution: no fuel-facing export should be removed until both checks are complete: dashboard JSON usage audit and internal C# reference/consumer audit.
 - Do not rebuild burn-to-end with dash-side NCALC formula chains from raw fuel/time/pace properties; use plugin-owned `Fuel.RequiredBurnToEnd`.
 - Tactical delta exports are contingency-aware on the required-to-finish side only; `Fuel.Pit.WillAdd` remains clamp mirror and should not be treated as reserve-augmented request.
+- Dashboard burn-target widgets should consume `Fuel.Burn.Target*` directly. SESSION is intentionally tied to the driver-selected MFD fuel request (`PitSvFuel` gated by `dpFuelFill`) before tank-space clamp; dashboards must not substitute `Fuel.Refuel.NextLitresCeil`, `Fuel.Pit.WillAdd`, planner values, or plugin recommendation exports.
 - Pit-window OPEN/status feasibility is contingency-aware on the required side (`CLEAR PUSH`/`RACE PACE`/`FUEL SAVE` require burn+reserve fit now), while `Fuel.Pit.WillAdd` remains unchanged clamp output.
 - Runtime pit-space exports are live-cap authoritative when available: `Fuel.Pit.TankSpaceAvailable` reflects live remaining capacity and `Fuel.Pit.WillAdd`/`Fuel.Pit.FuelOnExit` consume that runtime cap seam (not Strategy/Profile max-fuel override when live cap exists).
 - Setup fallback seam for pre-grid/pre-race: dashboards may consume `Fuel.Setup.FuelLevel`/`Fuel.Setup.FuelLevelValid`/`Fuel.Setup.FuelLevelSource` when live tank telemetry is zero/unavailable. This setup seam is read-only and does not replace runtime `Fuel.*` telemetry once live fuel is available.
