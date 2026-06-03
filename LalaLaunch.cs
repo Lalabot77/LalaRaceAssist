@@ -16333,7 +16333,7 @@ namespace LaunchPlugin
             for (int i = 0; i < slots.Length; i++)
             {
                 CarSASlot slot = slots[i];
-                if (slot == null || !slot.IsValid || slot.CarIdx < 0)
+                if (slot == null || !slot.IsValid || !slot.IsOnTrack || slot.CarIdx < 0)
                 {
                     continue;
                 }

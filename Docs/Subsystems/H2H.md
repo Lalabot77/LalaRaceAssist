@@ -38,10 +38,10 @@ H2H sector publication is intentionally simple:
 
 ## Target behavior
 ### H2HTrack
-- Scans CarSA ahead/behind slots and uses the nearest valid same-class local track target.
+- Scans CarSA ahead/behind slots and uses the nearest valid, on-track, same-class local track target.
 - Can be more volatile than race mode because local on-track slots can swap as nearby cars change.
 - When the selected track target changes, H2H immediately republishes `S1..S6State` / `S1..S6DeltaSec` from the new target's existing CarSA cache if present. If the new target has no cached value for a sector, that sector naturally publishes `empty`/`0`. There is no bind-clear rebuild window.
-- Short CarSA blink holds can keep the same track-target identity through brief NotInWorld/invalid-LapDistPct gaps. H2H does not own that hold; it simply benefits from CarSA preserving the selector while H2H live timing/gap validity still follows usable current telemetry.
+- Short CarSA blink holds can keep slot identity/cosmetics visible through brief NotInWorld/invalid-LapDistPct gaps, but held slots publish `IsOnTrack=false` and are not eligible as live H2HTrack timing selectors; H2HTrack clears/inactivates live timing until a valid on-track selector is available again.
 
 ### H2HRace
 - Uses Opponents class-ahead / class-behind identity as the race selector input.

@@ -1,5 +1,10 @@
 # Repo Status
 
+- 2026-06-03: H2HTrack blink-held CarSA selector fail-closed follow-up landed.
+  - `BuildH2HTrackSelector(...)` now requires selected CarSA slots to be valid and on-track, so blink-held slots keep CarSA identity/cosmetics but cannot produce `H2HTrack.*.Valid=true` or live gap/timing during the held telemetry gap.
+  - Normal valid on-track H2HTrack target selection, Opponents row hold behavior, H2HRace handling, export names, dashboard JSON, and fuel/pit/strategy/race-finish systems remain unchanged.
+  - Property Snapshot list reviewed: yes, no group change required because no exports were added, removed, renamed, or regrouped.
+
 - 2026-06-03: Blink-hold stale-data leak follow-up landed.
   - CarSA blink-hold eligibility now runs before the same-candidate fast path, preventing cached LapPct-grace distances from publishing stale normal gaps during the first invalid-`LapDistPct` ticks.
   - Opponents now fails closed when a held canonical identity appears at a different `CarIdx`, removing the old hold/marking the identity seen so `AddUnseenHeldRows` cannot resurrect the stale old row.
