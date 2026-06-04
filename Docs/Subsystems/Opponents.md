@@ -1,7 +1,7 @@
 # Opponents subsystem
 
 Validated against commit: HEAD
-Last updated: 2026-04-10
+Last updated: 2026-06-03
 Branch: work
 
 Purpose: own all opponent-facing calculations for strict same-class race-target selection, lap-time enrichment, and race-scoped pit-exit forecasting with SimHub exports under `Opp.*` and `PitExit.*`.
@@ -38,6 +38,7 @@ Opponents now reads from:
   - skip cars without valid lap distance (`0..1`)
   - skip cars not in world (`CarIdxTrackSurface < 0`)
 - Native `CarIdxClassPosition` remains available as an **official/anchor input** only; published live race-context `PositionInClass` uses the effective RaceProgress-first order so official timing lag does not block immediate context updates.
+- **Blink row hold:** known non-player rows with stable `CarIdx`/canonical identity can remain in the RaceProgress order for up to 2.0 s when telemetry briefly reports NotInWorld or invalid/missing `LapDistPct`. Held rows keep their last race-progress anchor and identity so short disconnect/reconnect events do not immediately re-rank the class. They are marked telemetry-stale internally, are published with identity/cosmetics and effective position continuity but `IsValid=false`, `CarIdx=-1`, `IsOnTrack=false`, `GapTrackSec`/`GapRelativeSec`/`GapToPlayerSec` as NaN, do not use the CarSA checkpoint seam, and are excluded from pit-exit prediction rows so pit-exit behavior is not expanded. If any live usable row exists for the same canonical identity, that live row wins over an older held row; a same-identity snapshot at a different `CarIdx` fails closed unless that row itself is live usable.
 - Opponents owns this ordering; CarSA ownership is unchanged.
 
 ## Gap and fight model (native)

@@ -41,6 +41,7 @@ namespace LaunchPlugin
         private const double HotCoolNoMessageMaxSec = 1.00;
         private const double HotCoolClosingRateThreshold = 0.10;
         private const double HotCoolGapMaxSec = 10.0;
+        private const double BlinkSlotHoldSec = 1.0;
         private const int HotCoolIntentNone = 0;
         private const int HotCoolIntentPush = 1;
         private const int HotCoolIntentHot = 2;
@@ -178,6 +179,8 @@ namespace LaunchPlugin
         private bool _playerCheckpointChangedThisTick;
         private bool _anyCheckpointCrossedThisTick;
         private int _miniSectorTickId;
+        private readonly bool[] _aheadSlotBlinkHeld = new bool[SlotsAhead];
+        private readonly bool[] _behindSlotBlinkHeld = new bool[SlotsBehind];
         private readonly double[] _playerGateTimeSecByGate = new double[MiniSectorCheckpointCount];
         private readonly int[] _playerGateLapByGate = new int[MiniSectorCheckpointCount];
         private readonly double[,] _carGateTimeSecByCarGate = new double[MaxCars, MiniSectorCheckpointCount];
@@ -197,6 +200,7 @@ namespace LaunchPlugin
         private readonly double[] _gateGapLastPublishedSecByCar = new double[MaxCars];
         private readonly double[] _gateGapLastPublishedTimeSecByCar = new double[MaxCars];
         private readonly bool[] _directCheckpointEligibleByCar = new bool[MaxCars];
+        private readonly double[] _blinkHoldLastEligibleSessionTimeByCar = new double[MaxCars];
         private double _trackGapLastGoodScaleSec = double.NaN;
         private double _checkpointGapLapTimeUsedSec = double.NaN;
         private bool _hadValidTick;
@@ -966,10 +970,10 @@ namespace LaunchPlugin
             int hysteresisReplacements = 0;
             int slotCarIdxChanged = 0;
 
-            ApplySlots(true, sessionTimeSec, playerCarIdx, playerLapPct, playerLap, carIdxLapDistPct, carIdxLap, carIdxTrackSurface, carIdxOnPitRoad, _aheadCandidateIdx, _aheadCandidateDist, _outputs.AheadSlots, ref hysteresisReplacements, ref slotCarIdxChanged);
-            ApplySlots(false, sessionTimeSec, playerCarIdx, playerLapPct, playerLap, carIdxLapDistPct, carIdxLap, carIdxTrackSurface, carIdxOnPitRoad, _behindCandidateIdx, _behindCandidateDist, _outputs.BehindSlots, ref hysteresisReplacements, ref slotCarIdxChanged);
-            UpdateSlotGapsFromCarStates(_outputs.AheadSlots, sessionTimeSec, lapTimeUsed, lapTimeUsedValid, trackGapScaleSec, trackGapScaleValid, isRace, true);
-            UpdateSlotGapsFromCarStates(_outputs.BehindSlots, sessionTimeSec, lapTimeUsed, lapTimeUsedValid, trackGapScaleSec, trackGapScaleValid, isRace, false);
+            ApplySlots(true, sessionTimeSec, playerCarIdx, playerLapPct, playerLap, carIdxLapDistPct, carIdxLap, carIdxTrackSurface, carIdxOnPitRoad, _aheadCandidateIdx, _aheadCandidateDist, _outputs.AheadSlots, _aheadSlotBlinkHeld, ref hysteresisReplacements, ref slotCarIdxChanged);
+            ApplySlots(false, sessionTimeSec, playerCarIdx, playerLapPct, playerLap, carIdxLapDistPct, carIdxLap, carIdxTrackSurface, carIdxOnPitRoad, _behindCandidateIdx, _behindCandidateDist, _outputs.BehindSlots, _behindSlotBlinkHeld, ref hysteresisReplacements, ref slotCarIdxChanged);
+            UpdateSlotGapsFromCarStates(_outputs.AheadSlots, _aheadSlotBlinkHeld, sessionTimeSec, lapTimeUsed, lapTimeUsedValid, trackGapScaleSec, trackGapScaleValid, isRace, true);
+            UpdateSlotGapsFromCarStates(_outputs.BehindSlots, _behindSlotBlinkHeld, sessionTimeSec, lapTimeUsed, lapTimeUsedValid, trackGapScaleSec, trackGapScaleValid, isRace, false);
             double lapTimeMapSec = lapTimeUsedValid ? lapTimeUsed : lapTimeEstimateSec;
             UpdateSlot01PrecisionGaps(sessionTimeSec, lapTimeMapSec);
 
@@ -1058,6 +1062,7 @@ namespace LaunchPlugin
             for (int i = 0; i < _carStates.Length; i++)
             {
                 _carStates[i].Reset(i);
+                _blinkHoldLastEligibleSessionTimeByCar[i] = double.NaN;
                 ClearFixedSectorCacheForCar(i);
             }
         }
@@ -1580,6 +1585,10 @@ namespace LaunchPlugin
                     state.LastGapPctAbs = gapPctAbs;
                     state.LastDeltaUpdateTime = sessionTimeSec;
                     state.LastValidSessionTime = sessionTimeSec;
+                    if (inWorldNow)
+                    {
+                        _blinkHoldLastEligibleSessionTimeByCar[carIdx] = sessionTimeSec;
+                    }
                 }
                 else
                 {
@@ -1820,7 +1829,7 @@ namespace LaunchPlugin
             return delta;
         }
 
-        private void UpdateSlotGapsFromCarStates(CarSASlot[] slots, double sessionTimeSec, double lapTimeUsedSec, bool lapTimeUsedValid, double trackGapScaleSec, bool trackGapScaleValid, bool isRace, bool isAhead)
+        private void UpdateSlotGapsFromCarStates(CarSASlot[] slots, bool[] blinkHeldSlots, double sessionTimeSec, double lapTimeUsedSec, bool lapTimeUsedValid, double trackGapScaleSec, bool trackGapScaleValid, bool isRace, bool isAhead)
 
         {
             _ = sessionTimeSec;
@@ -1829,8 +1838,10 @@ namespace LaunchPlugin
                 return;
             }
 
-            foreach (var slot in slots)
+            for (int slotIndex = 0; slotIndex < slots.Length; slotIndex++)
             {
+                var slot = slots[slotIndex];
+                bool blinkHeld = blinkHeldSlots != null && slotIndex < blinkHeldSlots.Length && blinkHeldSlots[slotIndex];
                 if (slot == null || !slot.IsValid || slot.CarIdx < 0 || slot.CarIdx >= _carStates.Length)
                 {
                     if (slot != null)
@@ -1847,6 +1858,18 @@ namespace LaunchPlugin
                 }
 
                 var state = _carStates[slot.CarIdx];
+                if (blinkHeld)
+                {
+                    slot.GapTrackSec = double.NaN;
+                    slot.GapRelativeSec = double.NaN;
+                    slot.GapRelativeSource = 0;
+                    slot.ClosingRateSecPerSec = double.NaN;
+                    slot.ClosingRateSmoothed = 0.0;
+                    slot.ClosingRateHasSample = false;
+                    slot.LapsSincePit = -1;
+                    continue;
+                }
+
                 bool carIdxChanged = slot.LastBoundCarIdx != slot.CarIdx;
                 if (carIdxChanged)
                 {
@@ -2014,8 +2037,17 @@ namespace LaunchPlugin
 
         private void UpdateSlot01PrecisionGaps(double sessionTimeSec, double lapTimeMapSec)
         {
-            _outputs.Ahead01PrecisionGapSec = ComputeSlotPrecisionGap(_outputs.AheadSlots, sessionTimeSec, lapTimeMapSec, true);
-            _outputs.Behind01PrecisionGapSec = ComputeSlotPrecisionGap(_outputs.BehindSlots, sessionTimeSec, lapTimeMapSec, false);
+            _outputs.Ahead01PrecisionGapSec = IsSlotBlinkHeld(_aheadSlotBlinkHeld, 0)
+                ? double.NaN
+                : ComputeSlotPrecisionGap(_outputs.AheadSlots, sessionTimeSec, lapTimeMapSec, true);
+            _outputs.Behind01PrecisionGapSec = IsSlotBlinkHeld(_behindSlotBlinkHeld, 0)
+                ? double.NaN
+                : ComputeSlotPrecisionGap(_outputs.BehindSlots, sessionTimeSec, lapTimeMapSec, false);
+        }
+
+        private static bool IsSlotBlinkHeld(bool[] blinkHeldSlots, int slotIndex)
+        {
+            return blinkHeldSlots != null && slotIndex >= 0 && slotIndex < blinkHeldSlots.Length && blinkHeldSlots[slotIndex];
         }
 
         private double ComputeSlotPrecisionGap(CarSASlot[] slots, double sessionTimeSec, double lapTimeUsed, bool isAhead)
@@ -2608,28 +2640,39 @@ namespace LaunchPlugin
             int[] candidateIdx,
             double[] candidateDist,
             CarSASlot[] slots,
+            bool[] blinkHeldSlots,
             ref int hysteresisReplacements,
             ref int slotCarIdxChanged)
         {
             int slotCount = slots.Length;
             bool[] usedCarIdx = new bool[MaxCars];
+            int candidateCursor = 0;
             for (int slotIndex = 0; slotIndex < slotCount; slotIndex++)
             {
                 CarSASlot slot = slots[slotIndex];
-                int newIdx = candidateIdx[slotIndex];
-                double newDist = candidateDist[slotIndex];
+                if (blinkHeldSlots != null && slotIndex < blinkHeldSlots.Length)
+                {
+                    blinkHeldSlots[slotIndex] = false;
+                }
+
+                AdvanceCandidateCursor(candidateIdx, usedCarIdx, ref candidateCursor);
+                int newIdx = GetCandidateIdx(candidateIdx, candidateCursor);
+                double newDist = GetCandidateDist(candidateDist, candidateCursor);
 
                 bool currentCarAlreadyUsed = slot.CarIdx >= 0
                     && slot.CarIdx < MaxCars
                     && usedCarIdx[slot.CarIdx];
 
-                if (newIdx >= 0 && newIdx < MaxCars && usedCarIdx[newIdx])
+                bool currentBlinkHoldEligible = ShouldHoldBlinkingSlot(slot, sessionTimeSec, carIdxLapDistPct, carIdxTrackSurface);
+                if (currentBlinkHoldEligible)
                 {
-                    newIdx = -1;
-                    newDist = double.MaxValue;
+                    MarkSlotBlinkHeld(slot, isAhead);
+                    if (blinkHeldSlots != null && slotIndex < blinkHeldSlots.Length)
+                    {
+                        blinkHeldSlots[slotIndex] = true;
+                    }
                 }
-
-                if (!currentCarAlreadyUsed && newIdx == slot.CarIdx && slot.CarIdx >= 0)
+                else if (!currentCarAlreadyUsed && newIdx == slot.CarIdx && slot.CarIdx >= 0)
                 {
                     if (isAhead)
                     {
@@ -2639,6 +2682,7 @@ namespace LaunchPlugin
                     {
                         slot.BackwardDistPct = newDist;
                     }
+                    ConsumeCandidate(candidateIdx, candidateCursor, newIdx, ref candidateCursor);
                 }
                 else
                 {
@@ -2655,6 +2699,7 @@ namespace LaunchPlugin
                         if (newIdx != -1)
                         {
                             hysteresisReplacements++;
+                            ConsumeCandidate(candidateIdx, candidateCursor, newIdx, ref candidateCursor);
                         }
                     }
                     else if (newIdx != -1 && newDist < currentDist * HysteresisFactor)
@@ -2664,6 +2709,7 @@ namespace LaunchPlugin
                             slotCarIdxChanged++;
                         }
                         hysteresisReplacements++;
+                        ConsumeCandidate(candidateIdx, candidateCursor, newIdx, ref candidateCursor);
                     }
                     else
                     {
@@ -2675,6 +2721,10 @@ namespace LaunchPlugin
                         {
                             slot.BackwardDistPct = currentDist;
                         }
+                        if (newIdx != -1)
+                        {
+                            ConsumeCandidate(candidateIdx, candidateCursor, newIdx, ref candidateCursor);
+                        }
                     }
                 }
 
@@ -2684,7 +2734,128 @@ namespace LaunchPlugin
                 }
 
                 UpdateSlotState(slot, playerLap, playerLapPct, isAhead, carIdxLap, carIdxTrackSurface, carIdxOnPitRoad);
+                if (blinkHeldSlots != null && slotIndex < blinkHeldSlots.Length && blinkHeldSlots[slotIndex])
+                {
+                    MarkSlotBlinkHeld(slot, isAhead);
+                }
             }
+        }
+
+        private static void AdvanceCandidateCursor(int[] candidateIdx, bool[] usedCarIdx, ref int candidateCursor)
+        {
+            while (candidateIdx != null && candidateCursor < candidateIdx.Length)
+            {
+                int candidate = candidateIdx[candidateCursor];
+                if (candidate < 0 || candidate >= MaxCars || (usedCarIdx != null && usedCarIdx[candidate]))
+                {
+                    candidateCursor++;
+                    continue;
+                }
+
+                return;
+            }
+        }
+
+        private static int GetCandidateIdx(int[] candidateIdx, int candidateCursor)
+        {
+            if (candidateIdx == null || candidateCursor < 0 || candidateCursor >= candidateIdx.Length)
+            {
+                return -1;
+            }
+
+            return candidateIdx[candidateCursor];
+        }
+
+        private static double GetCandidateDist(double[] candidateDist, int candidateCursor)
+        {
+            if (candidateDist == null || candidateCursor < 0 || candidateCursor >= candidateDist.Length)
+            {
+                return double.MaxValue;
+            }
+
+            return candidateDist[candidateCursor];
+        }
+
+        private static void ConsumeCandidate(int[] candidateIdx, int candidateCursor, int consumedCarIdx, ref int nextCandidateCursor)
+        {
+            if (candidateIdx != null
+                && candidateCursor >= 0
+                && candidateCursor < candidateIdx.Length
+                && consumedCarIdx >= 0
+                && candidateIdx[candidateCursor] == consumedCarIdx)
+            {
+                nextCandidateCursor = candidateCursor + 1;
+            }
+        }
+
+
+        private bool ShouldHoldBlinkingSlot(CarSASlot slot, double sessionTimeSec, float[] carIdxLapDistPct, int[] carIdxTrackSurface)
+        {
+            if (slot == null || slot.CarIdx < 0 || slot.CarIdx >= _carStates.Length)
+            {
+                return false;
+            }
+
+            int carIdx = slot.CarIdx;
+            bool lapPctInvalid = true;
+            if (carIdxLapDistPct != null && carIdx < carIdxLapDistPct.Length)
+            {
+                double lapPct = carIdxLapDistPct[carIdx];
+                lapPctInvalid = double.IsNaN(lapPct) || lapPct < 0.0 || lapPct >= 1.0;
+            }
+
+            bool notInWorld = false;
+            if (carIdxTrackSurface != null && carIdx < carIdxTrackSurface.Length)
+            {
+                notInWorld = IsNotInWorldSurface(NormalizeTrackSurfaceRaw(carIdxTrackSurface[carIdx]));
+            }
+
+            if (!lapPctInvalid && !notInWorld)
+            {
+                return false;
+            }
+
+            double lastBlinkEligible = _blinkHoldLastEligibleSessionTimeByCar[carIdx];
+            if (double.IsNaN(lastBlinkEligible) || double.IsInfinity(lastBlinkEligible))
+            {
+                return false;
+            }
+
+            double ageSec = sessionTimeSec - lastBlinkEligible;
+            return !double.IsNaN(ageSec) && !double.IsInfinity(ageSec) && ageSec >= 0.0 && ageSec <= BlinkSlotHoldSec;
+        }
+
+        private static void MarkSlotBlinkHeld(CarSASlot slot, bool isAhead)
+        {
+            if (slot == null)
+            {
+                return;
+            }
+
+            if (isAhead)
+            {
+                slot.ForwardDistPct = double.NaN;
+            }
+            else
+            {
+                slot.BackwardDistPct = double.NaN;
+            }
+
+            slot.IsValid = true;
+            slot.IsOnTrack = false;
+            slot.IsOnPitRoad = false;
+            slot.Status = (int)CarSAStatus.Unknown;
+            slot.StatusE = (int)CarSAStatusE.Unknown;
+            slot.StatusEReason = StatusEReasonUnknown;
+            slot.StatusShort = StatusShortUnknown;
+            slot.StatusLong = StatusLongUnknown;
+            slot.GapTrackSec = double.NaN;
+            slot.GapRelativeSec = double.NaN;
+            slot.GapRelativeSource = 0;
+            slot.ClosingRateSecPerSec = double.NaN;
+            slot.ClosingRateSmoothed = 0.0;
+            slot.ClosingRateHasSample = false;
+            slot.LapsSincePit = -1;
         }
 
         private static bool TryComputeDistance(int playerCarIdx, double playerLapPct, int carIdx, float[] carIdxLapDistPct, bool isAhead, out double dist)
@@ -3577,6 +3748,7 @@ namespace LaunchPlugin
                 _gateGapLastPredictTimeSecByCar[carIdx] = double.NaN;
                 _gateGapLastPublishedSecByCar[carIdx] = double.NaN;
                 _gateGapLastPublishedTimeSecByCar[carIdx] = double.NaN;
+                _blinkHoldLastEligibleSessionTimeByCar[carIdx] = double.NaN;
                 SetDirectCheckpointEligibilityForCar(carIdx, false);
             }
         }
