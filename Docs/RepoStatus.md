@@ -1,5 +1,12 @@
 # Repo Status
 
+- 2026-06-04: SESSION burn-target stationary no-burn credit clarification landed.
+  - Renamed the helper to `ComputeSessionBurnTargetStationaryNoBurnCreditLitres()` and documented the invariant that the credit accounts for a stationary car not burning fuel during pit-box service time.
+  - Preserved the existing SESSION formula and guards: remaining stops from `ceil(validated Fuel.Live.RemainingStints)`, selected burn from `Fuel.Refuel.SelectedBurnPerLap`, lap seconds from the selected runtime refuel projection lap seam, and zero credit for invalid/non-positive credit inputs.
+  - Timed projections and lap-limited fallback projections keep the same `Fuel.LiveLapsRemainingInRace_Stable` remaining-lap denominator; the stationary no-burn box-time credit is not gated to timed-race projections and does not reduce required laps.
+  - Preserved STINT, END, INVALID, raw MFD request gating, `Fuel.Refuel.*`, pit/refuel math, planner logic, dashboard JSON, XAML, and SimHub export names.
+  - Property Snapshot list reviewed: yes, no export additions/removals/renames or snapshot-group behavior changes.
+
 - 2026-06-03: Fuel burn target SESSION pit-stop fuel credit landed.
   - `Fuel.Burn.Target` SESSION now adds a fixed 40.0 seconds of fuel-burn credit per conservative calculated remaining stop before dividing by `Fuel.LiveLapsRemainingInRace_Stable`.
   - Phase selection is documented as `effectiveTargetStints = Fuel.Live.RemainingStints + 1.0` because `Fuel.Live.RemainingStints` excludes the current stint (`>2.0` STINT, `>1.0` SESSION, `<=1.0` END, with END validity/reserve guards). Remaining stops for SESSION credit use the existing validated `Fuel.Live.RemainingStints` exact runtime refuel basis rounded up; burn rate uses existing runtime refuel selected burn and selected projection-lap seam. Invalid/non-positive credit inputs apply no credit and preserve prior SESSION behavior.

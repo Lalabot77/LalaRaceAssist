@@ -1,5 +1,13 @@
 # Development Changelog
 
+## 2026-06-04 — SESSION burn-target stationary no-burn credit clarification
+- Classification: **internal-only** (helper naming/comment and documentation clarification only; no export names, dashboard JSON, or runtime formula/guard behavior changed).
+- Renamed the SESSION pit-fuel-credit helper to `ComputeSessionBurnTargetStationaryNoBurnCreditLitres()` to clarify that the SESSION allowance is a stationary no-burn pit-box service-time fuel credit.
+- Documented the invariant that the credit is not a timed-race distance or required-laps reduction: timed projections and lap-limited fallback projections preserve the existing `Fuel.LiveLapsRemainingInRace_Stable` remaining-lap denominator while applying the stationary no-burn box-time credit when the existing inputs are valid.
+- Preserved the existing SESSION formula and guards: remaining stops from `ceil(validated Fuel.Live.RemainingStints)`, selected burn from `Fuel.Refuel.SelectedBurnPerLap`, lap seconds from the selected runtime refuel projection lap seam, and zero credit for invalid/non-positive credit inputs.
+- Preserved STINT, END, INVALID, raw MFD request gating, `Fuel.Refuel.*`, pit/refuel math, planner logic, dashboard JSON, XAML, and SimHub export names.
+- Property Snapshot list reviewed: yes; no export additions/removals/renames or snapshot-group behavior changes.
+
 ## 2026-06-03 — Fuel burn target SESSION pit-stop fuel credit
 - Classification: **both** (existing dashboard-facing `Fuel.Burn.Target` SESSION value changes; no export names or UI surfaces changed).
 - Refined only the `Fuel.Burn.Target` SESSION branch to add a fixed first-order pit-stop fuel-burn credit before calculating the session target: `ceil(validated Fuel.Live.RemainingStints) * 40.0s * (Fuel.Refuel.SelectedBurnPerLap / selected runtime refuel projection lap seconds)`.

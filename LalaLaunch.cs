@@ -2410,7 +2410,7 @@ namespace LaunchPlugin
             return Math.Max(0, (int)Math.Ceiling(Fuel_Live_RemainingStints));
         }
 
-        private double ComputeSessionBurnTargetPitFuelCreditLitres()
+        private double ComputeSessionBurnTargetStationaryNoBurnCreditLitres()
         {
             int remainingStops = ResolveSessionBurnTargetRemainingStops();
             double selectedBurnPerLap = Fuel_Refuel_SelectedBurnPerLap;
@@ -2427,6 +2427,9 @@ namespace LaunchPlugin
                 return 0.0;
             }
 
+            // This is a stationary no-burn service-time allowance: preserve the existing
+            // remaining-laps denominator and do not gate it on whether the projection
+            // came from timed-race or sim-lap fallback distance.
             double burnPerSecond = selectedBurnPerLap / projectionLapSeconds;
             return Math.Max(0.0, remainingStops * FuelBurnTargetSessionPitCreditSecondsPerStop * burnPerSecond);
         }
@@ -2468,7 +2471,7 @@ namespace LaunchPlugin
 
                 double fuelOnExitIntent = Math.Min(currentFuel + rawMfdSelectedFuelRequest, maxTankCapacity);
                 double availableFuelToEnd = fuelOnExitIntent - activeContingencyLitres;
-                double availableFuelToEndWithCredit = availableFuelToEnd + ComputeSessionBurnTargetPitFuelCreditLitres();
+                double availableFuelToEndWithCredit = availableFuelToEnd + ComputeSessionBurnTargetStationaryNoBurnCreditLitres();
                 Fuel_Burn_Target = Math.Max(0.0, availableFuelToEndWithCredit / LiveLapsRemainingInRace_Stable);
                 Fuel_Burn_TargetText = "SESSION";
                 Fuel_Burn_TargetValid = true;
