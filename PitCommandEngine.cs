@@ -47,9 +47,6 @@ namespace LaunchPlugin
         private const string FuelSetZeroCommand = "#fuel 0.01$";
         private const int ConfirmationDelayMs = 180;
         private const int MessageHoldMs = 3000;
-        private const uint KeyEventKeyUp = 0x0002;
-        private const uint InputKeyboard = 1;
-        private const uint KeyeventfUnicode = 0x0004;
         private const uint WmKeyDown = 0x0100;
         private const uint WmKeyUp = 0x0101;
         private const uint WmChar = 0x0102;
@@ -458,37 +455,9 @@ namespace LaunchPlugin
                 return false;
             }
 
-            if (transportMode == PitCommandTransportMode.LegacyForegroundSendInput)
-            {
-                transportUsed = "sendinput";
-                return TryForegroundSendInputChatCommand(command, out reason);
-            }
-
-            if (transportMode == PitCommandTransportMode.DirectMessageOnly)
-            {
-                transportUsed = "postmessage";
-                bool chatStateMutated;
-                return TryPostMessageChatCommand(command, out reason, out chatStateMutated);
-            }
-
             transportUsed = "postmessage";
-            bool postMessageMutatedChatState;
-            if (TryPostMessageChatCommand(command, out reason, out postMessageMutatedChatState))
-            {
-                return true;
-            }
-
-            if (postMessageMutatedChatState)
-            {
-                reason = "postmessage-partial-state-unsafe";
-                SimHub.Logging.Current.Warn("[LalaPlugin:PitCommand] transport=sendinput fallback_suppressed=true reason=postmessage-partial-state-unsafe");
-                return false;
-            }
-
-            fallbackFrom = "postmessage";
-            SimHub.Logging.Current.Info($"[LalaPlugin:PitCommand] transport=sendinput fallback_from=postmessage reason={reason}");
-            transportUsed = "sendinput";
-            return TryForegroundSendInputChatCommand(command, out reason);
+            bool chatStateMutated;
+            return TryPostMessageChatCommand(command, out reason, out chatStateMutated);
         }
 
         private bool TryPostMessageChatCommand(string command, out string reason, out bool chatStateMutated)
@@ -555,33 +524,6 @@ namespace LaunchPlugin
             return true;
         }
 
-        private bool TryForegroundSendInputChatCommand(string command, out string reason)
-        {
-            if (!IsIracingForeground())
-            {
-                reason = "not-foreground";
-                WarnOnce("not_foreground", "[LalaPlugin:PitCommand] transport=sendinput unavailable reason=not-foreground.");
-                return false;
-            }
-
-            TapVirtualKey(Keys.Escape);
-            Thread.Sleep(12);
-            TapVirtualKey(Keys.T);
-            Thread.Sleep(40);
-
-            if (!SendUnicodeText(command))
-            {
-                reason = "unicode-send-failed";
-                WarnOnce("type_failed", "[LalaPlugin:PitCommand] transport=sendinput local submission issue while sending command text (transport attempt unconfirmed).");
-                return false;
-            }
-
-            Thread.Sleep(20);
-            TapVirtualKey(Keys.Enter);
-            reason = "none";
-            return true;
-        }
-
         private static bool PostVirtualKey(IntPtr hwnd, Keys key)
         {
             if (hwnd == IntPtr.Zero)
@@ -592,81 +534,6 @@ namespace LaunchPlugin
             int vk = (int)key;
             return PostMessage(hwnd, WmKeyDown, (IntPtr)vk, IntPtr.Zero) &&
                    PostMessage(hwnd, WmKeyUp, (IntPtr)vk, IntPtr.Zero);
-        }
-
-        private static void TapVirtualKey(Keys key)
-        {
-            byte vk = (byte)key;
-            keybd_event(vk, 0, 0, UIntPtr.Zero);
-            Thread.Sleep(12);
-            keybd_event(vk, 0, KeyEventKeyUp, UIntPtr.Zero);
-        }
-
-        private static bool SendUnicodeText(string text)
-        {
-            if (string.IsNullOrEmpty(text))
-            {
-                return false;
-            }
-
-            foreach (char c in text)
-            {
-                if (!SendUnicodeChar(c))
-                {
-                    return false;
-                }
-            }
-
-            return true;
-        }
-
-        private static bool SendUnicodeChar(char c)
-        {
-            INPUT[] inputs = new INPUT[2];
-            inputs[0] = CreateUnicodeInput(c, false);
-            inputs[1] = CreateUnicodeInput(c, true);
-            uint sent = SendInput((uint)inputs.Length, inputs, Marshal.SizeOf(typeof(INPUT)));
-            return sent == inputs.Length;
-        }
-
-        private static INPUT CreateUnicodeInput(char c, bool keyUp)
-        {
-            INPUT input = new INPUT();
-            input.type = InputKeyboard;
-            input.U.ki.wVk = 0;
-            input.U.ki.wScan = c;
-            input.U.ki.dwFlags = KeyeventfUnicode | (keyUp ? KeyEventKeyUp : 0u);
-            input.U.ki.time = 0;
-            input.U.ki.dwExtraInfo = IntPtr.Zero;
-            return input;
-        }
-
-        private static bool IsIracingForeground()
-        {
-            try
-            {
-                IntPtr hwnd = GetForegroundWindow();
-                if (hwnd == IntPtr.Zero)
-                {
-                    return false;
-                }
-
-                uint pid;
-                GetWindowThreadProcessId(hwnd, out pid);
-                if (pid == 0)
-                {
-                    return false;
-                }
-
-                using (Process p = Process.GetProcessById((int)pid))
-                {
-                    return IsIracingProcessName(p.ProcessName);
-                }
-            }
-            catch
-            {
-                return false;
-            }
         }
 
         private static bool TryResolveIracingMainWindow(out IntPtr windowHandle, out string reason)
@@ -816,69 +683,10 @@ namespace LaunchPlugin
             return string.IsNullOrWhiteSpace(fallbackFrom) ? string.Empty : $" fallback_from={fallbackFrom}";
         }
 
-        [DllImport("user32.dll", CharSet = CharSet.Auto, ExactSpelling = true)]
-        private static extern void keybd_event(byte bVk, byte bScan, uint dwFlags, UIntPtr dwExtraInfo);
-
-        [DllImport("user32.dll")]
-        private static extern uint SendInput(uint nInputs, INPUT[] pInputs, int cbSize);
-
-        [DllImport("user32.dll")]
-        private static extern IntPtr GetForegroundWindow();
-
-        [DllImport("user32.dll")]
-        private static extern uint GetWindowThreadProcessId(IntPtr hWnd, out uint processId);
 
         [DllImport("user32.dll")]
         [return: MarshalAs(UnmanagedType.Bool)]
         private static extern bool PostMessage(IntPtr hWnd, uint msg, IntPtr wParam, IntPtr lParam);
 
-        [StructLayout(LayoutKind.Sequential)]
-        private struct INPUT
-        {
-            public uint type;
-            public InputUnion U;
-        }
-
-        [StructLayout(LayoutKind.Explicit)]
-        private struct InputUnion
-        {
-            [FieldOffset(0)]
-            public MOUSEINPUT mi;
-
-            [FieldOffset(0)]
-            public KEYBDINPUT ki;
-
-            [FieldOffset(0)]
-            public HARDWAREINPUT hi;
-        }
-
-        [StructLayout(LayoutKind.Sequential)]
-        private struct MOUSEINPUT
-        {
-            public int dx;
-            public int dy;
-            public uint mouseData;
-            public uint dwFlags;
-            public uint time;
-            public IntPtr dwExtraInfo;
-        }
-
-        [StructLayout(LayoutKind.Sequential)]
-        private struct KEYBDINPUT
-        {
-            public ushort wVk;
-            public ushort wScan;
-            public uint dwFlags;
-            public uint time;
-            public IntPtr dwExtraInfo;
-        }
-
-        [StructLayout(LayoutKind.Sequential)]
-        private struct HARDWAREINPUT
-        {
-            public uint uMsg;
-            public ushort wParamL;
-            public ushort wParamH;
-        }
     }
 }

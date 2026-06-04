@@ -148,12 +148,9 @@ Use these for common race-chat messages you want on hardware buttons, keyboard k
 
 LalaLaunch injects iRacing pit/custom chat messages directly (no dedicated user macro-hotkey setup required).
 
-Transport mode is configurable in **Settings → Pit Commands**:
-- `Auto (Direct message then fallback)` (default) tries direct window-message send first, then falls back to legacy foreground `SendInput`.
-- `Legacy foreground SendInput only` uses only the focus-required `SendInput` path.
-- `Direct message only` uses only the window-message path and does not fallback.
+Transport is plugin-owned and fixed to direct iRacing window-message delivery. **Settings → Pit Commands** no longer exposes Auto/Legacy/Direct transport choices, and the legacy foreground `SendInput` path is no longer part of the normal workflow.
 
-If both available transport options fail for the selected mode (for example no iRacing window is available for direct send, or legacy fallback is blocked because iRacing is not foreground), LalaLaunch publishes `Pit Cmd Fail` and logs a pit-command warning so the failure is visible.
+If direct transport cannot find/use the iRacing window, LalaLaunch publishes `Pit Cmd Fail` and logs a pit-command warning so the failure is visible.
 For custom messages, raw commands, and stateless built-in pit actions, a successful direct send is transport-attempt only (queued/unverified), not authoritative proof that iRacing applied the command.
 Stateful toggle actions (`ToggleFuel`, tyre/fix toggles, etc.) remain the only pit actions with authoritative before/after telemetry confirmation.
 

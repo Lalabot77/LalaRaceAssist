@@ -1,7 +1,7 @@
 # Pit Commands and Fuel/Tyre Control
 
 Validated against commit: HEAD
-Last updated: 2026-04-30
+Last updated: 2026-06-04
 Branch: work
 
 ## Purpose
@@ -21,7 +21,7 @@ This is the canonical technical document for the pit/custom command stack and re
 ## Inputs (source + cadence)
 - Driver actions from SimHub Controls & Events / dash touch bindings.
 - Live telemetry/state confirmation inputs used by stateful pit toggles (fuel/tyres/repair/auto-fuel).
-- iRacing process/window availability for transport selection.
+- iRacing process/window availability for plugin-owned direct window-message transport.
 - Pit telemetry seams used by fuel-control ownership/cancel logic:
   - requested pit fuel (`PitSvFuel`),
   - MFD fuel-enable truth (`dpFuelFill`),
@@ -31,8 +31,9 @@ This is the canonical technical document for the pit/custom command stack and re
 
 ## Internal state
 ### Command transport state
-- Selected transport mode (`Auto`, `Legacy foreground SendInput only`, `Direct message only`).
-- Direct-path sequencing state used to avoid unsafe duplicate-open/double-send fallback behavior.
+- Transport is plugin-owned and fixed to the direct iRacing window-message path (`postmessage`). Users no longer choose a transport mode in Settings.
+- Legacy foreground `SendInput` and Auto fallback are no longer part of the normal user workflow or dispatch path.
+- Direct-path sequencing state is retained to avoid unsafe duplicate-open behavior after bounded direct-path aborts.
 - Last action/raw command strings for bounded diagnostics (`Pit.Command.LastAction`, `Pit.Command.LastRaw`).
 
 ### Feedback state
@@ -78,7 +79,7 @@ This is the canonical technical document for the pit/custom command stack and re
 - Target litres and override-active semantics for command generation.
 - DATA defaults to `LIVE` on session/control reset. Changing DATA always forces `SOURCE=STBY`, disarms AUTO, and sends no fuel command.
 - `SOURCE=PLAN` has been retired. The one-release compatibility action `Pit.FuelControl.SetPlan` now maps to `DATA=PLAN` + `SOURCE=STBY` and publishes `FUEL DATA PLAN`.
-- Legacy `Pit.FuelControl.PushSaveMode*` compatibility exports/actions were removed before public release; use `Pit.FuelControl.Data*` only.
+- Legacy `Pit.FuelControl.PushSaveMode*` compatibility exports/actions remain removed; issue #698 cleanup confirmed no live `PushSaveMode`/`PushSaveModeText` exports or legacy cycle action are present. Use `Pit.FuelControl.Data*` only.
 - `NORM` now follows DATA like `PUSH`/`SAVE`: `DATA LIVE` uses runtime/live stable normal target; `DATA PLAN` uses planner/profile normal target. `PUSH`/`SAVE` behavior is unchanged (`LIVE` selects live push/save targets; `PLAN` selects planner/profile memory push/save targets with the existing guarded fallback behavior).
 - Fault export state (`Pit.FuelControl.Fault`) for post-settle selector disagreement diagnostics only (`0/1/2/3` contract). Plugin-owned requested-fuel expectations now have a bounded confirmation expiry: after the existing post-send suppression window plus a short confirmation allowance, a still-unconfirmed `PitSvFuel` mismatch is treated as external/manual MFD takeover, clearing the stale pending request and fault for that tick rather than latching a long-lived request fault.
 
@@ -94,10 +95,7 @@ This is the canonical technical document for the pit/custom command stack and re
 ## Calculation blocks (high level)
 1. Receive an action from plugin-owned binding surface.
 2. Resolve built-in pit/custom/fuel-control/tyre-control command intent.
-3. Dispatch via selected transport mode:
-   - Auto: direct-message first, bounded fallback where safe.
-   - Legacy: foreground-only SendInput.
-   - Direct-only: no fallback.
+3. Dispatch via fixed plugin-owned direct window-message transport.
 4. Publish feedback + diagnostics:
    - stateful built-ins use effect confirmation when available,
    - custom/raw/stateless built-ins are transport-attempt only.
@@ -163,8 +161,8 @@ Canonical log wording and meaning live in `Docs/Internal/SimHubLogMessages.md`; 
 
 ## Failure modes / edge cases
 - No usable iRacing process/window: command send attempt fails and feedback/log surfaces should make this visible.
-- Direct transport partial-state uncertainty: Auto mode suppresses unsafe fallback on that press to avoid duplicate corruption.
-- Chat-open leak prevention is explicit in both transport paths: command transport force-sends `Esc` before `T` so stale-open chat does not absorb the opener key into outgoing raw/custom command payload (`t#...` / `tt#...` corruption).
+- Direct transport partial-state uncertainty fails closed for that press; there is no legacy fallback retry.
+- Chat-open leak prevention is explicit in direct transport: command transport force-sends `Esc` before `T` so stale-open chat does not absorb the opener key into outgoing raw/custom command payload (`t#...` / `tt#...` corruption).
 - Transport success for custom/raw/stateless commands is attempt-only; in-sim effect is unverified by design.
 - Tyre control has no resend loop: each target change/correction sends once at most, with a 1.0s settle hold and truth-following remap outside AUTO.
 - Tyre command `PIT CMD FAIL` feedback is transport-failure only (raw send returned false), and passive truth-mirror feedback is briefly suppressed after send failure so failure text is not immediately overwritten.

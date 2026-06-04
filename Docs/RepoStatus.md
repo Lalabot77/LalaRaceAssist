@@ -1,5 +1,12 @@
 # Repo Status
 
+- 2026-06-04 Pit command direct transport fixed path cleanup landed:
+  - Settings -> Pit Commands no longer exposes the transport-mode ComboBox/options;
+  - pit/custom commands now dispatch through the plugin-owned direct iRacing window-message path only, with persisted `PitCommandTransportMode` retained as ignored legacy load-safe data;
+  - legacy foreground `SendInput` fallback code was removed from live dispatch, while command names, raw payloads, custom-message slots, Pit.Command feedback/severity exports, Pit Fuel Control DATA/SOURCE/MODE semantics, Tyre Control behavior, fuel/refuel math, and dashboard JSON files remain unchanged;
+  - issue #698 legacy Fuel Data/PushSave cleanup was reviewed: `Pit.FuelControl.PushSaveMode`, `Pit.FuelControl.PushSaveModeText`, and legacy `PushSaveModeCycle` actions/exports were already absent; docs/log inventory now state that explicitly;
+  - Property Snapshot list reviewed: yes, no group update required because no live export/property was added, removed, renamed, or regrouped.
+
 - 2026-06-04: SESSION burn-target stationary no-burn credit clarification landed.
   - Renamed the helper to `ComputeSessionBurnTargetStationaryNoBurnCreditLitres()` and documented the invariant that the credit accounts for a stationary car not burning fuel during pit-box service time.
   - Preserved the existing SESSION formula and guards: remaining stops from `ceil(validated Fuel.Live.RemainingStints)`, selected burn from `Fuel.Refuel.SelectedBurnPerLap`, lap seconds from the selected runtime refuel projection lap seam, and zero credit for invalid/non-positive credit inputs.
