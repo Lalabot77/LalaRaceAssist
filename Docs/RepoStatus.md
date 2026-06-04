@@ -2,7 +2,7 @@
 
 - 2026-06-03: Fuel burn target SESSION pit-stop fuel credit landed.
   - `Fuel.Burn.Target` SESSION now adds a fixed 40.0 seconds of fuel-burn credit per conservative calculated remaining stop before dividing by `Fuel.LiveLapsRemainingInRace_Stable`.
-  - Remaining stops use the existing validated `Fuel.Live.RemainingStints` exact runtime refuel basis rounded up; burn rate uses existing runtime refuel selected burn and selected projection-lap seam. Invalid/non-positive credit inputs apply no credit and preserve prior SESSION behavior.
+  - Phase selection is documented as `effectiveTargetStints = Fuel.Live.RemainingStints + 1.0` because `Fuel.Live.RemainingStints` excludes the current stint (`>2.0` STINT, `>1.0` SESSION, `<=1.0` END, with END validity/reserve guards). Remaining stops for SESSION credit use the existing validated `Fuel.Live.RemainingStints` exact runtime refuel basis rounded up; burn rate uses existing runtime refuel selected burn and selected projection-lap seam. Invalid/non-positive credit inputs apply no credit and preserve prior SESSION behavior.
   - Preserved STINT, END, INVALID, `Fuel.Burn.TargetText`, `Fuel.StintBurnTarget`, `Fuel.RequiredBurnToEnd`, `Fuel.Refuel.*`, remaining-stints exports, pit/refuel math, pit-loss learning, pit-window logic, Strategy planner, dashboard JSON, and XAML.
   - Property Snapshot list reviewed: yes, no group change required because existing `Fuel.Burn.*` exports remain covered by the `Fuel.*` Fuel/Strategy prefix.
 
