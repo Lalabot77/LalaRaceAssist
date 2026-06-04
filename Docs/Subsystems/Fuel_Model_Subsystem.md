@@ -1,7 +1,7 @@
 # Fuel Model
 
 Validated against commit: HEAD
-Last updated: 2026-06-02
+Last updated: 2026-06-03
 Branch: work
 
 ## Purpose
@@ -64,6 +64,13 @@ Out of scope:
 - Separate dry and wet accepted-lap windows.
 - Per-session max-burn tracking with spike protection.
 - Seed markers so carry-over baseline values are not immediately evicted on a session transition.
+
+### Fuel burn target selector state
+- `Fuel.Burn.Target`, `Fuel.Burn.TargetText`, and `Fuel.Burn.TargetValid` are plugin-owned dashboard selector exports layered over existing Fuel Model guidance; dashboards should not rebuild the selector in JSON/NCALC.
+- The selector uses the validated `Fuel.Live.RemainingStints` basis only after runtime refuel/projection context has been resolved; reset/default `0` is not treated as END.
+- Selection order is `STINT` (`RemainingStints > 2`, target = `Fuel.StintBurnTarget`), `SESSION` (`RemainingStints > 1`, target = session calculation), `END` (`RemainingStints <= 1`, target = `Fuel.RequiredBurnToEnd`), else `INVALID`/`0`/`false`.
+- Only SESSION requires raw MFD request availability; STINT and END ignore that seam. SESSION uses the raw driver-selected MFD fuel request seam (`PitSvFuel`, gated to zero when `dpFuelFill` says refuel is not selected) before tank-space clamp: `min(current fuel + selected MFD request, max tank) - active contingency litres`, divided by numeric `Fuel.LiveLapsRemainingInRace_Stable`. It does not use `Fuel.Refuel.NextLitresCeil`, `Fuel.Pit.WillAdd`, plugin-recommended refuel values, planner fuel values, or tank-space-clamped add values.
+- END has an explicit reserve-protected guard: when current fuel plus one tank cannot cover the active guard burn/projection plus active contingency, the selector publishes INVALID instead of END even if the base remaining-stints value is `<= 1`.
 
 ### Fuel burn analysis popup state
 - `Fuel.Burn.Analysis.*` is an additive dashboard-analysis observer fed only by the existing accepted-fuel-lap insertion seam.

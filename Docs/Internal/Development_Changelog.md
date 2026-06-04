@@ -34,6 +34,19 @@
 - Message debounce intentionally deferred; the first fix is upstream data continuity, with MSGV1 debounce reserved for future captures showing sustained class-position oscillation after the row hold.
 - Property Snapshot list reviewed: yes, no group change required because no exports were added, removed, renamed, or regrouped.
 
+## 2026-06-03 — Fuel burn target selector redesign
+- Classification: **both** (new dashboard-facing fuel target exports plus internal Fuel Model selector contract).
+- Phase 1 seam result: the clean raw driver-selected MFD fuel request seam exists at `DataCorePlugin.GameRawData.Telemetry.PitSvFuel`, with `dpFuelFill` indicating whether refuel is selected; `PitSvFuel` is upstream of tank-space clamp and is mirrored by Pit Fuel Control for both external/manual MFD changes and plugin-owned `#fuel` sends.
+- Added `Fuel.Burn.Target`, `Fuel.Burn.TargetText`, and `Fuel.Burn.TargetValid` as a plugin-owned dashboard selector for `STINT` / `SESSION` / `END` / `INVALID`.
+- SESSION uses the selected MFD request before tank-space clamp and intentionally does not use `Fuel.Refuel.NextLitresCeil`, `Fuel.Pit.WillAdd`, plugin-recommended refuel values, tank-space-clamped add values, or planner fuel values.
+- Added an internal validity bit for `Fuel.Live.RemainingStints` so reset/default `0` does not publish `END`.
+- Added a reserve-protected END guard: if the active guard burn/projection plus active contingency still exceeds current fuel plus one runtime max tank, the selector publishes `INVALID` rather than `END`.
+- Preserved `Fuel.StintBurnTarget`, `Fuel.RequiredBurnToEnd`, `Fuel.Refuel.*`, `Fuel.Pit.*`, Pit Fuel Control command/refuel math, dashboard JSON, and XAML.
+- Property Snapshot list reviewed: yes; new `Fuel.Burn.*` exports route through the existing `Fuel.*` prefix into the Fuel/Strategy group.
+
+### Review follow-up: do not gate STINT/END on raw MFD availability
+- Fixed selector invocation so missing/unreadable `PitSvFuel` invalidates only the SESSION branch. STINT and END now continue to publish from validated `Fuel.Live.RemainingStints`, `Fuel.StintBurnTarget`, and `Fuel.RequiredBurnToEnd` basis when raw MFD request telemetry is unavailable.
+- Preserved SESSION semantics: it still requires valid raw MFD-selected fuel request, still gates the value by `dpFuelFill`, and still does not use `Fuel.Refuel.NextLitresCeil`, `Fuel.Pit.WillAdd`, planner values, plugin recommendations, or tank-space-clamped add values.
 ## 2026-06-03 — Pit Fuel Control stale request-fault expiry
 - Classification: **both** (driver-facing recovery behavior + internal fault-lifecycle hardening).
 - Added a bounded pending-owned requested-fuel confirmation expiry in `PitFuelControlEngine`: after the existing 900 ms post-send suppression and short confirmation allowance, a still-mismatched valid `PitSvFuel` is treated as external/manual MFD takeover, clearing stale pending ownership and `Pit.FuelControl.Fault` for that tick.
