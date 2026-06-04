@@ -137,7 +137,7 @@ Confirm:
 
 Output
 
-1. Summary of change
+1. Summary of change in copy paste block (markup)
 2. Files changed
 3. Behaviour impact (explicit)
 4. Verification result

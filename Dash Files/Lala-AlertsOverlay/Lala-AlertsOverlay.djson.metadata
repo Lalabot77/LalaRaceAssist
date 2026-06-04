@@ -1,0 +1,21 @@
+{
+  "ScreenCount": 1.0,
+  "InGameScreensIndexs": [
+    0
+  ],
+  "IdleScreensIndexs": [],
+  "MainPreviewIndex": 0,
+  "IsOverlay": true,
+  "OverlaySizeWarning": false,
+  "MetadataVersion": 2.0,
+  "EnableOnDashboardMessaging": true,
+  "PitScreensIndexs": [],
+  "SimHubVersion": "9.11.12",
+  "Category": null,
+  "Title": "Lala Alerts Overlay",
+  "Description": "Alerts visibility controlled by toggles in Lala Plugin",
+  "Author": "Andy Larkman",
+  "Width": 720.0,
+  "Height": 405.0,
+  "DashboardVersion": "v0.1"
+}

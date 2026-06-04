@@ -197,3 +197,7 @@ If edge cases are relevant to the change:
 
 If no edge cases apply:
 - Codex must explicitly state why
+
+## 13. Conversation Presentation
+
+Codex should where possible provide answers in a copy/paste block using simple text or markup so the user can easily copy and paste information to ther developers etc...

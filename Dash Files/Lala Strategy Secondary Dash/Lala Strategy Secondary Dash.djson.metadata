@@ -1,0 +1,36 @@
+{
+  "ScreenCount": 12.0,
+  "InGameScreensIndexs": [
+    0,
+    1,
+    2,
+    3,
+    4,
+    5,
+    6,
+    11
+  ],
+  "IdleScreensIndexs": [
+    0,
+    1,
+    2,
+    3,
+    4,
+    6,
+    11
+  ],
+  "MainPreviewIndex": 0,
+  "IsOverlay": false,
+  "OverlaySizeWarning": true,
+  "MetadataVersion": 2.0,
+  "EnableOnDashboardMessaging": true,
+  "PitScreensIndexs": [],
+  "SimHubVersion": "9.11.12",
+  "Category": null,
+  "Title": "Lala Strategy Secondary Dash",
+  "Description": "Secondary Dash for Strategy (Race Engineer)",
+  "Author": "Lalabot",
+  "Width": 1060.0,
+  "Height": 540.0,
+  "DashboardVersion": "v1.0"
+}

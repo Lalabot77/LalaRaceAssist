@@ -1,0 +1,21 @@
+{
+  "ScreenCount": 1.0,
+  "InGameScreensIndexs": [
+    0
+  ],
+  "IdleScreensIndexs": [],
+  "MainPreviewIndex": 0,
+  "IsOverlay": false,
+  "OverlaySizeWarning": false,
+  "MetadataVersion": 2.0,
+  "EnableOnDashboardMessaging": true,
+  "PitScreensIndexs": [],
+  "SimHubVersion": "9.10.15",
+  "Category": "",
+  "Title": "Lala-Dash",
+  "Description": "",
+  "Author": "Lalabot",
+  "Width": 850.0,
+  "Height": 480.0,
+  "DashboardVersion": "2"
+}
