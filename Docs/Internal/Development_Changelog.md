@@ -1,5 +1,14 @@
 # Development Changelog
 
+## 2026-06-03 — Fuel burn target SESSION pit-stop fuel credit
+- Classification: **both** (existing dashboard-facing `Fuel.Burn.Target` SESSION value changes; no export names or UI surfaces changed).
+- Refined only the `Fuel.Burn.Target` SESSION branch to add a fixed first-order pit-stop fuel-burn credit before calculating the session target: `ceil(validated Fuel.Live.RemainingStints) * 40.0s * (Fuel.Refuel.SelectedBurnPerLap / selected runtime refuel projection lap seconds)`.
+- Documentation follow-up: clarified that selector phase thresholds use `effectiveTargetStints = Fuel.Live.RemainingStints + 1.0` because `Fuel.Live.RemainingStints` excludes the current stint (`>2.0` STINT, `>1.0` SESSION, `<=1.0` END, subject to validity and END reserve guard).
+- Remaining stop-count source confirmed as existing plugin-owned validated `Fuel.Live.RemainingStints`, which is already computed from runtime refuel burn/projection context and normalized by runtime max-tank authority; it is rounded up conservatively because the source is exact tank-load/stint requirement.
+- Invalid/non-positive selected burn, projection lap seconds, or remaining stop count produce zero credit and preserve the previous SESSION calculation rather than invalidating SESSION.
+- Preserved STINT, END, INVALID, `Fuel.Burn.TargetText`, `Fuel.StintBurnTarget`, `Fuel.RequiredBurnToEnd`, `Fuel.Refuel.*`, `Fuel.Live.RemainingStints`, pit/refuel math, pit-loss learning, pit-window logic, Strategy planner, dashboard JSON, and XAML.
+- Property Snapshot list reviewed: yes; no group change required because existing `Fuel.Burn.*` exports remain covered by the `Fuel.*` Fuel/Strategy prefix.
+
 ## 2026-06-03 — Blink-continuity deep stale-data review follow-up
 - Classification: **internal-only** (stale-data/candidate-preservation follow-up; no export names or dashboard JSON changed).
 - CarSA slot assignment now keeps a candidate cursor separate from held-slot identity preservation, so a blink-held A1/B1 does not consume or drop the nearest valid live candidate; following slots can still publish the next eligible live cars without duplicate `CarIdx` slots.

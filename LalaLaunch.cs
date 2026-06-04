@@ -984,6 +984,7 @@ namespace LaunchPlugin
         private double _lastProjectedLapsRemaining;
         private double _lastSimLapsRemaining;
         private double _lastProjectionLapSecondsUsed;
+        private double _runtimeRefuelSelectedProjectionLapSeconds;
         private bool _afterZeroResultLogged;
 
         // New per-mode rolling windows
@@ -1022,6 +1023,7 @@ namespace LaunchPlugin
         public double Fuel_Burn_Target { get; private set; }
         public string Fuel_Burn_TargetText { get; private set; } = "INVALID";
         public bool Fuel_Burn_TargetValid { get; private set; }
+        private const double FuelBurnTargetSessionPitCreditSecondsPerStop = 40.0;
 
         private double _avgDryFuelPerLap = 0.0;
         private double _avgWetFuelPerLap = 0.0;
@@ -2398,6 +2400,37 @@ namespace LaunchPlugin
             }
         }
 
+        private int ResolveSessionBurnTargetRemainingStops()
+        {
+            if (!Fuel_Live_RemainingStintsValid || !IsFiniteNonNegative(Fuel_Live_RemainingStints))
+            {
+                return 0;
+            }
+
+            return Math.Max(0, (int)Math.Ceiling(Fuel_Live_RemainingStints));
+        }
+
+        private double ComputeSessionBurnTargetPitFuelCreditLitres()
+        {
+            int remainingStops = ResolveSessionBurnTargetRemainingStops();
+            double selectedBurnPerLap = Fuel_Refuel_SelectedBurnPerLap;
+            double projectionLapSeconds = _runtimeRefuelSelectedProjectionLapSeconds;
+
+            if (remainingStops <= 0 || selectedBurnPerLap <= 0.0 || projectionLapSeconds <= 0.0)
+            {
+                return 0.0;
+            }
+
+            if (double.IsNaN(selectedBurnPerLap) || double.IsInfinity(selectedBurnPerLap) ||
+                double.IsNaN(projectionLapSeconds) || double.IsInfinity(projectionLapSeconds))
+            {
+                return 0.0;
+            }
+
+            double burnPerSecond = selectedBurnPerLap / projectionLapSeconds;
+            return Math.Max(0.0, remainingStops * FuelBurnTargetSessionPitCreditSecondsPerStop * burnPerSecond);
+        }
+
         private void UpdateFuelBurnTargetSelector(
             double currentFuel,
             double maxTankCapacity,
@@ -2435,7 +2468,8 @@ namespace LaunchPlugin
 
                 double fuelOnExitIntent = Math.Min(currentFuel + rawMfdSelectedFuelRequest, maxTankCapacity);
                 double availableFuelToEnd = fuelOnExitIntent - activeContingencyLitres;
-                Fuel_Burn_Target = Math.Max(0.0, availableFuelToEnd / LiveLapsRemainingInRace_Stable);
+                double availableFuelToEndWithCredit = availableFuelToEnd + ComputeSessionBurnTargetPitFuelCreditLitres();
+                Fuel_Burn_Target = Math.Max(0.0, availableFuelToEndWithCredit / LiveLapsRemainingInRace_Stable);
                 Fuel_Burn_TargetText = "SESSION";
                 Fuel_Burn_TargetValid = true;
                 return;
@@ -10415,6 +10449,7 @@ namespace LaunchPlugin
             Fuel_Refuel_DataMode = (_pitFuelControlEngine?.Data ?? PitFuelControlData.Live) == PitFuelControlData.Plan ? "SAVED" : "LIVE";
             Fuel_Refuel_BurnMode = GetRefuelBurnModeText(_pitFuelControlEngine?.Source ?? PitFuelControlSource.Stby);
             Fuel_Refuel_SelectedBurnPerLap = 0.0;
+            _runtimeRefuelSelectedProjectionLapSeconds = 0.0;
             Fuel_Live_RemainingStints = 0.0;
             Fuel_Live_RemainingStintsValid = false;
         }
@@ -10443,6 +10478,7 @@ namespace LaunchPlugin
             Fuel_Refuel_BurnSource = ClassifyRefuelSourceToken(burnSource);
             Fuel_Refuel_LapSource = ClassifyRefuelSourceToken(lapSource);
             Fuel_Refuel_SelectedBurnPerLap = selectedBurn > 0.0 ? selectedBurn : 0.0;
+            _runtimeRefuelSelectedProjectionLapSeconds = lapSeconds > 0.0 && !double.IsNaN(lapSeconds) && !double.IsInfinity(lapSeconds) ? lapSeconds : 0.0;
             double projectedLapsRemaining;
             bool hasProjection = TryResolveDataGovernedProjectedLapsRemaining(
                 Fuel_Refuel_LapSource,
@@ -19888,6 +19924,7 @@ namespace LaunchPlugin
             Fuel_Refuel_DataMode = "LIVE";
             Fuel_Refuel_BurnMode = "STBY";
             Fuel_Refuel_SelectedBurnPerLap = 0;
+            _runtimeRefuelSelectedProjectionLapSeconds = 0.0;
             StrategyDash_BurnPlanText = "NORM";
             StrategyDash_ContingencyText = "CONT 0";
 
