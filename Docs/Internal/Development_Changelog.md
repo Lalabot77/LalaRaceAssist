@@ -1046,19 +1046,6 @@
   - retained separate planning-cap helper ownership (`ResolvePlanningMaxTankCapacity()`) for planner semantics boundaries.
 - Preserved invariants: planner Profile/Live Snapshot behavior, preset apply semantics, pit command/control state machine, and `Fuel.Pit.WillAdd = min(requestedAdd, tankSpace)` clamp shape remain unchanged.
 
-# Development Changelog
-
-## 2026-06-04 — Pit command direct transport fixed path cleanup
-- Classification: **both** (user-facing Settings UI simplification plus internal transport cleanup; no action names, Pit.Command exports, or fuel/strategy math changed).
-- Removed the Settings -> Pit Commands transport-mode ComboBox; users no longer choose Auto / Legacy foreground SendInput / Direct message only.
-- Pit/custom command dispatch is now fixed to the plugin-owned direct iRacing window-message path. Persisted `PitCommandTransportMode` values are retained as ignored legacy settings data so old settings load safely, but they cannot re-enable Auto fallback or legacy foreground `SendInput`.
-- Removed the live legacy foreground `SendInput` fallback path from `PitCommandEngine`; direct-window failure now fails closed with the existing `PIT CMD FAIL` feedback/log contract.
-- Issue #698 legacy cleanup reviewed: `Pit.FuelControl.PushSaveMode`, `Pit.FuelControl.PushSaveModeText`, and legacy `PushSaveModeCycle` code exports/actions were already absent; stale docs/log inventory references were corrected. Canonical Pit Fuel Control DATA/SOURCE/MODE behavior and `CycleData` remain unchanged.
-- Property Snapshot list reviewed: yes; no live SimHub export/property was added, removed, or renamed because the requested PushSaveMode exports were already absent and existing Pit/PitExit group coverage remains correct.
-
-This file tracks internal development history between releases.
-The public user-facing release history is maintained in the root `CHANGELOG.md`.
-
 ## 2026-05-04 — Pit-loss source-aware drive-through normalization + 2.00s transition allowance
 - Classification: **both** (driver-facing pit-loss display semantics + runtime total-stop-loss composition).
 - Added persisted per-track pit-loss learning mode (`PitLaneLossLearningMode`) so pit-loss save path records whether the accepted sample came from a boxed stop or drive-through cycle.

@@ -185,7 +185,7 @@ Canonical log wording and meaning live in `Docs/Internal/SimHubLogMessages.md`; 
 
 ## Test checklist
 - Bind and press representative built-in pit actions from SimHub Controls & Events.
-- Validate transport mode behavior in each mode (`Auto`, `Legacy`, `Direct only`) with logs.
+- Confirm representative pit/custom/fuel/tyre commands dispatch via direct postmessage and fail visibly with PIT CMD FAIL when no usable iRacing window exists.
 - Confirm Fuel Control mode/source actions stay on explicit raw-command attempt semantics (single attempt, no retries/poll loops).
 - Confirm Pit Fuel Control AUTO cancel triggers on external fuel request and MFD enable changes.
 - Confirm Tyre Control mode cycle order and AUTO wet/dry switching follow declared-wet authority.
