@@ -1,5 +1,39 @@
 # Development Changelog
 
+## 2026-06-03 — Blink-continuity deep stale-data review follow-up
+- Classification: **internal-only** (stale-data/candidate-preservation follow-up; no export names or dashboard JSON changed).
+- CarSA slot assignment now keeps a candidate cursor separate from held-slot identity preservation, so a blink-held A1/B1 does not consume or drop the nearest valid live candidate; following slots can still publish the next eligible live cars without duplicate `CarIdx` slots.
+- Opponents telemetry-stale targets now explicitly publish gap exports as NaN, and row continuity pre-scans for live usable canonical identities so live reconnect/DriverInfo duplicates win over older held rows.
+- Deep review confirmed H2HTrack remains fail-closed through `IsOnTrack` selector gating, H2HRace remains fail-closed through telemetry-stale `IsValid=false`/`CarIdx=-1` propagation, and pit-exit/checkpoint/lap-time ingestion continue to exclude telemetry-stale rows.
+- Property Snapshot list reviewed: yes; no exports/properties were added, removed, renamed, or regrouped.
+
+## 2026-06-03 — H2HTrack blink-held CarSA selector fail-closed follow-up
+- Classification: **internal-only** (stale live-target suppression; no export names or dashboard JSON changed).
+- `BuildH2HTrackSelector(...)` now requires CarSA slots to be both valid and on-track, so blink-held slots (`IsOnTrack=false`) can preserve identity/cosmetics in CarSA exports without becoming live-valid H2HTrack timing targets.
+- Preserved CarSA blink-hold identity continuity, normal valid H2HTrack selector behavior, Opponents row hold behavior, H2HRace handling, export names, dashboard JSON, and fuel/pit/strategy/race-finish systems.
+- Property Snapshot list reviewed: yes, no group change required because no exports were added, removed, renamed, or regrouped.
+
+## 2026-06-03 — Blink-hold stale-data leak follow-up
+- Classification: **internal-only** (stale-data suppression follow-up; no export names or dashboard JSON changed).
+- CarSA now evaluates blink-hold eligibility before the same-candidate slot fast path, so invalid-`LapDistPct` starts the hold immediately and normal/precision gap fields publish invalid values from the first affected tick.
+- Opponents now removes/marks seen a held identity when the current snapshot reports the same canonical identity at a different `CarIdx`, preventing the old held row from being resurrected during reconnect/DriverInfo churn.
+- Telemetry-stale Opponents targets now preserve identity/effective-position continuity but publish as not live-valid (`IsValid=false`, `CarIdx=-1`, no live gap truth); H2HRace selector propagation keeps stale identity with `CarIdx=-1` so H2H live timing/gap validity falls false instead of resolving stale live timing.
+- Property Snapshot list reviewed: yes, no group change required because no exports were added, removed, renamed, or regrouped.
+
+## 2026-06-03 — Blink-hold precision suppression follow-up
+- Classification: **internal-only** (behavior precision fix; no export names or dashboard JSON changed).
+- Suppressed `Car.Ahead01P.Gap.Sec` / `Car.Behind01P.Gap.Sec` while the corresponding slot-01 blink hold is active, preventing recent gate truth from publishing as precision gap truth during a held telemetry gap.
+- Added a dedicated CarSA blink-hold eligibility timestamp so invalid-`LapDistPct` holds can last the intended 1.0 s window without being shortened by the existing 0.5 s LapPct delta/closing-cache grace.
+- Preserved existing LapPct cache grace, NotInWorld latch grace, valid live slot behavior, Opponents row hold behavior, export names, and dashboard JSON.
+- Property Snapshot list reviewed: yes, no group change required because no exports were added, removed, renamed, or regrouped.
+
+## 2026-06-03 — CarSA/Opponents bounded opponent blink continuity
+- Classification: **internal-only** (runtime stability/observability behavior; no export names or dashboard JSON changed).
+- Added a 1.0 s CarSA physical-slot blink hold for existing ahead/behind `CarIdx` identities that briefly become NotInWorld or lose valid `LapDistPct`; identity/cosmetics are retained for target continuity while live gap truth is invalidated (`Gap.*` NaN/source 0, no checkpoint truth) until valid telemetry returns or the hold expires.
+- Added a 2.0 s Opponents row hold for known non-player race-order rows with the same canonical identity/`CarIdx`; held rows keep their last RaceProgress anchor, publish as not on track, skip the CarSA checkpoint preferred gap, and are excluded from pit-exit prediction rows to avoid expanding pit-exit behavior.
+- Message debounce intentionally deferred; the first fix is upstream data continuity, with MSGV1 debounce reserved for future captures showing sustained class-position oscillation after the row hold.
+- Property Snapshot list reviewed: yes, no group change required because no exports were added, removed, renamed, or regrouped.
+
 ## 2026-06-03 — Fuel burn target selector redesign
 - Classification: **both** (new dashboard-facing fuel target exports plus internal Fuel Model selector contract).
 - Phase 1 seam result: the clean raw driver-selected MFD fuel request seam exists at `DataCorePlugin.GameRawData.Telemetry.PitSvFuel`, with `dpFuelFill` indicating whether refuel is selected; `PitSvFuel` is upstream of tank-space clamp and is mirrored by Pit Fuel Control for both external/manual MFD changes and plugin-owned `#fuel` sends.

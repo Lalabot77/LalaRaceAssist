@@ -16444,7 +16444,7 @@ namespace LaunchPlugin
             for (int i = 0; i < slots.Length; i++)
             {
                 CarSASlot slot = slots[i];
-                if (slot == null || !slot.IsValid || slot.CarIdx < 0)
+                if (slot == null || !slot.IsValid || !slot.IsOnTrack || slot.CarIdx < 0)
                 {
                     continue;
                 }
@@ -16513,6 +16513,20 @@ namespace LaunchPlugin
             if (userId <= 0 && previousOutput != null && string.Equals(previousOutput.IdentityKey, identityKey, StringComparison.Ordinal))
             {
                 userId = previousOutput.UserID;
+            }
+
+            if (current != null && !current.IsValid)
+            {
+                return new H2HEngine.TargetSelector
+                {
+                    CarIdx = -1,
+                    IdentityKey = identityKey,
+                    Name = name,
+                    CarNumber = carNumber,
+                    ClassColor = NormalizeH2HClassColor(classColor),
+                    UserID = userId > 0 ? userId : 0,
+                    PositionInClass = positionInClass > 0 ? positionInClass : 0
+                };
             }
 
             int carIdx = -1;

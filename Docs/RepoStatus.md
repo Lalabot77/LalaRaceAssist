@@ -1,5 +1,33 @@
 # Repo Status
 
+## 2026-06-03 — Blink-continuity deep stale-data review follow-up
+- PR #776 review follow-up tightened the bounded blink-continuity contract without changing export names or dashboard JSON.
+- CarSA now preserves the nearest live candidate behind a blink-held slot, preventing held A1/B1 identity continuity from hiding the next live target or forcing H2HTrack to skip to a farther live car.
+- Opponents now publishes telemetry-stale target gap exports as NaN and prefers any live usable same-identity row over an older held row during reconnect/DriverInfo churn; changed-`CarIdx` stale rows still fail closed.
+- Property Snapshot list reviewed: yes; no snapshot group change required because this task changed existing export values only within the existing Car/Opp/H2H contract.
+
+- 2026-06-03: H2HTrack blink-held CarSA selector fail-closed follow-up landed.
+  - `BuildH2HTrackSelector(...)` now requires selected CarSA slots to be valid and on-track, so blink-held slots keep CarSA identity/cosmetics but cannot produce `H2HTrack.*.Valid=true` or live gap/timing during the held telemetry gap.
+  - Normal valid on-track H2HTrack target selection, Opponents row hold behavior, H2HRace handling, export names, dashboard JSON, and fuel/pit/strategy/race-finish systems remain unchanged.
+  - Property Snapshot list reviewed: yes, no group change required because no exports were added, removed, renamed, or regrouped.
+
+- 2026-06-03: Blink-hold stale-data leak follow-up landed.
+  - CarSA blink-hold eligibility now runs before the same-candidate fast path, preventing cached LapPct-grace distances from publishing stale normal gaps during the first invalid-`LapDistPct` ticks.
+  - Opponents now fails closed when a held canonical identity appears at a different `CarIdx`, removing the old hold/marking the identity seen so `AddUnseenHeldRows` cannot resurrect the stale old row.
+  - Telemetry-stale Opponents targets now preserve identity/effective-position continuity but publish not live-valid (`IsValid=false`, `CarIdx=-1`, no live gap truth), and H2HRace selector propagation keeps stale identity with `CarIdx=-1` so H2H live timing/gap validity falls false.
+  - Property Snapshot list reviewed: yes, no group change required because no exports were added, removed, renamed, or regrouped.
+
+- 2026-06-03: Blink-hold precision suppression follow-up landed.
+  - `Car.Ahead01P.Gap.Sec` / `Car.Behind01P.Gap.Sec` now publish `NaN` while the matching slot-01 blink hold is active, so precision outputs cannot leak recent gate truth during a held NotInWorld/invalid-LapDistPct gap.
+  - CarSA blink holds now use a dedicated eligibility timestamp instead of the delta-cache `LastValidSessionTime`, allowing invalid-`LapDistPct` holds to last the intended 1.0 s without changing the existing 0.5 s LapPct grace for delta/closing caches.
+  - Opponents row hold behavior, H2H selector ownership, export names, dashboard JSON, and Property Snapshot grouping remain unchanged.
+  - Property Snapshot list reviewed: yes, no group change required because no exports were added, removed, renamed, or regrouped.
+
+- 2026-06-03: CarSA/Opponents bounded opponent blink continuity landed.
+  - CarSA now holds an existing physical ahead/behind slot identity for up to 1.0 s when the same `CarIdx` briefly becomes NotInWorld or loses valid `LapDistPct`; the hold preserves identity/cosmetics for H2HTrack/dashboard continuity but invalidates live gap truth and publishes not-on-track state until the same car returns or timeout releases normal promotion.
+  - Opponents now holds known non-player race-order rows for up to 2.0 s across short NotInWorld/invalid-LapDistPct gaps, preserving the last RaceProgress anchor and avoiding immediate class re-rank; telemetry-stale rows skip the CarSA checkpoint seam and remain excluded from pit-exit prediction rows.
+  - H2H benefits through the existing CarSA/Opponents selector seams without H2H ownership changes. Message debounce was deferred pending post-continuity evidence.
+  - Property Snapshot list reviewed: yes, no group change required because no exports were added, removed, renamed, or regrouped.
 - 2026-06-03: Fuel burn target selector landed.
   - Added plugin-owned `Fuel.Burn.Target`, `Fuel.Burn.TargetText`, and `Fuel.Burn.TargetValid` dashboard exports.
   - SESSION uses the raw driver-selected MFD fuel request seam (`PitSvFuel`, gated by `dpFuelFill`) before tank-space clamp and explicitly does not use `Fuel.Refuel.NextLitresCeil`, `Fuel.Pit.WillAdd`, plugin recommendations, planner fuel values, or tank-space-clamped add values.
