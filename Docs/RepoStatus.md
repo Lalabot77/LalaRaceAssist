@@ -1,5 +1,11 @@
 # Repo Status
 
+- 2026-06-05 Car Tracking Probe CSV debug system landed:
+  - Debug Options now includes `Enable Car Tracking Probe`, Probe A/B `CarIdx` inputs, capture frequency, and START/STOP/RESET CSV controls for a separate diagnostics-only CSV writer;
+  - the writer captures player + two selected probes with raw CarIdx telemetry, `DriverInfo.Drivers##` identity/class data only, player-vs-probe derived deltas, and read-only CarSA/Opp/H2H correlation fields;
+  - runtime tracking behavior is unchanged: no CarSA gap math changes, no Opponents ordering changes, no H2H selector changes, no dashboard exports/properties, no Property Snapshot changes, and no `DriverInfo.CompetingDrivers` normal-driver fallback;
+  - Property Snapshot list reviewed: yes; unchanged because Car Tracking Probe is a separate debug CSV system and no exported property capture contract changed.
+
 - 2026-06-04 Pit command direct transport fixed path cleanup landed:
   - Settings -> Pit Commands no longer exposes the transport-mode ComboBox/options;
   - pit/custom commands now dispatch through the plugin-owned direct iRacing window-message path only, with persisted `PitCommandTransportMode` retained as ignored legacy load-safe data;
