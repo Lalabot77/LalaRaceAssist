@@ -175,6 +175,15 @@ Workflow routing note: `Docs/Internal/Property_Snapshot_Debug_Workflow.md` owns 
 ## Property snapshot debug exports
 - **`[LalaPlugin:Debug] Property snapshot rolling CSV schema reset: <reason>. Existing file will be rewritten using current wide schema.`** — One-shot rolling snapshot compatibility guard log emitted when an existing rolling CSV is legacy (`SnapshotUtc`), missing/blank, or unknown schema; old contents are not parsed as wide rows and the file is safely rewritten in current wide format (`SimHubProperty` column-0 authority).
 
+## Car Tracking Probe CSV debug exports
+- **`[LalaPlugin:CarTrackingProbe] START ignored: Soft Debug is disabled.`** — Debug UI start request was ignored because master soft debug is off.
+- **`[LalaPlugin:CarTrackingProbe] START ignored: Enable Car Tracking Probe is off.`** — Debug UI start request was ignored because the Car Tracking Probe enable toggle is off.
+- **`[LalaPlugin:CarTrackingProbe] CSV capture START.`** — Runtime-only Car Tracking Probe CSV capture started; rows are written only while soft debug and the enable toggle remain on.
+- **`[LalaPlugin:CarTrackingProbe] CSV capture STOP.`** — Runtime-only Car Tracking Probe CSV capture stopped and pending rows were flushed.
+- **`[LalaPlugin:CarTrackingProbe] CSV reset completed.`** — Current runtime Car Tracking Probe CSV path was removed/reset and capture was stopped.
+- **`[LalaPlugin:CarTrackingProbe] CSV reset failed: <message>`** — Reset attempted but file deletion/cleanup failed.
+- **`[LalaPlugin:CarTrackingProbe] CSV disabled after write failure: <message>`** — Writer hit an IO/format failure and disabled runtime capture to avoid repeated write failures.
+
 ## Leader lap selection
 - **`[LalaPlugin:Leader Lap] reject source=... reason=...`** — Candidate leader lap rejected (too small, below floor); may fall back to previous avg.【F:LalaLaunch.cs†L4845-L4862】
 - **`[LalaPlugin:Leader Lap] using leader lap from <source> = Xs`** — Accepted leader lap source (telemetry fallback ordering).【F:LalaLaunch.cs†L4852-L4867】

@@ -244,6 +244,14 @@ When `EnableOffTrackDebugCsv` is enabled (and a probe `OffTrackDebugProbeCarIdx`
 - **Latch state:** off-track now, off-track streak, first-seen time, compromised-until lap, compromised-off-track/penalty active flags, and latch enable.
 - **Player incidents:** player CarIdx, incident count, and incident delta for the tick.
 
+## Car Tracking Probe CSV export (optional)
+When Debug mode is enabled, `EnableCarTrackingProbeCsv` is enabled, and the Debug UI `START` button is pressed, the plugin writes `CarTrackingProbe_<Track>_<Timestamp>.csv` under `SimHub/Logs/LalapluginData/`. Capture frequency is bounded by `CarTrackingProbeCsvFrequencyHz` (normalized to 1–20 Hz), and rows are buffered/flushed periodically. `STOP` flushes and pauses capture; `RESET CSV` stops capture and removes the current runtime CSV file if one exists.
+- **Probe targets:** the player from `PlayerCarIdx`, Probe A from `CarTrackingProbeACarIdx`, and Probe B from `CarTrackingProbeBCarIdx`.
+- **Per-probe fields:** `CarIdx`, identity/class data from `DriverInfo.Drivers##` only (`Name`, `AbbrevName`, `CarNumber`, `ClassName`, `ClassColor`, `IsPaceCar` when available), raw CarIdx arrays (`CarIdxLap`, `CarIdxLapCompleted`, `CarIdxLapDistPct`, `CarIdxTrackSurface`, `CarIdxOnPitRoad`, `CarIdxClassPosition`, `CarIdxPosition`, `CarIdxBestLapTime`, `CarIdxLastLapTime`, `CarIdxSessionFlags`, `CarIdxPaceFlags`). `DriverInfo.CompetingDrivers` is intentionally not used as a normal-driver fallback for this export.
+- **Player-vs-probe fields:** lap deltas from both lap bases, raw progress deltas, circular track delta percent, estimated track seconds from the diagnostic lap-time scale, same-checkpoint gap when the existing read-only CarSA checkpoint seam reports one, checkpoint validity, optional checkpoint age (blank when unavailable), selected/published gap source when the probe matches a current CarSA/Opp/H2H target, and an eligibility reason.
+- **Correlation fields:** current `Car.Ahead01/Behind01`, precision gap, `Opp.Ahead1/Behind1`, `H2HTrack.Ahead/Behind`, and `H2HRace.Ahead/Behind` target/gap fields are copied read-only into the row for same-tick comparison.
+- **Invariant:** this writer is a separate diagnostics-only CSV system. It does not alter CarSA slot selection, CarSA gap math, checkpoint-gap runtime semantics, Opponents ordering, H2H selectors, dashboard exports, or Property Snapshot behavior.
+
 ## Performance notes
 - Single-pass candidate selection with fixed arrays (no per-tick allocations).
 - No LINQ or string formatting in per-tick loops.

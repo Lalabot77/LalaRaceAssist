@@ -65,6 +65,8 @@ H2H sector publication is intentionally simple:
 - `Valid` is true only when a side has a resolved live target and usable H2H timing context.
 
 ## Export contract summary
+Car Tracking Probe CSV diagnostics can copy current `H2HTrack.Ahead/Behind` and `H2HRace.Ahead/Behind` validity, `CarIdx`, and live-gap values into a debug CSV row for correlation only. This read-only observation does not change H2H race selectors, H2H track selectors, live-gap computation, sector state, or dashboard export names.
+
 Both `H2HRace.*` and `H2HTrack.*` expose the same flat shape:
 - family-level field: `ClassSessionBestLapSec`
 - `Ahead.*` / `Behind.*` identity fields: `Valid`, `CarIdx`, `IdentityKey`, `Name`, `CarNumber`, `ClassColor`, `PositionInClass`

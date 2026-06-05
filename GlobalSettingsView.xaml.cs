@@ -82,6 +82,21 @@ namespace LaunchPlugin
             RefreshPropertySnapshotRollingStatusText();
         }
 
+        private void CarTrackingProbeStart_Click(object sender, RoutedEventArgs e)
+        {
+            Plugin?.StartCarTrackingProbeCsv();
+        }
+
+        private void CarTrackingProbeStop_Click(object sender, RoutedEventArgs e)
+        {
+            Plugin?.StopCarTrackingProbeCsv();
+        }
+
+        private void CarTrackingProbeResetCsv_Click(object sender, RoutedEventArgs e)
+        {
+            Plugin?.ResetCarTrackingProbeCsv();
+        }
+
         private void RefreshPropertySnapshotRollingStatusText()
         {
             if (PropertySnapshotRollingStatusTextBlock == null)

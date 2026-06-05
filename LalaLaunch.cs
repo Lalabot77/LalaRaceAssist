@@ -18,6 +18,9 @@ using System.Text;
 using System.Threading.Tasks;
 using System.Windows.Data;
 using System.Windows.Media;
+using H2HOutputs = LaunchPlugin.H2HEngine.H2HOutputs;
+using H2HParticipantOutput = LaunchPlugin.H2HEngine.H2HParticipantOutput;
+using OpponentOutputs = LaunchPlugin.OpponentsEngine.OpponentOutputs;
 
 
 namespace LaunchPlugin
@@ -651,6 +654,67 @@ namespace LaunchPlugin
             catch (Exception ex)
             {
                 SimHub.Logging.Current.Warn($"[LalaPlugin:Debug] Property snapshot rolling CSV reset failed: {ex.Message}");
+            }
+        }
+
+        public void StartCarTrackingProbeCsv()
+        {
+            if (Settings == null) return;
+            if (!SoftDebugEnabled)
+            {
+                SimHub.Logging.Current.Warn("[LalaPlugin:CarTrackingProbe] START ignored: Soft Debug is disabled.");
+                return;
+            }
+            if (Settings.EnableCarTrackingProbeCsv != true)
+            {
+                SimHub.Logging.Current.Warn("[LalaPlugin:CarTrackingProbe] START ignored: Enable Car Tracking Probe is off.");
+                return;
+            }
+
+            NormalizeCarTrackingProbeSettings(Settings);
+            _carTrackingProbeCsvActiveRuntime = true;
+            _carTrackingProbeCsvFailed = false;
+            _carTrackingProbeCsvLastWriteSessionSec = double.NaN;
+            SimHub.Logging.Current.Info("[LalaPlugin:CarTrackingProbe] CSV capture START.");
+        }
+
+        public void StopCarTrackingProbeCsv()
+        {
+            _carTrackingProbeCsvActiveRuntime = false;
+            TryFlushCarTrackingProbeCsvBuffer();
+            SimHub.Logging.Current.Info("[LalaPlugin:CarTrackingProbe] CSV capture STOP.");
+        }
+
+        public void ResetCarTrackingProbeCsv()
+        {
+            try
+            {
+                _carTrackingProbeCsvActiveRuntime = false;
+                if (!TryFlushCarTrackingProbeCsvBuffer())
+                {
+                    return;
+                }
+
+                if (!string.IsNullOrWhiteSpace(_carTrackingProbeCsvPath) && File.Exists(_carTrackingProbeCsvPath))
+                {
+                    File.Delete(_carTrackingProbeCsvPath);
+                }
+
+                _carTrackingProbeCsvPath = null;
+                _carTrackingProbeCsvToken = null;
+                _carTrackingProbeCsvPendingLines = 0;
+                _carTrackingProbeCsvLastWriteSessionSec = double.NaN;
+                _carTrackingProbeCsvFailed = false;
+                if (_carTrackingProbeCsvBuffer != null)
+                {
+                    _carTrackingProbeCsvBuffer.Clear();
+                }
+
+                SimHub.Logging.Current.Info("[LalaPlugin:CarTrackingProbe] CSV reset completed.");
+            }
+            catch (Exception ex)
+            {
+                SimHub.Logging.Current.Warn($"[LalaPlugin:CarTrackingProbe] CSV reset failed: {ex.Message}");
             }
         }
 
@@ -7015,6 +7079,9 @@ namespace LaunchPlugin
         internal const int ShiftAssistDebugCsvMaxHzDefault = 10;
         private const int ShiftAssistDebugCsvMaxHzMin = 1;
         private const int ShiftAssistDebugCsvMaxHzMax = 60;
+        internal const double CarTrackingProbeCsvFrequencyHzDefault = 5.0;
+        private const double CarTrackingProbeCsvFrequencyHzMin = 1.0;
+        private const double CarTrackingProbeCsvFrequencyHzMax = 20.0;
         private const int ShiftAssistDelayHistorySize = 5;
         private const int ShiftAssistDelayPendingTimeoutMs = 2000;
         private const int ShiftAssistDelayDownshiftGraceMs = 150;
@@ -7072,6 +7139,13 @@ namespace LaunchPlugin
         private string _shiftAssistDebugCsvPath;
         private string _shiftAssistDebugCsvFileTimestamp;
         private bool _shiftAssistDebugCsvFailed;
+        private bool _carTrackingProbeCsvActiveRuntime;
+        private double _carTrackingProbeCsvLastWriteSessionSec = double.NaN;
+        private string _carTrackingProbeCsvPath;
+        private string _carTrackingProbeCsvToken;
+        private readonly StringBuilder _carTrackingProbeCsvBuffer = new StringBuilder(4096);
+        private int _carTrackingProbeCsvPendingLines;
+        private bool _carTrackingProbeCsvFailed;
         private DateTime _shiftAssistLearnSavedPulseUntilUtc = DateTime.MinValue;
         private ShiftAssistLearningTick _shiftAssistLastLearningTick = new ShiftAssistLearningTick { State = ShiftAssistLearningState.Off };
         private DateTime _shiftAssistRuntimeStatsLastRefreshUtc = DateTime.MinValue;
@@ -8888,6 +8962,7 @@ namespace LaunchPlugin
             _telemetryTraceLogger?.EndService();
 
             ResetOffTrackDebugExportState();
+            ResetCarTrackingProbeCsvState();
             ResetCarSaDebugExportState();
 
             _shiftAssistAudio?.Dispose();
@@ -8948,6 +9023,7 @@ namespace LaunchPlugin
             NormalizeDarkModeSettings(settings);
             NormalizePitCommandSettings(settings);
             NormalizeLeagueClassSettings(settings);
+            NormalizeCarTrackingProbeSettings(settings);
             return settings;
         }
 
@@ -8984,6 +9060,7 @@ namespace LaunchPlugin
             NormalizeShiftAssistSettings(effectiveSettings);
             NormalizeDarkModeSettings(effectiveSettings);
             NormalizePitCommandSettings(effectiveSettings);
+            NormalizeCarTrackingProbeSettings(effectiveSettings);
             var json = JsonConvert.SerializeObject(effectiveSettings, Formatting.Indented);
             File.WriteAllText(path, json);
         }
@@ -9050,6 +9127,30 @@ namespace LaunchPlugin
             }
         }
 
+
+        private static void NormalizeCarTrackingProbeSettings(LaunchPluginSettings settings)
+        {
+            if (settings == null)
+            {
+                return;
+            }
+
+            if (settings.CarTrackingProbeCsvFrequencyHz <= 0.0
+                || double.IsNaN(settings.CarTrackingProbeCsvFrequencyHz)
+                || double.IsInfinity(settings.CarTrackingProbeCsvFrequencyHz))
+            {
+                settings.CarTrackingProbeCsvFrequencyHz = CarTrackingProbeCsvFrequencyHzDefault;
+            }
+
+            if (settings.CarTrackingProbeCsvFrequencyHz < CarTrackingProbeCsvFrequencyHzMin)
+            {
+                settings.CarTrackingProbeCsvFrequencyHz = CarTrackingProbeCsvFrequencyHzMin;
+            }
+            else if (settings.CarTrackingProbeCsvFrequencyHz > CarTrackingProbeCsvFrequencyHzMax)
+            {
+                settings.CarTrackingProbeCsvFrequencyHz = CarTrackingProbeCsvFrequencyHzMax;
+            }
+        }
 
         private static void NormalizeDarkModeSettings(LaunchPluginSettings settings)
         {
@@ -11201,6 +11302,18 @@ namespace LaunchPlugin
                         trackBehindSelector);
                 }
 
+                WriteCarTrackingProbeCsv(
+                    pluginManager,
+                    sessionTimeSec,
+                    sessionState,
+                    sessionTypeName,
+                    playerCarIdx,
+                    carIdxLap,
+                    carIdxLapDistPct,
+                    carIdxTrackSurface,
+                    carIdxOnPitRoad,
+                    carIdxSessionFlags);
+
                 UpdateLapReferenceContext(playerCarIdx, carIdxLapDistPct, carIdxLap, sessionTypeName, playerLastLapTimeSec, playerBestLapTimeSec);
                 if (_friendsDirty)
                 {
@@ -13255,6 +13368,697 @@ namespace LaunchPlugin
             {
                 FlushOffTrackDebugExportBuffer();
             }
+        }
+
+        private void WriteCarTrackingProbeCsv(
+            PluginManager pluginManager,
+            double sessionTimeSec,
+            int sessionState,
+            string sessionTypeName,
+            int playerCarIdx,
+            int[] carIdxLap,
+            float[] carIdxLapDistPct,
+            int[] carIdxTrackSurface,
+            bool[] carIdxOnPitRoad,
+            int[] carIdxSessionFlags)
+        {
+            if (!_carTrackingProbeCsvActiveRuntime)
+            {
+                return;
+            }
+
+            if (Settings?.EnableCarTrackingProbeCsv != true || !SoftDebugEnabled)
+            {
+                TryFlushCarTrackingProbeCsvBuffer();
+                return;
+            }
+
+            if (_carTrackingProbeCsvFailed)
+            {
+                return;
+            }
+
+            try
+            {
+                NormalizeCarTrackingProbeSettings(Settings);
+                if (!double.IsNaN(_carTrackingProbeCsvLastWriteSessionSec)
+                    && sessionTimeSec < _carTrackingProbeCsvLastWriteSessionSec - 0.5)
+                {
+                    _carTrackingProbeCsvLastWriteSessionSec = double.NaN;
+                }
+
+                double frequencyHz = Settings.CarTrackingProbeCsvFrequencyHz;
+                double minIntervalSec = 1.0 / Math.Max(CarTrackingProbeCsvFrequencyHzMin, frequencyHz);
+                if (!double.IsNaN(_carTrackingProbeCsvLastWriteSessionSec)
+                    && sessionTimeSec - _carTrackingProbeCsvLastWriteSessionSec < minIntervalSec)
+                {
+                    return;
+                }
+
+                if (!EnsureCarTrackingProbeCsvFile(pluginManager))
+                {
+                    return;
+                }
+
+                int[] carIdxLapCompleted = SafeReadIntArray(pluginManager, "DataCorePlugin.GameRawData.Telemetry.CarIdxLapCompleted");
+                int[] carIdxClassPosition = SafeReadIntArray(pluginManager, "DataCorePlugin.GameRawData.Telemetry.CarIdxClassPosition");
+                int[] carIdxPosition = SafeReadIntArray(pluginManager, "DataCorePlugin.GameRawData.Telemetry.CarIdxPosition");
+                float[] carIdxBestLapTime = SafeReadFloatArray(pluginManager, "DataCorePlugin.GameRawData.Telemetry.CarIdxBestLapTime");
+                float[] carIdxLastLapTime = SafeReadFloatArray(pluginManager, "DataCorePlugin.GameRawData.Telemetry.CarIdxLastLapTime");
+
+                if (carIdxSessionFlags == null)
+                {
+                    TryReadTelemetryIntArray(pluginManager, "CarIdxSessionFlags", out carIdxSessionFlags, out _, out _);
+                }
+
+                TryReadTelemetryIntArray(pluginManager, "CarIdxPaceFlags", out int[] carIdxPaceFlags, out _, out _);
+
+                CarTrackingProbeSnapshot player = BuildCarTrackingProbeSnapshot(
+                    pluginManager,
+                    playerCarIdx,
+                    carIdxLap,
+                    carIdxLapCompleted,
+                    carIdxLapDistPct,
+                    carIdxTrackSurface,
+                    carIdxOnPitRoad,
+                    carIdxClassPosition,
+                    carIdxPosition,
+                    carIdxBestLapTime,
+                    carIdxLastLapTime,
+                    carIdxSessionFlags,
+                    carIdxPaceFlags);
+
+                CarTrackingProbeSnapshot probeA = BuildCarTrackingProbeSnapshot(
+                    pluginManager,
+                    Settings.CarTrackingProbeACarIdx,
+                    carIdxLap,
+                    carIdxLapCompleted,
+                    carIdxLapDistPct,
+                    carIdxTrackSurface,
+                    carIdxOnPitRoad,
+                    carIdxClassPosition,
+                    carIdxPosition,
+                    carIdxBestLapTime,
+                    carIdxLastLapTime,
+                    carIdxSessionFlags,
+                    carIdxPaceFlags);
+
+                CarTrackingProbeSnapshot probeB = BuildCarTrackingProbeSnapshot(
+                    pluginManager,
+                    Settings.CarTrackingProbeBCarIdx,
+                    carIdxLap,
+                    carIdxLapCompleted,
+                    carIdxLapDistPct,
+                    carIdxTrackSurface,
+                    carIdxOnPitRoad,
+                    carIdxClassPosition,
+                    carIdxPosition,
+                    carIdxBestLapTime,
+                    carIdxLastLapTime,
+                    carIdxSessionFlags,
+                    carIdxPaceFlags);
+
+                var cells = new List<string>(180);
+                AddCsvCell(cells, DateTime.UtcNow.ToString("o", CultureInfo.InvariantCulture));
+                AddCsvCell(cells, FormatCsvDouble(sessionTimeSec, "F3"));
+                AddCsvCell(cells, sessionState);
+                AddCsvCell(cells, sessionTypeName ?? string.Empty);
+                AddCsvCell(cells, ResolveCarTrackingProbeTrackName(pluginManager));
+                AddCsvCell(cells, playerCarIdx);
+                AddCsvCell(cells, Settings.CarTrackingProbeACarIdx);
+                AddCsvCell(cells, Settings.CarTrackingProbeBCarIdx);
+                AddCsvCell(cells, FormatCsvDouble(frequencyHz, "F2"));
+                AddCsvCell(cells, "frequency");
+
+                AppendCarTrackingProbeSnapshotCells(cells, player);
+                AppendCarTrackingProbeSnapshotCells(cells, probeA);
+                AppendCarTrackingProbeSnapshotCells(cells, probeB);
+
+                double lapTimeUsedSec = ResolveCarTrackingProbeLapTimeUsedSec(player, carIdxBestLapTime, carIdxLastLapTime);
+                AppendCarTrackingProbePairCells(cells, "ProbeA", player, probeA, lapTimeUsedSec);
+                AppendCarTrackingProbePairCells(cells, "ProbeB", player, probeB, lapTimeUsedSec);
+                AppendCarTrackingProbeCorrelationCells(cells);
+
+                _carTrackingProbeCsvBuffer.Append(BuildCsvLine(cells)).AppendLine();
+                _carTrackingProbeCsvLastWriteSessionSec = sessionTimeSec;
+                _carTrackingProbeCsvPendingLines++;
+                if (_carTrackingProbeCsvPendingLines >= 20 || _carTrackingProbeCsvBuffer.Length >= 8192)
+                {
+                    TryFlushCarTrackingProbeCsvBuffer();
+                }
+            }
+            catch (Exception ex)
+            {
+                HandleCarTrackingProbeCsvFailure(ex);
+            }
+        }
+
+        private struct CarTrackingProbeSnapshot
+        {
+            public int CarIdx;
+            public bool ValidCarIdx;
+            public string Name;
+            public string AbbrevName;
+            public string CarNumber;
+            public string ClassName;
+            public string ClassColor;
+            public bool? IsPaceCar;
+            public int Lap;
+            public int LapCompleted;
+            public double LapDistPct;
+            public int TrackSurface;
+            public bool? OnPitRoad;
+            public int ClassPosition;
+            public int Position;
+            public double BestLapTime;
+            public double LastLapTime;
+            public int SessionFlags;
+            public int PaceFlags;
+            public bool DriverInfoFound;
+        }
+
+        private CarTrackingProbeSnapshot BuildCarTrackingProbeSnapshot(
+            PluginManager pluginManager,
+            int carIdx,
+            int[] carIdxLap,
+            int[] carIdxLapCompleted,
+            float[] carIdxLapDistPct,
+            int[] carIdxTrackSurface,
+            bool[] carIdxOnPitRoad,
+            int[] carIdxClassPosition,
+            int[] carIdxPosition,
+            float[] carIdxBestLapTime,
+            float[] carIdxLastLapTime,
+            int[] carIdxSessionFlags,
+            int[] carIdxPaceFlags)
+        {
+            CarTrackingProbeSnapshot snapshot = new CarTrackingProbeSnapshot
+            {
+                CarIdx = carIdx,
+                ValidCarIdx = IsValidCarIdxForAnyArray(carIdx, carIdxLap, carIdxLapCompleted, carIdxLapDistPct, carIdxTrackSurface, carIdxOnPitRoad),
+                Name = string.Empty,
+                AbbrevName = string.Empty,
+                CarNumber = string.Empty,
+                ClassName = string.Empty,
+                ClassColor = string.Empty,
+                IsPaceCar = null,
+                Lap = ReadCarIdxInt(carIdxLap, carIdx, int.MinValue),
+                LapCompleted = ReadCarIdxInt(carIdxLapCompleted, carIdx, int.MinValue),
+                LapDistPct = ReadCarIdxFloat(carIdxLapDistPct, carIdx),
+                TrackSurface = ReadCarIdxInt(carIdxTrackSurface, carIdx, int.MinValue),
+                OnPitRoad = ReadCarIdxBool(carIdxOnPitRoad, carIdx),
+                ClassPosition = ReadCarIdxInt(carIdxClassPosition, carIdx, int.MinValue),
+                Position = ReadCarIdxInt(carIdxPosition, carIdx, int.MinValue),
+                BestLapTime = ReadCarIdxTime(carIdxBestLapTime, carIdx),
+                LastLapTime = ReadCarIdxTime(carIdxLastLapTime, carIdx),
+                SessionFlags = ReadCarIdxInt(carIdxSessionFlags, carIdx, int.MinValue),
+                PaceFlags = ReadCarIdxInt(carIdxPaceFlags, carIdx, int.MinValue),
+                DriverInfoFound = false
+            };
+
+            if (TryGetCarTrackingProbeDriverInfoFromDrivers(pluginManager, carIdx, out string name, out string abbrevName, out string carNumber, out string className, out string classColor, out bool? isPaceCar))
+            {
+                snapshot.Name = name ?? string.Empty;
+                snapshot.AbbrevName = abbrevName ?? string.Empty;
+                snapshot.CarNumber = carNumber ?? string.Empty;
+                snapshot.ClassName = className ?? string.Empty;
+                snapshot.ClassColor = classColor ?? string.Empty;
+                snapshot.IsPaceCar = isPaceCar;
+                snapshot.DriverInfoFound = true;
+            }
+
+            return snapshot;
+        }
+
+        private bool TryGetCarTrackingProbeDriverInfoFromDrivers(
+            PluginManager pluginManager,
+            int carIdx,
+            out string name,
+            out string abbrevName,
+            out string carNumber,
+            out string className,
+            out string classColor,
+            out bool? isPaceCar)
+        {
+            name = string.Empty;
+            abbrevName = string.Empty;
+            carNumber = string.Empty;
+            className = string.Empty;
+            classColor = string.Empty;
+            isPaceCar = null;
+
+            if (pluginManager == null || carIdx < 0)
+            {
+                return false;
+            }
+
+            for (int i = 1; i <= 64; i++)
+            {
+                string basePath = $"DataCorePlugin.GameRawData.SessionData.DriverInfo.Drivers{i:00}";
+                int idx = GetInt(pluginManager, $"{basePath}.CarIdx", int.MinValue);
+                if (idx == int.MinValue || idx != carIdx)
+                {
+                    continue;
+                }
+
+                name = GetString(pluginManager, $"{basePath}.UserName") ?? string.Empty;
+                abbrevName = GetString(pluginManager, $"{basePath}.AbbrevName") ?? string.Empty;
+                if (string.IsNullOrWhiteSpace(name))
+                {
+                    name = abbrevName;
+                }
+
+                carNumber = GetString(pluginManager, $"{basePath}.CarNumber") ?? string.Empty;
+                if (string.IsNullOrWhiteSpace(carNumber))
+                {
+                    int numberRaw = GetInt(pluginManager, $"{basePath}.CarNumberRaw", int.MinValue);
+                    if (numberRaw != int.MinValue)
+                    {
+                        carNumber = numberRaw.ToString(CultureInfo.InvariantCulture);
+                    }
+                }
+
+                className = GetString(pluginManager, $"{basePath}.CarClassShortName") ?? string.Empty;
+                if (string.IsNullOrWhiteSpace(className))
+                {
+                    className = GetString(pluginManager, $"{basePath}.CarClassName") ?? string.Empty;
+                }
+
+                classColor = GetCarClassColorHex(pluginManager, $"{basePath}.CarClassColor");
+                isPaceCar = SafeReadBool(pluginManager, basePath + ".IsPaceCar", false)
+                    || string.Equals((name ?? string.Empty).Trim(), "Pace Car", StringComparison.OrdinalIgnoreCase);
+                return true;
+            }
+
+            return false;
+        }
+
+        private void AppendCarTrackingProbeSnapshotCells(List<string> cells, CarTrackingProbeSnapshot snapshot)
+        {
+            AddCsvCell(cells, snapshot.CarIdx >= 0 ? snapshot.CarIdx.ToString(CultureInfo.InvariantCulture) : string.Empty);
+            AddCsvCell(cells, snapshot.Name);
+            AddCsvCell(cells, snapshot.AbbrevName);
+            AddCsvCell(cells, snapshot.CarNumber);
+            AddCsvCell(cells, snapshot.ClassName);
+            AddCsvCell(cells, snapshot.ClassColor);
+            AddCsvCell(cells, snapshot.IsPaceCar.HasValue ? (snapshot.IsPaceCar.Value ? "1" : "0") : string.Empty);
+            AddCsvCell(cells, FormatCsvOptionalInt(snapshot.Lap, int.MinValue));
+            AddCsvCell(cells, FormatCsvOptionalInt(snapshot.LapCompleted, int.MinValue));
+            AddCsvCell(cells, FormatCsvDouble(snapshot.LapDistPct, "F6"));
+            AddCsvCell(cells, FormatCsvOptionalInt(snapshot.TrackSurface, int.MinValue));
+            AddCsvCell(cells, snapshot.OnPitRoad.HasValue ? (snapshot.OnPitRoad.Value ? "1" : "0") : string.Empty);
+            AddCsvCell(cells, FormatCsvOptionalInt(snapshot.ClassPosition, int.MinValue));
+            AddCsvCell(cells, FormatCsvOptionalInt(snapshot.Position, int.MinValue));
+            AddCsvCell(cells, FormatCsvDouble(snapshot.BestLapTime, "F3"));
+            AddCsvCell(cells, FormatCsvDouble(snapshot.LastLapTime, "F3"));
+            AddCsvCell(cells, FormatCsvOptionalInt(snapshot.SessionFlags, int.MinValue));
+            AddCsvCell(cells, FormatCsvOptionalInt(snapshot.PaceFlags, int.MinValue));
+        }
+
+        private void AppendCarTrackingProbePairCells(List<string> cells, string label, CarTrackingProbeSnapshot player, CarTrackingProbeSnapshot probe, double lapTimeUsedSec)
+        {
+            bool hasLap = player.Lap != int.MinValue && probe.Lap != int.MinValue;
+            bool hasLapCompleted = player.LapCompleted != int.MinValue && probe.LapCompleted != int.MinValue;
+            bool hasPlayerPct = IsValidLapDistPct(player.LapDistPct);
+            bool hasProbePct = IsValidLapDistPct(probe.LapDistPct);
+            bool hasPct = hasPlayerPct && hasProbePct;
+
+            AddCsvCell(cells, hasLap ? (probe.Lap - player.Lap).ToString(CultureInfo.InvariantCulture) : string.Empty);
+            AddCsvCell(cells, hasLapCompleted ? (probe.LapCompleted - player.LapCompleted).ToString(CultureInfo.InvariantCulture) : string.Empty);
+            AddCsvCell(cells, hasLap && hasPct ? FormatCsvDouble((probe.Lap + probe.LapDistPct) - (player.Lap + player.LapDistPct), "F6") : string.Empty);
+            AddCsvCell(cells, hasLapCompleted && hasPct ? FormatCsvDouble((probe.LapCompleted + probe.LapDistPct) - (player.LapCompleted + player.LapDistPct), "F6") : string.Empty);
+
+            double circularDeltaPct = hasPct ? NormalizeSignedCircularDeltaPct(probe.LapDistPct - player.LapDistPct) : double.NaN;
+            AddCsvCell(cells, FormatCsvDouble(circularDeltaPct, "F6"));
+            AddCsvCell(cells, IsValidCarSaLapTimeSec(lapTimeUsedSec) && !double.IsNaN(circularDeltaPct) ? FormatCsvDouble(circularDeltaPct * lapTimeUsedSec, "F3") : string.Empty);
+
+            double checkpointGapSec = double.NaN;
+            bool checkpointValid = _carSaEngine != null && _carSaEngine.TryGetCheckpointGapSec(player.CarIdx, probe.CarIdx, out checkpointGapSec);
+            AddCsvCell(cells, checkpointValid ? FormatCsvDouble(checkpointGapSec, "F3") : string.Empty);
+            AddCsvCell(cells, checkpointValid ? "1" : "0");
+            AddCsvCell(cells, string.Empty);
+            AddCsvCell(cells, ResolveCarTrackingProbePublishedGapSource(probe.CarIdx));
+            AddCsvCell(cells, checkpointValid && hasLap && hasPct ? "ok" : ResolveCarTrackingProbeEligibilityReason(player, probe, hasLap, hasPct, checkpointValid));
+        }
+
+        private static string ResolveCarTrackingProbeEligibilityReason(CarTrackingProbeSnapshot player, CarTrackingProbeSnapshot probe, bool hasLap, bool hasPct, bool checkpointValid)
+        {
+            if (player.CarIdx < 0) return "player_invalid_caridx";
+            if (probe.CarIdx < 0) return "target_invalid_caridx";
+            if (!hasLap) return "missing_lap";
+            if (!hasPct) return "missing_lapdistpct";
+            if (player.OnPitRoad == true || probe.OnPitRoad == true) return "on_pit_road";
+            if (player.TrackSurface == int.MinValue || probe.TrackSurface == int.MinValue) return "missing_track_surface";
+            if (!checkpointValid) return "checkpoint_unavailable";
+            return "ok";
+        }
+
+        private string ResolveCarTrackingProbePublishedGapSource(int probeCarIdx)
+        {
+            if (probeCarIdx < 0)
+            {
+                return string.Empty;
+            }
+
+            CarSAOutputs carOutputs = _carSaEngine?.Outputs;
+            if (carOutputs != null)
+            {
+                if (carOutputs.AheadSlots != null && carOutputs.AheadSlots.Length > 0 && carOutputs.AheadSlots[0]?.CarIdx == probeCarIdx)
+                {
+                    return "Car.Ahead01.GapRelativeSource=" + carOutputs.AheadSlots[0].GapRelativeSource.ToString(CultureInfo.InvariantCulture);
+                }
+                if (carOutputs.BehindSlots != null && carOutputs.BehindSlots.Length > 0 && carOutputs.BehindSlots[0]?.CarIdx == probeCarIdx)
+                {
+                    return "Car.Behind01.GapRelativeSource=" + carOutputs.BehindSlots[0].GapRelativeSource.ToString(CultureInfo.InvariantCulture);
+                }
+            }
+
+            OpponentOutputs opp = _opponentsEngine?.Outputs;
+            if (opp != null)
+            {
+                if (opp.Ahead1?.CarIdx == probeCarIdx) return "Opp.Ahead1.Gap.RelativeSec";
+                if (opp.Behind1?.CarIdx == probeCarIdx) return "Opp.Behind1.Gap.RelativeSec";
+            }
+
+            H2HOutputs h2h = _h2hEngine?.Outputs;
+            if (h2h != null)
+            {
+                if (h2h.Track?.Ahead?.CarIdx == probeCarIdx) return "H2HTrack.Ahead.LiveGapSec";
+                if (h2h.Track?.Behind?.CarIdx == probeCarIdx) return "H2HTrack.Behind.LiveGapSec";
+                if (h2h.Race?.Ahead?.CarIdx == probeCarIdx) return "H2HRace.Ahead.LiveGapSec";
+                if (h2h.Race?.Behind?.CarIdx == probeCarIdx) return "H2HRace.Behind.LiveGapSec";
+            }
+
+            return string.Empty;
+        }
+
+        private void AppendCarTrackingProbeCorrelationCells(List<string> cells)
+        {
+            CarSAOutputs carOutputs = _carSaEngine?.Outputs;
+            CarSASlot carAhead = carOutputs?.AheadSlots != null && carOutputs.AheadSlots.Length > 0 ? carOutputs.AheadSlots[0] : null;
+            CarSASlot carBehind = carOutputs?.BehindSlots != null && carOutputs.BehindSlots.Length > 0 ? carOutputs.BehindSlots[0] : null;
+            OpponentOutputs opp = _opponentsEngine?.Outputs;
+            H2HOutputs h2h = _h2hEngine?.Outputs;
+
+            AddCsvCell(cells, FormatCsvOptionalInt(carAhead?.CarIdx ?? -1, -1));
+            AddCsvCell(cells, FormatCsvOptionalInt(carBehind?.CarIdx ?? -1, -1));
+            AddCsvCell(cells, FormatCsvDouble(carAhead?.GapTrackSec ?? double.NaN, "F3"));
+            AddCsvCell(cells, FormatCsvDouble(carBehind?.GapTrackSec ?? double.NaN, "F3"));
+            AddCsvCell(cells, FormatCsvDouble(carAhead?.GapRelativeSec ?? double.NaN, "F3"));
+            AddCsvCell(cells, FormatCsvDouble(carBehind?.GapRelativeSec ?? double.NaN, "F3"));
+            AddCsvCell(cells, FormatCsvDouble(carOutputs?.Ahead01PrecisionGapSec ?? double.NaN, "F3"));
+            AddCsvCell(cells, FormatCsvDouble(carOutputs?.Behind01PrecisionGapSec ?? double.NaN, "F3"));
+            AddCsvCell(cells, FormatCsvOptionalInt(opp?.Ahead1?.CarIdx ?? -1, -1));
+            AddCsvCell(cells, FormatCsvOptionalInt(opp?.Behind1?.CarIdx ?? -1, -1));
+            AddCsvCell(cells, FormatCsvDouble(opp?.Ahead1?.GapRelativeSec ?? double.NaN, "F3"));
+            AddCsvCell(cells, FormatCsvDouble(opp?.Behind1?.GapRelativeSec ?? double.NaN, "F3"));
+            AppendH2HCorrelationCells(cells, h2h?.Track?.Ahead);
+            AppendH2HCorrelationCells(cells, h2h?.Track?.Behind);
+            AppendH2HCorrelationCells(cells, h2h?.Race?.Ahead);
+            AppendH2HCorrelationCells(cells, h2h?.Race?.Behind);
+        }
+
+        private static void AppendH2HCorrelationCells(List<string> cells, H2HParticipantOutput participant)
+        {
+            AddCsvCell(cells, participant?.Valid == true ? "1" : "0");
+            AddCsvCell(cells, FormatCsvOptionalInt(participant?.CarIdx ?? -1, -1));
+            AddCsvCell(cells, FormatCsvDouble(participant?.LiveGapSec ?? double.NaN, "F3"));
+        }
+
+        private double ResolveCarTrackingProbeLapTimeUsedSec(CarTrackingProbeSnapshot player, float[] carIdxBestLapTime, float[] carIdxLastLapTime)
+        {
+            double lapTimeUsedSec = _carSaEngine?.Outputs?.Debug?.LapTimeUsedSec ?? double.NaN;
+            if (IsValidCarSaLapTimeSec(lapTimeUsedSec))
+            {
+                return lapTimeUsedSec;
+            }
+
+            lapTimeUsedSec = ReadCarIdxTime(carIdxBestLapTime, player.CarIdx);
+            if (IsValidCarSaLapTimeSec(lapTimeUsedSec))
+            {
+                return lapTimeUsedSec;
+            }
+
+            lapTimeUsedSec = ReadCarIdxTime(carIdxLastLapTime, player.CarIdx);
+            return IsValidCarSaLapTimeSec(lapTimeUsedSec) ? lapTimeUsedSec : double.NaN;
+        }
+
+        private bool EnsureCarTrackingProbeCsvFile(PluginManager pluginManager)
+        {
+            string token = string.IsNullOrWhiteSpace(_currentSessionToken) ? "na" : _currentSessionToken.Replace(":", "_");
+            if (string.Equals(token, _carTrackingProbeCsvToken, StringComparison.Ordinal) && !string.IsNullOrWhiteSpace(_carTrackingProbeCsvPath))
+            {
+                return true;
+            }
+
+            if (!TryFlushCarTrackingProbeCsvBuffer())
+            {
+                return false;
+            }
+
+            _carTrackingProbeCsvToken = token;
+            string folder = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "Logs", "LalapluginData");
+            Directory.CreateDirectory(folder);
+            string trackName = SanitizeOffTrackDebugExportName(ResolveCarTrackingProbeTrackName(pluginManager));
+            string timestamp = DateTime.UtcNow.ToString("yyyy-MM-dd_HH-mm-ss", CultureInfo.InvariantCulture);
+            _carTrackingProbeCsvPath = Path.Combine(folder, $"CarTrackingProbe_{trackName}_{timestamp}.csv");
+            if (!File.Exists(_carTrackingProbeCsvPath))
+            {
+                File.WriteAllText(_carTrackingProbeCsvPath, GetCarTrackingProbeCsvHeader() + Environment.NewLine);
+            }
+
+            return true;
+        }
+
+        private string ResolveCarTrackingProbeTrackName(PluginManager pluginManager)
+        {
+            string trackName = !string.IsNullOrWhiteSpace(CurrentTrackName) ? CurrentTrackName : CurrentTrackKey;
+            if (string.IsNullOrWhiteSpace(trackName))
+            {
+                trackName = GetSessionInfoTrackName(pluginManager);
+            }
+            return string.IsNullOrWhiteSpace(trackName) ? "UnknownTrack" : trackName;
+        }
+
+        private bool TryFlushCarTrackingProbeCsvBuffer()
+        {
+            if (string.IsNullOrWhiteSpace(_carTrackingProbeCsvPath) || _carTrackingProbeCsvBuffer == null || _carTrackingProbeCsvBuffer.Length == 0)
+            {
+                return true;
+            }
+
+            if (_carTrackingProbeCsvFailed)
+            {
+                return false;
+            }
+
+            try
+            {
+                File.AppendAllText(_carTrackingProbeCsvPath, _carTrackingProbeCsvBuffer.ToString());
+                _carTrackingProbeCsvBuffer.Clear();
+                _carTrackingProbeCsvPendingLines = 0;
+                return true;
+            }
+            catch (Exception ex)
+            {
+                HandleCarTrackingProbeCsvFailure(ex);
+                return false;
+            }
+        }
+
+        private void HandleCarTrackingProbeCsvFailure(Exception ex)
+        {
+            if (!_carTrackingProbeCsvFailed)
+            {
+                _carTrackingProbeCsvFailed = true;
+                _carTrackingProbeCsvActiveRuntime = false;
+                _carTrackingProbeCsvPendingLines = 0;
+                if (_carTrackingProbeCsvBuffer != null)
+                {
+                    _carTrackingProbeCsvBuffer.Clear();
+                }
+
+                SimHub.Logging.Current.Warn($"[LalaPlugin:CarTrackingProbe] CSV disabled after write failure: {ex.Message}");
+                return;
+            }
+
+            _carTrackingProbeCsvActiveRuntime = false;
+        }
+
+        private void ResetCarTrackingProbeCsvState()
+        {
+            TryFlushCarTrackingProbeCsvBuffer();
+            _carTrackingProbeCsvActiveRuntime = false;
+            _carTrackingProbeCsvPath = null;
+            _carTrackingProbeCsvToken = null;
+            _carTrackingProbeCsvPendingLines = 0;
+            _carTrackingProbeCsvLastWriteSessionSec = double.NaN;
+            _carTrackingProbeCsvFailed = false;
+            if (_carTrackingProbeCsvBuffer != null)
+            {
+                _carTrackingProbeCsvBuffer.Clear();
+            }
+        }
+
+        private static string GetCarTrackingProbeCsvHeader()
+        {
+            var columns = new List<string>(180);
+            columns.Add("Utc");
+            columns.Add("SessionTimeSec");
+            columns.Add("SessionState");
+            columns.Add("SessionTypeName");
+            columns.Add("TrackName");
+            columns.Add("PlayerCarIdx");
+            columns.Add("ProbeACarIdxSetting");
+            columns.Add("ProbeBCarIdxSetting");
+            columns.Add("CaptureFrequencyHz");
+            columns.Add("FrameWriteReason");
+            AddCarTrackingProbeHeader(columns, "Player");
+            AddCarTrackingProbeHeader(columns, "ProbeA");
+            AddCarTrackingProbeHeader(columns, "ProbeB");
+            AddCarTrackingProbePairHeader(columns, "PlayerVsProbeA");
+            AddCarTrackingProbePairHeader(columns, "PlayerVsProbeB");
+            columns.Add("Car.Ahead01.CarIdx");
+            columns.Add("Car.Behind01.CarIdx");
+            columns.Add("Car.Ahead01.Gap.TrackSec");
+            columns.Add("Car.Behind01.Gap.TrackSec");
+            columns.Add("Car.Ahead01.Gap.RelativeSec");
+            columns.Add("Car.Behind01.Gap.RelativeSec");
+            columns.Add("Car.Ahead01P.Gap.Sec");
+            columns.Add("Car.Behind01P.Gap.Sec");
+            columns.Add("Opp.Ahead1.CarIdx");
+            columns.Add("Opp.Behind1.CarIdx");
+            columns.Add("Opp.Ahead1.Gap.RelativeSec");
+            columns.Add("Opp.Behind1.Gap.RelativeSec");
+            columns.Add("H2HTrack.Ahead.Valid");
+            columns.Add("H2HTrack.Ahead.CarIdx");
+            columns.Add("H2HTrack.Ahead.GapSec");
+            columns.Add("H2HTrack.Behind.Valid");
+            columns.Add("H2HTrack.Behind.CarIdx");
+            columns.Add("H2HTrack.Behind.GapSec");
+            columns.Add("H2HRace.Ahead.Valid");
+            columns.Add("H2HRace.Ahead.CarIdx");
+            columns.Add("H2HRace.Ahead.GapSec");
+            columns.Add("H2HRace.Behind.Valid");
+            columns.Add("H2HRace.Behind.CarIdx");
+            columns.Add("H2HRace.Behind.GapSec");
+            return string.Join(",", columns);
+        }
+
+        private static void AddCarTrackingProbeHeader(List<string> columns, string prefix)
+        {
+            string[] names =
+            {
+                "CarIdx", "Name", "AbbrevName", "CarNumber", "ClassName", "ClassColor", "IsPaceCar",
+                "CarIdxLap", "CarIdxLapCompleted", "CarIdxLapDistPct", "CarIdxTrackSurface", "CarIdxOnPitRoad",
+                "CarIdxClassPosition", "CarIdxPosition", "CarIdxBestLapTime", "CarIdxLastLapTime", "CarIdxSessionFlags", "CarIdxPaceFlags"
+            };
+            for (int i = 0; i < names.Length; i++)
+            {
+                columns.Add(prefix + "." + names[i]);
+            }
+        }
+
+        private static void AddCarTrackingProbePairHeader(List<string> columns, string prefix)
+        {
+            string[] names =
+            {
+                "LapDelta.CarIdxLap", "LapDelta.CarIdxLapCompleted", "RawProgress.CarIdxLap", "RawProgress.CarIdxLapCompleted",
+                "CircularTrackDeltaPct", "EstimatedTrackSec", "SameCheckpointGapSec", "CheckpointGapValid", "CheckpointAgeSec",
+                "PublishedGapSource", "EligibilityReason"
+            };
+            for (int i = 0; i < names.Length; i++)
+            {
+                columns.Add(prefix + "." + names[i]);
+            }
+        }
+
+        private static void AddCsvCell(List<string> cells, object value)
+        {
+            cells.Add(value == null ? string.Empty : Convert.ToString(value, CultureInfo.InvariantCulture) ?? string.Empty);
+        }
+
+        private static string BuildCsvLine(List<string> cells)
+        {
+            StringBuilder buffer = new StringBuilder(cells.Count * 12);
+            for (int i = 0; i < cells.Count; i++)
+            {
+                if (i > 0)
+                {
+                    buffer.Append(',');
+                }
+
+                AppendQuotedCsvCell(buffer, cells[i]);
+            }
+            return buffer.ToString();
+        }
+
+        private static void AppendQuotedCsvCell(StringBuilder buffer, string value)
+        {
+            if (string.IsNullOrEmpty(value))
+            {
+                return;
+            }
+
+            bool quote = value.IndexOfAny(new[] { ',', '"', '\r', '\n' }) >= 0;
+            if (!quote)
+            {
+                buffer.Append(value);
+                return;
+            }
+
+            buffer.Append('"');
+            for (int i = 0; i < value.Length; i++)
+            {
+                char c = value[i];
+                if (c == '"')
+                {
+                    buffer.Append('"');
+                }
+                buffer.Append(c);
+            }
+            buffer.Append('"');
+        }
+
+        private static string FormatCsvOptionalInt(int value, int unsetValue)
+        {
+            return value == unsetValue ? string.Empty : value.ToString(CultureInfo.InvariantCulture);
+        }
+
+        private static string FormatCsvDouble(double value, string format)
+        {
+            return double.IsNaN(value) || double.IsInfinity(value) ? string.Empty : value.ToString(format, CultureInfo.InvariantCulture);
+        }
+
+        private static bool IsValidLapDistPct(double value)
+        {
+            return value >= 0.0 && value <= 1.0 && !double.IsNaN(value) && !double.IsInfinity(value);
+        }
+
+        private static double NormalizeSignedCircularDeltaPct(double delta)
+        {
+            if (double.IsNaN(delta) || double.IsInfinity(delta))
+            {
+                return double.NaN;
+            }
+
+            while (delta > 0.5) delta -= 1.0;
+            while (delta < -0.5) delta += 1.0;
+            return delta;
+        }
+
+        private static bool IsValidCarIdxForAnyArray(int carIdx, int[] lap, int[] lapCompleted, float[] lapDistPct, int[] trackSurface, bool[] onPitRoad)
+        {
+            if (carIdx < 0)
+            {
+                return false;
+            }
+
+            return (lap != null && carIdx < lap.Length)
+                || (lapCompleted != null && carIdx < lapCompleted.Length)
+                || (lapDistPct != null && carIdx < lapDistPct.Length)
+                || (trackSurface != null && carIdx < trackSurface.Length)
+                || (onPitRoad != null && carIdx < onPitRoad.Length);
         }
 
         private void UpdatePlayerLapInvalidState(
@@ -22538,6 +23342,10 @@ namespace LaunchPlugin
         public bool EnableCarSADebugExport { get; set; } = false;
         public bool EnableOffTrackDebugCsv { get; set; } = false;
         public bool OffTrackDebugLogChangesOnly { get; set; } = false;
+        public bool EnableCarTrackingProbeCsv { get; set; } = false;
+        public int CarTrackingProbeACarIdx { get; set; } = -1;
+        public int CarTrackingProbeBCarIdx { get; set; } = -1;
+        public double CarTrackingProbeCsvFrequencyHz { get; set; } = LalaLaunch.CarTrackingProbeCsvFrequencyHzDefault;
         public bool EnablePropertySnapshot { get; set; } = false;
         public bool PropertySnapshotSelectAllGroups { get; set; } = true;
         public bool PropertySnapshotGroupFuelStrategy { get; set; } = true;

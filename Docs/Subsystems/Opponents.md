@@ -43,6 +43,7 @@ Opponents now reads from:
 - Opponents owns this ordering; CarSA ownership is unchanged.
 
 ## Gap and fight model (native)
+- Car Tracking Probe CSV diagnostics can copy `Opp.Ahead1` / `Opp.Behind1` identity and `Gap.RelativeSec` values into a debug CSV row for correlation only. This read-only export-side observation does not participate in target selection, same-class ordering, row hold, pit-exit prediction, or gap fallback decisions.
 - Gap export semantics are explicitly split:
   - `Gap.TrackSec` = progress/pace track-gap estimate from native RaceProgress delta.
   - `Gap.RelativeSec` = preferred relative gap (CarSA checkpoint seam for slot 1 per side when valid; otherwise fallback to `Gap.TrackSec`).
