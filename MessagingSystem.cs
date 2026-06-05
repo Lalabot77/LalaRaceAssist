@@ -145,7 +145,14 @@ namespace LaunchPlugin
             if (estTimes != null && estTimes.Length > 0)
             {
                 int playerIdx = GetInt(pm, "DataCorePlugin.GameRawData.Telemetry.PlayerCarIdx", 0);
-                string myClassName = GetClassShortNameForCar(pm, playerIdx) ?? "";
+                string myClassName = GetClassShortNameForCar(pm, playerIdx);
+                if (string.IsNullOrWhiteSpace(myClassName))
+                {
+                    OvertakeApproachLine = string.Empty;
+                    OtherClassBehindGap = -1.0;
+                    MaintainMsgCxTimers();
+                    return;
+                }
 
                 // Pit/surface filters
                 var onPit = GetBoolArray(pm, "DataCorePlugin.GameRawData.Telemetry.CarIdxOnPitRoad");
