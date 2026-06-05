@@ -1,5 +1,11 @@
 # Repo Status
 
+- 2026-06-05 Car tracking safety filters landed:
+  - Opponents now excludes non-player `DriverInfo.Drivers##` Pace Car rows before native race-order rows are built, preventing marked Pace Car entries from feeding `Opp.Ahead1` / `Opp.Behind1`, H2HRace selector inputs, or PitExit prediction. The filter uses explicit `IsPaceCar` / `CarIsPaceCar` metadata plus conservative Pace Car identity markers and does not filter by `CarIdx`, so `PlayerCarIdx == 0` remains valid; skipped Pace Car `CarIdx`/identity evidence also clears matching blink-continuity holds so a prior normal row cannot be reinserted after being flagged.
+  - If the current player `Drivers##` row is pace-car flagged, Opponents preserves the player row and emits a one-time anomaly warning instead of removing the player.
+  - H2H now fails closed when a resolved ahead/behind target `CarIdx` equals `PlayerCarIdx`, clearing live target/gap publication for both H2HTrack and H2HRace rather than publishing self as a target.
+  - CarSA gap math, checkpoint logic, Opponents gap math, H2H gap math, export names, dashboard JSON, and Property Snapshot groups remain unchanged. Property Snapshot list reviewed: yes; no export/property add, remove, rename, or regroup.
+
 - 2026-06-05 Car Tracking Probe CSV flush failure guard follow-up landed:
   - all buffered probe CSV flush paths now share the protected failure-handling path, so file write failures disable capture and use the existing `[LalaPlugin:CarTrackingProbe] CSV disabled after write failure: ...` warning instead of propagating exceptions from STOP/RESET/toggle-off/session-rotation/shutdown flushes;
   - no CSV schema, UI, Property Snapshot, CarSA/Opp/H2H behavior, or dashboard export changes.

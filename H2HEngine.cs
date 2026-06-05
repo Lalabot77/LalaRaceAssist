@@ -147,7 +147,7 @@ namespace LaunchPlugin
             }
 
             bool hasSelector = !string.IsNullOrWhiteSpace(selector.IdentityKey) || selector.CarIdx >= 0;
-            if (!hasSelector)
+            if (!hasSelector || (playerCarIdx >= 0 && selector.CarIdx == playerCarIdx))
             {
                 output.ResetTarget();
                 runtime.Reset();

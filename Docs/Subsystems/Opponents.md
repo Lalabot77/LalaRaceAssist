@@ -28,6 +28,7 @@ Opponents now reads from:
 
 ## Identity model
 - `DriverInfo.Drivers##.*` is the only trusted normal-driver identity/class/roster source. `DriverInfo.CompetingDrivers[*]` is not used as a runtime fallback because observed SimHub/iRacing data can represent Safety/Pace Car rows rather than normal competing drivers.
+- Non-player `Drivers##` rows flagged as Pace Car are excluded before native race-order rows are built. The conservative pace-car helper checks `IsPaceCar`, `CarIsPaceCar`, exact `UserName`/`AbbrevName`/`CarScreenName` label `Pace Car`, and `CarPath` values containing `pacecar`; it never filters solely by `CarIdx`, so `PlayerCarIdx == 0` remains valid. Skipped Pace Car `CarIdx`/canonical identity evidence clears matching blink-continuity holds before `AddUnseenHeldRows`, so a prior normal row cannot be resurrected after it is flagged. If the current player row is pace-car flagged, Opponents preserves the player row and emits a one-time warning instead of blindly removing the player.
 - If `Drivers##` session metadata is not ready, Opponents fails closed for that tick or relies only on its bounded same-identity continuity hold for previously live rows; it does not synthesize new live rows from suspect fallback identity data.
 - Canonical identity key: `ClassColor:CarNumber`.
 - `ClassColor` is normalized to canonical `0xRRGGBB` with signed/integer masking (`& 0xFFFFFF`).
@@ -38,6 +39,7 @@ Opponents now reads from:
 - Live same-class target selection is **RaceProgress-first**: class-filtered order by `CarIdxLap` then `CarIdxLapDistPct` (descending), with guards:
   - skip cars without valid lap distance (`0..1`)
   - skip cars not in world (`CarIdxTrackSurface < 0`)
+  - skip non-player `Drivers##` pace-car rows before race-order rows, `Opp.Ahead1` / `Opp.Behind1`, H2HRace selector inputs, and PitExit prediction can consume them
 - Native `CarIdxClassPosition` remains available as an **official/anchor input** only; published live race-context `PositionInClass` uses the effective RaceProgress-first order so official timing lag does not block immediate context updates.
 - **Blink row hold:** known non-player rows with stable `CarIdx`/canonical identity can remain in the RaceProgress order for up to 2.0 s when telemetry briefly reports NotInWorld or invalid/missing `LapDistPct`. Held rows keep their last race-progress anchor and identity so short disconnect/reconnect events do not immediately re-rank the class. They are marked telemetry-stale internally, are published with identity/cosmetics and effective position continuity but `IsValid=false`, `CarIdx=-1`, `IsOnTrack=false`, `GapTrackSec`/`GapRelativeSec`/`GapToPlayerSec` as NaN, do not use the CarSA checkpoint seam, and are excluded from pit-exit prediction rows so pit-exit behavior is not expanded. If any live usable row exists for the same canonical identity, that live row wins over an older held row; a same-identity snapshot at a different `CarIdx` fails closed unless that row itself is live usable.
 - Opponents owns this ordering; CarSA ownership is unchanged.

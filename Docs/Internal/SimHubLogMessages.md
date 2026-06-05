@@ -4,7 +4,7 @@
 
 Validated against: HEAD
 Last reviewed: 2026-04-24
-Last updated: 2026-06-04
+Last updated: 2026-06-05
 Branch: work
 
 Scope: Info/Warn logs emitted via `SimHub.Logging.Current.Info(...)` and `SimHub.Logging.Current.Warn(...)`. Use the tag prefixes to filter in SimHub’s log view. Placeholder logs are noted; no deprecated messages are currently removed in code. Legacy/alternate copies of this list do not exist.
@@ -101,6 +101,7 @@ Workflow routing note: `Docs/Internal/Property_Snapshot_Debug_Workflow.md` owns 
 ## Opponents and pit-exit prediction
 - **`[LalaPlugin:Opponents] Opponents subsystem active (eligible live session).`** — Opponents activation gate opened for the current eligible live session; native same-class neighbor outputs are now live.
 - **`[LalaPlugin:Opponents] Native data unavailable -> outputs invalid (<reason>).`** — Native prerequisites are incomplete (for example missing player row/identity or telemetry arrays), so `Opp.*` and `PitExit.*` stay invalid/empty until data recovers; cadence-limited.
+- **`[LalaPlugin:Opponents] Player Drivers row is pace-car flagged (source=<source>); preserving player row and filtering only non-player pace-car rows.`** — One-time anomaly warning when the current player `DriverInfo.Drivers##` row matches the Pace Car metadata helper; Opponents keeps the player row to avoid unsafe removal and filters only non-player Pace Car rows.
 - **`[LalaPlugin:CarSA] CarSA enabled (source=CarIdxTruth, slots=5/5)`** — CarSA subsystem became valid for the session (CarIdx truth, 5/5 slots).【F:CarSAEngine.cs†L387-L390】
 - **`[LalaPlugin:CarSA] Class rank map built using <source> (<count> classes)`** — Class-rank lookup initialized from session info (CarClassRelSpeed preferred, else CarClassEstLapTime). Drives Faster/Slower class StatusE labeling in multiclass sessions.【F:LalaLaunch.cs†L4930-L4987】
 - **`[CarSA] BestLap fallback now using DriverInfo CarClassEstLapTime until best lap available.`** — Best-lap estimates switched to class-estimate fallback until per-car best laps arrive (once per session).【F:LalaLaunch.cs†L6655-L6660】
