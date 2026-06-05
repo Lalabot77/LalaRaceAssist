@@ -127,7 +127,7 @@ Tyre Control behavior notes for these bindings:
   - delayed truth convergence is treated as plugin-owned only when observed truth matches the full relevant pending plugin service/compound intent (if both are pending, both must match),
   - MFD tyre truth changes outside plugin-owned protection cancel AUTO only when a concrete manual truth remap exists (`OFF`/`DRY`/`WET`); ambiguous/unavailable truth does not cancel AUTO and does not force `OFF`.
 - Tyre control mode resets to `OFF` on `Telemetry.IsOnTrackCar` edge transitions (`false->true` or `true->false`) via the existing pit-control reset seam.
-- Tyre command confirmation is single-send/single-window: each manual action or AUTO target change attempts one send, waits a short confirmation window, and on unconfirmed result publishes `PIT CMD FAIL` then remaps mode to actual MFD truth (no retry resend loop).
+- Tyre command confirmation is single-send/single-window: each manual action or AUTO target change attempts one send, waits a short confirmation window, and on unconfirmed result publishes specific pit command failure feedback then remaps mode to actual MFD truth (no retry resend loop).
 
 In Settings → **Pit Commands**, tyre control shows a single built-in binding row (`Tyre Mode Cycle`) for normal use (no raw chat command editing). Direct tyre mode actions (`SetOff` / `SetDry` / `SetWet` / `SetAuto`) remain registered for SimHub Controls & Events / Dash Studio binding.
 
@@ -150,7 +150,7 @@ LalaLaunch injects iRacing pit/custom chat messages directly (no dedicated user 
 
 Transport is plugin-owned and fixed to direct iRacing window-message delivery. **Settings → Pit Commands** no longer exposes Auto/Legacy/Direct transport choices, and the legacy foreground `SendInput` path is no longer part of the normal workflow.
 
-If direct transport cannot find/use the iRacing window, LalaLaunch publishes `Pit Cmd Fail` and logs a pit-command warning so the failure is visible.
+If direct transport cannot find/use the iRacing window, LalaLaunch publishes `PIT CMD WINDOW FAIL` and logs a pit-command warning so the failure is visible.
 For custom messages, raw commands, and stateless built-in pit actions, a successful direct send is transport-attempt only (queued/unverified), not authoritative proof that iRacing applied the command.
 Stateful toggle actions (`ToggleFuel`, tyre/fix toggles, etc.) remain the only pit actions with authoritative before/after telemetry confirmation.
 

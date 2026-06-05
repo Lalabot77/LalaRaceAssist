@@ -145,7 +145,14 @@ namespace LaunchPlugin
             if (estTimes != null && estTimes.Length > 0)
             {
                 int playerIdx = GetInt(pm, "DataCorePlugin.GameRawData.Telemetry.PlayerCarIdx", 0);
-                string myClassName = GetClassShortNameForCar(pm, playerIdx) ?? "";
+                string myClassName = GetClassShortNameForCar(pm, playerIdx);
+                if (string.IsNullOrWhiteSpace(myClassName))
+                {
+                    OvertakeApproachLine = string.Empty;
+                    OtherClassBehindGap = -1.0;
+                    MaintainMsgCxTimers();
+                    return;
+                }
 
                 // Pit/surface filters
                 var onPit = GetBoolArray(pm, "DataCorePlugin.GameRawData.Telemetry.CarIdxOnPitRoad");
@@ -423,21 +430,21 @@ namespace LaunchPlugin
             catch { return null; }
         }
 
-        // SessionData.DriverInfo lookup: map CarIdx → CarClassShortName
+        // SessionData.DriverInfo lookup: map CarIdx → CarClassShortName.
+        // Drivers## is the only trusted normal-driver identity/class source; fail closed when it is unavailable.
         private static string GetClassShortNameForCar(PluginManager pm, int carIdx)
         {
-            if (pm == null) return null;
-            for (int k = 0; k < 64; k++)
+            if (pm == null || carIdx < 0) return null;
+            for (int k = 1; k <= 64; k++)
             {
-                int idx = GetInt(pm, $"DataCorePlugin.GameRawData.SessionData.DriverInfo.CompetingDrivers[{k}].CarIdx", int.MinValue);
-                if (idx == int.MinValue) break; // end
-                if (idx == carIdx)
-                {
-                    var shortName = GetString(pm, $"DataCorePlugin.GameRawData.SessionData.DriverInfo.CompetingDrivers[{k}].CarClassShortName");
-                    if (!string.IsNullOrWhiteSpace(shortName)) return shortName;
-                    var longName = GetString(pm, $"DataCorePlugin.GameRawData.SessionData.DriverInfo.CompetingDrivers[{k}].CarClassName");
-                    return longName;
-                }
+                string basePath = $"DataCorePlugin.GameRawData.SessionData.DriverInfo.Drivers{k:00}";
+                int idx = GetInt(pm, basePath + ".CarIdx", int.MinValue);
+                if (idx == int.MinValue || idx != carIdx) continue;
+
+                var shortName = GetString(pm, basePath + ".CarClassShortName");
+                if (!string.IsNullOrWhiteSpace(shortName)) return shortName;
+                var longName = GetString(pm, basePath + ".CarClassName");
+                return longName;
             }
             return null;
         }

@@ -18,7 +18,7 @@ Opponents also consumes a narrow timing seam (`TryGetCheckpointGapSec(playerCarI
 ## Truth source
 - **Primary:** `CarIdx*` telemetry arrays (CarIdxLapDistPct, CarIdxLap, CarIdxTrackSurface, CarIdxOnPitRoad).
 - **Raw flags (optional):** `CarIdxSessionFlags`, `CarIdxPaceFlags`, and `CarIdxTrackSurfaceMaterial` when raw telemetry read mode is enabled (drives compromised evidence and debug exports).
-- **Identity:** Slot Name/CarNumber/ClassColor are pulled from session info (`DriverInfo.DriversXX` preferred, fallback to `DriverInfo.CompetingDrivers`) with retry logic so replays can resolve identities once the session data arrives.
+- **Identity:** Slot Name/CarNumber/ClassColor are pulled from session info using `DriverInfo.Drivers##.*` only, with retry/hold logic so replays can resolve identities once trusted session data arrives. `DriverInfo.CompetingDrivers[*]` is not used as a live normal-driver fallback.
 - **Class rank map:** CarSA builds a per-session class rank map from `CarClassRelSpeed` (preferred) or `CarClassEstLapTime` to label Faster/Slower class statuses.
 - **Strength-of-field:** An iRating SOF average is computed across active CarSA slots for quick session context.
 

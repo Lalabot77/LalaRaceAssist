@@ -25,9 +25,10 @@ Opponents now reads from:
 - `DataCorePlugin.GameRawData.Telemetry.CarIdxOnPitRoad`
 - `DataCorePlugin.GameRawData.Telemetry.CarIdxTrackSurface`
 - `DataCorePlugin.GameRawData.SessionData.DriverInfo.Drivers##.*`
-- `DataCorePlugin.GameRawData.SessionData.DriverInfo.CompetingDrivers[*].*`
 
 ## Identity model
+- `DriverInfo.Drivers##.*` is the only trusted normal-driver identity/class/roster source. `DriverInfo.CompetingDrivers[*]` is not used as a runtime fallback because observed SimHub/iRacing data can represent Safety/Pace Car rows rather than normal competing drivers.
+- If `Drivers##` session metadata is not ready, Opponents fails closed for that tick or relies only on its bounded same-identity continuity hold for previously live rows; it does not synthesize new live rows from suspect fallback identity data.
 - Canonical identity key: `ClassColor:CarNumber`.
 - `ClassColor` is normalized to canonical `0xRRGGBB` with signed/integer masking (`& 0xFFFFFF`).
 - Plain numeric `CarClassColor` text is treated as decimal by default; explicit `0x`/`#` prefixes force hex parsing.
