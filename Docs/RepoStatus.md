@@ -1,5 +1,11 @@
 # Repo Status
 
+- 2026-06-05: CompetingDrivers runtime tracking fallback removal landed.
+  - Opponents no longer creates live `NativeCarRow` entries from `DriverInfo.CompetingDrivers[*]`; `NativeRaceModel.Rows`, `Opp.Ahead1` / `Opp.Behind1`, H2HRace race selectors, and PitExit prediction now receive normal-driver identity/class rows from `DriverInfo.Drivers##.*` only.
+  - Messaging fallback class lookup now uses `DriverInfo.Drivers##.*` only and fails closed when trusted driver rows are unavailable.
+  - CarSA gap math, CarSA slot selection, checkpoint logic, H2H selector behavior, PitExit math, export names, dashboard JSON, settings, and UI controls remain unchanged.
+  - Property Snapshot list reviewed: yes, no group update required because no exports/properties were added, removed, renamed, or regrouped.
+
 - 2026-06-04 Pit command direct transport fixed path cleanup landed:
   - Settings -> Pit Commands no longer exposes the transport-mode ComboBox/options;
   - pit/custom commands now dispatch through the plugin-owned direct iRacing window-message path only, with persisted `PitCommandTransportMode` retained as ignored legacy load-safe data;

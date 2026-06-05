@@ -1,5 +1,12 @@
 # Development Changelog
 
+## 2026-06-05 — CompetingDrivers runtime tracking fallback removal
+- Classification: **both** (driver-visible correctness hardening for Opp/H2HRace/PitExit/message target identity; no export names, dashboard JSON, settings, or UI controls changed).
+- Removed the Opponents `DriverInfo.CompetingDrivers[*]` second-pass row creation so `NativeRaceModel.Rows`, `Opp.Ahead1`/`Opp.Behind1`, H2HRace selectors, and PitExit prediction can only receive live normal-driver rows built from `DriverInfo.Drivers##.*` plus CarIdx telemetry.
+- Replaced the message-system class lookup fallback with a `DriverInfo.Drivers##.*` lookup only; when trusted driver rows are unavailable, message classification fails closed instead of using suspect CompetingDrivers data.
+- Preserved CarSA gap math, CarSA physical slot selection, checkpoint timing, H2H selector behavior, PitExit math, export names, and Property Snapshot grouping.
+- Property Snapshot list reviewed: yes, no group change required because no exports/properties were added, removed, renamed, or regrouped; this only removes suspect runtime data sourcing behind existing exports.
+
 ## 2026-06-04 — Pit command direct transport fixed path cleanup
 - Classification: **both** (user-facing Settings UI simplification plus internal transport cleanup; no action names, Pit.Command exports, or fuel/strategy math changed).
 - Removed the Settings -> Pit Commands transport-mode ComboBox; users no longer choose Auto / Legacy foreground SendInput / Direct message only.
