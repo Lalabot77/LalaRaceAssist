@@ -10,7 +10,7 @@ For internal between-release development history, see `Docs/Internal/Development
 - Strategy Dash Advanced/Simple mode toggle binding with dashboard-readable status exports (`LalaLaunch.StrategyDash.AdvancedMode`, `LalaLaunch.StrategyDash.ModeText`).
 - Pit Fuel Control DATA selector (`LIVE`/`PLAN`) with data actions/exports for dash and hardware bindings.
 - **Overview tab** as the plugin front door for quick links, release-check visibility, and at-a-glance status.
-- **Plugin-owned pit/custom command workflow** with built-in pit actions, custom-message slots, and in-plugin transport selection.
+- **Plugin-owned pit/custom command workflow** with built-in pit actions, custom-message slots, and fixed direct in-plugin transport.
 - **Pit Fuel Control + Tyre Control** command surfaces for dashboard/hardware bindings (`LalaLaunch.Pit.FuelControl.*`, `LalaLaunch.Pit.TyreControl.*`).
 - **ClassBest export family** for class session-best holder visibility on dashboards.
 
@@ -19,7 +19,7 @@ For internal between-release development history, see `Docs/Internal/Development
 - League Class presentation alignment now extends to CarSA-facing class identity fields and H2HTrack class colors: `Car.Player.ClassName/ClassColor/ClassColorHex`, `Car.Ahead01..05.*` and `Car.Behind01..05.*` class-facing fields, plus `H2HTrack.Ahead/Behind.ClassColor/ClassColorHex` now publish effective League Class presentation when enabled/resolved, with native fallback unchanged.
 - Pit Fuel Control SOURCE no longer includes PLAN. SOURCE is now `STBY`/`NORM`/`PUSH`/`SAVE`; DATA chooses whether `PUSH`/`SAVE` use live or planner/profile memory burn assumptions. Legacy `SetPlan` remains as a compatibility action that selects DATA PLAN and parks SOURCE at STBY.
 - **Strategy/PreRace status logic** refreshed with scenario-first outcomes and clearer status colors/text for no-stop, one-stop, and multi-stop contexts.
-- **Pit command transport behavior** now defaults to direct window-message delivery with bounded legacy fallback options.
+- **Pit command transport behavior** is now fixed to plugin-owned direct window-message delivery; the Settings transport selector and legacy foreground fallback workflow were removed.
 - **Pit Fuel Control behavior** refined so AUTO ownership/cancel behavior is clearer and non-AUTO OFF/MAN follows iRacing MFD fuel-enable truth.
 - **Pit command feedback contract** now standardizes dash severity exports (`Pit.Command.Severity`, `Pit.Command.SeverityText`), keeps `Pit.Command.Active` as a restartable hold pulse (including repeated identical message retriggers), and suppresses lower-severity feedback while higher-severity feedback is still active.
 - **Pit feedback severity visual mapping** updated for dashboards: `Caution` is steady (no blink) and `Warning` blinks for 1 second at 750ms.

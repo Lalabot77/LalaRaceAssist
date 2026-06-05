@@ -475,13 +475,10 @@ namespace LaunchPlugin
 
         private PitCommandTransportMode ResolvePitCommandTransportMode()
         {
-            int configuredMode = Settings != null ? Settings.PitCommandTransportMode : (int)PitCommandTransportMode.Auto;
-            if (configuredMode < (int)PitCommandTransportMode.Auto || configuredMode > (int)PitCommandTransportMode.DirectMessageOnly)
-            {
-                return PitCommandTransportMode.Auto;
-            }
-
-            return (PitCommandTransportMode)configuredMode;
+            // Transport is plugin-owned and fixed to the direct iRacing window-message path.
+            // Keep any persisted PitCommandTransportMode value load-safe, but do not let it
+            // re-enable legacy foreground SendInput or Auto fallback behavior.
+            return PitCommandTransportMode.DirectMessageOnly;
         }
 
         public void SetTrackMarkersLocked(bool locked)
@@ -9120,11 +9117,8 @@ namespace LaunchPlugin
                 return;
             }
 
-            if (settings.PitCommandTransportMode < (int)PitCommandTransportMode.Auto ||
-                settings.PitCommandTransportMode > (int)PitCommandTransportMode.DirectMessageOnly)
-            {
-                settings.PitCommandTransportMode = (int)PitCommandTransportMode.Auto;
-            }
+            // PitCommandTransportMode is retained only as ignored legacy persisted data.
+            // Do not reject or rewrite old saved values; dispatch is always direct-only.
 
             if (settings.PitFuelControlDataMode < 0 || settings.PitFuelControlDataMode > 1)
             {

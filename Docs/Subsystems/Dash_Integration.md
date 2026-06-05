@@ -86,12 +86,8 @@ This document is the canonical dash-facing contract layer. It does **not** redef
 
 ### Pit command transport contract
 - Dashboards trigger pit actions only; transport ownership is in-plugin.
-- Transport is plugin-configurable via **Settings → Pit Commands → Pit command transport**:
-  - `Auto (Direct message then fallback)` (default): tries direct iRacing window-message send first (`WM_KEYDOWN/UP T` → `WM_CHAR` text → `WM_KEYDOWN/UP Enter`), then falls back to legacy foreground `SendInput` if direct transport is unavailable.
-  - `Legacy foreground SendInput only`: preserves previous foreground-only `SendInput` behavior.
-  - `Direct message only`: direct window-message transport without legacy fallback.
-- Auto fallback safety guard: if a direct attempt already mutated chat state but then aborts (partial open/type sequence risk), legacy fallback is intentionally suppressed for that press to avoid second-path corruption/duplicate-open behavior.
-- Legacy fallback still requires iRacing foreground; direct-window path may still fail when no usable iRacing main window is available.
+- Transport is fixed to plugin-owned direct iRacing window-message delivery (`WM_KEYDOWN/UP T` → `WM_CHAR` text → `WM_KEYDOWN/UP Enter`). Dashboards and users do not choose Auto/Legacy/Direct transport modes.
+- Legacy foreground `SendInput` and Auto fallback are no longer part of the normal command path; direct-window transport may still fail when no usable iRacing main window is available.
 - Transport truth model: successful direct-message queueing is only `attempted=true` / `delivery=unverified` for custom messages, raw commands, and stateless built-ins (no post-send effect confirmation seam).
 - Stateful built-ins keep authoritative before/after telemetry confirmation ownership (`effect-confirmed=true|false`).
 - Dashboards can bind short-lived user feedback exports `LalaLaunch.Pit.Command.DisplayText` and `LalaLaunch.Pit.Command.Active` for command confirmations/failures.
