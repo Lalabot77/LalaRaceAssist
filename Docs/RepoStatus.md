@@ -1,5 +1,10 @@
 # Repo Status
 
+- 2026-06-05: CompetingDrivers runtime tracking fallback removal landed.
+  - Opponents no longer creates live `NativeCarRow` entries from `DriverInfo.CompetingDrivers[*]`; `NativeRaceModel.Rows`, `Opp.Ahead1` / `Opp.Behind1`, H2HRace race selectors, and PitExit prediction now receive normal-driver identity/class rows from `DriverInfo.Drivers##.*` only.
+  - Messaging fallback class lookup now uses `DriverInfo.Drivers##.*` only and fails closed when trusted driver rows are unavailable.
+  - CarSA gap math, CarSA slot selection, checkpoint logic, H2H selector behavior, PitExit math, export names, dashboard JSON, settings, and UI controls remain unchanged.
+  - Property Snapshot list reviewed: yes, no group update required because no exports/properties were added, removed, renamed, or regrouped.
 - 2026-06-05 Pit Fuel Control failure feedback preservation follow-up landed:
   - Pit Fuel Control no longer republishes generic `PIT CMD SEND FAIL` after failed raw sends, preserving the more specific command-engine failure already published by `ExecuteRawPitCommand`;
   - fuel-control fallback state remains unchanged: existing send-failure paths still force `Source=STBY` and disarm AUTO where they already did, and retain `send-failed` diagnostics;

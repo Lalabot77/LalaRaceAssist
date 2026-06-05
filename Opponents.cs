@@ -650,28 +650,6 @@ namespace LaunchPlugin
                     }
                 }
 
-                for (int i = 0; i < 64; i++)
-                {
-                    string basePath = "DataCorePlugin.GameRawData.SessionData.DriverInfo.CompetingDrivers[" + i.ToString(CultureInfo.InvariantCulture) + "]";
-                    int idx = ReadInt(pluginManager, basePath + ".CarIdx", int.MinValue);
-                    if (idx == int.MinValue)
-                    {
-                        break;
-                    }
-
-                    if (idx < 0 || seenCarIdx.Contains(idx))
-                    {
-                        continue;
-                    }
-
-                    var row = BuildRowFromCompeting(pluginManager, basePath, idx, carIdxLap, carIdxLapDist, carIdxBestLap, carIdxLastLap, carIdxClassPos, carIdxOnPitRoad, carIdxTrackSurface);
-                    if (row != null)
-                    {
-                        seenCarIdx.Add(idx);
-                        snapshot.Rows.Add(row);
-                    }
-                }
-
                 var player = snapshot.Rows.FirstOrDefault(r => r.CarIdx == snapshot.PlayerCarIdx);
                 if (player == null)
                 {
@@ -713,29 +691,6 @@ namespace LaunchPlugin
                     }
                 }
 
-                string classColor = NormalizeClassColor(ReadString(pluginManager, basePath + ".CarClassColor"));
-                string className = ReadString(pluginManager, basePath + ".CarClassShortName");
-                int iRating = ReadInt(pluginManager, basePath + ".IRating", 0);
-                int licLevel = ReadInt(pluginManager, basePath + ".LicLevel", 0);
-                int userId = ReadInt(pluginManager, basePath + ".UserID", 0);
-                int teamId = ReadInt(pluginManager, basePath + ".TeamID", 0);
-                string licString = ReadString(pluginManager, basePath + ".LicString");
-                ParseLicence(licString, out string licence, out double safetyRating);
-                return BuildTelemetryRow(carIdx, name, abbrevName, number, classColor, className, iRating, licence, safetyRating, licLevel, userId, teamId,
-                    carIdxLap, carIdxLapDist, carIdxBestLap, carIdxLastLap, carIdxClassPos, carIdxOnPitRoad, carIdxTrackSurface);
-            }
-
-            private static NativeCarRow BuildRowFromCompeting(PluginManager pluginManager, string basePath, int carIdx,
-                int[] carIdxLap, float[] carIdxLapDist, float[] carIdxBestLap, float[] carIdxLastLap, int[] carIdxClassPos, bool[] carIdxOnPitRoad, int[] carIdxTrackSurface)
-            {
-                string name = ReadString(pluginManager, basePath + ".UserName");
-                if (string.IsNullOrWhiteSpace(name))
-                {
-                    name = ReadString(pluginManager, basePath + ".TeamName");
-                }
-
-                string abbrevName = ReadString(pluginManager, basePath + ".AbbrevName");
-                string number = ReadString(pluginManager, basePath + ".CarNumber");
                 string classColor = NormalizeClassColor(ReadString(pluginManager, basePath + ".CarClassColor"));
                 string className = ReadString(pluginManager, basePath + ".CarClassShortName");
                 int iRating = ReadInt(pluginManager, basePath + ".IRating", 0);

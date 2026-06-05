@@ -1,13 +1,15 @@
 # Head-to-Head (H2H)
 
 Validated against commit: HEAD
-Last updated: 2026-06-03
+Last updated: 2026-06-05
 Branch: work
 
 ## Purpose
 Head-to-Head is a standalone dash-facing comparison subsystem that publishes two concurrent export families:
 - `H2HRace.*` = class race targets ahead/behind
 - `H2HTrack.*` = class on-track targets ahead/behind
+
+`H2HRace.*` inherits race-target identity from the Opponents selector seam. Opponents now builds live normal-driver rows from `DriverInfo.Drivers##.*` only; `DriverInfo.CompetingDrivers[*]` rows are not allowed into live Opponents rows and therefore cannot seed H2HRace targets.
 
 LapRef (`LapRef.*`) is a separate offline player-reference subsystem and does not alter H2H contracts or behavior.
 

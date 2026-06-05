@@ -1,5 +1,11 @@
 # Development Changelog
 
+## 2026-06-05 — CompetingDrivers runtime tracking fallback removal
+- Classification: **both** (driver-visible correctness hardening for Opp/H2HRace/PitExit/message target identity; no export names, dashboard JSON, settings, or UI controls changed).
+- Removed the Opponents `DriverInfo.CompetingDrivers[*]` second-pass row creation so `NativeRaceModel.Rows`, `Opp.Ahead1`/`Opp.Behind1`, H2HRace selectors, and PitExit prediction can only receive live normal-driver rows built from `DriverInfo.Drivers##.*` plus CarIdx telemetry.
+- Replaced the message-system class lookup fallback with a `DriverInfo.Drivers##.*` lookup only; when trusted driver rows are unavailable, message classification fails closed instead of using suspect CompetingDrivers data.
+- Preserved CarSA gap math, CarSA physical slot selection, checkpoint timing, H2H selector behavior, PitExit math, export names, and Property Snapshot grouping.
+- Property Snapshot list reviewed: yes, no group change required because no exports/properties were added, removed, renamed, or regrouped; this only removes suspect runtime data sourcing behind existing exports.
 ## 2026-06-05 — Pit Fuel Control failure feedback preservation follow-up
 - Classification: **both** (driver/dashboard-facing failure feedback preservation plus documentation correction).
 - Removed Pit Fuel Control's immediate generic `PIT CMD SEND FAIL` republish after failed raw sends so the more specific `PitCommandEngine` failure text (`PIT CMD WINDOW FAIL`, `PIT CMD CHAT FAIL`, or `PIT CMD SEND FAIL`) remains visible.
