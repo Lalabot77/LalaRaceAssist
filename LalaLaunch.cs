@@ -18,6 +18,9 @@ using System.Text;
 using System.Threading.Tasks;
 using System.Windows.Data;
 using System.Windows.Media;
+using H2HOutputs = LaunchPlugin.H2HEngine.H2HOutputs;
+using H2HParticipantOutput = LaunchPlugin.H2HEngine.H2HParticipantOutput;
+using OpponentOutputs = LaunchPlugin.OpponentsEngine.OpponentOutputs;
 
 
 namespace LaunchPlugin
@@ -13725,14 +13728,14 @@ namespace LaunchPlugin
                 }
             }
 
-            OpponentsEngine.OpponentOutputs opp = _opponentsEngine?.Outputs;
+            OpponentOutputs opp = _opponentsEngine?.Outputs;
             if (opp != null)
             {
                 if (opp.Ahead1?.CarIdx == probeCarIdx) return "Opp.Ahead1.Gap.RelativeSec";
                 if (opp.Behind1?.CarIdx == probeCarIdx) return "Opp.Behind1.Gap.RelativeSec";
             }
 
-            H2HEngine.H2HOutputs h2h = _h2hEngine?.Outputs;
+            H2HOutputs h2h = _h2hEngine?.Outputs;
             if (h2h != null)
             {
                 if (h2h.Track?.Ahead?.CarIdx == probeCarIdx) return "H2HTrack.Ahead.LiveGapSec";
@@ -13749,8 +13752,8 @@ namespace LaunchPlugin
             CarSAOutputs carOutputs = _carSaEngine?.Outputs;
             CarSASlot carAhead = carOutputs?.AheadSlots != null && carOutputs.AheadSlots.Length > 0 ? carOutputs.AheadSlots[0] : null;
             CarSASlot carBehind = carOutputs?.BehindSlots != null && carOutputs.BehindSlots.Length > 0 ? carOutputs.BehindSlots[0] : null;
-            OpponentsEngine.OpponentOutputs opp = _opponentsEngine?.Outputs;
-            H2HEngine.H2HOutputs h2h = _h2hEngine?.Outputs;
+            OpponentOutputs opp = _opponentsEngine?.Outputs;
+            H2HOutputs h2h = _h2hEngine?.Outputs;
 
             AddCsvCell(cells, FormatCsvOptionalInt(carAhead?.CarIdx ?? -1, -1));
             AddCsvCell(cells, FormatCsvOptionalInt(carBehind?.CarIdx ?? -1, -1));
@@ -13770,7 +13773,7 @@ namespace LaunchPlugin
             AppendH2HCorrelationCells(cells, h2h?.Race?.Behind);
         }
 
-        private static void AppendH2HCorrelationCells(List<string> cells, H2HEngine.H2HParticipantOutput participant)
+        private static void AppendH2HCorrelationCells(List<string> cells, H2HParticipantOutput participant)
         {
             AddCsvCell(cells, participant?.Valid == true ? "1" : "0");
             AddCsvCell(cells, FormatCsvOptionalInt(participant?.CarIdx ?? -1, -1));
