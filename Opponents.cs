@@ -731,6 +731,8 @@ namespace LaunchPlugin
             public int PaceCarRowsSkipped;
             public bool PlayerRowPaceCarFlagged;
             public string PlayerPaceCarSource;
+            public readonly HashSet<int> SkippedPaceCarCarIdx = new HashSet<int>();
+            public readonly HashSet<string> SkippedPaceCarIdentityKeys = new HashSet<string>(StringComparer.Ordinal);
 
             public static NativeSnapshot Build(PluginManager pluginManager)
             {
@@ -770,11 +772,24 @@ namespace LaunchPlugin
                     }
 
                     bool isPlayerCarIdx = idx == snapshot.PlayerCarIdx;
+                    string rowIdentityKey = BuildSkippedPaceCarIdentityKey(pluginManager, basePath);
+                    if (!isPlayerCarIdx
+                        && (snapshot.SkippedPaceCarCarIdx.Contains(idx)
+                            || (!string.IsNullOrWhiteSpace(rowIdentityKey) && snapshot.SkippedPaceCarIdentityKeys.Contains(rowIdentityKey))))
+                    {
+                        continue;
+                    }
+
                     if (IsDriversRowPaceCarMetadata(pluginManager, basePath, out string paceCarSource))
                     {
                         if (!isPlayerCarIdx)
                         {
                             snapshot.PaceCarRowsSkipped++;
+                            snapshot.SkippedPaceCarCarIdx.Add(idx);
+                            if (!string.IsNullOrWhiteSpace(rowIdentityKey))
+                            {
+                                snapshot.SkippedPaceCarIdentityKeys.Add(rowIdentityKey);
+                            }
                             continue;
                         }
 
@@ -809,6 +824,27 @@ namespace LaunchPlugin
                 snapshot.PaceReferenceSec = IsValidLapTimeSec(player.BestLapSec) ? player.BestLapSec : (IsValidLapTimeSec(player.LastLapSec) ? player.LastLapSec : 120.0);
                 snapshot.IsValid = true;
                 return snapshot;
+            }
+
+            private static string BuildSkippedPaceCarIdentityKey(PluginManager pluginManager, string basePath)
+            {
+                if (string.IsNullOrWhiteSpace(basePath))
+                {
+                    return string.Empty;
+                }
+
+                string number = ReadString(pluginManager, basePath + ".CarNumber");
+                if (string.IsNullOrWhiteSpace(number))
+                {
+                    int raw = ReadInt(pluginManager, basePath + ".CarNumberRaw", int.MinValue);
+                    if (raw != int.MinValue)
+                    {
+                        number = raw.ToString(CultureInfo.InvariantCulture);
+                    }
+                }
+
+                string classColor = NormalizeClassColor(ReadString(pluginManager, basePath + ".CarClassColor"));
+                return MakeIdentityKey(classColor, number);
             }
 
             private static NativeCarRow BuildRowFromDriver(PluginManager pluginManager, string basePath, int carIdx,
@@ -997,6 +1033,7 @@ namespace LaunchPlugin
                     _heldRowsByIdentity.Clear();
                 }
                 _lastBuildSessionTimeSec = sessionTimeSec;
+                RemoveHeldRowsForSkippedPaceCars(snapshot.SkippedPaceCarCarIdx, snapshot.SkippedPaceCarIdentityKeys);
                 _rows.AddRange(BuildRowsWithContinuity(snapshot.Rows, sessionTimeSec, snapshot.PlayerIdentityKey));
                 Player = _rows.FirstOrDefault(r => string.Equals(r.IdentityKey, snapshot.PlayerIdentityKey, StringComparison.Ordinal));
                 if (Player == null)
@@ -1089,6 +1126,59 @@ namespace LaunchPlugin
                 }
             }
 
+
+            private void RemoveHeldRowsForSkippedPaceCars(HashSet<int> skippedCarIdx, HashSet<string> skippedIdentityKeys)
+            {
+                bool hasSkippedCarIdx = skippedCarIdx != null && skippedCarIdx.Count > 0;
+                bool hasSkippedIdentity = skippedIdentityKeys != null && skippedIdentityKeys.Count > 0;
+                if (!hasSkippedCarIdx && !hasSkippedIdentity)
+                {
+                    return;
+                }
+
+                if (hasSkippedCarIdx && _lastPitLapByCarIdx.Count > 0)
+                {
+                    foreach (int carIdx in skippedCarIdx)
+                    {
+                        _lastPitLapByCarIdx.Remove(carIdx);
+                    }
+                }
+
+                if (_heldRowsByIdentity.Count == 0)
+                {
+                    return;
+                }
+
+                var staleKeys = _heldRowsByIdentity
+                    .Where(kv => IsHeldRowSkippedPaceCar(kv.Key, kv.Value, skippedCarIdx, skippedIdentityKeys))
+                    .Select(kv => kv.Key)
+                    .ToList();
+                for (int i = 0; i < staleKeys.Count; i++)
+                {
+                    _heldRowsByIdentity.Remove(staleKeys[i]);
+                }
+            }
+
+            private static bool IsHeldRowSkippedPaceCar(string identityKey, HeldOpponentRow held, HashSet<int> skippedCarIdx, HashSet<string> skippedIdentityKeys)
+            {
+                if (skippedIdentityKeys != null && !string.IsNullOrWhiteSpace(identityKey) && skippedIdentityKeys.Contains(identityKey))
+                {
+                    return true;
+                }
+
+                NativeCarRow row = held != null ? held.Row : null;
+                if (row == null)
+                {
+                    return false;
+                }
+
+                if (skippedIdentityKeys != null && !string.IsNullOrWhiteSpace(row.IdentityKey) && skippedIdentityKeys.Contains(row.IdentityKey))
+                {
+                    return true;
+                }
+
+                return skippedCarIdx != null && row.CarIdx >= 0 && skippedCarIdx.Contains(row.CarIdx);
+            }
 
             private List<NativeCarRow> BuildRowsWithContinuity(IEnumerable<NativeCarRow> snapshotRows, double sessionTimeSec, string playerIdentityKey)
             {
