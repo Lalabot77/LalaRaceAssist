@@ -681,7 +681,7 @@ namespace LaunchPlugin
         public void StopCarTrackingProbeCsv()
         {
             _carTrackingProbeCsvActiveRuntime = false;
-            FlushCarTrackingProbeCsvBuffer();
+            TryFlushCarTrackingProbeCsvBuffer();
             SimHub.Logging.Current.Info("[LalaPlugin:CarTrackingProbe] CSV capture STOP.");
         }
 
@@ -690,7 +690,11 @@ namespace LaunchPlugin
             try
             {
                 _carTrackingProbeCsvActiveRuntime = false;
-                FlushCarTrackingProbeCsvBuffer();
+                if (!TryFlushCarTrackingProbeCsvBuffer())
+                {
+                    return;
+                }
+
                 if (!string.IsNullOrWhiteSpace(_carTrackingProbeCsvPath) && File.Exists(_carTrackingProbeCsvPath))
                 {
                     File.Delete(_carTrackingProbeCsvPath);
@@ -13385,7 +13389,7 @@ namespace LaunchPlugin
 
             if (Settings?.EnableCarTrackingProbeCsv != true || !SoftDebugEnabled)
             {
-                FlushCarTrackingProbeCsvBuffer();
+                TryFlushCarTrackingProbeCsvBuffer();
                 return;
             }
 
@@ -13411,7 +13415,10 @@ namespace LaunchPlugin
                     return;
                 }
 
-                EnsureCarTrackingProbeCsvFile(pluginManager);
+                if (!EnsureCarTrackingProbeCsvFile(pluginManager))
+                {
+                    return;
+                }
 
                 int[] carIdxLapCompleted = SafeReadIntArray(pluginManager, "DataCorePlugin.GameRawData.Telemetry.CarIdxLapCompleted");
                 int[] carIdxClassPosition = SafeReadIntArray(pluginManager, "DataCorePlugin.GameRawData.Telemetry.CarIdxClassPosition");
@@ -13497,14 +13504,12 @@ namespace LaunchPlugin
                 _carTrackingProbeCsvPendingLines++;
                 if (_carTrackingProbeCsvPendingLines >= 20 || _carTrackingProbeCsvBuffer.Length >= 8192)
                 {
-                    FlushCarTrackingProbeCsvBuffer();
+                    TryFlushCarTrackingProbeCsvBuffer();
                 }
             }
             catch (Exception ex)
             {
-                _carTrackingProbeCsvFailed = true;
-                _carTrackingProbeCsvActiveRuntime = false;
-                SimHub.Logging.Current.Warn($"[LalaPlugin:CarTrackingProbe] CSV disabled after write failure: {ex.Message}");
+                HandleCarTrackingProbeCsvFailure(ex);
             }
         }
 
@@ -13798,15 +13803,19 @@ namespace LaunchPlugin
             return IsValidCarSaLapTimeSec(lapTimeUsedSec) ? lapTimeUsedSec : double.NaN;
         }
 
-        private void EnsureCarTrackingProbeCsvFile(PluginManager pluginManager)
+        private bool EnsureCarTrackingProbeCsvFile(PluginManager pluginManager)
         {
             string token = string.IsNullOrWhiteSpace(_currentSessionToken) ? "na" : _currentSessionToken.Replace(":", "_");
             if (string.Equals(token, _carTrackingProbeCsvToken, StringComparison.Ordinal) && !string.IsNullOrWhiteSpace(_carTrackingProbeCsvPath))
             {
-                return;
+                return true;
             }
 
-            FlushCarTrackingProbeCsvBuffer();
+            if (!TryFlushCarTrackingProbeCsvBuffer())
+            {
+                return false;
+            }
+
             _carTrackingProbeCsvToken = token;
             string folder = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "Logs", "LalapluginData");
             Directory.CreateDirectory(folder);
@@ -13817,6 +13826,8 @@ namespace LaunchPlugin
             {
                 File.WriteAllText(_carTrackingProbeCsvPath, GetCarTrackingProbeCsvHeader() + Environment.NewLine);
             }
+
+            return true;
         }
 
         private string ResolveCarTrackingProbeTrackName(PluginManager pluginManager)
@@ -13829,21 +13840,54 @@ namespace LaunchPlugin
             return string.IsNullOrWhiteSpace(trackName) ? "UnknownTrack" : trackName;
         }
 
-        private void FlushCarTrackingProbeCsvBuffer()
+        private bool TryFlushCarTrackingProbeCsvBuffer()
         {
             if (string.IsNullOrWhiteSpace(_carTrackingProbeCsvPath) || _carTrackingProbeCsvBuffer == null || _carTrackingProbeCsvBuffer.Length == 0)
             {
+                return true;
+            }
+
+            if (_carTrackingProbeCsvFailed)
+            {
+                return false;
+            }
+
+            try
+            {
+                File.AppendAllText(_carTrackingProbeCsvPath, _carTrackingProbeCsvBuffer.ToString());
+                _carTrackingProbeCsvBuffer.Clear();
+                _carTrackingProbeCsvPendingLines = 0;
+                return true;
+            }
+            catch (Exception ex)
+            {
+                HandleCarTrackingProbeCsvFailure(ex);
+                return false;
+            }
+        }
+
+        private void HandleCarTrackingProbeCsvFailure(Exception ex)
+        {
+            if (!_carTrackingProbeCsvFailed)
+            {
+                _carTrackingProbeCsvFailed = true;
+                _carTrackingProbeCsvActiveRuntime = false;
+                _carTrackingProbeCsvPendingLines = 0;
+                if (_carTrackingProbeCsvBuffer != null)
+                {
+                    _carTrackingProbeCsvBuffer.Clear();
+                }
+
+                SimHub.Logging.Current.Warn($"[LalaPlugin:CarTrackingProbe] CSV disabled after write failure: {ex.Message}");
                 return;
             }
 
-            File.AppendAllText(_carTrackingProbeCsvPath, _carTrackingProbeCsvBuffer.ToString());
-            _carTrackingProbeCsvBuffer.Clear();
-            _carTrackingProbeCsvPendingLines = 0;
+            _carTrackingProbeCsvActiveRuntime = false;
         }
 
         private void ResetCarTrackingProbeCsvState()
         {
-            FlushCarTrackingProbeCsvBuffer();
+            TryFlushCarTrackingProbeCsvBuffer();
             _carTrackingProbeCsvActiveRuntime = false;
             _carTrackingProbeCsvPath = null;
             _carTrackingProbeCsvToken = null;

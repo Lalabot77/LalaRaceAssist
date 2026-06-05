@@ -1,3 +1,8 @@
+- 2026-06-05: Car Tracking Probe CSV flush failure guard follow-up landed.
+  - Classification: **internal-only** (Car Tracking Probe CSV robustness only; no UI/schema/export changes).
+  - Centralized probe CSV buffered flushes through a protected flush path so STOP, RESET, soft-debug/enable-off flush, session/file rotation, periodic flush, and plugin shutdown cleanup all disable capture and emit the existing one-shot probe failure log instead of propagating `File.AppendAllText` exceptions.
+  - Preserved runtime invariants: no CSV schema changes, no UI changes, no Property Snapshot changes, no CarSA/Opp/H2H behavior changes, and no dashboard export changes.
+
 - 2026-06-05: Car Tracking Probe CSV debug system landed.
   - Classification: **internal-only** (Debug UI diagnostics and CSV documentation only; no dashboard exports/properties added).
   - Added a Debug UI controlled `CarTrackingProbe_<Track>_<Timestamp>.csv` writer for player + Probe A/B CarIdx rows, bounded by enable/start/stop/reset controls and a normalized 1–20 Hz capture frequency.

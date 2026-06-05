@@ -1,5 +1,9 @@
 # Repo Status
 
+- 2026-06-05 Car Tracking Probe CSV flush failure guard follow-up landed:
+  - all buffered probe CSV flush paths now share the protected failure-handling path, so file write failures disable capture and use the existing `[LalaPlugin:CarTrackingProbe] CSV disabled after write failure: ...` warning instead of propagating exceptions from STOP/RESET/toggle-off/session-rotation/shutdown flushes;
+  - no CSV schema, UI, Property Snapshot, CarSA/Opp/H2H behavior, or dashboard export changes.
+
 - 2026-06-05 Car Tracking Probe CSV debug system landed:
   - Debug Options now includes `Enable Car Tracking Probe`, Probe A/B `CarIdx` inputs, capture frequency, and START/STOP/RESET CSV controls for a separate diagnostics-only CSV writer;
   - the writer captures player + two selected probes with raw CarIdx telemetry, `DriverInfo.Drivers##` identity/class data only, player-vs-probe derived deltas, and read-only CarSA/Opp/H2H correlation fields;
