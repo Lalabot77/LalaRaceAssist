@@ -1,3 +1,10 @@
+## 2026-06-05 — Car tracking safety filters
+- Classification: **both** (driver-facing target contamination/self-target prevention plus internal safety-filter documentation).
+- Opponents now filters non-player `DriverInfo.Drivers##` Pace Car rows before building native race-order rows; filtered rows cannot enter `NativeRaceModel.Rows`, `Opp.Ahead1` / `Opp.Behind1`, H2HRace selector inputs, or PitExit prediction. The filter uses `IsPaceCar`, `CarIsPaceCar`, exact Pace Car identity labels, and conservative `CarPath` matching; it does not filter by `CarIdx`, preserving `PlayerCarIdx == 0`.
+- If the current player row is pace-car flagged, Opponents preserves the player row and logs a one-time anomaly warning rather than removing the player.
+- H2H target publication now fails closed when a resolved ahead/behind target `CarIdx` equals `PlayerCarIdx`, so H2HTrack/H2HRace cannot publish the player as their own target or retain stale self-gap data.
+- Preserved CarSA gap math, CarSA selection/checkpoint logic, Opponents ordering except Pace Car row exclusion, Opponents gap fallback math, H2H gap formula, export names, dashboard JSON, and Property Snapshot grouping. Property Snapshot list reviewed: yes; no export/property add, remove, rename, or regroup.
+
 - 2026-06-05: Car Tracking Probe CSV flush failure guard follow-up landed.
   - Classification: **internal-only** (Car Tracking Probe CSV robustness only; no UI/schema/export changes).
   - Centralized probe CSV buffered flushes through a protected flush path so STOP, RESET, soft-debug/enable-off flush, session/file rotation, periodic flush, and plugin shutdown cleanup all disable capture and emit the existing one-shot probe failure log instead of propagating `File.AppendAllText` exceptions.
