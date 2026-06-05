@@ -1,5 +1,12 @@
 # Repo Status
 
+- 2026-06-05 Pit Fuel Control failure feedback preservation follow-up landed:
+  - Pit Fuel Control no longer republishes generic `PIT CMD SEND FAIL` after failed raw sends, preserving the more specific command-engine failure already published by `ExecuteRawPitCommand`;
+  - fuel-control fallback state remains unchanged: existing send-failure paths still force `Source=STBY` and disarm AUTO where they already did, and retain `send-failed` diagnostics;
+  - Pit Tyre Control was checked and already preserves command-engine failure feedback because it does not republish a generic failure after raw-send failure;
+  - corrected the Pit Commands subsystem output wording to remove stale PushSaveMode compatibility-alias wording;
+  - Property Snapshot list reviewed: yes, no group update required because no SimHub export/property was added, removed, renamed, or regrouped.
+
 - 2026-06-05 Pit command failure message specificity landed:
   - generic driver-facing pit command failure publishes now use specific Warning text where current code paths can distinguish source: `PIT CMD WINDOW FAIL`, `PIT CMD CHAT FAIL`, `PIT CMD SEND FAIL`, or `PIT CMD CONFIRM FAIL`;
   - `PIT CMD TIMEOUT FAIL` is reserved/documented but intentionally not emitted because existing generic failure publish sites do not expose a true timeout/expiry distinction;
@@ -883,7 +890,7 @@ Branch: work
   - only internal Pit Fuel Control PUSH/SAVE target composition is affected; NORM and PLAN behavior remain unchanged;
   - fallback is silent to existing live PUSH/SAVE behavior when profile/track/condition/guard inputs are invalid;
   - mode toggle now refresh-sends current target immediately in MAN/AUTO when source is PUSH/SAVE (no send for OFF/STBY/NORM/PLAN);
-  - explicit toggle refresh send failures now follow SourceCycle-style fallback (`PIT CMD SEND FAIL`, force `STBY`, AUTO disarm).
+  - explicit toggle refresh send failures now follow SourceCycle-style fallback (specific command-engine failure feedback, force `STBY`, AUTO disarm).
 - 2026-04-29 Auto PreRace stable-source provenance follow-up landed:
   - in Auto (`selectedStrategy == 3`) when `LiveFuelPerLap_Stable > 0`, `LalaLaunch.PreRace.FuelSource` now follows the selected stable source only (`Live => live`, `Profile => profile`, other/non-standard stable source => `fallback`);
   - removed profile-baseline availability inference from this stable-consumption path so non-profile stable fallback cannot be mislabeled as `profile`;
@@ -991,7 +998,7 @@ Branch: work
   - removed tyre retry/attempt/timeout-fail state machines and plugin-owned suppression/intent-grace tracking; replaced with a single 1.0s settle hold after plugin-issued tyre commands.
   - outside AUTO, mode now mirrors known MFD truth only after settle (`OFF` / dry-family / wet-family) and never sends corrective commands for manual pit-menu tyre edits.
   - AUTO now enters feedback-only (`TYRE AUTO`), performs one correction send only when known MFD truth mismatches declared-wet target, and cancels/remaps on manual takeover with `TYRE AUTO CANCELLED` (no fight-back send).
-  - tyre-control `PIT CMD SEND FAIL` is now transport-failure only (raw send returned false); timeout-driven failure/revert paths were removed.
+  - tyre-control raw-send failure feedback is owned by the command engine (window/chat/send-specific); timeout-driven failure/revert paths were removed.
 - 2026-04-24 review follow-up landed for Fuel Control impossible-state ModeCycle handling:
   - `PitFuelControlEngine.ModeCycle()` now guards impossible `AUTO + PLAN` before AUTO->OFF send logic;
   - impossible branch now recovers to `Source=STBY` + `AutoArmed=false`, remains AUTO/disarmed, and sends no command;

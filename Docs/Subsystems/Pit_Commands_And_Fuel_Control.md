@@ -69,7 +69,7 @@ This is the canonical technical document for the pit/custom command stack and re
 - Driver-facing failure feedback is specific where existing code paths can distinguish the source; all remain `Warning` severity:
   - `PIT CMD WINDOW FAIL` = no usable iRacing process/main window,
   - `PIT CMD CHAT FAIL` = chat-open stage failed after a window was resolved,
-  - `PIT CMD SEND FAIL` = empty/invalid command text, text/submit transport failure, or raw/fuel/tyre send returned false without finer source detail,
+  - `PIT CMD SEND FAIL` = empty/invalid command text or text/submit transport failure after a usable window/chat path exists,
   - `PIT CMD CONFIRM FAIL` = stateful built-in command was sent but before/after telemetry could not confirm the expected toggle state,
   - `PIT CMD TIMEOUT FAIL` = reserved/documented failure text, but not currently emitted because no existing generic failure publish path has a true timeout distinction.
 - Reset seams that clear command feedback now clear:
@@ -123,12 +123,12 @@ This is the canonical technical document for the pit/custom command stack and re
   - plugin-driven actions use CHANGE wording (`TYRE CHANGE OFF/DRY/WET/AUTO`) only,
   - AUTO manual takeover feedback is `TYRE AUTO CANCELLED`,
    - unknown/ambiguous tyre truth is held fail-safe (no mode flip, no send),
-   - `PIT CMD SEND FAIL` is transport-failure only (raw send returned false), with no timeout-resend loop.
+   - raw-send failure feedback is owned by `PitCommandEngine`, preserving specific `PIT CMD WINDOW FAIL` / `PIT CMD CHAT FAIL` / `PIT CMD SEND FAIL` text with no timeout-resend loop.
 
 ## Outputs (exports + logs)
 Canonical export names live in `Docs/Internal/SimHubParameterInventory.md`; key families:
 - `Pit.Command.*` (display text, active, last action/raw, max-toggle state),
-- `Pit.FuelControl.*` (data, source, mode, target, override, fault, compatibility push/save mode aliases),
+- `Pit.FuelControl.*` (data, source, mode, target, override, fault),
 - `Pit.TyreControl.*` (mode text/state + fault).
 
 Fault export contract (diagnostic/visual only):
@@ -171,7 +171,7 @@ Canonical log wording and meaning live in `Docs/Internal/SimHubLogMessages.md`; 
 - Chat-open leak prevention is explicit in direct transport: command transport force-sends `Esc` before `T` so stale-open chat does not absorb the opener key into outgoing raw/custom command payload (`t#...` / `tt#...` corruption).
 - Transport success for custom/raw/stateless commands is attempt-only; in-sim effect is unverified by design.
 - Tyre control has no resend loop: each target change/correction sends once at most, with a 1.0s settle hold and truth-following remap outside AUTO.
-- Tyre command failure feedback is `PIT CMD SEND FAIL` when raw send returns false, and passive truth-mirror feedback is briefly suppressed after send failure so failure text is not immediately overwritten.
+- Tyre command failure feedback is owned by the raw command engine when raw send returns false, and passive truth-mirror feedback is briefly suppressed after send failure so the specific failure text is not immediately overwritten.
 - External pit-menu edits can cancel AUTO once and force safety recovery state in fuel control.
 - Fuel Control mode ownership is explicit-command only (no internal `Pit.ToggleFuel` use):
   - suppression gate is now reserved for truly invalid snapshot contexts (`no-plugin-manager`, `no-session`) and does not blanket-block active in-car/offline-testing pit-control button use;

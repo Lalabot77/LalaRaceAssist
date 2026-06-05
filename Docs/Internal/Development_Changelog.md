@@ -1,10 +1,18 @@
 # Development Changelog
 
+## 2026-06-05 — Pit Fuel Control failure feedback preservation follow-up
+- Classification: **both** (driver/dashboard-facing failure feedback preservation plus documentation correction).
+- Removed Pit Fuel Control's immediate generic `PIT CMD SEND FAIL` republish after failed raw sends so the more specific `PitCommandEngine` failure text (`PIT CMD WINDOW FAIL`, `PIT CMD CHAT FAIL`, or `PIT CMD SEND FAIL`) remains visible.
+- Preserved existing fuel-control fallback behavior and diagnostics: send-failure paths still force `Source=STBY` where they already did, disarm AUTO where they already did, and keep existing `send-failed` logs.
+- Confirmed Pit Tyre Control does not republish generic failure feedback after `_rawCommandSender` returns false; it already preserves command-engine failure feedback.
+- Corrected Pit Commands subsystem output wording to remove stale Pit Fuel Control PushSaveMode compatibility-alias wording.
+- Property Snapshot list reviewed: yes; no SimHub export/property names, groups, or dashboard JSON changed.
+
 ## 2026-06-05 — Pit command failure message specificity
 - Classification: **both** (driver/dashboard-facing `Pit.Command.DisplayText` warning text changes plus internal log/doc inventory alignment).
 - Replaced generic pit command failure publishes with specific warning texts where existing code paths already distinguish the failure source: `PIT CMD WINDOW FAIL`, `PIT CMD CHAT FAIL`, `PIT CMD SEND FAIL`, and `PIT CMD CONFIRM FAIL`.
 - `PIT CMD TIMEOUT FAIL` remains reserved/documented but not currently emitted because the generic failure-publish sites do not have a true timeout/expiry distinction; Pit Fuel Control stale-owned-request expiry remains a mirror/ownership expiry path and does not publish command-failure feedback.
-- Fuel Control and Tyre Control raw-send failure paths map to `PIT CMD SEND FAIL` because their caller contract is still the existing boolean raw-command send result; no transport retry, confirmation window, payload, dashboard JSON, fuel math, or tyre mode behavior changed.
+- Raw-command send failure paths preserve the `PitCommandEngine` failure text; no transport retry, confirmation window, payload, dashboard JSON, fuel math, or tyre mode behavior changed.
 - Property Snapshot list reviewed: yes; no SimHub export/property names, groups, or dashboard JSON changed because only existing `Pit.Command.DisplayText` warning text values changed.
 
 ## 2026-06-04 — Pit command direct transport fixed path cleanup
