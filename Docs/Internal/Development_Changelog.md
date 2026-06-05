@@ -1,10 +1,17 @@
 # Development Changelog
 
+## 2026-06-05 — Pit command failure message specificity
+- Classification: **both** (driver/dashboard-facing `Pit.Command.DisplayText` warning text changes plus internal log/doc inventory alignment).
+- Replaced generic pit command failure publishes with specific warning texts where existing code paths already distinguish the failure source: `PIT CMD WINDOW FAIL`, `PIT CMD CHAT FAIL`, `PIT CMD SEND FAIL`, and `PIT CMD CONFIRM FAIL`.
+- `PIT CMD TIMEOUT FAIL` remains reserved/documented but not currently emitted because the generic failure-publish sites do not have a true timeout/expiry distinction; Pit Fuel Control stale-owned-request expiry remains a mirror/ownership expiry path and does not publish command-failure feedback.
+- Fuel Control and Tyre Control raw-send failure paths map to `PIT CMD SEND FAIL` because their caller contract is still the existing boolean raw-command send result; no transport retry, confirmation window, payload, dashboard JSON, fuel math, or tyre mode behavior changed.
+- Property Snapshot list reviewed: yes; no SimHub export/property names, groups, or dashboard JSON changed because only existing `Pit.Command.DisplayText` warning text values changed.
+
 ## 2026-06-04 — Pit command direct transport fixed path cleanup
 - Classification: **both** (user-facing Settings UI simplification plus internal transport cleanup; no action names, Pit.Command exports, or fuel/strategy math changed).
 - Removed the Settings -> Pit Commands transport-mode ComboBox; users no longer choose Auto / Legacy foreground SendInput / Direct message only.
 - Pit/custom command dispatch is now fixed to the plugin-owned direct iRacing window-message path. Persisted `PitCommandTransportMode` values are retained as ignored legacy settings data so old settings load safely, but they cannot re-enable Auto fallback or legacy foreground `SendInput`.
-- Removed the live legacy foreground `SendInput` fallback path from `PitCommandEngine`; direct-window failure now fails closed with the existing `PIT CMD FAIL` feedback/log contract.
+- Removed the live legacy foreground `SendInput` fallback path from `PitCommandEngine`; direct-window failure now fails closed through the pit command feedback/log contract (now `PIT CMD WINDOW FAIL` for no usable window).
 - Issue #698 legacy cleanup reviewed: `Pit.FuelControl.PushSaveMode`, `Pit.FuelControl.PushSaveModeText`, and legacy `PushSaveModeCycle` code exports/actions were already absent; stale docs/log inventory references were corrected. Canonical Pit Fuel Control DATA/SOURCE/MODE behavior and `CycleData` remain unchanged.
 - Property Snapshot list reviewed: yes; no live SimHub export/property was added, removed, or renamed because the requested PushSaveMode exports were already absent and existing Pit/PitExit group coverage remains correct.
 

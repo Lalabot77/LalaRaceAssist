@@ -1,5 +1,11 @@
 # Repo Status
 
+- 2026-06-05 Pit command failure message specificity landed:
+  - generic driver-facing pit command failure publishes now use specific Warning text where current code paths can distinguish source: `PIT CMD WINDOW FAIL`, `PIT CMD CHAT FAIL`, `PIT CMD SEND FAIL`, or `PIT CMD CONFIRM FAIL`;
+  - `PIT CMD TIMEOUT FAIL` is reserved/documented but intentionally not emitted because existing generic failure publish sites do not expose a true timeout/expiry distinction;
+  - command action names, raw payloads, direct postmessage sequence, custom-message slots, `Pit.Command.Active` pulse behavior, severity exports, fuel/tyre semantics, fuel math, and dashboard JSON remain unchanged;
+  - Property Snapshot list reviewed: yes, no group update required because no SimHub export/property was added, removed, renamed, or regrouped.
+
 - 2026-06-04 Pit command direct transport fixed path cleanup landed:
   - Settings -> Pit Commands no longer exposes the transport-mode ComboBox/options;
   - pit/custom commands now dispatch through the plugin-owned direct iRacing window-message path only, with persisted `PitCommandTransportMode` retained as ignored legacy load-safe data;
@@ -877,7 +883,7 @@ Branch: work
   - only internal Pit Fuel Control PUSH/SAVE target composition is affected; NORM and PLAN behavior remain unchanged;
   - fallback is silent to existing live PUSH/SAVE behavior when profile/track/condition/guard inputs are invalid;
   - mode toggle now refresh-sends current target immediately in MAN/AUTO when source is PUSH/SAVE (no send for OFF/STBY/NORM/PLAN);
-  - explicit toggle refresh send failures now follow SourceCycle-style fallback (`PIT CMD FAIL`, force `STBY`, AUTO disarm).
+  - explicit toggle refresh send failures now follow SourceCycle-style fallback (`PIT CMD SEND FAIL`, force `STBY`, AUTO disarm).
 - 2026-04-29 Auto PreRace stable-source provenance follow-up landed:
   - in Auto (`selectedStrategy == 3`) when `LiveFuelPerLap_Stable > 0`, `LalaLaunch.PreRace.FuelSource` now follows the selected stable source only (`Live => live`, `Profile => profile`, other/non-standard stable source => `fallback`);
   - removed profile-baseline availability inference from this stable-consumption path so non-profile stable fallback cannot be mislabeled as `profile`;
@@ -940,7 +946,7 @@ Branch: work
   - `PitCommandEngine` feedback publisher now suppresses lower-severity incoming feedback while a higher-severity message is active;
   - equal/higher-severity incoming feedback still replaces immediately and restarts the active hold window (including repeated identical message retrigger cases);
   - no payload/transport/timing/fuel/tyre AUTO behavior changes were introduced, and no counters/sequence fields were added.
-  - pit feedback docs/contracts now include the explicit dash visual mapping (`None/Info/Advisory/Caution/Warning`) and logic CSV contracts include a `Severity` column with consistent uppercase `PIT CMD FAIL`.
+  - pit feedback docs/contracts now include the explicit dash visual mapping (`None/Info/Advisory/Caution/Warning`) and logic CSV contracts include a `Severity` column with specific uppercase `PIT CMD ... FAIL`.
 - 2026-04-24 follow-up hardened pit feedback reset seams:
   - removed `PitCommandEngine.ResetFeedbackState()` calls from `Telemetry.IsOnTrackCar` edge handlers in `LalaLaunch`;
   - pit command feedback reset now remains on explicit lifecycle/reset seams only (for example manual/runtime reset flows), avoiding transient on-track telemetry-gap clears while command feedback is active.
@@ -951,7 +957,7 @@ Branch: work
   - Fuel Control, Tyre Control, built-in pit commands, custom messages, and raw command feedback continue to flow through `PitCommandEngine` publisher ownership.
 - 2026-04-24 Tyre Control review-follow-up landed for send-failure feedback hold:
   - `PitTyreControlEngine` now tracks a short send-failure hold timestamp when raw tyre command send returns false;
-  - outside AUTO, truth-mirror mode remap still occurs as before, but passive mirror feedback publish (`TYRE OFF/DRY/WET`) is suppressed only during the failure-hold window so `PIT CMD FAIL` remains visible;
+  - outside AUTO, truth-mirror mode remap still occurs as before, but passive mirror feedback publish (`TYRE OFF/DRY/WET`) is suppressed only during the failure-hold window so pit failure feedback remains visible;
   - command payloads and mode-cycle behavior are unchanged (`#cleartires`, `#t tc 0`, `#t tc 2`; `OFF->DRY->WET->AUTO->OFF`).
 - 2026-04-24 Tyre Control feedback wording + command-active retrigger follow-up landed:
   - plugin-driven Tyre Control feedback now uses CHANGE wording (`TYRE CHANGE OFF/DRY/WET/AUTO`);
@@ -985,7 +991,7 @@ Branch: work
   - removed tyre retry/attempt/timeout-fail state machines and plugin-owned suppression/intent-grace tracking; replaced with a single 1.0s settle hold after plugin-issued tyre commands.
   - outside AUTO, mode now mirrors known MFD truth only after settle (`OFF` / dry-family / wet-family) and never sends corrective commands for manual pit-menu tyre edits.
   - AUTO now enters feedback-only (`TYRE AUTO`), performs one correction send only when known MFD truth mismatches declared-wet target, and cancels/remaps on manual takeover with `TYRE AUTO CANCELLED` (no fight-back send).
-  - tyre-control `PIT CMD FAIL` is now transport-failure only (raw send returned false); timeout-driven failure/revert paths were removed.
+  - tyre-control `PIT CMD SEND FAIL` is now transport-failure only (raw send returned false); timeout-driven failure/revert paths were removed.
 - 2026-04-24 review follow-up landed for Fuel Control impossible-state ModeCycle handling:
   - `PitFuelControlEngine.ModeCycle()` now guards impossible `AUTO + PLAN` before AUTO->OFF send logic;
   - impossible branch now recovers to `Source=STBY` + `AutoArmed=false`, remains AUTO/disarmed, and sends no command;
@@ -995,7 +1001,7 @@ Branch: work
   - AUTO source sends now use AUTO wording (`AUTO REFUEL SET ...`) and AUTO max/over-space wording (`AUTO FUEL <requested>L >MAX`), while MAN max feedback remains `FUEL MAX`;
   - `MAN STBY/PLAN -> AUTO STBY` now publishes `AUTO REFUEL STBY`;
   - `AUTO -> OFF` now publishes `REFUEL OFF` while still sending explicit `#-fuel$`;
-  - invalid MAN `SetPlan` (planner/live mismatch) now publishes `Pit Cmd Fail` instead of silent no-op;
+  - invalid MAN `SetPlan` (planner/live mismatch) publishes pit command failure feedback instead of silent no-op;
   - impossible `AUTO + PLAN` state is now guarded to no-send recovery (`AUTO STBY`, disarmed) and cannot fall through to PUSH send.
   - `Pit.ToggleFuel` action remains unchanged/available as an independent manual binding and is not used by Fuel Control ownership logic.
 - 2026-04-23 Pit Fuel Control testing/polish pass landed (command payload fix + observability + table alignment):
@@ -1005,7 +1011,7 @@ Branch: work
 - 2026-04-23 Tyre Control follow-up landed (compound confirmation timeout no longer reverts successful DRY/WET MFD changes):
   - `PitTyreControlEngine.EnsureCompound(...)` pending confirmation now succeeds immediately when requested compound truth exists and matches desired DRY/WET family (`HasRequestedCompound` + family match), without waiting for tyre-service ON confirmation;
   - successful family convergence now clears pending compound confirmation state before timeout evaluation, preventing false timeout failure from undoing already-successful MFD compound changes;
-  - bounded timeout failure handling remains active only for truly unconfirmed windows (`PIT CMD FAIL` + manual truth remap when no requested-family convergence occurred).
+  - bounded timeout failure handling remains active only for truly unconfirmed windows (specific pit command failure feedback + manual truth remap when no requested-family convergence occurred).
 - 2026-04-23 Pit command transport regression fix landed (chat-open `T` leak guard):
   - `PitCommandEngine` now force-closes chat (`Esc`) before opener (`T`) in both direct-postmessage and legacy-sendinput chat-injection paths;
   - prevents stale-open chat from absorbing the opener key into outgoing typed payloads (`t#...` / `tt#...`) for raw/custom pit commands such as `#tc 0`;
@@ -1030,7 +1036,7 @@ Branch: work
 - 2026-04-23 Tyre Control PR review follow-up landed (compound confirmation success-path restore):
   - while `_compoundConfirmationPending` is active, `PitTyreControlEngine.EnsureCompound(...)` now first checks whether `PitSvTireCompound` has converged into the requested DRY/WET family before considering timeout failure;
   - successful family convergence now clears pending compound confirmation state and pending compound-intent tracking immediately;
-  - timeout unconfirmed fallback (`PIT CMD FAIL` + manual-truth remap) now occurs only when the confirmation window actually expires without requested-family convergence;
+  - timeout unconfirmed fallback (pit command failure feedback + manual-truth remap) now occurs only when the confirmation window actually expires without requested-family convergence;
   - keeps the always-send single-command `#tc ...$` model and no-retry-loop behavior unchanged.
 - 2026-04-23 Tyre Control PR review follow-up landed (always-send compound intent for DRY/WET/AUTO):
   - removed `PitTyreControlEngine.EnsureCompound(...)` "already correct compound family => no send" short-circuit;
@@ -1041,7 +1047,7 @@ Branch: work
   - tyre control command model now uses `OFF => #cleartires$` and `DRY/WET/AUTO => #tc ...$` only (internal `#t$` sequencing removed);
   - tyre service/compound resend loops and retry/cooldown attempt budgets were removed for tyre control;
   - each manual action/AUTO target change now performs one send attempt and waits a short bounded confirmation window (~900 ms);
-  - unconfirmed timeout (or immediate send failure) now publishes `PIT CMD FAIL`, then remaps mode to current authoritative MFD truth with no retry loop;
+  - unconfirmed timeout (or immediate send failure) now publishes specific pit command failure feedback, then remaps mode to current authoritative MFD truth with no retry loop;
   - preserves existing mode cycle and AUTO external/manual takeover-cancel behaviour.
 - 2026-04-23 LapRef/PB reliability follow-up landed (bounded seam fix):
   - PB writes now execute on the accepted validated-lap seam in `UpdateLiveFuelCalcs` using the same authoritative lap-time handoff as LapRef validated capture (instead of waiting for native best-lap event timing);
@@ -1050,11 +1056,11 @@ Branch: work
 - 2026-04-23 PR follow-up restored `OFF -> MAN` progression for ModeCycle-only Fuel Control bindings:
   - `PitFuelControlEngine.ModeCycle()` OFF branch now issues an explicit fuel-amount command attempt (`#fuel ...$`) using the selected source target instead of selection-only state mutation;
   - keeps Fuel Control ownership explicit-command based (no `Pit.ToggleFuel` / `#!fuel` reintroduction) while allowing non-AUTO MAN truth to advance via MFD telemetry `dpFuelFill`;
-  - transport/send failure remains visible via existing `Pit Cmd Fail` feedback semantics.
+  - transport/send failure remains visible via pit command failure feedback semantics.
 - 2026-04-23 Pit Fuel Control mode ownership refactor landed (explicit-command model, no internal toggle dependency):
   - `PitFuelControlEngine` no longer depends on `_fuelToggleSender`, `TryToggleFuelFillEnabled(...)`, or `NotifyPluginFuelToggleAction()` for Fuel Control mode ownership;
   - Fuel Control mode cycle now uses explicit command semantics only: `OFF -> MAN` is selection-only intent with no send, `MAN -> AUTO` keeps existing immediate amount-send ownership behavior, and `AUTO -> OFF` sends explicit raw OFF command `#-fuel$` (single attempt, no retry/poll loop);
-  - successful AUTO->OFF explicit send exits AUTO to `Source=STBY` + `AutoArmed=false`; local transport failure remains visible as `Pit Cmd Fail`;
+  - successful AUTO->OFF explicit send exits AUTO to `Source=STBY` + `AutoArmed=false`; local transport failure remains visible as pit command failure feedback;
   - OFF hard guard, AUTO cancel edge-trigger behavior, on-track reset seam, and lap-cross AUTO cadence remain unchanged;
   - direct plugin action `Pit.ToggleFuel` remains available as a separate built-in pit action outside Fuel Control ownership.
 - 2026-04-23 PR review follow-up restored non-blocking post-toggle verification in `TryToggleFuelFillEnabled(...)`:
@@ -1083,15 +1089,15 @@ Branch: work
 - 2026-04-23 PR follow-up fixed AUTO-exit OFF toggle guard:
   - `PitFuelControlEngine.ModeCycle()` AUTO-exit now checks live `dpFuelFill` truth before sending `Pit.ToggleFuel` OFF,
   - if fill is already OFF, AUTO exits to OFF state without sending a toggle (`Source=STBY`, AUTO cleared/disarmed),
-  - OFF toggle send still runs only when fill is currently ON; bounded verification + `Pit Cmd Fail` mismatch feedback behavior remains unchanged.
+  - OFF toggle send still runs only when fill is currently ON; bounded verification + pit command mismatch feedback behavior remains unchanged.
 - 2026-04-22 Pit Fuel Control V2 follow-up polish landed:
   - `ModeCycle` now explicitly drives effective mode loop `OFF -> MAN -> AUTO -> OFF` and actively toggles MFD fuel-fill truth on OFF/MAN transitions (`Pit.ToggleFuel` ON/OFF with bounded `dpFuelFill` validation),
-  - toggle validation mismatches now publish `Pit Cmd Fail` and fall back to actual MFD truth without correction looping,
+  - toggle validation mismatches now publish pit command failure feedback and fall back to actual MFD truth without correction looping,
   - OFF is now a hard safety guard: source actions (`SourceCycle`, `SetPush`, `SetNorm`, `SetSave`) cannot send fuel commands while effective mode is OFF,
   - AUTO entry now sends immediately for `PUSH/NORM/SAVE` and arms only on successful send; PLAN entry is one-shot immediate send and then forced back to `Source=STBY` disarmed,
   - AUTO source cycle is now PLAN-isolated (`PUSH -> NORM -> SAVE -> PUSH` only); PLAN remains available in MAN cycle only,
   - AUTO cancel edge-trigger and lap-cross AUTO update cadence remain unchanged.
-  - same-day follow-up: MAN->AUTO immediate-send failures now explicitly publish `Pit Cmd Fail` for both `SAVED` and `PUSH/NORM/SAVE` entry branches while preserving fallback-to-`STBY` + disarmed behavior.
+  - same-day follow-up: MAN->AUTO immediate-send failures now explicitly publish pit command failure feedback for both `SAVED` and `PUSH/NORM/SAVE` entry branches while preserving fallback-to-`STBY` + disarmed behavior.
 - Tyre Control PR follow-up landed (explicit raw-command model + AUTO external ownership cancel/remap):
   - tyre control engine no longer uses internal toggle semantics for service enforcement (`Pit.ToggleTyresAll` remains a direct user action only);
   - explicit tyre commands are now authoritative in-engine (`OFF => #cleartires$`; `DRY/WET/AUTO => #t$` then dry/wet `#tc ...$`);
@@ -1331,7 +1337,7 @@ Branch: work
   - legacy lap-time-only PB rows remain valid.
 - PR #575 follow-up fixed Pit Fuel Control source-change failure feedback masking:
   - `SourceCycle` and direct source-select actions now publish `FUEL SRC ...` selection feedback only when no send is attempted (`Mode=OFF`).
-  - In `Mode=MAN/AUTO`, failed send attempts now keep existing pit-command failure feedback (`Pit Cmd Fail`) visible instead of being overwritten by selection text.
+  - In `Mode=MAN/AUTO`, failed send attempts now keep existing pit-command failure feedback visible instead of being overwritten by selection text.
 - PR follow-up corrected Pit Fuel Control live-target contingency ordering:
   - `NORM/PUSH/SAVE` now apply contingency before clamp (`max(0, shortfall + contingency)`)
   - avoids contingency-only overfuel commands when current fuel is already above the base live requirement
@@ -1387,7 +1393,7 @@ Branch: work
 - Added explicit failure handling:
   - chat injection unavailability/failure warnings,
   - before/after mismatch warnings for stateful toggles,
-  - user-facing `Pit Cmd Fail` fallback text.
+  - user-facing pit command failure fallback text.
 - Tightened pit-command logging semantics so transport-stage warnings are explicitly best-effort; state-confirmation mismatch remains the authoritative failure signal for stateful actions.
 - Fuel-add feedback now uses explicit `Fuel MAX` wording for max/clamp cases using existing pit tank-space authority.
 - Kept pit read-side authority unchanged: pit service status/selection remains telemetry-based (`dpFuelFill`, tyre selectors, `PlayerCarPitSvStatus` and related seams).

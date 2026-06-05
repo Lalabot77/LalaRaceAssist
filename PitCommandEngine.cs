@@ -32,6 +32,15 @@ namespace LaunchPlugin
         DirectMessageOnly = 2
     }
 
+    internal enum PitCommandFailReason
+    {
+        Window,
+        Chat,
+        Send,
+        Confirm,
+        Timeout
+    }
+
     internal sealed class PitCommandEngine
     {
         internal enum PitCommandSeverity
@@ -75,7 +84,7 @@ namespace LaunchPlugin
             string command = NormalizeChatCommand(raw);
             if (string.IsNullOrWhiteSpace(command))
             {
-                PublishMessage("PIT CMD FAIL", PitCommandSeverity.Warning);
+                PublishFailure(PitCommandFailReason.Send);
                 WarnOnce("invalid_command_" + action, $"[LalaPlugin:PitCommand] action={action} failed: chat command mapping is empty.");
                 return false;
             }
@@ -94,7 +103,7 @@ namespace LaunchPlugin
             bool transportAttempted = TryInjectChatCommand(command, transportMode, out transportUsed, out reason, out fallbackFrom);
             if (!transportAttempted)
             {
-                PublishMessage("PIT CMD FAIL", PitCommandSeverity.Warning);
+                PublishFailure(MapTransportFailureReason(reason));
                 SimHub.Logging.Current.Warn($"[LalaPlugin:PitCommand] action={action} transport={transportUsed} local-transport-issue reason={reason}{FormatFallbackSuffix(fallbackFrom)} raw='{raw}' normalized='{command}'");
                 return false;
             }
@@ -120,7 +129,7 @@ namespace LaunchPlugin
             LastRaw = normalized;
             if (string.IsNullOrWhiteSpace(normalized))
             {
-                PublishMessage("PIT CMD FAIL", PitCommandSeverity.Warning);
+                PublishFailure(PitCommandFailReason.Send);
                 SimHub.Logging.Current.Warn("[LalaPlugin:PitCommand] custom-message send blocked: message text is empty.");
                 return false;
             }
@@ -131,7 +140,7 @@ namespace LaunchPlugin
             bool transportAttempted = TryInjectChatCommand(normalized, transportMode, out transportUsed, out reason, out fallbackFrom);
             if (!transportAttempted)
             {
-                PublishMessage("PIT CMD FAIL", PitCommandSeverity.Warning);
+                PublishFailure(MapTransportFailureReason(reason));
                 SimHub.Logging.Current.Warn($"[LalaPlugin:PitCommand] custom-message transport={transportUsed} local-transport-issue reason={reason}{FormatFallbackSuffix(fallbackFrom)} text='{normalized}'");
                 return false;
             }
@@ -149,7 +158,7 @@ namespace LaunchPlugin
             string normalized = NormalizeChatCommand(rawCommandText);
             if (string.IsNullOrWhiteSpace(normalized))
             {
-                PublishMessage("PIT CMD FAIL", PitCommandSeverity.Warning);
+                PublishFailure(PitCommandFailReason.Send);
                 SimHub.Logging.Current.Warn($"[LalaPlugin:PitCommand] raw-command send blocked: command text is empty after normalization raw='{rawCommandText ?? string.Empty}' normalized='{normalized}'");
                 return false;
             }
@@ -160,7 +169,7 @@ namespace LaunchPlugin
             bool transportAttempted = TryInjectChatCommand(normalized, transportMode, out transportUsed, out reason, out fallbackFrom);
             if (!transportAttempted)
             {
-                PublishMessage("PIT CMD FAIL", PitCommandSeverity.Warning);
+                PublishFailure(MapTransportFailureReason(reason));
                 SimHub.Logging.Current.Warn($"[LalaPlugin:PitCommand] raw-command transport={transportUsed} local-transport-issue reason={reason}{FormatFallbackSuffix(fallbackFrom)} raw='{rawCommandText ?? string.Empty}' normalized='{normalized}'");
                 return false;
             }
@@ -200,7 +209,7 @@ namespace LaunchPlugin
 
             if (!before.HasValue)
             {
-                PublishMessage("PIT CMD FAIL", PitCommandSeverity.Warning);
+                PublishFailure(PitCommandFailReason.Confirm);
                 SimHub.Logging.Current.Warn($"[LalaPlugin:PitCommand] action={action} expected-state-check skipped: before state unavailable.");
                 return false;
             }
@@ -210,7 +219,7 @@ namespace LaunchPlugin
             bool expected = !before.Value;
             if (!after.HasValue || after.Value != expected)
             {
-                PublishMessage("PIT CMD FAIL", PitCommandSeverity.Warning);
+                PublishFailure(PitCommandFailReason.Confirm);
                 SimHub.Logging.Current.Warn($"[LalaPlugin:PitCommand] action={action} expected-state-mismatch expected={expected} before={FormatNullable(before)} after={FormatNullable(after)} transport={transportUsed}");
                 return false;
             }
@@ -306,7 +315,7 @@ namespace LaunchPlugin
                 case PitCommandAction.FuelAdd10: return reachedFuelMax ? "REFUEL SET MAX" : "REFUEL ADD 10L";
                 case PitCommandAction.FuelRemove10: return "REFUEL REMOVE  10L";
                 case PitCommandAction.FuelSetMax: return reachedFuelMax ? "REFUEL SET MAX" : "REFUEL SET ZERO";
-                default: return "PIT CMD FAIL";
+                default: return BuildPitCommandFailText(PitCommandFailReason.Send);
             }
         }
 
@@ -355,7 +364,7 @@ namespace LaunchPlugin
                 case PitCommandAction.Windshield:
                     return state ? "TEAR-OFF ON" : "TEAR-OFF OFF";
                 default:
-                    return "PIT CMD FAIL";
+                    return BuildPitCommandFailText(PitCommandFailReason.Confirm);
             }
         }
 
@@ -590,6 +599,50 @@ namespace LaunchPlugin
             return string.Equals(processName, "iRacingSim64DX11", StringComparison.OrdinalIgnoreCase);
         }
 
+        internal void PublishFailure(PitCommandFailReason reason)
+        {
+            PublishMessage(BuildPitCommandFailText(reason), PitCommandSeverity.Warning);
+        }
+
+        internal static string BuildPitCommandFailText(PitCommandFailReason reason)
+        {
+            switch (reason)
+            {
+                case PitCommandFailReason.Window:
+                    return "PIT CMD WINDOW FAIL";
+                case PitCommandFailReason.Chat:
+                    return "PIT CMD CHAT FAIL";
+                case PitCommandFailReason.Send:
+                    return "PIT CMD SEND FAIL";
+                case PitCommandFailReason.Confirm:
+                    return "PIT CMD CONFIRM FAIL";
+                case PitCommandFailReason.Timeout:
+                    return "PIT CMD TIMEOUT FAIL";
+                default:
+                    return "PIT CMD SEND FAIL";
+            }
+        }
+
+        private static PitCommandFailReason MapTransportFailureReason(string reason)
+        {
+            string normalized = (reason ?? string.Empty).Trim().ToLowerInvariant();
+            switch (normalized)
+            {
+                case "process-enumeration-failed":
+                case "no-iracing-process":
+                case "no-iracing-window":
+                    return PitCommandFailReason.Window;
+                case "postmessage-open-chat-failed":
+                    return PitCommandFailReason.Chat;
+                case "empty-command":
+                case "postmessage-char-failed":
+                case "postmessage-submit-failed":
+                    return PitCommandFailReason.Send;
+                default:
+                    return PitCommandFailReason.Send;
+            }
+        }
+
         public void PublishInfoMessage(string message)
         {
             PublishMessage(message, PitCommandSeverity.Info);
@@ -619,7 +672,7 @@ namespace LaunchPlugin
             string normalized = (message ?? string.Empty).Trim().ToUpperInvariant();
             string action = (actionName ?? string.Empty).Trim();
 
-            if (normalized == "PIT CMD FAIL")
+            if (IsPitCommandFailureText(normalized))
             {
                 return PitCommandSeverity.Warning;
             }
@@ -643,6 +696,15 @@ namespace LaunchPlugin
             }
 
             return PitCommandSeverity.Advisory;
+        }
+
+        private static bool IsPitCommandFailureText(string normalized)
+        {
+            return normalized == "PIT CMD WINDOW FAIL" ||
+                   normalized == "PIT CMD CHAT FAIL" ||
+                   normalized == "PIT CMD SEND FAIL" ||
+                   normalized == "PIT CMD CONFIRM FAIL" ||
+                   normalized == "PIT CMD TIMEOUT FAIL";
         }
 
         private static string SeverityToText(PitCommandSeverity severity)
