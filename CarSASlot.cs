@@ -104,6 +104,17 @@ namespace LaunchPlugin
         public int InfoVisibility { get; set; } = 0;
         public string Info { get; set; } = string.Empty;
 
+        // Diagnostics-only slot assignment evidence for the CarSA Debug CSV.
+        // These fields do not participate in candidate selection or publication.
+        internal string DebugAssignmentMode { get; set; } = "unknown";
+        internal bool DebugCandidatePresentThisTick { get; set; }
+        internal int DebugCandidateRankThisTick { get; set; }
+        internal bool DebugRetainedByHysteresis { get; set; }
+        internal bool DebugBlinkHeld { get; set; }
+        internal bool DebugRetentionEligible { get; set; }
+        internal string DebugRetentionReason { get; set; } = "unknown";
+        internal bool DebugLapDistPctValid { get; set; }
+
         internal double LastGapUpdateTimeSec { get; set; } = 0.0;
         internal double LastGapSec { get; set; } = double.NaN;
         internal bool HasGap { get; set; }
@@ -222,6 +233,14 @@ namespace LaunchPlugin
             BorderHex = "#A9A9A9";
             SessionFlagsRaw = -1;
             TrackSurfaceMaterialRaw = -1;
+            DebugAssignmentMode = "unknown";
+            DebugCandidatePresentThisTick = false;
+            DebugCandidateRankThisTick = 0;
+            DebugRetainedByHysteresis = false;
+            DebugBlinkHeld = false;
+            DebugRetentionEligible = false;
+            DebugRetentionReason = "unknown";
+            DebugLapDistPctValid = false;
             IsTalking = false;
             TalkRadioIdx = -1;
             TalkFrequencyIdx = -1;

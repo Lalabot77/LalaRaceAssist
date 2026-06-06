@@ -14709,6 +14709,15 @@ namespace LaunchPlugin
                 buffer.Append("0,");
                 buffer.Append("0,");
                 buffer.Append("0,");
+                buffer.Append("unknown,");
+                buffer.Append("0,");
+                buffer.Append("0,");
+                buffer.Append("0,");
+                buffer.Append("0,");
+                buffer.Append("0,");
+                buffer.Append("unknown,");
+                buffer.Append("0,");
+                buffer.Append("0,");
                 AppendSlotRawEvidence(buffer, null);
                 return;
             }
@@ -14724,6 +14733,17 @@ namespace LaunchPlugin
             buffer.Append(slot.HotCoolIntent).Append(',');
             buffer.Append(slot.HotCoolConflictCached ? 1 : 0).Append(',');
             buffer.Append(slot.StatusE).Append(',');
+            AppendCsvSafeValue(buffer, slot.DebugAssignmentMode, "unknown");
+            buffer.Append(',');
+            buffer.Append(slot.DebugCandidatePresentThisTick ? 1 : 0).Append(',');
+            buffer.Append(slot.DebugCandidateRankThisTick).Append(',');
+            buffer.Append(slot.DebugRetainedByHysteresis ? 1 : 0).Append(',');
+            buffer.Append(slot.DebugBlinkHeld ? 1 : 0).Append(',');
+            buffer.Append(slot.DebugRetentionEligible ? 1 : 0).Append(',');
+            AppendCsvSafeValue(buffer, slot.DebugRetentionReason, "unknown");
+            buffer.Append(',');
+            buffer.Append(slot.IsOnTrack ? 1 : 0).Append(',');
+            buffer.Append(slot.DebugLapDistPctValid ? 1 : 0).Append(',');
             AppendSlotRawEvidence(buffer, slot);
         }
 
@@ -15596,6 +15616,15 @@ namespace LaunchPlugin
             AppendCarSaDebugHeaderColumn(buffer, slotLabel + ".HotCoolIntent");
             AppendCarSaDebugHeaderColumn(buffer, slotLabel + ".HotCoolConflict");
             AppendCarSaDebugHeaderColumn(buffer, slotLabel + ".StatusE");
+            AppendCarSaDebugHeaderColumn(buffer, slotLabel + ".AssignmentMode");
+            AppendCarSaDebugHeaderColumn(buffer, slotLabel + ".CandidatePresentThisTick");
+            AppendCarSaDebugHeaderColumn(buffer, slotLabel + ".CandidateRankThisTick");
+            AppendCarSaDebugHeaderColumn(buffer, slotLabel + ".RetainedByHysteresis");
+            AppendCarSaDebugHeaderColumn(buffer, slotLabel + ".BlinkHeld");
+            AppendCarSaDebugHeaderColumn(buffer, slotLabel + ".RetentionEligible");
+            AppendCarSaDebugHeaderColumn(buffer, slotLabel + ".RetentionReason");
+            AppendCarSaDebugHeaderColumn(buffer, slotLabel + ".IsOnTrack");
+            AppendCarSaDebugHeaderColumn(buffer, slotLabel + ".LapDistPctValid");
             AppendCarSaDebugHeaderColumn(buffer, slotLabel + ".TrackSurfaceRaw");
             AppendCarSaDebugHeaderColumn(buffer, slotLabel + ".IsOnPitRoad");
             AppendCarSaDebugHeaderColumn(buffer, slotLabel + ".SessionFlagsRaw");
