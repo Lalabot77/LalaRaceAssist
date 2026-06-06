@@ -1,3 +1,10 @@
+## 2026-06-06 — Mandatory Codex single-fence final-response policy
+- Classification: **internal-only** (Codex governance/template policy; no runtime, UI, dashboard, export, profile, telemetry, or user-workflow behavior changes).
+- Changed final-response presentation guidance from optional copy/paste formatting to a mandatory contract requiring the entire response inside exactly one fenced `text` block, with no content before or after it.
+- Kept `Docs/Internal/CODEX_CONTRACT.txt` and `Docs/Internal/CODEX_TASK_TEMPLATE.txt` aligned on the exact opening fence, closing fence, and required result sections inside the single block.
+- Root `CHANGELOG.md` and `Docs/RepoStatus.md` remain unchanged because this is internal process policy rather than user-facing release content or validated runtime state.
+- Property Snapshot list reviewed: yes; no SimHub exports or properties are involved.
+
 ## 2026-06-06 — CarSA precision local checkpoint sign normalisation
 - Classification: **both** (driver-facing slot-01 precision acceptance correction + internal diagnostics/docs clarification; no export names or dashboard JSON changes).
 - After selecting the existing fresh checkpoint truth or freshness-bounded filtered state, `ComputeSlotPrecisionGap(...)` now locally negates the stored proximity candidate (`target checkpoint time - player checkpoint time`) into TrackSec convention before the unchanged current/±lap reconciliation.
