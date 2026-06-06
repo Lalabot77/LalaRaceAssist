@@ -17295,6 +17295,9 @@ namespace LaunchPlugin
                     continue;
                 }
 
+                double trackGapSec = slot.GapTrackSec;
+                bool hasTrackGapSec = !double.IsNaN(trackGapSec) && !double.IsInfinity(trackGapSec);
+
                 return new H2HEngine.TargetSelector
                 {
                     CarIdx = slot.CarIdx,
@@ -17303,7 +17306,10 @@ namespace LaunchPlugin
                     CarNumber = slot.CarNumber ?? string.Empty,
                     ClassColor = NormalizeH2HClassColor(slotClassColor),
                     UserID = slot.UserID > 0 ? slot.UserID : 0,
-                    PositionInClass = GetEffectivePositionInClassForPublishedContext(slot.CarIdx, slot.PositionInClass)
+                    PositionInClass = GetEffectivePositionInClassForPublishedContext(slot.CarIdx, slot.PositionInClass),
+                    RequiresLiveGapSecOverride = true,
+                    HasLiveGapSecOverride = hasTrackGapSec,
+                    LiveGapSecOverride = hasTrackGapSec ? trackGapSec : 0.0
                 };
             }
 

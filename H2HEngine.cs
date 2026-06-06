@@ -184,7 +184,7 @@ namespace LaunchPlugin
             output.LiveDeltaToBestSec = hasTargetContext ? ComputeLiveDeltaToBest(runtime, sessionTimeSec, output.BestLapSec) : 0.0;
             output.LastLapColor = ComputeLastLapColor(output.LastLapSec, output.BestLapSec, classSessionBestLapSec);
             output.LastLapDeltaToPlayerSec = ComputeLastLapDeltaToPlayer(output.LastLapSec, playerOutput != null ? playerOutput.LastLapSec : 0.0);
-            output.LiveGapSec = hasUsableTimingContext ? ComputeLiveGapSec(playerRuntime, runtime) : 0.0;
+            output.LiveGapSec = ResolveLiveGapSec(playerRuntime, runtime, selector, hasUsableTimingContext);
             output.ActiveSegment = hasTargetContext ? runtime.ActiveSegment : 0;
             output.LapRef = hasTargetContext ? runtime.LapRef : 0;
             output.Valid = hasUsableTimingContext;
@@ -339,6 +339,23 @@ namespace LaunchPlugin
             }
 
             return delta;
+        }
+
+        private static double ResolveLiveGapSec(ParticipantRuntime playerRuntime, ParticipantRuntime targetRuntime, TargetSelector selector, bool hasUsableTimingContext)
+        {
+            if (!hasUsableTimingContext)
+            {
+                return 0.0;
+            }
+
+            if (selector.RequiresLiveGapSecOverride)
+            {
+                return selector.HasLiveGapSecOverride && IsFinite(selector.LiveGapSecOverride)
+                    ? Math.Abs(selector.LiveGapSecOverride)
+                    : 0.0;
+            }
+
+            return ComputeLiveGapSec(playerRuntime, targetRuntime);
         }
 
         private static double ComputeLiveGapSec(ParticipantRuntime playerRuntime, ParticipantRuntime targetRuntime)
@@ -679,6 +696,9 @@ namespace LaunchPlugin
             public string ClassColor;
             public int UserID;
             public int PositionInClass;
+            public bool RequiresLiveGapSecOverride;
+            public bool HasLiveGapSecOverride;
+            public double LiveGapSecOverride;
         }
     }
 }
