@@ -10,6 +10,12 @@
 - Reverse matching preserves the stored `target time - player time` convention, reverse-only `|lap delta| <= 2` guard and existing normalization path, and `UpdateGateGapTruthForCar(...)` ownership. It rejects future/stale timestamps using a bound of `min(15 s, half the active lap-time scale)`, requires current direct-checkpoint eligibility, and skips same-update target crossings so the existing target-after-player path is not duplicated or rate-distorted.
 - Preserved CarSA slot selection, `Gap.TrackSec`, `Gap.RelativeSec` mapping/sticky/fallback/source semantics, precision sign normalization/tolerance/freshness, direct checkpoint seam behavior, H2HTrack, H2HRace, Opponents, PitExit, dashboard JSON, and all public export names.
 - Property Snapshot list reviewed: yes; no group change because no exports are added, removed, renamed, or regrouped.
+## 2026-06-06 — Mandatory Codex single-fence final-response policy
+- Classification: **internal-only** (Codex governance/template policy; no runtime, UI, dashboard, export, profile, telemetry, or user-workflow behavior changes).
+- Changed final-response presentation guidance from optional copy/paste formatting to a mandatory contract requiring the entire response inside exactly one fenced `text` block, with no content before or after it.
+- Kept `Docs/Internal/CODEX_CONTRACT.txt` and `Docs/Internal/CODEX_TASK_TEMPLATE.txt` aligned on the exact opening fence, closing fence, and required result sections inside the single block.
+- Root `CHANGELOG.md` and `Docs/RepoStatus.md` remain unchanged because this is internal process policy rather than user-facing release content or validated runtime state.
+- Property Snapshot list reviewed: yes; no SimHub exports or properties are involved.
 
 ## 2026-06-06 — CarSA precision local checkpoint sign normalisation
 - Classification: **both** (driver-facing slot-01 precision acceptance correction + internal diagnostics/docs clarification; no export names or dashboard JSON changes).

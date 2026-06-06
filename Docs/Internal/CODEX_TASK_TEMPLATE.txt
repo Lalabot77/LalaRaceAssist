@@ -137,7 +137,21 @@ Confirm:
 
 Output
 
-1. Summary of change in copy paste block (markup)
+Mandatory final-response format:
+
+* Return the entire final response inside exactly one fenced text block.
+* The opening line must be three backticks followed immediately by `text`; the closing line must be three backticks.
+* Do not place any response content before or after the fenced text block.
+
+Use exactly:
+
+```text
+<entire response>
+```
+
+Inside that single block include:
+
+1. Summary of change
 2. Files changed
 3. Behaviour impact (explicit)
 4. Verification result
