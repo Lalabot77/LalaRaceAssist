@@ -26,6 +26,9 @@ namespace LaunchPlugin
         // This avoids nuking per-car caches when we are already using TrackSec fallback.
         private const double GateGapMismatchFallbackThresholdSec = 2.0;
         private const double GateGapMismatchMaxTrackAbsSec = 20.0;
+        private const double PrecisionGapToleranceMinSec = 1.5;
+        private const double PrecisionGapToleranceTrackRatio = 0.08;
+        private const double PrecisionGapToleranceMaxSec = 6.0;
         private const double HalfLapFilterMin = 0.40;
         private const double HalfLapFilterMax = 0.60;
         private const double HalfLapDeadbandPct = 0.05;
@@ -1033,6 +1036,8 @@ namespace LaunchPlugin
             _outputs.Debug.PlayerTrackSurfaceRaw = -1;
             _outputs.Ahead01PrecisionGapSec = double.NaN;
             _outputs.Behind01PrecisionGapSec = double.NaN;
+            _outputs.Ahead01PrecisionDiagnostic.Reset("outputs_invalid");
+            _outputs.Behind01PrecisionDiagnostic.Reset("outputs_invalid");
             if (debugEnabled)
             {
                 _outputs.Debug.LapTimeEstimateSec = lapTimeEstimateSec;
@@ -2037,12 +2042,17 @@ namespace LaunchPlugin
 
         private void UpdateSlot01PrecisionGaps(double sessionTimeSec, double lapTimeMapSec)
         {
-            _outputs.Ahead01PrecisionGapSec = IsSlotBlinkHeld(_aheadSlotBlinkHeld, 0)
-                ? double.NaN
+            PrecisionGapResult aheadResult = IsSlotBlinkHeld(_aheadSlotBlinkHeld, 0)
+                ? CreateInvalidPrecisionGapResult("blink_hold")
                 : ComputeSlotPrecisionGap(_outputs.AheadSlots, sessionTimeSec, lapTimeMapSec, true);
-            _outputs.Behind01PrecisionGapSec = IsSlotBlinkHeld(_behindSlotBlinkHeld, 0)
-                ? double.NaN
+            PrecisionGapResult behindResult = IsSlotBlinkHeld(_behindSlotBlinkHeld, 0)
+                ? CreateInvalidPrecisionGapResult("blink_hold")
                 : ComputeSlotPrecisionGap(_outputs.BehindSlots, sessionTimeSec, lapTimeMapSec, false);
+
+            _outputs.Ahead01PrecisionGapSec = aheadResult.PublishedSec;
+            _outputs.Behind01PrecisionGapSec = behindResult.PublishedSec;
+            ApplyPrecisionGapDiagnostic(_outputs.Ahead01PrecisionDiagnostic, aheadResult);
+            ApplyPrecisionGapDiagnostic(_outputs.Behind01PrecisionDiagnostic, behindResult);
         }
 
         private static bool IsSlotBlinkHeld(bool[] blinkHeldSlots, int slotIndex)
@@ -2050,56 +2060,185 @@ namespace LaunchPlugin
             return blinkHeldSlots != null && slotIndex >= 0 && slotIndex < blinkHeldSlots.Length && blinkHeldSlots[slotIndex];
         }
 
-        private double ComputeSlotPrecisionGap(CarSASlot[] slots, double sessionTimeSec, double lapTimeUsed, bool isAhead)
+        private PrecisionGapResult ComputeSlotPrecisionGap(CarSASlot[] slots, double sessionTimeSec, double lapTimeUsed, bool isAhead)
         {
             if (slots == null || slots.Length == 0)
             {
-                return double.NaN;
+                return CreateInvalidPrecisionGapResult("slot_missing");
             }
 
             var slot = slots[0];
             if (slot == null || !slot.IsValid)
             {
-                return double.NaN;
+                return CreateInvalidPrecisionGapResult("slot_invalid");
             }
 
             int carIdx = slot.CarIdx;
             if (carIdx < 0 || carIdx >= MaxCars)
             {
-                return double.NaN;
+                return CreateInvalidPrecisionGapResult("caridx_invalid");
+            }
+
+            double trackSec = slot.GapTrackSec;
+            if (!IsFiniteNumber(trackSec))
+            {
+                return CreateInvalidPrecisionGapResult("track_invalid");
+            }
+
+            bool trackDirectionValid = isAhead ? trackSec > 0.0 : trackSec < 0.0;
+            if (!trackDirectionValid)
+            {
+                return CreateInvalidPrecisionGapResult("track_side_mismatch", trackSec);
             }
 
             double truthAgeSec = sessionTimeSec - _gateGapLastTruthTimeSecByCar[carIdx];
-            bool truthObservationRecent = !double.IsNaN(truthAgeSec) && !double.IsInfinity(truthAgeSec)
+            bool truthObservationRecent = IsFiniteNumber(truthAgeSec)
                 && truthAgeSec >= 0.0 && truthAgeSec <= GateGapTruthMaxAgeSec;
             bool truthFresh = _gateGapTruthValidByCar[carIdx]
-                && !double.IsNaN(_gateGapTruthSecByCar[carIdx]) && !double.IsInfinity(_gateGapTruthSecByCar[carIdx])
+                && IsFiniteNumber(_gateGapTruthSecByCar[carIdx])
                 && truthObservationRecent;
             bool filteredEligible = IsValidLapTimeSec(lapTimeUsed)
                 && _gateGapFilteredValidByCar[carIdx]
-                && !double.IsNaN(_gateGapFilteredSecByCar[carIdx]) && !double.IsInfinity(_gateGapFilteredSecByCar[carIdx])
+                && IsFiniteNumber(_gateGapFilteredSecByCar[carIdx])
                 && truthObservationRecent
                 && (_gateGapRateValidByCar[carIdx] || truthFresh);
 
-            double candidate;
+            double checkpointCandidate = double.NaN;
+            string candidateSource = string.Empty;
             if (truthFresh)
             {
-                candidate = _gateGapTruthSecByCar[carIdx];
+                checkpointCandidate = _gateGapTruthSecByCar[carIdx];
+                candidateSource = "checkpoint_truth";
             }
             else if (filteredEligible)
             {
-                candidate = _gateGapFilteredSecByCar[carIdx];
-            }
-            else if (!double.IsNaN(slot.GapTrackSec) && !double.IsInfinity(slot.GapTrackSec))
-            {
-                candidate = slot.GapTrackSec;
-            }
-            else
-            {
-                candidate = double.NaN;
+                checkpointCandidate = _gateGapFilteredSecByCar[carIdx];
+                candidateSource = "checkpoint_filtered";
             }
 
-            return isAhead ? MapToAhead(candidate, lapTimeUsed) : MapToBehind(candidate, lapTimeUsed);
+            if (!IsFiniteNumber(checkpointCandidate))
+            {
+                return CreateTrackFallbackPrecisionGapResult(trackSec, candidateSource, "checkpoint_unavailable");
+            }
+
+            if (!IsValidLapTimeSec(lapTimeUsed))
+            {
+                return CreateTrackFallbackPrecisionGapResult(trackSec, candidateSource, "lap_time_invalid", checkpointCandidate);
+            }
+
+            double toleranceSec = Math.Min(PrecisionGapToleranceMaxSec,
+                Math.Max(PrecisionGapToleranceMinSec, Math.Abs(trackSec) * PrecisionGapToleranceTrackRatio));
+            double reconciledCandidate = double.NaN;
+            double bestDifferenceSec = double.PositiveInfinity;
+            ConsiderPrecisionGapCandidate(checkpointCandidate, trackSec, ref reconciledCandidate, ref bestDifferenceSec);
+            ConsiderPrecisionGapCandidate(checkpointCandidate + lapTimeUsed, trackSec, ref reconciledCandidate, ref bestDifferenceSec);
+            ConsiderPrecisionGapCandidate(checkpointCandidate - lapTimeUsed, trackSec, ref reconciledCandidate, ref bestDifferenceSec);
+
+            if (!IsFiniteNumber(reconciledCandidate))
+            {
+                return CreateTrackFallbackPrecisionGapResult(trackSec, candidateSource, "no_directional_candidate", checkpointCandidate, double.NaN, toleranceSec);
+            }
+
+            if (bestDifferenceSec > toleranceSec)
+            {
+                return CreateTrackFallbackPrecisionGapResult(trackSec, candidateSource, "outside_tolerance", checkpointCandidate, reconciledCandidate, toleranceSec);
+            }
+
+            return new PrecisionGapResult
+            {
+                PublishedSec = reconciledCandidate,
+                TrackSec = trackSec,
+                RawCandidateSec = checkpointCandidate,
+                ReconciledCandidateSec = reconciledCandidate,
+                ToleranceSec = toleranceSec,
+                CandidateSource = candidateSource,
+                ChosenSource = "checkpoint_reconciled",
+                RejectReason = "accepted"
+            };
+        }
+
+        private static void ConsiderPrecisionGapCandidate(double candidate, double trackSec, ref double bestCandidate, ref double bestDifferenceSec)
+        {
+            if (!IsFiniteNumber(candidate) || Math.Sign(candidate) != Math.Sign(trackSec))
+            {
+                return;
+            }
+
+            double differenceSec = Math.Abs(candidate - trackSec);
+            if (differenceSec < bestDifferenceSec)
+            {
+                bestDifferenceSec = differenceSec;
+                bestCandidate = candidate;
+            }
+        }
+
+        private static bool IsFiniteNumber(double value)
+        {
+            return !double.IsNaN(value) && !double.IsInfinity(value);
+        }
+
+        private static PrecisionGapResult CreateInvalidPrecisionGapResult(string reason, double trackSec = double.NaN)
+        {
+            return new PrecisionGapResult
+            {
+                PublishedSec = double.NaN,
+                TrackSec = trackSec,
+                RawCandidateSec = double.NaN,
+                ReconciledCandidateSec = double.NaN,
+                ToleranceSec = double.NaN,
+                CandidateSource = string.Empty,
+                ChosenSource = "invalid",
+                RejectReason = reason ?? string.Empty
+            };
+        }
+
+        private static PrecisionGapResult CreateTrackFallbackPrecisionGapResult(
+            double trackSec,
+            string candidateSource,
+            string rejectReason,
+            double rawCandidateSec = double.NaN,
+            double reconciledCandidateSec = double.NaN,
+            double toleranceSec = double.NaN)
+        {
+            return new PrecisionGapResult
+            {
+                PublishedSec = trackSec,
+                TrackSec = trackSec,
+                RawCandidateSec = rawCandidateSec,
+                ReconciledCandidateSec = reconciledCandidateSec,
+                ToleranceSec = toleranceSec,
+                CandidateSource = candidateSource ?? string.Empty,
+                ChosenSource = "track_fallback",
+                RejectReason = rejectReason ?? string.Empty
+            };
+        }
+
+        private static void ApplyPrecisionGapDiagnostic(CarSAPrecisionGapDiagnostic diagnostic, PrecisionGapResult result)
+        {
+            if (diagnostic == null)
+            {
+                return;
+            }
+
+            diagnostic.TrackSec = result.TrackSec;
+            diagnostic.RawCandidateSec = result.RawCandidateSec;
+            diagnostic.ReconciledCandidateSec = result.ReconciledCandidateSec;
+            diagnostic.ToleranceSec = result.ToleranceSec;
+            diagnostic.CandidateSource = result.CandidateSource ?? string.Empty;
+            diagnostic.ChosenSource = result.ChosenSource ?? string.Empty;
+            diagnostic.RejectReason = result.RejectReason ?? string.Empty;
+        }
+
+        private struct PrecisionGapResult
+        {
+            public double PublishedSec;
+            public double TrackSec;
+            public double RawCandidateSec;
+            public double ReconciledCandidateSec;
+            public double ToleranceSec;
+            public string CandidateSource;
+            public string ChosenSource;
+            public string RejectReason;
         }
 
         private void UpdateInfoForSlots(CarSASlot[] slots, bool isAhead, double nowSec)

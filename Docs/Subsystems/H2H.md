@@ -58,7 +58,7 @@ H2H sector publication is intentionally simple:
 
 ## Numeric semantics
 - `PositionInClass = 0` when unavailable.
-- `H2HTrack.Ahead/Behind.LiveGapSec` preserves the existing positive display convention by publishing `abs(selected CarSA Gap.TrackSec)`. This is a directional TrackSec baseline, not the checkpoint/proximity precision path; `Car.*.Gap.RelativeSec` and `Car.Ahead01P/Behind01P.Gap.Sec` remain CarSA proximity values.
+- `H2HTrack.Ahead/Behind.LiveGapSec` preserves the existing positive display convention by publishing `abs(selected CarSA Gap.TrackSec)`. This remains the direct directional TrackSec baseline in this phase: `Car.*.Gap.RelativeSec` retains its visual/proximity contract, while `Car.Ahead01P/Behind01P.Gap.Sec` now reconcile checkpoint precision onto TrackSec's direction/lap branch without changing H2HTrack consumption.
 - Published `PositionInClass` for `H2HRace.*` and `H2HTrack.*` now includes both target rows and `Player.*` rows, and follows effective/live race-order semantics when available (RaceProgress-first context from Opponents), with local selector/native fallback only when effective context is unavailable.
 - `LiveDeltaToBestSec = 0` when insufficient data exists.
 - Sector delta values reset to `0` whenever their sector state is not `valid`.

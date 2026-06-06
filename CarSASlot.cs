@@ -395,6 +395,28 @@ namespace LaunchPlugin
         }
     }
 
+    public class CarSAPrecisionGapDiagnostic
+    {
+        public double TrackSec { get; set; } = double.NaN;
+        public double RawCandidateSec { get; set; } = double.NaN;
+        public double ReconciledCandidateSec { get; set; } = double.NaN;
+        public double ToleranceSec { get; set; } = double.NaN;
+        public string CandidateSource { get; set; } = string.Empty;
+        public string ChosenSource { get; set; } = string.Empty;
+        public string RejectReason { get; set; } = string.Empty;
+
+        public void Reset(string rejectReason = "reset")
+        {
+            TrackSec = double.NaN;
+            RawCandidateSec = double.NaN;
+            ReconciledCandidateSec = double.NaN;
+            ToleranceSec = double.NaN;
+            CandidateSource = string.Empty;
+            ChosenSource = "invalid";
+            RejectReason = rejectReason ?? string.Empty;
+        }
+    }
+
     public class CarSAOutputs
     {
         public CarSAOutputs(int slotsAhead, int slotsBehind)
@@ -413,6 +435,8 @@ namespace LaunchPlugin
             }
             PlayerSlot = new CarSASlot();
             Debug = new CarSADebug();
+            Ahead01PrecisionDiagnostic = new CarSAPrecisionGapDiagnostic();
+            Behind01PrecisionDiagnostic = new CarSAPrecisionGapDiagnostic();
         }
 
         public bool Valid { get; set; }
@@ -426,6 +450,8 @@ namespace LaunchPlugin
         public double IRatingSOF { get; set; }
         public double Ahead01PrecisionGapSec { get; set; } = double.NaN;
         public double Behind01PrecisionGapSec { get; set; } = double.NaN;
+        public CarSAPrecisionGapDiagnostic Ahead01PrecisionDiagnostic { get; }
+        public CarSAPrecisionGapDiagnostic Behind01PrecisionDiagnostic { get; }
 
         public void ResetSlots()
         {
@@ -449,6 +475,8 @@ namespace LaunchPlugin
             IRatingSOF = 0.0;
             Ahead01PrecisionGapSec = double.NaN;
             Behind01PrecisionGapSec = double.NaN;
+            Ahead01PrecisionDiagnostic.Reset();
+            Behind01PrecisionDiagnostic.Reset();
             Debug.Reset();
         }
     }
