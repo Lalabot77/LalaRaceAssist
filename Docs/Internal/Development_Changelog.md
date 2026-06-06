@@ -1,3 +1,11 @@
+## 2026-06-06 — CarSA precision local checkpoint sign normalisation
+- Classification: **both** (driver-facing slot-01 precision acceptance correction + internal diagnostics/docs clarification; no export names or dashboard JSON changes).
+- After selecting the existing fresh checkpoint truth or freshness-bounded filtered state, `ComputeSlotPrecisionGap(...)` now locally negates the stored proximity candidate (`target checkpoint time - player checkpoint time`) into TrackSec convention before the unchanged current/±lap reconciliation.
+- Close valid cases now retain the public sign contract (`Ahead01P` positive, `Behind01P` negative) and can publish checkpoint precision; long-gap short-path candidates still fail the existing same-sign/nearest-branch/tolerance checks and fall back to TrackSec.
+- Preserved checkpoint cache storage, recording, filtered prediction, freshness gates, tolerance, `NormalizeGateGapSec`, `MapToAhead/MapToBehind`, `Gap.TrackSec`, `Gap.RelativeSec`, CarSA slot selection, blink-held/invalid `NaN`, H2HTrack, H2HRace, Opponents, PitExit, dashboard JSON, and all public export names.
+- Car Tracking Probe CSV schema is unchanged: `RawCandidateSec` remains the selected stored/proximity candidate before sign normalization, while `ReconciledCandidateSec` is the best direction-normalized lap-adjusted candidate.
+- Property Snapshot list reviewed: yes; no group change because no exports were added, removed, renamed, or regrouped.
+
 ## 2026-06-06 — CarSA directional checkpoint gap reconciliation
 - Classification: **both** (driver-facing slot-01 precision correction + internal probe diagnostics/docs; no new public export names or dashboard JSON changes).
 - `Car.Ahead01P.Gap.Sec` / `Car.Behind01P.Gap.Sec` now use finite selected-slot `Gap.TrackSec` as the directional-loop and lap-branch authority. The selected fresh checkpoint candidate is tested at its current value and ± one lap time, retaining only same-sign candidates; the closest candidate is accepted only within `min(6.0 s, max(1.5 s, 8% of |TrackSec|))`.

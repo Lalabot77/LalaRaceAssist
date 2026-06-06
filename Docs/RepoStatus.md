@@ -1,3 +1,9 @@
+- 2026-06-06 CarSA precision local checkpoint sign normalisation landed:
+  - slot-01 precision now locally negates the selected stored checkpoint truth/filtered candidate from internal target-minus-player timing convention into public TrackSec convention before the existing current/±lap reconciliation;
+  - valid close checkpoint precision can now publish with the established signs (`Ahead01P` positive, `Behind01P` negative), while long-gap short-path candidates remain protected by unchanged TrackSec authority, same-sign filtering, nearest-branch selection, tolerance, and TrackSec fallback;
+  - checkpoint storage/recording/filtering, freshness, tolerance, `Gap.TrackSec`, `Gap.RelativeSec`, CarSA slot selection, invalid/blink-held `NaN`, H2HTrack, H2HRace, Opponents, PitExit, dashboard JSON, and export names remain unchanged;
+  - Car Tracking Probe CSV schema is unchanged: `RawCandidateSec` is still the stored/proximity candidate and `ReconciledCandidateSec` is the best direction-normalized lap-adjusted candidate. Property Snapshot list reviewed: yes; no export/property add, remove, rename, or regroup.
+
 - 2026-06-06 CarSA directional checkpoint reconciliation landed:
   - `Car.Ahead01P.Gap.Sec` / `Car.Behind01P.Gap.Sec` now treat selected-slot `Gap.TrackSec` as direction/lap-branch authority. Fresh checkpoint truth (or freshness-bounded filtered checkpoint state) is evaluated at its current value and ± one lap time; only the closest same-sign candidate within `min(6.0 s, max(1.5 s, 8% of |TrackSec|))` may publish.
   - Missing, wrong-direction, or out-of-tolerance checkpoint candidates fall back directly to TrackSec, preventing long directional gaps (for example a roughly -90 s behind loop) from collapsing to short-way half-lap proximity (for example roughly -17 s). Invalid TrackSec/slots and blink holds remain fail-closed to `NaN`.
