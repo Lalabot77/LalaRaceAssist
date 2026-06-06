@@ -1,5 +1,10 @@
 # Repo Status
 
+- 2026-06-06 H2HTrack LiveGapSec TrackSec alignment landed:
+  - H2HTrack selectors now carry the selected CarSA slot directional `Gap.TrackSec` into H2H, and `H2HTrack.Ahead/Behind.LiveGapSec` publishes that magnitude using the existing positive H2HTrack display convention instead of recomputing an independent full race-progress gap.
+  - Invalid/non-finite selected TrackSec publishes the existing safe zero live-gap value rather than falling back to the old formula; H2HTrack identity, validity rules, active segment, lap summaries, and CarSA-cache sector outputs remain unchanged.
+  - H2HRace, Opponents, CarSA gap math/slot selection, checkpoint/gate logic, `Gap.RelativeSec`, `Car.Ahead01P/Behind01P`, export names, dashboard JSON, CompetingDrivers removal, Pace Car/self-target filters, and Property Snapshot grouping remain unchanged. Property Snapshot list reviewed: yes; no export/property add, remove, rename, or regroup.
+
 - 2026-06-05 Car tracking safety filters landed:
   - Opponents now excludes non-player `DriverInfo.Drivers##` Pace Car rows before native race-order rows are built, preventing marked Pace Car entries from feeding `Opp.Ahead1` / `Opp.Behind1`, H2HRace selector inputs, or PitExit prediction. The filter uses explicit `IsPaceCar` / `CarIsPaceCar` metadata plus conservative Pace Car identity markers and does not filter by `CarIdx`, so `PlayerCarIdx == 0` remains valid; skipped Pace Car `CarIdx`/identity evidence also clears matching blink-continuity holds so a prior normal row cannot be reinserted after being flagged.
   - If the current player `Drivers##` row is pace-car flagged, Opponents preserves the player row and emits a one-time anomaly warning instead of removing the player.

@@ -72,7 +72,7 @@ It is included as a screen on the Driver and Strategy dashes as well as a standa
 From the driver’s point of view, H2H is one feature. Internally, it depends on supporting technical systems.
 
 - **Opponents** helps support the race-order target selection behind **H2H Race**.
-- **CarSA** helps support the local on-track target selection behind **H2H Track**.
+- **CarSA** helps support the local on-track target selection and directional track-loop live gap behind **H2H Track**.
 
 Those are supporting subsystem docs, not separate user-facing feature pages.
 

@@ -5,7 +5,7 @@ CarSA provides **session-agnostic**, **class-aware** spatial awareness using iRa
 
 CarSA is independent of the Opponents subsystem (live-session native same-class neighbors + race-scoped native pit-exit prediction) and does not change Opponents or Rejoin Assist behavior.
 Head-to-Head now consumes CarSA in two narrow ways:
-- `H2HTrack.*` uses CarSA as the **track-target selector seam** (the current ahead/behind slot sets, `CarIdx`, and already-resolved cosmetic metadata).
+- `H2HTrack.*` uses CarSA as the **track-target selector seam** (the current ahead/behind slot sets, `CarIdx`, and already-resolved cosmetic metadata) and consumes the selected slot `Gap.TrackSec` as its directional track-loop `LiveGapSec` baseline.
 - `H2HTrack.*` selector ownership remains CarSA-owned; published `PositionInClass` can use Opponents effective/live class-position context when available, without moving race-order selection ownership into CarSA.
 - `Car.Player.PositionInClass` and H2H player-row `PositionInClass` publication can consume the Opponents effective/live class-position seam when available; CarSA remains the session-agnostic spatial owner.
 - Both `H2HRace.*` and `H2HTrack.*` now read `S1..S6State` / `S1..S6DeltaSec` from the CarSA-owned per-car fixed-6-sector cache through the narrow CarSA accessor seam.
@@ -57,10 +57,10 @@ CarSA owns the per-car fixed-6-sector cache consumed by H2H:
 - **Slot reset:** when a slot swaps to a new `CarIdx`, gap and status text caches are cleared. Identity is refreshed with retry to avoid replay timing gaps.
 
 ## Gap & closing semantics
-- **Gap.TrackSec:** `distPct * lapTimeEstimateSec` (distance-based proximity gap).
+- **Gap.TrackSec:** `distPct * lapTimeEstimateSec` (directional track-loop baseline for the selected ahead/behind side; behind slots are published with the existing negative side sign, and H2HTrack uses the absolute magnitude for its positive display convention).
 - **Gap.RelativeSec (GateGap v2):** mini-sector gate timing produces a gate truth gap that is filtered forward in time with a rate EMA, corrected toward fresh truth, and held briefly (sticky publish) if inputs drop; values are mapped to ahead/behind sign so wraps stay direction-safe. Falls back to `Gap.TrackSec` when no gate data exists. Normalization guards handle lapped cars and mismatch fallbacks when gate gaps diverge from track gaps.
 - **Gap.RelativeSource:** tracks which input fed the relative gap (filtered, truth, track fallback, sticky hold, invalid).
-- **Slot 01 precision gaps:** `Car.Ahead01P.Gap.Sec` / `Car.Behind01P.Gap.Sec` remain sharper textual/number-display values for the closest ahead/behind slot: fresh gate truth first, then recently defensible filtered proximity while the last truth observation remains within the existing freshness limit, then track-gap fallback. They bypass `Gap.RelativeSec` sticky-hold semantics and do not publish stale raw truth or indefinitely predicted filtered values.
+- **Slot 01 precision gaps:** `Car.Ahead01P.Gap.Sec` / `Car.Behind01P.Gap.Sec` remain sharper textual/number-display values for the closest ahead/behind slot: fresh gate truth first, then recently defensible filtered proximity while the last truth observation remains within the existing freshness limit, then track-gap fallback. They bypass `Gap.RelativeSec` sticky-hold semantics and do not publish stale raw truth or indefinitely predicted filtered values. They remain checkpoint/proximity precision values and are not the TrackSec directional-loop authority consumed by H2HTrack.
 - Passive League Class metadata is additionally exported on `Car.Ahead01..05` and `Car.Behind01..05` (`LeagueClassName/ShortName/Rank/ColourHex/Valid/Source`) via resolver-only lookup; CarSA physical selection/order/filter logic is unchanged.
 - **ClosingRateSecPerSec:** derived from change in absolute delta pct over time; **positive values mean closing**; clamped to ±5 s/s.
 - **Lap time estimate:** player average pace, else last lap, else 120 s fallback.

@@ -131,7 +131,7 @@ This document is the canonical dash-facing contract layer. It does **not** redef
 - The same transport seam also dispatches custom-message actions; dashboards should keep custom-message content authored in plugin Settings rather than hardcoding message text in dash scripts/buttons.
 
 ### H2H / traffic
-- `H2HRace.*` and `H2HTrack.*` are already flattened for dashboard binding; dashboards should not try to recreate selector logic.
+- `H2HRace.*` and `H2HTrack.*` are already flattened for dashboard binding; dashboards should not try to recreate selector logic. `H2HTrack.Ahead/Behind.LiveGapSec` now follows the selected CarSA slot directional `Gap.TrackSec` magnitude, while `H2HRace.*.LiveGapSec` remains race-context H2H timing.
 - League Class presentation/cohort contract (including `H2HRace.*`, `H2HTrack.*`, CarSA/Opp/H2H class-facing exports, and effective `PositionInClass` semantics) is canonicalized in `Docs/Subsystems/League_Class_System.md`; dashboards should consume plugin exports directly and not recreate resolver logic.
 - CarSA / Opponents data that is not part of a published dash contract should stay a technical dependency, not a dashboard-owned truth source.
 

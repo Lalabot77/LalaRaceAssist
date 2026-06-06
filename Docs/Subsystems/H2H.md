@@ -1,7 +1,7 @@
 # Head-to-Head (H2H)
 
 Validated against commit: HEAD
-Last updated: 2026-06-05
+Last updated: 2026-06-06
 Branch: work
 
 ## Purpose
@@ -18,7 +18,7 @@ The feature provides a flat, explicit contract for Dash Studio consumption with 
 ## Ownership and subsystem boundaries
 - **H2H owns** family/side publication, selector-driven identity/cosmetic outputs, live-gap values, lap-summary values, active-segment outputs, and presentation of the flat dash contract.
 - **Opponents owns only race-target selection** for `H2HRace.*` via current class-ahead / class-behind identity (`Opp.Ahead1` / `Opp.Behind1`).
-- **CarSA owns track-target selection** for `H2HTrack.*` via the current ahead/behind slot set, `CarIdx`, and already-resolved cosmetic metadata.
+- **CarSA owns track-target selection** for `H2HTrack.*` via the current ahead/behind slot set, `CarIdx`, and already-resolved cosmetic metadata. H2HTrack also consumes the selected CarSA slot `Gap.TrackSec` as the directional track-loop authority for `LiveGapSec`; H2HRace keeps its independent race-selector/race-gap behavior.
 - **CarSA also owns the fixed-6-sector timing cache** for all cars. H2H is now a read-only consumer of that cache through the narrow CarSA accessor seam; H2H no longer owns a target-bound sector stopwatch runtime for published `S1..S6*`.
 - H2H does **not** move timing responsibility into Opponents, and selector ownership remains unchanged.
 
@@ -41,6 +41,7 @@ H2H sector publication is intentionally simple:
 ## Target behavior
 ### H2HTrack
 - Scans CarSA ahead/behind slots and uses the nearest valid, on-track, same-class local track target.
+- `LiveGapSec` uses the selected CarSA slot `Gap.TrackSec` magnitude so H2HTrack matches Track SA directional track-loop semantics instead of recomputing a separate full race-progress gap. If the selected slot has no finite `Gap.TrackSec`, H2HTrack publishes the existing safe zero live-gap value rather than falling back to the old independent formula.
 - Can be more volatile than race mode because local on-track slots can swap as nearby cars change.
 - When the selected track target changes, H2H immediately republishes `S1..S6State` / `S1..S6DeltaSec` from the new target's existing CarSA cache if present. If the new target has no cached value for a sector, that sector naturally publishes `empty`/`0`. There is no bind-clear rebuild window.
 - Short CarSA blink holds can keep slot identity/cosmetics visible through brief NotInWorld/invalid-LapDistPct gaps, but held slots publish `IsOnTrack=false` and are not eligible as live H2HTrack timing selectors; H2HTrack clears/inactivates live timing until a valid on-track selector is available again.
@@ -57,6 +58,7 @@ H2H sector publication is intentionally simple:
 
 ## Numeric semantics
 - `PositionInClass = 0` when unavailable.
+- `H2HTrack.Ahead/Behind.LiveGapSec` preserves the existing positive display convention by publishing `abs(selected CarSA Gap.TrackSec)`. This is a directional TrackSec baseline, not the checkpoint/proximity precision path; `Car.*.Gap.RelativeSec` and `Car.Ahead01P/Behind01P.Gap.Sec` remain CarSA proximity values.
 - Published `PositionInClass` for `H2HRace.*` and `H2HTrack.*` now includes both target rows and `Player.*` rows, and follows effective/live race-order semantics when available (RaceProgress-first context from Opponents), with local selector/native fallback only when effective context is unavailable.
 - `LiveDeltaToBestSec = 0` when insufficient data exists.
 - Sector delta values reset to `0` whenever their sector state is not `valid`.
@@ -86,7 +88,7 @@ Both `H2HRace.*` and `H2HTrack.*` expose the same flat shape:
 
 ## Runtime timing notes
 - H2H does not synthesize a lap-start timestamp from the current tick when a participant is first observed or rebound mid-lap; live-delta context remains incomplete until a real lap boundary is seen.
-- H2H still keeps lightweight participant context for `ActiveSegment`, `LapRef`, `LiveGapSec`, `LiveDeltaToBestSec`, and lap-summary publication.
+- H2H still keeps lightweight participant context for `ActiveSegment`, `LapRef`, `LiveGapSec`, `LiveDeltaToBestSec`, and lap-summary publication; for H2HTrack only, the live-gap value is supplied by the selected CarSA slot directional `Gap.TrackSec` override when finite.
 - H2H no longer owns target-bound sector completion timing, bind-aware row rebuild mechanics, or sector-6 lap-wrap carryover. Those published sector outputs are now entirely driven by the CarSA cache.
 - `ClassColor` / `ClassColorHex` are published as dash-ready `#RRGGBB` on H2H exports.
 - `H2HTrack.*` keeps CarSA-owned physical target selection, while League-aware class presentation and effective-cohort semantics are documented canonically in `Docs/Subsystems/League_Class_System.md`; disabled/unresolved paths remain native fallback.
