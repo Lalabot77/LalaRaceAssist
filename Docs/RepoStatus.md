@@ -1,3 +1,9 @@
+- 2026-06-06 CarSA directional checkpoint reconciliation landed:
+  - `Car.Ahead01P.Gap.Sec` / `Car.Behind01P.Gap.Sec` now treat selected-slot `Gap.TrackSec` as direction/lap-branch authority. Fresh checkpoint truth (or freshness-bounded filtered checkpoint state) is evaluated at its current value and ± one lap time; only the closest same-sign candidate within `min(6.0 s, max(1.5 s, 8% of |TrackSec|))` may publish.
+  - Missing, wrong-direction, or out-of-tolerance checkpoint candidates fall back directly to TrackSec, preventing long directional gaps (for example a roughly -90 s behind loop) from collapsing to short-way half-lap proximity (for example roughly -17 s). Invalid TrackSec/slots and blink holds remain fail-closed to `NaN`.
+  - Car Tracking Probe CSV correlation now records per-side TrackSec authority, raw checkpoint candidate, best reconciled candidate, tolerance, candidate/chosen source, and reject reason. No public SimHub exports were added.
+  - `Gap.TrackSec`, visible `Gap.RelativeSec` semantics, CarSA slot selection/checkpoint recording, H2HTrack's current direct TrackSec baseline, H2HRace, Opponents, PitExit, dashboard JSON, and export names remain unchanged. Property Snapshot list reviewed: yes; no export/property add, remove, rename, or regroup.
+
 # Repo Status
 
 - 2026-06-06 H2HTrack LiveGapSec TrackSec alignment landed:

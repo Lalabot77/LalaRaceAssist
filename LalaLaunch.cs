@@ -13768,6 +13768,8 @@ namespace LaunchPlugin
             AddCsvCell(cells, FormatCsvDouble(carBehind?.GapRelativeSec ?? double.NaN, "F3"));
             AddCsvCell(cells, FormatCsvDouble(carOutputs?.Ahead01PrecisionGapSec ?? double.NaN, "F3"));
             AddCsvCell(cells, FormatCsvDouble(carOutputs?.Behind01PrecisionGapSec ?? double.NaN, "F3"));
+            AppendPrecisionGapDiagnosticCells(cells, carOutputs?.Ahead01PrecisionDiagnostic);
+            AppendPrecisionGapDiagnosticCells(cells, carOutputs?.Behind01PrecisionDiagnostic);
             AddCsvCell(cells, FormatCsvOptionalInt(opp?.Ahead1?.CarIdx ?? -1, -1));
             AddCsvCell(cells, FormatCsvOptionalInt(opp?.Behind1?.CarIdx ?? -1, -1));
             AddCsvCell(cells, FormatCsvDouble(opp?.Ahead1?.GapRelativeSec ?? double.NaN, "F3"));
@@ -13776,6 +13778,17 @@ namespace LaunchPlugin
             AppendH2HCorrelationCells(cells, h2h?.Track?.Behind);
             AppendH2HCorrelationCells(cells, h2h?.Race?.Ahead);
             AppendH2HCorrelationCells(cells, h2h?.Race?.Behind);
+        }
+
+        private static void AppendPrecisionGapDiagnosticCells(List<string> cells, CarSAPrecisionGapDiagnostic diagnostic)
+        {
+            AddCsvCell(cells, FormatCsvDouble(diagnostic?.TrackSec ?? double.NaN, "F3"));
+            AddCsvCell(cells, FormatCsvDouble(diagnostic?.RawCandidateSec ?? double.NaN, "F3"));
+            AddCsvCell(cells, FormatCsvDouble(diagnostic?.ReconciledCandidateSec ?? double.NaN, "F3"));
+            AddCsvCell(cells, FormatCsvDouble(diagnostic?.ToleranceSec ?? double.NaN, "F3"));
+            AddCsvCell(cells, diagnostic?.CandidateSource ?? string.Empty);
+            AddCsvCell(cells, diagnostic?.ChosenSource ?? string.Empty);
+            AddCsvCell(cells, diagnostic?.RejectReason ?? string.Empty);
         }
 
         private static void AppendH2HCorrelationCells(List<string> cells, H2HParticipantOutput participant)
@@ -13926,6 +13939,8 @@ namespace LaunchPlugin
             columns.Add("Car.Behind01.Gap.RelativeSec");
             columns.Add("Car.Ahead01P.Gap.Sec");
             columns.Add("Car.Behind01P.Gap.Sec");
+            AddPrecisionGapDiagnosticHeader(columns, "Car.Ahead01P.DirectionalCheckpoint");
+            AddPrecisionGapDiagnosticHeader(columns, "Car.Behind01P.DirectionalCheckpoint");
             columns.Add("Opp.Ahead1.CarIdx");
             columns.Add("Opp.Behind1.CarIdx");
             columns.Add("Opp.Ahead1.Gap.RelativeSec");
@@ -13943,6 +13958,17 @@ namespace LaunchPlugin
             columns.Add("H2HRace.Behind.CarIdx");
             columns.Add("H2HRace.Behind.GapSec");
             return string.Join(",", columns);
+        }
+
+        private static void AddPrecisionGapDiagnosticHeader(List<string> columns, string prefix)
+        {
+            columns.Add(prefix + ".TrackSec");
+            columns.Add(prefix + ".RawCandidateSec");
+            columns.Add(prefix + ".ReconciledCandidateSec");
+            columns.Add(prefix + ".ToleranceSec");
+            columns.Add(prefix + ".CandidateSource");
+            columns.Add(prefix + ".ChosenSource");
+            columns.Add(prefix + ".RejectReason");
         }
 
         private static void AddCarTrackingProbeHeader(List<string> columns, string prefix)

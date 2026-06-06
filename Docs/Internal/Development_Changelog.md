@@ -1,3 +1,11 @@
+## 2026-06-06 — CarSA directional checkpoint gap reconciliation
+- Classification: **both** (driver-facing slot-01 precision correction + internal probe diagnostics/docs; no new public export names or dashboard JSON changes).
+- `Car.Ahead01P.Gap.Sec` / `Car.Behind01P.Gap.Sec` now use finite selected-slot `Gap.TrackSec` as the directional-loop and lap-branch authority. The selected fresh checkpoint candidate is tested at its current value and ± one lap time, retaining only same-sign candidates; the closest candidate is accepted only within `min(6.0 s, max(1.5 s, 8% of |TrackSec|))`.
+- Missing, wrong-direction, or out-of-tolerance checkpoint state falls back directly to TrackSec instead of passing through half-lap `MapToAhead/MapToBehind`, preventing short-way-around publication such as a roughly -17 s precision value when the correct behind loop is roughly -90 s. Invalid slot/TrackSec and blink-hold behavior remains `NaN`.
+- Added diagnostics-only Car Tracking Probe CSV columns for each precision side: TrackSec authority, raw checkpoint candidate, best reconciled candidate, tolerance, candidate source, chosen source, and reject reason. No SimHub properties were added.
+- Preserved `Gap.TrackSec`, visible `Gap.RelativeSec` semantics, CarSA slot selection, checkpoint recording, H2HTrack's current TrackSec override, H2HRace, Opponents, PitExit, dashboard JSON, CompetingDrivers removal, and all existing public export names.
+- Property Snapshot list reviewed: yes; no public export/property add, remove, rename, behavior regroup, or snapshot-group change.
+
 ## 2026-06-06 — H2HTrack LiveGapSec TrackSec alignment
 - Classification: **both** (dashboard-facing H2HTrack live-gap semantics align with Track SA; no export names or dashboard JSON changed).
 - H2HTrack selectors now carry the selected CarSA slot directional `Gap.TrackSec` into H2H; `H2HTrack.Ahead/Behind.LiveGapSec` publishes `abs(Gap.TrackSec)` to preserve the existing positive display convention while matching Track SA directional-loop authority.
