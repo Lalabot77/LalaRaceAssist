@@ -2126,13 +2126,14 @@ namespace LaunchPlugin
                 return CreateTrackFallbackPrecisionGapResult(trackSec, candidateSource, "lap_time_invalid", checkpointCandidate);
             }
 
+            double directionalCheckpointCandidate = -checkpointCandidate;
             double toleranceSec = Math.Min(PrecisionGapToleranceMaxSec,
                 Math.Max(PrecisionGapToleranceMinSec, Math.Abs(trackSec) * PrecisionGapToleranceTrackRatio));
             double reconciledCandidate = double.NaN;
             double bestDifferenceSec = double.PositiveInfinity;
-            ConsiderPrecisionGapCandidate(checkpointCandidate, trackSec, ref reconciledCandidate, ref bestDifferenceSec);
-            ConsiderPrecisionGapCandidate(checkpointCandidate + lapTimeUsed, trackSec, ref reconciledCandidate, ref bestDifferenceSec);
-            ConsiderPrecisionGapCandidate(checkpointCandidate - lapTimeUsed, trackSec, ref reconciledCandidate, ref bestDifferenceSec);
+            ConsiderPrecisionGapCandidate(directionalCheckpointCandidate, trackSec, ref reconciledCandidate, ref bestDifferenceSec);
+            ConsiderPrecisionGapCandidate(directionalCheckpointCandidate + lapTimeUsed, trackSec, ref reconciledCandidate, ref bestDifferenceSec);
+            ConsiderPrecisionGapCandidate(directionalCheckpointCandidate - lapTimeUsed, trackSec, ref reconciledCandidate, ref bestDifferenceSec);
 
             if (!IsFiniteNumber(reconciledCandidate))
             {
