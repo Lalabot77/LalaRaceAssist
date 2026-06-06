@@ -200,4 +200,14 @@ If no edge cases apply:
 
 ## 13. Conversation Presentation
 
-Codex should where possible provide answers in a copy/paste block using simple text or markup so the user can easily copy and paste information to ther developers etc...
+The final-response format is mandatory:
+
+* Return the entire final response inside exactly one fenced text block.
+* The opening line must be three backticks followed immediately by `text`; the closing line must be three backticks.
+* Do not place any response content before or after the fenced text block.
+
+Use exactly:
+
+```text
+<entire response>
+```
