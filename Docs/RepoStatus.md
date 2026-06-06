@@ -1,3 +1,9 @@
+- 2026-06-06 CarSA reverse checkpoint matching for ahead precision availability landed:
+  - player checkpoint crossings now reverse-match recent eligible non-player timestamps already recorded for the same gate, so normal ahead-order crossings can populate the existing gate truth/filter cache after the player arrives;
+  - reverse matches keep the existing stored sign and lap normalization, require current on-track/non-pit eligibility, reject future/stale timestamps beyond `min(15 s, half the active lap-time scale)`, and skip same-update target crossings to avoid duplicate truth/rate observations;
+  - CarSA slot selection, `Gap.TrackSec`, `Gap.RelativeSec` mapping/sticky/fallback/source behavior, precision sign/tolerance/freshness, the Opponents direct checkpoint seam, H2HTrack, H2HRace, Opponents, PitExit, dashboard JSON, and export names remain unchanged;
+  - Property Snapshot list reviewed: yes; no group change because no exports are added, removed, renamed, or regrouped.
+
 - 2026-06-06 CarSA precision local checkpoint sign normalisation landed:
   - slot-01 precision now locally negates the selected stored checkpoint truth/filtered candidate from internal target-minus-player timing convention into public TrackSec convention before the existing current/±lap reconciliation;
   - valid close checkpoint precision can now publish with the established signs (`Ahead01P` positive, `Behind01P` negative), while long-gap short-path candidates remain protected by unchanged TrackSec authority, same-sign filtering, nearest-branch selection, tolerance, and TrackSec fallback;
