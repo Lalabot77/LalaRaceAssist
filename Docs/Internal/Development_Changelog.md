@@ -1,7 +1,13 @@
+## 2026-06-06 — PR #788 reverse checkpoint lap-delta guard follow-up
+- Classification: **both** (ahead precision safety hardening + internal documentation alignment; no export names or dashboard JSON changes).
+- Tightened only the player-crossing reverse-match guard from `|target lap - player lap| <= 3` to `<= 2`, rejecting three-lap timestamp pairs that the unchanged downstream normalization/mapping chain cannot safely represent.
+- Preserved the existing target-after-player gate-truth path, `NormalizeGateGapSec`, `MapToAhead` / `MapToBehind`, slot selection, `Gap.TrackSec`, `Gap.RelativeSec`, precision sign/tolerance/freshness, direct checkpoint seam, H2H, Opponents, PitExit, dashboards, and exports.
+- Property Snapshot list reviewed: yes; no group change because no exports are added, removed, renamed, or regrouped.
+
 ## 2026-06-06 — CarSA reverse checkpoint matching for ahead precision availability
 - Classification: **both** (driver-facing slot-01 ahead precision availability correction + internal checkpoint-cache ordering fix; no export names or dashboard JSON changes).
 - Player checkpoint crossings now reverse-match eligible non-player timestamps already recorded for the same gate, allowing cars that crossed before the player (normally ahead cars) to feed the existing CarSA gate-truth/filter pipeline once the player reaches that gate.
-- Reverse matching preserves the stored `target time - player time` convention, existing `|lap delta| <= 3` normalization path, and `UpdateGateGapTruthForCar(...)` ownership. It rejects future/stale timestamps using a bound of `min(15 s, half the active lap-time scale)`, requires current direct-checkpoint eligibility, and skips same-update target crossings so the existing target-after-player path is not duplicated or rate-distorted.
+- Reverse matching preserves the stored `target time - player time` convention, reverse-only `|lap delta| <= 2` guard and existing normalization path, and `UpdateGateGapTruthForCar(...)` ownership. It rejects future/stale timestamps using a bound of `min(15 s, half the active lap-time scale)`, requires current direct-checkpoint eligibility, and skips same-update target crossings so the existing target-after-player path is not duplicated or rate-distorted.
 - Preserved CarSA slot selection, `Gap.TrackSec`, `Gap.RelativeSec` mapping/sticky/fallback/source semantics, precision sign normalization/tolerance/freshness, direct checkpoint seam behavior, H2HTrack, H2HRace, Opponents, PitExit, dashboard JSON, and all public export names.
 - Property Snapshot list reviewed: yes; no group change because no exports are added, removed, renamed, or regrouped.
 

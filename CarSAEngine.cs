@@ -1663,7 +1663,7 @@ namespace LaunchPlugin
                 }
 
                 int lapDeltaAtGate = targetGateLap - playerLap;
-                if (Math.Abs(lapDeltaAtGate) > 3)
+                if (Math.Abs(lapDeltaAtGate) > 2)
                 {
                     continue;
                 }
