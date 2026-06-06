@@ -1,3 +1,8 @@
+- 2026-06-06 CarSA pit/rejoin slot-retention diagnostics landed:
+  - `CarSA_Debug_*.csv` now records per-slot assignment mode, bounded current-candidate presence/rank, hysteresis/blink state, existing pre-assignment retention eligibility/reason, final on-track state, and LapDistPct validity for all five ahead and five behind slots;
+  - the added evidence is diagnostics-only and leaves candidate acquisition, slot retention/replacement, cursor/duplicate behavior, hysteresis, blink hold, slot ordering, TrackSec, RelativeSec, precision, checkpoint matching, H2H, Opponents, PitExit, dashboard JSON, and public exports unchanged;
+  - Property Snapshot list reviewed: yes; unchanged because this adds debug CSV diagnostics only, not SimHub exports/properties.
+
 - 2026-06-06 PR #788 reverse checkpoint lap-delta guard follow-up landed:
   - the player-crossing reverse-match path now rejects `|target lap - player lap| > 2`, preventing three-lap timestamp pairs from entering the unchanged normalization/mapping chain;
   - the existing target-after-player path and all CarSA slot, TrackSec, RelativeSec, precision, direct checkpoint, H2H, Opponents, PitExit, dashboard, and export contracts remain unchanged;

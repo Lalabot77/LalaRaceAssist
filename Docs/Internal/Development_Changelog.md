@@ -1,3 +1,9 @@
+## 2026-06-06 — CarSA pit/rejoin slot-retention CSV diagnostics
+- Classification: **internal-only** (bounded diagnostics schema expansion; no runtime selection, public export, dashboard JSON, or user workflow change).
+- Added per-slot `CarSA_Debug_*.csv` evidence for all five ahead and five behind slots: assignment mode, current bounded-candidate presence/rank, hysteresis retention, blink hold, existing pre-assignment retention eligibility/reason, final on-track state, and LapDistPct validity. Existing distance, TrackSec, pit-road, and raw-surface columns remain available for correlation.
+- Instrumentation observes the existing `ApplySlots(...)` branches after their unchanged decisions; candidate acquisition, cursor/duplicate handling, 10% hysteresis, blink hold, slot ordering, TrackSec, RelativeSec, precision, checkpoint matching, H2H, Opponents, PitExit, dashboards, and exports are unchanged.
+- Property Snapshot list reviewed: yes; unchanged because this adds debug CSV diagnostics only, not SimHub exports/properties.
+
 ## 2026-06-06 — PR #788 reverse checkpoint lap-delta guard follow-up
 - Classification: **both** (ahead precision safety hardening + internal documentation alignment; no export names or dashboard JSON changes).
 - Tightened only the player-crossing reverse-match guard from `|target lap - player lap| <= 3` to `<= 2`, rejecting three-lap timestamp pairs that the unchanged downstream normalization/mapping chain cannot safely represent.

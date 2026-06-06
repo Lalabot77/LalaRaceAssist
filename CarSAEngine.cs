@@ -2858,11 +2858,22 @@ namespace LaunchPlugin
                 bool currentCarAlreadyUsed = slot.CarIdx >= 0
                     && slot.CarIdx < MaxCars
                     && usedCarIdx[slot.CarIdx];
+                string assignmentMode = "unknown";
+                string retentionReason = "unknown";
+                bool retainedByHysteresis = false;
+                bool blinkHeld = false;
+                bool retentionEligible = false;
 
                 bool currentBlinkHoldEligible = ShouldHoldBlinkingSlot(slot, sessionTimeSec, carIdxLapDistPct, carIdxTrackSurface);
                 if (currentBlinkHoldEligible)
                 {
+                    double ignoredBlinkDistance;
+                    retentionEligible = !currentCarAlreadyUsed
+                        && TryComputeDistance(playerCarIdx, playerLapPct, slot.CarIdx, carIdxLapDistPct, isAhead, out ignoredBlinkDistance);
                     MarkSlotBlinkHeld(slot, isAhead);
+                    assignmentMode = "blink_hold";
+                    retentionReason = "blink_hold";
+                    blinkHeld = true;
                     if (blinkHeldSlots != null && slotIndex < blinkHeldSlots.Length)
                     {
                         blinkHeldSlots[slotIndex] = true;
@@ -2870,6 +2881,7 @@ namespace LaunchPlugin
                 }
                 else if (!currentCarAlreadyUsed && newIdx == slot.CarIdx && slot.CarIdx >= 0)
                 {
+                    retentionEligible = true;
                     if (isAhead)
                     {
                         slot.ForwardDistPct = newDist;
@@ -2878,6 +2890,8 @@ namespace LaunchPlugin
                     {
                         slot.BackwardDistPct = newDist;
                     }
+                    assignmentMode = "live_candidate";
+                    retentionReason = "current_matches_live_candidate";
                     ConsumeCandidate(candidateIdx, candidateCursor, newIdx, ref candidateCursor);
                 }
                 else
@@ -2885,6 +2899,7 @@ namespace LaunchPlugin
                     double currentDist = double.MaxValue;
                     bool currentValid = !currentCarAlreadyUsed
                         && TryComputeDistance(playerCarIdx, playerLapPct, slot.CarIdx, carIdxLapDistPct, isAhead, out currentDist);
+                    retentionEligible = currentValid;
 
                     if (!currentValid)
                     {
@@ -2894,8 +2909,19 @@ namespace LaunchPlugin
                         }
                         if (newIdx != -1)
                         {
+                            assignmentMode = "live_candidate";
+                            retentionReason = currentCarAlreadyUsed
+                                ? "duplicate_current_replaced"
+                                : "current_ineligible_replaced";
                             hysteresisReplacements++;
                             ConsumeCandidate(candidateIdx, candidateCursor, newIdx, ref candidateCursor);
+                        }
+                        else
+                        {
+                            assignmentMode = "cleared";
+                            retentionReason = currentCarAlreadyUsed
+                                ? "duplicate_current_no_candidate"
+                                : "current_ineligible_no_candidate";
                         }
                     }
                     else if (newIdx != -1 && newDist < currentDist * HysteresisFactor)
@@ -2904,6 +2930,8 @@ namespace LaunchPlugin
                         {
                             slotCarIdxChanged++;
                         }
+                        assignmentMode = "live_candidate";
+                        retentionReason = "candidate_10pct_closer";
                         hysteresisReplacements++;
                         ConsumeCandidate(candidateIdx, candidateCursor, newIdx, ref candidateCursor);
                     }
@@ -2917,9 +2945,16 @@ namespace LaunchPlugin
                         {
                             slot.BackwardDistPct = currentDist;
                         }
+                        assignmentMode = "retained_current";
                         if (newIdx != -1)
                         {
+                            retentionReason = "hysteresis_kept_current";
+                            retainedByHysteresis = true;
                             ConsumeCandidate(candidateIdx, candidateCursor, newIdx, ref candidateCursor);
+                        }
+                        else
+                        {
+                            retentionReason = "no_live_candidate_kept_current";
                         }
                     }
                 }
@@ -2934,7 +2969,28 @@ namespace LaunchPlugin
                 {
                     MarkSlotBlinkHeld(slot, isAhead);
                 }
+
+                int candidateRank = FindCandidateIndex(slot.CarIdx, candidateIdx);
+                slot.DebugAssignmentMode = assignmentMode;
+                slot.DebugCandidatePresentThisTick = candidateRank >= 0;
+                slot.DebugCandidateRankThisTick = candidateRank >= 0 ? candidateRank + 1 : 0;
+                slot.DebugRetainedByHysteresis = retainedByHysteresis;
+                slot.DebugBlinkHeld = blinkHeld;
+                slot.DebugRetentionEligible = retentionEligible;
+                slot.DebugRetentionReason = retentionReason;
+                slot.DebugLapDistPctValid = IsLapDistPctValid(slot.CarIdx, carIdxLapDistPct);
             }
+        }
+
+        private static bool IsLapDistPctValid(int carIdx, float[] carIdxLapDistPct)
+        {
+            if (carIdx < 0 || carIdxLapDistPct == null || carIdx >= carIdxLapDistPct.Length)
+            {
+                return false;
+            }
+
+            double lapPct = carIdxLapDistPct[carIdx];
+            return !double.IsNaN(lapPct) && !double.IsInfinity(lapPct) && lapPct >= 0.0 && lapPct < 1.0;
         }
 
         private static void AdvanceCandidateCursor(int[] candidateIdx, bool[] usedCarIdx, ref int candidateCursor)
