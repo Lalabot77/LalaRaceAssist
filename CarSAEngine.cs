@@ -22,6 +22,7 @@ namespace LaunchPlugin
         private const double GateGapRateClampSecPerSec = 8.00;
         private const double GateGapMaxPredictDtSec = 0.10;
         private const double GateGapStickyHoldSec = 0.25;
+        private const double ReverseCheckpointMatchMaxAgeSec = 15.0;
         // Guard against stale GateGap output after slot rebinds: same-lap only, GateGap sources only.
         // This avoids nuking per-car caches when we are already using TrackSec fallback.
         private const double GateGapMismatchFallbackThresholdSec = 2.0;
@@ -839,6 +840,7 @@ namespace LaunchPlugin
             _outputs.Debug.PlayerCheckpointIndexCrossed = _playerCheckpointIndexCrossed;
 
             UpdateCarStates(sessionTimeSec, sessionState, isRace, carIdxLapDistPct, carIdxLap, carIdxTrackSurface, carIdxTrackSurfaceMaterial, carIdxOnPitRoad, carIdxSessionFlags, carIdxPaceFlags, playerLapPctValid ? playerLapPct : double.NaN, playerLap, lapTimeEstimateSec, lapTimeUsed, allowLatches);
+            UpdateReverseCheckpointTruthForPlayerCrossing(playerCarIdx, sessionTimeSec, playerLap, lapTimeUsed);
             PredictGateGapForward(sessionTimeSec, lapTimeUsed);
             if (_playerCheckpointChangedThisTick || _anyCheckpointCrossedThisTick)
             {
@@ -1616,6 +1618,60 @@ namespace LaunchPlugin
                     }
                 }
 
+            }
+        }
+
+        private void UpdateReverseCheckpointTruthForPlayerCrossing(int playerCarIdx, double sessionTimeSec, int playerLap, double lapTimeUsedSec)
+        {
+            int checkpointCrossed = _playerCheckpointIndexCrossed;
+            if (checkpointCrossed < 0
+                || checkpointCrossed >= MiniSectorCheckpointCount
+                || playerCarIdx < 0
+                || playerCarIdx >= MaxCars
+                || !IsCheckpointGapEligibleCar(playerCarIdx)
+                || !IsValidLapTimeSec(lapTimeUsedSec))
+            {
+                return;
+            }
+
+            double maxTargetAgeSec = Math.Min(ReverseCheckpointMatchMaxAgeSec, 0.5 * lapTimeUsedSec);
+            for (int carIdx = 0; carIdx < MaxCars; carIdx++)
+            {
+                if (carIdx == playerCarIdx || !IsCheckpointGapEligibleCar(carIdx))
+                {
+                    continue;
+                }
+
+                double targetGateTimeSec = _carGateTimeSecByCarGate[carIdx, checkpointCrossed];
+                int targetGateLap = _carGateLapByCarGate[carIdx, checkpointCrossed];
+                if (!IsFiniteNumber(targetGateTimeSec) || targetGateLap == int.MinValue)
+                {
+                    continue;
+                }
+
+                double targetAgeSec = sessionTimeSec - targetGateTimeSec;
+                if (!IsFiniteNumber(targetAgeSec) || targetAgeSec < 0.0 || targetAgeSec > maxTargetAgeSec)
+                {
+                    continue;
+                }
+
+                bool targetCrossedSameGateThisTick = _carStates[carIdx].CheckpointIndexCrossed == checkpointCrossed
+                    && targetGateTimeSec == sessionTimeSec;
+                if (targetCrossedSameGateThisTick)
+                {
+                    continue;
+                }
+
+                int lapDeltaAtGate = targetGateLap - playerLap;
+                if (Math.Abs(lapDeltaAtGate) > 2)
+                {
+                    continue;
+                }
+
+                double rawGapSec = targetGateTimeSec - sessionTimeSec;
+                _gateRawGapSecByCar[carIdx] = rawGapSec;
+                double gateTruth = NormalizeGateGapSec(rawGapSec, lapDeltaAtGate, lapTimeUsedSec);
+                UpdateGateGapTruthForCar(carIdx, sessionTimeSec, gateTruth);
             }
         }
 
