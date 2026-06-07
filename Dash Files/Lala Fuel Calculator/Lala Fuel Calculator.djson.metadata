@@ -1,10 +1,12 @@
 {
-  "ScreenCount": 1.0,
+  "ScreenCount": 2.0,
   "InGameScreensIndexs": [
-    0
+    0,
+    1
   ],
   "IdleScreensIndexs": [
-    0
+    0,
+    1
   ],
   "MainPreviewIndex": 0,
   "IsOverlay": false,
@@ -12,7 +14,7 @@
   "MetadataVersion": 2.0,
   "EnableOnDashboardMessaging": true,
   "PitScreensIndexs": [],
-  "SimHubVersion": "9.11.12",
+  "SimHubVersion": "9.11.14",
   "Category": null,
   "Title": null,
   "Description": null,
