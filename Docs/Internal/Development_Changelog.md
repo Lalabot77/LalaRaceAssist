@@ -1,3 +1,10 @@
+## 2026-06-07 — CarSA target-after-player checkpoint freshness guard
+- Classification: **both** (driver-facing CarSA slot-01 precision/relative-gap correctness fix; no export names, dashboard JSON, or CSV schema changes).
+- Added a target-after-player checkpoint truth freshness guard requiring the stored player gate timestamp to be finite, non-future, and no older than `min(15 s, half the active lap-time scale)` before `UpdateGateGapTruthForCar(...)` can accept the forward match.
+- Rejects stale prior-lap player gate pairings such as the Imola ~103 s raw-gap case before `NormalizeGateGapSec(...)` can wrap them into fake close values, while preserving valid behind-car target-after-player matches where the player crossed the gate shortly before the target.
+- Preserved checkpoint count/indexing, reverse matching, normalization, precision sign/tolerance/freshness handling, `Gap.TrackSec`, `Gap.RelativeSec` mapping/filtering except through cleaner truth input, H2H, Opponents, PitExit, dashboards, public exports, and Property Snapshot grouping.
+- Property Snapshot list reviewed: yes; no group change because no SimHub exports/properties were added, removed, renamed, or regrouped.
+
 ## 2026-06-07 — PR #791 capture-window diagnostic reliability follow-up
 - Classification: **internal-only** (Car Tracking Probe diagnostic reliability only; no runtime selection, public export, dashboard JSON, or user workflow change).
 - Gated checkpoint-truth diagnostic collection on active Car Tracking Probe capture, with explicit START/STOP/RESET clearing, so pre-START or stopped-window events cannot appear in the first subsequent CSV row.
