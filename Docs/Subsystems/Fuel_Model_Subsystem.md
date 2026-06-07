@@ -274,9 +274,9 @@ Manual recovery may short-circuit on planner-safe success only while an active l
 Phase 1 `MonitorSystem.*` visibility is attached at the existing health-result seams without changing this ownership or recovery logic:
 - an existing healthy queued check publishes `FUEL HEALTH OK`,
 - an existing unhealthy observation publishes `FUEL DATA CHECK`,
-- the existing recovery return value publishes `FUEL DATA RECOVERED` or `FUEL DATA FAULT`.
+- an attempted recovery publishes `FUEL DATA RECOVERED` or `FUEL DATA FAULT` from the existing health verdict; deferred/not-attempted recovery retains `FUEL DATA CHECK`.
 
-The monitor does not calculate fuel, change the two-sample unhealthy streak, change the 450 ms evaluation throttle or two-second recovery throttle, alter runtime values, or own pit-stop/baseline checks.
+The monitor does not calculate fuel, change the two-sample unhealthy streak, change the 450 ms evaluation throttle or two-second recovery throttle, alter runtime values, or own pit-stop/baseline checks. A transient `FUEL DATA CHECK` clears to `FUEL HEALTH OK` when a later evaluation satisfies the existing valid healthy pass basis. Recovery rejected by the existing throttle (or otherwise not attempted) remains WATCH rather than being classified as FAULT; `FUEL DATA FAULT` is reserved for an attempted recovery whose existing post-refresh health verdict is false. Manual targeted recovery publishes the same outcome mapping while retaining its existing successful early-return and unsuccessful/deferred broad-reset behavior.
 
 Driving → Race transitions can seed race state from the just-learned baseline instead of forcing a full cold start. Those seeds intentionally do not enter `Fuel.Burn.Analysis.*`, which remains fresh-sample-only.
 

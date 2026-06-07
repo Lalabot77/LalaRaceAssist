@@ -29,6 +29,7 @@ namespace LaunchPlugin
         public string BackgroundColour { get; private set; }
         public string TextColour { get; private set; }
         public int Enum { get; private set; }
+        public bool IsFuelDataCheckActive => string.Equals(DisplayText, "FUEL DATA CHECK", StringComparison.Ordinal);
 
         public MonitorSystem()
         {

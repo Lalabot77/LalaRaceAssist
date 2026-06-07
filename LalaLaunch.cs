@@ -9861,8 +9861,9 @@ namespace LaunchPlugin
             SimHub.Logging.Current.Info($"[LalaPlugin:Runtime] fuel health check queued (reason: {reasonLabel}).");
         }
 
-        private bool RunPlannerSafeFuelRuntimeRecovery(string reason)
+        private bool RunPlannerSafeFuelRuntimeRecovery(string reason, out bool attempted)
         {
+            attempted = false;
             if (PluginManager == null)
                 return false;
 
@@ -9870,6 +9871,7 @@ namespace LaunchPlugin
             if ((now - _lastFuelRuntimeRecoveryUtc) < TimeSpan.FromSeconds(2))
                 return false;
 
+            attempted = true;
             _lastFuelRuntimeRecoveryUtc = now;
             string reasonLabel = string.IsNullOrWhiteSpace(reason) ? "unspecified" : reason.Trim();
             SimHub.Logging.Current.Info($"[LalaPlugin:Runtime] planner-safe fuel recovery start (reason: {reasonLabel}).");
@@ -9936,25 +9938,44 @@ namespace LaunchPlugin
                 string reason = _fuelRuntimeHealthCheckPending
                     ? _fuelRuntimeHealthPendingReason
                     : "stale live max seam";
-                bool recovered = RunPlannerSafeFuelRuntimeRecovery(reason);
-                _monitorSystem.Publish(
-                    recovered ? MonitorSeverity.Recovered : MonitorSeverity.Fault,
-                    recovered ? "FUEL DATA RECOVERED" : "FUEL DATA FAULT");
+                bool recoveryAttempted;
+                bool recovered = RunPlannerSafeFuelRuntimeRecovery(reason, out recoveryAttempted);
+                if (recoveryAttempted)
+                {
+                    _monitorSystem.Publish(
+                        recovered ? MonitorSeverity.Recovered : MonitorSeverity.Fault,
+                        recovered ? "FUEL DATA RECOVERED" : "FUEL DATA FAULT");
+                }
+                else
+                {
+                    _monitorSystem.Publish(MonitorSeverity.Watch, "FUEL DATA CHECK");
+                }
+
                 _fuelRuntimeHealthCheckPending = false;
                 _fuelRuntimeHealthPendingReason = string.Empty;
                 _fuelRuntimeUnhealthyStreak = recovered ? 0 : 1;
                 return;
             }
 
-            if (_fuelRuntimeHealthCheckPending && !unhealthy && hasCap && runtimeCap > 0.0)
+            bool healthPassed = !unhealthy && hasCap && runtimeCap > 0.0;
+            if (healthPassed)
             {
-                SimHub.Logging.Current.Info(
-                    $"[LalaPlugin:Runtime] fuel health check passed reason={_fuelRuntimeHealthPendingReason} " +
-                    $"raw={rawCap:F2} runtime={runtimeCap:F2} src={runtimeSource} strategyMissing={strategyDisplayMissing}");
-                _monitorSystem.Publish(MonitorSeverity.Ok, "FUEL HEALTH OK");
-                _fuelRuntimeHealthCheckPending = false;
-                _fuelRuntimeHealthPendingReason = string.Empty;
-                _fuelRuntimeUnhealthyStreak = 0;
+                bool publishMonitorOk = _monitorSystem.IsFuelDataCheckActive;
+                if (_fuelRuntimeHealthCheckPending)
+                {
+                    SimHub.Logging.Current.Info(
+                        $"[LalaPlugin:Runtime] fuel health check passed reason={_fuelRuntimeHealthPendingReason} " +
+                        $"raw={rawCap:F2} runtime={runtimeCap:F2} src={runtimeSource} strategyMissing={strategyDisplayMissing}");
+                    publishMonitorOk = true;
+                    _fuelRuntimeHealthCheckPending = false;
+                    _fuelRuntimeHealthPendingReason = string.Empty;
+                    _fuelRuntimeUnhealthyStreak = 0;
+                }
+
+                if (publishMonitorOk)
+                {
+                    _monitorSystem.Publish(MonitorSeverity.Ok, "FUEL HEALTH OK");
+                }
             }
         }
 
@@ -9965,9 +9986,24 @@ namespace LaunchPlugin
 
             bool sessionTransitionReset = string.Equals(reasonLabel, "Session transition", StringComparison.OrdinalIgnoreCase);
             bool isLiveSessionActive = FuelCalculator != null && FuelCalculator.IsLiveSessionActive;
-            if (!sessionTransitionReset && isLiveSessionActive && RunPlannerSafeFuelRuntimeRecovery(reasonLabel))
+            if (!sessionTransitionReset && isLiveSessionActive)
             {
-                return;
+                bool recoveryAttempted;
+                bool recovered = RunPlannerSafeFuelRuntimeRecovery(reasonLabel, out recoveryAttempted);
+                if (recoveryAttempted)
+                {
+                    _monitorSystem.Publish(
+                        recovered ? MonitorSeverity.Recovered : MonitorSeverity.Fault,
+                        recovered ? "FUEL DATA RECOVERED" : "FUEL DATA FAULT");
+                    if (recovered)
+                    {
+                        return;
+                    }
+                }
+                else
+                {
+                    _monitorSystem.Publish(MonitorSeverity.Watch, "FUEL DATA CHECK");
+                }
             }
 
             ResetProjectionFallbackState();

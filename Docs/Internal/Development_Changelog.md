@@ -1,3 +1,10 @@
+## 2026-06-07 — PR #790 MonitorSystem fuel-health outcome follow-up
+- Classification: **both** (dash-facing fuel-health status correctness + internal recovery-result distinction; no export names, message texts/enums, fuel logic, or command behavior changes).
+- A prior `FUEL DATA CHECK` WATCH now clears to `FUEL HEALTH OK` on the next evaluation that satisfies the existing healthy pass basis, even when the queued-check flag was already cleared; the existing passed log remains queued-check-only.
+- Planner-safe recovery now reports whether an attempt actually ran. Existing throttle/missing-manager deferrals retain WATCH instead of publishing FAULT; only an attempted unhealthy recovery publishes `FUEL DATA FAULT`. Recovery timing, side effects, pending-state clearing, and unhealthy-streak behavior remain unchanged.
+- Active-live-session manual targeted recovery now publishes the same RECOVERED/FAULT/WATCH monitor outcome as automatic recovery while preserving the existing successful early return and unsuccessful/deferred broad-reset fall-through.
+- Property Snapshot list reviewed: yes; no group change because the existing `MonitorSystem.*` exports remain in Fuel/Strategy. Message catalogue reviewed: unchanged because no emitted text or enum changed.
+
 ## 2026-06-07 — MonitorSystem Phase 1 framework + fuel-health visibility migration
 - Classification: **both** (new dash-facing monitoring exports + internal framework/catalogue/docs; no fuel, planner, pit-control, or command behavior change).
 - Added independent `MonitorSystem.cs` presentation state with Phase 1 enum/colour/text contract and identical-output deduplication; it has no dependency on fuel calculators, Strategy, pit engines, Opponents, CarSA, or H2H.

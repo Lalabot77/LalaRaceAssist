@@ -28,6 +28,12 @@
 
 # Repo Status
 
+- 2026-06-07 PR #790 MonitorSystem fuel-health outcome follow-up landed:
+  - transient `FUEL DATA CHECK` WATCH now clears on the next evaluation satisfying the existing valid healthy pass basis even if no queued health check remains; existing pass logging remains pending-check-only;
+  - planner-safe recovery distinguishes deferred/not-attempted from attempted failure, so throttle or missing-manager deferrals retain WATCH and only an attempted unhealthy result publishes `FUEL DATA FAULT`;
+  - manual targeted recovery now publishes RECOVERED/FAULT/WATCH consistently while preserving successful early return and failed/deferred broad-reset fall-through; fuel-health triggers, predicates, timing, side effects, fuel/refuel/planner math, Pit Fuel Control, Pit Command, messages, and exports remain unchanged;
+  - Property Snapshot list reviewed: yes; no group change because `MonitorSystem.*` remains in Fuel/Strategy. Message catalogue reviewed: unchanged.
+
 - 2026-06-07 MonitorSystem Phase 1 framework + fuel-health visibility migration landed:
   - added independent `MonitorSystem.cs` and five dash exports: `LalaLaunch.MonitorSystem.State`, `.Text`, `.BackgroundColour`, `.TextColour`, and `.Enum`; automatic startup state is `MONITOR READY`;
   - existing runtime fuel-health outcomes now publish `FUEL HEALTH OK`, `FUEL DATA CHECK`, `FUEL DATA RECOVERED`, or `FUEL DATA FAULT` while preserving existing logs, trigger conditions, checks, streak/timing thresholds, and planner-safe recovery behavior;
