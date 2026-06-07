@@ -386,6 +386,17 @@ namespace LaunchPlugin
             public double RelativeSecPreClearCandidateSec { get; set; }
             public double RelativeSecPreClearTrackSec { get; set; }
             public double RelativeSecPreClearDiffSec { get; set; }
+            public bool TruthOverwroteExistingSinceSnapshot { get; set; }
+            public int TruthUpdateCountSinceSnapshot { get; set; }
+            public int ForwardTruthUpdateCountSinceSnapshot { get; set; }
+            public int ReverseTruthUpdateCountSinceSnapshot { get; set; }
+            public int SameTickMultipleTruthUpdateCountSinceSnapshot { get; set; }
+            public int SameTickDifferentGateOverwriteCountSinceSnapshot { get; set; }
+            public int PriorTruthOverwriteCountSinceSnapshot { get; set; }
+            public int RelativeSecMismatchClearCountSinceSnapshot { get; set; }
+            public int CheckpointCrossingCountSinceSnapshot { get; set; }
+            public int TotalSkippedCheckpointCountSinceSnapshot { get; set; }
+            public int MaxSkippedCheckpointCountSinceSnapshot { get; set; }
         }
 
         private sealed class CheckpointTruthDiagnosticEntry
@@ -422,6 +433,17 @@ namespace LaunchPlugin
             public double RelativeSecPreClearCandidateSec = double.NaN;
             public double RelativeSecPreClearTrackSec = double.NaN;
             public double RelativeSecPreClearDiffSec = double.NaN;
+            public bool TruthOverwroteExistingSinceSnapshot;
+            public int TruthUpdateCountSinceSnapshot;
+            public int ForwardTruthUpdateCountSinceSnapshot;
+            public int ReverseTruthUpdateCountSinceSnapshot;
+            public int SameTickMultipleTruthUpdateCountSinceSnapshot;
+            public int SameTickDifferentGateOverwriteCountSinceSnapshot;
+            public int PriorTruthOverwriteCountSinceSnapshot;
+            public int RelativeSecMismatchClearCountSinceSnapshot;
+            public int CheckpointCrossingCountSinceSnapshot;
+            public int TotalSkippedCheckpointCountSinceSnapshot;
+            public int MaxSkippedCheckpointCountSinceSnapshot;
 
             public void Clear()
             {
@@ -457,6 +479,17 @@ namespace LaunchPlugin
                 RelativeSecPreClearCandidateSec = double.NaN;
                 RelativeSecPreClearTrackSec = double.NaN;
                 RelativeSecPreClearDiffSec = double.NaN;
+                TruthOverwroteExistingSinceSnapshot = false;
+                TruthUpdateCountSinceSnapshot = 0;
+                ForwardTruthUpdateCountSinceSnapshot = 0;
+                ReverseTruthUpdateCountSinceSnapshot = 0;
+                SameTickMultipleTruthUpdateCountSinceSnapshot = 0;
+                SameTickDifferentGateOverwriteCountSinceSnapshot = 0;
+                PriorTruthOverwriteCountSinceSnapshot = 0;
+                RelativeSecMismatchClearCountSinceSnapshot = 0;
+                CheckpointCrossingCountSinceSnapshot = 0;
+                TotalSkippedCheckpointCountSinceSnapshot = 0;
+                MaxSkippedCheckpointCountSinceSnapshot = 0;
             }
         }
 
@@ -642,7 +675,18 @@ namespace LaunchPlugin
                 RelativeSecMismatchClearedThisTick = entry.RelativeSecMismatchClearedThisTick,
                 RelativeSecPreClearCandidateSec = entry.RelativeSecPreClearCandidateSec,
                 RelativeSecPreClearTrackSec = entry.RelativeSecPreClearTrackSec,
-                RelativeSecPreClearDiffSec = entry.RelativeSecPreClearDiffSec
+                RelativeSecPreClearDiffSec = entry.RelativeSecPreClearDiffSec,
+                TruthOverwroteExistingSinceSnapshot = entry.TruthOverwroteExistingSinceSnapshot,
+                TruthUpdateCountSinceSnapshot = entry.TruthUpdateCountSinceSnapshot,
+                ForwardTruthUpdateCountSinceSnapshot = entry.ForwardTruthUpdateCountSinceSnapshot,
+                ReverseTruthUpdateCountSinceSnapshot = entry.ReverseTruthUpdateCountSinceSnapshot,
+                SameTickMultipleTruthUpdateCountSinceSnapshot = entry.SameTickMultipleTruthUpdateCountSinceSnapshot,
+                SameTickDifferentGateOverwriteCountSinceSnapshot = entry.SameTickDifferentGateOverwriteCountSinceSnapshot,
+                PriorTruthOverwriteCountSinceSnapshot = entry.PriorTruthOverwriteCountSinceSnapshot,
+                RelativeSecMismatchClearCountSinceSnapshot = entry.RelativeSecMismatchClearCountSinceSnapshot,
+                CheckpointCrossingCountSinceSnapshot = entry.CheckpointCrossingCountSinceSnapshot,
+                TotalSkippedCheckpointCountSinceSnapshot = entry.TotalSkippedCheckpointCountSinceSnapshot,
+                MaxSkippedCheckpointCountSinceSnapshot = entry.MaxSkippedCheckpointCountSinceSnapshot
             };
             return true;
         }
@@ -2040,7 +2084,13 @@ namespace LaunchPlugin
             entry.CurrentCheckpointIndex = currentCheckpointIndex;
             entry.CheckpointCrossedIndex = checkpointCrossedIndex;
             entry.CheckpointAdvance = checkpointAdvance;
-            entry.SkippedCheckpointCount += skippedCheckpointCount;
+            entry.SkippedCheckpointCount = skippedCheckpointCount;
+            entry.CheckpointCrossingCountSinceSnapshot++;
+            entry.TotalSkippedCheckpointCountSinceSnapshot += skippedCheckpointCount;
+            if (skippedCheckpointCount > entry.MaxSkippedCheckpointCountSinceSnapshot)
+            {
+                entry.MaxSkippedCheckpointCountSinceSnapshot = skippedCheckpointCount;
+            }
             entry.PreviousLapDistPct = previousLapDistPct;
             entry.CurrentLapDistPct = currentLapDistPct;
             entry.CheckpointDtSec = checkpointDtSec;
@@ -2086,9 +2136,23 @@ namespace LaunchPlugin
                 && IsFiniteNumber(_gateGapTruthSecByCar[carIdx])
                 && IsFiniteNumber(_gateGapLastTruthTimeSecByCar[carIdx]);
             bool sameTick = entry.LastTruthUpdateTickId == _checkpointDiagnosticTickId;
+            entry.TruthUpdateCountSinceSnapshot++;
+            if (string.Equals(truthSource, "target_after_player", StringComparison.Ordinal))
+            {
+                entry.ForwardTruthUpdateCountSinceSnapshot++;
+            }
+            else if (string.Equals(truthSource, "reverse_player_after_target", StringComparison.Ordinal))
+            {
+                entry.ReverseTruthUpdateCountSinceSnapshot++;
+            }
+            if (previousValid)
+            {
+                entry.PriorTruthOverwriteCountSinceSnapshot++;
+            }
             if (previousValid || sameTick)
             {
-                entry.TruthOverwroteExistingThisTick = true;
+                entry.TruthOverwroteExistingThisTick = sameTick;
+                entry.TruthOverwroteExistingSinceSnapshot = true;
                 entry.PreviousTruthSource = entry.TruthSource ?? "none";
                 entry.PreviousTruthGateIndex = entry.TruthGateIndex;
                 entry.PreviousTruthValueSec = _gateGapTruthSecByCar[carIdx];
@@ -2098,12 +2162,23 @@ namespace LaunchPlugin
                     : double.NaN;
             }
 
+            else
+            {
+                entry.TruthOverwroteExistingThisTick = false;
+            }
+
             if (sameTick)
             {
                 entry.SameTickMultipleTruthUpdates = true;
-                entry.SameTickOverwriteReason = gateIndex == entry.TruthGateIndex
-                    ? "same_tick_same_gate"
-                    : "same_tick_different_gate";
+                entry.SameTickMultipleTruthUpdateCountSinceSnapshot++;
+                bool sameTickDifferentGate = gateIndex != entry.TruthGateIndex;
+                if (sameTickDifferentGate)
+                {
+                    entry.SameTickDifferentGateOverwriteCountSinceSnapshot++;
+                }
+                entry.SameTickOverwriteReason = sameTickDifferentGate
+                    ? "same_tick_different_gate"
+                    : "same_tick_same_gate";
             }
             else if (previousValid)
             {
@@ -2533,6 +2608,7 @@ namespace LaunchPlugin
                 return;
             }
             entry.RelativeSecMismatchClearedThisTick = true;
+            entry.RelativeSecMismatchClearCountSinceSnapshot++;
             entry.RelativeSecPreClearCandidateSec = candidateValue;
             entry.RelativeSecPreClearTrackSec = trackSec;
             entry.RelativeSecPreClearDiffSec = diffSec;

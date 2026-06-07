@@ -13889,6 +13889,17 @@ namespace LaunchPlugin
             AddCsvCell(cells, FormatCsvDouble(trackSecAtPublication, "F3"));
             AddCsvCell(cells, FormatCsvDouble(differenceToTrackSec, "F3"));
             AddCsvCell(cells, diagnostic.TruthOverwroteExistingThisTick ? "1" : "0");
+            AddCsvCell(cells, diagnostic.TruthOverwroteExistingSinceSnapshot ? "1" : "0");
+            AddCsvCell(cells, diagnostic.TruthUpdateCountSinceSnapshot);
+            AddCsvCell(cells, diagnostic.ForwardTruthUpdateCountSinceSnapshot);
+            AddCsvCell(cells, diagnostic.ReverseTruthUpdateCountSinceSnapshot);
+            AddCsvCell(cells, diagnostic.SameTickMultipleTruthUpdateCountSinceSnapshot);
+            AddCsvCell(cells, diagnostic.SameTickDifferentGateOverwriteCountSinceSnapshot);
+            AddCsvCell(cells, diagnostic.PriorTruthOverwriteCountSinceSnapshot);
+            AddCsvCell(cells, diagnostic.RelativeSecMismatchClearCountSinceSnapshot);
+            AddCsvCell(cells, diagnostic.CheckpointCrossingCountSinceSnapshot);
+            AddCsvCell(cells, diagnostic.TotalSkippedCheckpointCountSinceSnapshot);
+            AddCsvCell(cells, diagnostic.MaxSkippedCheckpointCountSinceSnapshot);
             AddCsvCell(cells, diagnostic.PreviousTruthSource ?? "none");
             AddCsvCell(cells, FormatCsvOptionalInt(diagnostic.PreviousTruthGateIndex, -1));
             AddCsvCell(cells, FormatCsvDouble(diagnostic.PreviousTruthValueSec, "F3"));
@@ -13917,7 +13928,7 @@ namespace LaunchPlugin
             }
         }
 
-        private const int CheckpointTruthDiagnosticColumnCount = 37;
+        private const int CheckpointTruthDiagnosticColumnCount = 48;
 
         private static void AppendPrecisionGapDiagnosticCells(List<string> cells, CarSAPrecisionGapDiagnostic diagnostic)
         {
@@ -14113,7 +14124,11 @@ namespace LaunchPlugin
                 "TruthAgeSec", "TruthTargetGateTimeSec", "TruthPlayerGateTimeSec", "TruthTargetGateLap", "TruthPlayerGateLap",
                 "TruthRawGapSec", "TruthLapDeltaAtGate", "TruthNormalizedStoredSec", "TruthDirectionalCandidateSec",
                 "TrackSecAtTruthCreation", "TrackSecAtPrecisionPublication", "DifferenceToTrackSecAtPublication",
-                "TruthOverwroteExistingThisTick", "PreviousTruthSource", "PreviousTruthGateIndex", "PreviousTruthValueSec",
+                "TruthOverwroteExistingThisTick", "TruthOverwroteExistingSinceSnapshot", "TruthUpdateCountSinceSnapshot",
+                "ForwardTruthUpdateCountSinceSnapshot", "ReverseTruthUpdateCountSinceSnapshot", "SameTickMultipleTruthUpdateCountSinceSnapshot",
+                "SameTickDifferentGateOverwriteCountSinceSnapshot", "PriorTruthOverwriteCountSinceSnapshot", "RelativeSecMismatchClearCountSinceSnapshot",
+                "CheckpointCrossingCountSinceSnapshot", "TotalSkippedCheckpointCountSinceSnapshot", "MaxSkippedCheckpointCountSinceSnapshot",
+                "PreviousTruthSource", "PreviousTruthGateIndex", "PreviousTruthValueSec",
                 "PreviousTruthAgeSec", "PreviousTruthCreationSessionTime", "SameTickMultipleTruthUpdates", "SameTickOverwriteReason",
                 "RelativeSecMismatchClearedThisTick", "RelativeSecPreClearCandidateSec", "RelativeSecPreClearTrackSec",
                 "RelativeSecPreClearDiffSec", "PrecisionCandidateDifferenceToTrackSec", "PrecisionCandidateRelativeErrorRatio"

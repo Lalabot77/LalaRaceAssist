@@ -1,3 +1,7 @@
+- 2026-06-07 PR #791 aggregate-counter follow-up landed:
+  - Car Tracking Probe checkpoint-truth groups now include `*SinceSnapshot` counters so multiple truth/progression/overwrite/mismatch events between lower-frequency CSV rows survive in aggregate while latest-event fields still show the final event;
+  - `TruthOverwroteExistingThisTick` is limited to same-tick overwrite status for the latest truth event, with `TruthOverwroteExistingSinceSnapshot` carrying the latched window-level overwrite flag;
+  - runtime CarSA, Opponents, H2H, PitExit, dashboard JSON, public exports, and Property Snapshot grouping remain unchanged. Property Snapshot list reviewed: yes; no SimHub export/property changes.
 - 2026-06-07 PR #791 checkpoint diagnostics review follow-up landed:
   - checkpoint progression/overwrite/mismatch evidence now survives telemetry ticks until a successful Car Tracking Probe row consumes it, then clears so the same event is not repeatedly reported;
   - race-start reset clears diagnostic checkpoint timing/progression, Soft Debug off clears pending provenance, and `TruthSource` remains forward/reverse event provenance while precision `CandidateSource` remains separate;

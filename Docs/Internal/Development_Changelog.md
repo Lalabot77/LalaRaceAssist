@@ -1,3 +1,10 @@
+## 2026-06-07 — PR #791 checkpoint diagnostics aggregate-counter follow-up
+- Classification: **internal-only** (Car Tracking Probe diagnostic completeness only; no runtime selection, public export, dashboard JSON, or user workflow change).
+- Added bounded `*SinceSnapshot` aggregate counters for truth updates, forward/reverse truth source counts, same-tick multiple/different-gate overwrites, prior-truth overwrites, RelativeSec mismatch clears, checkpoint crossings, total skipped checkpoints, and maximum skipped checkpoints.
+- Latest-event fields continue to show the most recent event, while aggregate counters preserve useful evidence when multiple checkpoint/truth events occur between lower-frequency Car Tracking Probe rows; counters clear only with the existing post-row diagnostic consume.
+- `TruthOverwroteExistingThisTick` now only reflects same-tick overwrite status for the latest truth event, with `TruthOverwroteExistingSinceSnapshot` carrying the latched window-level overwrite flag.
+- Property Snapshot list reviewed: yes; unchanged because this adds Car Tracking Probe CSV diagnostics only and no SimHub exports/properties are added, removed, renamed, or regrouped.
+
 ## 2026-06-07 — PR #791 checkpoint diagnostics review follow-up
 - Classification: **internal-only** (Car Tracking Probe diagnostic reliability only; no runtime selection, public export, dashboard JSON, or user workflow change).
 - Latched checkpoint progression, truth overwrite, and RelativeSec mismatch evidence across telemetry ticks until the next successful Car Tracking Probe row snapshots all four target groups; the bounded diagnostic window is cleared only after that row is appended to the existing buffer.
