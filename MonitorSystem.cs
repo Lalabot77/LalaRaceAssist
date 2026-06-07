@@ -32,6 +32,11 @@ namespace LaunchPlugin
         public int Enum { get; private set; }
         public bool IsEnabled { get; private set; }
         public bool IsFuelDataCheckActive => IsEnabled && string.Equals(DisplayText, "FUEL DATA CHECK", StringComparison.Ordinal);
+        public bool IsFuelHealthAlertActive =>
+            IsEnabled &&
+            (string.Equals(DisplayText, "FUEL DATA CHECK", StringComparison.Ordinal) ||
+             string.Equals(DisplayText, "FUEL DATA FAULT", StringComparison.Ordinal) ||
+             string.Equals(DisplayText, "FUEL DATA RECOVERED", StringComparison.Ordinal));
         public bool IsPhase2BPitWarningActive =>
             IsEnabled &&
             (string.Equals(DisplayText, "REFUEL OFF", StringComparison.Ordinal) ||

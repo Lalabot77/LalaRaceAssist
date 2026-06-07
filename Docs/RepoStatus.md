@@ -28,6 +28,12 @@
 
 # Repo Status
 
+- 2026-06-07 MonitorSystem Phase 2B active review follow-up landed:
+  - Phase 2B pit warnings no longer publish over or clear active fuel-health monitor messages (`FUEL DATA CHECK`, `FUEL DATA FAULT`, `FUEL DATA RECOVERED`);
+  - `EXIT FUEL SHORT` now requires the pit-entry snapshot to have a meaningful required add (`PluginNextLitres > 0.5L`), preventing no-refuel/no-required-add pit cycles from warning on pit-lane burn alone;
+  - off-pit-road Fuel Control mode changes now evaluate CAUTION-level predictive risk only when needed to keep/clear an existing Phase 2B warning, so corrected predictive `REFUEL OFF` / `MFD FUEL LOW` can clear before pit entry without publishing off-road service WARNINGs;
+  - no `BASELINE SHORT`, `FUEL MODEL CHECK`, gross SimHub baseline maths, Fuel.Refuel calculation, Pit Fuel Control, Pit Command, CSV writer, new export, or Property Snapshot grouping changes. Property Snapshot list reviewed: yes; no group change.
+
 - 2026-06-07 MonitorSystem Phase 2B PR #792 review follow-up landed:
   - pit-stop warnings now use the existing independent `Fuel.Refuel.NextLitres` / `Fuel.Refuel.Valid` runtime recommendation seam rather than `Pit_WillAdd` / MFD-selected add mirrors, so `REFUEL OFF` remains eligible while refuel is disabled and `MFD FUEL LOW` compares the MFD request against an independent recommendation;
   - clean relevant service/exit edges clear active Phase 2B pit-warning text back to `MONITOR READY` without clearing fuel-health monitor texts;

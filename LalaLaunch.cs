@@ -16285,8 +16285,8 @@ namespace LaunchPlugin
                     bool serviceContext = onPitRoad || inPitStall || inPitBox;
                     MonitorPitWarningResult warning = serviceContext
                         ? EvaluateMonitorPitServiceWarnings(snapshot, MonitorSeverity.Warning)
-                        : MonitorPitWarningResult.None;
-                    if (serviceContext)
+                        : EvaluateMonitorPitServiceWarnings(snapshot, MonitorSeverity.Caution);
+                    if (serviceContext || (_monitorSystem != null && _monitorSystem.IsPhase2BPitWarningActive))
                     {
                         PublishMonitorPitWarningOrClear(warning);
                     }
@@ -16402,7 +16402,8 @@ namespace LaunchPlugin
                 return MonitorPitWarningResult.None;
             }
 
-            if (IsFinitePositive(_monitorPitEntrySnapshot.PluginFuelOnExit) &&
+            if (IsMonitorPitFuelStillRequired(_monitorPitEntrySnapshot) &&
+                IsFinitePositive(_monitorPitEntrySnapshot.PluginFuelOnExit) &&
                 IsFiniteNonNegative(snapshot.CurrentFuel) &&
                 snapshot.CurrentFuel + MonitorPitExitFuelShortToleranceLitres < _monitorPitEntrySnapshot.PluginFuelOnExit)
             {
@@ -16462,6 +16463,11 @@ namespace LaunchPlugin
         private void PublishMonitorPitWarningOrClear(MonitorPitWarningResult warning)
         {
             if (_monitorSystem == null)
+            {
+                return;
+            }
+
+            if (_monitorSystem.IsFuelHealthAlertActive)
             {
                 return;
             }

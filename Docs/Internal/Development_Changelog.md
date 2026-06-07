@@ -1,3 +1,11 @@
+## 2026-06-07 — MonitorSystem Phase 2B active review follow-up
+- Classification: **both** (driver-facing warning priority/correctness plus internal Phase 2B documentation; no export, fuel/refuel calculation, planner, Pit Fuel Control, or Pit Command behavior change).
+- Added a narrow fuel-health priority guard so Phase 2B pit warnings neither publish over nor clear `FUEL DATA CHECK`, `FUEL DATA FAULT`, or `FUEL DATA RECOVERED`; clean pit edges still clear only active Phase 2B pit-warning texts back to `MONITOR READY`.
+- Gated `EXIT FUEL SHORT` on a meaningful pit-entry required add (`PluginNextLitres > 0.5L` via the existing fuel-still-required helper), preventing no-refuel/no-required-add pit cycles from warning solely because pit-lane driving burned fuel below entry fuel.
+- Off-pit-road Fuel Control mode changes now evaluate CAUTION-level predictive risk when an active Phase 2B pit warning exists, allowing corrected predictive `REFUEL OFF` / `MFD FUEL LOW` warnings to clear before pit entry without publishing off-road service WARNINGs.
+- Preserved Phase 2B tolerances, edge-only behavior, Fuel Control DATA log-only behavior, message texts/enums, independent `Fuel.Refuel.NextLitres` basis, fuel/refuel calculations, Strategy/planner math, Pit Fuel Control behavior, Pit Command behavior, CSV behavior, and export names. No `BASELINE SHORT`, `FUEL MODEL CHECK`, independent gross SimHub baseline maths, new exports, or Property Snapshot grouping changes were added.
+- Property Snapshot list reviewed: yes; no group change required because no SimHub exports/properties were added, removed, renamed, or regrouped.
+
 ## 2026-06-07 — MonitorSystem Phase 2B PR #792 review follow-up
 - Classification: **both** (driver-facing warning correctness and internal Phase 2B evidence-log documentation; no export, fuel/refuel calculation, planner, Pit Fuel Control, or Pit Command behavior change).
 - Rebased Phase 2B pit-stop warning checks on the independent existing runtime recommendation seam `Fuel.Refuel.NextLitres` / `Fuel.Refuel.Valid` instead of `Pit_WillAdd` / current MFD-selected add mirrors. This allows `REFUEL OFF` to remain eligible when refuel is disabled and makes `MFD FUEL LOW` compare the MFD request against an independent recommendation. Invalid/missing recommendations fail closed.
