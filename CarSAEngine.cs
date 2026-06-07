@@ -210,6 +210,9 @@ namespace LaunchPlugin
         private bool _hadValidTick;
         private bool _hasMultipleClassOpponents;
         private readonly FixedSectorCacheEntry[] _fixedSectorCacheByCar = new FixedSectorCacheEntry[MaxCars];
+        private readonly CheckpointTruthDiagnosticEntry[] _checkpointTruthDiagnosticByCar = new CheckpointTruthDiagnosticEntry[MaxCars];
+        private long _checkpointDiagnosticTickId;
+        private bool _checkpointDiagnosticsEnabledThisTick;
 
         private sealed class CarSA_CarState
         {
@@ -257,6 +260,13 @@ namespace LaunchPlugin
             public int CheckpointIndexNow { get; set; } = -1;
             public int CheckpointIndexLast { get; set; } = -1;
             public int CheckpointIndexCrossed { get; set; } = -1;
+            public int CheckpointPreviousIndex { get; set; } = -1;
+            public double CheckpointPreviousLapDistPct { get; set; } = double.NaN;
+            public double CheckpointCurrentLapDistPct { get; set; } = double.NaN;
+            public int CheckpointAdvance { get; set; }
+            public int SkippedCheckpointCount { get; set; }
+            public double CheckpointDtSec { get; set; } = double.NaN;
+            public double LastCheckpointChangeTimeSec { get; set; } = double.NaN;
             public double LapStartTimeSec { get; set; } = double.NaN;
             public int LapStartLap { get; set; } = int.MinValue;
 
@@ -306,6 +316,13 @@ namespace LaunchPlugin
                 CheckpointIndexNow = -1;
                 CheckpointIndexLast = -1;
                 CheckpointIndexCrossed = -1;
+                CheckpointPreviousIndex = -1;
+                CheckpointPreviousLapDistPct = double.NaN;
+                CheckpointCurrentLapDistPct = double.NaN;
+                CheckpointAdvance = 0;
+                SkippedCheckpointCount = 0;
+                CheckpointDtSec = double.NaN;
+                LastCheckpointChangeTimeSec = double.NaN;
                 LapStartTimeSec = double.NaN;
                 LapStartLap = int.MinValue;
             }
@@ -331,6 +348,127 @@ namespace LaunchPlugin
             public bool SuspectPulseActive { get; set; }
             public bool CompromisedPenaltyActive { get; set; }
             public bool AllowLatches { get; set; }
+        }
+
+
+        public struct CheckpointTruthDiagnosticSnapshot
+        {
+            public int PreviousCheckpointIndex { get; set; }
+            public int CurrentCheckpointIndex { get; set; }
+            public int CheckpointCrossedIndex { get; set; }
+            public int CheckpointAdvance { get; set; }
+            public int SkippedCheckpointCount { get; set; }
+            public double PreviousLapDistPct { get; set; }
+            public double CurrentLapDistPct { get; set; }
+            public double CheckpointDtSec { get; set; }
+            public string TruthSource { get; set; }
+            public int TruthGateIndex { get; set; }
+            public double TruthCreationSessionTime { get; set; }
+            public double TruthAgeSec { get; set; }
+            public double TruthTargetGateTimeSec { get; set; }
+            public double TruthPlayerGateTimeSec { get; set; }
+            public int TruthTargetGateLap { get; set; }
+            public int TruthPlayerGateLap { get; set; }
+            public double TruthRawGapSec { get; set; }
+            public int TruthLapDeltaAtGate { get; set; }
+            public double TruthNormalizedStoredSec { get; set; }
+            public double TruthDirectionalCandidateSec { get; set; }
+            public double TrackSecAtTruthCreation { get; set; }
+            public bool TruthOverwroteExistingThisTick { get; set; }
+            public string PreviousTruthSource { get; set; }
+            public int PreviousTruthGateIndex { get; set; }
+            public double PreviousTruthValueSec { get; set; }
+            public double PreviousTruthAgeSec { get; set; }
+            public double PreviousTruthCreationSessionTime { get; set; }
+            public bool SameTickMultipleTruthUpdates { get; set; }
+            public string SameTickOverwriteReason { get; set; }
+            public bool RelativeSecMismatchClearedThisTick { get; set; }
+            public double RelativeSecPreClearCandidateSec { get; set; }
+            public double RelativeSecPreClearTrackSec { get; set; }
+            public double RelativeSecPreClearDiffSec { get; set; }
+        }
+
+        private sealed class CheckpointTruthDiagnosticEntry
+        {
+            public string TruthSource = "none";
+            public int TruthGateIndex = -1;
+            public double TruthCreationSessionTime = double.NaN;
+            public double TruthTargetGateTimeSec = double.NaN;
+            public double TruthPlayerGateTimeSec = double.NaN;
+            public int TruthTargetGateLap = int.MinValue;
+            public int TruthPlayerGateLap = int.MinValue;
+            public double TruthRawGapSec = double.NaN;
+            public int TruthLapDeltaAtGate;
+            public double TruthNormalizedStoredSec = double.NaN;
+            public double TrackSecAtTruthCreation = double.NaN;
+            public long LastTruthUpdateTickId = -1;
+            public long LastTransientResetTickId = -1;
+            public int TruthUpdatesThisTick;
+            public bool TruthOverwroteExistingThisTick;
+            public string PreviousTruthSource = "none";
+            public int PreviousTruthGateIndex = -1;
+            public double PreviousTruthValueSec = double.NaN;
+            public double PreviousTruthAgeSec = double.NaN;
+            public double PreviousTruthCreationSessionTime = double.NaN;
+            public bool SameTickMultipleTruthUpdates;
+            public string SameTickOverwriteReason = string.Empty;
+            public bool RelativeSecMismatchClearedThisTick;
+            public double RelativeSecPreClearCandidateSec = double.NaN;
+            public double RelativeSecPreClearTrackSec = double.NaN;
+            public double RelativeSecPreClearDiffSec = double.NaN;
+
+            public void ResetTransient(long tickId)
+            {
+                if (LastTransientResetTickId == tickId)
+                {
+                    return;
+                }
+
+                LastTransientResetTickId = tickId;
+                TruthUpdatesThisTick = 0;
+                TruthOverwroteExistingThisTick = false;
+                PreviousTruthSource = "none";
+                PreviousTruthGateIndex = -1;
+                PreviousTruthValueSec = double.NaN;
+                PreviousTruthAgeSec = double.NaN;
+                PreviousTruthCreationSessionTime = double.NaN;
+                SameTickMultipleTruthUpdates = false;
+                SameTickOverwriteReason = string.Empty;
+                RelativeSecMismatchClearedThisTick = false;
+                RelativeSecPreClearCandidateSec = double.NaN;
+                RelativeSecPreClearTrackSec = double.NaN;
+                RelativeSecPreClearDiffSec = double.NaN;
+            }
+
+            public void Clear()
+            {
+                TruthSource = "none";
+                TruthGateIndex = -1;
+                TruthCreationSessionTime = double.NaN;
+                TruthTargetGateTimeSec = double.NaN;
+                TruthPlayerGateTimeSec = double.NaN;
+                TruthTargetGateLap = int.MinValue;
+                TruthPlayerGateLap = int.MinValue;
+                TruthRawGapSec = double.NaN;
+                TruthLapDeltaAtGate = 0;
+                TruthNormalizedStoredSec = double.NaN;
+                TrackSecAtTruthCreation = double.NaN;
+                LastTruthUpdateTickId = -1;
+                LastTransientResetTickId = -1;
+                TruthUpdatesThisTick = 0;
+                TruthOverwroteExistingThisTick = false;
+                PreviousTruthSource = "none";
+                PreviousTruthGateIndex = -1;
+                PreviousTruthValueSec = double.NaN;
+                PreviousTruthAgeSec = double.NaN;
+                PreviousTruthCreationSessionTime = double.NaN;
+                SameTickMultipleTruthUpdates = false;
+                SameTickOverwriteReason = string.Empty;
+                RelativeSecMismatchClearedThisTick = false;
+                RelativeSecPreClearCandidateSec = double.NaN;
+                RelativeSecPreClearTrackSec = double.NaN;
+                RelativeSecPreClearDiffSec = double.NaN;
+            }
         }
 
         public struct FixedSectorValue
@@ -442,6 +580,7 @@ namespace LaunchPlugin
                 _carStates[i].Reset(i);
                 _fixedSectorCacheByCar[i] = new FixedSectorCacheEntry();
                 _fixedSectorCacheByCar[i].Clear();
+                _checkpointTruthDiagnosticByCar[i] = new CheckpointTruthDiagnosticEntry();
             }
 
             ClearGateGapCaches();
@@ -461,6 +600,64 @@ namespace LaunchPlugin
                 bool eligible = surface == TrackSurfaceOnTrack && !onPitRoad;
                 SetDirectCheckpointEligibilityForCar(carIdx, eligible);
             }
+        }
+
+        public bool TryGetCheckpointTruthDiagnosticSnapshot(int carIdx, out CheckpointTruthDiagnosticSnapshot snapshot)
+        {
+            snapshot = default(CheckpointTruthDiagnosticSnapshot);
+            if (carIdx < 0 || carIdx >= MaxCars)
+            {
+                return false;
+            }
+
+            CarSA_CarState state = _carStates[carIdx];
+            CheckpointTruthDiagnosticEntry entry = _checkpointTruthDiagnosticByCar[carIdx];
+            if (state == null || entry == null)
+            {
+                return false;
+            }
+            entry.ResetTransient(_checkpointDiagnosticTickId);
+
+            double truthAgeSec = IsFiniteNumber(entry.TruthCreationSessionTime) && IsFiniteNumber(_lastSessionTimeSec)
+                ? _lastSessionTimeSec - entry.TruthCreationSessionTime
+                : double.NaN;
+            snapshot = new CheckpointTruthDiagnosticSnapshot
+            {
+                PreviousCheckpointIndex = state.CheckpointPreviousIndex,
+                CurrentCheckpointIndex = state.CheckpointIndexNow,
+                CheckpointCrossedIndex = state.CheckpointIndexCrossed,
+                CheckpointAdvance = state.CheckpointAdvance,
+                SkippedCheckpointCount = state.SkippedCheckpointCount,
+                PreviousLapDistPct = state.CheckpointPreviousLapDistPct,
+                CurrentLapDistPct = state.CheckpointCurrentLapDistPct,
+                CheckpointDtSec = state.CheckpointDtSec,
+                TruthSource = entry.TruthSource ?? "none",
+                TruthGateIndex = entry.TruthGateIndex,
+                TruthCreationSessionTime = entry.TruthCreationSessionTime,
+                TruthAgeSec = truthAgeSec,
+                TruthTargetGateTimeSec = entry.TruthTargetGateTimeSec,
+                TruthPlayerGateTimeSec = entry.TruthPlayerGateTimeSec,
+                TruthTargetGateLap = entry.TruthTargetGateLap,
+                TruthPlayerGateLap = entry.TruthPlayerGateLap,
+                TruthRawGapSec = entry.TruthRawGapSec,
+                TruthLapDeltaAtGate = entry.TruthLapDeltaAtGate,
+                TruthNormalizedStoredSec = entry.TruthNormalizedStoredSec,
+                TruthDirectionalCandidateSec = IsFiniteNumber(entry.TruthNormalizedStoredSec) ? -entry.TruthNormalizedStoredSec : double.NaN,
+                TrackSecAtTruthCreation = entry.TrackSecAtTruthCreation,
+                TruthOverwroteExistingThisTick = entry.TruthOverwroteExistingThisTick,
+                PreviousTruthSource = entry.PreviousTruthSource ?? "none",
+                PreviousTruthGateIndex = entry.PreviousTruthGateIndex,
+                PreviousTruthValueSec = entry.PreviousTruthValueSec,
+                PreviousTruthAgeSec = entry.PreviousTruthAgeSec,
+                PreviousTruthCreationSessionTime = entry.PreviousTruthCreationSessionTime,
+                SameTickMultipleTruthUpdates = entry.SameTickMultipleTruthUpdates,
+                SameTickOverwriteReason = entry.SameTickOverwriteReason ?? string.Empty,
+                RelativeSecMismatchClearedThisTick = entry.RelativeSecMismatchClearedThisTick,
+                RelativeSecPreClearCandidateSec = entry.RelativeSecPreClearCandidateSec,
+                RelativeSecPreClearTrackSec = entry.RelativeSecPreClearTrackSec,
+                RelativeSecPreClearDiffSec = entry.RelativeSecPreClearDiffSec
+            };
+            return true;
         }
 
         public bool TryGetFixedSectorCacheSnapshot(int carIdx, out FixedSectorCacheSnapshot snapshot)
@@ -731,6 +928,8 @@ namespace LaunchPlugin
             bool debugEnabled)
         {
             _ = notRelevantGapSec;
+            _checkpointDiagnosticTickId++;
+            _checkpointDiagnosticsEnabledThisTick = debugEnabled;
             _hasMultipleClassOpponents = hasMultipleClassOpponents;
             _outputs.Source = "CarIdxTruth";
             _outputs.Debug.SessionTimeSec = sessionTimeSec;
@@ -839,8 +1038,8 @@ namespace LaunchPlugin
             _outputs.Debug.PlayerCheckpointIndexNow = _playerCheckpointIndexNow;
             _outputs.Debug.PlayerCheckpointIndexCrossed = _playerCheckpointIndexCrossed;
 
-            UpdateCarStates(sessionTimeSec, sessionState, isRace, carIdxLapDistPct, carIdxLap, carIdxTrackSurface, carIdxTrackSurfaceMaterial, carIdxOnPitRoad, carIdxSessionFlags, carIdxPaceFlags, playerLapPctValid ? playerLapPct : double.NaN, playerLap, lapTimeEstimateSec, lapTimeUsed, allowLatches);
-            UpdateReverseCheckpointTruthForPlayerCrossing(playerCarIdx, sessionTimeSec, playerLap, lapTimeUsed);
+            UpdateCarStates(sessionTimeSec, sessionState, isRace, carIdxLapDistPct, carIdxLap, carIdxTrackSurface, carIdxTrackSurfaceMaterial, carIdxOnPitRoad, carIdxSessionFlags, carIdxPaceFlags, playerLapPctValid ? playerLapPct : double.NaN, playerLap, lapTimeEstimateSec, lapTimeUsed, trackGapScaleSec, allowLatches);
+            UpdateReverseCheckpointTruthForPlayerCrossing(playerCarIdx, sessionTimeSec, playerLap, lapTimeUsed, trackGapScaleSec);
             PredictGateGapForward(sessionTimeSec, lapTimeUsed);
             if (_playerCheckpointChangedThisTick || _anyCheckpointCrossedThisTick)
             {
@@ -1252,6 +1451,7 @@ namespace LaunchPlugin
             int playerLap,
             double lapTimeEstimateSec,
             double lapTimeUsedSec,
+            double trackGapScaleSec,
             bool allowLatches)
         {
             _ = carIdxPaceFlags;
@@ -1262,6 +1462,8 @@ namespace LaunchPlugin
                 var state = _carStates[carIdx];
                 int prevLap = state.LastLapSeen;
                 bool prevWasPitArea = state.WasInPitArea;
+                double previousLapDistPct = state.LapDistPct;
+                int previousCheckpointIndex = state.CheckpointIndexLast;
                 state.CarIdx = carIdx;
                 state.LastSeenSessionTime = sessionTimeSec;
                 state.Lap = (carIdxLap != null && carIdx < carIdxLap.Length) ? carIdxLap[carIdx] : 0;
@@ -1486,9 +1688,23 @@ namespace LaunchPlugin
                     if (checkpointNow >= 0)
                     {
                         int checkpointCrossed = -1;
-                        if (state.CheckpointIndexLast >= 0 && checkpointNow != state.CheckpointIndexLast)
+                        int checkpointAdvance = 0;
+                        if (previousCheckpointIndex >= 0 && checkpointNow != previousCheckpointIndex)
                         {
                             checkpointCrossed = checkpointNow;
+                            checkpointAdvance = (checkpointNow - previousCheckpointIndex + MiniSectorCheckpointCount) % MiniSectorCheckpointCount;
+                        }
+                        state.CheckpointPreviousIndex = previousCheckpointIndex;
+                        state.CheckpointPreviousLapDistPct = previousLapDistPct;
+                        state.CheckpointCurrentLapDistPct = state.LapDistPct;
+                        state.CheckpointAdvance = checkpointAdvance;
+                        state.SkippedCheckpointCount = checkpointAdvance > 1 ? checkpointAdvance - 1 : 0;
+                        state.CheckpointDtSec = checkpointCrossed >= 0 && IsFiniteNumber(state.LastCheckpointChangeTimeSec)
+                            ? sessionTimeSec - state.LastCheckpointChangeTimeSec
+                            : double.NaN;
+                        if (checkpointCrossed >= 0)
+                        {
+                            state.LastCheckpointChangeTimeSec = sessionTimeSec;
                         }
                         state.CheckpointIndexNow = checkpointNow;
                         state.CheckpointIndexCrossed = checkpointCrossed;
@@ -1514,7 +1730,20 @@ namespace LaunchPlugin
                                 {
                                     _gateRawGapSecByCar[carIdx] = rawGapSec;
                                     double gateTruth = NormalizeGateGapSec(rawGapSec, lapDeltaAtGate, lapTimeUsedSec);
-                                    UpdateGateGapTruthForCar(carIdx, sessionTimeSec, gateTruth);
+                                    double trackSecAtTruthCreation = EstimateTrackSecAtTruthCreation(playerLapPct, state.LapDistPct, gateTruth, trackGapScaleSec);
+                                    UpdateGateGapTruthForCar(
+                                        carIdx,
+                                        sessionTimeSec,
+                                        gateTruth,
+                                        "target_after_player",
+                                        checkpointCrossed,
+                                        sessionTimeSec,
+                                        playerGateTimeSec,
+                                        state.Lap,
+                                        playerGateLap,
+                                        rawGapSec,
+                                        lapDeltaAtGate,
+                                        trackSecAtTruthCreation);
                                 }
                             }
                         }
@@ -1529,6 +1758,12 @@ namespace LaunchPlugin
                     {
                         state.CheckpointIndexNow = -1;
                         state.CheckpointIndexCrossed = -1;
+                        state.CheckpointPreviousIndex = previousCheckpointIndex;
+                        state.CheckpointPreviousLapDistPct = previousLapDistPct;
+                        state.CheckpointCurrentLapDistPct = double.NaN;
+                        state.CheckpointAdvance = 0;
+                        state.SkippedCheckpointCount = 0;
+                        state.CheckpointDtSec = double.NaN;
                         ClearFixedSectorCacheForCar(carIdx);
                     }
                 }
@@ -1536,6 +1771,12 @@ namespace LaunchPlugin
                 {
                     state.CheckpointIndexNow = -1;
                     state.CheckpointIndexCrossed = -1;
+                    state.CheckpointPreviousIndex = previousCheckpointIndex;
+                    state.CheckpointPreviousLapDistPct = previousLapDistPct;
+                    state.CheckpointCurrentLapDistPct = double.NaN;
+                    state.CheckpointAdvance = 0;
+                    state.SkippedCheckpointCount = 0;
+                    state.CheckpointDtSec = double.NaN;
                 }
 
                 if (checkpointNow >= 0)
@@ -1621,7 +1862,7 @@ namespace LaunchPlugin
             }
         }
 
-        private void UpdateReverseCheckpointTruthForPlayerCrossing(int playerCarIdx, double sessionTimeSec, int playerLap, double lapTimeUsedSec)
+        private void UpdateReverseCheckpointTruthForPlayerCrossing(int playerCarIdx, double sessionTimeSec, int playerLap, double lapTimeUsedSec, double trackGapScaleSec)
         {
             int checkpointCrossed = _playerCheckpointIndexCrossed;
             if (checkpointCrossed < 0
@@ -1671,16 +1912,59 @@ namespace LaunchPlugin
                 double rawGapSec = targetGateTimeSec - sessionTimeSec;
                 _gateRawGapSecByCar[carIdx] = rawGapSec;
                 double gateTruth = NormalizeGateGapSec(rawGapSec, lapDeltaAtGate, lapTimeUsedSec);
-                UpdateGateGapTruthForCar(carIdx, sessionTimeSec, gateTruth);
+                double trackSecAtTruthCreation = double.NaN;
+                if (playerCarIdx >= 0 && playerCarIdx < _carStates.Length)
+                {
+                    trackSecAtTruthCreation = EstimateTrackSecAtTruthCreation(_carStates[playerCarIdx].LapDistPct, _carStates[carIdx].LapDistPct, gateTruth, trackGapScaleSec);
+                }
+                UpdateGateGapTruthForCar(
+                    carIdx,
+                    sessionTimeSec,
+                    gateTruth,
+                    "reverse_player_after_target",
+                    checkpointCrossed,
+                    targetGateTimeSec,
+                    sessionTimeSec,
+                    targetGateLap,
+                    playerLap,
+                    rawGapSec,
+                    lapDeltaAtGate,
+                    trackSecAtTruthCreation);
             }
         }
 
-        private void UpdateGateGapTruthForCar(int carIdx, double sessionTimeSec, double gateTruth)
+        private void UpdateGateGapTruthForCar(
+            int carIdx,
+            double sessionTimeSec,
+            double gateTruth,
+            string truthSource,
+            int gateIndex,
+            double targetGateTimeSec,
+            double playerGateTimeSec,
+            int targetGateLap,
+            int playerGateLap,
+            double rawGapSec,
+            int lapDeltaAtGate,
+            double trackSecAtTruthCreation)
         {
             if (carIdx < 0 || carIdx >= MaxCars || double.IsNaN(gateTruth) || double.IsInfinity(gateTruth))
             {
                 return;
             }
+
+            UpdateCheckpointTruthDiagnosticForCar(
+                carIdx,
+                sessionTimeSec,
+                gateTruth,
+                truthSource,
+                gateIndex,
+                targetGateTimeSec,
+                playerGateTimeSec,
+                targetGateLap,
+                playerGateLap,
+                rawGapSec,
+                lapDeltaAtGate,
+                trackSecAtTruthCreation);
 
             double prevT = _gateGapPrevTruthTimeSecByCar[carIdx];
             double prevV = _gateGapPrevTruthSecByCar[carIdx];
@@ -1721,6 +2005,97 @@ namespace LaunchPlugin
                 _gateGapFilteredValidByCar[carIdx] = true;
                 _gateGapLastPredictTimeSecByCar[carIdx] = sessionTimeSec;
             }
+        }
+
+
+        private void UpdateCheckpointTruthDiagnosticForCar(
+            int carIdx,
+            double sessionTimeSec,
+            double gateTruth,
+            string truthSource,
+            int gateIndex,
+            double targetGateTimeSec,
+            double playerGateTimeSec,
+            int targetGateLap,
+            int playerGateLap,
+            double rawGapSec,
+            int lapDeltaAtGate,
+            double trackSecAtTruthCreation)
+        {
+            if (!_checkpointDiagnosticsEnabledThisTick || carIdx < 0 || carIdx >= _checkpointTruthDiagnosticByCar.Length)
+            {
+                return;
+            }
+
+            CheckpointTruthDiagnosticEntry entry = _checkpointTruthDiagnosticByCar[carIdx];
+            if (entry == null)
+            {
+                return;
+            }
+            entry.ResetTransient(_checkpointDiagnosticTickId);
+
+            bool previousValid = _gateGapTruthValidByCar[carIdx]
+                && IsFiniteNumber(_gateGapTruthSecByCar[carIdx])
+                && IsFiniteNumber(_gateGapLastTruthTimeSecByCar[carIdx]);
+            bool sameTick = entry.LastTruthUpdateTickId == _checkpointDiagnosticTickId && entry.TruthUpdatesThisTick > 0;
+            if (previousValid || sameTick)
+            {
+                entry.TruthOverwroteExistingThisTick = true;
+                entry.PreviousTruthSource = entry.TruthSource ?? "none";
+                entry.PreviousTruthGateIndex = entry.TruthGateIndex;
+                entry.PreviousTruthValueSec = _gateGapTruthSecByCar[carIdx];
+                entry.PreviousTruthCreationSessionTime = _gateGapLastTruthTimeSecByCar[carIdx];
+                entry.PreviousTruthAgeSec = IsFiniteNumber(entry.PreviousTruthCreationSessionTime)
+                    ? sessionTimeSec - entry.PreviousTruthCreationSessionTime
+                    : double.NaN;
+            }
+
+            if (sameTick)
+            {
+                entry.SameTickMultipleTruthUpdates = true;
+                entry.SameTickOverwriteReason = gateIndex == entry.TruthGateIndex
+                    ? "same_tick_same_gate"
+                    : "same_tick_different_gate";
+            }
+            else if (previousValid)
+            {
+                entry.SameTickOverwriteReason = "replaced_prior_truth";
+            }
+
+            entry.TruthSource = string.IsNullOrWhiteSpace(truthSource) ? "existing/unknown" : truthSource;
+            entry.TruthGateIndex = gateIndex;
+            entry.TruthCreationSessionTime = sessionTimeSec;
+            entry.TruthTargetGateTimeSec = targetGateTimeSec;
+            entry.TruthPlayerGateTimeSec = playerGateTimeSec;
+            entry.TruthTargetGateLap = targetGateLap;
+            entry.TruthPlayerGateLap = playerGateLap;
+            entry.TruthRawGapSec = rawGapSec;
+            entry.TruthLapDeltaAtGate = lapDeltaAtGate;
+            entry.TruthNormalizedStoredSec = gateTruth;
+            entry.TrackSecAtTruthCreation = trackSecAtTruthCreation;
+            entry.LastTruthUpdateTickId = _checkpointDiagnosticTickId;
+            entry.TruthUpdatesThisTick++;
+        }
+
+        private static double EstimateTrackSecAtTruthCreation(double playerLapPct, double targetLapPct, double normalizedStoredTruthSec, double trackGapScaleSec)
+        {
+            if (!IsFiniteNumber(playerLapPct) || !IsFiniteNumber(targetLapPct) || !IsFiniteNumber(normalizedStoredTruthSec) || !IsValidLapTimeSec(trackGapScaleSec))
+            {
+                return double.NaN;
+            }
+
+            double forwardDist = targetLapPct - playerLapPct;
+            if (forwardDist < 0.0) forwardDist += 1.0;
+            double backwardDist = playerLapPct - targetLapPct;
+            if (backwardDist < 0.0) backwardDist += 1.0;
+
+            double directionalCandidate = -normalizedStoredTruthSec;
+            if (directionalCandidate >= 0.0)
+            {
+                return forwardDist * trackGapScaleSec;
+            }
+
+            return -backwardDist * trackGapScaleSec;
         }
 
         private void PredictGateGapForward(double sessionTimeSec, double lapTimeUsed)
@@ -2060,6 +2435,7 @@ namespace LaunchPlugin
                         double diff = Math.Abs(candidateValue - slot.GapTrackSec);
                         if (diff > GateGapMismatchFallbackThresholdSec)
                         {
+                            RecordRelativeSecMismatchClear(slot.CarIdx, candidateValue, slot.GapTrackSec, diff);
                             candidateValue = slot.GapTrackSec;
                             gapSource = 3;
                             _gateGapFilteredValidByCar[slot.CarIdx] = false;
@@ -2094,6 +2470,27 @@ namespace LaunchPlugin
                     slot.LapsSincePit = state.LapsSincePit;
                 }
             }
+        }
+
+
+        private void RecordRelativeSecMismatchClear(int carIdx, double candidateValue, double trackSec, double diffSec)
+        {
+            if (!_checkpointDiagnosticsEnabledThisTick || carIdx < 0 || carIdx >= _checkpointTruthDiagnosticByCar.Length)
+            {
+                return;
+            }
+
+            CheckpointTruthDiagnosticEntry entry = _checkpointTruthDiagnosticByCar[carIdx];
+            if (entry == null)
+            {
+                return;
+            }
+            entry.ResetTransient(_checkpointDiagnosticTickId);
+
+            entry.RelativeSecMismatchClearedThisTick = true;
+            entry.RelativeSecPreClearCandidateSec = candidateValue;
+            entry.RelativeSecPreClearTrackSec = trackSec;
+            entry.RelativeSecPreClearDiffSec = diffSec;
         }
 
         private void UpdateSlot01PrecisionGaps(double sessionTimeSec, double lapTimeMapSec)
@@ -4001,6 +4398,10 @@ namespace LaunchPlugin
                 _gateGapLastPublishedSecByCar[carIdx] = double.NaN;
                 _gateGapLastPublishedTimeSecByCar[carIdx] = double.NaN;
                 _blinkHoldLastEligibleSessionTimeByCar[carIdx] = double.NaN;
+                if (_checkpointTruthDiagnosticByCar[carIdx] != null)
+                {
+                    _checkpointTruthDiagnosticByCar[carIdx].Clear();
+                }
                 SetDirectCheckpointEligibilityForCar(carIdx, false);
             }
         }
@@ -4032,6 +4433,7 @@ namespace LaunchPlugin
                 state.CheckpointIndexNow = -1;
                 state.CheckpointIndexLast = -1;
                 state.CheckpointIndexCrossed = -1;
+                state.CheckpointPreviousIndex = -1;
                 state.LapStartTimeSec = double.NaN;
                 state.LapStartLap = int.MinValue;
                 ClearFixedSectorCacheForCar(i);

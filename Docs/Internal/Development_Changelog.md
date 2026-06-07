@@ -1,3 +1,9 @@
+## 2026-06-07 — CarSA checkpoint truth event diagnostics
+- Classification: **internal-only** (bounded Car Tracking Probe CSV provenance expansion; no runtime selection, public export, dashboard JSON, or user workflow change).
+- Added read-only checkpoint progression and truth-event diagnostic state for the selected Ahead01P/Behind01P targets and configured Probe A/B identities, including skipped-index evidence, forward/reverse source, gate/timestamp/lap provenance, raw/normalized/directional values, TrackSec correlation, same-tick overwrite metadata, prior truth, RelativeSec mismatch clearing, and precision candidate difference/error ratio.
+- Extended only the existing buffered `CarTrackingProbe_<Track>_<Timestamp>.csv` schema; checkpoint crossing detection, 60-checkpoint count, truth generation/overwrite ordering, filtering, RelativeSec, precision, TrackSec, Opponents, H2H, PitExit, dashboard JSON, and public exports remain unchanged.
+- Property Snapshot list reviewed: yes; unchanged because this adds raw/checkpoint diagnostics only to Car Tracking Probe CSV and no SimHub exports/properties are added, removed, renamed, or regrouped.
+
 ## 2026-06-06 — CarSA pit/rejoin slot-retention CSV diagnostics
 - Classification: **internal-only** (bounded diagnostics schema expansion; no runtime selection, public export, dashboard JSON, or user workflow change).
 - Added per-slot `CarSA_Debug_*.csv` evidence for all five ahead and five behind slots: assignment mode, current bounded-candidate presence/rank, hysteresis retention, blink hold, existing pre-assignment retention eligibility/reason, final on-track state, and LapDistPct validity. Existing distance, TrackSec, pit-road, and raw-surface columns remain available for correlation.

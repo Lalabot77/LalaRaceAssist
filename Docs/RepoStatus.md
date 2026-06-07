@@ -1,3 +1,7 @@
+- 2026-06-07 CarSA checkpoint truth event diagnostics landed:
+  - Car Tracking Probe CSV now includes bounded checkpoint progression, truth source/gate/timestamp/lap provenance, normalized/directional values, TrackSec comparison, same-tick overwrite/prior-truth evidence, RelativeSec mismatch-clearing evidence, and precision difference/error fields for Ahead01P, Behind01P, Probe A, and Probe B;
+  - instrumentation is read-only and leaves the 60-checkpoint model, crossing detection, truth calculation/overwrite ordering, RelativeSec, precision, TrackSec, Opponents, H2H, PitExit, dashboard JSON, public exports, and Property Snapshot unchanged;
+  - Property Snapshot list reviewed: yes; unchanged because the new fields exist only in the buffered Car Tracking Probe CSV and add no SimHub exports/properties.
 - 2026-06-06 CarSA pit/rejoin slot-retention diagnostics landed:
   - `CarSA_Debug_*.csv` now records per-slot assignment mode, bounded current-candidate presence/rank, hysteresis/blink state, existing pre-assignment retention eligibility/reason, final on-track state, and LapDistPct validity for all five ahead and five behind slots;
   - the added evidence is diagnostics-only and leaves candidate acquisition, slot retention/replacement, cursor/duplicate behavior, hysteresis, blink hold, slot ordering, TrackSec, RelativeSec, precision, checkpoint matching, H2H, Opponents, PitExit, dashboard JSON, and public exports unchanged;
