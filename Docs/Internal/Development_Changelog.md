@@ -1,3 +1,10 @@
+## 2026-06-07 — MonitorSystem pre-Phase 2 enable control + colour cleanup
+- Classification: **both** (persisted driver setting and dash-facing state/colour behavior; no fuel-health logic, calculations, pit monitoring, or command behavior change).
+- Added persisted `MonitorSystemEnabled` (default `true`) and `Settings -> Launch Settings -> Enable Monitor System`; changes apply immediately and save through the existing settings path.
+- Simplified active state to `ON`: enabled/reset output is `ON` / `MONITOR READY` / enum `1`; disabled output is `OFF` / `MONITOR OFF` / enum `0`; active runtime no longer emits `AUTO`. Existing fuel-health publications are ignored while disabled and resume from ready after re-enable.
+- WARNING/FAULT presentation now uses red background (`#FF0000`) with yellow text (`#FFFF00`). Export names, enum values, message texts, fuel-health predicates/recovery, fuel/refuel/planner math, Pit Fuel Control, and Pit Command remain unchanged.
+- Property Snapshot list reviewed: yes; no group change because existing `MonitorSystem.*` exports remain in Fuel/Strategy.
+
 ## 2026-06-07 — PR #790 deferred fuel-health retry pending-state follow-up
 - Classification: **internal-only correctness follow-up** (existing MonitorSystem messages/exports; no fuel, planner, pit-control, or command behavior change).
 - Automatic planner-safe recovery deferral now retains `_fuelRuntimeHealthCheckPending`, its reason, and the current unhealthy streak so a transition-gap-only check remains eligible for the next bounded retry; attempted recovery still clears pending state, and the existing valid healthy pass still clears pending state while publishing `FUEL HEALTH OK`.

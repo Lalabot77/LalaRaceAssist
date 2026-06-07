@@ -28,6 +28,12 @@
 
 # Repo Status
 
+- 2026-06-07 MonitorSystem pre-Phase 2 cleanup landed:
+  - added persisted default-on `MonitorSystemEnabled` and `Enable Monitor System` Launch Settings checkbox with immediate saved state changes;
+  - enabled/default output is `ON` / `MONITOR READY` / enum `1`, disabled output is `OFF` / `MONITOR OFF` / enum `0`, and active runtime no longer emits `AUTO`; fuel-health messages publish only while enabled;
+  - WARNING/FAULT colours are red background with yellow text; exports, enum values, message texts, fuel-health logic/recovery, fuel/refuel/planner math, Pit Fuel Control, and Pit Command remain unchanged; no pit-stop monitoring, baseline checks, or debug CSV added;
+  - Property Snapshot list reviewed: yes; no group change because `MonitorSystem.*` remains in Fuel/Strategy.
+
 - 2026-06-07 PR #790 deferred fuel-health retry pending-state follow-up landed:
   - throttled/deferred automatic recovery now retains the pending health-check flag/reason and unhealthy streak, preserving transition-gap retry eligibility; attempted recovery and valid healthy-pass clearing remain unchanged;
   - no trigger, health predicate, timing threshold, recovery side effect, message/export, fuel/refuel/planner, Pit Fuel Control, or Pit Command change. Property Snapshot list reviewed: yes; no group change.

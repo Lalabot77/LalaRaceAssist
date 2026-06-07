@@ -271,7 +271,7 @@ Runtime recovery now distinguishes between:
 Planner-safe targeted recovery is intended to rebuild live-cap/runtime truth without silently clearing Strategy manual overrides or preset intent.
 Manual recovery may short-circuit on planner-safe success only while an active live session is present; outside active live session, manual reset continues into the broad reset path.
 
-Phase 1 `MonitorSystem.*` visibility is attached at the existing health-result seams without changing this ownership or recovery logic:
+Phase 1 `MonitorSystem.*` visibility is attached at the existing health-result seams without changing this ownership or recovery logic. Publication occurs only while the persisted `MonitorSystemEnabled` setting is enabled; disabling the monitor does not disable or alter the underlying fuel-health checks/recovery:
 - an existing healthy queued check publishes `FUEL HEALTH OK`,
 - an existing unhealthy observation publishes `FUEL DATA CHECK`,
 - an attempted recovery publishes `FUEL DATA RECOVERED` or `FUEL DATA FAULT` from the existing health verdict; deferred/not-attempted recovery retains `FUEL DATA CHECK`.

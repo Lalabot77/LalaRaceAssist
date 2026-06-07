@@ -6897,6 +6897,7 @@ namespace LaunchPlugin
         private bool _friendsDirty = true;
         private LaunchPluginSettings _subscribedLeagueClassSettings;
         private LaunchPluginSettings _subscribedPitFuelControlSettings;
+        private LaunchPluginSettings _subscribedMonitorSystemSettings;
         private bool _applyingPitFuelControlDataAction;
         private bool _leagueClassOpponentsRefreshPending;
         private List<LeagueClassDefinition> _subscribedLeagueClassDefinitions;
@@ -7338,6 +7339,7 @@ namespace LaunchPlugin
             HookCustomMessageSettings(Settings);
             HookLeagueClassSettings(Settings);
             HookPitFuelControlSettings(Settings);
+            HookMonitorSystemSettings(Settings);
             ReloadLeagueClassConfig();
             MarkFriendsDirty();
             _shiftAssistAudio = new ShiftAssistAudio(() => Settings);
@@ -16165,6 +16167,36 @@ namespace LaunchPlugin
             SubscribeCustomMessageEntries(_customMessagesCollection);
         }
 
+        private void HookMonitorSystemSettings(LaunchPluginSettings settings)
+        {
+            if (_subscribedMonitorSystemSettings != null)
+            {
+                _subscribedMonitorSystemSettings.PropertyChanged -= OnMonitorSystemSettingsPropertyChanged;
+                _subscribedMonitorSystemSettings = null;
+            }
+
+            if (settings == null)
+            {
+                _monitorSystem.SetEnabled(true);
+                return;
+            }
+
+            _subscribedMonitorSystemSettings = settings;
+            _subscribedMonitorSystemSettings.PropertyChanged += OnMonitorSystemSettingsPropertyChanged;
+            _monitorSystem.SetEnabled(settings.MonitorSystemEnabled);
+        }
+
+        private void OnMonitorSystemSettingsPropertyChanged(object sender, PropertyChangedEventArgs e)
+        {
+            if (!string.Equals(e?.PropertyName, nameof(LaunchPluginSettings.MonitorSystemEnabled), StringComparison.Ordinal))
+            {
+                return;
+            }
+
+            _monitorSystem.SetEnabled(_subscribedMonitorSystemSettings?.MonitorSystemEnabled != false);
+            SaveSettings();
+        }
+
         private void HookPitFuelControlSettings(LaunchPluginSettings settings)
         {
             if (_subscribedPitFuelControlSettings != null)
@@ -23515,6 +23547,17 @@ namespace LaunchPlugin
         }
         public double PitFuelPushSaveProfileGuardPct { get; set; } = 10.0;
         public bool EnableAutoDashSwitch { get; set; } = true;
+        private bool _monitorSystemEnabled = true;
+        public bool MonitorSystemEnabled
+        {
+            get { return _monitorSystemEnabled; }
+            set
+            {
+                if (_monitorSystemEnabled == value) return;
+                _monitorSystemEnabled = value;
+                OnPropertyChanged(nameof(MonitorSystemEnabled));
+            }
+        }
         private bool _strategyDashAdvancedMode = true;
         public bool StrategyDashAdvancedMode
         {

@@ -22,7 +22,7 @@ This document is the canonical dash-facing contract layer. It does **not** redef
 
 ## MonitorSystem contract
 `LalaLaunch.MonitorSystem.*` is the dedicated dash-facing monitoring surface. Dashboards should bind directly to:
-- `State` (`OFF`, `ON`, or `AUTO`),
+- `State` (`OFF` when disabled, `ON` when enabled; active runtime no longer emits `AUTO`),
 - `Text`,
 - `BackgroundColour`,
 - `TextColour`,
@@ -30,7 +30,7 @@ This document is the canonical dash-facing contract layer. It does **not** redef
 
 Phase 1 exposes only the existing start/runtime fuel-health evaluation and planner-safe recovery outcomes. It does not add pit-stop monitoring or an independent gross SimHub baseline fuel check. `MonitorSystem.*` is presentation/health feedback only: it is not `Pit.Command`, does not send commands, and must not replace `Pit.Command.*` action feedback.
 
-Dashboard logic should use `MonitorSystem.Text` and the paired colour exports rather than reconstructing fuel-health conditions. The initial automatic state is `AUTO` / `MONITOR READY`; later messages follow `Docs/Internal/MonitorSystem_Messages.csv`.
+Dashboard logic should use `MonitorSystem.Text` and the paired colour exports rather than reconstructing fuel-health conditions. The persisted `Enable Monitor System` setting defaults on: enabled state starts as `ON` / `MONITOR READY` / enum `1`; disabled state is `OFF` / `MONITOR OFF` / enum `0`; re-enabling returns to the enabled ready state. Fuel-health messages publish only while enabled. WARNING/FAULT styling is red background with yellow text. Later messages follow `Docs/Internal/MonitorSystem_Messages.csv`.
 
 ## High-level dash ownership map
 ### Strategy / fuel / pace

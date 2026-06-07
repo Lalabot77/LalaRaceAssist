@@ -15,12 +15,12 @@ Branch: work
 ## Monitor System
 | Exported name | Type | Units / meaning | Update cadence | Defined in |
 | --- | --- | --- | --- | --- |
-| MonitorSystem.State | string | Monitor operating state: `OFF`, `ON`, or `AUTO`. Phase 1 runs automatically and initializes as `AUTO`; `OFF`/`ON` are reserved framework states with no Phase 1 setting/action. | On monitor output change. | `MonitorSystem.cs` state presentation + `LalaLaunch.cs` `AttachCore`. |
+| MonitorSystem.State | string | Monitor operating state: `OFF` when `Settings -> Launch Settings -> Enable Monitor System` is disabled; `ON` when enabled. The persisted setting defaults to enabled. `AUTO` is no longer emitted by active runtime behavior. | On monitor output or enable-setting change. | `MonitorSystem.cs` state presentation + `LalaLaunch.cs` setting hook/`AttachCore`. |
 | MonitorSystem.Text | string | Dash-ready monitor message. Phase 1 emits only catalogue texts: `MONITOR OFF`, `MONITOR READY`, `FUEL HEALTH OK`, `FUEL DATA CHECK`, `FUEL DATA RECOVERED`, or `FUEL DATA FAULT`. | On monitor output change. | `MonitorSystem.cs`; existing fuel-health outcome seams in `LalaLaunch.cs`. |
-| MonitorSystem.BackgroundColour / TextColour | string/string | Simple hex colours paired with the current monitor enum/text. Dashboards should consume these directly unless deliberately applying their own accessible theme. | On monitor output change. | `MonitorSystem.cs`. |
+| MonitorSystem.BackgroundColour / TextColour | string/string | Simple hex colours paired with the current monitor enum/text. WARNING/FAULT use red background (`#FF0000`) with yellow text (`#FFFF00`). Dashboards should consume these directly unless deliberately applying their own accessible theme. | On monitor output or enable-setting change. | `MonitorSystem.cs`. |
 | MonitorSystem.Enum | int | Phase 1 severity contract: `0=OFF`, `1=OK`, `2=WATCH`, `3=CAUTION`, `4=WARNING`, `5=FAULT`, `6=RECOVERED`. | On monitor output change. | `MonitorSystem.cs`. |
 
-Phase 1 reports the existing start/runtime fuel-health check only. It does not monitor pit stops, perform an independent gross SimHub baseline check, send pit commands, or replace `Pit.Command.*` feedback. The message catalogue is `Docs/Internal/MonitorSystem_Messages.csv`. `MonitorSystem.*` belongs to the existing Property Snapshot `Fuel/Strategy` group.
+Phase 1 reports the existing start/runtime fuel-health check only while `MonitorSystemEnabled` is true. Disabled state is `OFF` / `MONITOR OFF` / enum `0`; enabling resets the surface to `ON` / `MONITOR READY` / enum `1`. It does not monitor pit stops, perform an independent gross SimHub baseline check, send pit commands, or replace `Pit.Command.*` feedback. The message catalogue is `Docs/Internal/MonitorSystem_Messages.csv`. `MonitorSystem.*` belongs to the existing Property Snapshot `Fuel/Strategy` group.
 
 ## Brake
 | Exported name | Type | Units / meaning | Update cadence | Defined in |
