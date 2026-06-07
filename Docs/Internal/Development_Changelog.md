@@ -1,3 +1,10 @@
+## 2026-06-07 — PR #791 capture-window diagnostic reliability follow-up
+- Classification: **internal-only** (Car Tracking Probe diagnostic reliability only; no runtime selection, public export, dashboard JSON, or user workflow change).
+- Gated checkpoint-truth diagnostic collection on active Car Tracking Probe capture, with explicit START/STOP/RESET clearing, so pre-START or stopped-window events cannot appear in the first subsequent CSV row.
+- Reset `LastCheckpointChangeTimeSec` on invalid checkpoint/LapDistPct and checkpoint re-anchor paths, preventing stale elapsed intervals on the first valid crossing after telemetry gaps.
+- Reset latest-event same-tick fields on every truth update while preserving aggregate `*SinceSnapshot` counters for historical evidence, and changed snapshot consumption to keep an `existing/unknown` active-truth baseline when runtime checkpoint truth remains valid.
+- Property Snapshot list reviewed: yes; unchanged because this refines Car Tracking Probe CSV diagnostics only and no SimHub exports/properties are added, removed, renamed, or regrouped.
+
 ## 2026-06-07 — PR #791 checkpoint diagnostics aggregate-counter follow-up
 - Classification: **internal-only** (Car Tracking Probe diagnostic completeness only; no runtime selection, public export, dashboard JSON, or user workflow change).
 - Added bounded `*SinceSnapshot` aggregate counters for truth updates, forward/reverse truth source counts, same-tick multiple/different-gate overwrites, prior-truth overwrites, RelativeSec mismatch clears, checkpoint crossings, total skipped checkpoints, and maximum skipped checkpoints.

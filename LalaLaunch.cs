@@ -672,6 +672,7 @@ namespace LaunchPlugin
             }
 
             NormalizeCarTrackingProbeSettings(Settings);
+            _carSaEngine?.ClearCheckpointTruthDiagnosticSnapshots();
             _carTrackingProbeCsvActiveRuntime = true;
             _carTrackingProbeCsvFailed = false;
             _carTrackingProbeCsvLastWriteSessionSec = double.NaN;
@@ -681,6 +682,7 @@ namespace LaunchPlugin
         public void StopCarTrackingProbeCsv()
         {
             _carTrackingProbeCsvActiveRuntime = false;
+            _carSaEngine?.ClearCheckpointTruthDiagnosticSnapshots();
             TryFlushCarTrackingProbeCsvBuffer();
             SimHub.Logging.Current.Info("[LalaPlugin:CarTrackingProbe] CSV capture STOP.");
         }
@@ -690,6 +692,7 @@ namespace LaunchPlugin
             try
             {
                 _carTrackingProbeCsvActiveRuntime = false;
+                _carSaEngine?.ClearCheckpointTruthDiagnosticSnapshots();
                 if (!TryFlushCarTrackingProbeCsvBuffer())
                 {
                     return;
@@ -11167,7 +11170,11 @@ namespace LaunchPlugin
             {
                 hasMultipleClassOpponents = false;
             }
-            _carSaEngine?.Update(sessionTimeSec, sessionState, sessionTypeName, playerCarIdx, hasMultipleClassOpponents, carIdxLapDistPct, carIdxLap, carIdxTrackSurface, carIdxTrackSurfaceMaterial, carIdxOnPitRoad, carIdxSessionFlags, null, playerBestLapTimeSec, playerLastLapTimeSec, lapTimeEstimateSec, classEstLapTimeSec, notRelevantGapSec, debugMaster);
+            bool carTrackingProbeCaptureActive = debugMaster
+                && _carTrackingProbeCsvActiveRuntime
+                && Settings?.EnableCarTrackingProbeCsv == true
+                && !_carTrackingProbeCsvFailed;
+            _carSaEngine?.Update(sessionTimeSec, sessionState, sessionTypeName, playerCarIdx, hasMultipleClassOpponents, carIdxLapDistPct, carIdxLap, carIdxTrackSurface, carIdxTrackSurfaceMaterial, carIdxOnPitRoad, carIdxSessionFlags, null, playerBestLapTimeSec, playerLastLapTimeSec, lapTimeEstimateSec, classEstLapTimeSec, notRelevantGapSec, debugMaster, carTrackingProbeCaptureActive);
             if (_carSaEngine != null)
             {
                 UpdateCarSaTelemetryCaches(pluginManager, sessionTimeSec);

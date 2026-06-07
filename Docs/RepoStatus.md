@@ -1,3 +1,7 @@
+- 2026-06-07 PR #791 capture-window diagnostic reliability follow-up landed:
+  - checkpoint-truth diagnostic collection now follows active Car Tracking Probe capture and clears on START/STOP/RESET, preventing pre-START or stopped-window evidence from appearing in subsequent rows;
+  - invalid LapDistPct/checkpoint re-anchor paths reset diagnostic checkpoint timing, latest-event same-tick metadata resets per truth update, and CSV consumption preserves an `existing/unknown` active-truth baseline when runtime truth remains valid;
+  - runtime CarSA, Opponents, H2H, PitExit, dashboard JSON, public exports, and Property Snapshot grouping remain unchanged. Property Snapshot list reviewed: yes; no SimHub export/property changes.
 - 2026-06-07 PR #791 aggregate-counter follow-up landed:
   - Car Tracking Probe checkpoint-truth groups now include `*SinceSnapshot` counters so multiple truth/progression/overwrite/mismatch events between lower-frequency CSV rows survive in aggregate while latest-event fields still show the final event;
   - `TruthOverwroteExistingThisTick` is limited to same-tick overwrite status for the latest truth event, with `TruthOverwroteExistingSinceSnapshot` carrying the latched window-level overwrite flag;
