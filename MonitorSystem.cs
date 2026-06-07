@@ -35,8 +35,7 @@ namespace LaunchPlugin
         public bool IsFuelHealthAlertActive =>
             IsEnabled &&
             (string.Equals(DisplayText, "FUEL DATA CHECK", StringComparison.Ordinal) ||
-             string.Equals(DisplayText, "FUEL DATA FAULT", StringComparison.Ordinal) ||
-             string.Equals(DisplayText, "FUEL DATA RECOVERED", StringComparison.Ordinal));
+             string.Equals(DisplayText, "FUEL DATA FAULT", StringComparison.Ordinal));
         public bool IsPhase2BPitWarningActive =>
             IsEnabled &&
             (string.Equals(DisplayText, "REFUEL OFF", StringComparison.Ordinal) ||

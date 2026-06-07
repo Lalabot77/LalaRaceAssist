@@ -1,3 +1,11 @@
+## 2026-06-07 — MonitorSystem Phase 2B latest review follow-up
+- Classification: **both** (driver-facing warning priority/correctness plus internal Phase 2B evidence-log wording; no export, fuel/refuel calculation, planner, Pit Fuel Control, or Pit Command behavior change).
+- Narrowed fuel-health blocking to unresolved `FUEL DATA CHECK` / `FUEL DATA FAULT` only, so auto-recoverable `FUEL DATA RECOVERED` no longer suppresses urgent Phase 2B pit warnings.
+- Added known/unknown MFD refuel telemetry handling: `dpFuelFill` is read without defaulting missing values to `false`, snapshots carry `MfdRefuelKnown`, service warnings fail closed when refuel telemetry is unknown, and pit evidence logs include `mfdRefuelKnown`.
+- Off-pit-road Fuel Control mode changes now re-check CAUTION-level predictive risk while still inside the two-laps-fuel window, even after the one-shot predictive trigger previously fired clean, allowing later MFD/refuel changes to publish or clear predictive pit warnings before pit entry without per-tick scans or off-road WARNINGs.
+- Preserved Phase 2B tolerances, Fuel Control DATA log-only behavior, message texts/enums, independent `Fuel.Refuel.NextLitres` basis, fuel/refuel calculations, Strategy/planner math, Pit Fuel Control behavior, Pit Command behavior, CSV behavior, and export names. No `BASELINE SHORT`, `FUEL MODEL CHECK`, independent gross SimHub baseline maths, new exports, or Property Snapshot grouping changes were added.
+- Property Snapshot list reviewed: yes; no group change required because no SimHub exports/properties were added, removed, renamed, or regrouped.
+
 ## 2026-06-07 — MonitorSystem Phase 2B active review follow-up
 - Classification: **both** (driver-facing warning priority/correctness plus internal Phase 2B documentation; no export, fuel/refuel calculation, planner, Pit Fuel Control, or Pit Command behavior change).
 - Added a narrow fuel-health priority guard so Phase 2B pit warnings neither publish over nor clear `FUEL DATA CHECK`, `FUEL DATA FAULT`, or `FUEL DATA RECOVERED`; clean pit edges still clear only active Phase 2B pit-warning texts back to `MONITOR READY`.
