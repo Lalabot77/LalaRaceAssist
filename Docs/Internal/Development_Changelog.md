@@ -1,3 +1,29 @@
+## 2026-06-07 — PR #791 capture-window diagnostic reliability follow-up
+- Classification: **internal-only** (Car Tracking Probe diagnostic reliability only; no runtime selection, public export, dashboard JSON, or user workflow change).
+- Gated checkpoint-truth diagnostic collection on active Car Tracking Probe capture, with explicit START/STOP/RESET clearing, so pre-START or stopped-window events cannot appear in the first subsequent CSV row.
+- Reset `LastCheckpointChangeTimeSec` on invalid checkpoint/LapDistPct and checkpoint re-anchor paths, preventing stale elapsed intervals on the first valid crossing after telemetry gaps.
+- Reset latest-event same-tick fields on every truth update while preserving aggregate `*SinceSnapshot` counters for historical evidence, and changed snapshot consumption to keep an `existing/unknown` active-truth baseline when runtime checkpoint truth remains valid.
+- Property Snapshot list reviewed: yes; unchanged because this refines Car Tracking Probe CSV diagnostics only and no SimHub exports/properties are added, removed, renamed, or regrouped.
+
+## 2026-06-07 — PR #791 checkpoint diagnostics aggregate-counter follow-up
+- Classification: **internal-only** (Car Tracking Probe diagnostic completeness only; no runtime selection, public export, dashboard JSON, or user workflow change).
+- Added bounded `*SinceSnapshot` aggregate counters for truth updates, forward/reverse truth source counts, same-tick multiple/different-gate overwrites, prior-truth overwrites, RelativeSec mismatch clears, checkpoint crossings, total skipped checkpoints, and maximum skipped checkpoints.
+- Latest-event fields continue to show the most recent event, while aggregate counters preserve useful evidence when multiple checkpoint/truth events occur between lower-frequency Car Tracking Probe rows; counters clear only with the existing post-row diagnostic consume.
+- `TruthOverwroteExistingThisTick` now only reflects same-tick overwrite status for the latest truth event, with `TruthOverwroteExistingSinceSnapshot` carrying the latched window-level overwrite flag.
+- Property Snapshot list reviewed: yes; unchanged because this adds Car Tracking Probe CSV diagnostics only and no SimHub exports/properties are added, removed, renamed, or regrouped.
+
+## 2026-06-07 — PR #791 checkpoint diagnostics review follow-up
+- Classification: **internal-only** (Car Tracking Probe diagnostic reliability only; no runtime selection, public export, dashboard JSON, or user workflow change).
+- Latched checkpoint progression, truth overwrite, and RelativeSec mismatch evidence across telemetry ticks until the next successful Car Tracking Probe row snapshots all four target groups; the bounded diagnostic window is cleared only after that row is appended to the existing buffer.
+- Race-start latch reset now clears all new progression/timing fields including `LastCheckpointChangeTimeSec`; Soft Debug disabled ticks clear pending truth provenance so re-enable cannot expose stale events.
+- Preserved `TruthSource` as forward/reverse event provenance and left the existing precision `CandidateSource` responsible for identifying `checkpoint_truth` versus `checkpoint_filtered`.
+- Property Snapshot list reviewed: yes; unchanged because this refines diagnostics only in Car Tracking Probe CSV and no SimHub exports/properties are added, removed, renamed, or regrouped.
+
+## 2026-06-07 — CarSA checkpoint truth event diagnostics
+- Classification: **internal-only** (bounded Car Tracking Probe CSV provenance expansion; no runtime selection, public export, dashboard JSON, or user workflow change).
+- Added read-only checkpoint progression and truth-event diagnostic state for the selected Ahead01P/Behind01P targets and configured Probe A/B identities, including skipped-index evidence, forward/reverse source, gate/timestamp/lap provenance, raw/normalized/directional values, TrackSec correlation, same-tick overwrite metadata, prior truth, RelativeSec mismatch clearing, and precision candidate difference/error ratio.
+- Extended only the existing buffered `CarTrackingProbe_<Track>_<Timestamp>.csv` schema; checkpoint crossing detection, 60-checkpoint count, truth generation/overwrite ordering, filtering, RelativeSec, precision, TrackSec, Opponents, H2H, PitExit, dashboard JSON, and public exports remain unchanged.
+- Property Snapshot list reviewed: yes; unchanged because this adds raw/checkpoint diagnostics only to Car Tracking Probe CSV and no SimHub exports/properties are added, removed, renamed, or regrouped.
 ## 2026-06-07 - MonitorSystem Phase 2A pit-stop trigger framework
 - Classification: **both** (internal pit-stop evidence framework and driver-visible settings placement correction; no new driver warnings, exports, command behavior, fuel math, or refuel math).
 - Added a private MonitorSystem Phase 2A observer in `LalaLaunch.cs` that records edge-only trigger logs for `FuelControlModeChanged`, `FuelControlDataChanged`, `PredictiveTwoLapsFuelRemaining`, `PitRoadEntry`, `PitBoxEntry`, and `PitRoadExit`.
