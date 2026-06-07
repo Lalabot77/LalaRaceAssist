@@ -16270,6 +16270,11 @@ namespace LaunchPlugin
                 _monitorPitLastOnPitRoad = onPitRoad;
                 _monitorPitLastInPitBox = inPitBox;
                 _monitorPitPhase = phase;
+                if (onPitRoad)
+                {
+                    _monitorPitEntrySnapshot = snapshot;
+                    LogMonitorPitTrigger("PitRoadSnapshotSeeded", snapshot, "primed while already on pit road");
+                }
             }
             else
             {
@@ -16277,10 +16282,14 @@ namespace LaunchPlugin
 
                 if (fuelControlMode != _monitorPitLastFuelControlMode)
                 {
-                    MonitorPitWarningResult warning = (onPitRoad || inPitStall || inPitBox)
+                    bool serviceContext = onPitRoad || inPitStall || inPitBox;
+                    MonitorPitWarningResult warning = serviceContext
                         ? EvaluateMonitorPitServiceWarnings(snapshot, MonitorSeverity.Warning)
                         : MonitorPitWarningResult.None;
-                    PublishMonitorPitWarning(warning);
+                    if (serviceContext)
+                    {
+                        PublishMonitorPitWarningOrClear(warning);
+                    }
                     LogMonitorPitTrigger("FuelControlModeChanged", snapshot, string.Format(
                         CultureInfo.InvariantCulture,
                         "from={0} to={1}",
@@ -16301,21 +16310,21 @@ namespace LaunchPlugin
                 {
                     _monitorPitEntrySnapshot = snapshot;
                     MonitorPitWarningResult warning = EvaluateMonitorPitServiceWarnings(snapshot, MonitorSeverity.Warning);
-                    PublishMonitorPitWarning(warning);
+                    PublishMonitorPitWarningOrClear(warning);
                     LogMonitorPitTrigger("PitRoadEntry", snapshot, "OnPitRoad false->true", warning);
                 }
 
                 if (!_monitorPitLastInPitBox && inPitBox)
                 {
                     MonitorPitWarningResult warning = EvaluateMonitorPitServiceWarnings(snapshot, MonitorSeverity.Warning);
-                    PublishMonitorPitWarning(warning);
+                    PublishMonitorPitWarningOrClear(warning);
                     LogMonitorPitTrigger("PitBoxEntry", snapshot, "pit-box seam false->true", warning);
                 }
 
                 if (_monitorPitLastOnPitRoad && !onPitRoad)
                 {
                     MonitorPitWarningResult warning = EvaluateMonitorPitExitWarning(snapshot);
-                    PublishMonitorPitWarning(warning);
+                    PublishMonitorPitWarningOrClear(warning);
                     LogMonitorPitTrigger("PitRoadExit", snapshot, "OnPitRoad true->false; predictive reset", warning);
                     _monitorPitEntrySnapshot = null;
                     _monitorPitPredictiveTwoLapsTriggeredThisStint = false;
@@ -16341,7 +16350,7 @@ namespace LaunchPlugin
             {
                 _monitorPitPredictiveTwoLapsTriggeredThisStint = true;
                 MonitorPitWarningResult warning = EvaluateMonitorPitServiceWarnings(snapshot, MonitorSeverity.Caution);
-                PublishMonitorPitWarning(warning);
+                PublishMonitorPitWarningOrClear(warning);
                 LogMonitorPitTrigger("PredictiveTwoLapsFuelRemaining", snapshot, string.Format(
                     CultureInfo.InvariantCulture,
                     "lapsRemainingInTank={0:0.00} threshold={1:0.00}",
@@ -16450,14 +16459,23 @@ namespace LaunchPlugin
                 snapshot.CurrentFuel + MonitorPitRefuelCompleteToleranceLitres >= _monitorPitEntrySnapshot.PluginFuelOnExit;
         }
 
-        private void PublishMonitorPitWarning(MonitorPitWarningResult warning)
+        private void PublishMonitorPitWarningOrClear(MonitorPitWarningResult warning)
         {
-            if (!warning.HasWarning || _monitorSystem == null)
+            if (_monitorSystem == null)
             {
                 return;
             }
 
-            _monitorSystem.Publish(warning.Severity, warning.Text);
+            if (warning.HasWarning)
+            {
+                _monitorSystem.Publish(warning.Severity, warning.Text);
+                return;
+            }
+
+            if (_monitorSystem.IsPhase2BPitWarningActive)
+            {
+                _monitorSystem.Publish(MonitorSeverity.Ok, "MONITOR READY");
+            }
         }
 
         private MonitorPitStopSnapshot BuildMonitorPitStopSnapshot(
@@ -16471,7 +16489,14 @@ namespace LaunchPlugin
             bool inPitBox)
         {
             double currentFuel = data?.NewData?.Fuel ?? _lastFuelLevel;
-            bool pluginRefuelValid = IsFiniteNonNegative(Pit_WillAdd) && IsFiniteNonNegative(Pit_FuelOnExit);
+            bool currentFuelValid = IsFiniteNonNegative(currentFuel);
+            double pluginNextLitres = Fuel_Refuel_Valid && IsFiniteNonNegative(Fuel_Refuel_NextLitres)
+                ? Fuel_Refuel_NextLitres
+                : double.NaN;
+            bool pluginRefuelValid = IsFiniteNonNegative(pluginNextLitres);
+            double pluginFuelOnExit = pluginRefuelValid && currentFuelValid
+                ? currentFuel + pluginNextLitres
+                : double.NaN;
 
             return new MonitorPitStopSnapshot
             {
@@ -16479,14 +16504,14 @@ namespace LaunchPlugin
                 SessionTimeSec = sessionTimeSec,
                 SessionType = string.IsNullOrWhiteSpace(sessionType) ? "unknown" : sessionType,
                 SessionState = sessionState,
-                CurrentFuel = IsFiniteNonNegative(currentFuel) ? currentFuel : double.NaN,
+                CurrentFuel = currentFuelValid ? currentFuel : double.NaN,
                 MfdRefuelEnabled = SafeReadBool(pluginManager, "DataCorePlugin.GameRawData.Telemetry.dpFuelFill", false),
                 MfdFuelRequest = SafeReadDouble(pluginManager, "DataCorePlugin.GameRawData.Telemetry.PitSvFuel", double.NaN),
                 FuelControlMode = _pitFuelControlEngine?.ModeText ?? FormatMonitorFuelControlMode(_pitFuelControlEngine?.Mode ?? PitFuelControlMode.Off),
                 FuelControlDataMode = _pitFuelControlEngine?.DataText ?? FormatMonitorFuelControlData(_pitFuelControlEngine?.Data ?? PitFuelControlData.Live),
                 PluginRefuelValid = pluginRefuelValid,
-                PluginNextLitres = pluginRefuelValid ? Pit_WillAdd : double.NaN,
-                PluginFuelOnExit = pluginRefuelValid ? Pit_FuelOnExit : double.NaN,
+                PluginNextLitres = pluginNextLitres,
+                PluginFuelOnExit = pluginFuelOnExit,
                 OnPitRoad = onPitRoad,
                 InPitStall = inPitStall,
                 InPitBox = inPitBox

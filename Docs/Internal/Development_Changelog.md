@@ -1,3 +1,11 @@
+## 2026-06-07 — MonitorSystem Phase 2B PR #792 review follow-up
+- Classification: **both** (driver-facing warning correctness and internal Phase 2B evidence-log documentation; no export, fuel/refuel calculation, planner, Pit Fuel Control, or Pit Command behavior change).
+- Rebased Phase 2B pit-stop warning checks on the independent existing runtime recommendation seam `Fuel.Refuel.NextLitres` / `Fuel.Refuel.Valid` instead of `Pit_WillAdd` / current MFD-selected add mirrors. This allows `REFUEL OFF` to remain eligible when refuel is disabled and makes `MFD FUEL LOW` compare the MFD request against an independent recommendation. Invalid/missing recommendations fail closed.
+- Added narrow MonitorSystem ownership detection for active Phase 2B pit-warning texts; relevant clean evaluation edges now clear only `REFUEL OFF`, `MFD FUEL LOW`, or `EXIT FUEL SHORT` back to `MONITOR READY`, leaving `FUEL DATA CHECK`, `FUEL DATA FAULT`, and `FUEL DATA RECOVERED` untouched.
+- First-tick priming while already on pit road now seeds the pit-entry snapshot and logs `PitRoadSnapshotSeeded` without warning publication, so later pit-road exit can still compare actual fuel against the seeded expected fuel-on-exit.
+- Preserved Phase 2B tolerances/guard style, edge-only warning publication, Fuel Control DATA log-only behavior, message texts/enums, fuel/refuel calculations, Strategy/planner math, Pit Fuel Control behavior, Pit Command behavior, CSV behavior, and export names. No `BASELINE SHORT`, `FUEL MODEL CHECK`, independent gross SimHub baseline maths, new exports, or Property Snapshot grouping changes were added.
+- Property Snapshot list reviewed: yes; no group change required because no SimHub exports/properties were added, removed, renamed, or regrouped.
+
 ## 2026-06-07 — MonitorSystem Phase 2B pit-stop warning checks
 - Classification: **both** (driver-facing MonitorSystem pit-stop warning text plus internal Phase 2 trigger/check documentation).
 - Added edge-triggered `REFUEL OFF`, `MFD FUEL LOW`, and `EXIT FUEL SHORT` MonitorSystem messages using only Phase 2A pit-stop snapshots/evidence and existing plugin refuel recommendation seams (`PluginNextLitres`, `PluginFuelOnExit`).

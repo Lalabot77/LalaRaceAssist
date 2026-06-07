@@ -28,6 +28,12 @@
 
 # Repo Status
 
+- 2026-06-07 MonitorSystem Phase 2B PR #792 review follow-up landed:
+  - pit-stop warnings now use the existing independent `Fuel.Refuel.NextLitres` / `Fuel.Refuel.Valid` runtime recommendation seam rather than `Pit_WillAdd` / MFD-selected add mirrors, so `REFUEL OFF` remains eligible while refuel is disabled and `MFD FUEL LOW` compares the MFD request against an independent recommendation;
+  - clean relevant service/exit edges clear active Phase 2B pit-warning text back to `MONITOR READY` without clearing fuel-health monitor texts;
+  - first-tick priming while already on pit road seeds the pit-entry snapshot and logs `PitRoadSnapshotSeeded` without publishing a priming warning, preserving pit-exit shortfall checks after reload/start-on-pit-road;
+  - no `BASELINE SHORT`, `FUEL MODEL CHECK`, gross SimHub baseline maths, fuel/refuel/planner/pit-command behavior, CSV writer, new exports, or Property Snapshot grouping changes. Property Snapshot list reviewed: yes; no group change because no SimHub exports/properties were added, removed, renamed, or regrouped.
+
 - 2026-06-07 MonitorSystem Phase 2B pit-stop warning checks landed:
   - added edge-triggered driver-facing `REFUEL OFF`, `MFD FUEL LOW`, and `EXIT FUEL SHORT` MonitorSystem warnings using only Phase 2A snapshots and existing plugin refuel seams;
   - predictive two-laps-fuel checks publish CAUTION, pit-road/boxed service checks publish WARNING, and pit-exit shortfall publishes WARNING;
