@@ -1,7 +1,7 @@
 # Fuel Model
 
 Validated against commit: HEAD
-Last updated: 2026-06-03
+Last updated: 2026-06-07
 Branch: work
 
 ## Purpose
@@ -270,6 +270,15 @@ Runtime recovery now distinguishes between:
 
 Planner-safe targeted recovery is intended to rebuild live-cap/runtime truth without silently clearing Strategy manual overrides or preset intent.
 Manual recovery may short-circuit on planner-safe success only while an active live session is present; outside active live session, manual reset continues into the broad reset path.
+
+Phase 1 `MonitorSystem.*` visibility is attached at the existing health-result seams without changing this ownership or recovery logic. Publication occurs only while the persisted `MonitorSystemEnabled` setting is enabled; disabling the monitor does not disable or alter the underlying fuel-health checks/recovery:
+- an existing healthy queued check publishes `FUEL HEALTH OK`,
+- an existing unhealthy observation publishes `FUEL DATA CHECK`,
+- an attempted recovery publishes `FUEL DATA RECOVERED` or `FUEL DATA FAULT` from the existing health verdict; deferred/not-attempted recovery retains `FUEL DATA CHECK`.
+
+The monitor does not calculate fuel, change the two-sample unhealthy streak, change the 450 ms evaluation throttle or two-second recovery throttle, alter runtime values, or own pit-stop/baseline warning checks. A transient `FUEL DATA CHECK` clears to `FUEL HEALTH OK` when a later evaluation satisfies the existing valid healthy pass basis. Recovery rejected by the existing throttle (or otherwise not attempted) remains WATCH rather than being classified as FAULT; `FUEL DATA FAULT` is reserved for an attempted recovery whose existing post-refresh health verdict is false. Manual targeted recovery publishes the same outcome mapping while retaining its existing successful early-return and unsuccessful/deferred broad-reset behavior.
+
+Phase 2A adds pit-stop trigger evidence only. It observes existing Fuel Model/Pit Fuel Control/Pit Timing state to log edge-only trigger moments and freezes a lightweight pit-entry snapshot for later checks. It does not change `Fuel.Refuel.*`, `Fuel.Pit.*`, fuel-health recovery, Pit Fuel Control DATA/MODE/SOURCE behavior, or pit command sending, and it does not emit any new monitor text.
 
 Driving → Race transitions can seed race state from the just-learned baseline instead of forcing a full cold start. Those seeds intentionally do not enter `Fuel.Burn.Analysis.*`, which remains fresh-sample-only.
 

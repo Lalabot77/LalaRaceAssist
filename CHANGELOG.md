@@ -24,6 +24,7 @@ For internal between-release development history, see `Docs/Internal/Development
 - **Pit command feedback contract** now standardizes dash severity exports (`Pit.Command.Severity`, `Pit.Command.SeverityText`), keeps `Pit.Command.Active` as a restartable hold pulse (including repeated identical message retriggers), suppresses lower-severity feedback while higher-severity feedback is still active, and uses specific warning texts for window/chat/send/confirmation failures.
 - **Pit feedback severity visual mapping** updated for dashboards: `Caution` is steady (no blink) and `Warning` blinks for 1 second at 750ms.
 - **Dashboard/navigation documentation** and Overview-first workflow guidance were aligned across user docs.
+- **Monitor System setting placement** moved from Launch UI / Bindings to Dash Control -> Global Dash Functions -> General. Phase 2A pit-stop monitoring now records trigger evidence in logs only, with no driver-facing pit-stop warnings yet.
 
 ### Fixed
 - Fixed PreRace/Friends export registration so dashboards should use single-prefixed `LalaLaunch.PreRace.*` and `LalaLaunch.Friends.Count` names instead of accidental `LalaLaunch.LalaLaunch.*` names.

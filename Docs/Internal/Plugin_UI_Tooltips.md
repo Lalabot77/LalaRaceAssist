@@ -1,7 +1,7 @@
 # Plugin UI Tooltips
 
 Validated against commit: HEAD
-Last updated: 2026-06-04
+Last updated: 2026-06-07
 Branch: work
 
 ## CopyProfileDialog.xaml
@@ -20,12 +20,15 @@ Branch: work
 - `Toggle Strategy Dash Mode` tooltip says the binding toggles the Strategy Dash between Advanced and Simple and that current state is exported as `LalaLaunch.StrategyDash.AdvancedMode` (`true` = Advanced, `false` = Simple).
 - League Class resolver precedence, fallback behavior, and cohort semantics are documented canonically in `Docs/Subsystems/League_Class_System.md` (tooltips should stay workflow-focused).
 - `Plugin Quick Reset` / `PrimaryDashMode` binding is a manual plugin recovery trigger (runtime re-arm/reset seam) while preserving the existing action name for compatibility.
-- `Global Dash Functions` -> General: `Auto screen selection at session start` automatically switches dash screens when a session starts based on context.
+- `Global Dash Functions` -> General: `Auto screen selection at session start` automatically switches dash screens when a session starts based on context; `Enable Monitor System` controls the persisted dashboard-facing MonitorSystem status and fuel-health messages.
 - `Global Dash Functions` -> Dark Mode: `Dark Mode` selector uses Off / Manual / Auto, `Dark Mode Brightness` sets base brightness, `Use Lovely True Dark` follows Lovely when available, and `Toggle Dark Mode` remains here as the dark-mode-specific binding row.
 - `Global Dash Functions` -> Fuel: `Fuel Ready Confidence` sets the live-fuel readiness threshold, `Pit-in Fuel Reserve` sets the stint reserve margin, `Fuel Data Plan Mode` is a two-state toggle for Pit Fuel Control DATA (OFF=`LIVE`, ON=`PLAN` for PUSH/SAVE memory/profile assumptions), and `DATA PLAN Push/Save Guard (%)` clamps DATA PLAN PUSH/SAVE burn around live stable NORM burn.
 - `Dash Visibility` keeps the existing visibility matrix for Launch Assist, Pit Assists, Automatic Pit Screen, Rejoin Assist, Verbose Race Messages, Race Flags, Radio Messages, and Traffic Alerts, but the release-facing column headers are now `DRIVER`, `STRATEGY`, and `OVERLAY`.
 - `Dash Visibility` header tooltips make the short labels explicit: `DRIVER = Lala Race Dash`, `STRATEGY = Lala Strategy Dash`, and `OVERLAY = overlay surfaces`.
 - `Launch Mode`, `Event Marker`, and `Post-Launch Results Display Time` no longer appear in Dash Control after this tidy-up.
+
+## LaunchPluginSettingsUI.xaml
+- `Enable Monitor System` no longer appears in the Launch UI / Bindings section; the persisted setting is owned by Dash Control global functions.
 
 ## FuelCalculatorView.xaml
 - Main planner navigation: top-level `FUEL` tab is now `STRATEGY`, and preset management is opened from the `Presets...` button beside the `Race Preset` selector instead of a separate top-level `PRESETS` tab.

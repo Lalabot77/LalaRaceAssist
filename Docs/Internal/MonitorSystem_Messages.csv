@@ -1,0 +1,7 @@
+Enum,Severity,Text,Category,Trigger,Description,DriverAction,AutoRecoverable
+0,OFF,MONITOR OFF,System,Disabled,Monitor system disabled,None,No
+1,OK,MONITOR READY,System,Enabled,Monitor system enabled and no current caution,None,Yes
+1,OK,FUEL HEALTH OK,Fuel,StartupFuelHealth,Existing fuel health check passed,None,Yes
+2,WATCH,FUEL DATA CHECK,Fuel,StartupFuelHealth,Existing fuel health check detected questionable runtime fuel data,Check fuel display,No
+6,RECOVERED,FUEL DATA RECOVERED,Fuel,StartupFuelHealth,Existing fuel health recovery refreshed runtime fuel data,None,Yes
+5,FAULT,FUEL DATA FAULT,Fuel,StartupFuelHealth,Existing fuel health check failed after recovery,Review fuel data before racing,No

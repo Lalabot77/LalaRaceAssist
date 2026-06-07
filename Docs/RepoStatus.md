@@ -44,6 +44,34 @@
 
 # Repo Status
 
+- 2026-06-07 MonitorSystem Phase 2A pit-stop trigger framework landed:
+  - added private edge-only pit-stop monitor triggers for Fuel Control mode changes, DATA changes, predictive two-laps-fuel remaining, pit-road entry, pit-box entry, and pit-road exit;
+  - pit-road entry freezes an internal evidence snapshot for later Phase 2B checks, but no race-risk warning maths, baseline checks, new monitor text, CSV writer, pit commands, automatic recovery, fuel/refuel math, Pit Fuel Control, or Pit Command behavior changed;
+  - moved `Enable Monitor System` from Launch UI / Bindings to `Dash Control -> Global Dash Functions -> General`; persisted setting semantics and ON/OFF outputs remain unchanged;
+  - Property Snapshot list reviewed: yes; no group change because no SimHub exports/properties were added or changed. Message catalogue reviewed: unchanged.
+
+- 2026-06-07 MonitorSystem pre-Phase 2 cleanup landed:
+  - added persisted default-on `MonitorSystemEnabled` and `Enable Monitor System` Launch Settings checkbox with immediate saved state changes;
+  - enabled/default output is `ON` / `MONITOR READY` / enum `1`, disabled output is `OFF` / `MONITOR OFF` / enum `0`, and active runtime no longer emits `AUTO`; fuel-health messages publish only while enabled;
+  - WARNING/FAULT colours are red background with yellow text; exports, enum values, message texts, fuel-health logic/recovery, fuel/refuel/planner math, Pit Fuel Control, and Pit Command remain unchanged; no pit-stop monitoring, baseline checks, or debug CSV added;
+  - Property Snapshot list reviewed: yes; no group change because `MonitorSystem.*` remains in Fuel/Strategy.
+
+- 2026-06-07 PR #790 deferred fuel-health retry pending-state follow-up landed:
+  - throttled/deferred automatic recovery now retains the pending health-check flag/reason and unhealthy streak, preserving transition-gap retry eligibility; attempted recovery and valid healthy-pass clearing remain unchanged;
+  - no trigger, health predicate, timing threshold, recovery side effect, message/export, fuel/refuel/planner, Pit Fuel Control, or Pit Command change. Property Snapshot list reviewed: yes; no group change.
+
+- 2026-06-07 PR #790 MonitorSystem fuel-health outcome follow-up landed:
+  - transient `FUEL DATA CHECK` WATCH now clears on the next evaluation satisfying the existing valid healthy pass basis even if no queued health check remains; existing pass logging remains pending-check-only;
+  - planner-safe recovery distinguishes deferred/not-attempted from attempted failure, so throttle or missing-manager deferrals retain WATCH and only an attempted unhealthy result publishes `FUEL DATA FAULT`;
+  - manual targeted recovery now publishes RECOVERED/FAULT/WATCH consistently while preserving successful early return and failed/deferred broad-reset fall-through; fuel-health triggers, predicates, timing, side effects, fuel/refuel/planner math, Pit Fuel Control, Pit Command, messages, and exports remain unchanged;
+  - Property Snapshot list reviewed: yes; no group change because `MonitorSystem.*` remains in Fuel/Strategy. Message catalogue reviewed: unchanged.
+
+- 2026-06-07 MonitorSystem Phase 1 framework + fuel-health visibility migration landed:
+  - added independent `MonitorSystem.cs` and five dash exports: `LalaLaunch.MonitorSystem.State`, `.Text`, `.BackgroundColour`, `.TextColour`, and `.Enum`; automatic startup state is `MONITOR READY`;
+  - existing runtime fuel-health outcomes now publish `FUEL HEALTH OK`, `FUEL DATA CHECK`, `FUEL DATA RECOVERED`, or `FUEL DATA FAULT` while preserving existing logs, trigger conditions, checks, streak/timing thresholds, and planner-safe recovery behavior;
+  - no fuel/refuel/planner/pit-control/pit-command math or behavior changed; no pit-stop monitor, independent gross SimHub baseline check, monitor debug CSV, or automatic command sending was added;
+  - dashboard/inventory/fuel docs and `Docs/Internal/MonitorSystem_Messages.csv` define the Phase 1 contract. Property Snapshot list reviewed: yes; `MonitorSystem.*` is in the existing Fuel/Strategy group.
+
 - 2026-06-06 H2HTrack LiveGapSec TrackSec alignment landed:
   - H2HTrack selectors now carry the selected CarSA slot directional `Gap.TrackSec` into H2H, and `H2HTrack.Ahead/Behind.LiveGapSec` publishes that magnitude using the existing positive H2HTrack display convention instead of recomputing an independent full race-progress gap.
   - Invalid/non-finite selected TrackSec publishes the existing safe zero live-gap value rather than falling back to the old formula; H2HTrack identity, validity rules, active segment, lap summaries, and CarSA-cache sector outputs remain unchanged.

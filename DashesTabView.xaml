@@ -56,6 +56,10 @@
                     <styles:SHToggleCheckbox Content="Auto screen selection at session start"
                                              IsChecked="{Binding Settings.EnableAutoDashSwitch, Mode=TwoWay}"
                                              ToolTip="Automatically switch dash screens when a session starts based on context." />
+                    <styles:SHToggleCheckbox Content="Enable Monitor System"
+                                             Margin="0,8,0,0"
+                                             IsChecked="{Binding Settings.MonitorSystemEnabled, Mode=TwoWay}"
+                                             ToolTip="Enable the dashboard-facing MonitorSystem status and fuel-health messages." />
 
                     <Separator Margin="0,12,0,12" />
 
