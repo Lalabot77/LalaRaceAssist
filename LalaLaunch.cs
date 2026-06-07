@@ -9945,15 +9945,15 @@ namespace LaunchPlugin
                     _monitorSystem.Publish(
                         recovered ? MonitorSeverity.Recovered : MonitorSeverity.Fault,
                         recovered ? "FUEL DATA RECOVERED" : "FUEL DATA FAULT");
+                    _fuelRuntimeHealthCheckPending = false;
+                    _fuelRuntimeHealthPendingReason = string.Empty;
+                    _fuelRuntimeUnhealthyStreak = recovered ? 0 : 1;
                 }
                 else
                 {
                     _monitorSystem.Publish(MonitorSeverity.Watch, "FUEL DATA CHECK");
                 }
 
-                _fuelRuntimeHealthCheckPending = false;
-                _fuelRuntimeHealthPendingReason = string.Empty;
-                _fuelRuntimeUnhealthyStreak = recovered ? 0 : 1;
                 return;
             }
 

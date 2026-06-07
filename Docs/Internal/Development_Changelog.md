@@ -1,3 +1,8 @@
+## 2026-06-07 — PR #790 deferred fuel-health retry pending-state follow-up
+- Classification: **internal-only correctness follow-up** (existing MonitorSystem messages/exports; no fuel, planner, pit-control, or command behavior change).
+- Automatic planner-safe recovery deferral now retains `_fuelRuntimeHealthCheckPending`, its reason, and the current unhealthy streak so a transition-gap-only check remains eligible for the next bounded retry; attempted recovery still clears pending state, and the existing valid healthy pass still clears pending state while publishing `FUEL HEALTH OK`.
+- Property Snapshot list reviewed: yes; no group change because no exports were added, removed, renamed, or regrouped.
+
 ## 2026-06-07 — PR #790 MonitorSystem fuel-health outcome follow-up
 - Classification: **both** (dash-facing fuel-health status correctness + internal recovery-result distinction; no export names, message texts/enums, fuel logic, or command behavior changes).
 - A prior `FUEL DATA CHECK` WATCH now clears to `FUEL HEALTH OK` on the next evaluation that satisfies the existing healthy pass basis, even when the queued-check flag was already cleared; the existing passed log remains queued-check-only.

@@ -28,6 +28,10 @@
 
 # Repo Status
 
+- 2026-06-07 PR #790 deferred fuel-health retry pending-state follow-up landed:
+  - throttled/deferred automatic recovery now retains the pending health-check flag/reason and unhealthy streak, preserving transition-gap retry eligibility; attempted recovery and valid healthy-pass clearing remain unchanged;
+  - no trigger, health predicate, timing threshold, recovery side effect, message/export, fuel/refuel/planner, Pit Fuel Control, or Pit Command change. Property Snapshot list reviewed: yes; no group change.
+
 - 2026-06-07 PR #790 MonitorSystem fuel-health outcome follow-up landed:
   - transient `FUEL DATA CHECK` WATCH now clears on the next evaluation satisfying the existing valid healthy pass basis even if no queued health check remains; existing pass logging remains pending-check-only;
   - planner-safe recovery distinguishes deferred/not-attempted from attempted failure, so throttle or missing-manager deferrals retain WATCH and only an attempted unhealthy result publishes `FUEL DATA FAULT`;
