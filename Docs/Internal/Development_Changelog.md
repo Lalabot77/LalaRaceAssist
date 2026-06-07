@@ -1,3 +1,10 @@
+## 2026-06-07 — PR #791 checkpoint diagnostics review follow-up
+- Classification: **internal-only** (Car Tracking Probe diagnostic reliability only; no runtime selection, public export, dashboard JSON, or user workflow change).
+- Latched checkpoint progression, truth overwrite, and RelativeSec mismatch evidence across telemetry ticks until the next successful Car Tracking Probe row snapshots all four target groups; the bounded diagnostic window is cleared only after that row is appended to the existing buffer.
+- Race-start latch reset now clears all new progression/timing fields including `LastCheckpointChangeTimeSec`; Soft Debug disabled ticks clear pending truth provenance so re-enable cannot expose stale events.
+- Preserved `TruthSource` as forward/reverse event provenance and left the existing precision `CandidateSource` responsible for identifying `checkpoint_truth` versus `checkpoint_filtered`.
+- Property Snapshot list reviewed: yes; unchanged because this refines diagnostics only in Car Tracking Probe CSV and no SimHub exports/properties are added, removed, renamed, or regrouped.
+
 ## 2026-06-07 — CarSA checkpoint truth event diagnostics
 - Classification: **internal-only** (bounded Car Tracking Probe CSV provenance expansion; no runtime selection, public export, dashboard JSON, or user workflow change).
 - Added read-only checkpoint progression and truth-event diagnostic state for the selected Ahead01P/Behind01P targets and configured Probe A/B identities, including skipped-index evidence, forward/reverse source, gate/timestamp/lap provenance, raw/normalized/directional values, TrackSec correlation, same-tick overwrite metadata, prior truth, RelativeSec mismatch clearing, and precision candidate difference/error ratio.

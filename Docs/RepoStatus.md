@@ -1,3 +1,7 @@
+- 2026-06-07 PR #791 checkpoint diagnostics review follow-up landed:
+  - checkpoint progression/overwrite/mismatch evidence now survives telemetry ticks until a successful Car Tracking Probe row consumes it, then clears so the same event is not repeatedly reported;
+  - race-start reset clears diagnostic checkpoint timing/progression, Soft Debug off clears pending provenance, and `TruthSource` remains forward/reverse event provenance while precision `CandidateSource` remains separate;
+  - runtime CarSA, Opponents, H2H, PitExit, dashboard JSON, public exports, and Property Snapshot grouping remain unchanged. Property Snapshot list reviewed: yes; no SimHub export/property changes.
 - 2026-06-07 CarSA checkpoint truth event diagnostics landed:
   - Car Tracking Probe CSV now includes bounded checkpoint progression, truth source/gate/timestamp/lap provenance, normalized/directional values, TrackSec comparison, same-tick overwrite/prior-truth evidence, RelativeSec mismatch-clearing evidence, and precision difference/error fields for Ahead01P, Behind01P, Probe A, and Probe B;
   - instrumentation is read-only and leaves the 60-checkpoint model, crossing detection, truth calculation/overwrite ordering, RelativeSec, precision, TrackSec, Opponents, H2H, PitExit, dashboard JSON, public exports, and Property Snapshot unchanged;

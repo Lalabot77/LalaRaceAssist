@@ -13500,6 +13500,7 @@ namespace LaunchPlugin
                 AppendCarTrackingProbeCorrelationCells(cells);
 
                 _carTrackingProbeCsvBuffer.Append(BuildCsvLine(cells)).AppendLine();
+                _carSaEngine?.ConsumeCheckpointTruthDiagnosticSnapshots();
                 _carTrackingProbeCsvLastWriteSessionSec = sessionTimeSec;
                 _carTrackingProbeCsvPendingLines++;
                 if (_carTrackingProbeCsvPendingLines >= 20 || _carTrackingProbeCsvBuffer.Length >= 8192)
@@ -13770,10 +13771,14 @@ namespace LaunchPlugin
             AddCsvCell(cells, FormatCsvDouble(carOutputs?.Behind01PrecisionGapSec ?? double.NaN, "F3"));
             AppendPrecisionGapDiagnosticCells(cells, carOutputs?.Ahead01PrecisionDiagnostic);
             AppendPrecisionGapDiagnosticCells(cells, carOutputs?.Behind01PrecisionDiagnostic);
-            AppendCheckpointTruthDiagnosticCells(cells, carAhead?.CarIdx ?? -1, carAhead?.GapTrackSec ?? double.NaN, carOutputs?.Ahead01PrecisionDiagnostic);
-            AppendCheckpointTruthDiagnosticCells(cells, carBehind?.CarIdx ?? -1, carBehind?.GapTrackSec ?? double.NaN, carOutputs?.Behind01PrecisionDiagnostic);
-            AppendCheckpointTruthDiagnosticCells(cells, Settings?.CarTrackingProbeACarIdx ?? -1, ResolveCurrentCarSaTrackSecForCarIdx(Settings?.CarTrackingProbeACarIdx ?? -1), null);
-            AppendCheckpointTruthDiagnosticCells(cells, Settings?.CarTrackingProbeBCarIdx ?? -1, ResolveCurrentCarSaTrackSecForCarIdx(Settings?.CarTrackingProbeBCarIdx ?? -1), null);
+            int aheadDiagnosticCarIdx = carAhead?.CarIdx ?? -1;
+            int behindDiagnosticCarIdx = carBehind?.CarIdx ?? -1;
+            int probeADiagnosticCarIdx = Settings?.CarTrackingProbeACarIdx ?? -1;
+            int probeBDiagnosticCarIdx = Settings?.CarTrackingProbeBCarIdx ?? -1;
+            AppendCheckpointTruthDiagnosticCells(cells, aheadDiagnosticCarIdx, carAhead?.GapTrackSec ?? double.NaN, carOutputs?.Ahead01PrecisionDiagnostic);
+            AppendCheckpointTruthDiagnosticCells(cells, behindDiagnosticCarIdx, carBehind?.GapTrackSec ?? double.NaN, carOutputs?.Behind01PrecisionDiagnostic);
+            AppendCheckpointTruthDiagnosticCells(cells, probeADiagnosticCarIdx, ResolveCurrentCarSaTrackSecForCarIdx(probeADiagnosticCarIdx), null);
+            AppendCheckpointTruthDiagnosticCells(cells, probeBDiagnosticCarIdx, ResolveCurrentCarSaTrackSecForCarIdx(probeBDiagnosticCarIdx), null);
             AddCsvCell(cells, FormatCsvOptionalInt(opp?.Ahead1?.CarIdx ?? -1, -1));
             AddCsvCell(cells, FormatCsvOptionalInt(opp?.Behind1?.CarIdx ?? -1, -1));
             AddCsvCell(cells, FormatCsvDouble(opp?.Ahead1?.GapRelativeSec ?? double.NaN, "F3"));
@@ -13834,11 +13839,7 @@ namespace LaunchPlugin
             }
 
             string truthSource = diagnostic.TruthSource ?? "none";
-            if (precisionDiagnostic != null && string.Equals(precisionDiagnostic.CandidateSource, "checkpoint_filtered", StringComparison.Ordinal))
-            {
-                truthSource = "filtered";
-            }
-            else if (precisionDiagnostic != null
+            if (precisionDiagnostic != null
                 && string.Equals(precisionDiagnostic.CandidateSource, "checkpoint_truth", StringComparison.Ordinal)
                 && (string.IsNullOrWhiteSpace(truthSource) || string.Equals(truthSource, "none", StringComparison.Ordinal)))
             {
