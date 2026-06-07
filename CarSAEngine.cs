@@ -1845,26 +1845,33 @@ namespace LaunchPlugin
                                 && playerGateLap != int.MinValue
                                 && IsValidLapTimeSec(lapTimeUsedSec))
                             {
-                                double rawGapSec = sessionTimeSec - playerGateTimeSec;
-                                int lapDeltaAtGate = state.Lap - playerGateLap;
-                                if (Math.Abs(lapDeltaAtGate) <= 3)
+                                double playerGateAgeSec = sessionTimeSec - playerGateTimeSec;
+                                double maxPlayerGateAgeSec = Math.Min(ReverseCheckpointMatchMaxAgeSec, 0.5 * lapTimeUsedSec);
+                                if (IsFiniteNumber(playerGateAgeSec)
+                                    && playerGateAgeSec >= 0.0
+                                    && playerGateAgeSec <= maxPlayerGateAgeSec)
                                 {
-                                    _gateRawGapSecByCar[carIdx] = rawGapSec;
-                                    double gateTruth = NormalizeGateGapSec(rawGapSec, lapDeltaAtGate, lapTimeUsedSec);
-                                    double trackSecAtTruthCreation = EstimateTrackSecAtTruthCreation(playerLapPct, state.LapDistPct, gateTruth, trackGapScaleSec);
-                                    UpdateGateGapTruthForCar(
-                                        carIdx,
-                                        sessionTimeSec,
-                                        gateTruth,
-                                        "target_after_player",
-                                        checkpointCrossed,
-                                        sessionTimeSec,
-                                        playerGateTimeSec,
-                                        state.Lap,
-                                        playerGateLap,
-                                        rawGapSec,
-                                        lapDeltaAtGate,
-                                        trackSecAtTruthCreation);
+                                    double rawGapSec = sessionTimeSec - playerGateTimeSec;
+                                    int lapDeltaAtGate = state.Lap - playerGateLap;
+                                    if (Math.Abs(lapDeltaAtGate) <= 3)
+                                    {
+                                        _gateRawGapSecByCar[carIdx] = rawGapSec;
+                                        double gateTruth = NormalizeGateGapSec(rawGapSec, lapDeltaAtGate, lapTimeUsedSec);
+                                        double trackSecAtTruthCreation = EstimateTrackSecAtTruthCreation(playerLapPct, state.LapDistPct, gateTruth, trackGapScaleSec);
+                                        UpdateGateGapTruthForCar(
+                                            carIdx,
+                                            sessionTimeSec,
+                                            gateTruth,
+                                            "target_after_player",
+                                            checkpointCrossed,
+                                            sessionTimeSec,
+                                            playerGateTimeSec,
+                                            state.Lap,
+                                            playerGateLap,
+                                            rawGapSec,
+                                            lapDeltaAtGate,
+                                            trackSecAtTruthCreation);
+                                    }
                                 }
                             }
                         }
