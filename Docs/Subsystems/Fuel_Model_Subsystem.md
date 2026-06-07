@@ -1,7 +1,7 @@
 # Fuel Model
 
 Validated against commit: HEAD
-Last updated: 2026-06-03
+Last updated: 2026-06-07
 Branch: work
 
 ## Purpose
@@ -270,6 +270,13 @@ Runtime recovery now distinguishes between:
 
 Planner-safe targeted recovery is intended to rebuild live-cap/runtime truth without silently clearing Strategy manual overrides or preset intent.
 Manual recovery may short-circuit on planner-safe success only while an active live session is present; outside active live session, manual reset continues into the broad reset path.
+
+Phase 1 `MonitorSystem.*` visibility is attached at the existing health-result seams without changing this ownership or recovery logic:
+- an existing healthy queued check publishes `FUEL HEALTH OK`,
+- an existing unhealthy observation publishes `FUEL DATA CHECK`,
+- the existing recovery return value publishes `FUEL DATA RECOVERED` or `FUEL DATA FAULT`.
+
+The monitor does not calculate fuel, change the two-sample unhealthy streak, change the 450 ms evaluation throttle or two-second recovery throttle, alter runtime values, or own pit-stop/baseline checks.
 
 Driving → Race transitions can seed race state from the just-learned baseline instead of forcing a full cold start. Those seeds intentionally do not enter `Fuel.Burn.Analysis.*`, which remains fresh-sample-only.
 

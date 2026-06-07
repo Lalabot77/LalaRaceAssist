@@ -133,6 +133,7 @@ namespace LaunchPlugin
 
         public LalaLaunch()
         {
+            _monitorSystem = new MonitorSystem();
             _pitFuelControlEngine = new PitFuelControlEngine(
                 BuildPitFuelControlSnapshot,
                 SendPitFuelControlCommand,
@@ -1231,6 +1232,7 @@ namespace LaunchPlugin
         private double _lastLiveMaxHealthLoggedEffective = double.NaN;
         private string _lastLiveMaxHealthLoggedSource = string.Empty;
         private string _lastLiveDetectLogSignature = string.Empty;
+        private readonly MonitorSystem _monitorSystem;
         private DateTime _lastFuelRuntimeRecoveryUtc = DateTime.MinValue;
         private DateTime _lastFuelRuntimeHealthCheckUtc = DateTime.MinValue;
         private int _fuelRuntimeUnhealthyStreak = 0;
@@ -7667,6 +7669,12 @@ namespace LaunchPlugin
             
             AttachCore("Friends.Count", () => _friendsCount);
 
+            AttachCore("MonitorSystem.State", () => _monitorSystem.StateText);
+            AttachCore("MonitorSystem.Text", () => _monitorSystem.DisplayText);
+            AttachCore("MonitorSystem.BackgroundColour", () => _monitorSystem.BackgroundColour);
+            AttachCore("MonitorSystem.TextColour", () => _monitorSystem.TextColour);
+            AttachCore("MonitorSystem.Enum", () => _monitorSystem.Enum);
+
             // --- DELEGATES FOR LIVE FUEL CALCULATOR (CORE) ---
             AttachCore("Fuel.LiveFuelPerLap", () => LiveFuelPerLap);
             AttachCore("Fuel.LiveFuelPerLap_Stable", () => LiveFuelPerLap_Stable);
@@ -9917,6 +9925,11 @@ namespace LaunchPlugin
             bool unhealthy = runtimeMissingWhileRawValid || mismatch || transitionGap;
 
             _fuelRuntimeUnhealthyStreak = unhealthy ? (_fuelRuntimeUnhealthyStreak + 1) : 0;
+            if (unhealthy)
+            {
+                _monitorSystem.Publish(MonitorSeverity.Watch, "FUEL DATA CHECK");
+            }
+
             bool shouldRecover = _fuelRuntimeUnhealthyStreak >= 2;
             if (shouldRecover)
             {
@@ -9924,6 +9937,9 @@ namespace LaunchPlugin
                     ? _fuelRuntimeHealthPendingReason
                     : "stale live max seam";
                 bool recovered = RunPlannerSafeFuelRuntimeRecovery(reason);
+                _monitorSystem.Publish(
+                    recovered ? MonitorSeverity.Recovered : MonitorSeverity.Fault,
+                    recovered ? "FUEL DATA RECOVERED" : "FUEL DATA FAULT");
                 _fuelRuntimeHealthCheckPending = false;
                 _fuelRuntimeHealthPendingReason = string.Empty;
                 _fuelRuntimeUnhealthyStreak = recovered ? 0 : 1;
@@ -9935,6 +9951,7 @@ namespace LaunchPlugin
                 SimHub.Logging.Current.Info(
                     $"[LalaPlugin:Runtime] fuel health check passed reason={_fuelRuntimeHealthPendingReason} " +
                     $"raw={rawCap:F2} runtime={runtimeCap:F2} src={runtimeSource} strategyMissing={strategyDisplayMissing}");
+                _monitorSystem.Publish(MonitorSeverity.Ok, "FUEL HEALTH OK");
                 _fuelRuntimeHealthCheckPending = false;
                 _fuelRuntimeHealthPendingReason = string.Empty;
                 _fuelRuntimeUnhealthyStreak = 0;
@@ -15496,6 +15513,7 @@ namespace LaunchPlugin
             if (propertyName.StartsWith("Car.Debug.", StringComparison.Ordinal)) return "RawDebug";
 
             if (propertyName.StartsWith("Fuel.", StringComparison.Ordinal)
+                || propertyName.StartsWith("MonitorSystem.", StringComparison.Ordinal)
                 || propertyName.StartsWith("Strategy", StringComparison.Ordinal)
                 || propertyName.StartsWith("PreRace.", StringComparison.Ordinal)
                 || propertyName.StartsWith("Pace.", StringComparison.Ordinal)

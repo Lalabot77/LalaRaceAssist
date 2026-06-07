@@ -1,3 +1,11 @@
+## 2026-06-07 — MonitorSystem Phase 1 framework + fuel-health visibility migration
+- Classification: **both** (new dash-facing monitoring exports + internal framework/catalogue/docs; no fuel, planner, pit-control, or command behavior change).
+- Added independent `MonitorSystem.cs` presentation state with Phase 1 enum/colour/text contract and identical-output deduplication; it has no dependency on fuel calculators, Strategy, pit engines, Opponents, CarSA, or H2H.
+- Added `LalaLaunch.MonitorSystem.State`, `.Text`, `.BackgroundColour`, `.TextColour`, and `.Enum`; initial state is automatic `MONITOR READY`.
+- Mirrored existing fuel-health outcomes only: unhealthy observation -> `FUEL DATA CHECK`, unchanged pass -> `FUEL HEALTH OK`, unchanged recovery success -> `FUEL DATA RECOVERED`, unchanged recovery failure -> `FUEL DATA FAULT`. Existing trigger conditions, health checks, logs, 450 ms evaluation throttle, two-observation streak, two-second recovery throttle, recovery state mutations, fuel math, Strategy/PreRace, `Fuel.Refuel.*`, `Pit.FuelControl.*`, and `Pit.Command.*` remain unchanged.
+- Added `Docs/Internal/MonitorSystem_Messages.csv`; no debug CSV writer was added in Phase 1. Pit-stop monitoring and independent gross SimHub baseline fuel checks remain future work.
+- Property Snapshot list reviewed: yes; `MonitorSystem.*` is assigned to the existing Fuel/Strategy group because Phase 1 surfaces the runtime fuel-health seam.
+
 ## 2026-06-06 — CarSA pit/rejoin slot-retention CSV diagnostics
 - Classification: **internal-only** (bounded diagnostics schema expansion; no runtime selection, public export, dashboard JSON, or user workflow change).
 - Added per-slot `CarSA_Debug_*.csv` evidence for all five ahead and five behind slots: assignment mode, current bounded-candidate presence/rank, hysteresis retention, blink hold, existing pre-assignment retention eligibility/reason, final on-track state, and LapDistPct validity. Existing distance, TrackSec, pit-road, and raw-surface columns remain available for correlation.

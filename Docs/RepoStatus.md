@@ -28,6 +28,12 @@
 
 # Repo Status
 
+- 2026-06-07 MonitorSystem Phase 1 framework + fuel-health visibility migration landed:
+  - added independent `MonitorSystem.cs` and five dash exports: `LalaLaunch.MonitorSystem.State`, `.Text`, `.BackgroundColour`, `.TextColour`, and `.Enum`; automatic startup state is `MONITOR READY`;
+  - existing runtime fuel-health outcomes now publish `FUEL HEALTH OK`, `FUEL DATA CHECK`, `FUEL DATA RECOVERED`, or `FUEL DATA FAULT` while preserving existing logs, trigger conditions, checks, streak/timing thresholds, and planner-safe recovery behavior;
+  - no fuel/refuel/planner/pit-control/pit-command math or behavior changed; no pit-stop monitor, independent gross SimHub baseline check, monitor debug CSV, or automatic command sending was added;
+  - dashboard/inventory/fuel docs and `Docs/Internal/MonitorSystem_Messages.csv` define the Phase 1 contract. Property Snapshot list reviewed: yes; `MonitorSystem.*` is in the existing Fuel/Strategy group.
+
 - 2026-06-06 H2HTrack LiveGapSec TrackSec alignment landed:
   - H2HTrack selectors now carry the selected CarSA slot directional `Gap.TrackSec` into H2H, and `H2HTrack.Ahead/Behind.LiveGapSec` publishes that magnitude using the existing positive H2HTrack display convention instead of recomputing an independent full race-progress gap.
   - Invalid/non-finite selected TrackSec publishes the existing safe zero live-gap value rather than falling back to the old formula; H2HTrack identity, validity rules, active segment, lap summaries, and CarSA-cache sector outputs remain unchanged.

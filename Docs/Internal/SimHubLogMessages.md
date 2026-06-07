@@ -23,6 +23,7 @@ Workflow routing note: `Docs/Internal/Property_Snapshot_Debug_Workflow.md` owns 
 - **`[LalaPlugin:Runtime] fuel health check queued (reason: <reason>).`** — Runtime-health trigger was detected (session/combo/car-active edge) and queued for bounded fuel live-cap health evaluation.
 - **`[LalaPlugin:Runtime] fuel health check passed reason=... raw=... runtime=... src=... strategyMissing=...`** — Queued fuel health check evaluated healthy without recovery.
 - **`[LalaPlugin:Runtime] planner-safe fuel recovery start/end ...`** — Planner-safe targeted fuel/live-snapshot recovery executed; end line reports health verdict and resolved cap source.
+- Phase 1 MonitorSystem migration preserves all three runtime fuel-health log families above unchanged. The same existing outcomes now also publish `FUEL HEALTH OK`, `FUEL DATA CHECK`, `FUEL DATA RECOVERED`, or `FUEL DATA FAULT` through `LalaLaunch.MonitorSystem.*`; `MonitorSystem` adds no separate log stream or per-tick logging.
 - **`[LalaPlugin:Dash] StrategyDashModeToggle action fired -> Advanced=<true|false>.`** — Strategy Dash mode binding pressed; toggles persisted Advanced/Simple presentation status (`true` = Advanced, `false` = Simple).
 - **`[LalaPlugin:Dash] DeclutterMode action fired -> DeclutterMode=0/1/2.`** — Declutter control pressed; cycles the 0/1/2 export used for dash visibility bindings.【F:LalaLaunch.cs†L10-L50】
 - **`[LalaPlugin:Dash] SecondaryDashMode action fired (legacy) -> DeclutterMode=0/1/2.`** — Legacy alias for the same declutter cycle to preserve old bindings.【F:LalaLaunch.cs†L10-L50】

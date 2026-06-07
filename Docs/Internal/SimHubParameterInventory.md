@@ -3,14 +3,24 @@
 **CANONICAL CONTRACT**
 
 Validated against: HEAD
-Last reviewed: 2026-06-02
-Last updated: 2026-06-03
+Last reviewed: 2026-06-07
+Last updated: 2026-06-07
 Branch: work
 
 - All exports are attached in `LalaLaunch.cs` during `Init()` via `AttachCore`/`AttachVerbose`. Core values are refreshed in `DataUpdate` (500 ms poll for fuel/pace/pit via `_poll500ms`; per-tick for launch/dash/messaging). Verbose rows require `SimhubPublish.VERBOSE`.【F:LalaLaunch.cs†L2644-L3120】【F:LalaLaunch.cs†L3411-L3775】
 - Legacy spreadsheet removed; this file is canonical.
 - “Defined in” lists the class/method that computes the value before `AttachCore/AttachVerbose` publishes it.
 - SimHub displays plugin exports under the plugin namespace. The code registers PreRace and Friends properties as unqualified internal names (`PreRace.*`, `Friends.Count`) so dashboards consume the single-prefixed public names (`LalaLaunch.PreRace.*`, `LalaLaunch.Friends.Count`) instead of accidental `LalaLaunch.LalaLaunch.*` names.
+
+## Monitor System
+| Exported name | Type | Units / meaning | Update cadence | Defined in |
+| --- | --- | --- | --- | --- |
+| MonitorSystem.State | string | Monitor operating state: `OFF`, `ON`, or `AUTO`. Phase 1 runs automatically and initializes as `AUTO`; `OFF`/`ON` are reserved framework states with no Phase 1 setting/action. | On monitor output change. | `MonitorSystem.cs` state presentation + `LalaLaunch.cs` `AttachCore`. |
+| MonitorSystem.Text | string | Dash-ready monitor message. Phase 1 emits only catalogue texts: `MONITOR OFF`, `MONITOR READY`, `FUEL HEALTH OK`, `FUEL DATA CHECK`, `FUEL DATA RECOVERED`, or `FUEL DATA FAULT`. | On monitor output change. | `MonitorSystem.cs`; existing fuel-health outcome seams in `LalaLaunch.cs`. |
+| MonitorSystem.BackgroundColour / TextColour | string/string | Simple hex colours paired with the current monitor enum/text. Dashboards should consume these directly unless deliberately applying their own accessible theme. | On monitor output change. | `MonitorSystem.cs`. |
+| MonitorSystem.Enum | int | Phase 1 severity contract: `0=OFF`, `1=OK`, `2=WATCH`, `3=CAUTION`, `4=WARNING`, `5=FAULT`, `6=RECOVERED`. | On monitor output change. | `MonitorSystem.cs`. |
+
+Phase 1 reports the existing start/runtime fuel-health check only. It does not monitor pit stops, perform an independent gross SimHub baseline check, send pit commands, or replace `Pit.Command.*` feedback. The message catalogue is `Docs/Internal/MonitorSystem_Messages.csv`. `MonitorSystem.*` belongs to the existing Property Snapshot `Fuel/Strategy` group.
 
 ## Brake
 | Exported name | Type | Units / meaning | Update cadence | Defined in |

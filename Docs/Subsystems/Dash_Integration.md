@@ -1,7 +1,7 @@
 # Dash Integration
 
 Validated against commit: HEAD
-Last updated: 2026-06-03
+Last updated: 2026-06-07
 Branch: work
 
 ## Purpose
@@ -19,6 +19,18 @@ This document is the canonical dash-facing contract layer. It does **not** redef
 - **Do not renormalize plugin units** unless the dash needs purely visual scaling.
 - **Clear state aggressively on session transitions** so stale visuals do not linger.
 - Use single plugin-qualified public names in dashboard formulas. For example, use `LalaLaunch.PreRace.StatusText` and `LalaLaunch.Friends.Count`; do not bind accidental double-prefix names such as `LalaLaunch.LalaLaunch.PreRace.*`.
+
+## MonitorSystem contract
+`LalaLaunch.MonitorSystem.*` is the dedicated dash-facing monitoring surface. Dashboards should bind directly to:
+- `State` (`OFF`, `ON`, or `AUTO`),
+- `Text`,
+- `BackgroundColour`,
+- `TextColour`,
+- `Enum` (`0=OFF`, `1=OK`, `2=WATCH`, `3=CAUTION`, `4=WARNING`, `5=FAULT`, `6=RECOVERED`).
+
+Phase 1 exposes only the existing start/runtime fuel-health evaluation and planner-safe recovery outcomes. It does not add pit-stop monitoring or an independent gross SimHub baseline fuel check. `MonitorSystem.*` is presentation/health feedback only: it is not `Pit.Command`, does not send commands, and must not replace `Pit.Command.*` action feedback.
+
+Dashboard logic should use `MonitorSystem.Text` and the paired colour exports rather than reconstructing fuel-health conditions. The initial automatic state is `AUTO` / `MONITOR READY`; later messages follow `Docs/Internal/MonitorSystem_Messages.csv`.
 
 ## High-level dash ownership map
 ### Strategy / fuel / pace
