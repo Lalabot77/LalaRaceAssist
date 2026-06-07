@@ -18,13 +18,13 @@ That means dashboards are not the source of truth for strategy math, fuel learni
 
 ## Monitor System
 
-The dashboard-facing Monitor System is enabled by default. Use **Settings → Launch Settings → Enable Monitor System** to control it:
+The dashboard-facing Monitor System is enabled by default. Use **Dash Control -> Global Dash Functions -> General -> Enable Monitor System** to control it:
 
 - enabled: `LalaLaunch.MonitorSystem.State` is `ON` and the default message is `MONITOR READY`;
 - disabled: state is `OFF` and the message is `MONITOR OFF`;
 - re-enabling returns the monitor to the ready state before later fuel-health messages are published.
 
-The current Phase 1 monitor reports existing runtime fuel-health status only. It does not send pit commands or replace `Pit.Command.*` feedback.
+The current monitor reports existing runtime fuel-health status and records Phase 2A pit-stop trigger evidence in logs only. It does not publish pit-stop driver warnings, send pit commands, or replace `Pit.Command.*` feedback.
 
 ## 2. Installation / import
 

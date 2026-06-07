@@ -1,3 +1,11 @@
+## 2026-06-07 - MonitorSystem Phase 2A pit-stop trigger framework
+- Classification: **both** (internal pit-stop evidence framework and driver-visible settings placement correction; no new driver warnings, exports, command behavior, fuel math, or refuel math).
+- Added a private MonitorSystem Phase 2A observer in `LalaLaunch.cs` that records edge-only trigger logs for `FuelControlModeChanged`, `FuelControlDataChanged`, `PredictiveTwoLapsFuelRemaining`, `PitRoadEntry`, `PitBoxEntry`, and `PitRoadExit`.
+- Pit-road entry now freezes a lightweight internal evidence snapshot with UTC, session time/type/state, current fuel, raw MFD refuel enabled/request values, Pit Fuel Control mode/DATA, plugin refuel validity/next litres/fuel-on-exit, and pit-road/box state. The snapshot is not used for warnings in this phase.
+- Moved `Enable Monitor System` out of Launch UI / Bindings and into `Dash Control -> Global Dash Functions -> General`; persistence and ON/OFF output behavior are unchanged.
+- No Phase 2B race-risk checks were added: no `REFUEL OFF`, `MFD FUEL LOW`, `BASELINE SHORT`, or `EXIT FUEL SHORT` checks, no gross SimHub baseline check, no pit commands, no recovery, no new monitor text, no CSV writer, and no per-tick logs.
+- Property Snapshot list reviewed: yes; no group change because no SimHub exports/properties were added, removed, renamed, or regrouped. Message catalogue reviewed: unchanged.
+
 ## 2026-06-07 — MonitorSystem pre-Phase 2 enable control + colour cleanup
 - Classification: **both** (persisted driver setting and dash-facing state/colour behavior; no fuel-health logic, calculations, pit monitoring, or command behavior change).
 - Added persisted `MonitorSystemEnabled` (default `true`) and `Settings -> Launch Settings -> Enable Monitor System`; changes apply immediately and save through the existing settings path.

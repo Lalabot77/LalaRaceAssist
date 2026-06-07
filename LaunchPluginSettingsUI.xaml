@@ -49,10 +49,6 @@
                     <ui:ControlsEditor ActionName="LalaLaunch.LaunchMode"
                                        FriendlyName="Launch Mode"
                                        ToolTip="Manual prime/abort launch mode (useful for testing and non-standing-start sessions)." />
-                    <styles:SHToggleCheckbox Content="Enable Monitor System"
-                                             Margin="0,10,0,0"
-                                             IsChecked="{Binding Settings.MonitorSystemEnabled, Mode=TwoWay}"
-                                             ToolTip="Enable the dashboard-facing MonitorSystem status and fuel-health messages." />
                     <ui:TitledSlider Title="Post-Launch Results Display Time: "
                                      Margin="0,10,0,0"
                                      Minimum="0"

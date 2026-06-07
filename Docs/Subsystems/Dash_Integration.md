@@ -28,9 +28,9 @@ This document is the canonical dash-facing contract layer. It does **not** redef
 - `TextColour`,
 - `Enum` (`0=OFF`, `1=OK`, `2=WATCH`, `3=CAUTION`, `4=WARNING`, `5=FAULT`, `6=RECOVERED`).
 
-Phase 1 exposes only the existing start/runtime fuel-health evaluation and planner-safe recovery outcomes. It does not add pit-stop monitoring or an independent gross SimHub baseline fuel check. `MonitorSystem.*` is presentation/health feedback only: it is not `Pit.Command`, does not send commands, and must not replace `Pit.Command.*` action feedback.
+Phase 1 exposes the existing start/runtime fuel-health evaluation and planner-safe recovery outcomes. Phase 2A adds an internal pit-stop trigger framework that records edge-only evidence logs for Fuel Control mode/DATA changes, predictive two-laps-fuel remaining, pit-road entry/exit, and pit-box entry. Phase 2A does not add driver-facing pit warnings, race-risk warning maths, an independent gross SimHub baseline fuel check, CSV output, or new exports. `MonitorSystem.*` is presentation/health feedback only: it is not `Pit.Command`, does not send commands, and must not replace `Pit.Command.*` action feedback.
 
-Dashboard logic should use `MonitorSystem.Text` and the paired colour exports rather than reconstructing fuel-health conditions. The persisted `Enable Monitor System` setting defaults on: enabled state starts as `ON` / `MONITOR READY` / enum `1`; disabled state is `OFF` / `MONITOR OFF` / enum `0`; re-enabling returns to the enabled ready state. Fuel-health messages publish only while enabled. WARNING/FAULT styling is red background with yellow text. Later messages follow `Docs/Internal/MonitorSystem_Messages.csv`.
+Dashboard logic should use `MonitorSystem.Text` and the paired colour exports rather than reconstructing fuel-health conditions. The persisted `Enable Monitor System` setting defaults on and is shown under `Dash Control -> Global Dash Functions -> General`: enabled state starts as `ON` / `MONITOR READY` / enum `1`; disabled state is `OFF` / `MONITOR OFF` / enum `0`; re-enabling returns to the enabled ready state. Fuel-health messages publish only while enabled. WARNING/FAULT styling is red background with yellow text. Later messages follow `Docs/Internal/MonitorSystem_Messages.csv`.
 
 ## High-level dash ownership map
 ### Strategy / fuel / pace

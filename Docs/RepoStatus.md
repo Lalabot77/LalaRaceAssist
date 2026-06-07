@@ -28,6 +28,12 @@
 
 # Repo Status
 
+- 2026-06-07 MonitorSystem Phase 2A pit-stop trigger framework landed:
+  - added private edge-only pit-stop monitor triggers for Fuel Control mode changes, DATA changes, predictive two-laps-fuel remaining, pit-road entry, pit-box entry, and pit-road exit;
+  - pit-road entry freezes an internal evidence snapshot for later Phase 2B checks, but no race-risk warning maths, baseline checks, new monitor text, CSV writer, pit commands, automatic recovery, fuel/refuel math, Pit Fuel Control, or Pit Command behavior changed;
+  - moved `Enable Monitor System` from Launch UI / Bindings to `Dash Control -> Global Dash Functions -> General`; persisted setting semantics and ON/OFF outputs remain unchanged;
+  - Property Snapshot list reviewed: yes; no group change because no SimHub exports/properties were added or changed. Message catalogue reviewed: unchanged.
+
 - 2026-06-07 MonitorSystem pre-Phase 2 cleanup landed:
   - added persisted default-on `MonitorSystemEnabled` and `Enable Monitor System` Launch Settings checkbox with immediate saved state changes;
   - enabled/default output is `ON` / `MONITOR READY` / enum `1`, disabled output is `OFF` / `MONITOR OFF` / enum `0`, and active runtime no longer emits `AUTO`; fuel-health messages publish only while enabled;

@@ -7008,6 +7008,34 @@ namespace LaunchPlugin
         private double _pitRefuelBoxEntryFuelCandidate = 0.0;
         private double _pitRefuelLastObservedFuel = 0.0;
         private const double PitExitSpeedEpsilonMps = 0.1;
+        private const double MonitorPitPredictiveFuelLapsThreshold = 2.05;
+        private bool _monitorPitFrameworkPrimed = false;
+        private PitFuelControlMode _monitorPitLastFuelControlMode = PitFuelControlMode.Off;
+        private PitFuelControlData _monitorPitLastFuelControlData = PitFuelControlData.Live;
+        private bool _monitorPitLastOnPitRoad = false;
+        private bool _monitorPitLastInPitBox = false;
+        private bool _monitorPitPredictiveTwoLapsTriggeredThisStint = false;
+        private string _monitorPitPhase = "OnTrack";
+        private MonitorPitStopSnapshot _monitorPitEntrySnapshot;
+
+        private sealed class MonitorPitStopSnapshot
+        {
+            public DateTime Utc;
+            public double SessionTimeSec;
+            public string SessionType;
+            public int SessionState;
+            public double CurrentFuel;
+            public bool MfdRefuelEnabled;
+            public double MfdFuelRequest;
+            public string FuelControlMode;
+            public string FuelControlDataMode;
+            public bool PluginRefuelValid;
+            public double PluginNextLitres;
+            public double PluginFuelOnExit;
+            public bool OnPitRoad;
+            public bool InPitStall;
+            public bool InPitBox;
+        }
 
         // ==== Refuel learning state (hardened) ====
         private bool _isRefuelling = false;
@@ -9403,6 +9431,7 @@ namespace LaunchPlugin
             _lastPitWindowLabel = string.Empty;
             _lastPitWindowLogUtc = DateTime.MinValue;
             ResetPitFuelControlSessionDefaults();
+            ResetMonitorPitStopFrameworkState();
             _pitTyreControlEngine?.ResetToOff();
             _pitCommandEngine?.ResetFeedbackState();
             _opponentsEngine?.Reset();
@@ -10080,6 +10109,7 @@ namespace LaunchPlugin
             _trackMarkerLengthDeltaPulse.Reset();
             _trackMarkerLockedMismatchPulse.Reset();
             ResetPitScreenToAuto(reasonLabel);
+            ResetMonitorPitStopFrameworkState();
 
             _msgCxCooldownTimer.Reset();
             _msgCxPressed = false;
@@ -11100,6 +11130,7 @@ namespace LaunchPlugin
             double currentFuelNow = data.NewData?.Fuel ?? 0.0;
             UpdatePitBoxCountdownValues(inLane, isInPitStall);
             UpdatePitRefuelGaugeValues(currentFuelNow);
+            UpdateMonitorPitStopFramework(data, pluginManager, sessionTime);
 
             // --- Rejoin assist update & lap incident tracking ---
             _rejoinEngine?.Update(data, pluginManager, IsLaunchActive);
@@ -16195,6 +16226,211 @@ namespace LaunchPlugin
 
             _monitorSystem.SetEnabled(_subscribedMonitorSystemSettings?.MonitorSystemEnabled != false);
             SaveSettings();
+        }
+
+        private void ResetMonitorPitStopFrameworkState()
+        {
+            _monitorPitFrameworkPrimed = false;
+            _monitorPitLastFuelControlMode = PitFuelControlMode.Off;
+            _monitorPitLastFuelControlData = PitFuelControlData.Live;
+            _monitorPitLastOnPitRoad = false;
+            _monitorPitLastInPitBox = false;
+            _monitorPitPredictiveTwoLapsTriggeredThisStint = false;
+            _monitorPitPhase = "OnTrack";
+            _monitorPitEntrySnapshot = null;
+        }
+
+        private void UpdateMonitorPitStopFramework(GameData data, PluginManager pluginManager, double sessionTimeSec)
+        {
+            if (data?.NewData == null || pluginManager == null)
+            {
+                return;
+            }
+
+            string sessionType = NormalizeSessionTypeName(data.NewData.SessionTypeName ?? string.Empty);
+            int sessionState = ReadSessionStateInt(pluginManager);
+            bool onPitRoad = SafeReadBool(pluginManager, "DataCorePlugin.GameRawData.Telemetry.OnPitRoad", false);
+            bool inPitStall = SafeReadBool(pluginManager, "DataCorePlugin.GameRawData.Telemetry.PlayerCarInPitStall", false);
+            bool inPitBox = _pitBoxCountdownActive || (inPitStall && _pit != null && _pit.CurrentPitPhase == PitPhase.InBox);
+            PitFuelControlMode fuelControlMode = _pitFuelControlEngine?.Mode ?? PitFuelControlMode.Off;
+            PitFuelControlData fuelControlData = _pitFuelControlEngine?.Data ?? PitFuelControlData.Live;
+            string phase = ResolveMonitorPitPhase(onPitRoad, inPitBox);
+            var snapshot = BuildMonitorPitStopSnapshot(data, pluginManager, sessionTimeSec, sessionType, sessionState, onPitRoad, inPitStall, inPitBox);
+
+            bool firstTick = !_monitorPitFrameworkPrimed;
+            if (firstTick)
+            {
+                _monitorPitFrameworkPrimed = true;
+                _monitorPitLastFuelControlMode = fuelControlMode;
+                _monitorPitLastFuelControlData = fuelControlData;
+                _monitorPitLastOnPitRoad = onPitRoad;
+                _monitorPitLastInPitBox = inPitBox;
+                _monitorPitPhase = phase;
+            }
+            else
+            {
+                _monitorPitPhase = phase;
+
+                if (fuelControlMode != _monitorPitLastFuelControlMode)
+                {
+                    LogMonitorPitTrigger("FuelControlModeChanged", snapshot, string.Format(
+                        CultureInfo.InvariantCulture,
+                        "from={0} to={1}",
+                        FormatMonitorFuelControlMode(_monitorPitLastFuelControlMode),
+                        FormatMonitorFuelControlMode(fuelControlMode)));
+                }
+
+                if (fuelControlData != _monitorPitLastFuelControlData)
+                {
+                    LogMonitorPitTrigger("FuelControlDataChanged", snapshot, string.Format(
+                        CultureInfo.InvariantCulture,
+                        "from={0} to={1}",
+                        FormatMonitorFuelControlData(_monitorPitLastFuelControlData),
+                        FormatMonitorFuelControlData(fuelControlData)));
+                }
+
+                if (!_monitorPitLastOnPitRoad && onPitRoad)
+                {
+                    _monitorPitEntrySnapshot = snapshot;
+                    LogMonitorPitTrigger("PitRoadEntry", snapshot, "OnPitRoad false->true");
+                }
+
+                if (!_monitorPitLastInPitBox && inPitBox)
+                {
+                    LogMonitorPitTrigger("PitBoxEntry", snapshot, "pit-box seam false->true");
+                }
+
+                if (_monitorPitLastOnPitRoad && !onPitRoad)
+                {
+                    LogMonitorPitTrigger("PitRoadExit", snapshot, "OnPitRoad true->false; predictive reset");
+                    _monitorPitPredictiveTwoLapsTriggeredThisStint = false;
+                }
+
+                _monitorPitLastFuelControlMode = fuelControlMode;
+                _monitorPitLastFuelControlData = fuelControlData;
+                _monitorPitLastOnPitRoad = onPitRoad;
+                _monitorPitLastInPitBox = inPitBox;
+            }
+
+            bool raceOnly = IsRaceSession(sessionType);
+            double lapsRemainingInTank = LapsRemainingInTank;
+            bool predictiveEligible =
+                raceOnly &&
+                sessionState == 4 &&
+                !onPitRoad &&
+                !_monitorPitPredictiveTwoLapsTriggeredThisStint &&
+                IsFinitePositive(lapsRemainingInTank) &&
+                lapsRemainingInTank <= MonitorPitPredictiveFuelLapsThreshold;
+
+            if (predictiveEligible)
+            {
+                _monitorPitPredictiveTwoLapsTriggeredThisStint = true;
+                LogMonitorPitTrigger("PredictiveTwoLapsFuelRemaining", snapshot, string.Format(
+                    CultureInfo.InvariantCulture,
+                    "lapsRemainingInTank={0:0.00} threshold={1:0.00}",
+                    lapsRemainingInTank,
+                    MonitorPitPredictiveFuelLapsThreshold));
+            }
+        }
+
+        private MonitorPitStopSnapshot BuildMonitorPitStopSnapshot(
+            GameData data,
+            PluginManager pluginManager,
+            double sessionTimeSec,
+            string sessionType,
+            int sessionState,
+            bool onPitRoad,
+            bool inPitStall,
+            bool inPitBox)
+        {
+            double currentFuel = data?.NewData?.Fuel ?? _lastFuelLevel;
+            bool pluginRefuelValid = IsFiniteNonNegative(Pit_WillAdd) && IsFiniteNonNegative(Pit_FuelOnExit);
+
+            return new MonitorPitStopSnapshot
+            {
+                Utc = DateTime.UtcNow,
+                SessionTimeSec = sessionTimeSec,
+                SessionType = string.IsNullOrWhiteSpace(sessionType) ? "unknown" : sessionType,
+                SessionState = sessionState,
+                CurrentFuel = IsFiniteNonNegative(currentFuel) ? currentFuel : double.NaN,
+                MfdRefuelEnabled = SafeReadBool(pluginManager, "DataCorePlugin.GameRawData.Telemetry.dpFuelFill", false),
+                MfdFuelRequest = SafeReadDouble(pluginManager, "DataCorePlugin.GameRawData.Telemetry.PitSvFuel", double.NaN),
+                FuelControlMode = _pitFuelControlEngine?.ModeText ?? FormatMonitorFuelControlMode(_pitFuelControlEngine?.Mode ?? PitFuelControlMode.Off),
+                FuelControlDataMode = _pitFuelControlEngine?.DataText ?? FormatMonitorFuelControlData(_pitFuelControlEngine?.Data ?? PitFuelControlData.Live),
+                PluginRefuelValid = pluginRefuelValid,
+                PluginNextLitres = pluginRefuelValid ? Pit_WillAdd : double.NaN,
+                PluginFuelOnExit = pluginRefuelValid ? Pit_FuelOnExit : double.NaN,
+                OnPitRoad = onPitRoad,
+                InPitStall = inPitStall,
+                InPitBox = inPitBox
+            };
+        }
+
+        private void LogMonitorPitTrigger(string triggerName, MonitorPitStopSnapshot snapshot, string reason)
+        {
+            if (snapshot == null)
+            {
+                return;
+            }
+
+            string trigger = string.IsNullOrWhiteSpace(triggerName) ? "Unknown" : triggerName.Trim();
+            string reasonText = string.IsNullOrWhiteSpace(reason) ? "none" : reason.Trim();
+            SimHub.Logging.Current.Info(string.Format(
+                CultureInfo.InvariantCulture,
+                "[LalaPlugin:MonitorSystem] pit trigger={0} sessionTime={1} sessionType={2} sessionState={3} phase={4} monitorState={5} monitorEnum={6} monitorText={7} onPitRoad={8} inPitStall={9} currentFuel={10} mode={11} data={12} mfdRefuelEnabled={13} mfdFuelRequest={14} pluginRefuelValid={15} pluginNextLitres={16} pluginFuelOnExit={17} reason={18}",
+                trigger,
+                FormatMonitorDouble(snapshot.SessionTimeSec),
+                snapshot.SessionType,
+                snapshot.SessionState,
+                _monitorPitPhase,
+                _monitorSystem?.StateText ?? string.Empty,
+                _monitorSystem?.Enum ?? 0,
+                _monitorSystem?.DisplayText ?? string.Empty,
+                snapshot.OnPitRoad,
+                snapshot.InPitStall || snapshot.InPitBox,
+                FormatMonitorDouble(snapshot.CurrentFuel),
+                snapshot.FuelControlMode,
+                snapshot.FuelControlDataMode,
+                snapshot.MfdRefuelEnabled,
+                FormatMonitorDouble(snapshot.MfdFuelRequest),
+                snapshot.PluginRefuelValid,
+                FormatMonitorDouble(snapshot.PluginNextLitres),
+                FormatMonitorDouble(snapshot.PluginFuelOnExit),
+                reasonText));
+        }
+
+        private static string ResolveMonitorPitPhase(bool onPitRoad, bool inPitBox)
+        {
+            if (inPitBox)
+            {
+                return "InBox";
+            }
+
+            return onPitRoad ? "PitRoad" : "OnTrack";
+        }
+
+        private static string FormatMonitorFuelControlMode(PitFuelControlMode mode)
+        {
+            switch (mode)
+            {
+                case PitFuelControlMode.Man: return "MAN";
+                case PitFuelControlMode.Auto: return "AUTO";
+                case PitFuelControlMode.Off:
+                default:
+                    return "OFF";
+            }
+        }
+
+        private static string FormatMonitorFuelControlData(PitFuelControlData data)
+        {
+            return data == PitFuelControlData.Plan ? "PLAN" : "LIVE";
+        }
+
+        private static string FormatMonitorDouble(double value)
+        {
+            return (double.IsNaN(value) || double.IsInfinity(value))
+                ? "NA"
+                : value.ToString("0.###", CultureInfo.InvariantCulture);
         }
 
         private void HookPitFuelControlSettings(LaunchPluginSettings settings)
