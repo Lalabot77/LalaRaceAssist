@@ -154,6 +154,7 @@
       <DependentUpon>LaunchPluginSettingsUI.xaml</DependentUpon>
     </Compile>
     <Compile Include="MessagingSystem.cs" />
+    <Compile Include="MonitorSystem.cs" />
     <Compile Include="NotBoolConverter.cs" />
     <Compile Include="ParsedSummary.cs" />
     <Compile Include="LalaLaunch.cs" />

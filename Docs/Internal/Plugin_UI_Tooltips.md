@@ -1,7 +1,7 @@
 # Plugin UI Tooltips
 
 Validated against commit: HEAD
-Last updated: 2026-06-04
+Last updated: 2026-06-07
 Branch: work
 
 ## CopyProfileDialog.xaml
@@ -26,6 +26,9 @@ Branch: work
 - `Dash Visibility` keeps the existing visibility matrix for Launch Assist, Pit Assists, Automatic Pit Screen, Rejoin Assist, Verbose Race Messages, Race Flags, Radio Messages, and Traffic Alerts, but the release-facing column headers are now `DRIVER`, `STRATEGY`, and `OVERLAY`.
 - `Dash Visibility` header tooltips make the short labels explicit: `DRIVER = Lala Race Dash`, `STRATEGY = Lala Strategy Dash`, and `OVERLAY = overlay surfaces`.
 - `Launch Mode`, `Event Marker`, and `Post-Launch Results Display Time` no longer appear in Dash Control after this tidy-up.
+
+## LaunchPluginSettingsUI.xaml
+- `Enable Monitor System`: persisted setting, enabled by default. OFF publishes `MonitorSystem.State=OFF`, `MONITOR OFF`, enum `0`; ON resets the monitor to `MonitorSystem.State=ON`, `MONITOR READY`, enum `1` and permits existing fuel-health messages.
 
 ## FuelCalculatorView.xaml
 - Main planner navigation: top-level `FUEL` tab is now `STRATEGY`, and preset management is opened from the `Presets...` button beside the `Race Preset` selector instead of a separate top-level `PRESETS` tab.

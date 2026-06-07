@@ -133,6 +133,7 @@ namespace LaunchPlugin
 
         public LalaLaunch()
         {
+            _monitorSystem = new MonitorSystem();
             _pitFuelControlEngine = new PitFuelControlEngine(
                 BuildPitFuelControlSnapshot,
                 SendPitFuelControlCommand,
@@ -1231,6 +1232,7 @@ namespace LaunchPlugin
         private double _lastLiveMaxHealthLoggedEffective = double.NaN;
         private string _lastLiveMaxHealthLoggedSource = string.Empty;
         private string _lastLiveDetectLogSignature = string.Empty;
+        private readonly MonitorSystem _monitorSystem;
         private DateTime _lastFuelRuntimeRecoveryUtc = DateTime.MinValue;
         private DateTime _lastFuelRuntimeHealthCheckUtc = DateTime.MinValue;
         private int _fuelRuntimeUnhealthyStreak = 0;
@@ -6895,6 +6897,7 @@ namespace LaunchPlugin
         private bool _friendsDirty = true;
         private LaunchPluginSettings _subscribedLeagueClassSettings;
         private LaunchPluginSettings _subscribedPitFuelControlSettings;
+        private LaunchPluginSettings _subscribedMonitorSystemSettings;
         private bool _applyingPitFuelControlDataAction;
         private bool _leagueClassOpponentsRefreshPending;
         private List<LeagueClassDefinition> _subscribedLeagueClassDefinitions;
@@ -7336,6 +7339,7 @@ namespace LaunchPlugin
             HookCustomMessageSettings(Settings);
             HookLeagueClassSettings(Settings);
             HookPitFuelControlSettings(Settings);
+            HookMonitorSystemSettings(Settings);
             ReloadLeagueClassConfig();
             MarkFriendsDirty();
             _shiftAssistAudio = new ShiftAssistAudio(() => Settings);
@@ -7666,6 +7670,12 @@ namespace LaunchPlugin
             this.AddAction("ShiftAssist_ToggleLock_G8", (a, b) => ExecuteShiftAssistLockAction(8, current => !current, "ShiftAssist_ToggleLock_G8"));
             
             AttachCore("Friends.Count", () => _friendsCount);
+
+            AttachCore("MonitorSystem.State", () => _monitorSystem.StateText);
+            AttachCore("MonitorSystem.Text", () => _monitorSystem.DisplayText);
+            AttachCore("MonitorSystem.BackgroundColour", () => _monitorSystem.BackgroundColour);
+            AttachCore("MonitorSystem.TextColour", () => _monitorSystem.TextColour);
+            AttachCore("MonitorSystem.Enum", () => _monitorSystem.Enum);
 
             // --- DELEGATES FOR LIVE FUEL CALCULATOR (CORE) ---
             AttachCore("Fuel.LiveFuelPerLap", () => LiveFuelPerLap);
@@ -9853,8 +9863,9 @@ namespace LaunchPlugin
             SimHub.Logging.Current.Info($"[LalaPlugin:Runtime] fuel health check queued (reason: {reasonLabel}).");
         }
 
-        private bool RunPlannerSafeFuelRuntimeRecovery(string reason)
+        private bool RunPlannerSafeFuelRuntimeRecovery(string reason, out bool attempted)
         {
+            attempted = false;
             if (PluginManager == null)
                 return false;
 
@@ -9862,6 +9873,7 @@ namespace LaunchPlugin
             if ((now - _lastFuelRuntimeRecoveryUtc) < TimeSpan.FromSeconds(2))
                 return false;
 
+            attempted = true;
             _lastFuelRuntimeRecoveryUtc = now;
             string reasonLabel = string.IsNullOrWhiteSpace(reason) ? "unspecified" : reason.Trim();
             SimHub.Logging.Current.Info($"[LalaPlugin:Runtime] planner-safe fuel recovery start (reason: {reasonLabel}).");
@@ -9917,27 +9929,55 @@ namespace LaunchPlugin
             bool unhealthy = runtimeMissingWhileRawValid || mismatch || transitionGap;
 
             _fuelRuntimeUnhealthyStreak = unhealthy ? (_fuelRuntimeUnhealthyStreak + 1) : 0;
+            if (unhealthy)
+            {
+                _monitorSystem.Publish(MonitorSeverity.Watch, "FUEL DATA CHECK");
+            }
+
             bool shouldRecover = _fuelRuntimeUnhealthyStreak >= 2;
             if (shouldRecover)
             {
                 string reason = _fuelRuntimeHealthCheckPending
                     ? _fuelRuntimeHealthPendingReason
                     : "stale live max seam";
-                bool recovered = RunPlannerSafeFuelRuntimeRecovery(reason);
-                _fuelRuntimeHealthCheckPending = false;
-                _fuelRuntimeHealthPendingReason = string.Empty;
-                _fuelRuntimeUnhealthyStreak = recovered ? 0 : 1;
+                bool recoveryAttempted;
+                bool recovered = RunPlannerSafeFuelRuntimeRecovery(reason, out recoveryAttempted);
+                if (recoveryAttempted)
+                {
+                    _monitorSystem.Publish(
+                        recovered ? MonitorSeverity.Recovered : MonitorSeverity.Fault,
+                        recovered ? "FUEL DATA RECOVERED" : "FUEL DATA FAULT");
+                    _fuelRuntimeHealthCheckPending = false;
+                    _fuelRuntimeHealthPendingReason = string.Empty;
+                    _fuelRuntimeUnhealthyStreak = recovered ? 0 : 1;
+                }
+                else
+                {
+                    _monitorSystem.Publish(MonitorSeverity.Watch, "FUEL DATA CHECK");
+                }
+
                 return;
             }
 
-            if (_fuelRuntimeHealthCheckPending && !unhealthy && hasCap && runtimeCap > 0.0)
+            bool healthPassed = !unhealthy && hasCap && runtimeCap > 0.0;
+            if (healthPassed)
             {
-                SimHub.Logging.Current.Info(
-                    $"[LalaPlugin:Runtime] fuel health check passed reason={_fuelRuntimeHealthPendingReason} " +
-                    $"raw={rawCap:F2} runtime={runtimeCap:F2} src={runtimeSource} strategyMissing={strategyDisplayMissing}");
-                _fuelRuntimeHealthCheckPending = false;
-                _fuelRuntimeHealthPendingReason = string.Empty;
-                _fuelRuntimeUnhealthyStreak = 0;
+                bool publishMonitorOk = _monitorSystem.IsFuelDataCheckActive;
+                if (_fuelRuntimeHealthCheckPending)
+                {
+                    SimHub.Logging.Current.Info(
+                        $"[LalaPlugin:Runtime] fuel health check passed reason={_fuelRuntimeHealthPendingReason} " +
+                        $"raw={rawCap:F2} runtime={runtimeCap:F2} src={runtimeSource} strategyMissing={strategyDisplayMissing}");
+                    publishMonitorOk = true;
+                    _fuelRuntimeHealthCheckPending = false;
+                    _fuelRuntimeHealthPendingReason = string.Empty;
+                    _fuelRuntimeUnhealthyStreak = 0;
+                }
+
+                if (publishMonitorOk)
+                {
+                    _monitorSystem.Publish(MonitorSeverity.Ok, "FUEL HEALTH OK");
+                }
             }
         }
 
@@ -9948,9 +9988,24 @@ namespace LaunchPlugin
 
             bool sessionTransitionReset = string.Equals(reasonLabel, "Session transition", StringComparison.OrdinalIgnoreCase);
             bool isLiveSessionActive = FuelCalculator != null && FuelCalculator.IsLiveSessionActive;
-            if (!sessionTransitionReset && isLiveSessionActive && RunPlannerSafeFuelRuntimeRecovery(reasonLabel))
+            if (!sessionTransitionReset && isLiveSessionActive)
             {
-                return;
+                bool recoveryAttempted;
+                bool recovered = RunPlannerSafeFuelRuntimeRecovery(reasonLabel, out recoveryAttempted);
+                if (recoveryAttempted)
+                {
+                    _monitorSystem.Publish(
+                        recovered ? MonitorSeverity.Recovered : MonitorSeverity.Fault,
+                        recovered ? "FUEL DATA RECOVERED" : "FUEL DATA FAULT");
+                    if (recovered)
+                    {
+                        return;
+                    }
+                }
+                else
+                {
+                    _monitorSystem.Publish(MonitorSeverity.Watch, "FUEL DATA CHECK");
+                }
             }
 
             ResetProjectionFallbackState();
@@ -15496,6 +15551,7 @@ namespace LaunchPlugin
             if (propertyName.StartsWith("Car.Debug.", StringComparison.Ordinal)) return "RawDebug";
 
             if (propertyName.StartsWith("Fuel.", StringComparison.Ordinal)
+                || propertyName.StartsWith("MonitorSystem.", StringComparison.Ordinal)
                 || propertyName.StartsWith("Strategy", StringComparison.Ordinal)
                 || propertyName.StartsWith("PreRace.", StringComparison.Ordinal)
                 || propertyName.StartsWith("Pace.", StringComparison.Ordinal)
@@ -16109,6 +16165,36 @@ namespace LaunchPlugin
             _customMessagesCollection = customMessages;
             _customMessagesCollection.CollectionChanged += OnCustomMessagesCollectionChanged;
             SubscribeCustomMessageEntries(_customMessagesCollection);
+        }
+
+        private void HookMonitorSystemSettings(LaunchPluginSettings settings)
+        {
+            if (_subscribedMonitorSystemSettings != null)
+            {
+                _subscribedMonitorSystemSettings.PropertyChanged -= OnMonitorSystemSettingsPropertyChanged;
+                _subscribedMonitorSystemSettings = null;
+            }
+
+            if (settings == null)
+            {
+                _monitorSystem.SetEnabled(true);
+                return;
+            }
+
+            _subscribedMonitorSystemSettings = settings;
+            _subscribedMonitorSystemSettings.PropertyChanged += OnMonitorSystemSettingsPropertyChanged;
+            _monitorSystem.SetEnabled(settings.MonitorSystemEnabled);
+        }
+
+        private void OnMonitorSystemSettingsPropertyChanged(object sender, PropertyChangedEventArgs e)
+        {
+            if (!string.Equals(e?.PropertyName, nameof(LaunchPluginSettings.MonitorSystemEnabled), StringComparison.Ordinal))
+            {
+                return;
+            }
+
+            _monitorSystem.SetEnabled(_subscribedMonitorSystemSettings?.MonitorSystemEnabled != false);
+            SaveSettings();
         }
 
         private void HookPitFuelControlSettings(LaunchPluginSettings settings)
@@ -23461,6 +23547,17 @@ namespace LaunchPlugin
         }
         public double PitFuelPushSaveProfileGuardPct { get; set; } = 10.0;
         public bool EnableAutoDashSwitch { get; set; } = true;
+        private bool _monitorSystemEnabled = true;
+        public bool MonitorSystemEnabled
+        {
+            get { return _monitorSystemEnabled; }
+            set
+            {
+                if (_monitorSystemEnabled == value) return;
+                _monitorSystemEnabled = value;
+                OnPropertyChanged(nameof(MonitorSystemEnabled));
+            }
+        }
         private bool _strategyDashAdvancedMode = true;
         public bool StrategyDashAdvancedMode
         {

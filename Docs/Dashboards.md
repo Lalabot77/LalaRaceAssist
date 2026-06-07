@@ -16,6 +16,16 @@ Keep the ownership split clear:
 
 That means dashboards are not the source of truth for strategy math, fuel learning, H2H selection, rejoin logic, or pit-entry calculations. They display the outputs the plugin publishes and let you interact with those surfaces in a driver-friendly way.
 
+## Monitor System
+
+The dashboard-facing Monitor System is enabled by default. Use **Settings → Launch Settings → Enable Monitor System** to control it:
+
+- enabled: `LalaLaunch.MonitorSystem.State` is `ON` and the default message is `MONITOR READY`;
+- disabled: state is `OFF` and the message is `MONITOR OFF`;
+- re-enabling returns the monitor to the ready state before later fuel-health messages are published.
+
+The current Phase 1 monitor reports existing runtime fuel-health status only. It does not send pit commands or replace `Pit.Command.*` feedback.
+
 ## 2. Installation / import
 
 At a high level, dashboard setup is:
