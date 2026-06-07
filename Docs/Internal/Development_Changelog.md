@@ -1,3 +1,12 @@
+## 2026-06-07 — MonitorSystem Phase 2B pit-stop warning checks
+- Classification: **both** (driver-facing MonitorSystem pit-stop warning text plus internal Phase 2 trigger/check documentation).
+- Added edge-triggered `REFUEL OFF`, `MFD FUEL LOW`, and `EXIT FUEL SHORT` MonitorSystem messages using only Phase 2A pit-stop snapshots/evidence and existing plugin refuel recommendation seams (`PluginNextLitres`, `PluginFuelOnExit`).
+- Trigger mapping: predictive two-laps-fuel remaining checks publish `REFUEL OFF`/`MFD FUEL LOW` as CAUTION; pit-road entry, pit-box entry, and on-pit-road/boxed Fuel Control mode changes publish those service checks as WARNING; Fuel Control DATA changes stay log-only; pit-road exit checks `EXIT FUEL SHORT` as WARNING before clearing the pit-entry snapshot.
+- `REFUEL OFF` is guarded by effective refuel completion (`CurrentFuel + 0.75L >= pit-entry PluginFuelOnExit` or `PluginNextLitres <= 0.5L`) to avoid warning when iRacing/fuel-control naturally switches OFF after fuel has already been added.
+- Updated the MonitorSystem message catalogue and Phase 2B edge log wording with `warningText`/`warningEnum`.
+- Preserved fuel/refuel calculations, Strategy/planner math, Pit Fuel Control behavior, pit command behavior, dashboard export names, CSV behavior, and Phase 1 fuel-health messages. No `BASELINE SHORT`, `FUEL MODEL CHECK`, independent gross SimHub baseline maths, new exports, or Property Snapshot grouping changes were added.
+- Property Snapshot list reviewed: yes; no group change required because no SimHub exports/properties were added, removed, renamed, or regrouped.
+
 ## 2026-06-07 - MonitorSystem Phase 2A pit-stop trigger framework
 - Classification: **both** (internal pit-stop evidence framework and driver-visible settings placement correction; no new driver warnings, exports, command behavior, fuel math, or refuel math).
 - Added a private MonitorSystem Phase 2A observer in `LalaLaunch.cs` that records edge-only trigger logs for `FuelControlModeChanged`, `FuelControlDataChanged`, `PredictiveTwoLapsFuelRemaining`, `PitRoadEntry`, `PitBoxEntry`, and `PitRoadExit`.

@@ -7009,6 +7009,10 @@ namespace LaunchPlugin
         private double _pitRefuelLastObservedFuel = 0.0;
         private const double PitExitSpeedEpsilonMps = 0.1;
         private const double MonitorPitPredictiveFuelLapsThreshold = 2.05;
+        private const double MonitorPitMinRequiredAddLitres = 0.5;
+        private const double MonitorPitFuelLowToleranceLitres = 0.75;
+        private const double MonitorPitExitFuelShortToleranceLitres = 0.75;
+        private const double MonitorPitRefuelCompleteToleranceLitres = 0.75;
         private bool _monitorPitFrameworkPrimed = false;
         private PitFuelControlMode _monitorPitLastFuelControlMode = PitFuelControlMode.Off;
         private PitFuelControlData _monitorPitLastFuelControlData = PitFuelControlData.Live;
@@ -16273,11 +16277,15 @@ namespace LaunchPlugin
 
                 if (fuelControlMode != _monitorPitLastFuelControlMode)
                 {
+                    MonitorPitWarningResult warning = (onPitRoad || inPitStall || inPitBox)
+                        ? EvaluateMonitorPitServiceWarnings(snapshot, MonitorSeverity.Warning)
+                        : MonitorPitWarningResult.None;
+                    PublishMonitorPitWarning(warning);
                     LogMonitorPitTrigger("FuelControlModeChanged", snapshot, string.Format(
                         CultureInfo.InvariantCulture,
                         "from={0} to={1}",
                         FormatMonitorFuelControlMode(_monitorPitLastFuelControlMode),
-                        FormatMonitorFuelControlMode(fuelControlMode)));
+                        FormatMonitorFuelControlMode(fuelControlMode)), warning);
                 }
 
                 if (fuelControlData != _monitorPitLastFuelControlData)
@@ -16292,17 +16300,24 @@ namespace LaunchPlugin
                 if (!_monitorPitLastOnPitRoad && onPitRoad)
                 {
                     _monitorPitEntrySnapshot = snapshot;
-                    LogMonitorPitTrigger("PitRoadEntry", snapshot, "OnPitRoad false->true");
+                    MonitorPitWarningResult warning = EvaluateMonitorPitServiceWarnings(snapshot, MonitorSeverity.Warning);
+                    PublishMonitorPitWarning(warning);
+                    LogMonitorPitTrigger("PitRoadEntry", snapshot, "OnPitRoad false->true", warning);
                 }
 
                 if (!_monitorPitLastInPitBox && inPitBox)
                 {
-                    LogMonitorPitTrigger("PitBoxEntry", snapshot, "pit-box seam false->true");
+                    MonitorPitWarningResult warning = EvaluateMonitorPitServiceWarnings(snapshot, MonitorSeverity.Warning);
+                    PublishMonitorPitWarning(warning);
+                    LogMonitorPitTrigger("PitBoxEntry", snapshot, "pit-box seam false->true", warning);
                 }
 
                 if (_monitorPitLastOnPitRoad && !onPitRoad)
                 {
-                    LogMonitorPitTrigger("PitRoadExit", snapshot, "OnPitRoad true->false; predictive reset");
+                    MonitorPitWarningResult warning = EvaluateMonitorPitExitWarning(snapshot);
+                    PublishMonitorPitWarning(warning);
+                    LogMonitorPitTrigger("PitRoadExit", snapshot, "OnPitRoad true->false; predictive reset", warning);
+                    _monitorPitEntrySnapshot = null;
                     _monitorPitPredictiveTwoLapsTriggeredThisStint = false;
                 }
 
@@ -16325,12 +16340,124 @@ namespace LaunchPlugin
             if (predictiveEligible)
             {
                 _monitorPitPredictiveTwoLapsTriggeredThisStint = true;
+                MonitorPitWarningResult warning = EvaluateMonitorPitServiceWarnings(snapshot, MonitorSeverity.Caution);
+                PublishMonitorPitWarning(warning);
                 LogMonitorPitTrigger("PredictiveTwoLapsFuelRemaining", snapshot, string.Format(
                     CultureInfo.InvariantCulture,
                     "lapsRemainingInTank={0:0.00} threshold={1:0.00}",
                     lapsRemainingInTank,
-                    MonitorPitPredictiveFuelLapsThreshold));
+                    MonitorPitPredictiveFuelLapsThreshold), warning);
             }
+        }
+
+
+        private struct MonitorPitWarningResult
+        {
+            public static readonly MonitorPitWarningResult None = new MonitorPitWarningResult(MonitorSeverity.Off, null);
+
+            public MonitorPitWarningResult(MonitorSeverity severity, string text)
+            {
+                Severity = severity;
+                Text = text;
+            }
+
+            public MonitorSeverity Severity { get; }
+            public string Text { get; }
+            public bool HasWarning => !string.IsNullOrWhiteSpace(Text);
+        }
+
+        private MonitorPitWarningResult EvaluateMonitorPitServiceWarnings(MonitorPitStopSnapshot snapshot, MonitorSeverity serviceSeverity)
+        {
+            if (snapshot == null)
+            {
+                return MonitorPitWarningResult.None;
+            }
+
+            if (IsMonitorPitRefuelOffRisk(snapshot))
+            {
+                return new MonitorPitWarningResult(serviceSeverity, "REFUEL OFF");
+            }
+
+            if (IsMonitorPitMfdFuelLow(snapshot))
+            {
+                return new MonitorPitWarningResult(serviceSeverity, "MFD FUEL LOW");
+            }
+
+            return MonitorPitWarningResult.None;
+        }
+
+        private MonitorPitWarningResult EvaluateMonitorPitExitWarning(MonitorPitStopSnapshot snapshot)
+        {
+            if (snapshot == null || _monitorPitEntrySnapshot == null)
+            {
+                return MonitorPitWarningResult.None;
+            }
+
+            if (IsFinitePositive(_monitorPitEntrySnapshot.PluginFuelOnExit) &&
+                IsFiniteNonNegative(snapshot.CurrentFuel) &&
+                snapshot.CurrentFuel + MonitorPitExitFuelShortToleranceLitres < _monitorPitEntrySnapshot.PluginFuelOnExit)
+            {
+                return new MonitorPitWarningResult(MonitorSeverity.Warning, "EXIT FUEL SHORT");
+            }
+
+            return MonitorPitWarningResult.None;
+        }
+
+        private bool IsMonitorPitFuelStillRequired(MonitorPitStopSnapshot snapshot)
+        {
+            return snapshot != null &&
+                snapshot.PluginRefuelValid &&
+                IsFinitePositive(snapshot.PluginNextLitres) &&
+                snapshot.PluginNextLitres > MonitorPitMinRequiredAddLitres;
+        }
+
+        private bool IsMonitorPitMfdFuelLow(MonitorPitStopSnapshot snapshot)
+        {
+            return IsMonitorPitFuelStillRequired(snapshot) &&
+                snapshot.MfdRefuelEnabled &&
+                GetMonitorPitMfdSelectedAddLitres(snapshot) + MonitorPitFuelLowToleranceLitres < snapshot.PluginNextLitres;
+        }
+
+        private static double GetMonitorPitMfdSelectedAddLitres(MonitorPitStopSnapshot snapshot)
+        {
+            return snapshot != null && snapshot.MfdRefuelEnabled && IsFinitePositive(snapshot.MfdFuelRequest)
+                ? snapshot.MfdFuelRequest
+                : 0.0;
+        }
+
+        private bool IsMonitorPitRefuelOffRisk(MonitorPitStopSnapshot snapshot)
+        {
+            return IsMonitorPitFuelStillRequired(snapshot) &&
+                !snapshot.MfdRefuelEnabled &&
+                !IsMonitorPitRefuelEffectivelyComplete(snapshot);
+        }
+
+        private bool IsMonitorPitRefuelEffectivelyComplete(MonitorPitStopSnapshot snapshot)
+        {
+            if (snapshot == null)
+            {
+                return false;
+            }
+
+            if (IsFiniteNonNegative(snapshot.PluginNextLitres) && snapshot.PluginNextLitres <= MonitorPitMinRequiredAddLitres)
+            {
+                return true;
+            }
+
+            return _monitorPitEntrySnapshot != null &&
+                IsFinitePositive(_monitorPitEntrySnapshot.PluginFuelOnExit) &&
+                IsFiniteNonNegative(snapshot.CurrentFuel) &&
+                snapshot.CurrentFuel + MonitorPitRefuelCompleteToleranceLitres >= _monitorPitEntrySnapshot.PluginFuelOnExit;
+        }
+
+        private void PublishMonitorPitWarning(MonitorPitWarningResult warning)
+        {
+            if (!warning.HasWarning || _monitorSystem == null)
+            {
+                return;
+            }
+
+            _monitorSystem.Publish(warning.Severity, warning.Text);
         }
 
         private MonitorPitStopSnapshot BuildMonitorPitStopSnapshot(
@@ -16368,6 +16495,11 @@ namespace LaunchPlugin
 
         private void LogMonitorPitTrigger(string triggerName, MonitorPitStopSnapshot snapshot, string reason)
         {
+            LogMonitorPitTrigger(triggerName, snapshot, reason, MonitorPitWarningResult.None);
+        }
+
+        private void LogMonitorPitTrigger(string triggerName, MonitorPitStopSnapshot snapshot, string reason, MonitorPitWarningResult warning)
+        {
             if (snapshot == null)
             {
                 return;
@@ -16375,9 +16507,11 @@ namespace LaunchPlugin
 
             string trigger = string.IsNullOrWhiteSpace(triggerName) ? "Unknown" : triggerName.Trim();
             string reasonText = string.IsNullOrWhiteSpace(reason) ? "none" : reason.Trim();
+            string warningText = warning.HasWarning ? warning.Text : "none";
+            int warningEnum = warning.HasWarning ? (int)warning.Severity : 0;
             SimHub.Logging.Current.Info(string.Format(
                 CultureInfo.InvariantCulture,
-                "[LalaPlugin:MonitorSystem] pit trigger={0} sessionTime={1} sessionType={2} sessionState={3} phase={4} monitorState={5} monitorEnum={6} monitorText={7} onPitRoad={8} inPitStall={9} currentFuel={10} mode={11} data={12} mfdRefuelEnabled={13} mfdFuelRequest={14} pluginRefuelValid={15} pluginNextLitres={16} pluginFuelOnExit={17} reason={18}",
+                "[LalaPlugin:MonitorSystem] pit trigger={0} sessionTime={1} sessionType={2} sessionState={3} phase={4} monitorState={5} monitorEnum={6} monitorText={7} onPitRoad={8} inPitStall={9} currentFuel={10} mode={11} data={12} mfdRefuelEnabled={13} mfdFuelRequest={14} pluginRefuelValid={15} pluginNextLitres={16} pluginFuelOnExit={17} warningText={18} warningEnum={19} reason={20}",
                 trigger,
                 FormatMonitorDouble(snapshot.SessionTimeSec),
                 snapshot.SessionType,
@@ -16396,6 +16530,8 @@ namespace LaunchPlugin
                 snapshot.PluginRefuelValid,
                 FormatMonitorDouble(snapshot.PluginNextLitres),
                 FormatMonitorDouble(snapshot.PluginFuelOnExit),
+                warningText,
+                warningEnum,
                 reasonText));
         }
 
