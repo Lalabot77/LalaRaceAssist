@@ -14,5 +14,4 @@ Enum,Severity,Text,Category,Trigger,Description,DriverAction,AutoRecoverable
 4,WARNING,BASELINE SHORT,FuelPitStop,PitRoadOrBox,Baseline gross fuel check is short by more than one SimHub fuel lap during pit context,Add fuel or plan another stop,No
 3,CAUTION,OPP TARGET CHECK,CarOppH2H,ImpossibleState,Published Opp target is valid but has an impossible CarIdx or matches the player,Check target data,Yes
 3,CAUTION,CARSA SLOT CHECK,CarOppH2H,ImpossibleState,Published CarSA slot is valid but has an impossible CarIdx,Check car awareness data,Yes
-3,CAUTION,CARSA GAP CHECK,CarOppH2H,ImpossibleState,Published live CarSA slot is valid but required TrackSec gap is non-finite,Check car awareness data,Yes
 2,WATCH,H2H TARGET CHECK,CarOppH2H,ImpossibleState,Published H2H target is valid but has an impossible CarIdx or matches the player,Check H2H data,Yes

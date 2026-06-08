@@ -6893,7 +6893,7 @@ namespace LaunchPlugin
         private const double MonitorPitPredictiveFuelLapsThreshold = 2.05;
         private const double MonitorPitMinRequiredAddLitres = 0.5;
         private const double MonitorPitFuelLowToleranceLitres = 0.75;
-        private const double MonitorPitExitFuelShortToleranceLitres = 0.75;
+        private const double MonitorPitExitFuelShortToleranceLitres = 1.5;
         private const double MonitorPitRefuelCompleteToleranceLitres = 0.75;
         private const double MonitorBaselineFuelToleranceLaps = 1.0;
         private const double MonitorCarOppH2HWarmupSeconds = 3.0;
@@ -6910,7 +6910,6 @@ namespace LaunchPlugin
         private double _monitorCarOppH2HEligibleSinceSessionTimeSec = double.NaN;
         private readonly MonitorCarOppH2HCheckState _monitorOppTargetCheckState = new MonitorCarOppH2HCheckState("OppTarget", "OPP TARGET CHECK", MonitorSeverity.Caution);
         private readonly MonitorCarOppH2HCheckState _monitorCarSaSlotCheckState = new MonitorCarOppH2HCheckState("CarSASlot", "CARSA SLOT CHECK", MonitorSeverity.Caution);
-        private readonly MonitorCarOppH2HCheckState _monitorCarSaGapCheckState = new MonitorCarOppH2HCheckState("CarSAGap", "CARSA GAP CHECK", MonitorSeverity.Caution);
         private readonly MonitorCarOppH2HCheckState _monitorH2HTargetCheckState = new MonitorCarOppH2HCheckState("H2HTarget", "H2H TARGET CHECK", MonitorSeverity.Watch);
 
         private sealed class MonitorCarOppH2HCheckState
@@ -15977,7 +15976,6 @@ namespace LaunchPlugin
         {
             _monitorOppTargetCheckState.Reset();
             _monitorCarSaSlotCheckState.Reset();
-            _monitorCarSaGapCheckState.Reset();
             _monitorH2HTargetCheckState.Reset();
         }
 
@@ -16018,14 +16016,13 @@ namespace LaunchPlugin
             bool newFailure = false;
             newFailure |= UpdateMonitorCarOppH2HCheckState(_monitorOppTargetCheckState, EvaluateMonitorOppTargetCheck(playerCarIdx), sessionTimeSec, normalizedSessionType, playerCarIdx);
             newFailure |= UpdateMonitorCarOppH2HCheckState(_monitorCarSaSlotCheckState, EvaluateMonitorCarSaSlotCheck(), sessionTimeSec, normalizedSessionType, playerCarIdx);
-            newFailure |= UpdateMonitorCarOppH2HCheckState(_monitorCarSaGapCheckState, EvaluateMonitorCarSaGapCheck(), sessionTimeSec, normalizedSessionType, playerCarIdx);
             newFailure |= UpdateMonitorCarOppH2HCheckState(_monitorH2HTargetCheckState, EvaluateMonitorH2HTargetCheck(playerCarIdx), sessionTimeSec, normalizedSessionType, playerCarIdx);
 
             MonitorCarOppH2HCheckState activeState = SelectActiveMonitorCarOppH2HCheckState();
             if (activeState != null)
             {
-                bool activeTextAlreadyOwned = _monitorSystem != null && _monitorSystem.IsCarOppH2HHealthWarningActive;
-                if (newFailure || !activeTextAlreadyOwned)
+                bool activeTextDisplayed = _monitorSystem != null && string.Equals(_monitorSystem.DisplayText, activeState.Text, StringComparison.Ordinal);
+                if (newFailure || !activeTextDisplayed)
                 {
                     PublishMonitorCarOppH2HHealthWarning(activeState);
                 }
@@ -16085,7 +16082,6 @@ namespace LaunchPlugin
         {
             if (_monitorOppTargetCheckState.Active) return _monitorOppTargetCheckState;
             if (_monitorCarSaSlotCheckState.Active) return _monitorCarSaSlotCheckState;
-            if (_monitorCarSaGapCheckState.Active) return _monitorCarSaGapCheckState;
             if (_monitorH2HTargetCheckState.Active) return _monitorH2HTargetCheckState;
             return null;
         }
@@ -16217,27 +16213,13 @@ namespace LaunchPlugin
                 return MonitorCarOppH2HFailure.None;
             }
 
-            var failure = EvaluateMonitorCarSaSlotSet("Ahead", outputs.AheadSlots, true);
+            var failure = EvaluateMonitorCarSaSlotSet("Ahead", outputs.AheadSlots);
             if (failure.HasFailure) return failure;
 
-            return EvaluateMonitorCarSaSlotSet("Behind", outputs.BehindSlots, true);
+            return EvaluateMonitorCarSaSlotSet("Behind", outputs.BehindSlots);
         }
 
-        private MonitorCarOppH2HFailure EvaluateMonitorCarSaGapCheck()
-        {
-            var outputs = _carSaEngine?.Outputs;
-            if (outputs == null)
-            {
-                return MonitorCarOppH2HFailure.None;
-            }
-
-            var failure = EvaluateMonitorCarSaSlotSet("Ahead", outputs.AheadSlots, false);
-            if (failure.HasFailure) return failure;
-
-            return EvaluateMonitorCarSaSlotSet("Behind", outputs.BehindSlots, false);
-        }
-
-        private static MonitorCarOppH2HFailure EvaluateMonitorCarSaSlotSet(string side, CarSASlot[] slots, bool checkCarIdx)
+        private static MonitorCarOppH2HFailure EvaluateMonitorCarSaSlotSet(string side, CarSASlot[] slots)
         {
             if (slots == null)
             {
@@ -16253,23 +16235,11 @@ namespace LaunchPlugin
                 }
 
                 int slotNumber = i + 1;
-                if (checkCarIdx)
-                {
-                    if (!IsMonitorCarIdxValid(slot.CarIdx))
-                    {
-                        return new MonitorCarOppH2HFailure(string.Format(
-                            CultureInfo.InvariantCulture,
-                            "side={0} slot={1} carIdx={2} issue=valid_slot_invalid_caridx",
-                            side,
-                            slotNumber,
-                            slot.CarIdx));
-                    }
-                }
-                else if (slot.IsOnTrack && IsMonitorCarIdxValid(slot.CarIdx) && !IsFiniteNumber(slot.GapTrackSec))
+                if (!IsMonitorCarIdxValid(slot.CarIdx))
                 {
                     return new MonitorCarOppH2HFailure(string.Format(
                         CultureInfo.InvariantCulture,
-                        "side={0} slot={1} carIdx={2} issue=valid_live_slot_track_gap_nonfinite",
+                        "side={0} slot={1} carIdx={2} issue=valid_slot_invalid_caridx",
                         side,
                         slotNumber,
                         slot.CarIdx));
@@ -16341,11 +16311,6 @@ namespace LaunchPlugin
         private static bool IsMonitorCarIdxValid(int carIdx)
         {
             return carIdx >= 0 && carIdx < CarSAEngine.MaxCars;
-        }
-
-        private static bool IsFiniteNumber(double value)
-        {
-            return !double.IsNaN(value) && !double.IsInfinity(value);
         }
 
         private void ResetMonitorPitStopFrameworkState()

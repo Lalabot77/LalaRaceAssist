@@ -49,7 +49,6 @@ namespace LaunchPlugin
             IsEnabled &&
             (string.Equals(DisplayText, "OPP TARGET CHECK", StringComparison.Ordinal) ||
              string.Equals(DisplayText, "CARSA SLOT CHECK", StringComparison.Ordinal) ||
-             string.Equals(DisplayText, "CARSA GAP CHECK", StringComparison.Ordinal) ||
              string.Equals(DisplayText, "H2H TARGET CHECK", StringComparison.Ordinal));
 
         public MonitorSystem()
