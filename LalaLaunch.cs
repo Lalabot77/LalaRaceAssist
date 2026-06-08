@@ -7014,7 +7014,7 @@ namespace LaunchPlugin
         private const double MonitorPitPredictiveFuelLapsThreshold = 2.05;
         private const double MonitorPitMinRequiredAddLitres = 0.5;
         private const double MonitorPitFuelLowToleranceLitres = 0.75;
-        private const double MonitorPitExitFuelShortToleranceLitres = 0.75;
+        private const double MonitorPitExitFuelShortToleranceLitres = 1.5;
         private const double MonitorPitRefuelCompleteToleranceLitres = 0.75;
         private const double MonitorBaselineFuelToleranceLaps = 1.0;
         private bool _monitorPitFrameworkPrimed = false;
