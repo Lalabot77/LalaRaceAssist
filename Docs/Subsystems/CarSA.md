@@ -231,7 +231,7 @@ Debug (`Car.Debug.*`):
 - Optional (debug-gated): `LapTimeUsedSec`
 
 ## Debug export (optional)
-When `EnableCarSADebugExport` is enabled (and soft debug is on), CarSA writes a lightweight CSV snapshot using the configured cadence: `Tick`, `MiniSector`, or `EventOnly`. Tick mode honors the configured max-Hz cap; MiniSector mode writes at mini-sector/checkpoint transitions; EventOnly writes event-marker rows. Output is buffered and flushed every 20 lines or 4 KB.
+When `EnableCarSADebugExport` / `CarSA Debug CSV` is enabled (and master soft debug is on), CarSA writes a lightweight CSV snapshot using the configured cadence: `Tick`, `MiniSector`, or event changes only. Tick mode honors the configured max-Hz cap; MiniSector mode writes at mini-sector/checkpoint transitions; event-change cadence writes rows when CarSA slot debug event values change. The separate `CarSADebugExportWriteEventsCsv` / `Write CarSA events CSV` option preserves the CarSA events CSV writer for event-change diagnostics. Output is buffered and flushed every 20 lines or 4 KB.
 - Path: `SimHub/Logs/LalapluginData/CarSA_Debug_YYYY-MM-DD_HH-mm-ss_<TrackName>.csv` (UTC timestamp, sanitized track name; repeated `_` collapsed, trimmed, clamped to 60 chars)
 - Columns (grouped, validation export; expect HotLap/CoolLap extensions later):
   - **Top-level context:** `SessionTimeSec`, `SessionState`, `SessionTypeName`, `PlayerCarIdx`, `PlayerLap`, `PlayerLapPct`, `PlayerCheckpointIndexNow`, `PlayerCheckpointIndexCrossed`, `NotRelevantGapSec`.
@@ -239,7 +239,7 @@ When `EnableCarSADebugExport` is enabled (and soft debug is on), CarSA writes a 
   - **Player tail:** `PlayerTrackSurfaceRaw`, `PlayerSessionFlagsRaw`.
 
 ## Car Tracking Probe CSV export (optional)
-When Debug mode is enabled, `EnableCarTrackingProbeCsv` is enabled, and the Debug UI `START` button is pressed, the plugin writes `CarTrackingProbe_<Track>_<Timestamp>.csv` under `SimHub/Logs/LalapluginData/`. Capture frequency is bounded by `CarTrackingProbeCsvFrequencyHz` (normalized to 1–20 Hz), and rows are buffered/flushed periodically. `STOP` flushes and pauses capture; `RESET CSV` stops capture and removes the current runtime CSV file if one exists.
+When master Debug mode is enabled, `EnableCarTrackingProbeCsv` is enabled, and the Debug UI `START` button is pressed, the plugin writes `CarTrackingProbe_<Track>_<Timestamp>.csv` under `SimHub/Logs/LalapluginData/`. Capture frequency is bounded by `CarTrackingProbeCsvFrequencyHz` (normalized to 1–20 Hz), and rows are buffered/flushed periodically. `STOP` flushes and pauses capture; `RESET CSV` stops capture and removes the current runtime CSV file if one exists.
 - **Probe targets:** the player from `PlayerCarIdx`, Probe A from `CarTrackingProbeACarIdx`, and Probe B from `CarTrackingProbeBCarIdx`.
 - **Per-probe fields:** `CarIdx`, identity/class data from `DriverInfo.Drivers##` only (`Name`, `AbbrevName`, `CarNumber`, `ClassName`, `ClassColor`, `IsPaceCar` when available), raw CarIdx arrays (`CarIdxLap`, `CarIdxLapCompleted`, `CarIdxLapDistPct`, `CarIdxTrackSurface`, `CarIdxOnPitRoad`, `CarIdxClassPosition`, `CarIdxPosition`, `CarIdxBestLapTime`, `CarIdxLastLapTime`, `CarIdxSessionFlags`, `CarIdxPaceFlags`). `DriverInfo.CompetingDrivers` is intentionally not used as a normal-driver fallback for this export.
 - **Player-vs-probe fields:** lap deltas from both lap bases, raw progress deltas, circular track delta percent, estimated track seconds from the diagnostic lap-time scale, same-checkpoint gap when the existing read-only CarSA checkpoint seam reports one, checkpoint validity, optional checkpoint age (blank when unavailable), selected/published gap source when the probe matches a current CarSA/Opp/H2H target, and an eligibility reason.
@@ -253,3 +253,8 @@ When Debug mode is enabled, `EnableCarTrackingProbeCsv` is enabled, and the Debu
 - Car-centric cache avoids per-slot computations for closing and status latches.
 
 - 2026-04-30 Phase 1 League Race Class infrastructure: CarSA spatial selection/hysteresis logic remains unchanged; no effective-class selection injection in this phase.
+
+
+## Debug UI / OffTrack CSV note (2026-06-08)
+- The old OffTrack Debug CSV workflow remains removed. Off-track runtime/latch behavior that belongs to CarSA remains intact, but there is no active `OffTrack Debug CSV` UI/settings/export workflow and no `Car.Debug.OffTrack.ProbeCarIdx` export.
+- Car Tracking Probe CSV remains a separate diagnostics-only writer with parent-toggle-hidden UI controls and master-debug operational gating.

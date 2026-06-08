@@ -5,6 +5,15 @@
 - Preserved predictive checks on later ticks, trusted SimHub telemetry reads, no `MfdFuelRequestKnown`, no new warnings, no CSV, no per-tick checks, no `Fuel.Refuel.*` / Pit Fuel Control / Pit Command / Strategy planner changes, and no Property Snapshot group changes.
 - Property Snapshot list reviewed: yes; no export/property add, remove, rename, behavior-contract change, or group change because `MonitorSystem.*` remains in the existing Fuel/Strategy group.
 
+## 2026-06-08 — Debug Options UI tidy and master debug gate
+- Classification: **both** (user-facing Settings Debug Options UI cleanup plus internal debug operational gating; no dashboard JSON, runtime fuel/pit/CarSA/Shift/Launch calculation behavior, or SimHub export/property names changed).
+- `Enable debugging mode` / `SoftDebugEnabled` now acts as the operational kill switch for debug capture/logging systems: Property Snapshot manual/rolling capture, CarSA Debug CSV/Event CSV writing, Car Tracking Probe CSV, Shift Assist Debug CSV, and extra debug/detail logs are inert while master debug is off; active rolling/probe/debug CSV runtime state is stopped/flushed safely without clearing child preferences.
+- Debug Options UI is split into General logging, Property Snapshot, CarSA diagnostics, Car Tracking Probe CSV, Shift Assist diagnostics, and Debug Actions sections. Child controls are hidden behind parent toggles/modes, including Property Snapshot rolling/frequency, CarSA tick Hz, Car Tracking Probe details, and Shift Assist max Hz.
+- Property Snapshot rolling frequency now normalizes and displays the runtime 1–2 Hz cap; rolling START/STOP/RESET UI state refreshes through the existing OFF/READY/RECORDING status resolver.
+- PitExit math-audit/detail logging now uses master debug + `Enable Debug Logging`; the visible legacy `PitExit Verbose Logging` toggle was removed while the persisted setting remains load-safe legacy data.
+- Verified OffTrack Debug CSV remains removed; preserved Property Snapshot, Event Marker, CarSA Debug CSV, CarSA Events CSV, Car Tracking Probe CSV, Shift Assist Debug CSV, DecelCapture, Launch traces/analysis, and Trace Logging.
+- Property Snapshot list reviewed: yes; no SimHub export/property was added, removed, renamed, or regrouped because this changes UI visibility and debug operational gates only.
+
 ## 2026-06-08 — MonitorSystem Phase 2C pit-exit MFD context fix
 - Classification: **internal-only correctness follow-up** (baseline-warning edge context fix; no export names, dashboard JSON, fuel/refuel math, planner, Pit Fuel Control, Pit Command, or message text changes).
 - Parameterized `IsMonitorBaselineFuelShort(...)` with `includeSelectedMfdFuel`, keeping selected `PitSvFuel` included for predictive, pit-road entry, and pit-box entry checks while excluding it on `PitRoadExit`.

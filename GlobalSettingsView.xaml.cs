@@ -25,9 +25,27 @@ namespace LaunchPlugin
             TelemetryService = telemetry;
             DataContext = plugin;
             LaunchSettingsHost.Content = new LaunchPluginSettingsUI(plugin, telemetry);
+            if (Plugin != null)
+            {
+                Plugin.DebugUiRefreshRequested += Plugin_DebugUiRefreshRequested;
+            }
+            Unloaded += GlobalSettingsView_Unloaded;
             InitializeIOverlayImport();
             SyncPropertySnapshotSelectAllFromGroups();
             RefreshPropertySnapshotRollingStatusText();
+        }
+
+        private void Plugin_DebugUiRefreshRequested()
+        {
+            Dispatcher.BeginInvoke(new Action(RefreshPropertySnapshotRollingStatusText));
+        }
+
+        private void GlobalSettingsView_Unloaded(object sender, RoutedEventArgs e)
+        {
+            if (Plugin != null)
+            {
+                Plugin.DebugUiRefreshRequested -= Plugin_DebugUiRefreshRequested;
+            }
         }
 
         private void PropertySnapshotSelectAll_Click(object sender, RoutedEventArgs e)
@@ -72,6 +90,16 @@ namespace LaunchPlugin
             RefreshPropertySnapshotRollingStatusText();
         }
 
+        private void DebugMasterToggle_Click(object sender, RoutedEventArgs e)
+        {
+            if (DebugMasterToggle?.IsChecked != true)
+            {
+                Plugin?.DisableDebugRuntimeSystemsForMasterGate();
+            }
+
+            RefreshPropertySnapshotRollingStatusText();
+        }
+
         private void PropertySnapshotRollingStatusRefresh_Click(object sender, RoutedEventArgs e)
         {
             RefreshPropertySnapshotRollingStatusText();
@@ -79,6 +107,12 @@ namespace LaunchPlugin
 
         private void PropertySnapshotRollingStatusRefresh_Click(object sender, SelectionChangedEventArgs e)
         {
+            RefreshPropertySnapshotRollingStatusText();
+        }
+
+        private void PropertySnapshotRollingFrequencyTextBox_LostFocus(object sender, RoutedEventArgs e)
+        {
+            Plugin?.NormalizePropertySnapshotRollingFrequencyForUi();
             RefreshPropertySnapshotRollingStatusText();
         }
 
@@ -105,18 +139,30 @@ namespace LaunchPlugin
             }
 
             string status = (Plugin?.GetPropertySnapshotRollingStatusTextForUi() ?? "OFF").Trim().ToUpperInvariant();
+            bool isReady = string.Equals(status, "READY", StringComparison.Ordinal);
             bool isRecording = string.Equals(status, "RECORDING", StringComparison.Ordinal);
 
             PropertySnapshotRollingStatusTextBlock.Text = status;
 
+            if (PropertySnapshotRollingFrequencyTextBox != null && Plugin?.Settings != null)
+            {
+                Plugin.NormalizePropertySnapshotRollingFrequencyForUi();
+                PropertySnapshotRollingFrequencyTextBox.Text = Plugin.Settings.PropertySnapshotRollingFrequencyHz.ToString("0.##", System.Globalization.CultureInfo.InvariantCulture);
+            }
+
             if (PropertySnapshotStartRollingButton != null)
             {
-                PropertySnapshotStartRollingButton.IsEnabled = !isRecording;
+                PropertySnapshotStartRollingButton.IsEnabled = isReady;
             }
 
             if (PropertySnapshotStopRollingButton != null)
             {
                 PropertySnapshotStopRollingButton.IsEnabled = isRecording;
+            }
+
+            if (PropertySnapshotResetRollingCsvButton != null)
+            {
+                PropertySnapshotResetRollingCsvButton.IsEnabled = isReady || isRecording;
             }
 
             if (PropertySnapshotRollingStatusBorder == null)

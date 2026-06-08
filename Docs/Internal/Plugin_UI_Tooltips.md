@@ -1,7 +1,7 @@
 # Plugin UI Tooltips
 
 Validated against commit: HEAD
-Last updated: 2026-06-07
+Last updated: 2026-06-08
 Branch: work
 
 ## CopyProfileDialog.xaml
@@ -26,6 +26,16 @@ Branch: work
 - `Dash Visibility` keeps the existing visibility matrix for Launch Assist, Pit Assists, Automatic Pit Screen, Rejoin Assist, Verbose Race Messages, Race Flags, Radio Messages, and Traffic Alerts, but the release-facing column headers are now `DRIVER`, `STRATEGY`, and `OVERLAY`.
 - `Dash Visibility` header tooltips make the short labels explicit: `DRIVER = Lala Race Dash`, `STRATEGY = Lala Strategy Dash`, and `OVERLAY = overlay surfaces`.
 - `Launch Mode`, `Event Marker`, and `Post-Launch Results Display Time` no longer appear in Dash Control after this tidy-up.
+
+
+## GlobalSettingsView.xaml
+- `Enable debugging mode` is the master operational kill switch for debug capture/logging systems; turning it off hides Debug Options and stops/flushes runtime debug CSV/rolling capture state without clearing child preferences.
+- Debug Options is organized into sections: General logging, Property Snapshot, CarSA diagnostics, Car Tracking Probe CSV, Shift Assist diagnostics, and Debug Actions.
+- General logging: `Enable Debug Logging` controls extra/detail SimHub logs only while master debugging mode is enabled; the old visible `PitExit Verbose Logging` toggle is removed and PitExit math-audit/detail logs now use this gate.
+- Property Snapshot: group checkboxes are on their own row; options are on the next row; rolling controls/status are visible only when `Write rolling combined CSV` is enabled. `Frequency Hz` appears only in `FREQUENCY` mode and is normalized to the 1–2 Hz runtime cap.
+- CarSA diagnostics: `CarSA Debug CSV` enables the debug CSV writer while master debugging mode is on. Cadence options are `Tick`, `MiniSector`, and `Event changes only`; `Tick mode max Hz` appears only for `Tick`. `Write CarSA events CSV` keeps the separate events CSV behavior for event-change cadence diagnostics.
+- Car Tracking Probe CSV: child controls (`Probe A/B CarIdx`, frequency, START/STOP/RESET, and explanatory text) are visible only when `Enable Car Tracking Probe` is checked; runtime capture still requires master debugging mode and START.
+- Shift Assist diagnostics: `Shift Assist Debug Max Hz` is visible only when `Shift Assist Debug CSV` is checked; CSV writing is also master-gated. `Mute Shift Assist sound in replay` remains a normal Shift Assist debug preference.
 
 ## LaunchPluginSettingsUI.xaml
 - `Enable Monitor System` no longer appears in the Launch UI / Bindings section; the persisted setting is owned by Dash Control global functions.
@@ -106,6 +116,16 @@ Branch: work
 - L104: Pick the telemetry channel for Plot 2.
 - L114: When checked, scales each graph's Y-axis from its own min to max value (or 0-Max for RPM), making it easier to see the shape of the data. Uncheck to see the true values.
 - L154: Zoom the time window (sec) shown in the graphs.
+
+
+## GlobalSettingsView.xaml
+- `Enable debugging mode` is the master operational kill switch for debug capture/logging systems; turning it off hides Debug Options and stops/flushes runtime debug CSV/rolling capture state without clearing child preferences.
+- Debug Options is organized into sections: General logging, Property Snapshot, CarSA diagnostics, Car Tracking Probe CSV, Shift Assist diagnostics, and Debug Actions.
+- General logging: `Enable Debug Logging` controls extra/detail SimHub logs only while master debugging mode is enabled; the old visible `PitExit Verbose Logging` toggle is removed and PitExit math-audit/detail logs now use this gate.
+- Property Snapshot: group checkboxes are on their own row; options are on the next row; rolling controls/status are visible only when `Write rolling combined CSV` is enabled. `Frequency Hz` appears only in `FREQUENCY` mode and is normalized to the 1–2 Hz runtime cap.
+- CarSA diagnostics: `CarSA Debug CSV` enables the debug CSV writer while master debugging mode is on. Cadence options are `Tick`, `MiniSector`, and `Event changes only`; `Tick mode max Hz` appears only for `Tick`. `Write CarSA events CSV` keeps the separate events CSV behavior for event-change cadence diagnostics.
+- Car Tracking Probe CSV: child controls (`Probe A/B CarIdx`, frequency, START/STOP/RESET, and explanatory text) are visible only when `Enable Car Tracking Probe` is checked; runtime capture still requires master debugging mode and START.
+- Shift Assist diagnostics: `Shift Assist Debug Max Hz` is visible only when `Shift Assist Debug CSV` is checked; CSV writing is also master-gated. `Mute Shift Assist sound in replay` remains a normal Shift Assist debug preference.
 
 ## LaunchPluginSettingsUI.xaml
 - L26: Save the current launch settings to this profile.
@@ -222,11 +242,11 @@ Branch: work
 - `GlobalSettingsView.xaml` is now the top-level `SETTINGS` tab, with visible main-tab order `STRATEGY`, `PROFILES`, `DASH CONTROL`, `LAUNCH ANALYSIS`, `SETTINGS`.
 - `GlobalSettingsView.xaml` now surfaces the Friends List tools/import flow inside a collapsed `Friends List` expander first, then a collapsed `Launch Settings` expander, then the existing Debug block.
 - `GlobalSettingsView.xaml` no longer contains the duplicated per-profile `USER VARIABLES` block; the Settings tab now begins with the Friends List tools/import flow.
-- `GlobalSettingsView.xaml` DEBUG section continues to host the existing debug toggles and the moved `Event Marker` binding under `Debug Actions`; Launch Settings now sits above this block inside its own collapsed expander.
+- `GlobalSettingsView.xaml` DEBUG section hosts the master debug toggle and sectioned Debug Options (`General logging`, `Property Snapshot`, `CarSA diagnostics`, `Car Tracking Probe CSV`, `Shift Assist diagnostics`, `Debug Actions`); Launch Settings sits above this block inside its own collapsed expander.
 - `GlobalSettingsView.xaml` shows the warning text `Debug mode is for troubleshooting only. Leave this off unless asked to enable it.` directly below `Enable debugging mode`.
-- `GlobalSettingsView.xaml` `Enable Debug Logging` tooltip says it enables verbose logging for troubleshooting the plugin.
-- `GlobalSettingsView.xaml` Property Snapshot rolling frequency tooltip documents the runtime 1–2 Hz cap. Debug Options includes `Enable Car Tracking Probe`, Probe A/B `CarIdx` inputs, `Frequency Hz`, `START`, `STOP`, and `RESET CSV` controls for a diagnostics-only CSV writer. The removed OffTrack Debug CSV controls are no longer documented. The Car Tracking Probe toggle tooltip states it enables targeted diagnostic CSV capture for player plus Probe A/B CarIdx values; the frequency tooltip documents the 1–20 Hz range.
-- `GlobalSettingsView.xaml` `PitExit Verbose Logging` tooltip says it adds PitExit math audit details to pit-in snapshots for troubleshooting.
+- `GlobalSettingsView.xaml` `Enable Debug Logging` tooltip says it enables extra troubleshooting/detail logs only while master debugging mode is also enabled.
+- `GlobalSettingsView.xaml` Property Snapshot rolling frequency tooltip documents the runtime 1–2 Hz cap and normalizes higher entries; rolling controls are hidden unless `Write rolling combined CSV` is enabled and frequency is hidden unless `FREQUENCY` mode is selected. Debug Options includes parent-hidden `Enable Car Tracking Probe`, Probe A/B `CarIdx` inputs, `Frequency Hz`, `START`, `STOP`, and `RESET CSV` controls for a diagnostics-only CSV writer. The removed OffTrack Debug CSV controls are no longer documented. The Car Tracking Probe frequency tooltip documents the 1–20 Hz range.
+- `GlobalSettingsView.xaml` no longer exposes `PitExit Verbose Logging`; PitExit math-audit/detail logs are controlled by master debugging mode plus `Enable Debug Logging`.
 - `GlobalSettingsView.xaml` `Pit.Box: include optional repairs in service countdown` toggle tooltip says optional repair time is included in Pit.Box target/remaining and shared total-stop-loss prediction when enabled; mandatory repairs remain included by default when valid while boxed.
 - `GlobalSettingsView.xaml` now includes a collapsed `Pit Commands` expander in Settings with:
   - built-in pit-action binding rows (`Pit Clear All`, `Clear Tyres`, `Toggle Fuel`, `Fuel +/-1`, `Fuel +/-10`, `Fuel MAX`, `Toggle Tyres`, `Toggle Fast Repair`, `Toggle Auto Fuel`, `Toggle Tear-off`),

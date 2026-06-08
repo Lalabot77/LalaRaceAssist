@@ -307,3 +307,7 @@ Reset semantics are centralised in:
 - TODO/VERIFY: Confirm whether DTL uses session-average or stint-average pace as baseline.
 - TODO/VERIFY: Confirm pit loss publication gating for non-race sessions (practice/qualifying).
 - TODO/VERIFY: Native/SDK pit service prediction remains limited in plugin scope. Current runtime authority confirms elapsed stall timing (`PlayerCarInPitStall`, `PitStopElapsedSec`, `GameData.LastPitStopDuration` validation), pit service selection flags (`dpFuelFill`, tyre change selectors), and boxed repair-left time where available (`PitRepairLeft`, optional `PitOptRepairLeft` when the user setting is enabled). Setup-adjustment timing remains intentionally out of scope.
+
+
+## Debug logging gate note (2026-06-08)
+- PitExit math-audit/detail logging is now controlled by the global Debug Options `Enable Debug Logging` gate and only emits while master `Enable debugging mode` is also on. The visible legacy `PitExit Verbose Logging` toggle was removed from the UI; normal Pit/PitLite/PitExit INFO/WARN operational logs are unchanged.

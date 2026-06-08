@@ -180,7 +180,7 @@ Workflow routing note: `Docs/Internal/Property_Snapshot_Debug_Workflow.md` owns 
 ## Car Tracking Probe CSV debug exports
 - **`[LalaPlugin:CarTrackingProbe] START ignored: Soft Debug is disabled.`** — Debug UI start request was ignored because master soft debug is off.
 - **`[LalaPlugin:CarTrackingProbe] START ignored: Enable Car Tracking Probe is off.`** — Debug UI start request was ignored because the Car Tracking Probe enable toggle is off.
-- **`[LalaPlugin:CarTrackingProbe] CSV capture START.`** — Runtime-only Car Tracking Probe CSV capture started; rows are written only while soft debug and the enable toggle remain on.
+- **`[LalaPlugin:CarTrackingProbe] CSV capture START.`** — Runtime-only Car Tracking Probe CSV capture started; rows are written only while master soft debug and the enable toggle remain on.
 - **`[LalaPlugin:CarTrackingProbe] CSV capture STOP.`** — Runtime-only Car Tracking Probe CSV capture stopped and pending rows were flushed.
 - **`[LalaPlugin:CarTrackingProbe] CSV reset completed.`** — Current runtime Car Tracking Probe CSV path was removed/reset and capture was stopped.
 - **`[LalaPlugin:CarTrackingProbe] CSV reset failed: <message>`** — Reset attempted but file deletion/cleanup failed.
@@ -277,3 +277,9 @@ Workflow routing note: `Docs/Internal/Property_Snapshot_Debug_Workflow.md` owns 
 
 
 - **Shift Assist urgent cue volume policy** — Urgent beep audio uses derived 50% of the main beep slider at runtime and has no separate urgent volume control.
+
+
+## 2026-06-08 debug logging gate clarification
+- Extra/detail logs use `Enable Debug Logging` only while master `Enable debugging mode` is also on (`SoftDebugEnabled && EnableDebugLogging`).
+- PitExit math-audit/detail logging is folded under `Enable Debug Logging`; the old visible `PitExit Verbose Logging` UI toggle is no longer an active behavior gate. Normal PitExit INFO/WARN operational logs remain unchanged.
+- Shift Assist audio-delay telemetry logs are treated as extra debug/detail logs and use the same master-debug + `Enable Debug Logging` gate; Shift Assist Debug CSV rows remain controlled by master debug plus `Shift Assist Debug CSV`.

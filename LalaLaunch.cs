@@ -1,4 +1,4 @@
-// --- Using Directives ---
+﻿// --- Using Directives ---
 using GameReaderCommon;
 using LaunchPlugin.Messaging;
 using Newtonsoft.Json;
@@ -606,6 +606,50 @@ namespace LaunchPlugin
             SimHub.Logging.Current.Info("[LalaPlugin:Dash] Event marker action fired (pressed latched).");
         }
 
+        public event Action DebugUiRefreshRequested;
+
+        public void DisableDebugRuntimeSystemsForMasterGate()
+        {
+            StopDebugRuntimeSystemsForMasterGate();
+        }
+
+        public double NormalizePropertySnapshotRollingFrequencyForUi()
+        {
+            return NormalizePropertySnapshotRollingFrequencyHz();
+        }
+
+        private void EnsureDebugMasterGateOperationalState(bool debugMaster)
+        {
+            if (!debugMaster && _lastDebugMasterOperationalState)
+            {
+                StopDebugRuntimeSystemsForMasterGate();
+            }
+
+            _lastDebugMasterOperationalState = debugMaster;
+        }
+
+        private void StopDebugRuntimeSystemsForMasterGate()
+        {
+            if (_propertySnapshotRollingActiveRuntime)
+            {
+                _propertySnapshotRollingActiveRuntime = false;
+                _propertySnapshotLastAutoCaptureUtc = DateTime.MinValue;
+                _propertySnapshotLastLapCaptured = -1;
+            }
+
+            if (_carTrackingProbeCsvActiveRuntime)
+            {
+                _carTrackingProbeCsvActiveRuntime = false;
+                _carSaEngine?.ClearCheckpointTruthDiagnosticSnapshots();
+                TryFlushCarTrackingProbeCsvBuffer();
+            }
+
+            ResetCarSaDebugExportState();
+            ResetShiftAssistDebugCsvState();
+            _propertySnapshotDisabledGateLogged = false;
+            RequestDebugUiRefresh();
+        }
+
         public void StartPropertySnapshotRolling()
         {
             if (Settings == null) return;
@@ -627,6 +671,7 @@ namespace LaunchPlugin
             _propertySnapshotRollingActiveRuntime = true;
             _propertySnapshotLastAutoCaptureUtc = DateTime.MinValue;
             _propertySnapshotLastLapCaptured = -1;
+            RequestDebugUiRefresh();
             SimHub.Logging.Current.Info("[LalaPlugin:Debug] Property snapshot rolling automation START (runtime-only). Frequency mode rewrites full rolling CSV each capture; max frequency capped at 2 Hz.");
         }
 
@@ -634,6 +679,7 @@ namespace LaunchPlugin
         {
             if (Settings == null) return;
             _propertySnapshotRollingActiveRuntime = false;
+            RequestDebugUiRefresh();
             SimHub.Logging.Current.Info("[LalaPlugin:Debug] Property snapshot rolling automation STOP.");
         }
 
@@ -650,11 +696,31 @@ namespace LaunchPlugin
                 string fallbackPath = BuildFallbackPathFromPrimary(primaryPath);
                 if (File.Exists(primaryPath)) File.Delete(primaryPath);
                 if (!string.Equals(primaryPath, fallbackPath, StringComparison.OrdinalIgnoreCase) && File.Exists(fallbackPath)) File.Delete(fallbackPath);
+                RequestDebugUiRefresh();
                 SimHub.Logging.Current.Info("[LalaPlugin:Debug] Property snapshot rolling CSV reset completed.");
             }
             catch (Exception ex)
             {
+                RequestDebugUiRefresh();
                 SimHub.Logging.Current.Warn($"[LalaPlugin:Debug] Property snapshot rolling CSV reset failed: {ex.Message}");
+            }
+        }
+
+        private void RequestDebugUiRefresh()
+        {
+            var handler = DebugUiRefreshRequested;
+            if (handler == null)
+            {
+                return;
+            }
+
+            try
+            {
+                handler();
+            }
+            catch
+            {
+                // UI refresh callbacks must not affect runtime/debug capture paths.
             }
         }
 
@@ -5836,6 +5902,7 @@ namespace LaunchPlugin
         private int _eventMarkerPressCount = 0;
         private int _propertySnapshotLastProcessedPressCount = 0;
         private bool _propertySnapshotRollingActiveRuntime = false;
+        private bool _lastDebugMasterOperationalState = false;
         private DateTime _propertySnapshotLastAutoCaptureUtc = DateTime.MinValue;
         private int _propertySnapshotLastLapCaptured = -1;
         private DateTime _propertySnapshotLastAutoSnapshotLogUtc = DateTime.MinValue;
@@ -7545,7 +7612,7 @@ namespace LaunchPlugin
                 }
 
                 Settings.EnableShiftAssistDebugCsv = !Settings.EnableShiftAssistDebugCsv;
-                if (!Settings.EnableShiftAssistDebugCsv)
+                if (!Settings.EnableShiftAssistDebugCsv || !SoftDebugEnabled)
                 {
                     ResetShiftAssistDebugCsvState();
                 }
@@ -11024,13 +11091,14 @@ namespace LaunchPlugin
 
             _carPlayerTrackPct = SanitizeTrackPercent(trackPct);
             double sessionTimeSec = ResolveShiftAssistSessionTimeSec(pluginManager);
+            bool debugMaster = IsDebugOnForLogic;
+            EnsureDebugMasterGateOperationalState(debugMaster);
             MaybeWritePropertySnapshot(sessionTimeSec);
             double sessionTimeRemainingSec = SafeReadDouble(pluginManager, "DataCorePlugin.GameRawData.Telemetry.SessionTimeRemain", double.NaN);
             int sessionState = SafeReadInt(pluginManager, "DataCorePlugin.GameRawData.Telemetry.SessionState", 0);
             string sessionTypeName = !string.IsNullOrWhiteSpace(currentSessionTypeForConfidence)
                 ? currentSessionTypeForConfidence
                 : (data.NewData?.SessionTypeName ?? string.Empty);
-            bool debugMaster = IsDebugOnForLogic;
             bool verboseLogs = IsVerboseDebugLoggingOn;
             int[] carIdxLap = SafeReadIntArray(pluginManager, "DataCorePlugin.GameRawData.Telemetry.CarIdxLap");
             int[] carIdxTrackSurface = SafeReadIntArray(pluginManager, "DataCorePlugin.GameRawData.Telemetry.CarIdxTrackSurface");
@@ -12488,7 +12556,7 @@ namespace LaunchPlugin
                     _shiftAssistAudioDelayMs = delayMs;
                     _shiftAssistAudioDelayLastIssuedUtc = issuedUtc;
 
-                    if (Settings?.EnableShiftAssistDebugCsv == true)
+                    if (IsVerboseDebugLoggingOn)
                     {
                         SimHub.Logging.Current.Info($"[LalaPlugin:ShiftAssist] AudioDelayMs={delayMs} backend=SoundPlayer");
                     }
@@ -12742,7 +12810,7 @@ namespace LaunchPlugin
 
         private void WriteShiftAssistDebugCsv(DateTime nowUtc, double sessionTimeSec, int gear, int effectiveGear, int maxForwardGears, int rpm, double throttle01, int targetRpm, int leadTimeMs, bool beepTriggered, bool exportedBeepLatched, double speedMps, double accelDerivedMps2, double lonAccelTelemetryMps2, ShiftAssistLearningTick learningTick, string learnRedlineSource, int redlineRpm, bool urgentEligible, string urgentSuppressedReason, bool urgentAttempted, bool urgentPlayed, string urgentPlayError, string beepType)
         {
-            if (Settings?.EnableShiftAssistDebugCsv != true)
+            if (!SoftDebugEnabled || Settings?.EnableShiftAssistDebugCsv != true)
             {
                 ResetShiftAssistDebugCsvState();
                 return;
@@ -14861,6 +14929,10 @@ namespace LaunchPlugin
                 hz = PropertySnapshotRollingFrequencyDefaultHz;
             }
             if (hz > PropertySnapshotRollingFrequencyMaxHz) hz = PropertySnapshotRollingFrequencyMaxHz;
+            if (Settings != null && Math.Abs(Settings.PropertySnapshotRollingFrequencyHz - hz) > 0.0001)
+            {
+                Settings.PropertySnapshotRollingFrequencyHz = hz;
+            }
             return hz;
         }
 
@@ -20908,7 +20980,7 @@ namespace LaunchPlugin
                 $"lock={pitTripLockActive}"
             );
 
-            bool pitExitVerbose = SoftDebugEnabled && Settings?.PitExitVerboseLogging == true;
+            bool pitExitVerbose = IsVerboseDebugLoggingOn;
             if (pitExitVerbose && _opponentsEngine.TryGetPitExitMathAudit(out var auditLine))
             {
                 SimHub.Logging.Current.Info($"[LalaPlugin:PitExit] {auditLine}");
