@@ -188,9 +188,11 @@ Workflow routing note: `Docs/Internal/Property_Snapshot_Debug_Workflow.md` owns 
 - **`[LalaPlugin:CarTrackingProbe] CSV disabled after write failure: <message>`** — Writer hit an IO/format failure and disabled runtime capture to avoid repeated write failures.
 
 ## Leader lap selection
-- **`[LalaPlugin:Leader Lap] reject source=... reason=...`** — Candidate leader lap rejected (too small, below floor); may fall back to previous avg.【F:LalaLaunch.cs†L4845-L4862】
-- **`[LalaPlugin:Leader Lap] using leader lap from <source> = Xs`** — Accepted leader lap source (telemetry fallback ordering).【F:LalaLaunch.cs†L4852-L4867】
-- **`[LalaPlugin:Leader Lap] no valid leader lap time from any candidate – returning 0`** — All candidates invalid; leader lap cleared.【F:LalaLaunch.cs†L4869-L4872】
+- **`[LalaPlugin:Leader Lap] candidate source=overall_p1_last_lap ...`** — Verbose diagnostic for current overall P1 `CarIdxLastLapTime` after overall-leader identity resolution.
+- **`[LalaPlugin:Leader Lap] using overall leader lap from overall_p1_last_lap ... = Xs`** — Accepted current overall P1 last-lap sample for the 3-sample overall race-leading pace window.
+- **`[LalaPlugin:Leader Lap] using low-confidence overall leader best lap fallback ... = Xs`** — Rolling window is empty and current overall P1 `CarIdxBestLapTime` is used as a low-confidence published fallback; it is not ingested into the rolling window.
+- **`[LalaPlugin:Leader Lap] reject source=overall_p1_last_lap|overall_p1_best_lap_low_conf ... reason=...`** — Overall leader candidate rejected (invalid, too small/large, or below player-half floor); may fall back to existing rolling average when available.
+- **`[LalaPlugin:Leader Lap] no valid overall leader ... – returning 0`** — Overall P1 identity or pace authority unavailable; leader lap fails closed.
 - **`[LalaPlugin:Leader Lap] ResetSnapshotDisplays: cleared live snapshot including leader delta.`** — Live strategy snapshot cleared on session end/reset from FuelCalcs.【F:FuelCalcs.cs†L2985-L3023】
 - **`[LalaPlugin:Leader Lap] CalculateStrategy: estLap=..., leaderDelta=..., leaderLap=...`** — Strategy lap calculation when leader delta or estimate changes meaningfully.【F:FuelCalcs.cs†L3839-L3879】
 

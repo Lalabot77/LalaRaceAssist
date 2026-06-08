@@ -1,3 +1,12 @@
+## 2026-06-08 — Overall Leader Lap authority from native CarIdx overall P1
+- Classification: **both** (existing dashboard/strategy-facing `Pace.LeaderAvgLapTimeSec` / `Pace.LeaderDeltaToPlayerSec` behavior now has valid overall race leader authority; no export names or dashboard JSON changed).
+- Replaced the bogus/unproven `DataCorePlugin.GameData.LeaderLastLapTime` and `DataCorePlugin.GameData.LeaderAverageLapTime` Leader Lap candidates with plugin-owned native CarIdx resolution.
+- Overall P1 identity now follows the existing finish-timing semantics: prefer `CarIdxPosition==1 && CarIdxClassPosition==1`, fall back to `CarIdxPosition==1`, and require the car to be in-world.
+- Primary samples come from current overall P1 `CarIdxLastLapTime`; a 3-sample rolling window keeps the last valid overall race-leading samples and intentionally survives overall-P1 identity changes.
+- Current overall P1 `CarIdxBestLapTime` is only a low-confidence published fallback while the rolling window is empty and is not ingested into the rolling window.
+- Preserved class leader/class best/H2H/LapRef semantics, RaceFinish behavior, fuel math, lap acceptance/rejection, Opponents/H2H/CarSA target selection, dashboards, and iRacing ExtraProperties removal.
+- Property Snapshot list reviewed: yes; existing `Pace.*` exports remain covered by the Fuel/Strategy group, with no export/property additions, removals, or renames.
+
 ## 2026-06-08 — Pit Debrief PR #797 review sync commit
 - Classification: **internal-only review traceability** (comments/docs only; no export names, dashboard JSON, fuel model, PitExit, PitCycleLite, or debrief runtime semantics changed beyond the already-present PR #797 fixes).
 - Added explicit code comments at the service-latch ordering and actual-loss normalization seams so the PR review can see why fuel-added evidence is captured before `Pit_AddedSoFar` reset and why boxed-stop actual loss adds stationary box time only inside the debrief readout.

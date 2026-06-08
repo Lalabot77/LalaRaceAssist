@@ -1,3 +1,9 @@
+- 2026-06-08 Overall Leader Lap authority landed:
+  - Leader Lap no longer reads bogus/unproven `DataCorePlugin.GameData.LeaderLastLapTime` / `LeaderAverageLapTime` candidates;
+  - overall race-leading pace now resolves current overall P1 using finish-timing identity semantics (`CarIdxPosition==1 && CarIdxClassPosition==1`, then `CarIdxPosition==1`, in-world required) and samples native `CarIdxLastLapTime`;
+  - the leader pace window keeps the last 3 valid overall-P1 samples independent of `CarIdx` identity changes, with current overall P1 `CarIdxBestLapTime` used only as a low-confidence published fallback while the rolling window is empty;
+  - class leader, class best, H2H class-best, LapRef, Opp same-class leader pace, RaceFinish semantics, fuel math, lap acceptance, Opponents/H2H/CarSA target selection, dashboards, and iRacing ExtraProperties fallback behavior remain unchanged. Property Snapshot list reviewed: yes; existing `Pace.*` exports remain in the Fuel/Strategy group and no export/property names were added, removed, or renamed.
+
 - 2026-06-08 MonitorSystem Phase 3A review follow-up landed:
   - active Car/Opp/H2H health publication now corrects the displayed MonitorSystem text when the selected active check changes, without overriding unresolved fuel-health alerts or active pit warnings;
   - deferred `CARSA GAP CHECK` because no clean non-debug CarSA gap-scale/lap-time readiness output exists for MonitorSystem to observe without guessing, leaving only `OPP TARGET CHECK`, `CARSA SLOT CHECK`, and `H2H TARGET CHECK` active;
