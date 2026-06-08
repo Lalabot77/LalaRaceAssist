@@ -1,3 +1,13 @@
+- 2026-06-08 MonitorSystem Phase 3A review follow-up landed:
+  - active Car/Opp/H2H health publication now corrects the displayed MonitorSystem text when the selected active check changes, without overriding unresolved fuel-health alerts or active pit warnings;
+  - deferred `CARSA GAP CHECK` because no clean non-debug CarSA gap-scale/lap-time readiness output exists for MonitorSystem to observe without guessing, leaving only `OPP TARGET CHECK`, `CARSA SLOT CHECK`, and `H2H TARGET CHECK` active;
+  - restored main-branch `EXIT FUEL SHORT` tolerance to 1.5 L. Property Snapshot list reviewed: yes; existing `MonitorSystem.*` exports remain mapped to FuelStrategy and no export/property add, remove, rename, or regroup is required.
+
+- 2026-06-08 MonitorSystem Phase 3A Car/Opp/H2H impossible-state checks landed:
+  - added edge/low-frequency report-by-exception `OPP TARGET CHECK`, `CARSA SLOT CHECK`, and `H2H TARGET CHECK` messages using only existing Opponents, CarSA, and H2H outputs;
+  - checks are gated on eligible live sessions, valid player `CarIdx`, and a short 3 s warmup, ignore invalid/blink-held rows, do not override unresolved fuel-health alerts or active pit warnings, and clear only their own active MonitorSystem text;
+  - no race-order correctness, checkpoint freshness, TrackSec-vs-RelativeSec reconciliation, gap recalculation, fallback target selection, self-healing, telemetry-known wrappers, new exports, property names, settings, UI, dash JSON, PitExit, fuel, planner, strategy, command, or Property Snapshot group changes. Property Snapshot list reviewed: yes; existing `MonitorSystem.*` exports remain mapped to FuelStrategy and no export/property add, remove, rename, or regroup is required.
+
 - 2026-06-07 CarSA target-after-player checkpoint freshness guard landed:
   - target-after-player checkpoint truth now rejects player gate timestamps that are non-finite, future-dated, or older than `min(15 s, half the active lap-time scale)`, blocking prior-lap player timestamps from being normalized into fake close `Ahead01P`/`RelativeSec` values;
   - valid behind-car forward matches remain accepted when the player crossed the same gate shortly before the target, and reverse `reverse_player_after_target` matching for ahead cars remains unchanged;

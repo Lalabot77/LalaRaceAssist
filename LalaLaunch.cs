@@ -6896,6 +6896,8 @@ namespace LaunchPlugin
         private const double MonitorPitExitFuelShortToleranceLitres = 1.5;
         private const double MonitorPitRefuelCompleteToleranceLitres = 0.75;
         private const double MonitorBaselineFuelToleranceLaps = 1.0;
+        private const double MonitorCarOppH2HWarmupSeconds = 3.0;
+        private const double MonitorCarOppH2HRepeatLogSeconds = 60.0;
         private bool _monitorPitFrameworkPrimed = false;
         private PitFuelControlMode _monitorPitLastFuelControlMode = PitFuelControlMode.Off;
         private PitFuelControlData _monitorPitLastFuelControlData = PitFuelControlData.Live;
@@ -6904,6 +6906,48 @@ namespace LaunchPlugin
         private bool _monitorPitPredictiveTwoLapsTriggeredThisStint = false;
         private string _monitorPitPhase = "OnTrack";
         private MonitorPitStopSnapshot _monitorPitEntrySnapshot;
+        private string _monitorCarOppH2HSessionType = string.Empty;
+        private double _monitorCarOppH2HEligibleSinceSessionTimeSec = double.NaN;
+        private readonly MonitorCarOppH2HCheckState _monitorOppTargetCheckState = new MonitorCarOppH2HCheckState("OppTarget", "OPP TARGET CHECK", MonitorSeverity.Caution);
+        private readonly MonitorCarOppH2HCheckState _monitorCarSaSlotCheckState = new MonitorCarOppH2HCheckState("CarSASlot", "CARSA SLOT CHECK", MonitorSeverity.Caution);
+        private readonly MonitorCarOppH2HCheckState _monitorH2HTargetCheckState = new MonitorCarOppH2HCheckState("H2HTarget", "H2H TARGET CHECK", MonitorSeverity.Watch);
+
+        private sealed class MonitorCarOppH2HCheckState
+        {
+            public MonitorCarOppH2HCheckState(string name, string text, MonitorSeverity severity)
+            {
+                Name = name;
+                Text = text;
+                Severity = severity;
+            }
+
+            public string Name { get; private set; }
+            public string Text { get; private set; }
+            public MonitorSeverity Severity { get; private set; }
+            public bool Active { get; set; }
+            public string Detail { get; set; } = string.Empty;
+            public DateTime LastLogUtc { get; set; } = DateTime.MinValue;
+
+            public void Reset()
+            {
+                Active = false;
+                Detail = string.Empty;
+                LastLogUtc = DateTime.MinValue;
+            }
+        }
+
+        private struct MonitorCarOppH2HFailure
+        {
+            public static readonly MonitorCarOppH2HFailure None = new MonitorCarOppH2HFailure(null);
+
+            public MonitorCarOppH2HFailure(string detail)
+            {
+                Detail = detail;
+            }
+
+            public string Detail { get; private set; }
+            public bool HasFailure => !string.IsNullOrWhiteSpace(Detail);
+        }
 
         private sealed class MonitorPitStopSnapshot
         {
@@ -11245,6 +11289,8 @@ namespace LaunchPlugin
                 ResetClassLeaderExports();
                 ResetClassBestExports();
             }
+
+            UpdateMonitorCarOppH2HHealth(sessionTypeName, sessionTimeSec, playerCarIdx, isOpponentsEligibleSessionNow);
 
             if (pitEntryEdge)
             {
@@ -15924,6 +15970,347 @@ namespace LaunchPlugin
 
             _monitorSystem.SetEnabled(_subscribedMonitorSystemSettings?.MonitorSystemEnabled != false);
             SaveSettings();
+        }
+
+        private void ResetMonitorCarOppH2HHealthStates()
+        {
+            _monitorOppTargetCheckState.Reset();
+            _monitorCarSaSlotCheckState.Reset();
+            _monitorH2HTargetCheckState.Reset();
+        }
+
+        private void UpdateMonitorCarOppH2HHealth(string sessionTypeName, double sessionTimeSec, int playerCarIdx, bool eligibleSession)
+        {
+            string normalizedSessionType = NormalizeSessionTypeName(sessionTypeName);
+            bool sessionChanged = !string.Equals(_monitorCarOppH2HSessionType, normalizedSessionType, StringComparison.OrdinalIgnoreCase);
+            if (sessionChanged)
+            {
+                _monitorCarOppH2HSessionType = normalizedSessionType;
+                _monitorCarOppH2HEligibleSinceSessionTimeSec = double.NaN;
+                ResetMonitorCarOppH2HHealthStates();
+                ClearActiveMonitorCarOppH2HHealthWarningIfOwned();
+            }
+
+            if (!eligibleSession || !IsMonitorCarIdxValid(playerCarIdx) || !IsFiniteNonNegative(sessionTimeSec))
+            {
+                _monitorCarOppH2HEligibleSinceSessionTimeSec = double.NaN;
+                ResetMonitorCarOppH2HHealthStates();
+                ClearActiveMonitorCarOppH2HHealthWarningIfOwned();
+                return;
+            }
+
+            if (double.IsNaN(_monitorCarOppH2HEligibleSinceSessionTimeSec) ||
+                sessionTimeSec < _monitorCarOppH2HEligibleSinceSessionTimeSec - 0.5)
+            {
+                _monitorCarOppH2HEligibleSinceSessionTimeSec = sessionTimeSec;
+                ResetMonitorCarOppH2HHealthStates();
+                ClearActiveMonitorCarOppH2HHealthWarningIfOwned();
+                return;
+            }
+
+            if (sessionTimeSec - _monitorCarOppH2HEligibleSinceSessionTimeSec < MonitorCarOppH2HWarmupSeconds)
+            {
+                return;
+            }
+
+            bool newFailure = false;
+            newFailure |= UpdateMonitorCarOppH2HCheckState(_monitorOppTargetCheckState, EvaluateMonitorOppTargetCheck(playerCarIdx), sessionTimeSec, normalizedSessionType, playerCarIdx);
+            newFailure |= UpdateMonitorCarOppH2HCheckState(_monitorCarSaSlotCheckState, EvaluateMonitorCarSaSlotCheck(), sessionTimeSec, normalizedSessionType, playerCarIdx);
+            newFailure |= UpdateMonitorCarOppH2HCheckState(_monitorH2HTargetCheckState, EvaluateMonitorH2HTargetCheck(playerCarIdx), sessionTimeSec, normalizedSessionType, playerCarIdx);
+
+            MonitorCarOppH2HCheckState activeState = SelectActiveMonitorCarOppH2HCheckState();
+            if (activeState != null)
+            {
+                bool activeTextDisplayed = _monitorSystem != null && string.Equals(_monitorSystem.DisplayText, activeState.Text, StringComparison.Ordinal);
+                if (newFailure || !activeTextDisplayed)
+                {
+                    PublishMonitorCarOppH2HHealthWarning(activeState);
+                }
+                return;
+            }
+
+            ClearActiveMonitorCarOppH2HHealthWarningIfOwned();
+        }
+
+        private bool UpdateMonitorCarOppH2HCheckState(
+            MonitorCarOppH2HCheckState state,
+            MonitorCarOppH2HFailure failure,
+            double sessionTimeSec,
+            string sessionTypeName,
+            int playerCarIdx)
+        {
+            if (state == null)
+            {
+                return false;
+            }
+
+            if (failure.HasFailure)
+            {
+                bool firstFailure = !state.Active;
+                bool detailChanged = state.Active && !string.Equals(state.Detail, failure.Detail, StringComparison.Ordinal);
+                bool repeatDue = state.Active && (DateTime.UtcNow - state.LastLogUtc).TotalSeconds >= MonitorCarOppH2HRepeatLogSeconds;
+                state.Active = true;
+                state.Detail = failure.Detail;
+
+                if (firstFailure || detailChanged)
+                {
+                    state.LastLogUtc = DateTime.UtcNow;
+                    LogMonitorCarOppH2HHealth("fail", state, sessionTimeSec, sessionTypeName, playerCarIdx, failure.Detail);
+                    return true;
+                }
+
+                if (repeatDue)
+                {
+                    state.LastLogUtc = DateTime.UtcNow;
+                    LogMonitorCarOppH2HHealth("still-failing", state, sessionTimeSec, sessionTypeName, playerCarIdx, failure.Detail);
+                }
+
+                return false;
+            }
+
+            if (state.Active)
+            {
+                string previousDetail = state.Detail;
+                state.Reset();
+                LogMonitorCarOppH2HHealth("recovered", state, sessionTimeSec, sessionTypeName, playerCarIdx, previousDetail);
+            }
+
+            return false;
+        }
+
+        private MonitorCarOppH2HCheckState SelectActiveMonitorCarOppH2HCheckState()
+        {
+            if (_monitorOppTargetCheckState.Active) return _monitorOppTargetCheckState;
+            if (_monitorCarSaSlotCheckState.Active) return _monitorCarSaSlotCheckState;
+            if (_monitorH2HTargetCheckState.Active) return _monitorH2HTargetCheckState;
+            return null;
+        }
+
+        private void PublishMonitorCarOppH2HHealthWarning(MonitorCarOppH2HCheckState state)
+        {
+            if (_monitorSystem == null || state == null)
+            {
+                return;
+            }
+
+            if (_monitorSystem.IsFuelHealthAlertActive || _monitorSystem.IsMonitorPitWarningActive)
+            {
+                return;
+            }
+
+            _monitorSystem.Publish(state.Severity, state.Text);
+        }
+
+        private void ClearActiveMonitorCarOppH2HHealthWarningIfOwned()
+        {
+            if (_monitorSystem == null || !_monitorSystem.IsCarOppH2HHealthWarningActive)
+            {
+                return;
+            }
+
+            if (_monitorSystem.IsFuelHealthAlertActive || _monitorSystem.IsMonitorPitWarningActive)
+            {
+                return;
+            }
+
+            _monitorSystem.Publish(MonitorSeverity.Ok, "MONITOR READY");
+        }
+
+        private void LogMonitorCarOppH2HHealth(
+            string status,
+            MonitorCarOppH2HCheckState state,
+            double sessionTimeSec,
+            string sessionTypeName,
+            int playerCarIdx,
+            string detail)
+        {
+            if (state == null)
+            {
+                return;
+            }
+
+            string statusText = string.IsNullOrWhiteSpace(status) ? "unknown" : status.Trim();
+            string detailText = string.IsNullOrWhiteSpace(detail) ? "none" : detail.Trim();
+            string sessionText = string.IsNullOrWhiteSpace(sessionTypeName) ? "unknown" : sessionTypeName.Trim();
+            string line = string.Format(
+                CultureInfo.InvariantCulture,
+                "[LalaPlugin:MonitorSystem] car health check={0} status={1} text={2} sessionTime={3} sessionType={4} playerCarIdx={5} reason={6}",
+                state.Name,
+                statusText,
+                state.Text,
+                FormatMonitorDouble(sessionTimeSec),
+                sessionText,
+                playerCarIdx,
+                detailText);
+
+            if (string.Equals(statusText, "fail", StringComparison.Ordinal) || string.Equals(statusText, "still-failing", StringComparison.Ordinal))
+            {
+                SimHub.Logging.Current.Warn(line);
+            }
+            else
+            {
+                SimHub.Logging.Current.Info(line);
+            }
+        }
+
+        private MonitorCarOppH2HFailure EvaluateMonitorOppTargetCheck(int playerCarIdx)
+        {
+            OpponentOutputs outputs = _opponentsEngine?.Outputs;
+            if (outputs == null)
+            {
+                return MonitorCarOppH2HFailure.None;
+            }
+
+            for (int i = 0; i < 5; i++)
+            {
+                var failure = EvaluateMonitorOppTarget("Ahead", i + 1, outputs.GetAheadSlot(i), playerCarIdx);
+                if (failure.HasFailure) return failure;
+
+                failure = EvaluateMonitorOppTarget("Behind", i + 1, outputs.GetBehindSlot(i), playerCarIdx);
+                if (failure.HasFailure) return failure;
+            }
+
+            return MonitorCarOppH2HFailure.None;
+        }
+
+        private static MonitorCarOppH2HFailure EvaluateMonitorOppTarget(string side, int slotNumber, OpponentsEngine.OpponentTargetOutput target, int playerCarIdx)
+        {
+            if (target == null || !target.IsValid)
+            {
+                return MonitorCarOppH2HFailure.None;
+            }
+
+            if (!IsMonitorCarIdxValid(target.CarIdx))
+            {
+                return new MonitorCarOppH2HFailure(string.Format(
+                    CultureInfo.InvariantCulture,
+                    "side={0} slot={1} carIdx={2} playerCarIdx={3} issue=valid_target_invalid_caridx",
+                    side,
+                    slotNumber,
+                    target.CarIdx,
+                    playerCarIdx));
+            }
+
+            if (target.CarIdx == playerCarIdx)
+            {
+                return new MonitorCarOppH2HFailure(string.Format(
+                    CultureInfo.InvariantCulture,
+                    "side={0} slot={1} carIdx={2} playerCarIdx={3} issue=valid_target_is_player",
+                    side,
+                    slotNumber,
+                    target.CarIdx,
+                    playerCarIdx));
+            }
+
+            return MonitorCarOppH2HFailure.None;
+        }
+
+        private MonitorCarOppH2HFailure EvaluateMonitorCarSaSlotCheck()
+        {
+            var outputs = _carSaEngine?.Outputs;
+            if (outputs == null)
+            {
+                return MonitorCarOppH2HFailure.None;
+            }
+
+            var failure = EvaluateMonitorCarSaSlotSet("Ahead", outputs.AheadSlots);
+            if (failure.HasFailure) return failure;
+
+            return EvaluateMonitorCarSaSlotSet("Behind", outputs.BehindSlots);
+        }
+
+        private static MonitorCarOppH2HFailure EvaluateMonitorCarSaSlotSet(string side, CarSASlot[] slots)
+        {
+            if (slots == null)
+            {
+                return MonitorCarOppH2HFailure.None;
+            }
+
+            for (int i = 0; i < slots.Length; i++)
+            {
+                CarSASlot slot = slots[i];
+                if (slot == null || !slot.IsValid)
+                {
+                    continue;
+                }
+
+                int slotNumber = i + 1;
+                if (!IsMonitorCarIdxValid(slot.CarIdx))
+                {
+                    return new MonitorCarOppH2HFailure(string.Format(
+                        CultureInfo.InvariantCulture,
+                        "side={0} slot={1} carIdx={2} issue=valid_slot_invalid_caridx",
+                        side,
+                        slotNumber,
+                        slot.CarIdx));
+                }
+            }
+
+            return MonitorCarOppH2HFailure.None;
+        }
+
+        private MonitorCarOppH2HFailure EvaluateMonitorH2HTargetCheck(int playerCarIdx)
+        {
+            H2HOutputs outputs = _h2hEngine?.Outputs;
+            if (outputs == null)
+            {
+                return MonitorCarOppH2HFailure.None;
+            }
+
+            var failure = EvaluateMonitorH2HFamily("H2HRace", outputs.Race, playerCarIdx);
+            if (failure.HasFailure) return failure;
+
+            return EvaluateMonitorH2HFamily("H2HTrack", outputs.Track, playerCarIdx);
+        }
+
+        private static MonitorCarOppH2HFailure EvaluateMonitorH2HFamily(string familyName, H2HEngine.H2HFamilyOutput family, int playerCarIdx)
+        {
+            if (family == null)
+            {
+                return MonitorCarOppH2HFailure.None;
+            }
+
+            var failure = EvaluateMonitorH2HTarget(familyName, "Ahead", family.Ahead, playerCarIdx);
+            if (failure.HasFailure) return failure;
+
+            return EvaluateMonitorH2HTarget(familyName, "Behind", family.Behind, playerCarIdx);
+        }
+
+        private static MonitorCarOppH2HFailure EvaluateMonitorH2HTarget(string familyName, string side, H2HParticipantOutput target, int playerCarIdx)
+        {
+            if (target == null || !target.Valid)
+            {
+                return MonitorCarOppH2HFailure.None;
+            }
+
+            if (!IsMonitorCarIdxValid(target.CarIdx))
+            {
+                return new MonitorCarOppH2HFailure(string.Format(
+                    CultureInfo.InvariantCulture,
+                    "family={0} side={1} carIdx={2} playerCarIdx={3} issue=valid_target_invalid_caridx",
+                    familyName,
+                    side,
+                    target.CarIdx,
+                    playerCarIdx));
+            }
+
+            if (target.CarIdx == playerCarIdx)
+            {
+                return new MonitorCarOppH2HFailure(string.Format(
+                    CultureInfo.InvariantCulture,
+                    "family={0} side={1} carIdx={2} playerCarIdx={3} issue=valid_target_is_player",
+                    familyName,
+                    side,
+                    target.CarIdx,
+                    playerCarIdx));
+            }
+
+            return MonitorCarOppH2HFailure.None;
+        }
+
+        private static bool IsMonitorCarIdxValid(int carIdx)
+        {
+            return carIdx >= 0 && carIdx < CarSAEngine.MaxCars;
         }
 
         private void ResetMonitorPitStopFrameworkState()

@@ -45,6 +45,11 @@ namespace LaunchPlugin
             IsEnabled &&
             string.Equals(DisplayText, "BASELINE SHORT", StringComparison.Ordinal);
         public bool IsMonitorPitWarningActive => IsPhase2BPitWarningActive || IsBaselineFuelWarningActive;
+        public bool IsCarOppH2HHealthWarningActive =>
+            IsEnabled &&
+            (string.Equals(DisplayText, "OPP TARGET CHECK", StringComparison.Ordinal) ||
+             string.Equals(DisplayText, "CARSA SLOT CHECK", StringComparison.Ordinal) ||
+             string.Equals(DisplayText, "H2H TARGET CHECK", StringComparison.Ordinal));
 
         public MonitorSystem()
         {

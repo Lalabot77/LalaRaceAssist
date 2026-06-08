@@ -22,9 +22,9 @@ The dashboard-facing Monitor System is enabled by default. Use **Dash Control ->
 
 - enabled: `LalaLaunch.MonitorSystem.State` is `ON` and the default message is `MONITOR READY`;
 - disabled: state is `OFF` and the message is `MONITOR OFF`;
-- re-enabling returns the monitor to the ready state before later fuel-health messages are published.
+- re-enabling returns the monitor to the ready state before later monitor messages are published.
 
-The current monitor reports existing runtime fuel-health status and records Phase 2A pit-stop trigger evidence in logs only. It does not publish pit-stop driver warnings, send pit commands, or replace `Pit.Command.*` feedback.
+The current monitor reports existing runtime fuel-health status, edge-triggered pit/fuel risk warnings, and small report-by-exception CarSA/Opponents/H2H impossible-state checks. It observes already-published subsystem outputs only; it does not send pit commands, select fallback targets, reset car/opponent/H2H state, or replace `Pit.Command.*` feedback.
 
 ## 2. Installation / import
 
