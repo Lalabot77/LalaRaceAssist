@@ -5,3 +5,8 @@ Enum,Severity,Text,Category,Trigger,Description,DriverAction,AutoRecoverable
 2,WATCH,FUEL DATA CHECK,Fuel,StartupFuelHealth,Existing fuel health check detected questionable runtime fuel data,Check fuel display,No
 6,RECOVERED,FUEL DATA RECOVERED,Fuel,StartupFuelHealth,Existing fuel health recovery refreshed runtime fuel data,None,Yes
 5,FAULT,FUEL DATA FAULT,Fuel,StartupFuelHealth,Existing fuel health check failed after recovery,Review fuel data before racing,No
+3,CAUTION,REFUEL OFF,FuelPitStop,PredictivePitCheck,Refuel is disabled while fuel is expected soon,Enable refuel,No
+4,WARNING,REFUEL OFF,FuelPitStop,PitRoadOrBox,Refuel is disabled while fuel is still required during pit service,Enable refuel,No
+3,CAUTION,MFD FUEL LOW,FuelPitStop,PredictivePitCheck,Selected MFD fuel is below expected required add,Increase fuel request,No
+4,WARNING,MFD FUEL LOW,FuelPitStop,PitRoadOrBox,Selected MFD fuel is below expected required add during pit service,Increase fuel request,No
+4,WARNING,EXIT FUEL SHORT,FuelPitStop,PitExitCheck,Fuel on pit exit is below expected safe amount,Fuel save or plan another stop,No

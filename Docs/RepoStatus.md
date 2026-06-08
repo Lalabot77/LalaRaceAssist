@@ -49,6 +49,36 @@
 
 # Repo Status
 
+- 2026-06-08 MonitorSystem trusted SimHub telemetry simplification landed:
+  - removed the Phase 2B `MfdRefuelKnown` / `TryReadMonitorPitBool` telemetry-known layer and restored direct trusted `dpFuelFill` use for REFUEL OFF / MFD FUEL LOW checks;
+  - kept `PitSvFuel` as direct trusted telemetry and intentionally did not add `MfdFuelRequestKnown` or PitSvFuel availability guards; hypothetical missing SimHub telemetry remains outside MonitorSystem scope unless backed by real project logs;
+  - reverted the pit evidence log format to `mfdRefuelEnabled` without `mfdRefuelKnown`;
+  - no `BASELINE SHORT`, `FUEL MODEL CHECK`, gross SimHub baseline maths, Fuel.Refuel calculation, Pit Fuel Control, Pit Command, CSV writer, new export, or Property Snapshot grouping changes. Property Snapshot list reviewed: yes; no group change.
+
+- 2026-06-07 MonitorSystem Phase 2B latest review follow-up landed:
+  - fuel-health priority now blocks Phase 2B pit warnings only for unresolved `FUEL DATA CHECK` / `FUEL DATA FAULT`; auto-recoverable `FUEL DATA RECOVERED` no longer suppresses urgent pit warnings;
+  - pit-service warnings now distinguish known vs missing `dpFuelFill` telemetry (`mfdRefuelKnown` in pit evidence logs), so missing MFD refuel telemetry fails closed instead of being treated as refuel disabled;
+  - off-pit-road Fuel Control mode changes inside the predictive low-fuel window can publish/clear CAUTION-level predictive pit warnings even after the one-shot predictive threshold previously fired clean, without adding per-tick scans or off-road WARNINGs;
+  - no `BASELINE SHORT`, `FUEL MODEL CHECK`, gross SimHub baseline maths, Fuel.Refuel calculation, Pit Fuel Control, Pit Command, CSV writer, new export, or Property Snapshot grouping changes. Property Snapshot list reviewed: yes; no group change.
+
+- 2026-06-07 MonitorSystem Phase 2B active review follow-up landed:
+  - Phase 2B pit warnings no longer publish over or clear active fuel-health monitor messages (`FUEL DATA CHECK`, `FUEL DATA FAULT`, `FUEL DATA RECOVERED`);
+  - `EXIT FUEL SHORT` now requires the pit-entry snapshot to have a meaningful required add (`PluginNextLitres > 0.5L`), preventing no-refuel/no-required-add pit cycles from warning on pit-lane burn alone;
+  - off-pit-road Fuel Control mode changes now evaluate CAUTION-level predictive risk only when needed to keep/clear an existing Phase 2B warning, so corrected predictive `REFUEL OFF` / `MFD FUEL LOW` can clear before pit entry without publishing off-road service WARNINGs;
+  - no `BASELINE SHORT`, `FUEL MODEL CHECK`, gross SimHub baseline maths, Fuel.Refuel calculation, Pit Fuel Control, Pit Command, CSV writer, new export, or Property Snapshot grouping changes. Property Snapshot list reviewed: yes; no group change.
+
+- 2026-06-07 MonitorSystem Phase 2B PR #792 review follow-up landed:
+  - pit-stop warnings now use the existing independent `Fuel.Refuel.NextLitres` / `Fuel.Refuel.Valid` runtime recommendation seam rather than `Pit_WillAdd` / MFD-selected add mirrors, so `REFUEL OFF` remains eligible while refuel is disabled and `MFD FUEL LOW` compares the MFD request against an independent recommendation;
+  - clean relevant service/exit edges clear active Phase 2B pit-warning text back to `MONITOR READY` without clearing fuel-health monitor texts;
+  - first-tick priming while already on pit road seeds the pit-entry snapshot and logs `PitRoadSnapshotSeeded` without publishing a priming warning, preserving pit-exit shortfall checks after reload/start-on-pit-road;
+  - no `BASELINE SHORT`, `FUEL MODEL CHECK`, gross SimHub baseline maths, fuel/refuel/planner/pit-command behavior, CSV writer, new exports, or Property Snapshot grouping changes. Property Snapshot list reviewed: yes; no group change because no SimHub exports/properties were added, removed, renamed, or regrouped.
+
+- 2026-06-07 MonitorSystem Phase 2B pit-stop warning checks landed:
+  - added edge-triggered driver-facing `REFUEL OFF`, `MFD FUEL LOW`, and `EXIT FUEL SHORT` MonitorSystem warnings using only Phase 2A snapshots and existing plugin refuel seams;
+  - predictive two-laps-fuel checks publish CAUTION, pit-road/boxed service checks publish WARNING, and pit-exit shortfall publishes WARNING;
+  - refuel-off warnings are suppressed after effective refuel completion (`CurrentFuel + 0.75L >= pit-entry PluginFuelOnExit` or `PluginNextLitres <= 0.5L`) so the normal late OFF transition does not warn;
+  - no `BASELINE SHORT`, `FUEL MODEL CHECK`, gross SimHub baseline maths, fuel/refuel/planner/pit-command behavior, CSV writer, new exports, or Property Snapshot grouping changes. Property Snapshot list reviewed: yes; no group change because no SimHub exports/properties were added, removed, renamed, or regrouped. Message catalogue updated.
+
 - 2026-06-07 MonitorSystem Phase 2A pit-stop trigger framework landed:
   - added private edge-only pit-stop monitor triggers for Fuel Control mode changes, DATA changes, predictive two-laps-fuel remaining, pit-road entry, pit-box entry, and pit-road exit;
   - pit-road entry freezes an internal evidence snapshot for later Phase 2B checks, but no race-risk warning maths, baseline checks, new monitor text, CSV writer, pit commands, automatic recovery, fuel/refuel math, Pit Fuel Control, or Pit Command behavior changed;

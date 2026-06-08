@@ -1,3 +1,44 @@
+## 2026-06-08 — MonitorSystem trusted SimHub telemetry simplification
+- Classification: **internal-only correctness/scope cleanup** (Phase 2B monitor implementation and internal docs; no export, message text/enum, fuel/refuel calculation, planner, Pit Fuel Control, or Pit Command behavior change).
+- Removed the `MfdRefuelKnown` snapshot field and `TryReadMonitorPitBool` helper so Phase 2B service checks again read trusted SimHub/iRacing `dpFuelFill` through the existing simple bool-read path.
+- Kept `PitSvFuel` as direct trusted telemetry and intentionally did not add `MfdFuelRequestKnown`, PitSvFuel availability checks, or other telemetry-validity/fallback layers; hypothetical missing SimHub telemetry is outside MonitorSystem scope unless project logs prove a real issue.
+- Reverted the pit evidence log wording/format to `mfdRefuelEnabled` without `mfdRefuelKnown`.
+- Preserved Phase 2B tolerances, edge-only behavior, Fuel Control DATA log-only behavior, message texts/enums, independent `Fuel.Refuel.NextLitres` basis, fuel/refuel calculations, Strategy/planner math, Pit Fuel Control behavior, Pit Command behavior, CSV behavior, and export names. No `BASELINE SHORT`, `FUEL MODEL CHECK`, independent gross SimHub baseline maths, new exports, or Property Snapshot grouping changes were added.
+- Property Snapshot list reviewed: yes; no group change required because no SimHub exports/properties were added, removed, renamed, or regrouped.
+
+## 2026-06-07 — MonitorSystem Phase 2B latest review follow-up
+- Classification: **both** (driver-facing warning priority/correctness plus internal Phase 2B evidence-log wording; no export, fuel/refuel calculation, planner, Pit Fuel Control, or Pit Command behavior change).
+- Narrowed fuel-health blocking to unresolved `FUEL DATA CHECK` / `FUEL DATA FAULT` only, so auto-recoverable `FUEL DATA RECOVERED` no longer suppresses urgent Phase 2B pit warnings.
+- Added known/unknown MFD refuel telemetry handling: `dpFuelFill` is read without defaulting missing values to `false`, snapshots carry `MfdRefuelKnown`, service warnings fail closed when refuel telemetry is unknown, and pit evidence logs include `mfdRefuelKnown`.
+- Off-pit-road Fuel Control mode changes now re-check CAUTION-level predictive risk while still inside the two-laps-fuel window, even after the one-shot predictive trigger previously fired clean, allowing later MFD/refuel changes to publish or clear predictive pit warnings before pit entry without per-tick scans or off-road WARNINGs.
+- Preserved Phase 2B tolerances, Fuel Control DATA log-only behavior, message texts/enums, independent `Fuel.Refuel.NextLitres` basis, fuel/refuel calculations, Strategy/planner math, Pit Fuel Control behavior, Pit Command behavior, CSV behavior, and export names. No `BASELINE SHORT`, `FUEL MODEL CHECK`, independent gross SimHub baseline maths, new exports, or Property Snapshot grouping changes were added.
+- Property Snapshot list reviewed: yes; no group change required because no SimHub exports/properties were added, removed, renamed, or regrouped.
+
+## 2026-06-07 — MonitorSystem Phase 2B active review follow-up
+- Classification: **both** (driver-facing warning priority/correctness plus internal Phase 2B documentation; no export, fuel/refuel calculation, planner, Pit Fuel Control, or Pit Command behavior change).
+- Added a narrow fuel-health priority guard so Phase 2B pit warnings neither publish over nor clear `FUEL DATA CHECK`, `FUEL DATA FAULT`, or `FUEL DATA RECOVERED`; clean pit edges still clear only active Phase 2B pit-warning texts back to `MONITOR READY`.
+- Gated `EXIT FUEL SHORT` on a meaningful pit-entry required add (`PluginNextLitres > 0.5L` via the existing fuel-still-required helper), preventing no-refuel/no-required-add pit cycles from warning solely because pit-lane driving burned fuel below entry fuel.
+- Off-pit-road Fuel Control mode changes now evaluate CAUTION-level predictive risk when an active Phase 2B pit warning exists, allowing corrected predictive `REFUEL OFF` / `MFD FUEL LOW` warnings to clear before pit entry without publishing off-road service WARNINGs.
+- Preserved Phase 2B tolerances, edge-only behavior, Fuel Control DATA log-only behavior, message texts/enums, independent `Fuel.Refuel.NextLitres` basis, fuel/refuel calculations, Strategy/planner math, Pit Fuel Control behavior, Pit Command behavior, CSV behavior, and export names. No `BASELINE SHORT`, `FUEL MODEL CHECK`, independent gross SimHub baseline maths, new exports, or Property Snapshot grouping changes were added.
+- Property Snapshot list reviewed: yes; no group change required because no SimHub exports/properties were added, removed, renamed, or regrouped.
+
+## 2026-06-07 — MonitorSystem Phase 2B PR #792 review follow-up
+- Classification: **both** (driver-facing warning correctness and internal Phase 2B evidence-log documentation; no export, fuel/refuel calculation, planner, Pit Fuel Control, or Pit Command behavior change).
+- Rebased Phase 2B pit-stop warning checks on the independent existing runtime recommendation seam `Fuel.Refuel.NextLitres` / `Fuel.Refuel.Valid` instead of `Pit_WillAdd` / current MFD-selected add mirrors. This allows `REFUEL OFF` to remain eligible when refuel is disabled and makes `MFD FUEL LOW` compare the MFD request against an independent recommendation. Invalid/missing recommendations fail closed.
+- Added narrow MonitorSystem ownership detection for active Phase 2B pit-warning texts; relevant clean evaluation edges now clear only `REFUEL OFF`, `MFD FUEL LOW`, or `EXIT FUEL SHORT` back to `MONITOR READY`, leaving `FUEL DATA CHECK`, `FUEL DATA FAULT`, and `FUEL DATA RECOVERED` untouched.
+- First-tick priming while already on pit road now seeds the pit-entry snapshot and logs `PitRoadSnapshotSeeded` without warning publication, so later pit-road exit can still compare actual fuel against the seeded expected fuel-on-exit.
+- Preserved Phase 2B tolerances/guard style, edge-only warning publication, Fuel Control DATA log-only behavior, message texts/enums, fuel/refuel calculations, Strategy/planner math, Pit Fuel Control behavior, Pit Command behavior, CSV behavior, and export names. No `BASELINE SHORT`, `FUEL MODEL CHECK`, independent gross SimHub baseline maths, new exports, or Property Snapshot grouping changes were added.
+- Property Snapshot list reviewed: yes; no group change required because no SimHub exports/properties were added, removed, renamed, or regrouped.
+
+## 2026-06-07 — MonitorSystem Phase 2B pit-stop warning checks
+- Classification: **both** (driver-facing MonitorSystem pit-stop warning text plus internal Phase 2 trigger/check documentation).
+- Added edge-triggered `REFUEL OFF`, `MFD FUEL LOW`, and `EXIT FUEL SHORT` MonitorSystem messages using only Phase 2A pit-stop snapshots/evidence and existing plugin refuel recommendation seams (`PluginNextLitres`, `PluginFuelOnExit`).
+- Trigger mapping: predictive two-laps-fuel remaining checks publish `REFUEL OFF`/`MFD FUEL LOW` as CAUTION; pit-road entry, pit-box entry, and on-pit-road/boxed Fuel Control mode changes publish those service checks as WARNING; Fuel Control DATA changes stay log-only; pit-road exit checks `EXIT FUEL SHORT` as WARNING before clearing the pit-entry snapshot.
+- `REFUEL OFF` is guarded by effective refuel completion (`CurrentFuel + 0.75L >= pit-entry PluginFuelOnExit` or `PluginNextLitres <= 0.5L`) to avoid warning when iRacing/fuel-control naturally switches OFF after fuel has already been added.
+- Updated the MonitorSystem message catalogue and Phase 2B edge log wording with `warningText`/`warningEnum`.
+- Preserved fuel/refuel calculations, Strategy/planner math, Pit Fuel Control behavior, pit command behavior, dashboard export names, CSV behavior, and Phase 1 fuel-health messages. No `BASELINE SHORT`, `FUEL MODEL CHECK`, independent gross SimHub baseline maths, new exports, or Property Snapshot grouping changes were added.
+- Property Snapshot list reviewed: yes; no group change required because no SimHub exports/properties were added, removed, renamed, or regrouped.
+
 ## 2026-06-07 — CarSA target-after-player checkpoint freshness guard
 - Classification: **both** (driver-facing CarSA slot-01 precision/relative-gap correctness fix; no export names, dashboard JSON, or CSV schema changes).
 - Added a target-after-player checkpoint truth freshness guard requiring the stored player gate timestamp to be finite, non-future, and no older than `min(15 s, half the active lap-time scale)` before `UpdateGateGapTruthForCar(...)` can accept the forward match.
