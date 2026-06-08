@@ -419,6 +419,9 @@
                         <styles:SHToggleCheckbox Content="PitExit Verbose Logging" Margin="0,10,0,0"
                                                  IsChecked="{Binding Settings.PitExitVerboseLogging, Mode=TwoWay}"
                                                  ToolTip="Adds PitExit math audit details to pit-in snapshots for troubleshooting."/>
+                        <styles:SHToggleCheckbox Content="Enable Monitor Event CSV" Margin="0,10,0,0"
+                                                 IsChecked="{Binding Settings.EnableMonitorEventCsv, Mode=TwoWay}"
+                                                 ToolTip="Writes non-normal MonitorSystem event rows to SimHub\Logs\LalaPluginData\MonitorSystem_Events.csv for troubleshooting."/>
                         <StackPanel Orientation="Vertical" Margin="0,10,0,0">
                             <styles:SHToggleCheckbox x:Name="PropertySnapshotToggle"
                                                      Content="Enable Property Snapshot"

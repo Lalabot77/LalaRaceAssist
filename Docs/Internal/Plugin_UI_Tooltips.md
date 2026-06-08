@@ -1,7 +1,7 @@
 # Plugin UI Tooltips
 
 Validated against commit: HEAD
-Last updated: 2026-06-07
+Last updated: 2026-06-08
 Branch: work
 
 ## CopyProfileDialog.xaml
@@ -26,6 +26,9 @@ Branch: work
 - `Dash Visibility` keeps the existing visibility matrix for Launch Assist, Pit Assists, Automatic Pit Screen, Rejoin Assist, Verbose Race Messages, Race Flags, Radio Messages, and Traffic Alerts, but the release-facing column headers are now `DRIVER`, `STRATEGY`, and `OVERLAY`.
 - `Dash Visibility` header tooltips make the short labels explicit: `DRIVER = Lala Race Dash`, `STRATEGY = Lala Strategy Dash`, and `OVERLAY = overlay surfaces`.
 - `Launch Mode`, `Event Marker`, and `Post-Launch Results Display Time` no longer appear in Dash Control after this tidy-up.
+
+## GlobalSettingsView.xaml
+- Debug Options: `Enable Monitor Event CSV` writes changed non-normal MonitorSystem publications to `Logs/LalaPluginData/MonitorSystem_Events.csv` for troubleshooting only. It is off by default and depends on `Enable Monitor System`.
 
 ## LaunchPluginSettingsUI.xaml
 - `Enable Monitor System` no longer appears in the Launch UI / Bindings section; the persisted setting is owned by Dash Control global functions.

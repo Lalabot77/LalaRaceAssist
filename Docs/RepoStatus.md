@@ -1,3 +1,8 @@
+- 2026-06-08 MonitorSystem optional event CSV + snapshot coverage audit landed:
+  - added default-off Debug Options setting `Enable Monitor Event CSV`; when MonitorSystem is enabled it writes changed non-normal MonitorSystem publications only to `Logs/LalaPluginData/MonitorSystem_Events.csv`;
+  - skips `MONITOR OFF`, `MONITOR READY`, `FUEL HEALTH OK`, unchanged repeats, and per-tick OK/default spam; I/O failure disables the CSV writer after a single warning;
+  - no health logic, self-healing, fallback, MSGV1 integration, driver-message queue/cancel semantics, new exports, or dashboard JSON changes. Property Snapshot list reviewed: yes; existing `MonitorSystem.*` exports remain mapped to FuelStrategy and no snapshot group/list update was required. Root `CHANGELOG.md` reviewed unchanged as internal debug tooling.
+
 - 2026-06-08 MonitorSystem Phase 3A review follow-up landed:
   - active Car/Opp/H2H health publication now corrects the displayed MonitorSystem text when the selected active check changes, without overriding unresolved fuel-health alerts or active pit warnings;
   - deferred `CARSA GAP CHECK` because no clean non-debug CarSA gap-scale/lap-time readiness output exists for MonitorSystem to observe without guessing, leaving only `OPP TARGET CHECK`, `CARSA SLOT CHECK`, and `H2H TARGET CHECK` active;

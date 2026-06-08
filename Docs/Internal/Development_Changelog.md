@@ -1,3 +1,9 @@
+## 2026-06-08 — MonitorSystem optional event CSV + snapshot coverage audit
+- Classification: **internal-only** (debug/testing CSV + docs alignment; no new SimHub exports, dashboard JSON, health logic, MSGV1 routing, self-healing, fallback, or driver message queue/cancel behavior).
+- Added persisted Debug Options setting `Enable Monitor Event CSV` (default off) that writes changed non-normal MonitorSystem publications only (`WATCH`, `CAUTION`, `WARNING`, `FAULT`, `RECOVERED`) to `Logs/LalaPluginData/MonitorSystem_Events.csv` when MonitorSystem itself is enabled.
+- CSV rows include generic session/monitor/context columns and intentionally skip `MONITOR OFF`, `MONITOR READY`, `FUEL HEALTH OK`, unchanged repeat publications, and per-tick OK/default state spam; file I/O failure logs once and disables the writer.
+- Property Snapshot list reviewed: yes; existing `MonitorSystem.*` exports are already attached through `AttachCore` and mapped by `ResolvePropertySnapshotGroup(...)` to FuelStrategy, so no snapshot list or group change was required. Root `CHANGELOG.md` reviewed unchanged because this is an internal debug/testing tool.
+
 ## 2026-06-08 — Pit Debrief PR #797 review sync commit
 - Classification: **internal-only review traceability** (comments/docs only; no export names, dashboard JSON, fuel model, PitExit, PitCycleLite, or debrief runtime semantics changed beyond the already-present PR #797 fixes).
 - Added explicit code comments at the service-latch ordering and actual-loss normalization seams so the PR review can see why fuel-added evidence is captured before `Pit_AddedSoFar` reset and why boxed-stop actual loss adds stationary box time only inside the debrief readout.
