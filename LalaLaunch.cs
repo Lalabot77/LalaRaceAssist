@@ -7021,6 +7021,9 @@ namespace LaunchPlugin
         private bool _monitorPitLastOnPitRoad = false;
         private bool _monitorPitLastInPitBox = false;
         private bool _monitorPitPredictiveTwoLapsTriggeredThisStint = false;
+        private bool _monitorPostPitRefuelOffInhibitActive = false;
+        private bool _monitorPostPitRefuelOffSuppressionLoggedForWindow = false;
+        private int _monitorPostPitRefuelOffExitCompletedLap = -1;
         private string _monitorPitPhase = "OnTrack";
         private MonitorPitStopSnapshot _monitorPitEntrySnapshot;
         private string _monitorCarOppH2HSessionType = string.Empty;
@@ -7114,6 +7117,7 @@ namespace LaunchPlugin
             public string SessionType;
             public int SessionState;
             public double CurrentFuel;
+            public int CompletedLaps;
             public bool MfdRefuelEnabled;
             public double MfdFuelRequest;
             public string FuelControlMode;
@@ -17054,6 +17058,9 @@ namespace LaunchPlugin
             _monitorPitLastOnPitRoad = false;
             _monitorPitLastInPitBox = false;
             _monitorPitPredictiveTwoLapsTriggeredThisStint = false;
+            _monitorPostPitRefuelOffInhibitActive = false;
+            _monitorPostPitRefuelOffSuppressionLoggedForWindow = false;
+            _monitorPostPitRefuelOffExitCompletedLap = -1;
             _monitorPitPhase = "OnTrack";
             _monitorPitEntrySnapshot = null;
         }
@@ -17077,6 +17084,23 @@ namespace LaunchPlugin
             bool pitRoadExitThisTick = false;
 
             bool firstTick = !_monitorPitFrameworkPrimed;
+            if (!firstTick)
+            {
+                if (_monitorPostPitRefuelOffInhibitActive && snapshot.CompletedLaps > _monitorPostPitRefuelOffExitCompletedLap)
+                {
+                    _monitorPostPitRefuelOffInhibitActive = false;
+                    _monitorPostPitRefuelOffSuppressionLoggedForWindow = false;
+                    _monitorPostPitRefuelOffExitCompletedLap = -1;
+                }
+
+                if (_monitorPitLastOnPitRoad && !onPitRoad)
+                {
+                    _monitorPostPitRefuelOffInhibitActive = true;
+                    _monitorPostPitRefuelOffSuppressionLoggedForWindow = false;
+                    _monitorPostPitRefuelOffExitCompletedLap = snapshot.CompletedLaps;
+                }
+            }
+
             if (firstTick)
             {
                 _monitorPitFrameworkPrimed = true;
@@ -17161,14 +17185,21 @@ namespace LaunchPlugin
 
             if (predictiveEligible)
             {
-                _monitorPitPredictiveTwoLapsTriggeredThisStint = true;
                 MonitorPitWarningResult warning = EvaluateMonitorPitServiceWarnings(snapshot, MonitorSeverity.Caution, true);
+                if (!warning.RefuelOffSuppressed)
+                {
+                    _monitorPitPredictiveTwoLapsTriggeredThisStint = true;
+                }
+
                 PublishMonitorPitWarningOrClear(warning);
-                LogMonitorPitTrigger("PredictiveTwoLapsFuelRemaining", snapshot, string.Format(
-                    CultureInfo.InvariantCulture,
-                    "lapsRemainingInTank={0:0.00} threshold={1:0.00}",
-                    lapsRemainingInTank,
-                    MonitorPitPredictiveFuelLapsThreshold), warning);
+                if (!warning.RefuelOffSuppressed)
+                {
+                    LogMonitorPitTrigger("PredictiveTwoLapsFuelRemaining", snapshot, string.Format(
+                        CultureInfo.InvariantCulture,
+                        "lapsRemainingInTank={0:0.00} threshold={1:0.00}",
+                        lapsRemainingInTank,
+                        MonitorPitPredictiveFuelLapsThreshold), warning);
+                }
             }
         }
 
@@ -17188,13 +17219,20 @@ namespace LaunchPlugin
             public static readonly MonitorPitWarningResult None = new MonitorPitWarningResult(MonitorSeverity.Off, null);
 
             public MonitorPitWarningResult(MonitorSeverity severity, string text)
+                : this(severity, text, false)
+            {
+            }
+
+            public MonitorPitWarningResult(MonitorSeverity severity, string text, bool refuelOffSuppressed)
             {
                 Severity = severity;
                 Text = text;
+                RefuelOffSuppressed = refuelOffSuppressed;
             }
 
             public MonitorSeverity Severity { get; }
             public string Text { get; }
+            public bool RefuelOffSuppressed { get; }
             public bool HasWarning => !string.IsNullOrWhiteSpace(Text);
         }
 
@@ -17210,9 +17248,18 @@ namespace LaunchPlugin
                 return new MonitorPitWarningResult(serviceSeverity, "BASELINE SHORT");
             }
 
+            bool refuelOffSuppressed = false;
             if (IsMonitorPitRefuelOffRisk(snapshot))
             {
-                return new MonitorPitWarningResult(serviceSeverity, "REFUEL OFF");
+                if (IsMonitorPostPitRefuelOffInhibitActive(snapshot))
+                {
+                    LogMonitorPostPitRefuelOffSuppressed(snapshot, serviceSeverity);
+                    refuelOffSuppressed = true;
+                }
+                else
+                {
+                    return new MonitorPitWarningResult(serviceSeverity, "REFUEL OFF");
+                }
             }
 
             if (IsMonitorPitMfdFuelLow(snapshot))
@@ -17220,7 +17267,9 @@ namespace LaunchPlugin
                 return new MonitorPitWarningResult(serviceSeverity, "MFD FUEL LOW");
             }
 
-            return MonitorPitWarningResult.None;
+            return refuelOffSuppressed
+                ? new MonitorPitWarningResult(serviceSeverity, null, true)
+                : MonitorPitWarningResult.None;
         }
 
         private MonitorPitWarningResult EvaluateMonitorPitExitWarning(MonitorPitStopSnapshot snapshot)
@@ -17323,6 +17372,41 @@ namespace LaunchPlugin
                 !IsMonitorPitRefuelEffectivelyComplete(snapshot);
         }
 
+        private bool IsMonitorPostPitRefuelOffInhibitActive(MonitorPitStopSnapshot snapshot)
+        {
+            return snapshot != null &&
+                _monitorPostPitRefuelOffInhibitActive &&
+                _monitorPostPitRefuelOffExitCompletedLap >= 0 &&
+                snapshot.CompletedLaps <= _monitorPostPitRefuelOffExitCompletedLap;
+        }
+
+        private void LogMonitorPostPitRefuelOffSuppressed(MonitorPitStopSnapshot snapshot, MonitorSeverity severity)
+        {
+            if (snapshot == null)
+            {
+                return;
+            }
+
+            if (_monitorPostPitRefuelOffSuppressionLoggedForWindow)
+            {
+                return;
+            }
+
+            _monitorPostPitRefuelOffSuppressionLoggedForWindow = true;
+            SimHub.Logging.Current.Info(string.Format(
+                CultureInfo.InvariantCulture,
+                "[LalaPlugin:MonitorSystem] REFUEL OFF suppressed post-pit-exit until outlap complete sessionTime={0} sessionType={1} sessionState={2} completedLaps={3} exitCompletedLap={4} severity={5} mfdRefuelEnabled={6} pluginNextLitres={7} pluginFuelOnExit={8}",
+                FormatMonitorDouble(snapshot.SessionTimeSec),
+                snapshot.SessionType,
+                snapshot.SessionState,
+                snapshot.CompletedLaps,
+                _monitorPostPitRefuelOffExitCompletedLap,
+                (int)severity,
+                snapshot.MfdRefuelEnabled,
+                FormatMonitorDouble(snapshot.PluginNextLitres),
+                FormatMonitorDouble(snapshot.PluginFuelOnExit)));
+        }
+
         private bool IsMonitorPitRefuelEffectivelyComplete(MonitorPitStopSnapshot snapshot)
         {
             if (snapshot == null)
@@ -17399,6 +17483,7 @@ namespace LaunchPlugin
                 SessionType = string.IsNullOrWhiteSpace(sessionType) ? "unknown" : sessionType,
                 SessionState = sessionState,
                 CurrentFuel = currentFuelValid ? currentFuel : double.NaN,
+                CompletedLaps = Convert.ToInt32(data?.NewData?.CompletedLaps ?? 0),
                 MfdRefuelEnabled = SafeReadBool(pluginManager, "DataCorePlugin.GameRawData.Telemetry.dpFuelFill", false),
                 MfdFuelRequest = SafeReadDouble(pluginManager, "DataCorePlugin.GameRawData.Telemetry.PitSvFuel", double.NaN),
                 FuelControlMode = _pitFuelControlEngine?.ModeText ?? FormatMonitorFuelControlMode(_pitFuelControlEngine?.Mode ?? PitFuelControlMode.Off),

@@ -1,3 +1,8 @@
+- 2026-06-08 MonitorSystem post-pit `REFUEL OFF` inhibit landed:
+  - the existing pit-road-exit seam now starts a `REFUEL OFF`-only inhibit by latching completed laps at exit, suppressing through the outlap, and clearing on completed-lap advance or session transition;
+  - `MFD FUEL LOW`, `EXIT FUEL SHORT`, `BASELINE SHORT`, fuel-health faults, stale-state checks, and Car/Opp/H2H MonitorSystem warnings are unchanged; suppressed `REFUEL OFF` records log evidence only, with no Monitor Event CSV row;
+  - no SimHub exports, settings, dashboard JSON, command paths, fuel/refuel math, Pit Fuel Control, Pit Command, Strategy, Planner, or MSGV1 behavior changed. Property Snapshot list reviewed: yes; no export/property change.
+
 - 2026-06-08 MonitorSystem Phase 4A/4B PR #807 review follow-up landed:
   - stale-state WATCH publication now also respects active Car/Opp/H2H health warnings (`OPPONENT DATA UNRELIABLE`, `TRAFFIC DATA UNRELIABLE`, `H2H DATA UNRELIABLE`) in addition to existing fuel-health and pit-warning priority guards;
   - `FUEL LEARNING STALE` treats accepted burn-analysis sample-count decreases/resets as baseline progress, clearing stale state instead of waiting for the counter to exceed its pre-reset value;
