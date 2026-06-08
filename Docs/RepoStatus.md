@@ -1,3 +1,8 @@
+- 2026-06-08 MonitorSystem Phase 4A/4B PR #807 review follow-up landed:
+  - stale-state WATCH publication now also respects active Car/Opp/H2H health warnings (`OPPONENT DATA UNRELIABLE`, `TRAFFIC DATA UNRELIABLE`, `H2H DATA UNRELIABLE`) in addition to existing fuel-health and pit-warning priority guards;
+  - `FUEL LEARNING STALE` treats accepted burn-analysis sample-count decreases/resets as baseline progress, clearing stale state instead of waiting for the counter to exceed its pre-reset value;
+  - no new messages, thresholds, exports, Fuel Model learning changes, command paths, MSGV1 routing, or Property Snapshot grouping changes. Property Snapshot list reviewed: yes; no export/property change.
+
 - 2026-06-08 MonitorSystem Phase 4A/4B stale-state checks landed:
   - added report-only WATCH messages `LAUNCH ACTIVE TOO LONG`, `REJOIN ACTIVE TOO LONG`, `FUEL PROJECTION STALE`, `FUEL MODEL STALE`, and `FUEL LEARNING STALE`;
   - Launch/Rejoin checks observe existing active/visible states only, exclude completed Launch visibility, suppressed Rejoin states, hidden Rejoin messages, and PitExit, and never reset or mutate those subsystems;

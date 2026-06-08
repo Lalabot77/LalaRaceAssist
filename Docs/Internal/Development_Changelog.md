@@ -1,3 +1,9 @@
+## 2026-06-08 — MonitorSystem Phase 4A/4B PR #807 review follow-up
+- Classification: **internal-only** (priority/reset bug fix for newly added MonitorSystem stale-state checks; no new driver-facing texts, exports, settings, dashboard JSON, command paths, MSGV1 routing, or fuel-learning behavior changes).
+- Stale-state WATCH publication now preserves active Car/Opp/H2H reliability warnings in addition to existing fuel-health and pit-warning priority guards.
+- `FUEL LEARNING STALE` now treats accepted burn-analysis sample-count resets/decreases as monitor-baseline progress and clears/rebaselines stale observation immediately.
+- Property Snapshot list reviewed: yes; no SimHub exports/properties were added, removed, renamed, or behavior-changed. Existing `MonitorSystem.*` remains in the Fuel/Strategy group.
+
 ## 2026-06-08 — MonitorSystem Phase 4A/4B stale-state checks
 - Classification: **both** (driver-facing MonitorSystem WATCH texts plus internal stale-state observability; no new settings, exports, dashboard JSON, commands, recovery, or subsystem mutation).
 - Added edge/low-frequency report-only `LAUNCH ACTIVE TOO LONG`, `REJOIN ACTIVE TOO LONG`, `FUEL PROJECTION STALE`, `FUEL MODEL STALE`, and `FUEL LEARNING STALE` warnings with concise fail/recovered logs and Monitor Event CSV category support.

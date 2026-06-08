@@ -16517,7 +16517,7 @@ namespace LaunchPlugin
                 _monitorFuelLearningNoProgressStartLap = -1;
             }
 
-            if (sampleCount > _monitorFuelLearningLastSampleCount)
+            if (sampleCount != _monitorFuelLearningLastSampleCount)
             {
                 _monitorFuelLearningLastSampleCount = sampleCount;
                 _monitorFuelLearningLastCompletedLap = completedLaps;
@@ -16652,7 +16652,8 @@ namespace LaunchPlugin
             return _monitorSystem != null &&
                 _monitorSystem.IsEnabled &&
                 !_monitorSystem.IsFuelHealthAlertActive &&
-                !_monitorSystem.IsMonitorPitWarningActive;
+                !_monitorSystem.IsMonitorPitWarningActive &&
+                !_monitorSystem.IsCarOppH2HHealthWarningActive;
         }
 
         private void ClearActiveMonitorStaleHealthWarningIfOwned()

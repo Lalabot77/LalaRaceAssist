@@ -127,7 +127,7 @@ Launch trace discard ownership:
 - Header-only / obviously empty launch traces are treated as useless and can be removed during trace housekeeping.
 
 ## MonitorSystem observation
-MonitorSystem Phase 4A observes the internal active Launch state (`ManualPrimed`, `AutoPrimed`, `InProgress`, or `Logging`) and can publish `LAUNCH ACTIVE TOO LONG` as a WATCH if that active state remains continuous for 60 seconds. This intentionally does **not** use `LaunchModeActive` when it includes completed/results visibility, and it does not reset Launch, cancel a trace, send commands, or mutate Launch Mode. The warning clears when Launch is no longer active and does not override active fuel-health or pit warnings.
+MonitorSystem Phase 4A observes the internal active Launch state (`ManualPrimed`, `AutoPrimed`, `InProgress`, or `Logging`) and can publish `LAUNCH ACTIVE TOO LONG` as a WATCH if that active state remains continuous for 60 seconds. This intentionally does **not** use `LaunchModeActive` when it includes completed/results visibility, and it does not reset Launch, cancel a trace, send commands, or mutate Launch Mode. The warning clears when Launch is no longer active and does not override active fuel-health, pit, or Car/Opp/H2H reliability warnings.
 
 ## Failure modes / safeguards
 - **Blocked by pits or serious rejoin:** launch will not arm or continue.
