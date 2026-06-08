@@ -49,6 +49,11 @@
 
 # Repo Status
 
+- 2026-06-08 MonitorSystem Phase 2C pit-exit baseline MFD context fix landed:
+  - `PitRoadExit` `BASELINE SHORT` now evaluates actual exit fuel only and no longer counts still-selected `PitSvFuel`/`dpFuelFill` MFD fuel after the stop has completed;
+  - predictive two-laps, pit-road entry, and pit-box entry baseline checks still include selected MFD fuel when refuel is enabled because that request can still be serviced in those contexts;
+  - no telemetry fallback/known-state logic, new warnings, exports, CSV, per-tick checks, `Fuel.Refuel.*`, Pit Fuel Control, Pit Command, planner, or Property Snapshot group changes. Property Snapshot list reviewed: yes; no export/property change.
+
 - 2026-06-08 MonitorSystem Phase 2C baseline gross fuel check landed:
   - added edge-triggered `BASELINE SHORT` warning using only SimHub/DataCore current fuel (`DataCorePlugin.GameData.NewData.Fuel`), SimHub fuel-per-lap (`DataCorePlugin.Computed.Fuel_LitersPerLap`), SimHub remaining laps (`DataCorePlugin.GameData.LapsRemaining`), MFD refuel state/request (`dpFuelFill` / `PitSvFuel`), and the existing `Fuel.Setup.FuelLevel` pre-race seam;
   - formula is `baselineRequired = fuelPerLap * remainingLaps`, `baselineAvailable = setup/current fuel` before race or `current fuel + MFD add when refuel enabled` while running/in pit context, and warning only when `baselineRequired - baselineAvailable > fuelPerLap * 1.0`;

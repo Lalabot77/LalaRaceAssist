@@ -16575,7 +16575,7 @@ namespace LaunchPlugin
                 return MonitorPitWarningResult.None;
             }
 
-            if (includeBaselineFuelCheck && IsMonitorBaselineFuelShort(snapshot))
+            if (includeBaselineFuelCheck && IsMonitorBaselineFuelShort(snapshot, includeSelectedMfdFuel: true))
             {
                 return new MonitorPitWarningResult(serviceSeverity, "BASELINE SHORT");
             }
@@ -16600,7 +16600,7 @@ namespace LaunchPlugin
                 return MonitorPitWarningResult.None;
             }
 
-            if (IsMonitorBaselineFuelShort(snapshot))
+            if (IsMonitorBaselineFuelShort(snapshot, includeSelectedMfdFuel: false))
             {
                 return new MonitorPitWarningResult(MonitorSeverity.Warning, "BASELINE SHORT");
             }
@@ -16617,7 +16617,7 @@ namespace LaunchPlugin
         }
 
 
-        private bool IsMonitorBaselineFuelShort(MonitorPitStopSnapshot snapshot)
+        private bool IsMonitorBaselineFuelShort(MonitorPitStopSnapshot snapshot, bool includeSelectedMfdFuel)
         {
             if (snapshot == null || !IsFiniteNonNegative(snapshot.CurrentFuel))
             {
@@ -16644,7 +16644,7 @@ namespace LaunchPlugin
                     baselineAvailable = Fuel_Setup_FuelLevel;
                 }
             }
-            else if (snapshot.MfdRefuelEnabled)
+            else if (includeSelectedMfdFuel && snapshot.MfdRefuelEnabled)
             {
                 if (!IsFiniteNonNegative(snapshot.MfdFuelRequest))
                 {

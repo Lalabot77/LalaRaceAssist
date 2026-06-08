@@ -1,3 +1,10 @@
+## 2026-06-08 — MonitorSystem Phase 2C pit-exit MFD context fix
+- Classification: **internal-only correctness follow-up** (baseline-warning edge context fix; no export names, dashboard JSON, fuel/refuel math, planner, Pit Fuel Control, Pit Command, or message text changes).
+- Parameterized `IsMonitorBaselineFuelShort(...)` with `includeSelectedMfdFuel`, keeping selected `PitSvFuel` included for predictive, pit-road entry, and pit-box entry checks while excluding it on `PitRoadExit`.
+- Pit-road exit `BASELINE SHORT` now uses actual exit fuel only, so a still-selected MFD fuel request after leaving pit road cannot hide a real post-stop shortfall.
+- Preserved trusted SimHub telemetry reads, no telemetry fallback/known-state layer, no `MfdFuelRequestKnown`, no new warnings, no CSV, no per-tick checks, no `Fuel.Refuel.*` / Pit Fuel Control / Pit Command / Strategy planner changes, and no Property Snapshot group changes.
+- Property Snapshot list reviewed: yes; no export/property add, remove, rename, behavior-contract change, or group change because `MonitorSystem.*` remains in the existing Fuel/Strategy group.
+
 ## 2026-06-08 — MonitorSystem trusted SimHub telemetry simplification
 - Classification: **internal-only correctness/scope cleanup** (Phase 2B monitor implementation and internal docs; no export, message text/enum, fuel/refuel calculation, planner, Pit Fuel Control, or Pit Command behavior change).
 - Removed the `MfdRefuelKnown` snapshot field and `TryReadMonitorPitBool` helper so Phase 2B service checks again read trusted SimHub/iRacing `dpFuelFill` through the existing simple bool-read path.
