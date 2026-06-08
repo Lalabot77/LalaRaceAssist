@@ -361,6 +361,8 @@ namespace LaunchPlugin
 
         private void LatchFuelAdded(double fuelAddedLitres)
         {
+            // Preserve the largest existing Fuel.Pit gauge value observed during service so
+            // a later box-exit reset to 0 cannot erase the completed-stop debrief evidence.
             if (!IsFiniteNonNegative(fuelAddedLitres))
             {
                 return;

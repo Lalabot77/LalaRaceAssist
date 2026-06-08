@@ -10993,6 +10993,9 @@ namespace LaunchPlugin
             }
             double currentFuelNow = data.NewData?.Fuel ?? 0.0;
             UpdatePitBoxCountdownValues(inLane, isInPitStall);
+
+            // PR #797: capture Pit.Debrief service evidence before UpdatePitRefuelGaugeValues can
+            // clear Pit_AddedSoFar on the first non-active box tick. This reads existing fuel seams only.
             UpdatePitDebriefBoxServiceLatch(inLane, isInPitStall);
             UpdatePitRefuelGaugeValues(currentFuelNow);
             if (_pitDebrief != null && _pitBoxCountdownActive)
@@ -20827,6 +20830,9 @@ namespace LaunchPlugin
 
         private double NormalizePitDebriefActualTotalLossSeconds(double actualLossSec, string lossSource)
         {
+            // Fuel.Live.TotalStopLoss is a boxed-stop total prediction. Current PitEngine/PitLite
+            // final DTL/direct seams are lane-equivalent, so boxed-stop debrief actuals add
+            // stationary box time here without feeding that normalization back into learning.
             if (double.IsNaN(actualLossSec) || double.IsInfinity(actualLossSec) || actualLossSec <= 0.0)
             {
                 return actualLossSec;

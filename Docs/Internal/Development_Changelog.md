@@ -1,3 +1,8 @@
+## 2026-06-08 — Pit Debrief PR #797 review sync commit
+- Classification: **internal-only review traceability** (comments/docs only; no export names, dashboard JSON, fuel model, PitExit, PitCycleLite, or debrief runtime semantics changed beyond the already-present PR #797 fixes).
+- Added explicit code comments at the service-latch ordering and actual-loss normalization seams so the PR review can see why fuel-added evidence is captured before `Pit_AddedSoFar` reset and why boxed-stop actual loss adds stationary box time only inside the debrief readout.
+- Property Snapshot list reviewed: yes; no export/property add, remove, rename, or behavior-contract change. `Pit.Debrief.*` remains in Pit/PitExit through the existing `Pit.` prefix.
+
 ## 2026-06-08 — Pit Debrief service latch/total-loss normalization follow-up
 - Classification: **both** (dashboard-visible debrief export correctness plus internal log-contract wording).
 - Preserved `Pit.Debrief.Service.FuelAddedLitres` from the existing Fuel.Pit gauge while the box countdown is still active, before the gauge reset can clear `Pit_AddedSoFar` on box exit; no new refuel detector or refuel-duration seam was added.

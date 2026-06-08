@@ -49,6 +49,10 @@
 
 # Repo Status
 
+- 2026-06-08 Pit Debrief PR #797 review sync commit validated:
+  - added explicit code comments documenting that debrief service evidence is captured before `Pit_AddedSoFar` reset and that actual loss is normalized to total-stop-equivalent only for the debrief readout;
+  - no runtime logic, export names, Property Snapshot grouping, PitCycleLite, fuel model, PitExit prediction, Rejoin, or dashboard JSON/layout changes beyond the already-present PR #797 fix semantics. Property Snapshot list reviewed: yes; unchanged because no exports/properties changed.
+
 - 2026-06-08 Pit Debrief service latch and total-loss normalization follow-up validated:
   - `Pit.Debrief.Service.FuelAddedLitres` now preserves existing Fuel.Pit gauge evidence while the box countdown is still active, before box-exit gauge reset can clear `Pit_AddedSoFar`;
   - `Pit.Debrief.Timing.ActualTotalLossSec` now compares against `Fuel.Live.TotalStopLoss` on a total-stop-equivalent basis by adding latched stationary box duration to existing DTL/direct lane-equivalent final loss for boxed stops;
