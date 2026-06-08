@@ -69,4 +69,4 @@ Evaluate message definitions against telemetry and plugin signals, maintain an a
 
 
 ## Log hygiene note
-- MSGV1 no longer emits obsolete legacy ExtraProperties fallback-removal warnings for unavailable legacy signal IDs. The optional session marker is Soft-Debug-gated and uses current Soft Debug terminology.
+- MSGV1 no longer emits obsolete legacy ExtraProperties fallback-removal warnings for unavailable legacy signal IDs. The optional session marker is gated by master `Enable debugging mode` plus child `Enable Debug Logging` and uses current debug-logging terminology.

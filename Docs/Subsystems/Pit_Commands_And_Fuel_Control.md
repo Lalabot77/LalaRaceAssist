@@ -149,9 +149,9 @@ Canonical log wording and meaning live in `Docs/Internal/SimHubLogMessages.md`; 
 - tyre compound attempt + single-window confirmation diagnostics.
 - Fuel Control action-path diagnostics:
   - `LalaLaunch` Fuel Control action entry logs are intentionally emitted (`PitFuelControl* action received`) to prove SimHub binding reached plugin action methods;
-  - `PitFuelControlEngine` entry snapshots (`entry action=... mode=... source=... suppressReason=...`) are now Soft-Debug-gated for focused ownership diagnostics;
-  - blocked/no-send branches preserve always-on evidence for serious cases (`snapshot-null`, `target-invalid`, `send-failed`) while benign ownership/mirror/suppression churn (`suppressed:<reason>`, `off-hard-guard`, `source-stby`, `auto-not-armed`, `lap-cross-no-material-delta`, `iracing-autofuel-ownership`, `external-mirror-change`, `owned-mirror-consumed`) is emitted only when Soft Debug is enabled and is transition/rate-limited;
-  - telemetry suppression diagnostics are transition/throttled Soft-Debug details (no per-tick spam), with explicit always-on suppression-clear transition logging.
+  - `PitFuelControlEngine` entry snapshots (`entry action=... mode=... source=... suppressReason=...`) are gated by master `Enable debugging mode` plus child `Enable Debug Logging` for focused ownership diagnostics;
+  - blocked/no-send branches preserve always-on evidence for serious cases (`snapshot-null`, `target-invalid`, `send-failed`) while benign ownership/mirror/suppression churn (`suppressed:<reason>`, `off-hard-guard`, `source-stby`, `auto-not-armed`, `lap-cross-no-material-delta`, `iracing-autofuel-ownership`, `external-mirror-change`, `owned-mirror-consumed`) is emitted only when master `Enable debugging mode` and child `Enable Debug Logging` are both enabled, and remains transition/rate-limited;
+  - telemetry suppression diagnostics are transition/throttled `Enable Debug Logging` details (no per-tick spam), with explicit always-on suppression-clear transition logging.
 - tyre mode transitions, one-shot command sends, and truth-mirror / AUTO-cancel reasons.
 
 ## Dependencies / ordering assumptions

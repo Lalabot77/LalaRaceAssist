@@ -1,3 +1,14 @@
+## 2026-06-08 — PR #808 debug logging gate ownership completion
+- Classification: **internal-only** (SimHub Info diagnostic logging gate correction only; no runtime fuel math, Leader Lap authority decisions, lap detection behavior, PitFuelControl command/mirror/fault behavior, PitDebrief, exports/properties, dashboard JSON, or debug UI layout changed).
+- Completed the PR #808 audit so Lap Detector diagnostics, the PitFuelControlEngine diagnostic provider, MSGV1 optional session marker, and Property Snapshot manual/detailed summary logs all use the effective child logging gate (`SoftDebugEnabled && EnableDebugLogging`) instead of master Soft Debug alone. Leader Lap routine candidate/source/use/reject detail remains on the same effective gate.
+- Preserved always-on evidence for Leader authority unavailable/hold/recovery, PitFuelControl serious blocked reasons (`snapshot-null`, `target-invalid`, `send-failed`), stale ownership expiry/recovery, PitDebrief finals, PitCommand failures, MonitorSystem warnings, and race-finish summaries. `SimHub.Logging.Current.Debug` is not used.
+- Property Snapshot list reviewed: yes; no SimHub exports/properties or snapshot groups changed. Root `CHANGELOG.md` reviewed unchanged because this is internal diagnostic-log gate ownership only.
+
+## 2026-06-08 — PR #808 debug logging gate ownership fix
+- Classification: **internal-only** (SimHub Info diagnostic logging gate correction only; no runtime fuel math, Leader Lap authority decisions, lap detection, PitFuelControl behavior, PitDebrief, exports/properties, dashboard JSON, or debug UI layout changed).
+- Leader Lap routine candidate/source/accept/reject detail now uses the existing effective verbose helper (`SoftDebugEnabled && EnableDebugLogging`) instead of master Soft Debug alone, so `Enable debugging mode` can expose debug tools without enabling extra SimHub Info diagnostic verbosity.
+- Always-on transition/rate-limited authority unavailable/hold/recovery evidence remains unchanged; `SimHub.Logging.Current.Debug` is not used. Property Snapshot list reviewed: yes; no SimHub exports/properties or snapshot groups changed.
+
 ## 2026-06-08 — MonitorSystem documentation consolidation cleanup
 - Classification: **internal-only** (documentation/current-state consolidation only; no C# code, exports, MonitorSystem messages, CSV schema, runtime behavior, dashboard JSON, or settings UI changed).
 - Merged duplicate Property Snapshot CSV inventory wording, updated Dash Integration/SimHub inventory to include active Phase 4A/4B stale-state checks, and documented the MonitorSystem priority order as unresolved fuel-health > pit/baseline > Car/Opp/H2H > stale-state.
@@ -22,16 +33,16 @@
 
 ## 2026-06-08 — PitFuelControl serious blocked-log hygiene follow-up
 - Classification: **internal-only** (observability contract fix only; no PitFuelControl command, mirror, fault, fuel math, export/property, dashboard JSON, settings UI, or profile behavior changed).
-- Restored always-on Info logging for serious PitFuelControl blocked reasons routed through the Soft-Debug helper (`snapshot-null`, `target-invalid`, and existing `send-failed`) while preserving Soft-Debug/rate-limited logging for benign ownership/no-op churn such as `external-mirror-change`, `source-stby`, `auto-not-armed`, and `lap-cross-no-material-delta`.
+- Restored always-on Info logging for serious PitFuelControl blocked reasons routed through the shared diagnostic helper (`snapshot-null`, `target-invalid`, and existing `send-failed`) while preserving `Enable Debug Logging`-gated/rate-limited logging for benign ownership/no-op churn such as `external-mirror-change`, `source-stby`, `auto-not-armed`, and `lap-cross-no-material-delta`.
 - Docs reviewed: `SimHubLogMessages.md` and `Pit_Commands_And_Fuel_Control.md` already stated serious blocked reasons remain always-on, so their wording required no change. Property Snapshot list reviewed: yes; no SimHub exports/properties changed.
 
 ## 2026-06-08 — SimHub log hygiene cleanup
 - Classification: **internal-only** (normal SimHub log noise reduction and observability-contract documentation; no runtime math, command behavior, lap detection behavior, Leader Lap authority behavior, exports/properties, settings UI, dashboard JSON, or profile schema changed).
-- Removed obsolete legacy ExtraProperties fallback-removal warnings from Messaging/MSGV1/H2H and updated the optional MSGV1 session marker to use current Soft Debug terminology.
+- Removed obsolete legacy ExtraProperties fallback-removal warnings from Messaging/MSGV1/H2H and updated the optional MSGV1 session marker to use current debug-logging terminology.
 - Property Snapshot now keeps START/STOP/RESET/ignored START guards/path/schema/failure logs while suppressing routine auto-capture heartbeat and successful write/append lines that duplicated the CSV output itself.
-- Lap Detector normal pending/reject/low-speed/atypical crossing diagnostics are Soft-Debug-gated; normal lap-cross success details no longer appear in always-on logs.
-- Leader Lap keeps transition/rate-limited always-on visibility for authority unavailable/fail-closed, hold start, hold expiry, and authority recovery, while routine candidate/source/accept/reject/fallback details are Soft-Debug-gated Info and PR #799 authority behavior is unchanged.
-- PitFuelControl keeps compact LalaLaunch action-received logs, serious blocked reasons, stale ownership expiry, and suppression-clear recovery always-on; full action-entry state and benign ownership/mirror/suppression churn including `external-mirror-change` are Soft-Debug-gated and rate-limited.
+- Lap Detector normal pending/reject/low-speed/atypical crossing diagnostics require the effective `Enable Debug Logging` gate; normal lap-cross success details no longer appear in always-on logs.
+- Leader Lap keeps transition/rate-limited always-on visibility for authority unavailable/fail-closed, hold start, hold expiry, and authority recovery, while routine candidate/source/accept/reject/fallback details now require the effective `Enable Debug Logging` gate and PR #799 authority behavior is unchanged.
+- PitFuelControl keeps compact LalaLaunch action-received logs, serious blocked reasons, stale ownership expiry, and suppression-clear recovery always-on; full action-entry state and benign ownership/mirror/suppression churn including `external-mirror-change` require the effective `Enable Debug Logging` gate and remain rate-limited.
 - PitDebrief final structured stop logs, useful pit-cycle/debrief event logs, PitCommand warnings/failures, race-finish summaries, and Warn/Error failure paths remain always-on.
 - Property Snapshot list reviewed: yes; no SimHub exports/properties were added, removed, renamed, or behavior-changed, so `ResolvePropertySnapshotGroup(...)` required no change.
 ## 2026-06-08 — Pit Debrief box delta/fuel-target source follow-up
