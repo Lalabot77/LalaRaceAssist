@@ -6983,9 +6983,9 @@ namespace LaunchPlugin
         private MonitorPitStopSnapshot _monitorPitEntrySnapshot;
         private string _monitorCarOppH2HSessionType = string.Empty;
         private double _monitorCarOppH2HEligibleSinceSessionTimeSec = double.NaN;
-        private readonly MonitorCarOppH2HCheckState _monitorOppTargetCheckState = new MonitorCarOppH2HCheckState("OppTarget", "OPP TARGET CHECK", MonitorSeverity.Caution);
-        private readonly MonitorCarOppH2HCheckState _monitorCarSaSlotCheckState = new MonitorCarOppH2HCheckState("CarSASlot", "CARSA SLOT CHECK", MonitorSeverity.Caution);
-        private readonly MonitorCarOppH2HCheckState _monitorH2HTargetCheckState = new MonitorCarOppH2HCheckState("H2HTarget", "H2H TARGET CHECK", MonitorSeverity.Watch);
+        private readonly MonitorCarOppH2HCheckState _monitorOppTargetCheckState = new MonitorCarOppH2HCheckState("OppTarget", "OPPONENT DATA UNRELIABLE", MonitorSeverity.Caution);
+        private readonly MonitorCarOppH2HCheckState _monitorCarSaSlotCheckState = new MonitorCarOppH2HCheckState("CarSASlot", "TRAFFIC DATA UNRELIABLE", MonitorSeverity.Caution);
+        private readonly MonitorCarOppH2HCheckState _monitorH2HTargetCheckState = new MonitorCarOppH2HCheckState("H2HTarget", "H2H DATA UNRELIABLE", MonitorSeverity.Watch);
         private bool _monitorEventCsvFailed;
         private bool _monitorEventCsvPathLogged;
 
@@ -9938,7 +9938,7 @@ namespace LaunchPlugin
             _fuelRuntimeUnhealthyStreak = unhealthy ? (_fuelRuntimeUnhealthyStreak + 1) : 0;
             if (unhealthy)
             {
-                PublishMonitorSystemEvent(MonitorSeverity.Watch, "FUEL DATA CHECK", "FuelHealth", _fuelRuntimeHealthCheckPending ? _fuelRuntimeHealthPendingReason : "health check failed", string.Empty);
+                PublishMonitorSystemEvent(MonitorSeverity.Watch, "CHECK FUEL DATA", "FuelHealth", _fuelRuntimeHealthCheckPending ? _fuelRuntimeHealthPendingReason : "health check failed", string.Empty);
             }
 
             bool shouldRecover = _fuelRuntimeUnhealthyStreak >= 2;
@@ -9963,7 +9963,7 @@ namespace LaunchPlugin
                 }
                 else
                 {
-                    PublishMonitorSystemEvent(MonitorSeverity.Watch, "FUEL DATA CHECK", "FuelHealth", _fuelRuntimeHealthCheckPending ? _fuelRuntimeHealthPendingReason : "health check failed", string.Empty);
+                    PublishMonitorSystemEvent(MonitorSeverity.Watch, "CHECK FUEL DATA", "FuelHealth", _fuelRuntimeHealthCheckPending ? _fuelRuntimeHealthPendingReason : "health check failed", string.Empty);
                 }
 
                 return;
@@ -10017,7 +10017,7 @@ namespace LaunchPlugin
                 }
                 else
                 {
-                    PublishMonitorSystemEvent(MonitorSeverity.Watch, "FUEL DATA CHECK", "FuelHealth", _fuelRuntimeHealthCheckPending ? _fuelRuntimeHealthPendingReason : "health check failed", string.Empty);
+                    PublishMonitorSystemEvent(MonitorSeverity.Watch, "CHECK FUEL DATA", "FuelHealth", _fuelRuntimeHealthCheckPending ? _fuelRuntimeHealthPendingReason : "health check failed", string.Empty);
                 }
             }
 
@@ -16192,7 +16192,7 @@ namespace LaunchPlugin
             string displayText = string.IsNullOrWhiteSpace(text) ? string.Empty : text.Trim();
             switch (displayText)
             {
-                case "FUEL DATA CHECK":
+                case "CHECK FUEL DATA":
                 case "FUEL DATA RECOVERED":
                 case "FUEL DATA FAULT":
                     return "FuelHealth";
@@ -16202,9 +16202,9 @@ namespace LaunchPlugin
                     return "FuelPitStop";
                 case "BASELINE SHORT":
                     return "BaselineFuel";
-                case "OPP TARGET CHECK":
-                case "CARSA SLOT CHECK":
-                case "H2H TARGET CHECK":
+                case "OPPONENT DATA UNRELIABLE":
+                case "TRAFFIC DATA UNRELIABLE":
+                case "H2H DATA UNRELIABLE":
                     return "CarOppH2H";
                 default:
                     return "Unknown";

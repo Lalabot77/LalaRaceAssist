@@ -1,3 +1,8 @@
+- 2026-06-08 MonitorSystem driver-facing wording update landed:
+  - renamed the current driver/dashboard/CSV/log/catalogue texts from `FUEL DATA CHECK` to `CHECK FUEL DATA`, from `OPP TARGET CHECK` to `OPPONENT DATA UNRELIABLE`, from `CARSA SLOT CHECK` to `TRAFFIC DATA UNRELIABLE`, and from `H2H TARGET CHECK` to `H2H DATA UNRELIABLE`;
+  - Monitor Event CSV category mapping now recognises `CHECK FUEL DATA` as `FuelHealth` and the three Car/Opp/H2H unreliable-data texts as `CarOppH2H`, while still skipping `MONITOR OFF`, `MONITOR READY`, and `FUEL HEALTH OK`;
+  - wording-only change: no severity enum values, export/property names, CSV names/columns, trigger logic, fuel logic, pit logic, CarSA/Opp/H2H logic, MSGV1, dashboard JSON, settings UI, or Property Snapshot grouping changed. Property Snapshot list reviewed: yes; existing `MonitorSystem.*` exports remain mapped to FuelStrategy and no export/property add, remove, rename, or regroup is required.
+
 - 2026-06-08 MonitorSystem optional event CSV + snapshot coverage audit landed:
   - added default-off Debug Options setting `Enable Monitor Event CSV`; when MonitorSystem is enabled it writes changed non-normal MonitorSystem publications only to `Logs/LalaPluginData/MonitorSystem_Events.csv`;
   - skips `MONITOR OFF`, `MONITOR READY`, `FUEL HEALTH OK`, unchanged repeats, and per-tick OK/default spam; I/O failure disables the CSV writer after a single warning;
@@ -5,11 +10,11 @@
 
 - 2026-06-08 MonitorSystem Phase 3A review follow-up landed:
   - active Car/Opp/H2H health publication now corrects the displayed MonitorSystem text when the selected active check changes, without overriding unresolved fuel-health alerts or active pit warnings;
-  - deferred `CARSA GAP CHECK` because no clean non-debug CarSA gap-scale/lap-time readiness output exists for MonitorSystem to observe without guessing, leaving only `OPP TARGET CHECK`, `CARSA SLOT CHECK`, and `H2H TARGET CHECK` active;
+  - deferred `CARSA GAP CHECK` because no clean non-debug CarSA gap-scale/lap-time readiness output exists for MonitorSystem to observe without guessing, leaving only `OPPONENT DATA UNRELIABLE`, `TRAFFIC DATA UNRELIABLE`, and `H2H DATA UNRELIABLE` active;
   - restored main-branch `EXIT FUEL SHORT` tolerance to 1.5 L. Property Snapshot list reviewed: yes; existing `MonitorSystem.*` exports remain mapped to FuelStrategy and no export/property add, remove, rename, or regroup is required.
 
 - 2026-06-08 MonitorSystem Phase 3A Car/Opp/H2H impossible-state checks landed:
-  - added edge/low-frequency report-by-exception `OPP TARGET CHECK`, `CARSA SLOT CHECK`, and `H2H TARGET CHECK` messages using only existing Opponents, CarSA, and H2H outputs;
+  - added edge/low-frequency report-by-exception `OPPONENT DATA UNRELIABLE`, `TRAFFIC DATA UNRELIABLE`, and `H2H DATA UNRELIABLE` messages using only existing Opponents, CarSA, and H2H outputs;
   - checks are gated on eligible live sessions, valid player `CarIdx`, and a short 3 s warmup, ignore invalid/blink-held rows, do not override unresolved fuel-health alerts or active pit warnings, and clear only their own active MonitorSystem text;
   - no race-order correctness, checkpoint freshness, TrackSec-vs-RelativeSec reconciliation, gap recalculation, fallback target selection, self-healing, telemetry-known wrappers, new exports, property names, settings, UI, dash JSON, PitExit, fuel, planner, strategy, command, or Property Snapshot group changes. Property Snapshot list reviewed: yes; existing `MonitorSystem.*` exports remain mapped to FuelStrategy and no export/property add, remove, rename, or regroup is required.
 
@@ -112,7 +117,7 @@
   - added edge-triggered `BASELINE SHORT` warning using only SimHub/DataCore current fuel (`DataCorePlugin.GameData.NewData.Fuel`), SimHub fuel-per-lap (`DataCorePlugin.Computed.Fuel_LitersPerLap`), SimHub remaining laps (`DataCorePlugin.GameData.LapsRemaining`), MFD refuel state/request (`dpFuelFill` / `PitSvFuel`), and the existing `Fuel.Setup.FuelLevel` pre-race seam;
   - formula is `baselineRequired = fuelPerLap * remainingLaps`, `baselineAvailable = setup/current fuel` before race or `current fuel + MFD add when refuel enabled` while running/in pit context, and warning only when `baselineRequired - baselineAvailable > fuelPerLap * 1.0`;
   - evaluation is limited to existing MonitorSystem edges (`PredictiveTwoLapsFuelRemaining`, `PitRoadEntry`, `PitBoxEntry`, optional `PitRoadExit`) and does not add per-tick scans, planner/strategy fuel math, fallback/unknown telemetry layers, new exports, CSV, Pit Fuel Control, Pit Command, or `Fuel.Refuel.*` changes;
-  - `BASELINE SHORT` does not override unresolved `FUEL DATA CHECK` / `FUEL DATA FAULT`, can replace `FUEL DATA RECOVERED`, `MONITOR READY`, or Phase 2B pit warnings, and Property Snapshot list reviewed: yes; no export/property add, remove, rename, or regroup.
+  - `BASELINE SHORT` does not override unresolved `CHECK FUEL DATA` / `FUEL DATA FAULT`, can replace `FUEL DATA RECOVERED`, `MONITOR READY`, or Phase 2B pit warnings, and Property Snapshot list reviewed: yes; no export/property add, remove, rename, or regroup.
 
 - 2026-06-08 MonitorSystem trusted SimHub telemetry simplification landed:
   - removed the Phase 2B `MfdRefuelKnown` / `TryReadMonitorPitBool` telemetry-known layer and restored direct trusted `dpFuelFill` use for REFUEL OFF / MFD FUEL LOW checks;
@@ -121,13 +126,13 @@
   - no `BASELINE SHORT`, `FUEL MODEL CHECK`, gross SimHub baseline maths, Fuel.Refuel calculation, Pit Fuel Control, Pit Command, CSV writer, new export, or Property Snapshot grouping changes. Property Snapshot list reviewed: yes; no group change.
 
 - 2026-06-07 MonitorSystem Phase 2B latest review follow-up landed:
-  - fuel-health priority now blocks Phase 2B pit warnings only for unresolved `FUEL DATA CHECK` / `FUEL DATA FAULT`; auto-recoverable `FUEL DATA RECOVERED` no longer suppresses urgent pit warnings;
+  - fuel-health priority now blocks Phase 2B pit warnings only for unresolved `CHECK FUEL DATA` / `FUEL DATA FAULT`; auto-recoverable `FUEL DATA RECOVERED` no longer suppresses urgent pit warnings;
   - pit-service warnings now distinguish known vs missing `dpFuelFill` telemetry (`mfdRefuelKnown` in pit evidence logs), so missing MFD refuel telemetry fails closed instead of being treated as refuel disabled;
   - off-pit-road Fuel Control mode changes inside the predictive low-fuel window can publish/clear CAUTION-level predictive pit warnings even after the one-shot predictive threshold previously fired clean, without adding per-tick scans or off-road WARNINGs;
   - no `BASELINE SHORT`, `FUEL MODEL CHECK`, gross SimHub baseline maths, Fuel.Refuel calculation, Pit Fuel Control, Pit Command, CSV writer, new export, or Property Snapshot grouping changes. Property Snapshot list reviewed: yes; no group change.
 
 - 2026-06-07 MonitorSystem Phase 2B active review follow-up landed:
-  - Phase 2B pit warnings no longer publish over or clear active fuel-health monitor messages (`FUEL DATA CHECK`, `FUEL DATA FAULT`, `FUEL DATA RECOVERED`);
+  - Phase 2B pit warnings no longer publish over or clear active fuel-health monitor messages (`CHECK FUEL DATA`, `FUEL DATA FAULT`, `FUEL DATA RECOVERED`);
   - `EXIT FUEL SHORT` now requires the pit-entry snapshot to have a meaningful required add (`PluginNextLitres > 0.5L`), preventing no-refuel/no-required-add pit cycles from warning on pit-lane burn alone;
   - off-pit-road Fuel Control mode changes now evaluate CAUTION-level predictive risk only when needed to keep/clear an existing Phase 2B warning, so corrected predictive `REFUEL OFF` / `MFD FUEL LOW` can clear before pit entry without publishing off-road service WARNINGs;
   - no `BASELINE SHORT`, `FUEL MODEL CHECK`, gross SimHub baseline maths, Fuel.Refuel calculation, Pit Fuel Control, Pit Command, CSV writer, new export, or Property Snapshot grouping changes. Property Snapshot list reviewed: yes; no group change.
@@ -161,14 +166,14 @@
   - no trigger, health predicate, timing threshold, recovery side effect, message/export, fuel/refuel/planner, Pit Fuel Control, or Pit Command change. Property Snapshot list reviewed: yes; no group change.
 
 - 2026-06-07 PR #790 MonitorSystem fuel-health outcome follow-up landed:
-  - transient `FUEL DATA CHECK` WATCH now clears on the next evaluation satisfying the existing valid healthy pass basis even if no queued health check remains; existing pass logging remains pending-check-only;
+  - transient `CHECK FUEL DATA` WATCH now clears on the next evaluation satisfying the existing valid healthy pass basis even if no queued health check remains; existing pass logging remains pending-check-only;
   - planner-safe recovery distinguishes deferred/not-attempted from attempted failure, so throttle or missing-manager deferrals retain WATCH and only an attempted unhealthy result publishes `FUEL DATA FAULT`;
   - manual targeted recovery now publishes RECOVERED/FAULT/WATCH consistently while preserving successful early return and failed/deferred broad-reset fall-through; fuel-health triggers, predicates, timing, side effects, fuel/refuel/planner math, Pit Fuel Control, Pit Command, messages, and exports remain unchanged;
   - Property Snapshot list reviewed: yes; no group change because `MonitorSystem.*` remains in Fuel/Strategy. Message catalogue reviewed: unchanged.
 
 - 2026-06-07 MonitorSystem Phase 1 framework + fuel-health visibility migration landed:
   - added independent `MonitorSystem.cs` and five dash exports: `LalaLaunch.MonitorSystem.State`, `.Text`, `.BackgroundColour`, `.TextColour`, and `.Enum`; automatic startup state is `MONITOR READY`;
-  - existing runtime fuel-health outcomes now publish `FUEL HEALTH OK`, `FUEL DATA CHECK`, `FUEL DATA RECOVERED`, or `FUEL DATA FAULT` while preserving existing logs, trigger conditions, checks, streak/timing thresholds, and planner-safe recovery behavior;
+  - existing runtime fuel-health outcomes now publish `FUEL HEALTH OK`, `CHECK FUEL DATA`, `FUEL DATA RECOVERED`, or `FUEL DATA FAULT` while preserving existing logs, trigger conditions, checks, streak/timing thresholds, and planner-safe recovery behavior;
   - no fuel/refuel/planner/pit-control/pit-command math or behavior changed; no pit-stop monitor, independent gross SimHub baseline check, monitor debug CSV, or automatic command sending was added;
   - dashboard/inventory/fuel docs and `Docs/Internal/MonitorSystem_Messages.csv` define the Phase 1 contract. Property Snapshot list reviewed: yes; `MonitorSystem.*` is in the existing Fuel/Strategy group.
 
