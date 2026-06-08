@@ -1,3 +1,9 @@
+## 2026-06-08 — Car Tracking Probe CSV status UI polish
+- Classification: **internal-only** (Debug Options UI state/pill feedback for diagnostics; no public release note required).
+- Added a `PROBE CSV:` status pill for Car Tracking Probe CSV with `OFF`, `READY`, `RECORDING`, and `FAILED` states, plus immediate START/STOP/RESET enabled-state refresh through the shared debug UI refresh callback.
+- Runtime refresh requests now cover probe START, STOP, RESET, master-debug shutdown, enable-toggle UI changes, and write-failure disable paths while preserving the diagnostics-only writer, 1–20 Hz frequency normalization, CSV schema, SimHub exports/properties, dashboard JSON, and CarSA/Opp/H2H/PitExit behavior.
+- Property Snapshot list reviewed: yes; no SimHub export/property additions, removals, renames, or behavior changes were made, so snapshot groups remain unchanged.
+
 ## 2026-06-08 — Overall Leader Lap authority from native CarIdx overall P1
 - Classification: **both** (existing dashboard/strategy-facing `Pace.LeaderAvgLapTimeSec` / `Pace.LeaderDeltaToPlayerSec` behavior now has valid overall race leader authority; no export names or dashboard JSON changed).
 - Replaced the bogus/unproven `DataCorePlugin.GameData.LeaderLastLapTime` and `DataCorePlugin.GameData.LeaderAverageLapTime` Leader Lap candidates with plugin-owned native CarIdx resolution.
