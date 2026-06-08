@@ -1,3 +1,13 @@
+- 2026-06-08 MonitorSystem post-pit `REFUEL OFF` inhibit review follow-up landed:
+  - suppressed post-pit `REFUEL OFF` results no longer enter the pit-warning clear path, so active `EXIT FUEL SHORT`, `MFD FUEL LOW`, and `BASELINE SHORT` publications are preserved and `MONITOR READY` is not published for a suppressed `REFUEL OFF`;
+  - re-entering pit road before outlap completion clears the inhibit so suppression applies only to off-pit-road post-exit checks;
+  - no export/property names, schemas, settings, dashboard JSON, commands, fuel/refuel math, Pit Fuel Control, Pit Command, Strategy, Planner, or MSGV1 behavior changed beyond the intended `MonitorSystem.Text` suppression behavior. Property Snapshot list reviewed: yes; `MonitorSystem.*` remains in Fuel/Strategy.
+
+- 2026-06-08 MonitorSystem post-pit `REFUEL OFF` inhibit landed:
+  - the existing pit-road-exit seam now starts a `REFUEL OFF`-only inhibit by latching completed laps at exit, suppressing through the outlap, and clearing on completed-lap advance or session transition;
+  - `MFD FUEL LOW`, `EXIT FUEL SHORT`, `BASELINE SHORT`, fuel-health faults, stale-state checks, and Car/Opp/H2H MonitorSystem warnings are unchanged; suppressed `REFUEL OFF` records log evidence only, with no Monitor Event CSV row;
+  - no export/property names, schemas, settings, dashboard JSON, command paths, fuel/refuel math, Pit Fuel Control, Pit Command, Strategy, Planner, or MSGV1 behavior changed beyond the intended `MonitorSystem.Text` suppression behavior. Property Snapshot list reviewed: yes; `MonitorSystem.*` remains in Fuel/Strategy.
+
 - 2026-06-08 PitFuelControl serious blocked-log hygiene follow-up landed:
   - restored the documented always-on Info path for `snapshot-null`, `target-invalid`, and `send-failed` blocked reasons even when they are routed through the Soft-Debug helper;
   - benign blocked/no-send churn remains Soft-Debug-gated and rate-limited, and no PitFuelControl command, mirror, fault, fuel math, export/property, dashboard JSON, settings UI, or profile behavior changed. Property Snapshot list reviewed: yes; no group mapping change required.

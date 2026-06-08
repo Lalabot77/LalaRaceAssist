@@ -1,3 +1,15 @@
+## 2026-06-08 — MonitorSystem post-pit REFUEL OFF inhibit review follow-up
+- Classification: **internal-only** (correctness follow-up for existing MonitorSystem.Text suppression behavior; no export/property names, schemas, settings, dashboard JSON, command paths, MSGV1 routing, fuel/refuel math, Pit Fuel Control, Pit Command, Strategy, or Planner changes).
+- Suppressed post-pit `REFUEL OFF` results now skip the pit-warning clear path entirely, preserving active `EXIT FUEL SHORT`, `MFD FUEL LOW`, and `BASELINE SHORT` warnings and avoiding unintended `MONITOR READY` publication.
+- Re-entering pit road before completing the outlap now clears the post-pit inhibit window so suppression applies only to off-pit-road post-exit checks.
+- Property Snapshot list reviewed: yes; no export/property names, schemas, or groups changed, but `MonitorSystem.Text` behavior intentionally changed because dashboards may see fewer `REFUEL OFF` publications after pit exit. Root `CHANGELOG.md` reviewed unchanged because this is internal MonitorSystem warning-suppression polish.
+
+## 2026-06-08 — MonitorSystem post-pit REFUEL OFF inhibit
+- Classification: **internal-only** (warning-suppression tidy-up for an existing MonitorSystem pit warning; no export/property names or schemas, settings, dashboard JSON, commands, MSGV1 routing, fuel/refuel math, Pit Fuel Control, Pit Command, Strategy, or Planner changes).
+- Pit-road exit now latches the current completed-lap count and suppresses only `REFUEL OFF` while current completed laps remains less than or equal to that exit lap, clearing the inhibit on completed-lap advance or session transition.
+- `MFD FUEL LOW`, `EXIT FUEL SHORT`, `BASELINE SHORT`, fuel-health faults, stale-state checks, and Car/Opp/H2H reliability warnings remain unaffected; suppressed `REFUEL OFF` writes concise log evidence only and no Monitor Event CSV row.
+- Property Snapshot list reviewed: yes; no SimHub export/property names, schemas, or snapshot groups changed, but `MonitorSystem.Text` behavior intentionally changed by suppressing post-pit-outlap `REFUEL OFF` publications. Root `CHANGELOG.md` reviewed unchanged because this is internal warning-suppression behavior for existing MonitorSystem text.
+
 ## 2026-06-08 — PitFuelControl serious blocked-log hygiene follow-up
 - Classification: **internal-only** (observability contract fix only; no PitFuelControl command, mirror, fault, fuel math, export/property, dashboard JSON, settings UI, or profile behavior changed).
 - Restored always-on Info logging for serious PitFuelControl blocked reasons routed through the Soft-Debug helper (`snapshot-null`, `target-invalid`, and existing `send-failed`) while preserving Soft-Debug/rate-limited logging for benign ownership/no-op churn such as `external-mirror-change`, `source-stby`, `auto-not-armed`, and `lap-cross-no-material-delta`.
