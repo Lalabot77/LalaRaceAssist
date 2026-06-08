@@ -29,6 +29,8 @@ namespace LaunchPlugin
         private bool _hasTyreCount;
         private bool _hasServiceSec;
         private bool _hasBoxDelta;
+        private bool _hasRawBoxDelta;
+        private bool _boxDeltaSuppressed;
         private bool _serviceKnown;
         private bool _boxOutcomeResolved;
         private bool _summaryFinalized;
@@ -38,6 +40,7 @@ namespace LaunchPlugin
         private bool _boxSeen;
         private bool _missedBoxObserved;
         private PitPhase _missedBoxPhase = PitPhase.None;
+        private const double MaxPlausibleBoxDeltaSec = 10.0;
 
         public bool Valid { get; private set; }
         public int StopIndex { get; private set; }
@@ -53,6 +56,8 @@ namespace LaunchPlugin
         public string BoxMissedReason { get; private set; } = "unknown";
         public double BoxStationarySec { get; private set; }
         public double BoxDeltaSec { get; private set; }
+        public double RawBoxDeltaSec { get; private set; }
+        public bool BoxDeltaSuppressed { get; private set; }
 
         public double ServiceFuelAddedLitres { get; private set; }
         public double ServiceFuelTargetLitres { get; private set; }
@@ -301,6 +306,8 @@ namespace LaunchPlugin
             BoxMissedReason = "unknown";
             BoxStationarySec = 0.0;
             BoxDeltaSec = 0.0;
+            RawBoxDeltaSec = 0.0;
+            BoxDeltaSuppressed = false;
             ServiceFuelAddedLitres = 0.0;
             ServiceFuelTargetLitres = 0.0;
             ServiceRefuelDurationSec = 0.0;
@@ -326,6 +333,8 @@ namespace LaunchPlugin
             _hasTyreCount = false;
             _hasServiceSec = false;
             _hasBoxDelta = false;
+            _hasRawBoxDelta = false;
+            _boxDeltaSuppressed = false;
             _serviceKnown = false;
             _boxOutcomeResolved = false;
             _summaryFinalized = false;
@@ -345,22 +354,18 @@ namespace LaunchPlugin
             string token = (entryDebriefToken ?? string.Empty).Trim().ToLowerInvariant();
             if (token == "safe")
             {
-                EntryQualityText = "GOOD";
                 EntryLimiterQualityText = "SAFE";
             }
             else if (token == "normal")
             {
-                EntryQualityText = "NORMAL";
                 EntryLimiterQualityText = "NORMAL";
             }
             else if (token == "bad")
             {
-                EntryQualityText = "POOR";
                 EntryLimiterQualityText = "POOR";
             }
             else
             {
-                EntryQualityText = Unknown;
                 EntryLimiterQualityText = Unknown;
             }
 
@@ -369,7 +374,28 @@ namespace LaunchPlugin
             {
                 EntryLineTimeLossSec = entryLineTimeLossSec;
                 _hasEntryLoss = true;
+                EntryQualityText = ResolveEntryPerformanceQuality(entryLineTimeLossSec);
             }
+            else
+            {
+                EntryQualityText = ResolveEntryFallbackQuality(token);
+            }
+        }
+
+
+        private static string ResolveEntryPerformanceQuality(double entryLineTimeLossSec)
+        {
+            if (entryLineTimeLossSec > 0.5) return "POOR";
+            if (entryLineTimeLossSec > 0.1) return "NORMAL";
+            return "GOOD";
+        }
+
+        private static string ResolveEntryFallbackQuality(string token)
+        {
+            if (token == "safe") return "GOOD";
+            if (token == "normal") return "NORMAL";
+            if (token == "bad") return "POOR";
+            return Unknown;
         }
 
         private void LatchFuelTarget(double fuelTargetLitres)
@@ -414,18 +440,38 @@ namespace LaunchPlugin
         {
             if (IsPositiveFinite(predictedBoxSec) && IsFiniteNonNegative(elapsedBoxSec))
             {
-                BoxDeltaSec = elapsedBoxSec - predictedBoxSec;
-                _hasBoxDelta = true;
+                LatchBoxDeltaCandidate(elapsedBoxSec - predictedBoxSec);
             }
         }
 
         private void LatchBoxDeltaFromActualMinusPredicted(double actualMinusPredictedSec)
         {
-            if (IsFiniteNonNegative(Math.Abs(actualMinusPredictedSec)))
+            LatchBoxDeltaCandidate(actualMinusPredictedSec);
+        }
+
+        private void LatchBoxDeltaCandidate(double actualMinusPredictedSec)
+        {
+            if (double.IsNaN(actualMinusPredictedSec) || double.IsInfinity(actualMinusPredictedSec))
             {
-                BoxDeltaSec = actualMinusPredictedSec;
-                _hasBoxDelta = true;
+                return;
             }
+
+            RawBoxDeltaSec = actualMinusPredictedSec;
+            _hasRawBoxDelta = true;
+
+            if (Math.Abs(actualMinusPredictedSec) > MaxPlausibleBoxDeltaSec)
+            {
+                BoxDeltaSec = 0.0;
+                _hasBoxDelta = false;
+                BoxDeltaSuppressed = true;
+                _boxDeltaSuppressed = true;
+                return;
+            }
+
+            BoxDeltaSec = actualMinusPredictedSec;
+            _hasBoxDelta = true;
+            BoxDeltaSuppressed = false;
+            _boxDeltaSuppressed = false;
         }
 
         private void LatchRefuelRate(double refuelRateLps)
@@ -497,8 +543,8 @@ namespace LaunchPlugin
         {
             string quality;
             if (string.Equals(EntryQualityText, "POOR", StringComparison.Ordinal)) quality = "POOR";
-            else if (string.Equals(EntryQualityText, "GOOD", StringComparison.Ordinal)
-                || string.Equals(EntryQualityText, "NORMAL", StringComparison.Ordinal)) quality = "GOOD";
+            else if (string.Equals(EntryQualityText, "NORMAL", StringComparison.Ordinal)) quality = "NORMAL";
+            else if (string.Equals(EntryQualityText, "GOOD", StringComparison.Ordinal)) quality = "GOOD";
             else quality = Unknown;
 
             string delta = _hasEntryLoss
@@ -607,6 +653,9 @@ namespace LaunchPlugin
             sb.Append(" limiter=").Append(EntryLimiterQualityText);
             sb.Append(" box=").Append(BoxQualityText);
             sb.Append(" missed=").Append(BoxMissedReason);
+            sb.Append(" boxDeltaSec=").Append(FormatNumberOrNa(BoxDeltaSec, _hasBoxDelta, "0.0"));
+            sb.Append(" rawBoxDeltaSec=").Append(FormatNumberOrNa(RawBoxDeltaSec, _hasRawBoxDelta, "0.0"));
+            sb.Append(" boxDeltaSuppressed=").Append(_boxDeltaSuppressed ? "true" : "false");
             sb.Append(" fuelTargetL=").Append(FormatNumberOrNa(ServiceFuelTargetLitres, _hasFuelTarget, "0.0"));
             sb.Append(" fuelAddedL=").Append(FormatNumberOrNa(ServiceFuelAddedLitres, _hasFuelAdded, "0.0"));
             sb.Append(" refuelSec=").Append(FormatNumberOrNa(ServiceRefuelDurationSec, _hasRefuelDuration, "0.0"));

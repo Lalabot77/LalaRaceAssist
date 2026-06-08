@@ -1,3 +1,8 @@
+- 2026-06-08 Pit Debrief entry wording and box delta audit landed:
+  - Pit Debrief entry headline now uses `Pit.EntryLineTimeLoss_s` as the performance verdict (`GOOD` ≤0.1s, `NORMAL` >0.1s, `POOR` >0.5s) while keeping the original Pit Entry Assist safety/compliance token in `Pit.Debrief.Entry.LimiterQualityText` and final logs;
+  - box delta source remains the existing pit-box countdown seam, with the first box-exit edge falling back to the last live elapsed countdown when PitEngine stop duration is not ready, and implausible `abs(delta) > 10.0s` values suppressed to `Δ PENDING` in `SummaryText`;
+  - no Pit Entry Assist safety/compliance logic, PitEngine phase/timing/loss logic, PitCycleLite, fuel model, PitExit prediction, dashboard JSON/layout, settings, export names, or Property Snapshot grouping changed. Property Snapshot list reviewed: yes; existing `Pit.*`/`PitExit.*` exports remain in the Pit/PitExit group. Root `CHANGELOG.md` reviewed unchanged because this is a post-release internal refinement already covered by the current Pit Stop Debrief release-note family.
+
 - 2026-06-08 Overall Leader Lap authority landed:
   - Leader Lap no longer reads bogus/unproven `DataCorePlugin.GameData.LeaderLastLapTime` / `LeaderAverageLapTime` candidates;
   - overall race-leading pace now resolves current overall P1 using finish-timing identity semantics (`CarIdxPosition==1 && CarIdxClassPosition==1`, then `CarIdxPosition==1`, in-world required) and samples native `CarIdxLastLapTime`;

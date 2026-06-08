@@ -3,7 +3,7 @@
 **Subsystem doc**
 
 Validated against commit: HEAD
-Last updated: 2026-04-10
+Last updated: 2026-06-08
 Last reviewed: 2026-01-14
 Branch: work
 
@@ -142,6 +142,6 @@ These values update **once per pit entry** and remain until the next assist acti
 
 ## Pit Debrief consumption
 
-Pit Debrief consumes existing Pit Entry Assist readouts after a completed stop. `Pit.EntryLineDebrief` maps to debrief entry quality (`safe` → `GOOD`, `normal` → `NORMAL`, `bad` → `POOR`) and limiter quality (`SAFE`/`NORMAL`/`POOR`), while `Pit.EntryLineTimeLoss_s` is latched as the entry line time-loss review value.
+Pit Debrief consumes existing Pit Entry Assist readouts after a completed stop, but it deliberately separates the Pit Entry Assist safety/compliance verdict from the debrief performance headline. `Pit.EntryLineDebrief` remains the original assist verdict (`safe`/`normal`/`bad`) and still maps to `Pit.Debrief.Entry.LimiterQualityText` (`SAFE`/`NORMAL`/`POOR`) for debug/log evidence. `Pit.Debrief.Entry.QualityText` and the `ENTRY ...` headline are performance-oriented from `Pit.EntryLineTimeLoss_s`: `>0.5s` is `POOR`, `>0.1s` is `NORMAL`, and `≤0.1s` is `GOOD`, so a compliance `bad` with `0.0s` time loss does not become `ENTRY POOR`.
 
 The v1 debrief does not infer an actual deceleration quality. `Pit.Debrief.Entry.DecelQualityText` remains `UNKNOWN` until an existing authoritative actual-decel source is available and explicitly wired by a later task.
