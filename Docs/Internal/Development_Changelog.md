@@ -1,3 +1,8 @@
+## 2026-06-08 — PitFuelControl serious blocked-log hygiene follow-up
+- Classification: **internal-only** (observability contract fix only; no PitFuelControl command, mirror, fault, fuel math, export/property, dashboard JSON, settings UI, or profile behavior changed).
+- Restored always-on Info logging for serious PitFuelControl blocked reasons routed through the Soft-Debug helper (`snapshot-null`, `target-invalid`, and existing `send-failed`) while preserving Soft-Debug/rate-limited logging for benign ownership/no-op churn such as `external-mirror-change`, `source-stby`, `auto-not-armed`, and `lap-cross-no-material-delta`.
+- Docs reviewed: `SimHubLogMessages.md` and `Pit_Commands_And_Fuel_Control.md` already stated serious blocked reasons remain always-on, so their wording required no change. Property Snapshot list reviewed: yes; no SimHub exports/properties changed.
+
 ## 2026-06-08 — SimHub log hygiene cleanup
 - Classification: **internal-only** (normal SimHub log noise reduction and observability-contract documentation; no runtime math, command behavior, lap detection behavior, Leader Lap authority behavior, exports/properties, settings UI, dashboard JSON, or profile schema changed).
 - Removed obsolete legacy ExtraProperties fallback-removal warnings from Messaging/MSGV1/H2H and updated the optional MSGV1 session marker to use current Soft Debug terminology.

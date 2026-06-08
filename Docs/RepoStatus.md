@@ -1,3 +1,7 @@
+- 2026-06-08 PitFuelControl serious blocked-log hygiene follow-up landed:
+  - restored the documented always-on Info path for `snapshot-null`, `target-invalid`, and `send-failed` blocked reasons even when they are routed through the Soft-Debug helper;
+  - benign blocked/no-send churn remains Soft-Debug-gated and rate-limited, and no PitFuelControl command, mirror, fault, fuel math, export/property, dashboard JSON, settings UI, or profile behavior changed. Property Snapshot list reviewed: yes; no group mapping change required.
+
 - 2026-06-08 SimHub log hygiene cleanup landed:
   - removed obsolete legacy ExtraProperties fallback-removal warnings and moved normal Lap Detector, Leader Lap candidate/source detail, and benign PitFuelControl ownership churn behind Soft Debug Info without using SimHub Debug-level logging in the touched paths;
   - kept always-on failure/recovery boundaries, Leader Lap authority lost/recovered/hold transitions, PitCommand/PitFuelControl serious failures, PitDebrief final structured logs, pit-cycle/debrief context, and race-finish summaries;

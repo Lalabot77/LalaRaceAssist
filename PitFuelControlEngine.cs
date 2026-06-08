@@ -743,6 +743,12 @@ namespace LaunchPlugin
 
         private void LogActionBlockedSoftDebug(string actionName, string reason)
         {
+            if (IsAlwaysOnBlockedReason(reason))
+            {
+                LogActionBlockedInfo(actionName, reason);
+                return;
+            }
+
             if (ShouldLogSoftDebugBlocked(actionName, reason))
             {
                 SimHub.Logging.Current.Info($"[LalaPlugin:PitFuelControl] blocked action={actionName} reason={reason}");
