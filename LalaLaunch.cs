@@ -7029,7 +7029,6 @@ namespace LaunchPlugin
             public string SessionType;
             public int SessionState;
             public double CurrentFuel;
-            public bool MfdRefuelKnown;
             public bool MfdRefuelEnabled;
             public double MfdFuelRequest;
             public string FuelControlMode;
@@ -16431,7 +16430,6 @@ namespace LaunchPlugin
         private bool IsMonitorPitMfdFuelLow(MonitorPitStopSnapshot snapshot)
         {
             return IsMonitorPitFuelStillRequired(snapshot) &&
-                snapshot.MfdRefuelKnown &&
                 snapshot.MfdRefuelEnabled &&
                 GetMonitorPitMfdSelectedAddLitres(snapshot) + MonitorPitFuelLowToleranceLitres < snapshot.PluginNextLitres;
         }
@@ -16446,7 +16444,6 @@ namespace LaunchPlugin
         private bool IsMonitorPitRefuelOffRisk(MonitorPitStopSnapshot snapshot)
         {
             return IsMonitorPitFuelStillRequired(snapshot) &&
-                snapshot.MfdRefuelKnown &&
                 !snapshot.MfdRefuelEnabled &&
                 !IsMonitorPitRefuelEffectivelyComplete(snapshot);
         }
@@ -16493,25 +16490,6 @@ namespace LaunchPlugin
             }
         }
 
-        private static bool TryReadMonitorPitBool(PluginManager pluginManager, string propertyName, out bool value)
-        {
-            value = false;
-            if (pluginManager == null || string.IsNullOrWhiteSpace(propertyName))
-            {
-                return false;
-            }
-
-            try
-            {
-                object raw = pluginManager.GetPropertyValue(propertyName);
-                return raw != null && TryCoerceBool(raw, out value);
-            }
-            catch
-            {
-                return false;
-            }
-        }
-
         private MonitorPitStopSnapshot BuildMonitorPitStopSnapshot(
             GameData data,
             PluginManager pluginManager,
@@ -16531,7 +16509,6 @@ namespace LaunchPlugin
             double pluginFuelOnExit = pluginRefuelValid && currentFuelValid
                 ? currentFuel + pluginNextLitres
                 : double.NaN;
-            bool mfdRefuelKnown = TryReadMonitorPitBool(pluginManager, "DataCorePlugin.GameRawData.Telemetry.dpFuelFill", out bool mfdRefuelEnabled);
 
             return new MonitorPitStopSnapshot
             {
@@ -16540,8 +16517,7 @@ namespace LaunchPlugin
                 SessionType = string.IsNullOrWhiteSpace(sessionType) ? "unknown" : sessionType,
                 SessionState = sessionState,
                 CurrentFuel = currentFuelValid ? currentFuel : double.NaN,
-                MfdRefuelKnown = mfdRefuelKnown,
-                MfdRefuelEnabled = mfdRefuelKnown && mfdRefuelEnabled,
+                MfdRefuelEnabled = SafeReadBool(pluginManager, "DataCorePlugin.GameRawData.Telemetry.dpFuelFill", false),
                 MfdFuelRequest = SafeReadDouble(pluginManager, "DataCorePlugin.GameRawData.Telemetry.PitSvFuel", double.NaN),
                 FuelControlMode = _pitFuelControlEngine?.ModeText ?? FormatMonitorFuelControlMode(_pitFuelControlEngine?.Mode ?? PitFuelControlMode.Off),
                 FuelControlDataMode = _pitFuelControlEngine?.DataText ?? FormatMonitorFuelControlData(_pitFuelControlEngine?.Data ?? PitFuelControlData.Live),
@@ -16572,7 +16548,7 @@ namespace LaunchPlugin
             int warningEnum = warning.HasWarning ? (int)warning.Severity : 0;
             SimHub.Logging.Current.Info(string.Format(
                 CultureInfo.InvariantCulture,
-                "[LalaPlugin:MonitorSystem] pit trigger={0} sessionTime={1} sessionType={2} sessionState={3} phase={4} monitorState={5} monitorEnum={6} monitorText={7} onPitRoad={8} inPitStall={9} currentFuel={10} mode={11} data={12} mfdRefuelKnown={13} mfdRefuelEnabled={14} mfdFuelRequest={15} pluginRefuelValid={16} pluginNextLitres={17} pluginFuelOnExit={18} warningText={19} warningEnum={20} reason={21}",
+                "[LalaPlugin:MonitorSystem] pit trigger={0} sessionTime={1} sessionType={2} sessionState={3} phase={4} monitorState={5} monitorEnum={6} monitorText={7} onPitRoad={8} inPitStall={9} currentFuel={10} mode={11} data={12} mfdRefuelEnabled={13} mfdFuelRequest={14} pluginRefuelValid={15} pluginNextLitres={16} pluginFuelOnExit={17} warningText={18} warningEnum={19} reason={20}",
                 trigger,
                 FormatMonitorDouble(snapshot.SessionTimeSec),
                 snapshot.SessionType,
@@ -16586,7 +16562,6 @@ namespace LaunchPlugin
                 FormatMonitorDouble(snapshot.CurrentFuel),
                 snapshot.FuelControlMode,
                 snapshot.FuelControlDataMode,
-                snapshot.MfdRefuelKnown,
                 snapshot.MfdRefuelEnabled,
                 FormatMonitorDouble(snapshot.MfdFuelRequest),
                 snapshot.PluginRefuelValid,

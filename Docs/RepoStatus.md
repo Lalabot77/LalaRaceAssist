@@ -28,6 +28,12 @@
 
 # Repo Status
 
+- 2026-06-08 MonitorSystem trusted SimHub telemetry simplification landed:
+  - removed the Phase 2B `MfdRefuelKnown` / `TryReadMonitorPitBool` telemetry-known layer and restored direct trusted `dpFuelFill` use for REFUEL OFF / MFD FUEL LOW checks;
+  - kept `PitSvFuel` as direct trusted telemetry and intentionally did not add `MfdFuelRequestKnown` or PitSvFuel availability guards; hypothetical missing SimHub telemetry remains outside MonitorSystem scope unless backed by real project logs;
+  - reverted the pit evidence log format to `mfdRefuelEnabled` without `mfdRefuelKnown`;
+  - no `BASELINE SHORT`, `FUEL MODEL CHECK`, gross SimHub baseline maths, Fuel.Refuel calculation, Pit Fuel Control, Pit Command, CSV writer, new export, or Property Snapshot grouping changes. Property Snapshot list reviewed: yes; no group change.
+
 - 2026-06-07 MonitorSystem Phase 2B latest review follow-up landed:
   - fuel-health priority now blocks Phase 2B pit warnings only for unresolved `FUEL DATA CHECK` / `FUEL DATA FAULT`; auto-recoverable `FUEL DATA RECOVERED` no longer suppresses urgent pit warnings;
   - pit-service warnings now distinguish known vs missing `dpFuelFill` telemetry (`mfdRefuelKnown` in pit evidence logs), so missing MFD refuel telemetry fails closed instead of being treated as refuel disabled;

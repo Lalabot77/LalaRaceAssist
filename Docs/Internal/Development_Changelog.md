@@ -1,3 +1,11 @@
+## 2026-06-08 — MonitorSystem trusted SimHub telemetry simplification
+- Classification: **internal-only correctness/scope cleanup** (Phase 2B monitor implementation and internal docs; no export, message text/enum, fuel/refuel calculation, planner, Pit Fuel Control, or Pit Command behavior change).
+- Removed the `MfdRefuelKnown` snapshot field and `TryReadMonitorPitBool` helper so Phase 2B service checks again read trusted SimHub/iRacing `dpFuelFill` through the existing simple bool-read path.
+- Kept `PitSvFuel` as direct trusted telemetry and intentionally did not add `MfdFuelRequestKnown`, PitSvFuel availability checks, or other telemetry-validity/fallback layers; hypothetical missing SimHub telemetry is outside MonitorSystem scope unless project logs prove a real issue.
+- Reverted the pit evidence log wording/format to `mfdRefuelEnabled` without `mfdRefuelKnown`.
+- Preserved Phase 2B tolerances, edge-only behavior, Fuel Control DATA log-only behavior, message texts/enums, independent `Fuel.Refuel.NextLitres` basis, fuel/refuel calculations, Strategy/planner math, Pit Fuel Control behavior, Pit Command behavior, CSV behavior, and export names. No `BASELINE SHORT`, `FUEL MODEL CHECK`, independent gross SimHub baseline maths, new exports, or Property Snapshot grouping changes were added.
+- Property Snapshot list reviewed: yes; no group change required because no SimHub exports/properties were added, removed, renamed, or regrouped.
+
 ## 2026-06-07 — MonitorSystem Phase 2B latest review follow-up
 - Classification: **both** (driver-facing warning priority/correctness plus internal Phase 2B evidence-log wording; no export, fuel/refuel calculation, planner, Pit Fuel Control, or Pit Command behavior change).
 - Narrowed fuel-health blocking to unresolved `FUEL DATA CHECK` / `FUEL DATA FAULT` only, so auto-recoverable `FUEL DATA RECOVERED` no longer suppresses urgent Phase 2B pit warnings.
