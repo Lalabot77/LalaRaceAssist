@@ -21568,7 +21568,7 @@ namespace LaunchPlugin
                 if (wasActive && lastTargetSec > 0.0)
                 {
                     double finalElapsedSec = _pit.PitStopElapsedSec;
-                    if (double.IsNaN(finalElapsedSec) || double.IsInfinity(finalElapsedSec) || finalElapsedSec < 0.0)
+                    if (double.IsNaN(finalElapsedSec) || double.IsInfinity(finalElapsedSec) || finalElapsedSec <= 0.0)
                     {
                         finalElapsedSec = Math.Max(0.0, _pitBoxElapsedSec);
                     }
