@@ -41,6 +41,10 @@ namespace LaunchPlugin
             (string.Equals(DisplayText, "REFUEL OFF", StringComparison.Ordinal) ||
              string.Equals(DisplayText, "MFD FUEL LOW", StringComparison.Ordinal) ||
              string.Equals(DisplayText, "EXIT FUEL SHORT", StringComparison.Ordinal));
+        public bool IsBaselineFuelWarningActive =>
+            IsEnabled &&
+            string.Equals(DisplayText, "BASELINE SHORT", StringComparison.Ordinal);
+        public bool IsMonitorPitWarningActive => IsPhase2BPitWarningActive || IsBaselineFuelWarningActive;
 
         public MonitorSystem()
         {
