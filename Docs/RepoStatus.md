@@ -1,3 +1,24 @@
+- 2026-06-07 CarSA target-after-player checkpoint freshness guard landed:
+  - target-after-player checkpoint truth now rejects player gate timestamps that are non-finite, future-dated, or older than `min(15 s, half the active lap-time scale)`, blocking prior-lap player timestamps from being normalized into fake close `Ahead01P`/`RelativeSec` values;
+  - valid behind-car forward matches remain accepted when the player crossed the same gate shortly before the target, and reverse `reverse_player_after_target` matching for ahead cars remains unchanged;
+  - checkpoint count/indexing, `NormalizeGateGapSec`, precision sign/tolerance handling, `Gap.TrackSec`, H2H, Opponents, PitExit, dashboard JSON, CSV headers, public exports, and Property Snapshot grouping remain unchanged. Property Snapshot list reviewed: yes; no SimHub export/property changes.
+
+- 2026-06-07 PR #791 capture-window diagnostic reliability follow-up landed:
+  - checkpoint-truth diagnostic collection now follows active Car Tracking Probe capture and clears on START/STOP/RESET, preventing pre-START or stopped-window evidence from appearing in subsequent rows;
+  - invalid LapDistPct/checkpoint re-anchor paths reset diagnostic checkpoint timing, latest-event same-tick metadata resets per truth update, and CSV consumption preserves an `existing/unknown` active-truth baseline when runtime truth remains valid;
+  - runtime CarSA, Opponents, H2H, PitExit, dashboard JSON, public exports, and Property Snapshot grouping remain unchanged. Property Snapshot list reviewed: yes; no SimHub export/property changes.
+- 2026-06-07 PR #791 aggregate-counter follow-up landed:
+  - Car Tracking Probe checkpoint-truth groups now include `*SinceSnapshot` counters so multiple truth/progression/overwrite/mismatch events between lower-frequency CSV rows survive in aggregate while latest-event fields still show the final event;
+  - `TruthOverwroteExistingThisTick` is limited to same-tick overwrite status for the latest truth event, with `TruthOverwroteExistingSinceSnapshot` carrying the latched window-level overwrite flag;
+  - runtime CarSA, Opponents, H2H, PitExit, dashboard JSON, public exports, and Property Snapshot grouping remain unchanged. Property Snapshot list reviewed: yes; no SimHub export/property changes.
+- 2026-06-07 PR #791 checkpoint diagnostics review follow-up landed:
+  - checkpoint progression/overwrite/mismatch evidence now survives telemetry ticks until a successful Car Tracking Probe row consumes it, then clears so the same event is not repeatedly reported;
+  - race-start reset clears diagnostic checkpoint timing/progression, Soft Debug off clears pending provenance, and `TruthSource` remains forward/reverse event provenance while precision `CandidateSource` remains separate;
+  - runtime CarSA, Opponents, H2H, PitExit, dashboard JSON, public exports, and Property Snapshot grouping remain unchanged. Property Snapshot list reviewed: yes; no SimHub export/property changes.
+- 2026-06-07 CarSA checkpoint truth event diagnostics landed:
+  - Car Tracking Probe CSV now includes bounded checkpoint progression, truth source/gate/timestamp/lap provenance, normalized/directional values, TrackSec comparison, same-tick overwrite/prior-truth evidence, RelativeSec mismatch-clearing evidence, and precision difference/error fields for Ahead01P, Behind01P, Probe A, and Probe B;
+  - instrumentation is read-only and leaves the 60-checkpoint model, crossing detection, truth calculation/overwrite ordering, RelativeSec, precision, TrackSec, Opponents, H2H, PitExit, dashboard JSON, public exports, and Property Snapshot unchanged;
+  - Property Snapshot list reviewed: yes; unchanged because the new fields exist only in the buffered Car Tracking Probe CSV and add no SimHub exports/properties.
 - 2026-06-06 CarSA pit/rejoin slot-retention diagnostics landed:
   - `CarSA_Debug_*.csv` now records per-slot assignment mode, bounded current-candidate presence/rank, hysteresis/blink state, existing pre-assignment retention eligibility/reason, final on-track state, and LapDistPct validity for all five ahead and five behind slots;
   - the added evidence is diagnostics-only and leaves candidate acquisition, slot retention/replacement, cursor/duplicate behavior, hysteresis, blink hold, slot ordering, TrackSec, RelativeSec, precision, checkpoint matching, H2H, Opponents, PitExit, dashboard JSON, and public exports unchanged;

@@ -673,6 +673,7 @@ namespace LaunchPlugin
             }
 
             NormalizeCarTrackingProbeSettings(Settings);
+            _carSaEngine?.ClearCheckpointTruthDiagnosticSnapshots();
             _carTrackingProbeCsvActiveRuntime = true;
             _carTrackingProbeCsvFailed = false;
             _carTrackingProbeCsvLastWriteSessionSec = double.NaN;
@@ -682,6 +683,7 @@ namespace LaunchPlugin
         public void StopCarTrackingProbeCsv()
         {
             _carTrackingProbeCsvActiveRuntime = false;
+            _carSaEngine?.ClearCheckpointTruthDiagnosticSnapshots();
             TryFlushCarTrackingProbeCsvBuffer();
             SimHub.Logging.Current.Info("[LalaPlugin:CarTrackingProbe] CSV capture STOP.");
         }
@@ -691,6 +693,7 @@ namespace LaunchPlugin
             try
             {
                 _carTrackingProbeCsvActiveRuntime = false;
+                _carSaEngine?.ClearCheckpointTruthDiagnosticSnapshots();
                 if (!TryFlushCarTrackingProbeCsvBuffer())
                 {
                     return;
@@ -11257,7 +11260,11 @@ namespace LaunchPlugin
             {
                 hasMultipleClassOpponents = false;
             }
-            _carSaEngine?.Update(sessionTimeSec, sessionState, sessionTypeName, playerCarIdx, hasMultipleClassOpponents, carIdxLapDistPct, carIdxLap, carIdxTrackSurface, carIdxTrackSurfaceMaterial, carIdxOnPitRoad, carIdxSessionFlags, null, playerBestLapTimeSec, playerLastLapTimeSec, lapTimeEstimateSec, classEstLapTimeSec, notRelevantGapSec, debugMaster);
+            bool carTrackingProbeCaptureActive = debugMaster
+                && _carTrackingProbeCsvActiveRuntime
+                && Settings?.EnableCarTrackingProbeCsv == true
+                && !_carTrackingProbeCsvFailed;
+            _carSaEngine?.Update(sessionTimeSec, sessionState, sessionTypeName, playerCarIdx, hasMultipleClassOpponents, carIdxLapDistPct, carIdxLap, carIdxTrackSurface, carIdxTrackSurfaceMaterial, carIdxOnPitRoad, carIdxSessionFlags, null, playerBestLapTimeSec, playerLastLapTimeSec, lapTimeEstimateSec, classEstLapTimeSec, notRelevantGapSec, debugMaster, carTrackingProbeCaptureActive);
             if (_carSaEngine != null)
             {
                 UpdateCarSaTelemetryCaches(pluginManager, sessionTimeSec);
@@ -13568,7 +13575,7 @@ namespace LaunchPlugin
                     carIdxSessionFlags,
                     carIdxPaceFlags);
 
-                var cells = new List<string>(180);
+                var cells = new List<string>(360);
                 AddCsvCell(cells, DateTime.UtcNow.ToString("o", CultureInfo.InvariantCulture));
                 AddCsvCell(cells, FormatCsvDouble(sessionTimeSec, "F3"));
                 AddCsvCell(cells, sessionState);
@@ -13590,6 +13597,7 @@ namespace LaunchPlugin
                 AppendCarTrackingProbeCorrelationCells(cells);
 
                 _carTrackingProbeCsvBuffer.Append(BuildCsvLine(cells)).AppendLine();
+                _carSaEngine?.ConsumeCheckpointTruthDiagnosticSnapshots();
                 _carTrackingProbeCsvLastWriteSessionSec = sessionTimeSec;
                 _carTrackingProbeCsvPendingLines++;
                 if (_carTrackingProbeCsvPendingLines >= 20 || _carTrackingProbeCsvBuffer.Length >= 8192)
@@ -13860,6 +13868,14 @@ namespace LaunchPlugin
             AddCsvCell(cells, FormatCsvDouble(carOutputs?.Behind01PrecisionGapSec ?? double.NaN, "F3"));
             AppendPrecisionGapDiagnosticCells(cells, carOutputs?.Ahead01PrecisionDiagnostic);
             AppendPrecisionGapDiagnosticCells(cells, carOutputs?.Behind01PrecisionDiagnostic);
+            int aheadDiagnosticCarIdx = carAhead?.CarIdx ?? -1;
+            int behindDiagnosticCarIdx = carBehind?.CarIdx ?? -1;
+            int probeADiagnosticCarIdx = Settings?.CarTrackingProbeACarIdx ?? -1;
+            int probeBDiagnosticCarIdx = Settings?.CarTrackingProbeBCarIdx ?? -1;
+            AppendCheckpointTruthDiagnosticCells(cells, aheadDiagnosticCarIdx, carAhead?.GapTrackSec ?? double.NaN, carOutputs?.Ahead01PrecisionDiagnostic);
+            AppendCheckpointTruthDiagnosticCells(cells, behindDiagnosticCarIdx, carBehind?.GapTrackSec ?? double.NaN, carOutputs?.Behind01PrecisionDiagnostic);
+            AppendCheckpointTruthDiagnosticCells(cells, probeADiagnosticCarIdx, ResolveCurrentCarSaTrackSecForCarIdx(probeADiagnosticCarIdx), null);
+            AppendCheckpointTruthDiagnosticCells(cells, probeBDiagnosticCarIdx, ResolveCurrentCarSaTrackSecForCarIdx(probeBDiagnosticCarIdx), null);
             AddCsvCell(cells, FormatCsvOptionalInt(opp?.Ahead1?.CarIdx ?? -1, -1));
             AddCsvCell(cells, FormatCsvOptionalInt(opp?.Behind1?.CarIdx ?? -1, -1));
             AddCsvCell(cells, FormatCsvDouble(opp?.Ahead1?.GapRelativeSec ?? double.NaN, "F3"));
@@ -13869,6 +13885,147 @@ namespace LaunchPlugin
             AppendH2HCorrelationCells(cells, h2h?.Race?.Ahead);
             AppendH2HCorrelationCells(cells, h2h?.Race?.Behind);
         }
+
+
+        private double ResolveCurrentCarSaTrackSecForCarIdx(int carIdx)
+        {
+            if (carIdx < 0 || _carSaEngine?.Outputs == null)
+            {
+                return double.NaN;
+            }
+
+            if (TryFindCurrentCarSaSlotTrackSec(_carSaEngine.Outputs.AheadSlots, carIdx, out double trackSec))
+            {
+                return trackSec;
+            }
+            if (TryFindCurrentCarSaSlotTrackSec(_carSaEngine.Outputs.BehindSlots, carIdx, out trackSec))
+            {
+                return trackSec;
+            }
+
+            return double.NaN;
+        }
+
+        private static bool TryFindCurrentCarSaSlotTrackSec(CarSASlot[] slots, int carIdx, out double trackSec)
+        {
+            trackSec = double.NaN;
+            if (slots == null || carIdx < 0)
+            {
+                return false;
+            }
+
+            for (int i = 0; i < slots.Length; i++)
+            {
+                CarSASlot slot = slots[i];
+                if (slot != null && slot.CarIdx == carIdx)
+                {
+                    trackSec = slot.GapTrackSec;
+                    return true;
+                }
+            }
+
+            return false;
+        }
+
+        private void AppendCheckpointTruthDiagnosticCells(List<string> cells, int carIdx, double trackSecAtPublication, CarSAPrecisionGapDiagnostic precisionDiagnostic)
+        {
+            if (_carSaEngine == null || carIdx < 0 || !_carSaEngine.TryGetCheckpointTruthDiagnosticSnapshot(carIdx, out CarSAEngine.CheckpointTruthDiagnosticSnapshot diagnostic))
+            {
+                AppendEmptyCheckpointTruthDiagnosticCells(cells);
+                return;
+            }
+
+            string truthSource = diagnostic.TruthSource ?? "none";
+            if (precisionDiagnostic != null
+                && string.Equals(precisionDiagnostic.CandidateSource, "checkpoint_truth", StringComparison.Ordinal)
+                && (string.IsNullOrWhiteSpace(truthSource) || string.Equals(truthSource, "none", StringComparison.Ordinal)))
+            {
+                truthSource = "existing/unknown";
+            }
+            else if (string.IsNullOrWhiteSpace(truthSource))
+            {
+                truthSource = "none";
+            }
+
+            double differenceToTrackSec = IsFiniteNumberForCsv(diagnostic.TruthDirectionalCandidateSec) && IsFiniteNumberForCsv(trackSecAtPublication)
+                ? diagnostic.TruthDirectionalCandidateSec - trackSecAtPublication
+                : double.NaN;
+            double precisionDifference = precisionDiagnostic != null
+                && IsFiniteNumberForCsv(precisionDiagnostic.ReconciledCandidateSec)
+                && IsFiniteNumberForCsv(precisionDiagnostic.TrackSec)
+                    ? precisionDiagnostic.ReconciledCandidateSec - precisionDiagnostic.TrackSec
+                    : double.NaN;
+            double precisionRelativeError = precisionDiagnostic != null
+                && IsFiniteNumberForCsv(precisionDifference)
+                && IsFiniteNumberForCsv(precisionDiagnostic.TrackSec)
+                && Math.Abs(precisionDiagnostic.TrackSec) > 0.001
+                    ? Math.Abs(precisionDifference) / Math.Abs(precisionDiagnostic.TrackSec)
+                    : double.NaN;
+
+            AddCsvCell(cells, FormatCsvOptionalInt(diagnostic.PreviousCheckpointIndex, -1));
+            AddCsvCell(cells, FormatCsvOptionalInt(diagnostic.CurrentCheckpointIndex, -1));
+            AddCsvCell(cells, FormatCsvOptionalInt(diagnostic.CheckpointCrossedIndex, -1));
+            AddCsvCell(cells, diagnostic.CheckpointAdvance);
+            AddCsvCell(cells, diagnostic.SkippedCheckpointCount);
+            AddCsvCell(cells, FormatCsvDouble(diagnostic.PreviousLapDistPct, "F6"));
+            AddCsvCell(cells, FormatCsvDouble(diagnostic.CurrentLapDistPct, "F6"));
+            AddCsvCell(cells, FormatCsvDouble(diagnostic.CheckpointDtSec, "F3"));
+            AddCsvCell(cells, truthSource);
+            AddCsvCell(cells, FormatCsvOptionalInt(diagnostic.TruthGateIndex, -1));
+            AddCsvCell(cells, FormatCsvDouble(diagnostic.TruthCreationSessionTime, "F3"));
+            AddCsvCell(cells, FormatCsvDouble(diagnostic.TruthAgeSec, "F3"));
+            AddCsvCell(cells, FormatCsvDouble(diagnostic.TruthTargetGateTimeSec, "F3"));
+            AddCsvCell(cells, FormatCsvDouble(diagnostic.TruthPlayerGateTimeSec, "F3"));
+            AddCsvCell(cells, FormatCsvOptionalInt(diagnostic.TruthTargetGateLap, int.MinValue));
+            AddCsvCell(cells, FormatCsvOptionalInt(diagnostic.TruthPlayerGateLap, int.MinValue));
+            AddCsvCell(cells, FormatCsvDouble(diagnostic.TruthRawGapSec, "F3"));
+            AddCsvCell(cells, diagnostic.TruthLapDeltaAtGate);
+            AddCsvCell(cells, FormatCsvDouble(diagnostic.TruthNormalizedStoredSec, "F3"));
+            AddCsvCell(cells, FormatCsvDouble(diagnostic.TruthDirectionalCandidateSec, "F3"));
+            AddCsvCell(cells, FormatCsvDouble(diagnostic.TrackSecAtTruthCreation, "F3"));
+            AddCsvCell(cells, FormatCsvDouble(trackSecAtPublication, "F3"));
+            AddCsvCell(cells, FormatCsvDouble(differenceToTrackSec, "F3"));
+            AddCsvCell(cells, diagnostic.TruthOverwroteExistingThisTick ? "1" : "0");
+            AddCsvCell(cells, diagnostic.TruthOverwroteExistingSinceSnapshot ? "1" : "0");
+            AddCsvCell(cells, diagnostic.TruthUpdateCountSinceSnapshot);
+            AddCsvCell(cells, diagnostic.ForwardTruthUpdateCountSinceSnapshot);
+            AddCsvCell(cells, diagnostic.ReverseTruthUpdateCountSinceSnapshot);
+            AddCsvCell(cells, diagnostic.SameTickMultipleTruthUpdateCountSinceSnapshot);
+            AddCsvCell(cells, diagnostic.SameTickDifferentGateOverwriteCountSinceSnapshot);
+            AddCsvCell(cells, diagnostic.PriorTruthOverwriteCountSinceSnapshot);
+            AddCsvCell(cells, diagnostic.RelativeSecMismatchClearCountSinceSnapshot);
+            AddCsvCell(cells, diagnostic.CheckpointCrossingCountSinceSnapshot);
+            AddCsvCell(cells, diagnostic.TotalSkippedCheckpointCountSinceSnapshot);
+            AddCsvCell(cells, diagnostic.MaxSkippedCheckpointCountSinceSnapshot);
+            AddCsvCell(cells, diagnostic.PreviousTruthSource ?? "none");
+            AddCsvCell(cells, FormatCsvOptionalInt(diagnostic.PreviousTruthGateIndex, -1));
+            AddCsvCell(cells, FormatCsvDouble(diagnostic.PreviousTruthValueSec, "F3"));
+            AddCsvCell(cells, FormatCsvDouble(diagnostic.PreviousTruthAgeSec, "F3"));
+            AddCsvCell(cells, FormatCsvDouble(diagnostic.PreviousTruthCreationSessionTime, "F3"));
+            AddCsvCell(cells, diagnostic.SameTickMultipleTruthUpdates ? "1" : "0");
+            AddCsvCell(cells, diagnostic.SameTickOverwriteReason ?? string.Empty);
+            AddCsvCell(cells, diagnostic.RelativeSecMismatchClearedThisTick ? "1" : "0");
+            AddCsvCell(cells, FormatCsvDouble(diagnostic.RelativeSecPreClearCandidateSec, "F3"));
+            AddCsvCell(cells, FormatCsvDouble(diagnostic.RelativeSecPreClearTrackSec, "F3"));
+            AddCsvCell(cells, FormatCsvDouble(diagnostic.RelativeSecPreClearDiffSec, "F3"));
+            AddCsvCell(cells, FormatCsvDouble(precisionDifference, "F3"));
+            AddCsvCell(cells, FormatCsvDouble(precisionRelativeError, "F3"));
+        }
+
+        private static bool IsFiniteNumberForCsv(double value)
+        {
+            return !double.IsNaN(value) && !double.IsInfinity(value);
+        }
+
+        private static void AppendEmptyCheckpointTruthDiagnosticCells(List<string> cells)
+        {
+            for (int i = 0; i < CheckpointTruthDiagnosticColumnCount; i++)
+            {
+                AddCsvCell(cells, string.Empty);
+            }
+        }
+
+        private const int CheckpointTruthDiagnosticColumnCount = 48;
 
         private static void AppendPrecisionGapDiagnosticCells(List<string> cells, CarSAPrecisionGapDiagnostic diagnostic)
         {
@@ -14005,7 +14162,7 @@ namespace LaunchPlugin
 
         private static string GetCarTrackingProbeCsvHeader()
         {
-            var columns = new List<string>(180);
+            var columns = new List<string>(360);
             columns.Add("Utc");
             columns.Add("SessionTimeSec");
             columns.Add("SessionState");
@@ -14031,6 +14188,10 @@ namespace LaunchPlugin
             columns.Add("Car.Behind01P.Gap.Sec");
             AddPrecisionGapDiagnosticHeader(columns, "Car.Ahead01P.DirectionalCheckpoint");
             AddPrecisionGapDiagnosticHeader(columns, "Car.Behind01P.DirectionalCheckpoint");
+            AddCheckpointTruthDiagnosticHeader(columns, "Car.Ahead01P.CheckpointTruth");
+            AddCheckpointTruthDiagnosticHeader(columns, "Car.Behind01P.CheckpointTruth");
+            AddCheckpointTruthDiagnosticHeader(columns, "ProbeA.CheckpointTruth");
+            AddCheckpointTruthDiagnosticHeader(columns, "ProbeB.CheckpointTruth");
             columns.Add("Opp.Ahead1.CarIdx");
             columns.Add("Opp.Behind1.CarIdx");
             columns.Add("Opp.Ahead1.Gap.RelativeSec");
@@ -14048,6 +14209,31 @@ namespace LaunchPlugin
             columns.Add("H2HRace.Behind.CarIdx");
             columns.Add("H2HRace.Behind.GapSec");
             return string.Join(",", columns);
+        }
+
+
+        private static void AddCheckpointTruthDiagnosticHeader(List<string> columns, string prefix)
+        {
+            string[] names =
+            {
+                "PreviousCheckpointIndex", "CurrentCheckpointIndex", "CheckpointCrossedIndex", "CheckpointAdvance", "SkippedCheckpointCount",
+                "PreviousLapDistPct", "CurrentLapDistPct", "CheckpointDtSec", "TruthSource", "TruthGateIndex", "TruthCreationSessionTime",
+                "TruthAgeSec", "TruthTargetGateTimeSec", "TruthPlayerGateTimeSec", "TruthTargetGateLap", "TruthPlayerGateLap",
+                "TruthRawGapSec", "TruthLapDeltaAtGate", "TruthNormalizedStoredSec", "TruthDirectionalCandidateSec",
+                "TrackSecAtTruthCreation", "TrackSecAtPrecisionPublication", "DifferenceToTrackSecAtPublication",
+                "TruthOverwroteExistingThisTick", "TruthOverwroteExistingSinceSnapshot", "TruthUpdateCountSinceSnapshot",
+                "ForwardTruthUpdateCountSinceSnapshot", "ReverseTruthUpdateCountSinceSnapshot", "SameTickMultipleTruthUpdateCountSinceSnapshot",
+                "SameTickDifferentGateOverwriteCountSinceSnapshot", "PriorTruthOverwriteCountSinceSnapshot", "RelativeSecMismatchClearCountSinceSnapshot",
+                "CheckpointCrossingCountSinceSnapshot", "TotalSkippedCheckpointCountSinceSnapshot", "MaxSkippedCheckpointCountSinceSnapshot",
+                "PreviousTruthSource", "PreviousTruthGateIndex", "PreviousTruthValueSec",
+                "PreviousTruthAgeSec", "PreviousTruthCreationSessionTime", "SameTickMultipleTruthUpdates", "SameTickOverwriteReason",
+                "RelativeSecMismatchClearedThisTick", "RelativeSecPreClearCandidateSec", "RelativeSecPreClearTrackSec",
+                "RelativeSecPreClearDiffSec", "PrecisionCandidateDifferenceToTrackSec", "PrecisionCandidateRelativeErrorRatio"
+            };
+            for (int i = 0; i < names.Length; i++)
+            {
+                columns.Add(prefix + "." + names[i]);
+            }
         }
 
         private static void AddPrecisionGapDiagnosticHeader(List<string> columns, string prefix)
