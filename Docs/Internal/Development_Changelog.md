@@ -198,6 +198,13 @@
 
 # Development Changelog
 
+## 2026-06-08 — Debug Cleanup Phase A
+- Classification: **internal-only** (debug/export cleanup and documentation alignment; no driver-facing runtime math, telemetry gating, learning, or dashboard-consumed core exports changed).
+- Removed Rejoin ThreatDebug internals, OffTrack Debug CSV settings/UI/writer/probe export, and verbose-only Pit/PitLite SimHub exports. Active Pit/PitLite core exports, CarSA debug CSV/event CSV, Shift Assist debug CSV, DecelCapture, Property Snapshot, Event Marker, Trace Logging, and launch trace/analysis systems remain.
+- Removed approved inert/commented debug clutter: parked MsgCx helper block, commented PitExit pit-out snapshot logger/call, commented `MSG.PitPhaseDebug`, commented `Pit.Debug.LastTimeOnPitRoad`, stale launch-trace skip comment, stale obsolete Rejoin debug comment, and stale Session Summary scaffolding wording.
+- Updated docs for the Property Snapshot 2 Hz frequency cap and CarSA debug CSV `Tick`/`MiniSector`/`EventOnly` cadence support.
+- Property Snapshot list reviewed: yes; cleanup removed exports/settings but did not add/rename exports or change snapshot behavior.
+
 ## 2026-06-05 — CompetingDrivers runtime tracking fallback removal
 - Classification: **both** (driver-visible correctness hardening for Opp/H2HRace/PitExit/message target identity; no export names, dashboard JSON, settings, or UI controls changed).
 - Removed the Opponents `DriverInfo.CompetingDrivers[*]` second-pass row creation so `NativeRaceModel.Rows`, `Opp.Ahead1`/`Opp.Behind1`, H2HRace selectors, and PitExit prediction can only receive live normal-driver rows built from `DriverInfo.Drivers##.*` plus CarIdx telemetry.
@@ -579,7 +586,7 @@
   - Property Snapshot rolling mode ComboBox binding switched to `SelectedIndex` for robust int binding semantics (`MANUAL/FREQUENCY/PER LAP` => `0/1/2`).
 
 - 2026-05-18: Property Snapshot rolling automation modes (Part 2) validated.
-  - added rolling capture modes via debug settings: `MANUAL` (0), `FREQUENCY` (1), `PER LAP` (2), with `START`/`STOP` state control and guarded frequency setting (`default 1 Hz`, capped `max 5 Hz`).
+  - added rolling capture modes via debug settings: `MANUAL` (0), `FREQUENCY` (1), `PER LAP` (2), with `START`/`STOP` state control and guarded frequency setting (`default 1 Hz`, capped `max 2 Hz`).
   - Event Marker behavior remains manual capture trigger; manual captures still write one-shot snapshot files and optional rolling snapshots per existing toggle.
   - automatic rolling captures now run only when rolling output is enabled and START is active: FREQUENCY uses capped interval timing; PER LAP reuses existing lap-cross seam and de-duplicates by completed lap number.
   - added `RESET ROLLING CSV` UI/action path that deletes only `PropertySnapshot_Rolling.csv` (primary + fallback path) with bounded info/warn logging.

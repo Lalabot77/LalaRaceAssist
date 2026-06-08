@@ -49,6 +49,11 @@
 
 # Repo Status
 
+- 2026-06-08 Debug Cleanup Phase A landed:
+  - removed Rejoin ThreatDebug internals, OffTrack Debug CSV settings/UI/writer/probe export, and verbose-only Pit/PitLite SimHub exports while preserving active core Pit/PitLite exports, DecelCapture, Property Snapshot, Event Marker, Trace Logging, launch traces/analysis, Shift Assist debug CSV, and CarSA debug/event CSV diagnostics;
+  - removed approved dead/commented debug clutter (parked MsgCx helper block, commented PitExit pit-out snapshot logger/call, commented MSG.PitPhaseDebug export, commented Pit.Debug.LastTimeOnPitRoad alias, stale launch-trace skip comment, stale obsolete debug comment, and stale Session Summary scaffolding wording);
+  - documentation now reflects the Property Snapshot 2 Hz frequency cap and CarSA debug CSV cadence modes (`Tick`, `MiniSector`, `EventOnly`). Property Snapshot list reviewed: yes; removed exports/settings were not in snapshot group expectations beyond the AttachCore/AttachVerbose enumeration, and no snapshot workflow behavior changed.
+
 - 2026-06-08 MonitorSystem Phase 2C baseline warning review follow-up landed:
   - `BASELINE SHORT` now fails silently unless current fuel is positive, so zero current-fuel readings on monitor edges do not produce baseline warnings;
   - same-tick `PitRoadExit` suppresses the predictive check for that update, preventing a WARNING published on pit exit from being downgraded to a predictive CAUTION before the tick ends;
@@ -463,7 +468,7 @@ Branch: work
 - 2026-05-18: Property Snapshot rolling automation modes + controls validated (Part 2).
   - Debug Options > Property Snapshot now includes rolling mode selector (`MANUAL`/`FREQUENCY`/`PER LAP`), frequency setting, and explicit `START`/`STOP`/`RESET ROLLING CSV` controls.
   - Manual Event Marker semantics preserved; manual captures still write one-shot snapshot files and optional rolling column append.
-  - Automatic rolling capture is gated by START + rolling-enabled toggle: FREQUENCY uses guarded 1..5 Hz cadence (default 1), PER LAP reuses existing lap-cross seam and prevents duplicate same-lap capture.
+  - Automatic rolling capture is gated by START + rolling-enabled toggle: FREQUENCY uses guarded 1..2 Hz cadence (default 1), PER LAP reuses existing lap-cross seam and prevents duplicate same-lap capture.
   - Rolling reset clears only `PropertySnapshot_Rolling.csv` (primary + fallback), without touching one-shot files, group settings, or snapshot include-changed behavior.
 
 - 2026-05-18 final tidy: aligned active docs/contracts with Drivers-only identity and renamed Drivers-row counter helpers for clarity.

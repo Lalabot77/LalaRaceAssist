@@ -231,18 +231,12 @@ Debug (`Car.Debug.*`):
 - Optional (debug-gated): `LapTimeUsedSec`
 
 ## Debug export (optional)
-When `EnableCarSADebugExport` is enabled (and soft debug is on), CarSA writes a lightweight CSV snapshot on **every DataUpdate tick** (buffered, flushed every 20 lines or 4 KB):
+When `EnableCarSADebugExport` is enabled (and soft debug is on), CarSA writes a lightweight CSV snapshot using the configured cadence: `Tick`, `MiniSector`, or `EventOnly`. Tick mode honors the configured max-Hz cap; MiniSector mode writes at mini-sector/checkpoint transitions; EventOnly writes event-marker rows. Output is buffered and flushed every 20 lines or 4 KB.
 - Path: `SimHub/Logs/LalapluginData/CarSA_Debug_YYYY-MM-DD_HH-mm-ss_<TrackName>.csv` (UTC timestamp, sanitized track name; repeated `_` collapsed, trimmed, clamped to 60 chars)
 - Columns (grouped, validation export; expect HotLap/CoolLap extensions later):
   - **Top-level context:** `SessionTimeSec`, `SessionState`, `SessionTypeName`, `PlayerCarIdx`, `PlayerLap`, `PlayerLapPct`, `PlayerCheckpointIndexNow`, `PlayerCheckpointIndexCrossed`, `NotRelevantGapSec`.
 - **Per-slot (Ahead01..Ahead05, Behind01..Behind05):** existing spatial/status fields include `CarIdx`, `DistPct`, `GapTrackSec`, `GapRelativeSec`, `GapRelativeSource`, `ClosingRateSecPerSec`, `LapDelta`, `IsOnTrack`, `IsOnPitRoad`, `StatusE`, `TrackSurfaceRaw`, and `SessionFlagsRaw`. Diagnostics-only assignment evidence adds `AssignmentMode`, `CandidatePresentThisTick`, `CandidateRankThisTick`, `RetainedByHysteresis`, `BlinkHeld`, `RetentionEligible`, `RetentionReason`, and `LapDistPctValid`. `CandidateRankThisTick` is one-based within the bounded five-car candidate array for that side (`0` when absent). `RetentionEligible` records the existing pre-assignment `TryComputeDistance` result for the previously bound identity; it does not add or change an eligibility gate. `AssignmentMode` is `live_candidate`, `retained_current`, `blink_hold`, `cleared`, or `unknown`, with `RetentionReason` distinguishing current-candidate matches, invalid/duplicate replacement, 10%-closer replacement, hysteresis retention, no-candidate retention, and blink hold. These fields observe the existing assignment decision only and do not alter candidate acquisition, cursor consumption, duplicate suppression, hysteresis, blink hold, or final slot ordering.
   - **Player tail:** `PlayerTrackSurfaceRaw`, `PlayerSessionFlagsRaw`.
-
-## Off-track probe export (optional)
-When `EnableOffTrackDebugCsv` is enabled (and a probe `OffTrackDebugProbeCarIdx` is configured), the plugin writes `OffTrackDebug_<Track>_<Timestamp>.csv` under `SimHub/Logs/LalapluginData/` with raw telemetry and latch state for the probe car. If `OffTrackDebugLogChangesOnly` is enabled, rows are written only when the snapshot changes:
-- **Context:** session time/state, session flags (hex + dec), probe CarIdx, and per-car telemetry (`CarIdxTrackSurface`, `CarIdxTrackSurfaceMaterial`, `CarIdxSessionFlags`, `CarIdxOnPitRoad`, `CarIdxLap`, `CarIdxLapDistPct`).
-- **Latch state:** off-track now, off-track streak, first-seen time, compromised-until lap, compromised-off-track/penalty active flags, and latch enable.
-- **Player incidents:** player CarIdx, incident count, and incident delta for the tick.
 
 ## Car Tracking Probe CSV export (optional)
 When Debug mode is enabled, `EnableCarTrackingProbeCsv` is enabled, and the Debug UI `START` button is pressed, the plugin writes `CarTrackingProbe_<Track>_<Timestamp>.csv` under `SimHub/Logs/LalapluginData/`. Capture frequency is bounded by `CarTrackingProbeCsvFrequencyHz` (normalized to 1–20 Hz), and rows are buffered/flushed periodically. `STOP` flushes and pauses capture; `RESET CSV` stops capture and removes the current runtime CSV file if one exists.

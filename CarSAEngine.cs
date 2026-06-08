@@ -328,29 +328,6 @@ namespace LaunchPlugin
             }
         }
 
-        public struct OffTrackDebugState
-        {
-            public bool OffTrackNow { get; set; }
-            public bool SurfaceOffTrackNow { get; set; }
-            public bool DefinitiveOffTrackNow { get; set; }
-            public bool BoundaryEvidenceNow { get; set; }
-            public int TrackSurfaceMaterialRaw { get; set; }
-            public bool SuspectOffTrackNow { get; set; }
-            public int OffTrackStreak { get; set; }
-            public double OffTrackFirstSeenTimeSec { get; set; }
-            public int SuspectOffTrackStreak { get; set; }
-            public double SuspectOffTrackFirstSeenTimeSec { get; set; }
-            public int CompromisedUntilLap { get; set; }
-            public bool CompromisedOffTrackActive { get; set; }
-            public bool SuspectOffTrackActive { get; set; }
-            public int SuspectEventId { get; set; }
-            public double SuspectPulseUntilTimeSec { get; set; }
-            public bool SuspectPulseActive { get; set; }
-            public bool CompromisedPenaltyActive { get; set; }
-            public bool AllowLatches { get; set; }
-        }
-
-
         public struct CheckpointTruthDiagnosticSnapshot
         {
             public int PreviousCheckpointIndex { get; set; }
@@ -968,48 +945,6 @@ namespace LaunchPlugin
             _anyCheckpointCrossedThisTick = false;
             _miniSectorTickId = 0;
             ClearGateGapCaches();
-        }
-
-        public bool TryGetOffTrackDebugState(int carIdx, out OffTrackDebugState state)
-        {
-            state = default;
-            if (carIdx < 0 || carIdx >= _carStates.Length)
-            {
-                return false;
-            }
-
-            var carState = _carStates[carIdx];
-            bool surfaceOffTrackNow = carState.TrackSurfaceRaw == TrackSurfaceOffTrack;
-            bool materialAvailableNow = carState.TrackSurfaceMaterialRaw >= 0;
-            bool definitiveOffTrackNow = materialAvailableNow
-                && surfaceOffTrackNow
-                && IsDefinitiveOffTrackMaterial(carState.TrackSurfaceMaterialRaw);
-            state = new OffTrackDebugState
-            {
-                OffTrackNow = surfaceOffTrackNow,
-                SurfaceOffTrackNow = surfaceOffTrackNow,
-                DefinitiveOffTrackNow = definitiveOffTrackNow,
-                BoundaryEvidenceNow = materialAvailableNow
-                    && carState.TrackSurfaceRaw == TrackSurfaceOnTrack
-                    && (carState.TrackSurfaceMaterialRaw == 9 || carState.TrackSurfaceMaterialRaw == 10),
-                TrackSurfaceMaterialRaw = carState.TrackSurfaceMaterialRaw,
-                SuspectOffTrackNow = surfaceOffTrackNow
-                    && ((materialAvailableNow && IsSuspectOffTrackMaterial(carState.TrackSurfaceMaterialRaw))
-                        || !materialAvailableNow),
-                OffTrackStreak = carState.OffTrackStreak,
-                OffTrackFirstSeenTimeSec = carState.OffTrackFirstSeenTimeSec,
-                SuspectOffTrackStreak = carState.SuspectOffTrackStreak,
-                SuspectOffTrackFirstSeenTimeSec = carState.SuspectOffTrackFirstSeenTimeSec,
-                CompromisedUntilLap = carState.CompromisedUntilLap,
-                CompromisedOffTrackActive = carState.CompromisedOffTrackActive,
-                SuspectOffTrackActive = carState.SuspectOffTrackActive,
-                SuspectEventId = carState.SuspectEventId,
-                SuspectPulseUntilTimeSec = carState.SuspectPulseUntilTimeSec,
-                SuspectPulseActive = carState.SuspectPulseActive,
-                CompromisedPenaltyActive = carState.CompromisedPenaltyActive,
-                AllowLatches = _allowLatchesThisTick
-            };
-            return true;
         }
 
         // === SA / track-awareness + slot assignment =============================
