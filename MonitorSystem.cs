@@ -31,10 +31,10 @@ namespace LaunchPlugin
         public string TextColour { get; private set; }
         public int Enum { get; private set; }
         public bool IsEnabled { get; private set; }
-        public bool IsFuelDataCheckActive => IsEnabled && string.Equals(DisplayText, "FUEL DATA CHECK", StringComparison.Ordinal);
+        public bool IsFuelDataCheckActive => IsEnabled && string.Equals(DisplayText, "CHECK FUEL DATA", StringComparison.Ordinal);
         public bool IsFuelHealthAlertActive =>
             IsEnabled &&
-            (string.Equals(DisplayText, "FUEL DATA CHECK", StringComparison.Ordinal) ||
+            (string.Equals(DisplayText, "CHECK FUEL DATA", StringComparison.Ordinal) ||
              string.Equals(DisplayText, "FUEL DATA FAULT", StringComparison.Ordinal));
         public bool IsPhase2BPitWarningActive =>
             IsEnabled &&
@@ -47,9 +47,9 @@ namespace LaunchPlugin
         public bool IsMonitorPitWarningActive => IsPhase2BPitWarningActive || IsBaselineFuelWarningActive;
         public bool IsCarOppH2HHealthWarningActive =>
             IsEnabled &&
-            (string.Equals(DisplayText, "OPP TARGET CHECK", StringComparison.Ordinal) ||
-             string.Equals(DisplayText, "CARSA SLOT CHECK", StringComparison.Ordinal) ||
-             string.Equals(DisplayText, "H2H TARGET CHECK", StringComparison.Ordinal));
+            (string.Equals(DisplayText, "OPPONENT DATA UNRELIABLE", StringComparison.Ordinal) ||
+             string.Equals(DisplayText, "TRAFFIC DATA UNRELIABLE", StringComparison.Ordinal) ||
+             string.Equals(DisplayText, "H2H DATA UNRELIABLE", StringComparison.Ordinal));
 
         public MonitorSystem()
         {

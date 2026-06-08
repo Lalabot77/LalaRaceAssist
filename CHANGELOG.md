@@ -26,6 +26,7 @@ For internal between-release development history, see `Docs/Internal/Development
 - **Pit feedback severity visual mapping** updated for dashboards: `Caution` is steady (no blink) and `Warning` blinks for 1 second at 750ms.
 - **Dashboard/navigation documentation** and Overview-first workflow guidance were aligned across user docs.
 - **Monitor System setting placement** moved from Launch UI / Bindings to Dash Control -> Global Dash Functions -> General. Phase 2B pit-stop monitoring now adds edge-triggered `REFUEL OFF`, `MFD FUEL LOW`, and `EXIT FUEL SHORT` warnings while preserving Phase 2A trigger evidence logs.
+- **Monitor System warning wording** is clearer for drivers: `CHECK FUEL DATA`, `OPPONENT DATA UNRELIABLE`, `TRAFFIC DATA UNRELIABLE`, and `H2H DATA UNRELIABLE` replace the older internal-style wording without changing triggers, severity, exports, CSV schema, or dashboard JSON.
 
 ### Fixed
 - Fixed Pit Stop Debrief service/timing review latches so fuel-added evidence survives box-exit gauge reset and actual-vs-predicted loss compares total-stop-equivalent values.
