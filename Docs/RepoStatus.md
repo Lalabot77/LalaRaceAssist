@@ -1,3 +1,11 @@
+- 2026-06-08 PitFuelControl serious blocked-log hygiene follow-up landed:
+  - restored the documented always-on Info path for `snapshot-null`, `target-invalid`, and `send-failed` blocked reasons even when they are routed through the Soft-Debug helper;
+  - benign blocked/no-send churn remains Soft-Debug-gated and rate-limited, and no PitFuelControl command, mirror, fault, fuel math, export/property, dashboard JSON, settings UI, or profile behavior changed. Property Snapshot list reviewed: yes; no group mapping change required.
+
+- 2026-06-08 SimHub log hygiene cleanup landed:
+  - removed obsolete legacy ExtraProperties fallback-removal warnings and moved normal Lap Detector, Leader Lap candidate/source detail, and benign PitFuelControl ownership churn behind Soft Debug Info without using SimHub Debug-level logging in the touched paths;
+  - kept always-on failure/recovery boundaries, Leader Lap authority lost/recovered/hold transitions, PitCommand/PitFuelControl serious failures, PitDebrief final structured logs, pit-cycle/debrief context, and race-finish summaries;
+  - Property Snapshot keeps START/STOP/RESET/guard/failure/path/schema logs while suppressing routine heartbeat and write-success/append-success spam. No runtime math, command behavior, lap detection behavior, Leader Lap authority behavior, exports/properties, dashboard JSON, settings UI, or profile schema changed. Property Snapshot list reviewed: yes; no group mapping change required.
 - 2026-06-08 Pit Debrief box delta/fuel-target follow-up landed:
   - `Pit.Box.LastDeltaSec` preserves the existing dashboard sign contract (`target - actual`; positive quicker/better, negative slower/worse), while Pit Debrief inverts that seam internally for summary sign convention (`actual - predicted`; positive slower). The completed-delta validity flag clears at pit-entry/debrief start and next boxed-stop activation, so exact `0.0s` on-target stops are valid without leaking a previous stop's delta;
   - `Pit.Debrief.Service.FuelTargetLitres` now latches the largest positive existing requested-add evidence from `Fuel.Pit.Box.WillAddLatched` / `Fuel.Pit.WillAdd` across box-exit reset ticks, but explicit in-box refuel deselect clears the debrief target to `0.0`; actual added fuel remains separate;

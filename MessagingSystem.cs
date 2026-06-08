@@ -68,8 +68,6 @@ namespace LaunchPlugin
         // Very short hold to avoid flicker if the signal blips
         private DateTime _lastHitUtc = DateTime.MinValue;
         private const double HoldAfterMissSec = 0.35;
-        private bool _legacyExtraPropertiesWarned;
-
         public void Update(GameData data, PluginManager pm)
         {
             if (!Enabled || data?.NewData == null || pm == null || data.GameName != "IRacing")
@@ -78,15 +76,6 @@ namespace LaunchPlugin
                 OtherClassBehindGap = -1.0;
                 MaintainMsgCxTimers();
                 return;
-            }
-
-            // Legacy iRacingExtraProperties fast-path removed in native-only cleanup.
-            if (!_legacyExtraPropertiesWarned)
-            {
-                _legacyExtraPropertiesWarned = true;
-                SimHub.Logging.Current.Warn(
-                    "[LalaPlugin:Messaging] Legacy IRacingExtraProperties traffic fast-path disabled. " +
-                    "MessagingSystem now uses native/session opponent context only; output may remain empty when no native context is available.");
             }
 
             // Guard the threshold locally too
