@@ -32,12 +32,12 @@ namespace LaunchPlugin
             Unloaded += GlobalSettingsView_Unloaded;
             InitializeIOverlayImport();
             SyncPropertySnapshotSelectAllFromGroups();
-            RefreshPropertySnapshotRollingStatusText();
+            RefreshDebugUiState();
         }
 
         private void Plugin_DebugUiRefreshRequested()
         {
-            Dispatcher.BeginInvoke(new Action(RefreshPropertySnapshotRollingStatusText));
+            Dispatcher.BeginInvoke(new Action(RefreshDebugUiState));
         }
 
         private void GlobalSettingsView_Unloaded(object sender, RoutedEventArgs e)
@@ -69,25 +69,25 @@ namespace LaunchPlugin
         private void PropertySnapshotGroup_Click(object sender, RoutedEventArgs e)
         {
             SyncPropertySnapshotSelectAllFromGroups();
-            RefreshPropertySnapshotRollingStatusText();
+            RefreshDebugUiState();
         }
 
         private void PropertySnapshotStartRolling_Click(object sender, RoutedEventArgs e)
         {
             Plugin?.StartPropertySnapshotRolling();
-            RefreshPropertySnapshotRollingStatusText();
+            RefreshDebugUiState();
         }
 
         private void PropertySnapshotStopRolling_Click(object sender, RoutedEventArgs e)
         {
             Plugin?.StopPropertySnapshotRolling();
-            RefreshPropertySnapshotRollingStatusText();
+            RefreshDebugUiState();
         }
 
         private void PropertySnapshotResetRollingCsv_Click(object sender, RoutedEventArgs e)
         {
             Plugin?.ResetPropertySnapshotRollingCsv();
-            RefreshPropertySnapshotRollingStatusText();
+            RefreshDebugUiState();
         }
 
         private void DebugMasterToggle_Click(object sender, RoutedEventArgs e)
@@ -97,17 +97,17 @@ namespace LaunchPlugin
                 Plugin?.DisableDebugRuntimeSystemsForMasterGate();
             }
 
-            RefreshPropertySnapshotRollingStatusText();
+            RefreshDebugUiState();
         }
 
         private void PropertySnapshotRollingStatusRefresh_Click(object sender, RoutedEventArgs e)
         {
-            RefreshPropertySnapshotRollingStatusText();
+            RefreshDebugUiState();
         }
 
         private void PropertySnapshotRollingStatusRefresh_Click(object sender, SelectionChangedEventArgs e)
         {
-            RefreshPropertySnapshotRollingStatusText();
+            RefreshDebugUiState();
         }
 
         private void PropertySnapshotRollingFrequencyTextBox_LostFocus(object sender, RoutedEventArgs e)
@@ -116,22 +116,36 @@ namespace LaunchPlugin
             binding?.UpdateSource();
             Plugin?.NormalizePropertySnapshotRollingFrequencyForUi();
             binding?.UpdateTarget();
-            RefreshPropertySnapshotRollingStatusText();
+            RefreshDebugUiState();
         }
 
         private void CarTrackingProbeStart_Click(object sender, RoutedEventArgs e)
         {
             Plugin?.StartCarTrackingProbeCsv();
+            RefreshDebugUiState();
         }
 
         private void CarTrackingProbeStop_Click(object sender, RoutedEventArgs e)
         {
             Plugin?.StopCarTrackingProbeCsv();
+            RefreshDebugUiState();
         }
 
         private void CarTrackingProbeResetCsv_Click(object sender, RoutedEventArgs e)
         {
             Plugin?.ResetCarTrackingProbeCsv();
+            RefreshDebugUiState();
+        }
+
+        private void CarTrackingProbeCsvToggle_Click(object sender, RoutedEventArgs e)
+        {
+            RefreshDebugUiState();
+        }
+
+        private void RefreshDebugUiState()
+        {
+            RefreshPropertySnapshotRollingStatusText();
+            RefreshCarTrackingProbeCsvStatusText();
         }
 
         private void RefreshPropertySnapshotRollingStatusText()
@@ -189,6 +203,66 @@ namespace LaunchPlugin
                     PropertySnapshotRollingStatusBorder.Background = CreateBrush("#222222");
                     PropertySnapshotRollingStatusBorder.BorderBrush = CreateBrush("#666666");
                     PropertySnapshotRollingStatusTextBlock.Foreground = CreateBrush("#D8D8D8");
+                    break;
+            }
+        }
+
+
+        private void RefreshCarTrackingProbeCsvStatusText()
+        {
+            if (CarTrackingProbeCsvStatusTextBlock == null)
+            {
+                return;
+            }
+
+            string status = (Plugin?.GetCarTrackingProbeCsvStatusTextForUi() ?? "OFF").Trim().ToUpperInvariant();
+            bool isReady = string.Equals(status, "READY", StringComparison.Ordinal);
+            bool isRecording = string.Equals(status, "RECORDING", StringComparison.Ordinal);
+            bool isFailed = string.Equals(status, "FAILED", StringComparison.Ordinal);
+
+            CarTrackingProbeCsvStatusTextBlock.Text = status;
+
+            if (CarTrackingProbeStartButton != null)
+            {
+                CarTrackingProbeStartButton.IsEnabled = isReady;
+            }
+
+            if (CarTrackingProbeStopButton != null)
+            {
+                CarTrackingProbeStopButton.IsEnabled = isRecording;
+            }
+
+            if (CarTrackingProbeResetCsvButton != null)
+            {
+                CarTrackingProbeResetCsvButton.IsEnabled = isReady || isRecording || isFailed;
+            }
+
+            if (CarTrackingProbeCsvStatusBorder == null)
+            {
+                return;
+            }
+
+            switch (status)
+            {
+                case "RECORDING":
+                    CarTrackingProbeCsvStatusBorder.Background = CreateBrush("#13351F");
+                    CarTrackingProbeCsvStatusBorder.BorderBrush = CreateBrush("#2CFF7A");
+                    CarTrackingProbeCsvStatusTextBlock.Foreground = CreateBrush("#7CFFA7");
+                    break;
+                case "READY":
+                    CarTrackingProbeCsvStatusBorder.Background = CreateBrush("#11263A");
+                    CarTrackingProbeCsvStatusBorder.BorderBrush = CreateBrush("#4FB7FF");
+                    CarTrackingProbeCsvStatusTextBlock.Foreground = CreateBrush("#78CCFF");
+                    break;
+                case "FAILED":
+                    CarTrackingProbeCsvStatusBorder.Background = CreateBrush("#3A2411");
+                    CarTrackingProbeCsvStatusBorder.BorderBrush = CreateBrush("#FF9D2E");
+                    CarTrackingProbeCsvStatusTextBlock.Foreground = CreateBrush("#FFC078");
+                    break;
+                default:
+                    CarTrackingProbeCsvStatusBorder.Background = CreateBrush("#222222");
+                    CarTrackingProbeCsvStatusBorder.BorderBrush = CreateBrush("#666666");
+                    CarTrackingProbeCsvStatusTextBlock.Foreground = CreateBrush("#D8D8D8");
                     break;
             }
         }

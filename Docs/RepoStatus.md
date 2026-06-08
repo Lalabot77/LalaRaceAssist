@@ -1,3 +1,8 @@
+- 2026-06-08 Car Tracking Probe CSV status UI polish landed:
+  - added a `PROBE CSV:` Debug UI status pill with `OFF` / `READY` / `RECORDING` / `FAILED` states and immediate START/STOP/RESET enablement refresh matching the Property Snapshot rolling control pattern;
+  - status refresh now follows START, STOP, RESET, master-debug gate shutdown, Enable Car Tracking Probe toggle changes, and write-failure disable paths;
+  - no Car Tracking Probe CSV schema, SimHub export/property names, dashboard JSON, CarSA/Opponents/H2H/PitExit runtime logic, Property Snapshot behavior, or frequency normalization changed. Property Snapshot list reviewed: yes; no export/property additions, removals, renames, or behavior changes required snapshot group updates.
+
 - 2026-06-08 Overall Leader Lap authority landed:
   - Leader Lap no longer reads bogus/unproven `DataCorePlugin.GameData.LeaderLastLapTime` / `LeaderAverageLapTime` candidates;
   - overall race-leading pace now resolves current overall P1 using finish-timing identity semantics (`CarIdxPosition==1 && CarIdxClassPosition==1`, then `CarIdxPosition==1`, in-world required) and samples native `CarIdxLastLapTime`;
