@@ -1,0 +1,1198 @@
+﻿[2026-06-08 10:40:08,740] INFO - Starting SimHub v9.11.12 (build time : 06/05/2026 15:17:46)
+[2026-06-08 10:40:08,748] INFO - Requesting high windows timer resolution (initial)
+[2026-06-08 10:40:08,755] INFO - Windows Timer resolution: Current resolution after starting is 5000 for a target of 5000 (was 10000 before)
+[2026-06-08 10:40:08,768] INFO - Windows Defender Controlled Folder Access : likely to be disabled
+[2026-06-08 10:40:08,768] INFO - Administrator privileges : True 
+[2026-06-08 10:40:08,792] INFO - OS version : Microsoft Windows NT 10.0.26200.0, Windows 10.0.26200
+[2026-06-08 10:40:08,889] INFO - License : e98c2a8c-307d-45de-be5b-261234b1b00d, SimHub Licensed edition, Valid
+[2026-06-08 10:40:08,890] INFO - Process priority : Normal
+[2026-06-08 10:40:08,997] INFO - Sound card changes notification registered
+[2026-06-08 10:40:09,020] INFO - Searching for game readers
+[2026-06-08 10:40:09,108] INFO - 110 game readers loaded
+[2026-06-08 10:40:09,385] INFO - Scanning for installed steam games
+[2026-06-08 10:40:09,427] INFO - Creating main window
+[2026-06-08 10:40:14,990] INFO - (Re)Starting IRacing Game Manager and plugin manager
+[2026-06-08 10:40:15,018] INFO - Creating IRacing game manager (IRacingReader.IRacingManager)
+[2026-06-08 10:40:15,320] INFO - IRacing game manager created
+[2026-06-08 10:40:15,337] INFO - Creating plugin manager with plugins : SerialDashPlugin, ControlMapperPlugin, JoystickPlugin, GraphicalDashPlugin, DevicesPlugin, KeyboardEmulatorPlugin, KeyboardReaderPlugin, LalaLaunch, LovelyPlugin, ShakeITMotorsV3Plugin, LapHitoryPlugin
+[2026-06-08 10:40:15,574] INFO - Creating SimHub.Plugins.AudioControl.AudioPlayPlugin plugin
+[2026-06-08 10:40:15,589] INFO - Creating SimHub.Plugins.DataPlugins.SystemInfosProvider plugin
+[2026-06-08 10:40:15,605] INFO - Creating SimHub.Plugins.DataPlugins.Shell.ShellPlugin plugin
+[2026-06-08 10:40:15,611] INFO - Creating SimHub.Plugins.DataPlugins.PersistantTracker.PersistantTrackerPlugin plugin
+[2026-06-08 10:40:15,618] INFO - Creating SimHub.Plugins.DataPlugins.DataCore.DataCorePlugin plugin
+[2026-06-08 10:40:15,623] INFO - Creating SimHub.Plugins.Web.WebPlugin plugin
+[2026-06-08 10:40:15,713] INFO - Creating LaunchPlugin.LalaLaunch plugin
+[2026-06-08 10:40:15,764] INFO - Creating LovelySimRacing.Plugin.LovelyPlugin plugin
+[2026-06-08 10:40:15,769] INFO - Creating SimHub.Plugins.InputPlugins.JoystickPlugin plugin
+[2026-06-08 10:40:15,789] INFO - Creating SimHub.Plugins.InputPlugins.KeyboardReaderPlugin plugin
+[2026-06-08 10:40:15,801] INFO - Creating SimHub.Plugins.OutputPlugins.Dash.SerialDashPlugin plugin
+[2026-06-08 10:40:15,861] INFO - Creating SimHub.Plugins.OutputPlugins.ControlRemapper.ControlMapperPlugin plugin
+[2026-06-08 10:40:15,876] INFO - Creating SimHub.Plugins.OutputPlugins.GraphicalDash.GraphicalDashPlugin plugin
+[2026-06-08 10:40:15,881] INFO - Creating SimHub.Plugins.Devices.DevicesPlugin plugin
+[2026-06-08 10:40:15,885] INFO - Creating SimHub.Plugins.DataPlugins.ShakeItV3.ShakeITMotorsV3Plugin plugin
+[2026-06-08 10:40:15,892] INFO - Creating SimHub.Plugins.DataPlugins.PersistantTracker.LapHitoryPlugin plugin
+[2026-06-08 10:40:15,896] INFO - Creating SimHub.Plugins.KeyboardEmulator.KeyboardEmulatorPlugin plugin
+[2026-06-08 10:40:15,898] INFO - Initializing SimHub.Plugins.DataPlugins.DataCore.DataCorePlugin plugin
+[2026-06-08 10:40:16,566] INFO - Initializing SimHub.Plugins.DataPlugins.SystemInfosProvider plugin
+[2026-06-08 10:40:16,743] INFO - Initializing SimHub.Plugins.DataPlugins.PersistantTracker.PersistantTrackerPlugin plugin
+[2026-06-08 10:40:16,752] INFO - Initializing LaunchPlugin.LalaLaunch plugin
+[2026-06-08 10:40:17,323] INFO - [LalaPlugin:Leader Lap] ResetSnapshotDisplays: cleared live snapshot including leader delta.
+[2026-06-08 10:40:17,374] INFO - [LalaPlugin:ShiftAssist] Enabled=False
+[2026-06-08 10:40:17,490] INFO - [LalaPlugin:TrackMarkers] load ok (16 track(s)) path='PluginsData\Common\LalaPlugin\TrackMarkers.json'
+[2026-06-08 10:40:17,509] INFO - Initializing LovelySimRacing.Plugin.LovelyPlugin plugin
+[2026-06-08 10:40:17,576] INFO - Exception in plugin (LovelyPlugin) : Key not valid for use in specified state.
+
+[2026-06-08 10:40:18,760] INFO - Initializing SimHub.Plugins.OutputPlugins.ControlRemapper.ControlMapperPlugin plugin
+[2026-06-08 10:40:19,345] INFO - Initializing SimHub.Plugins.Devices.DevicesPlugin plugin
+[2026-06-08 10:40:21,375] INFO - [WatchDog] Abnormal Inactivity detected
+[2026-06-08 10:40:22,879] INFO - Loaded device : Simagic GT Neo (Simagic GT Neo, 67A11361-13EE-45AE-A461-3E19E14B8F87)
+[2026-06-08 10:40:23,070] INFO - Loaded device : SimDash (Web device slot (Phone, tablet, app ...), 13409C5B-5B24-4E12-8D87-CA044BFED300)
+[2026-06-08 10:40:23,078] INFO - Loaded device : SimTablet (Web device slot (Phone, tablet, app ...), 13409C5B-5B24-4E12-8D87-CA044BFED300)
+[2026-06-08 10:40:23,080] INFO - Loaded device : 2ndDash (Web device slot (Phone, tablet, app ...), 13409C5B-5B24-4E12-8D87-CA044BFED300)
+[2026-06-08 10:40:23,132] INFO - Loaded device : MiniMonitor (Generic Monitor (HDMI, DP ...), 153CC152-03BF-432B-A1C3-B7496DC6799E)
+[2026-06-08 10:40:24,544] INFO - [WatchDog] Stacks dump : 
+	ManagedThreadId: 1, Name: N/A, OSThreadId: 14864, Thread: IsAlive: True, IsBackground: False
+		DomainBoundILStubClass.IL_STUB_PInvoke(System.Windows.Interop.MSG ByRef)
+		System.Windows.Threading.Dispatcher.PushFrameImpl(System.Windows.Threading.DispatcherFrame)
+		System.Windows.Threading.Dispatcher.PushFrame(System.Windows.Threading.DispatcherFrame)
+		System.Windows.Application.RunDispatcher(System.Object)
+		System.Windows.Application.RunInternal(System.Windows.Window)
+		System.Windows.Application.Run(System.Windows.Window)
+		콏.콏.Main()
+	ManagedThreadId: 5, Name: N/A, OSThreadId: 9496, Thread: IsAlive: True, IsBackground: True
+		System.Threading.WaitHandle.WaitMultiple(System.Threading.WaitHandle[], Int32, Boolean, Boolean)
+		System.Threading.WaitHandle.WaitAny(System.Threading.WaitHandle[], Int32, Boolean)
+		System.Net.TimerThread.ThreadProc()
+		System.Threading.ThreadHelper.ThreadStart_Context(System.Object)
+		System.Threading.ExecutionContext.RunInternal(System.Threading.ExecutionContext, System.Threading.ContextCallback, System.Object, Boolean)
+		System.Threading.ExecutionContext.Run(System.Threading.ExecutionContext, System.Threading.ContextCallback, System.Object, Boolean)
+		System.Threading.ExecutionContext.Run(System.Threading.ExecutionContext, System.Threading.ContextCallback, System.Object)
+		System.Threading.ThreadHelper.ThreadStart()
+	ManagedThreadId: 9, Name: N/A, OSThreadId: 6868, Thread: IsAlive: True, IsBackground: True
+		DomainBoundILStubClass.IL_STUB_PInvoke(System.Runtime.Remoting.Channels.Ipc.PipeHandle, System.Threading.Overlapped)
+		System.Runtime.Remoting.Channels.Ipc.IpcPort.WaitForConnect()
+		System.Runtime.Remoting.Channels.Ipc.IpcServerChannel.Listen()
+		System.Threading.ThreadHelper.ThreadStart_Context(System.Object)
+		System.Threading.ExecutionContext.RunInternal(System.Threading.ExecutionContext, System.Threading.ContextCallback, System.Object, Boolean)
+		System.Threading.ExecutionContext.Run(System.Threading.ExecutionContext, System.Threading.ContextCallback, System.Object, Boolean)
+		System.Threading.ExecutionContext.Run(System.Threading.ExecutionContext, System.Threading.ContextCallback, System.Object)
+		System.Threading.ThreadHelper.ThreadStart()
+	ManagedThreadId: 13, Name: N/A, OSThreadId: 43140, Thread: IsAlive: True, IsBackground: True
+		System.Threading.Thread.SleepInternal(Int32)
+		System.Threading.Thread.Sleep(Int32)
+		SimHub.Plugins.TimerHelperRequest+TimerHelper+<>c.<Init>b__3_0()
+		System.Threading.ThreadHelper.ThreadStart_Context(System.Object)
+		System.Threading.ExecutionContext.RunInternal(System.Threading.ExecutionContext, System.Threading.ContextCallback, System.Object, Boolean)
+		System.Threading.ExecutionContext.Run(System.Threading.ExecutionContext, System.Threading.ContextCallback, System.Object, Boolean)
+		System.Threading.ExecutionContext.Run(System.Threading.ExecutionContext, System.Threading.ContextCallback, System.Object)
+		System.Threading.ThreadHelper.ThreadStart()
+	ManagedThreadId: 15, Name: Simhub Serial Watcher, OSThreadId: 36676, Thread: IsAlive: True, IsBackground: True
+		DomainBoundILStubClass.IL_STUB_PInvoke(UInt32, IntPtr*, Boolean, UInt32)
+		촰.쳗.쳵()
+		System.Threading.ThreadHelper.ThreadStart_Context(System.Object)
+		System.Threading.ExecutionContext.RunInternal(System.Threading.ExecutionContext, System.Threading.ContextCallback, System.Object, Boolean)
+		System.Threading.ExecutionContext.Run(System.Threading.ExecutionContext, System.Threading.ContextCallback, System.Object, Boolean)
+		System.Threading.ExecutionContext.Run(System.Threading.ExecutionContext, System.Threading.ContextCallback, System.Object)
+		System.Threading.ThreadHelper.ThreadStart()
+	ManagedThreadId: 20, Name: N/A, OSThreadId: 35376, Thread: IsAlive: True, IsBackground: False
+		System.Threading.Thread.SleepInternal(Int32)
+		System.Threading.Thread.Sleep(Int32)
+		iRacingSDK.iRacingConnection+<WaitForInitialConnection>d__23.MoveNext()
+		iRacingSDK.iRacingConnection+<GetRawDataFeed>d__22.MoveNext()
+		iRacingSDK.DataSampleExtensions+<WithLastSample>d__7.MoveNext()
+		iRacingSDK.DataSampleExtensions+<WithEvents>d__6.MoveNext()
+		iRacingSDK.iRacingEvents.Listen()
+		System.Threading.ThreadHelper.ThreadStart_Context(System.Object)
+		System.Threading.ExecutionContext.RunInternal(System.Threading.ExecutionContext, System.Threading.ContextCallback, System.Object, Boolean)
+		System.Threading.ExecutionContext.Run(System.Threading.ExecutionContext, System.Threading.ContextCallback, System.Object, Boolean)
+		System.Threading.ExecutionContext.Run(System.Threading.ExecutionContext, System.Threading.ContextCallback, System.Object)
+		System.Threading.ThreadHelper.ThreadStart()
+	ManagedThreadId: 24, Name: WeakCache-Cleanup, OSThreadId: 6624, Thread: IsAlive: True, IsBackground: True
+		System.Threading.Thread.SleepInternal(Int32)
+		System.Threading.Thread.Sleep(Int32)
+		System.Threading.Thread.Sleep(System.TimeSpan)
+		SimHub.Plugins.OutputPlugins.Dash.TemplatingCommon.WeakCacheCleanupHub.<.ctor>b__5_0()
+		System.Threading.ThreadHelper.ThreadStart_Context(System.Object)
+		System.Threading.ExecutionContext.RunInternal(System.Threading.ExecutionContext, System.Threading.ContextCallback, System.Object, Boolean)
+		System.Threading.ExecutionContext.Run(System.Threading.ExecutionContext, System.Threading.ContextCallback, System.Object, Boolean)
+		System.Threading.ExecutionContext.Run(System.Threading.ExecutionContext, System.Threading.ContextCallback, System.Object)
+		System.Threading.ThreadHelper.ThreadStart()
+	ManagedThreadId: 26, Name: HID Manager, OSThreadId: 42248, Thread: IsAlive: True, IsBackground: True
+		DomainBoundILStubClass.IL_STUB_PInvoke(MSG ByRef, IntPtr, UInt32, UInt32)
+		HidSharp.Platform.Windows.WinHidManager.Run(System.Action)
+		HidSharp.Platform.HidManager.RunImpl(System.Object)
+		System.Threading.ThreadHelper.ThreadStart_Context(System.Object)
+		System.Threading.ExecutionContext.RunInternal(System.Threading.ExecutionContext, System.Threading.ContextCallback, System.Object, Boolean)
+		System.Threading.ExecutionContext.Run(System.Threading.ExecutionContext, System.Threading.ContextCallback, System.Object, Boolean)
+		System.Threading.ExecutionContext.Run(System.Threading.ExecutionContext, System.Threading.ContextCallback, System.Object)
+		System.Threading.ThreadHelper.ThreadStart(System.Object)
+	ManagedThreadId: 27, Name: HidSharp Serial Watcher, OSThreadId: 38732, Thread: IsAlive: True, IsBackground: True
+		DomainBoundILStubClass.IL_STUB_PInvoke(UInt32, IntPtr*, Boolean, UInt32)
+		HidSharp.Platform.Windows.WinHidManager.SerialWatcherThread()
+		System.Threading.ThreadHelper.ThreadStart_Context(System.Object)
+		System.Threading.ExecutionContext.RunInternal(System.Threading.ExecutionContext, System.Threading.ContextCallback, System.Object, Boolean)
+		System.Threading.ExecutionContext.Run(System.Threading.ExecutionContext, System.Threading.ContextCallback, System.Object, Boolean)
+		System.Threading.ExecutionContext.Run(System.Threading.ExecutionContext, System.Threading.ContextCallback, System.Object)
+		System.Threading.ThreadHelper.ThreadStart()
+	ManagedThreadId: 28, Name: HidSharp RaiseChanged, OSThreadId: 46848, Thread: IsAlive: True, IsBackground: True
+		System.Threading.Monitor.ObjWait(Boolean, Int32, System.Object)
+		System.Threading.Monitor.Wait(System.Object, Int32, Boolean)
+		HidSharp.Platform.Windows.WinHidManager.DeviceMonitorEventThread()
+		System.Threading.ThreadHelper.ThreadStart_Context(System.Object)
+		System.Threading.ExecutionContext.RunInternal(System.Threading.ExecutionContext, System.Threading.ContextCallback, System.Object, Boolean)
+		System.Threading.ExecutionContext.Run(System.Threading.ExecutionContext, System.Threading.ContextCallback, System.Object, Boolean)
+		System.Threading.ExecutionContext.Run(System.Threading.ExecutionContext, System.Threading.ContextCallback, System.Object)
+		System.Threading.ThreadHelper.ThreadStart()
+
+[2026-06-08 10:40:25,279] INFO - Loaded device : Simagic Haptic Pedals Reactor (P1000/P2000/P700/P500) (Simagic Haptic Pedals Reactor (P1000/P2000/P700/P500), A974E20A-A714-467D-B55A-7DEE2BA3896C)
+[2026-06-08 10:40:25,279] INFO - Initializing SimHub.Plugins.DataPlugins.ShakeItV3.ShakeITMotorsV3Plugin plugin
+[2026-06-08 10:40:25,559] INFO - [WatchDog] Abnormal Inactivity recovered
+[2026-06-08 10:40:25,992] INFO - Initializing SimHub.Plugins.DataPlugins.PersistantTracker.LapHitoryPlugin plugin
+[2026-06-08 10:40:25,998] INFO - Initializing SimHub.Plugins.AudioControl.AudioPlayPlugin plugin
+[2026-06-08 10:40:26,010] INFO - Initializing SimHub.Plugins.DataPlugins.Shell.ShellPlugin plugin
+[2026-06-08 10:40:26,016] INFO - Initializing SimHub.Plugins.InputPlugins.JoystickPlugin plugin
+[2026-06-08 10:40:26,044] INFO - Initializing SimHub.Plugins.InputPlugins.KeyboardReaderPlugin plugin
+[2026-06-08 10:40:26,049] INFO - Initializing SimHub.Plugins.KeyboardEmulator.KeyboardEmulatorPlugin plugin
+[2026-06-08 10:40:26,138] INFO - Initializing SimHub.Plugins.OutputPlugins.Dash.SerialDashPlugin plugin
+[2026-06-08 10:40:27,438] INFO - Starting Arduino in Single USB mode
+[2026-06-08 10:40:27,471] INFO - Initializing SimHub.Plugins.OutputPlugins.GraphicalDash.GraphicalDashPlugin plugin
+[2026-06-08 10:40:28,712] INFO - Initializing SimHub.Plugins.Web.WebPlugin plugin
+[2026-06-08 10:40:29,086] INFO - Web plugin suggested IP :192.168.1.88
+[2026-06-08 10:40:29,086] INFO - Web plugin available IPs :10.5.0.2,192.168.1.88
+[2026-06-08 10:40:29,095] INFO - Plugin manager correctly initialized
+[2026-06-08 10:40:29,098] INFO - Loading plugins controls
+[2026-06-08 10:40:29,254] INFO - Web plugin listening to 8888 (User friendly port)
+[2026-06-08 10:40:31,822] INFO - Game successfully loaded
+[2026-06-08 10:40:34,234] INFO - [WatchDog] Abnormal Inactivity detected
+[2026-06-08 10:40:38,001] INFO - [WatchDog] Stacks dump : 
+	ManagedThreadId: 1, Name: N/A, OSThreadId: 14864, Thread: IsAlive: True, IsBackground: False
+		DomainBoundILStubClass.IL_STUB_PInvoke(System.Runtime.InteropServices.HandleRef, Int32)
+		System.Windows.Forms.Control.SetVisibleCore(Boolean)
+		System.Windows.Forms.Form.SetVisibleCore(Boolean)
+		System.Windows.Forms.Control.Show()
+		콏.콏.CreatePriorityKeepingWindow()
+		콏.콏+<App_Startup>d__15.MoveNext()
+		System.Runtime.CompilerServices.AsyncMethodBuilderCore+MoveNextRunner.InvokeMoveNext(System.Object)
+		System.Threading.ExecutionContext.RunInternal(System.Threading.ExecutionContext, System.Threading.ContextCallback, System.Object, Boolean)
+		System.Threading.ExecutionContext.Run(System.Threading.ExecutionContext, System.Threading.ContextCallback, System.Object, Boolean)
+		System.Runtime.CompilerServices.AsyncMethodBuilderCore+MoveNextRunner.Run()
+		System.Threading.Tasks.SynchronizationContextAwaitTaskContinuation+<>c.<.cctor>b__8_0(System.Object)
+		System.Windows.Threading.ExceptionWrapper.InternalRealCall(System.Delegate, System.Object, Int32)
+		System.Windows.Threading.ExceptionWrapper.TryCatchWhen(System.Object, System.Delegate, System.Object, Int32, System.Delegate)
+		System.Windows.Threading.DispatcherOperation.InvokeImpl()
+		System.Windows.Threading.DispatcherOperation.InvokeInSecurityContext(System.Object)
+		MS.Internal.CulturePreservingExecutionContext.CallbackWrapper(System.Object)
+		System.Threading.ExecutionContext.RunInternal(System.Threading.ExecutionContext, System.Threading.ContextCallback, System.Object, Boolean)
+		System.Threading.ExecutionContext.Run(System.Threading.ExecutionContext, System.Threading.ContextCallback, System.Object, Boolean)
+		System.Threading.ExecutionContext.Run(System.Threading.ExecutionContext, System.Threading.ContextCallback, System.Object)
+		MS.Internal.CulturePreservingExecutionContext.Run(MS.Internal.CulturePreservingExecutionContext, System.Threading.ContextCallback, System.Object)
+		System.Windows.Threading.DispatcherOperation.Invoke()
+		System.Windows.Threading.Dispatcher.ProcessQueue()
+		System.Windows.Threading.Dispatcher.WndProcHook(IntPtr, Int32, IntPtr, IntPtr, Boolean ByRef)
+		MS.Win32.HwndWrapper.WndProc(IntPtr, Int32, IntPtr, IntPtr, Boolean ByRef)
+		MS.Win32.HwndSubclass.DispatcherCallbackOperation(System.Object)
+		System.Windows.Threading.ExceptionWrapper.InternalRealCall(System.Delegate, System.Object, Int32)
+		System.Windows.Threading.ExceptionWrapper.TryCatchWhen(System.Object, System.Delegate, System.Object, Int32, System.Delegate)
+		System.Windows.Threading.Dispatcher.LegacyInvokeImpl(System.Windows.Threading.DispatcherPriority, System.TimeSpan, System.Delegate, System.Object, Int32)
+		MS.Win32.HwndSubclass.SubclassWndProc(IntPtr, Int32, IntPtr, IntPtr)
+		DomainBoundILStubClass.IL_STUB_PInvoke(System.Windows.Interop.MSG ByRef)
+		System.Windows.Threading.Dispatcher.PushFrameImpl(System.Windows.Threading.DispatcherFrame)
+		System.Windows.Threading.Dispatcher.PushFrame(System.Windows.Threading.DispatcherFrame)
+		System.Windows.Application.RunDispatcher(System.Object)
+		System.Windows.Application.RunInternal(System.Windows.Window)
+		System.Windows.Application.Run(System.Windows.Window)
+		콏.콏.Main()
+	ManagedThreadId: 5, Name: N/A, OSThreadId: 9496, Thread: IsAlive: True, IsBackground: True
+		System.Threading.WaitHandle.WaitMultiple(System.Threading.WaitHandle[], Int32, Boolean, Boolean)
+		System.Threading.WaitHandle.WaitAny(System.Threading.WaitHandle[], Int32, Boolean)
+		System.Net.TimerThread.ThreadProc()
+		System.Threading.ThreadHelper.ThreadStart_Context(System.Object)
+		System.Threading.ExecutionContext.RunInternal(System.Threading.ExecutionContext, System.Threading.ContextCallback, System.Object, Boolean)
+		System.Threading.ExecutionContext.Run(System.Threading.ExecutionContext, System.Threading.ContextCallback, System.Object, Boolean)
+		System.Threading.ExecutionContext.Run(System.Threading.ExecutionContext, System.Threading.ContextCallback, System.Object)
+		System.Threading.ThreadHelper.ThreadStart()
+	ManagedThreadId: 9, Name: N/A, OSThreadId: 6868, Thread: IsAlive: True, IsBackground: True
+		DomainBoundILStubClass.IL_STUB_PInvoke(System.Runtime.Remoting.Channels.Ipc.PipeHandle, System.Threading.Overlapped)
+		System.Runtime.Remoting.Channels.Ipc.IpcPort.WaitForConnect()
+		System.Runtime.Remoting.Channels.Ipc.IpcServerChannel.Listen()
+		System.Threading.ThreadHelper.ThreadStart_Context(System.Object)
+		System.Threading.ExecutionContext.RunInternal(System.Threading.ExecutionContext, System.Threading.ContextCallback, System.Object, Boolean)
+		System.Threading.ExecutionContext.Run(System.Threading.ExecutionContext, System.Threading.ContextCallback, System.Object, Boolean)
+		System.Threading.ExecutionContext.Run(System.Threading.ExecutionContext, System.Threading.ContextCallback, System.Object)
+		System.Threading.ThreadHelper.ThreadStart()
+	ManagedThreadId: 13, Name: N/A, OSThreadId: 43140, Thread: IsAlive: True, IsBackground: True
+		System.Threading.Thread.SleepInternal(Int32)
+		System.Threading.Thread.Sleep(Int32)
+		SimHub.Plugins.TimerHelperRequest+TimerHelper+<>c.<Init>b__3_0()
+		System.Threading.ThreadHelper.ThreadStart_Context(System.Object)
+		System.Threading.ExecutionContext.RunInternal(System.Threading.ExecutionContext, System.Threading.ContextCallback, System.Object, Boolean)
+		System.Threading.ExecutionContext.Run(System.Threading.ExecutionContext, System.Threading.ContextCallback, System.Object, Boolean)
+		System.Threading.ExecutionContext.Run(System.Threading.ExecutionContext, System.Threading.ContextCallback, System.Object)
+		System.Threading.ThreadHelper.ThreadStart()
+	ManagedThreadId: 15, Name: Simhub Serial Watcher, OSThreadId: 36676, Thread: IsAlive: True, IsBackground: True
+		DomainBoundILStubClass.IL_STUB_PInvoke(UInt32, IntPtr*, Boolean, UInt32)
+		촰.쳗.쳵()
+		System.Threading.ThreadHelper.ThreadStart_Context(System.Object)
+		System.Threading.ExecutionContext.RunInternal(System.Threading.ExecutionContext, System.Threading.ContextCallback, System.Object, Boolean)
+		System.Threading.ExecutionContext.Run(System.Threading.ExecutionContext, System.Threading.ContextCallback, System.Object, Boolean)
+		System.Threading.ExecutionContext.Run(System.Threading.ExecutionContext, System.Threading.ContextCallback, System.Object)
+		System.Threading.ThreadHelper.ThreadStart()
+	ManagedThreadId: 20, Name: N/A, OSThreadId: 35376, Thread: IsAlive: True, IsBackground: False
+		System.Threading.Thread.SleepInternal(Int32)
+		System.Threading.Thread.Sleep(Int32)
+		iRacingSDK.iRacingConnection+<WaitForInitialConnection>d__23.MoveNext()
+		iRacingSDK.iRacingConnection+<GetRawDataFeed>d__22.MoveNext()
+		iRacingSDK.DataSampleExtensions+<WithLastSample>d__7.MoveNext()
+		iRacingSDK.DataSampleExtensions+<WithEvents>d__6.MoveNext()
+		iRacingSDK.iRacingEvents.Listen()
+		System.Threading.ThreadHelper.ThreadStart_Context(System.Object)
+		System.Threading.ExecutionContext.RunInternal(System.Threading.ExecutionContext, System.Threading.ContextCallback, System.Object, Boolean)
+		System.Threading.ExecutionContext.Run(System.Threading.ExecutionContext, System.Threading.ContextCallback, System.Object, Boolean)
+		System.Threading.ExecutionContext.Run(System.Threading.ExecutionContext, System.Threading.ContextCallback, System.Object)
+		System.Threading.ThreadHelper.ThreadStart()
+	ManagedThreadId: 24, Name: WeakCache-Cleanup, OSThreadId: 6624, Thread: IsAlive: True, IsBackground: True
+		System.Threading.Thread.SleepInternal(Int32)
+		System.Threading.Thread.Sleep(Int32)
+		System.Threading.Thread.Sleep(System.TimeSpan)
+		SimHub.Plugins.OutputPlugins.Dash.TemplatingCommon.WeakCacheCleanupHub.<.ctor>b__5_0()
+		System.Threading.ThreadHelper.ThreadStart_Context(System.Object)
+		System.Threading.ExecutionContext.RunInternal(System.Threading.ExecutionContext, System.Threading.ContextCallback, System.Object, Boolean)
+		System.Threading.ExecutionContext.Run(System.Threading.ExecutionContext, System.Threading.ContextCallback, System.Object, Boolean)
+		System.Threading.ExecutionContext.Run(System.Threading.ExecutionContext, System.Threading.ContextCallback, System.Object)
+		System.Threading.ThreadHelper.ThreadStart()
+	ManagedThreadId: 26, Name: HID Manager, OSThreadId: 42248, Thread: IsAlive: True, IsBackground: True
+		DomainBoundILStubClass.IL_STUB_PInvoke(MSG ByRef, IntPtr, UInt32, UInt32)
+		HidSharp.Platform.Windows.WinHidManager.Run(System.Action)
+		HidSharp.Platform.HidManager.RunImpl(System.Object)
+		System.Threading.ThreadHelper.ThreadStart_Context(System.Object)
+		System.Threading.ExecutionContext.RunInternal(System.Threading.ExecutionContext, System.Threading.ContextCallback, System.Object, Boolean)
+		System.Threading.ExecutionContext.Run(System.Threading.ExecutionContext, System.Threading.ContextCallback, System.Object, Boolean)
+		System.Threading.ExecutionContext.Run(System.Threading.ExecutionContext, System.Threading.ContextCallback, System.Object)
+		System.Threading.ThreadHelper.ThreadStart(System.Object)
+	ManagedThreadId: 27, Name: HidSharp Serial Watcher, OSThreadId: 38732, Thread: IsAlive: True, IsBackground: True
+		DomainBoundILStubClass.IL_STUB_PInvoke(UInt32, IntPtr*, Boolean, UInt32)
+		HidSharp.Platform.Windows.WinHidManager.SerialWatcherThread()
+		System.Threading.ThreadHelper.ThreadStart_Context(System.Object)
+		System.Threading.ExecutionContext.RunInternal(System.Threading.ExecutionContext, System.Threading.ContextCallback, System.Object, Boolean)
+		System.Threading.ExecutionContext.Run(System.Threading.ExecutionContext, System.Threading.ContextCallback, System.Object, Boolean)
+		System.Threading.ExecutionContext.Run(System.Threading.ExecutionContext, System.Threading.ContextCallback, System.Object)
+		System.Threading.ThreadHelper.ThreadStart()
+	ManagedThreadId: 28, Name: HidSharp RaiseChanged, OSThreadId: 46848, Thread: IsAlive: True, IsBackground: True
+		System.Threading.Monitor.ObjWait(Boolean, Int32, System.Object)
+		System.Threading.Monitor.Wait(System.Object, Int32, Boolean)
+		HidSharp.Platform.Windows.WinHidManager.DeviceMonitorEventThread()
+		System.Threading.ThreadHelper.ThreadStart_Context(System.Object)
+		System.Threading.ExecutionContext.RunInternal(System.Threading.ExecutionContext, System.Threading.ContextCallback, System.Object, Boolean)
+		System.Threading.ExecutionContext.Run(System.Threading.ExecutionContext, System.Threading.ContextCallback, System.Object, Boolean)
+		System.Threading.ExecutionContext.Run(System.Threading.ExecutionContext, System.Threading.ContextCallback, System.Object)
+		System.Threading.ThreadHelper.ThreadStart()
+	ManagedThreadId: 38, Name: RemapperWorker, OSThreadId: 40356, Thread: IsAlive: True, IsBackground: False
+		System.Threading.Thread.SleepInternal(Int32)
+		System.Threading.Thread.Sleep(Int32)
+		SimHub.Plugins.OutputPlugins.ControlRemapper.RemapperWorker.ProcessControllers()
+		System.Threading.ThreadHelper.ThreadStart_Context(System.Object)
+		System.Threading.ExecutionContext.RunInternal(System.Threading.ExecutionContext, System.Threading.ContextCallback, System.Object, Boolean)
+		System.Threading.ExecutionContext.Run(System.Threading.ExecutionContext, System.Threading.ContextCallback, System.Object, Boolean)
+		System.Threading.ExecutionContext.Run(System.Threading.ExecutionContext, System.Threading.ContextCallback, System.Object)
+		System.Threading.ThreadHelper.ThreadStart()
+	ManagedThreadId: 39, Name: JoystickPollThread, OSThreadId: 39548, Thread: IsAlive: True, IsBackground: False
+		System.Threading.Thread.SleepInternal(Int32)
+		System.Threading.Thread.Sleep(Int32)
+		SimHub.Plugins.InputPlugins.JoystickPlugin.PollControllers()
+		System.Threading.ThreadHelper.ThreadStart_Context(System.Object)
+		System.Threading.ExecutionContext.RunInternal(System.Threading.ExecutionContext, System.Threading.ContextCallback, System.Object, Boolean)
+		System.Threading.ExecutionContext.Run(System.Threading.ExecutionContext, System.Threading.ContextCallback, System.Object, Boolean)
+		System.Threading.ExecutionContext.Run(System.Threading.ExecutionContext, System.Threading.ContextCallback, System.Object)
+		System.Threading.ThreadHelper.ThreadStart()
+	ManagedThreadId: 40, Name: KestrelThread, OSThreadId: 8092, Thread: IsAlive: True, IsBackground: False
+		System.Threading.Monitor.ObjWait(Boolean, Int32, System.Object)
+		System.Threading.Monitor.Wait(System.Object, Int32, Boolean)
+		System.Threading.Monitor.Wait(System.Object, Int32)
+		System.Threading.ManualResetEventSlim.Wait(Int32, System.Threading.CancellationToken)
+		System.Threading.Tasks.Task.SpinThenBlockingWait(Int32, System.Threading.CancellationToken)
+		System.Threading.Tasks.Task.InternalWait(Int32, System.Threading.CancellationToken)
+		System.Runtime.CompilerServices.TaskAwaiter.HandleNonSuccessAndDebuggerNotification(System.Threading.Tasks.Task)
+		Microsoft.AspNetCore.Hosting.WebHostExtensions.Run(Microsoft.AspNetCore.Hosting.IWebHost)
+		SimHub.Plugins.Web.KestrelStartup.RunWebHost(Int32, System.Nullable`1<Int32>)
+		SimHub.Plugins.Web.KestrelStartup+<>c__DisplayClass7_0.<Start>b__0()
+		System.Threading.ThreadHelper.ThreadStart_Context(System.Object)
+		System.Threading.ExecutionContext.RunInternal(System.Threading.ExecutionContext, System.Threading.ContextCallback, System.Object, Boolean)
+		System.Threading.ExecutionContext.Run(System.Threading.ExecutionContext, System.Threading.ContextCallback, System.Object, Boolean)
+		System.Threading.ExecutionContext.Run(System.Threading.ExecutionContext, System.Threading.ContextCallback, System.Object)
+		System.Threading.ThreadHelper.ThreadStart()
+	ManagedThreadId: 41, Name: AsyncPluginUpdateThread, OSThreadId: 47852, Thread: IsAlive: True, IsBackground: False
+		System.Threading.WaitHandle.WaitOneNative(System.Runtime.InteropServices.SafeHandle, UInt32, Boolean, Boolean)
+		System.Threading.WaitHandle.InternalWaitOne(System.Runtime.InteropServices.SafeHandle, Int64, Boolean, Boolean)
+		System.Threading.WaitHandle.WaitOne(Int32, Boolean)
+		System.Threading.WaitHandle.WaitOne()
+		SimHub.Plugins.PluginManager.AsyncDataUpdateLoop()
+		System.Threading.ThreadHelper.ThreadStart_Context(System.Object)
+		System.Threading.ExecutionContext.RunInternal(System.Threading.ExecutionContext, System.Threading.ContextCallback, System.Object, Boolean)
+		System.Threading.ExecutionContext.Run(System.Threading.ExecutionContext, System.Threading.ContextCallback, System.Object, Boolean)
+		System.Threading.ExecutionContext.Run(System.Threading.ExecutionContext, System.Threading.ContextCallback, System.Object)
+		System.Threading.ThreadHelper.ThreadStart()
+	ManagedThreadId: 42, Name: GameLoopThread, OSThreadId: 42392, Thread: IsAlive: True, IsBackground: True
+		DomainBoundILStubClass.IL_STUB_PInvoke(Int64 ByRef)
+		System.Diagnostics.Stopwatch.GetTimestamp()
+		SimHub.Licensing.GameLoop.맫()
+		System.Threading.ThreadHelper.ThreadStart_Context(System.Object)
+		System.Threading.ExecutionContext.RunInternal(System.Threading.ExecutionContext, System.Threading.ContextCallback, System.Object, Boolean)
+		System.Threading.ExecutionContext.Run(System.Threading.ExecutionContext, System.Threading.ContextCallback, System.Object, Boolean)
+		System.Threading.ExecutionContext.Run(System.Threading.ExecutionContext, System.Threading.ContextCallback, System.Object)
+		System.Threading.ThreadHelper.ThreadStart()
+	ManagedThreadId: 43, Name: N/A, OSThreadId: 16212, Thread: IsAlive: True, IsBackground: True
+		System.Threading.Thread.SleepInternal(Int32)
+		System.Threading.Thread.Sleep(Int32)
+		SimHub.Licensing.GameLoop.먙()
+		System.Threading.ThreadHelper.ThreadStart_Context(System.Object)
+		System.Threading.ExecutionContext.RunInternal(System.Threading.ExecutionContext, System.Threading.ContextCallback, System.Object, Boolean)
+		System.Threading.ExecutionContext.Run(System.Threading.ExecutionContext, System.Threading.ContextCallback, System.Object, Boolean)
+		System.Threading.ExecutionContext.Run(System.Threading.ExecutionContext, System.Threading.ContextCallback, System.Object)
+		System.Threading.ThreadHelper.ThreadStart()
+
+[2026-06-08 10:40:47,477] INFO - [LalaPlugin:DarkMode] Lovely availability changed -> available=True.
+[2026-06-08 10:40:47,508] INFO - [WatchDog] Abnormal Inactivity recovered
+[2026-06-08 10:47:32,276] INFO - Replay mode : Replay
+[2026-06-08 10:47:32,709] INFO - Active car model changed : mclaren720sgt3 / McLaren 720S GT3 EVO
+[2026-06-08 10:47:32,709] INFO - Active track changed : imola gp  
+[2026-06-08 10:47:32,711] INFO - Game connected
+[2026-06-08 10:47:32,948] INFO - All time best found : 00:01:41.7700000 recorded at 4/9/2026 1:06:57 PM
+[2026-06-08 10:47:33,121] INFO - [LalaPlugin:Leader Lap] CalculateStrategy: estLap=165.500, leaderDelta=1.200, leaderLap=164.300
+[2026-06-08 10:47:33,126] INFO - [LalaPlugin:Leader Lap] CalculateStrategy: estLap=108.765, leaderDelta=1.200, leaderLap=107.565
+[2026-06-08 10:47:33,137] INFO - [LalaPlugin:Fuel Burn] Strategy reset – defaults applied.
+[2026-06-08 10:47:33,144] INFO - [LalaPlugin:Leader Lap] ResetSnapshotDisplays: cleared live snapshot including leader delta.
+[2026-06-08 10:47:33,146] INFO - [LalaPlugin:Leader Lap] CalculateStrategy: estLap=165.500, leaderDelta=0.200, leaderLap=165.300
+[2026-06-08 10:47:33,147] INFO - [LalaPlugin:Leader Lap] CalculateStrategy: estLap=102.500, leaderDelta=0.200, leaderLap=102.300
+[2026-06-08 10:47:33,177] INFO - [LalaPlugin:Fuel Burn] Car/track change detected – clearing seeds and confidence
+[2026-06-08 10:47:33,178] INFO - [LalaPlugin:Runtime] fuel health check queued (reason: combo change).
+[2026-06-08 10:47:33,178] INFO - [LalaPlugin:Session] token change old=none new=303420602:84200464 type=Race
+[2026-06-08 10:47:33,178] INFO - [LalaPlugin:Pit Cycle] SessionChange: skipPitLossSave=true pitLiteStatus=None candidateReady=False lastDirect=0.00 oldToken=none newToken=303420602:84200464
+[2026-06-08 10:47:33,181] INFO - [LalaPlugin:Runtime] manual recovery reset triggered (reason: Session transition).
+[2026-06-08 10:47:33,213] INFO - [LalaPlugin:Runtime] fuel health check queued (reason: session token change).
+[2026-06-08 10:47:33,213] INFO - [LalaPlugin:Profile] Session start snapshot: Car='McLaren 720S GT3 EVO'  Track='imola gp'
+[2026-06-08 10:47:33,219] INFO - [LalaPlugin:MSGV1] Session active (logs suppressed; set DEBUG to view details)
+[2026-06-08 10:47:33,308] INFO - [LalaPlugin:Strategy] Live Detect changed: source=CurrentSessionInfo session=none isRace=True isLimitedSessionLaps=False sessionLaps=0 isLimitedTime=True sessionTime=3600 basis=time value=60 reason=time-limited
+[2026-06-08 10:47:33,311] INFO - [LalaPlugin:Strategy] UpdateLiveDisplay: live max tank refresh 77.00L.
+[2026-06-08 10:47:33,312] INFO - [LalaPlugin:Fuel Burn] live-max health source=raw raw=77.00 live=77.00 lastValid=77.00 effective=77.00
+[2026-06-08 10:47:33,319] INFO - [LalaPlugin:Fuel Burn] runtime burn basis selected source=SIMHUB burn=3.260 liveAccepted=0 fallback=3.260 profileFuel=0.000 reason=simhub-last-resort
+[2026-06-08 10:47:33,323] INFO - [LalaPlugin:Pace] source=fallback.none lap=0.000s stint=0.000s last5=0.000s profile=0.000s
+[2026-06-08 10:47:33,323] INFO - [LalaPlugin:Drive Time Projection] After 0 Source Change from= to=planner live valid=False timer0 seen=False
+[2026-06-08 10:47:33,359] INFO - [LalaPlugin:Pit Window] state=6 label=N/A reqAdd=0.0 tankSpace=77.0 lap=1 confStable=0% confOverall=0% reqStops=1 closeLap=0
+[2026-06-08 10:47:33,413] INFO - [LalaPlugin:Opponents] Opponents subsystem active (eligible live session).
+[2026-06-08 10:47:33,571] WARN - [LalaPlugin:H2H] Native class session-best lap unavailable; legacy IRacingExtraProperties fallback is removed. H2H class-best output remains 0 until native class-best is available.
+[2026-06-08 10:47:33,616] INFO - [LalaPlugin:CarSA] Class rank map built using DriverInfo.Drivers.CarClassRelSpeed (1 classes)
+[2026-06-08 10:47:33,630] WARN - [LalaPlugin:Messaging] Legacy IRacingExtraProperties traffic fast-path disabled. MessagingSystem now uses native/session opponent context only; output may remain empty when no native context is available.
+[2026-06-08 10:47:33,668] WARN - [LalaPlugin:MSGV1] Signal 'TrafficBehindGapSeconds' has no native/plugin-owned authority. Legacy IRacingExtraProperties fallback is removed; signal remains unavailable.
+[2026-06-08 10:47:33,669] WARN - [LalaPlugin:MSGV1] Signal 'TrafficBehindDistanceM' has no native/plugin-owned authority. Legacy IRacingExtraProperties fallback is removed; signal remains unavailable.
+[2026-06-08 10:47:33,669] WARN - [LalaPlugin:MSGV1] Signal 'SlowDownTimeRemaining' has no native/plugin-owned authority. Legacy IRacingExtraProperties fallback is removed; signal remains unavailable.
+[2026-06-08 10:47:33,704] INFO - [LalaPlugin:Profile] New live combo detected. Auto-selecting profile for Car='McLaren 720S GT3 EVO', Track='imola gp'.
+[2026-06-08 10:47:33,747] INFO - [LalaPlugin:Profiles] Track resolved: key='imola gp', display='imola gp'
+[2026-06-08 10:47:33,771] INFO - [LalaPlugin:Leader Lap] CalculateStrategy: estLap=165.500, leaderDelta=0.200, leaderLap=165.300
+[2026-06-08 10:47:33,771] INFO - [LalaPlugin:Leader Lap] CalculateStrategy: estLap=102.500, leaderDelta=0.200, leaderLap=102.300
+[2026-06-08 10:47:33,821] INFO - [LalaPlugin:Runtime] fuel health check queued (reason: car active edge).
+[2026-06-08 10:47:33,876] INFO - [LalaPlugin:Leader Lap] CalculateStrategy: estLap=165.500, leaderDelta=0.200, leaderLap=165.300
+[2026-06-08 10:47:33,877] INFO - [LalaPlugin:Leader Lap] CalculateStrategy: estLap=102.500, leaderDelta=0.200, leaderLap=102.300
+[2026-06-08 10:47:33,878] INFO - [LalaPlugin:Strategy] UpdateLiveDisplay: live max tank refresh 77.00L.
+[2026-06-08 10:47:34,574] INFO - [LalaPlugin:Fuel Burn] runtime burn basis selected source=PROFILE burn=3.200 liveAccepted=0 fallback=3.260 profileFuel=3.200 reason=profile-before-simhub
+[2026-06-08 10:47:34,577] INFO - [LalaPlugin:Drive Time Projection] projection=drive_time lapsProj=35.44 simLaps=0.00 deltaLaps=+35.44 lapRef=102.50s after0Used=68.0s src=planner tRemain=3565.0 driveRemain=3633.0s
+[2026-06-08 10:47:34,595] INFO - [LalaPlugin:Runtime] fuel health check passed reason=car active edge raw=77.00 runtime=77.00 src=raw strategyMissing=False
+[2026-06-08 10:47:38,710] INFO - [LalaPlugin:Pace] source=profile.avg lap=102.500s stint=0.000s last5=0.000s profile=102.500s
+[2026-06-08 10:47:54,148] INFO - Starting dashboard DashTemplates\Lala Fuel Calculator\Lala Fuel Calculator.djson (HTMLWebView2) : TopMost, No window activate
+[2026-06-08 10:47:58,395] INFO - Web client connected : 127.0.0.1, SimHubWebView2
+[2026-06-08 10:47:58,558] INFO - Active dash on 127.0.0.1 : Lala Fuel Calculator
+[2026-06-08 10:49:23,959] INFO - [LalaPlugin:CarSA] CarSA enabled (source=CarIdxTruth, slots=5/5)
+[2026-06-08 10:49:23,960] INFO - [CarSA] BestLap fallback now using DriverInfo CarClassEstLapTime until best lap available.
+[2026-06-08 10:49:24,030] INFO - Loaded IRacing Suspension pre-calibration data
+[2026-06-08 10:49:24,059] INFO - [LalaPlugin:Dash] Ignition off detected – auto dash re-armed.
+[2026-06-08 10:49:26,530] INFO - [LalaPlugin:Runtime] fuel health check queued (reason: car active edge).
+[2026-06-08 10:49:26,949] INFO - [LalaPlugin:Runtime] fuel health check passed reason=car active edge raw=77.00 runtime=77.00 src=raw strategyMissing=False
+[2026-06-08 10:49:28,006] INFO - [LalaPlugin:Runtime] fuel health check queued (reason: car active edge).
+[2026-06-08 10:49:28,377] INFO - [LalaPlugin:Runtime] fuel health check passed reason=car active edge raw=77.00 runtime=77.00 src=raw strategyMissing=False
+[2026-06-08 10:49:44,441] INFO - [LalaPlugin:Runtime] fuel health check queued (reason: active driving edge).
+[2026-06-08 10:49:44,799] INFO - [LalaPlugin:Runtime] fuel health check passed reason=active driving edge raw=77.00 runtime=77.00 src=raw strategyMissing=False
+[2026-06-08 10:50:33,740] INFO - New fuel stat aggregated 2.44/lap
+[2026-06-08 10:50:37,412] INFO - [LalaPlugin:Finish] end_phase phase=AfterZeroLeaderRunning(2) conf=3 state=4 timed=True tRemain=-1.0
+[2026-06-08 10:50:37,412] INFO - [LalaPlugin:Finish] last_lap_likely=True phase=AfterZeroLeaderRunning state=4 timed=True tRemain=-1.0
+[2026-06-08 10:50:38,534] INFO - [LalaPlugin:Finish] end_phase phase=Running(1) conf=3 state=4 timed=True tRemain=3597.7
+[2026-06-08 10:50:38,535] INFO - [LalaPlugin:Finish] last_lap_likely=False phase=Running state=4 timed=True tRemain=3597.7
+[2026-06-08 10:50:38,541] INFO - [LalaPlugin:PitExit] Predictor valid -> true (pitLoss=28.0s)
+[2026-06-08 10:50:38,819] INFO - [LalaPlugin:Pit Window] state=4 label=SET FUEL! reqAdd=0.0 tankSpace=1.2 lap=1 confStable=15% confOverall=0% reqStops=1 closeLap=0
+[2026-06-08 10:52:26,158] INFO - New fuel stat aggregated 3.24/lap
+[2026-06-08 10:52:26,375] INFO - [LalaPlugin:Leader Lap] no valid leader lap time from any candidate – returning 0
+[2026-06-08 10:52:26,387] INFO - [LalaPlugin:PACE] Lap 1: ok=False reason=race-warmup lap_s=0.000 baseline_s=- delta_s=- stint_avg_s=0.000 last5_avg_s=0.000 conf_pct=0 leader_lap_s=0.000 leader_avg_s=0.000 leader_samples=0 posClass=P4 posOverall=P4 gapLdr=6.0
+[2026-06-08 10:52:26,387] INFO - [LalaPlugin:FUEL PER LAP] Lap 1: ok=False reason=pace-rejected mode=dry live_fpl=3.200 window_dry=0 window_wet=0 max_session_fpl=0.000 fuel_conf_pct=0 overall_conf_pct=0 pit_trip_active=False
+[2026-06-08 10:52:26,387] INFO - [LalaPlugin:FUEL DELTA] Lap 1: current_l=72.7 required_l=111.1 delta_l=-43.2 stable_fpl=3.200 stable_laps=34.72
+[2026-06-08 10:52:26,387] INFO - [LalaPlugin:RACE PROJECTION] Lap 1: after_zero_used_s=68.0 source=planner timer0_s=n/a session_remain_s=3490.0 projected_laps=34.72 projection_lap_s=102.500 projected_remain_s=3558.5
+[2026-06-08 10:52:26,425] INFO - [LalaPlugin:Drive Time Projection] tRemain=3490.0 after0Used=68.0s src=planner lapsProj=34.71 simLaps=35.44 lapRef=102.500s lapRefSrc=profile.avg after0Observed=0.0s state=4 mode=race-running
+[2026-06-08 10:52:27,996] INFO - Old map quality score : 7 / New map quality score : 5
+[2026-06-08 10:52:27,996] INFO - New session best recorded 00:01:49.7660000
+[2026-06-08 10:52:27,997] INFO - New valid lap detected : 00:01:49.7660000, (LapId :7832abc3-cbbf-482f-91e5-e079b3f59ac8)
+[2026-06-08 10:52:28,000] INFO - Fuel stats tracking resetted
+[2026-06-08 10:54:09,928] INFO - New fuel stat aggregated 3.22/lap
+[2026-06-08 10:54:10,078] INFO - [LalaPlugin:Leader Lap] no valid leader lap time from any candidate – returning 0
+[2026-06-08 10:54:10,083] INFO - [LalaPlugin:LapRef] Session best updated (dry): 109.766s
+[2026-06-08 10:54:10,112] INFO - [LalaPlugin:PACE] Lap 2: ok=True reason=accepted lap_s=109.766 baseline_s=- delta_s=- stint_avg_s=109.766 last5_avg_s=109.766 conf_pct=21 leader_lap_s=0.000 leader_avg_s=0.000 leader_samples=0 posClass=P4 posOverall=P4 gapLdr=3.7
+[2026-06-08 10:54:10,112] INFO - [LalaPlugin:FUEL PER LAP] Lap 2: ok=True reason=accepted mode=dry live_fpl=3.228 window_dry=1 window_wet=0 max_session_fpl=3.228 fuel_conf_pct=17 overall_conf_pct=4 pit_trip_active=False
+[2026-06-08 10:54:10,113] INFO - [LalaPlugin:FUEL DELTA] Lap 2: current_l=69.4 required_l=107.9 delta_l=-43.2 stable_fpl=3.200 stable_laps=33.71
+[2026-06-08 10:54:10,113] INFO - [LalaPlugin:RACE PROJECTION] Lap 2: after_zero_used_s=68.0 source=planner timer0_s=n/a session_remain_s=3386.3 projected_laps=33.71 projection_lap_s=102.500 projected_remain_s=3454.8
+[2026-06-08 10:54:10,115] INFO - [LalaPlugin:Drive Time Projection] projection=drive_time lapsProj=33.77 simLaps=35.44 deltaLaps=-1.68 lapRef=102.50s after0Used=74.9s src=planner tRemain=3386.3 driveRemain=3461.2s
+[2026-06-08 10:54:10,115] INFO - [LalaPlugin:Drive Time Projection] tRemain=3386.3 after0Used=74.9s src=planner lapsProj=33.77 simLaps=35.44 lapRef=102.500s lapRefSrc=profile.avg after0Observed=0.0s state=4 mode=race-running
+[2026-06-08 10:54:11,078] INFO - [LalaPlugin:MonitorSystem] pit trigger=FuelControlModeChanged sessionTime=378.733 sessionType=Race sessionState=4 phase=OnTrack monitorState=ON monitorEnum=1 monitorText=FUEL HEALTH OK onPitRoad=False inPitStall=False currentFuel=69.385 mode=MAN data=LIVE mfdRefuelEnabled=True mfdFuelRequest=1 pluginRefuelValid=True pluginNextLitres=43.437 pluginFuelOnExit=112.822 warningText=none warningEnum=0 reason=from=OFF to=MAN
+[2026-06-08 10:54:11,128] INFO - [LalaPlugin:Pit Window] state=7 label=TANK SPACE reqAdd=1.0 tankSpace=7.6 lap=3 confStable=17% confOverall=4% reqStops=1 closeLap=24
+[2026-06-08 10:54:11,137] INFO - [LalaPlugin:PitFuelControl] blocked action=OnTelemetryTick reason=external-mirror-change
+[2026-06-08 10:54:11,649] INFO - [LalaPlugin:PitFuelControl] blocked action=OnTelemetryTick reason=external-mirror-change
+[2026-06-08 10:54:11,879] INFO - Old map quality score : 7 / New map quality score : 5
+[2026-06-08 10:54:11,879] INFO - New session best recorded 00:01:43.6440000
+[2026-06-08 10:54:11,879] INFO - New valid lap detected : 00:01:43.6440000, (LapId :f8a1a1f8-0391-4e5e-b3ea-5c04ddcc4399)
+[2026-06-08 10:54:11,881] INFO - Storing lap consumption : 3.23, lap start : 72.59, lap end : 69.36
+[2026-06-08 10:54:12,159] INFO - [LalaPlugin:PitFuelControl] blocked action=OnTelemetryTick reason=external-mirror-change
+[2026-06-08 10:54:12,661] INFO - [LalaPlugin:PitFuelControl] blocked action=OnTelemetryTick reason=external-mirror-change
+[2026-06-08 10:54:13,175] INFO - [LalaPlugin:PitFuelControl] blocked action=OnTelemetryTick reason=external-mirror-change
+[2026-06-08 10:54:13,856] INFO - [LalaPlugin:PitFuelControl] blocked action=OnTelemetryTick reason=external-mirror-change
+[2026-06-08 10:54:14,363] INFO - [LalaPlugin:PitFuelControl] blocked action=OnTelemetryTick reason=external-mirror-change
+[2026-06-08 10:54:14,869] INFO - [LalaPlugin:PitFuelControl] blocked action=OnTelemetryTick reason=external-mirror-change
+[2026-06-08 10:54:15,389] INFO - [LalaPlugin:PitFuelControl] blocked action=OnTelemetryTick reason=external-mirror-change
+[2026-06-08 10:54:15,911] INFO - [LalaPlugin:PitFuelControl] blocked action=OnTelemetryTick reason=external-mirror-change
+[2026-06-08 10:54:16,435] INFO - [LalaPlugin:PitFuelControl] blocked action=OnTelemetryTick reason=external-mirror-change
+[2026-06-08 10:54:16,968] INFO - [LalaPlugin:PitFuelControl] blocked action=OnTelemetryTick reason=external-mirror-change
+[2026-06-08 10:54:17,473] INFO - [LalaPlugin:PitFuelControl] blocked action=OnTelemetryTick reason=external-mirror-change
+[2026-06-08 10:55:50,628] INFO - [LalaPlugin:PitExit] Predicted class position changed -> P39 (ahead=38)
+[2026-06-08 10:55:52,410] INFO - New fuel stat aggregated 3.22/lap
+[2026-06-08 10:55:52,824] INFO - [LalaPlugin:Leader Lap] no valid leader lap time from any candidate – returning 0
+[2026-06-08 10:55:52,871] INFO - [LalaPlugin:LapRef] Session best updated (dry): 103.644s
+[2026-06-08 10:55:52,877] INFO - [LalaPlugin:PACE] Lap 3: ok=True reason=accepted lap_s=103.644 baseline_s=109.766 delta_s=-6.122 stint_avg_s=106.705 last5_avg_s=106.705 conf_pct=48 leader_lap_s=0.000 leader_avg_s=0.000 leader_samples=0 posClass=P4 posOverall=P4 gapLdr=4.2
+[2026-06-08 10:55:52,878] INFO - [LalaPlugin:FUEL PER LAP] Lap 3: ok=True reason=accepted mode=dry live_fpl=3.222 window_dry=2 window_wet=0 max_session_fpl=3.228 fuel_conf_pct=40 overall_conf_pct=19 pit_trip_active=False
+[2026-06-08 10:55:52,878] INFO - [LalaPlugin:FUEL DELTA] Lap 3: current_l=66.2 required_l=104.9 delta_l=-43.4 stable_fpl=3.200 stable_laps=32.77
+[2026-06-08 10:55:52,878] INFO - [LalaPlugin:RACE PROJECTION] Lap 3: after_zero_used_s=74.9 source=planner timer0_s=n/a session_remain_s=3283.7 projected_laps=32.77 projection_lap_s=102.500 projected_remain_s=3359.1
+[2026-06-08 10:55:52,881] INFO - [LalaPlugin:Drive Time Projection] tRemain=3283.7 after0Used=74.9s src=planner lapsProj=32.77 simLaps=35.44 lapRef=102.500s lapRefSrc=profile.avg after0Observed=0.0s state=4 mode=race-running
+[2026-06-08 10:55:54,352] INFO - Old map quality score : 7 / New map quality score : 5
+[2026-06-08 10:55:54,353] INFO - New session best recorded 00:01:42.5960000
+[2026-06-08 10:55:54,353] INFO - New valid lap detected : 00:01:42.5960000, (LapId :6d94f5e7-f8b1-44be-9cab-7241cdf5b3bb)
+[2026-06-08 10:55:54,353] INFO - Storing lap consumption : 3.22, lap start : 69.36, lap end : 66.14
+[2026-06-08 10:56:16,124] INFO - New fuel stat aggregated 3.08/lap
+[2026-06-08 10:56:18,757] INFO - New fuel stat aggregated 3.30/lap
+[2026-06-08 10:56:19,048] INFO - Old map quality score : 7 / New map quality score : 5
+[2026-06-08 10:56:19,048] INFO - New valid lap detected : 00:01:43.1310000, (LapId :f5d3bc35-a7fa-4b60-953f-868648d852f9)
+[2026-06-08 10:56:19,048] INFO - Storing lap consumption : 3.35, lap start : 66.14, lap end : 62.78
+[2026-06-08 10:56:19,100] INFO - [LalaPlugin:Lap Detector] lap_crossed source=CompletedLaps lap=4 prev_lap=3 trackpct.last=0.946 trackpct.cur=0.067 near_sf=False far_from_sf=False pct_impossible=False speed_kmh=251.9 session_state=4
+[2026-06-08 10:56:19,100] INFO - [LalaPlugin:Leader Lap] no valid leader lap time from any candidate – returning 0
+[2026-06-08 10:56:19,100] INFO - [LalaPlugin:LapRef] Session best updated (dry): 103.131s
+[2026-06-08 10:56:19,106] INFO - [LalaPlugin:PACE] Lap 4: ok=True reason=accepted lap_s=103.131 baseline_s=106.705 delta_s=-3.574 stint_avg_s=105.514 last5_avg_s=105.514 conf_pct=50 leader_lap_s=0.000 leader_avg_s=0.000 leader_samples=0 posClass=P4 posOverall=P4 gapLdr=5.3
+[2026-06-08 10:56:19,106] INFO - [LalaPlugin:FUEL PER LAP] Lap 4: ok=True reason=accepted mode=dry live_fpl=3.290 window_dry=3 window_wet=0 max_session_fpl=3.427 fuel_conf_pct=60 overall_conf_pct=30 pit_trip_active=False
+[2026-06-08 10:56:19,106] INFO - [LalaPlugin:FUEL DELTA] Lap 4: current_l=62.8 required_l=101.8 delta_l=-43.4 stable_fpl=3.200 stable_laps=31.80
+[2026-06-08 10:56:19,106] INFO - [LalaPlugin:RACE PROJECTION] Lap 4: after_zero_used_s=74.9 source=planner timer0_s=n/a session_remain_s=3176.0 projected_laps=31.80 projection_lap_s=102.500 projected_remain_s=3260.0
+[2026-06-08 10:56:19,108] INFO - [LalaPlugin:Pace] source=pace.stint lap=105.500s stint=105.514s last5=105.514s profile=102.500s
+[2026-06-08 10:56:19,109] INFO - [LalaPlugin:Drive Time Projection] tRemain=3176.0 after0Used=74.9s src=planner lapsProj=30.81 simLaps=35.44 lapRef=105.500s lapRefSrc=pace.stint after0Observed=0.0s state=4 mode=race-running
+[2026-06-08 10:56:21,362] INFO - New fuel stat aggregated 3.70/lap
+[2026-06-08 10:56:23,169] INFO - [LalaPlugin:PitExit] Predicted class position changed -> P40 (ahead=39)
+[2026-06-08 10:56:24,125] INFO - Old map quality score : 7 / New map quality score : 6
+[2026-06-08 10:56:24,126] INFO - New session best recorded 00:01:42.1710000
+[2026-06-08 10:56:24,126] INFO - New valid lap detected : 00:01:42.1710000, (LapId :302ddacb-23ae-4c50-a96c-fddb2260cdc9)
+[2026-06-08 10:56:24,127] INFO - Storing lap consumption : 3.23, lap start : 62.78, lap end : 59.55
+[2026-06-08 10:56:24,201] INFO - New fuel stat aggregated 3.43/lap
+[2026-06-08 10:56:24,211] INFO - [LalaPlugin:Lap Detector] lap_crossed source=CompletedLaps lap=5 prev_lap=4 trackpct.last=0.990 trackpct.cur=0.055 near_sf=False far_from_sf=False pct_impossible=False speed_kmh=249.1 session_state=4
+[2026-06-08 10:56:24,211] INFO - [LalaPlugin:Leader Lap] no valid leader lap time from any candidate – returning 0
+[2026-06-08 10:56:24,212] INFO - [LalaPlugin:PACE] Lap 5: ok=False reason=incident:WrongWay lap_s=102.171 baseline_s=105.514 delta_s=-3.343 stint_avg_s=105.514 last5_avg_s=105.514 conf_pct=50 leader_lap_s=0.000 leader_avg_s=0.000 leader_samples=0 posClass=P4 posOverall=P4 gapLdr=4.6
+[2026-06-08 10:56:24,212] INFO - [LalaPlugin:FUEL PER LAP] Lap 5: ok=False reason=pace-rejected mode=dry live_fpl=3.290 window_dry=3 window_wet=0 max_session_fpl=3.427 fuel_conf_pct=60 overall_conf_pct=30 pit_trip_active=False
+[2026-06-08 10:56:24,212] INFO - [LalaPlugin:FUEL DELTA] Lap 5: current_l=59.6 required_l=98.4 delta_l=-43.5 stable_fpl=3.290 stable_laps=29.90
+[2026-06-08 10:56:24,212] INFO - [LalaPlugin:RACE PROJECTION] Lap 5: after_zero_used_s=74.9 source=planner timer0_s=n/a session_remain_s=3074.6 projected_laps=29.90 projection_lap_s=105.500 projected_remain_s=3154.4
+[2026-06-08 10:56:24,214] INFO - [LalaPlugin:Drive Time Projection] tRemain=3074.6 after0Used=74.9s src=planner lapsProj=29.85 simLaps=35.44 lapRef=105.500s lapRefSrc=pace.stint after0Observed=0.0s state=4 mode=race-running
+[2026-06-08 10:56:26,028] INFO - New fuel stat aggregated 3.25/lap
+[2026-06-08 10:56:43,169] INFO - Starting dashboard DashTemplates\Lala Strategy Secondary Dash\Lala Strategy Secondary Dash.djson (HTMLWebView2) : TopMost, No window activate
+[2026-06-08 10:56:44,734] INFO - Web client connected : 127.0.0.1, SimHubWebView2
+[2026-06-08 10:56:45,147] INFO - Active dash on 127.0.0.1 : Lala Strategy Secondary Dash
+[2026-06-08 10:57:45,072] INFO - New fuel stat aggregated 3.41/lap
+[2026-06-08 10:57:45,084] INFO - [LalaPlugin:Lap Detector] lap_crossed source=CompletedLaps lap=6 prev_lap=5 trackpct.last=0.905 trackpct.cur=0.001 near_sf=False far_from_sf=False pct_impossible=False speed_kmh=235.9 session_state=4
+[2026-06-08 10:57:45,084] INFO - [LalaPlugin:Leader Lap] no valid leader lap time from any candidate – returning 0
+[2026-06-08 10:57:45,085] INFO - [LalaPlugin:PACE] Lap 6: ok=False reason=incident:WrongWay lap_s=102.171 baseline_s=105.514 delta_s=-3.343 stint_avg_s=105.514 last5_avg_s=105.514 conf_pct=50 leader_lap_s=0.000 leader_avg_s=0.000 leader_samples=0 posClass=P4 posOverall=P4 gapLdr=2.7
+[2026-06-08 10:57:45,085] INFO - [LalaPlugin:FUEL PER LAP] Lap 6: ok=False reason=pace-rejected mode=dry live_fpl=3.290 window_dry=3 window_wet=0 max_session_fpl=3.427 fuel_conf_pct=60 overall_conf_pct=30 pit_trip_active=False
+[2026-06-08 10:57:45,085] INFO - [LalaPlugin:FUEL DELTA] Lap 6: current_l=56.5 required_l=95.4 delta_l=-43.5 stable_fpl=3.290 stable_laps=29.00
+[2026-06-08 10:57:45,085] INFO - [LalaPlugin:RACE PROJECTION] Lap 6: after_zero_used_s=74.9 source=planner timer0_s=n/a session_remain_s=2976.4 projected_laps=29.00 projection_lap_s=105.500 projected_remain_s=3059.3
+[2026-06-08 10:57:45,087] INFO - [LalaPlugin:Drive Time Projection] tRemain=2976.4 after0Used=74.9s src=planner lapsProj=28.92 simLaps=35.44 lapRef=105.500s lapRefSrc=pace.stint after0Observed=0.0s state=4 mode=race-running
+[2026-06-08 10:57:45,580] INFO - Old map quality score : 7 / New map quality score : 5
+[2026-06-08 10:57:45,581] INFO - New valid lap detected : 00:01:42.2010000, (LapId :7e6afda8-c730-4420-bd5b-d61d9710f348)
+[2026-06-08 10:57:45,581] INFO - Storing lap consumption : 3.36, lap start : 59.55, lap end : 56.20
+[2026-06-08 10:57:46,447] INFO - [LalaPlugin:PitExit] Predicted class position changed -> P33 (ahead=32)
+[2026-06-08 10:57:46,740] INFO - [LalaPlugin:PitExit] Predicted class position changed -> P37 (ahead=36)
+[2026-06-08 10:57:47,692] INFO - New fuel stat aggregated 3.37/lap
+[2026-06-08 10:57:49,219] INFO - New fuel stat aggregated 3.27/lap
+[2026-06-08 10:57:49,846] INFO - [LalaPlugin:PitExit] Predicted class position changed -> P38 (ahead=37)
+[2026-06-08 10:57:50,238] INFO - New fuel stat aggregated 3.23/lap
+[2026-06-08 10:57:50,476] INFO - Old map quality score : 7 / New map quality score : 6
+[2026-06-08 10:57:50,477] INFO - New valid lap detected : 00:01:42.7090000, (LapId :ee3c3497-6d5e-44cf-8cd4-14cc1b39fa44)
+[2026-06-08 10:57:50,478] INFO - Storing lap consumption : 3.07, lap start : 56.20, lap end : 53.12
+[2026-06-08 10:57:50,544] INFO - [LalaPlugin:Lap Detector] lap_crossed source=CompletedLaps lap=7 prev_lap=6 trackpct.last=0.928 trackpct.cur=0.025 near_sf=False far_from_sf=False pct_impossible=False speed_kmh=244.8 session_state=4
+[2026-06-08 10:57:50,544] INFO - [LalaPlugin:Leader Lap] no valid leader lap time from any candidate – returning 0
+[2026-06-08 10:57:50,544] INFO - [LalaPlugin:LapRef] Session best updated (dry): 102.709s
+[2026-06-08 10:57:50,550] INFO - [LalaPlugin:PACE] Lap 7: ok=True reason=accepted lap_s=102.709 baseline_s=105.514 delta_s=-2.805 stint_avg_s=104.813 last5_avg_s=104.813 conf_pct=62 leader_lap_s=0.000 leader_avg_s=0.000 leader_samples=0 posClass=P3 posOverall=P3 gapLdr=1.5
+[2026-06-08 10:57:50,550] INFO - [LalaPlugin:FUEL PER LAP] Lap 7: ok=True reason=accepted mode=dry live_fpl=3.303 window_dry=4 window_wet=0 max_session_fpl=3.427 fuel_conf_pct=80 overall_conf_pct=50 pit_trip_active=False
+[2026-06-08 10:57:50,550] INFO - [LalaPlugin:FUEL DELTA] Lap 7: current_l=53.1 required_l=92.1 delta_l=-43.6 stable_fpl=3.290 stable_laps=28.00
+[2026-06-08 10:57:50,550] INFO - [LalaPlugin:RACE PROJECTION] Lap 7: after_zero_used_s=74.9 source=planner timer0_s=n/a session_remain_s=2871.9 projected_laps=28.00 projection_lap_s=105.500 projected_remain_s=2954.4
+[2026-06-08 10:57:50,552] INFO - [LalaPlugin:Pace] source=pace.stint lap=104.800s stint=104.813s last5=104.813s profile=102.500s
+[2026-06-08 10:57:50,552] INFO - [LalaPlugin:Drive Time Projection] tRemain=2871.9 after0Used=74.9s src=planner lapsProj=28.12 simLaps=35.44 lapRef=104.800s lapRefSrc=pace.stint after0Observed=0.0s state=4 mode=race-running
+[2026-06-08 10:57:51,561] INFO - [LalaPlugin:PitExit] Predicted class position changed -> P33 (ahead=32)
+[2026-06-08 10:57:51,852] INFO - [LalaPlugin:PitExit] Predicted class position changed -> P35 (ahead=34)
+[2026-06-08 10:57:52,091] INFO - [LalaPlugin:PitExit] Predicted class position changed -> P37 (ahead=36)
+[2026-06-08 10:57:52,628] INFO - New fuel stat aggregated 3.92/lap
+[2026-06-08 10:57:53,741] INFO - New fuel stat aggregated 2.91/lap
+[2026-06-08 10:57:55,318] INFO - New fuel stat aggregated 3.36/lap
+[2026-06-08 10:57:55,634] INFO - Old map quality score : 7 / New map quality score : 6
+[2026-06-08 10:57:55,635] INFO - New session best recorded 00:01:41.9270000
+[2026-06-08 10:57:55,635] INFO - New valid lap detected : 00:01:41.9270000, (LapId :3386e4d4-0fbb-483c-bc4e-3145210f2d87)
+[2026-06-08 10:57:55,635] INFO - Storing lap consumption : 3.24, lap start : 53.12, lap end : 49.89
+[2026-06-08 10:57:55,708] INFO - [LalaPlugin:Leader Lap] no valid leader lap time from any candidate – returning 0
+[2026-06-08 10:57:55,708] INFO - [LalaPlugin:LapRef] Session best updated (dry): 101.927s
+[2026-06-08 10:57:55,715] INFO - [LalaPlugin:PACE] Lap 8: ok=True reason=accepted lap_s=101.927 baseline_s=104.813 delta_s=-2.885 stint_avg_s=104.235 last5_avg_s=104.235 conf_pct=72 leader_lap_s=0.000 leader_avg_s=0.000 leader_samples=0 posClass=P3 posOverall=P3 gapLdr=1.1
+[2026-06-08 10:57:55,715] INFO - [LalaPlugin:FUEL PER LAP] Lap 8: ok=True reason=accepted mode=dry live_fpl=3.290 window_dry=5 window_wet=0 max_session_fpl=3.427 fuel_conf_pct=100 overall_conf_pct=72 pit_trip_active=False
+[2026-06-08 10:57:55,715] INFO - [LalaPlugin:FUEL DELTA] Lap 8: current_l=49.9 required_l=89.5 delta_l=-44.3 stable_fpl=3.290 stable_laps=27.19
+[2026-06-08 10:57:55,716] INFO - [LalaPlugin:RACE PROJECTION] Lap 8: after_zero_used_s=74.9 source=planner timer0_s=n/a session_remain_s=2769.6 projected_laps=27.19 projection_lap_s=104.800 projected_remain_s=2850.0
+[2026-06-08 10:57:55,717] INFO - [LalaPlugin:Pace] source=pace.stint lap=104.200s stint=104.235s last5=104.235s profile=102.500s
+[2026-06-08 10:57:55,717] INFO - [LalaPlugin:Drive Time Projection] tRemain=2769.6 after0Used=74.9s src=planner lapsProj=27.30 simLaps=35.44 lapRef=104.200s lapRefSrc=pace.stint after0Observed=0.0s state=4 mode=race-running
+[2026-06-08 10:57:55,958] INFO - [LalaPlugin:PitExit] Predicted class position changed -> P33 (ahead=32)
+[2026-06-08 10:57:56,240] INFO - [LalaPlugin:PitExit] Predicted class position changed -> P36 (ahead=35)
+[2026-06-08 10:57:56,750] INFO - [LalaPlugin:PitExit] Predicted class position changed -> P33 (ahead=32)
+[2026-06-08 10:57:57,256] INFO - [LalaPlugin:PitExit] Predicted class position changed -> P37 (ahead=36)
+[2026-06-08 10:57:57,806] INFO - New fuel stat aggregated 3.95/lap
+[2026-06-08 10:57:58,956] INFO - New fuel stat aggregated 3.12/lap
+[2026-06-08 10:57:59,266] INFO - [LalaPlugin:PitExit] Predicted class position changed -> P38 (ahead=37)
+[2026-06-08 10:58:02,350] INFO - [LalaPlugin:PitExit] Predicted class position changed -> P37 (ahead=36)
+[2026-06-08 10:58:13,610] INFO - [LalaPlugin:PitExit] Predicted class position changed -> P38 (ahead=37)
+[2026-06-08 10:58:14,662] INFO - New fuel stat aggregated 3.48/lap
+[2026-06-08 10:58:14,671] INFO - [LalaPlugin:Lap Detector] lap_crossed source=CompletedLaps lap=9 prev_lap=8 trackpct.last=0.935 trackpct.cur=0.010 near_sf=False far_from_sf=False pct_impossible=False speed_kmh=241.5 session_state=4
+[2026-06-08 10:58:14,672] INFO - [LalaPlugin:Leader Lap] no valid leader lap time from any candidate – returning 0
+[2026-06-08 10:58:14,672] INFO - [LalaPlugin:LapRef] Session best updated (dry): 101.927s
+[2026-06-08 10:58:14,714] INFO - [LalaPlugin:PACE] Lap 9: ok=True reason=accepted lap_s=101.927 baseline_s=104.235 delta_s=-2.308 stint_avg_s=103.851 last5_avg_s=102.668 conf_pct=72 leader_lap_s=0.000 leader_avg_s=0.000 leader_samples=0 posClass=P3 posOverall=P3 gapLdr=1.2
+[2026-06-08 10:58:14,714] INFO - [LalaPlugin:FUEL PER LAP] Lap 9: ok=True reason=accepted mode=dry live_fpl=3.284 window_dry=5 window_wet=0 max_session_fpl=3.427 fuel_conf_pct=100 overall_conf_pct=72 pit_trip_active=False
+[2026-06-08 10:58:14,714] INFO - [LalaPlugin:FUEL DELTA] Lap 9: current_l=46.7 required_l=86.8 delta_l=-44.8 stable_fpl=3.290 stable_laps=26.38
+[2026-06-08 10:58:14,714] INFO - [LalaPlugin:RACE PROJECTION] Lap 9: after_zero_used_s=74.9 source=planner timer0_s=n/a session_remain_s=2668.0 projected_laps=26.38 projection_lap_s=104.200 projected_remain_s=2748.7
+[2026-06-08 10:58:14,716] INFO - [LalaPlugin:Drive Time Projection] tRemain=2668.0 after0Used=74.9s src=planner lapsProj=26.32 simLaps=35.44 lapRef=104.200s lapRefSrc=pace.stint after0Observed=0.0s state=4 mode=race-running
+[2026-06-08 10:58:14,953] INFO - Old map quality score : 7 / New map quality score : 6
+[2026-06-08 10:58:14,954] INFO - New valid lap detected : 00:01:43.1320000, (LapId :24daac35-d4d1-454c-bdd8-ad44700f58d7)
+[2026-06-08 10:58:14,954] INFO - Storing lap consumption : 3.28, lap start : 49.89, lap end : 46.61
+[2026-06-08 10:58:15,464] INFO - [LalaPlugin:PitExit] Predicted class position changed -> P34 (ahead=33)
+[2026-06-08 10:58:15,728] INFO - [LalaPlugin:PitExit] Predicted class position changed -> P32 (ahead=31)
+[2026-06-08 10:58:15,973] INFO - [LalaPlugin:PitExit] Predicted class position changed -> P36 (ahead=35)
+[2026-06-08 10:58:16,509] INFO - New fuel stat aggregated 2.99/lap
+[2026-06-08 10:58:16,514] INFO - [LalaPlugin:PitExit] Predicted class position changed -> P30 (ahead=29)
+[2026-06-08 10:58:17,131] INFO - [LalaPlugin:PitExit] Predicted class position changed -> P33 (ahead=32)
+[2026-06-08 10:58:17,422] INFO - [LalaPlugin:PitExit] Predicted class position changed -> P36 (ahead=35)
+[2026-06-08 10:58:17,639] INFO - New fuel stat aggregated 2.83/lap
+[2026-06-08 10:58:18,942] INFO - New fuel stat aggregated 3.06/lap
+[2026-06-08 10:58:20,194] INFO - [LalaPlugin:PitExit] Predicted class position changed -> P38 (ahead=37)
+[2026-06-08 10:58:20,523] INFO - New fuel stat aggregated 3.28/lap
+[2026-06-08 10:58:20,635] INFO - Old map quality score : 7 / New map quality score : 6
+[2026-06-08 10:58:20,636] INFO - New valid lap detected : 00:01:42.3780000, (LapId :a089c5f6-5f6a-4acd-bb4e-c9f378d45b8b)
+[2026-06-08 10:58:20,636] INFO - Storing lap consumption : 3.22, lap start : 46.61, lap end : 43.39
+[2026-06-08 10:58:21,087] INFO - [LalaPlugin:PitExit] Predicted class position changed -> P31 (ahead=30)
+[2026-06-08 10:58:21,091] INFO - [LalaPlugin:Lap Detector] lap_crossed source=CompletedLaps lap=10 prev_lap=9 trackpct.last=0.985 trackpct.cur=0.116 near_sf=False far_from_sf=False pct_impossible=False speed_kmh=241.5 session_state=4
+[2026-06-08 10:58:21,092] INFO - [LalaPlugin:Leader Lap] no valid leader lap time from any candidate – returning 0
+[2026-06-08 10:58:21,100] INFO - [LalaPlugin:PACE] Lap 10: ok=True reason=accepted lap_s=102.378 baseline_s=102.668 delta_s=-0.290 stint_avg_s=102.619 last5_avg_s=102.414 conf_pct=100 leader_lap_s=0.000 leader_avg_s=0.000 leader_samples=0 posClass=P3 posOverall=P3 gapLdr=1.6
+[2026-06-08 10:58:21,100] INFO - [LalaPlugin:FUEL PER LAP] Lap 10: ok=True reason=accepted mode=dry live_fpl=3.347 window_dry=5 window_wet=0 max_session_fpl=3.533 fuel_conf_pct=90 overall_conf_pct=90 pit_trip_active=False
+[2026-06-08 10:58:21,100] INFO - [LalaPlugin:FUEL DELTA] Lap 10: current_l=43.2 required_l=83.4 delta_l=-44.8 stable_fpl=3.290 stable_laps=25.36
+[2026-06-08 10:58:21,100] INFO - [LalaPlugin:RACE PROJECTION] Lap 10: after_zero_used_s=74.9 source=planner timer0_s=n/a session_remain_s=2558.2 projected_laps=25.36 projection_lap_s=104.200 projected_remain_s=2642.4
+[2026-06-08 10:58:21,101] INFO - [LalaPlugin:Pace] source=pace.stint lap=102.600s stint=102.619s last5=102.414s profile=102.500s
+[2026-06-08 10:58:21,101] INFO - [LalaPlugin:Drive Time Projection] tRemain=2558.2 after0Used=74.9s src=planner lapsProj=25.66 simLaps=35.44 lapRef=102.600s lapRefSrc=pace.stint after0Observed=0.0s state=4 mode=race-running
+[2026-06-08 10:58:21,345] INFO - [LalaPlugin:PitExit] Predicted class position changed -> P33 (ahead=32)
+[2026-06-08 10:58:21,582] INFO - [LalaPlugin:PitExit] Predicted class position changed -> P36 (ahead=35)
+[2026-06-08 10:58:21,819] INFO - New fuel stat aggregated 3.04/lap
+[2026-06-08 10:58:21,825] INFO - [LalaPlugin:PitExit] Predicted class position changed -> P32 (ahead=31)
+[2026-06-08 10:58:22,361] INFO - [LalaPlugin:PitExit] Predicted class position changed -> P33 (ahead=32)
+[2026-06-08 10:58:22,626] INFO - [LalaPlugin:PitExit] Predicted class position changed -> P36 (ahead=35)
+[2026-06-08 10:58:23,152] INFO - New fuel stat aggregated 4.59/lap
+[2026-06-08 10:58:24,471] INFO - New fuel stat aggregated 3.21/lap
+[2026-06-08 10:58:25,383] INFO - [LalaPlugin:PitExit] Predicted class position changed -> P38 (ahead=37)
+[2026-06-08 10:58:25,451] INFO - New fuel stat aggregated 3.05/lap
+[2026-06-08 10:58:25,657] INFO - New fuel stat aggregated 3.29/lap
+[2026-06-08 10:58:25,677] INFO - [LalaPlugin:Lap Detector] lap_crossed source=CompletedLaps lap=11 prev_lap=10 trackpct.last=0.862 trackpct.cur=0.011 near_sf=False far_from_sf=False pct_impossible=False speed_kmh=240.5 session_state=4
+[2026-06-08 10:58:25,677] INFO - [LalaPlugin:Leader Lap] no valid leader lap time from any candidate – returning 0
+[2026-06-08 10:58:25,697] INFO - Old map quality score : 7 / New map quality score : 5
+[2026-06-08 10:58:25,697] INFO - New valid lap detected : 00:01:42.2760000, (LapId :dc74fd36-f8f2-4f13-99d6-9a55bafc861d)
+[2026-06-08 10:58:25,721] INFO - [LalaPlugin:PACE] Lap 11: ok=True reason=accepted lap_s=102.378 baseline_s=102.414 delta_s=-0.036 stint_avg_s=102.408 last5_avg_s=102.264 conf_pct=100 leader_lap_s=0.000 leader_avg_s=0.000 leader_samples=0 posClass=P3 posOverall=P3 gapLdr=2.3
+[2026-06-08 10:58:25,722] INFO - [LalaPlugin:FUEL PER LAP] Lap 11: ok=True reason=accepted mode=dry live_fpl=3.250 window_dry=5 window_wet=0 max_session_fpl=3.533 fuel_conf_pct=90 overall_conf_pct=90 pit_trip_active=False
+[2026-06-08 10:58:25,722] INFO - [LalaPlugin:FUEL DELTA] Lap 11: current_l=40.2 required_l=83.3 delta_l=-47.5 stable_fpl=3.347 stable_laps=24.88
+[2026-06-08 10:58:25,722] INFO - [LalaPlugin:RACE PROJECTION] Lap 11: after_zero_used_s=74.9 source=planner timer0_s=n/a session_remain_s=2463.2 projected_laps=24.88 projection_lap_s=102.600 projected_remain_s=2552.2
+[2026-06-08 10:58:25,724] INFO - [LalaPlugin:Drive Time Projection] tRemain=2463.2 after0Used=74.9s src=planner lapsProj=24.74 simLaps=35.44 lapRef=102.600s lapRefSrc=pace.stint after0Observed=0.0s state=4 mode=race-running
+[2026-06-08 10:58:25,755] INFO - Storing lap consumption : 3.26, lap start : 43.39, lap end : 40.13
+[2026-06-08 10:58:26,242] INFO - [LalaPlugin:PitExit] Predicted class position changed -> P31 (ahead=30)
+[2026-06-08 10:58:26,760] INFO - [LalaPlugin:PitExit] Predicted class position changed -> P33 (ahead=32)
+[2026-06-08 10:58:27,008] INFO - [LalaPlugin:PitExit] Predicted class position changed -> P31 (ahead=30)
+[2026-06-08 10:58:27,281] INFO - [LalaPlugin:Pit Window] state=1 label=FUEL SAVE reqAdd=43.0 tankSpace=37.6 lap=12 confStable=90% confOverall=90% reqStops=1 closeLap=24
+[2026-06-08 10:58:27,772] INFO - [LalaPlugin:PitExit] Predicted class position changed -> P35 (ahead=34)
+[2026-06-08 10:58:28,039] INFO - New fuel stat aggregated 3.33/lap
+[2026-06-08 10:58:30,637] INFO - New fuel stat aggregated 3.35/lap
+[2026-06-08 10:58:30,984] INFO - Old map quality score : 7 / New map quality score : 6
+[2026-06-08 10:58:30,985] INFO - New session best recorded 00:01:41.7700000
+[2026-06-08 10:58:30,985] INFO - New valid lap detected : 00:01:41.7700000, (LapId :86ee0d3f-d2c5-48b4-a0d6-70eb6a0b6ab5)
+[2026-06-08 10:58:30,985] INFO - Storing lap consumption : 3.18, lap start : 40.13, lap end : 36.95
+[2026-06-08 10:58:31,057] INFO - [LalaPlugin:PitExit] Predicted class position changed -> P36 (ahead=35)
+[2026-06-08 10:58:31,061] INFO - [LalaPlugin:Lap Detector] lap_crossed source=CompletedLaps lap=12 prev_lap=11 trackpct.last=0.903 trackpct.cur=0.025 near_sf=False far_from_sf=False pct_impossible=False speed_kmh=244.7 session_state=4
+[2026-06-08 10:58:31,062] INFO - [LalaPlugin:Leader Lap] no valid leader lap time from any candidate – returning 0
+[2026-06-08 10:58:31,062] INFO - [LalaPlugin:LapRef] Session best updated (dry): 101.770s
+[2026-06-08 10:58:31,080] INFO - [LalaPlugin:PACE] Lap 12: ok=True reason=accepted lap_s=101.770 baseline_s=102.264 delta_s=-0.494 stint_avg_s=102.182 last5_avg_s=102.076 conf_pct=100 leader_lap_s=0.000 leader_avg_s=0.000 leader_samples=0 posClass=P3 posOverall=P3 gapLdr=1.9
+[2026-06-08 10:58:31,080] INFO - [LalaPlugin:FUEL PER LAP] Lap 12: ok=True reason=accepted mode=dry live_fpl=3.235 window_dry=5 window_wet=0 max_session_fpl=3.533 fuel_conf_pct=90 overall_conf_pct=90 pit_trip_active=False
+[2026-06-08 10:58:31,080] INFO - [LalaPlugin:FUEL DELTA] Lap 12: current_l=36.9 required_l=77.5 delta_l=-45.0 stable_fpl=3.250 stable_laps=23.83
+[2026-06-08 10:58:31,080] INFO - [LalaPlugin:RACE PROJECTION] Lap 12: after_zero_used_s=74.9 source=planner timer0_s=n/a session_remain_s=2360.5 projected_laps=23.83 projection_lap_s=102.600 projected_remain_s=2445.2
+[2026-06-08 10:58:31,082] INFO - [LalaPlugin:Pace] source=pace.stint lap=102.200s stint=102.182s last5=102.076s profile=102.500s
+[2026-06-08 10:58:31,082] INFO - [LalaPlugin:Drive Time Projection] tRemain=2360.5 after0Used=74.9s src=planner lapsProj=23.83 simLaps=35.44 lapRef=102.200s lapRefSrc=pace.stint after0Observed=0.0s state=4 mode=race-running
+[2026-06-08 10:58:31,307] INFO - [LalaPlugin:PitExit] Predicted class position changed -> P33 (ahead=32)
+[2026-06-08 10:58:31,598] INFO - [LalaPlugin:PitExit] Predicted class position changed -> P31 (ahead=30)
+[2026-06-08 10:58:33,082] INFO - New fuel stat aggregated 3.35/lap
+[2026-06-08 10:58:33,089] INFO - [LalaPlugin:PitExit] Predicted class position changed -> P34 (ahead=33)
+[2026-06-08 10:58:33,681] INFO - New fuel stat aggregated 3.19/lap
+[2026-06-08 10:58:34,796] INFO - [LalaPlugin:PitExit] Predicted class position changed -> P35 (ahead=34)
+[2026-06-08 10:58:36,043] INFO - New fuel stat aggregated 3.59/lap
+[2026-06-08 10:58:36,326] INFO - Old map quality score : 7 / New map quality score : 6
+[2026-06-08 10:58:36,327] INFO - New valid lap detected : 00:01:42.5450000, (LapId :c9396ea8-8c28-4d5c-b47f-db1a81d7c7d3)
+[2026-06-08 10:58:36,327] INFO - Storing lap consumption : 3.39, lap start : 36.95, lap end : 33.56
+[2026-06-08 10:58:36,389] INFO - [LalaPlugin:PitExit] Predicted class position changed -> P32 (ahead=31)
+[2026-06-08 10:58:36,391] INFO - [LalaPlugin:Lap Detector] lap_crossed source=CompletedLaps lap=13 prev_lap=12 trackpct.last=0.963 trackpct.cur=0.071 near_sf=False far_from_sf=False pct_impossible=False speed_kmh=252.8 session_state=4
+[2026-06-08 10:58:36,392] INFO - [LalaPlugin:Leader Lap] no valid leader lap time from any candidate – returning 0
+[2026-06-08 10:58:36,399] INFO - [LalaPlugin:PACE] Lap 13: ok=True reason=accepted lap_s=102.545 baseline_s=102.076 delta_s=+0.469 stint_avg_s=102.154 last5_avg_s=102.200 conf_pct=100 leader_lap_s=0.000 leader_avg_s=0.000 leader_samples=0 posClass=P3 posOverall=P3 gapLdr=2.7
+[2026-06-08 10:58:36,399] INFO - [LalaPlugin:FUEL PER LAP] Lap 13: ok=True reason=accepted mode=dry live_fpl=3.266 window_dry=5 window_wet=0 max_session_fpl=3.533 fuel_conf_pct=90 overall_conf_pct=90 pit_trip_active=False
+[2026-06-08 10:58:36,399] INFO - [LalaPlugin:FUEL DELTA] Lap 13: current_l=33.6 required_l=74.3 delta_l=-45.3 stable_fpl=3.250 stable_laps=22.87
+[2026-06-08 10:58:36,399] INFO - [LalaPlugin:RACE PROJECTION] Lap 13: after_zero_used_s=74.9 source=planner timer0_s=n/a session_remain_s=2254.7 projected_laps=22.87 projection_lap_s=102.200 projected_remain_s=2337.5
+[2026-06-08 10:58:36,400] INFO - [LalaPlugin:Drive Time Projection] tRemain=2254.7 after0Used=74.9s src=planner lapsProj=22.79 simLaps=35.44 lapRef=102.200s lapRefSrc=pace.stint after0Observed=0.0s state=4 mode=race-running
+[2026-06-08 10:58:38,348] INFO - New fuel stat aggregated 4.02/lap
+[2026-06-08 10:58:38,579] INFO - [LalaPlugin:PitExit] Predicted class position changed -> P35 (ahead=34)
+[2026-06-08 10:58:39,410] INFO - [LalaPlugin:PitExit] Predicted class position changed -> P37 (ahead=36)
+[2026-06-08 10:58:39,625] INFO - [LalaPlugin:Pit Window] state=2 label=RACE PACE reqAdd=43.0 tankSpace=45.4 lap=14 confStable=90% confOverall=90% reqStops=1 closeLap=23
+[2026-06-08 10:58:39,936] INFO - New fuel stat aggregated 3.47/lap
+[2026-06-08 10:58:39,942] INFO - [LalaPlugin:PitExit] Predicted class position changed -> P33 (ahead=32)
+[2026-06-08 10:58:40,276] INFO - [LalaPlugin:PitExit] Predicted class position changed -> P35 (ahead=34)
+[2026-06-08 10:58:40,981] INFO - New fuel stat aggregated 3.24/lap
+[2026-06-08 10:58:41,296] INFO - [LalaPlugin:Lap Detector] lap_crossed source=CompletedLaps lap=14 prev_lap=13 trackpct.last=0.932 trackpct.cur=0.013 near_sf=False far_from_sf=False pct_impossible=False speed_kmh=240.4 session_state=4
+[2026-06-08 10:58:41,296] INFO - [LalaPlugin:Leader Lap] no valid leader lap time from any candidate – returning 0
+[2026-06-08 10:58:41,297] INFO - [LalaPlugin:PACE] Lap 14: ok=True reason=accepted lap_s=102.545 baseline_s=102.200 delta_s=+0.345 stint_avg_s=102.257 last5_avg_s=102.323 conf_pct=100 leader_lap_s=0.000 leader_avg_s=0.000 leader_samples=0 posClass=P3 posOverall=P3 gapLdr=3.6
+[2026-06-08 10:58:41,297] INFO - [LalaPlugin:FUEL PER LAP] Lap 14: ok=True reason=accepted mode=dry live_fpl=3.235 window_dry=5 window_wet=0 max_session_fpl=3.533 fuel_conf_pct=90 overall_conf_pct=90 pit_trip_active=False
+[2026-06-08 10:58:41,297] INFO - [LalaPlugin:FUEL DELTA] Lap 14: current_l=30.5 required_l=71.2 delta_l=-45.2 stable_fpl=3.250 stable_laps=21.89
+[2026-06-08 10:58:41,297] INFO - [LalaPlugin:RACE PROJECTION] Lap 14: after_zero_used_s=74.9 source=planner timer0_s=n/a session_remain_s=2156.2 projected_laps=21.89 projection_lap_s=102.200 projected_remain_s=2237.5
+[2026-06-08 10:58:41,299] INFO - [LalaPlugin:Drive Time Projection] tRemain=2156.2 after0Used=74.9s src=planner lapsProj=21.83 simLaps=35.44 lapRef=102.200s lapRefSrc=pace.stint after0Observed=0.0s state=4 mode=race-running
+[2026-06-08 10:58:41,519] INFO - Old map quality score : 7 / New map quality score : 6
+[2026-06-08 10:58:41,531] INFO - New valid lap detected : 00:01:42.5600000, (LapId :ef507e50-9b24-466b-a5fe-a1e8fef57c8a)
+[2026-06-08 10:58:41,531] INFO - Storing lap consumption : 3.32, lap start : 33.56, lap end : 30.24
+[2026-06-08 10:58:41,588] INFO - [LalaPlugin:PitExit] Predicted class position changed -> P31 (ahead=30)
+[2026-06-08 10:58:43,322] INFO - New fuel stat aggregated 2.96/lap
+[2026-06-08 10:58:43,678] INFO - [LalaPlugin:PitExit] Predicted class position changed -> P32 (ahead=31)
+[2026-06-08 10:58:43,968] INFO - [LalaPlugin:PitExit] Predicted class position changed -> P34 (ahead=33)
+[2026-06-08 10:58:45,274] INFO - [LalaPlugin:PitExit] Predicted class position changed -> P31 (ahead=30)
+[2026-06-08 10:58:45,736] INFO - [LalaPlugin:PitExit] Predicted class position changed -> P34 (ahead=33)
+[2026-06-08 10:58:46,108] INFO - New fuel stat aggregated 3.31/lap
+[2026-06-08 10:58:46,434] INFO - [LalaPlugin:PitExit] Predicted class position changed -> P31 (ahead=30)
+[2026-06-08 10:58:46,644] INFO - Old map quality score : 7 / New map quality score : 6
+[2026-06-08 10:58:46,645] INFO - New valid lap detected : 00:01:42.4430000, (LapId :ef07f46f-f21f-4108-8790-c8ce89917ad7)
+[2026-06-08 10:58:46,646] INFO - Storing lap consumption : 3.25, lap start : 30.24, lap end : 27.00
+[2026-06-08 10:58:46,714] INFO - [LalaPlugin:Lap Detector] lap_crossed source=CompletedLaps lap=15 prev_lap=14 trackpct.last=0.919 trackpct.cur=0.108 near_sf=False far_from_sf=False pct_impossible=False speed_kmh=259.0 session_state=4
+[2026-06-08 10:58:46,714] INFO - [LalaPlugin:Leader Lap] no valid leader lap time from any candidate – returning 0
+[2026-06-08 10:58:46,715] INFO - [LalaPlugin:PACE] Lap 15: ok=True reason=accepted lap_s=102.443 baseline_s=102.323 delta_s=+0.120 stint_avg_s=102.343 last5_avg_s=102.336 conf_pct=100 leader_lap_s=0.000 leader_avg_s=0.000 leader_samples=0 posClass=P3 posOverall=P3 gapLdr=3.0
+[2026-06-08 10:58:46,715] INFO - [LalaPlugin:FUEL PER LAP] Lap 15: ok=True reason=accepted mode=dry live_fpl=3.232 window_dry=5 window_wet=0 max_session_fpl=3.533 fuel_conf_pct=90 overall_conf_pct=90 pit_trip_active=False
+[2026-06-08 10:58:46,715] INFO - [LalaPlugin:FUEL DELTA] Lap 15: current_l=27.0 required_l=67.9 delta_l=-45.2 stable_fpl=3.250 stable_laps=20.90
+[2026-06-08 10:58:46,715] INFO - [LalaPlugin:RACE PROJECTION] Lap 15: after_zero_used_s=74.9 source=planner timer0_s=n/a session_remain_s=2047.1 projected_laps=20.90 projection_lap_s=102.200 projected_remain_s=2136.2
+[2026-06-08 10:58:46,716] INFO - [LalaPlugin:Drive Time Projection] tRemain=2047.1 after0Used=74.9s src=planner lapsProj=20.76 simLaps=35.44 lapRef=102.200s lapRefSrc=pace.stint after0Observed=0.0s state=4 mode=race-running
+[2026-06-08 10:58:46,913] INFO - [LalaPlugin:PitExit] Predicted class position changed -> P29 (ahead=28)
+[2026-06-08 10:58:47,433] INFO - New fuel stat aggregated 3.01/lap
+[2026-06-08 10:58:47,670] INFO - [LalaPlugin:PitExit] Predicted class position changed -> P28 (ahead=27)
+[2026-06-08 10:58:48,190] INFO - [LalaPlugin:PitExit] Predicted class position changed -> P30 (ahead=29)
+[2026-06-08 10:58:48,608] INFO - [LalaPlugin:Pit Window] state=3 label=CLEAR PUSH reqAdd=43.0 tankSpace=51.1 lap=16 confStable=90% confOverall=90% reqStops=1 closeLap=23
+[2026-06-08 10:58:49,122] INFO - New fuel stat aggregated 3.64/lap
+[2026-06-08 10:58:50,302] INFO - New fuel stat aggregated 3.72/lap
+[2026-06-08 10:58:50,309] INFO - [LalaPlugin:PitExit] Predicted class position changed -> P30 (ahead=29)
+[2026-06-08 10:58:51,317] INFO - Old map quality score : 7 / New map quality score : 6
+[2026-06-08 10:58:51,318] INFO - New valid lap detected : 00:01:42.1910000, (LapId :dff8f4df-140d-4b1c-bc3c-e28c8e34a505)
+[2026-06-08 10:58:51,318] INFO - Storing lap consumption : 2.99, lap start : 27.00, lap end : 24.00
+[2026-06-08 10:58:51,353] INFO - New fuel stat aggregated 3.77/lap
+[2026-06-08 10:58:51,619] INFO - [LalaPlugin:Lap Detector] lap_crossed source=CompletedLaps lap=16 prev_lap=15 trackpct.last=0.906 trackpct.cur=0.041 near_sf=False far_from_sf=False pct_impossible=False speed_kmh=246.7 session_state=4
+[2026-06-08 10:58:51,619] INFO - [LalaPlugin:Leader Lap] no valid leader lap time from any candidate – returning 0
+[2026-06-08 10:58:51,621] INFO - [LalaPlugin:PACE] Lap 16: ok=True reason=accepted lap_s=102.191 baseline_s=102.336 delta_s=-0.145 stint_avg_s=102.312 last5_avg_s=102.299 conf_pct=100 leader_lap_s=0.000 leader_avg_s=0.000 leader_samples=0 posClass=P3 posOverall=P3 gapLdr=3.6
+[2026-06-08 10:58:51,621] INFO - [LalaPlugin:FUEL PER LAP] Lap 16: ok=True reason=accepted mode=dry live_fpl=3.255 window_dry=5 window_wet=0 max_session_fpl=3.533 fuel_conf_pct=90 overall_conf_pct=90 pit_trip_active=False
+[2026-06-08 10:58:51,622] INFO - [LalaPlugin:FUEL DELTA] Lap 16: current_l=23.9 required_l=64.7 delta_l=-45.2 stable_fpl=3.250 stable_laps=19.91
+[2026-06-08 10:58:51,622] INFO - [LalaPlugin:RACE PROJECTION] Lap 16: after_zero_used_s=74.9 source=planner timer0_s=n/a session_remain_s=1949.6 projected_laps=19.91 projection_lap_s=102.200 projected_remain_s=2035.2
+[2026-06-08 10:58:51,637] INFO - [LalaPlugin:Drive Time Projection] tRemain=1949.6 after0Used=74.9s src=planner lapsProj=19.81 simLaps=35.44 lapRef=102.200s lapRefSrc=pace.stint after0Observed=0.0s state=4 mode=race-running
+[2026-06-08 10:58:51,933] INFO - [LalaPlugin:PitExit] Predicted class position changed -> P26 (ahead=25)
+[2026-06-08 10:58:52,609] INFO - [LalaPlugin:PitExit] Predicted class position changed -> P26 (ahead=25)
+[2026-06-08 10:58:53,397] INFO - [LalaPlugin:PitExit] Predicted class position changed -> P28 (ahead=27)
+[2026-06-08 10:58:53,643] INFO - New fuel stat aggregated 3.14/lap
+[2026-06-08 10:58:55,040] INFO - [LalaPlugin:PitExit] Predicted class position changed -> P31 (ahead=30)
+[2026-06-08 10:58:55,255] INFO - New fuel stat aggregated 2.90/lap
+[2026-06-08 10:58:56,381] INFO - New fuel stat aggregated 2.81/lap
+[2026-06-08 10:58:56,625] INFO - Old map quality score : 7 / New map quality score : 5
+[2026-06-08 10:58:56,626] INFO - New valid lap detected : 00:01:42.2200000, (LapId :836c9dfc-28b8-4722-a65f-80ddd9a7e567)
+[2026-06-08 10:58:56,626] INFO - Storing lap consumption : 3.28, lap start : 24.00, lap end : 20.72
+[2026-06-08 10:58:56,921] INFO - [LalaPlugin:PitExit] Predicted class position changed -> P27 (ahead=26)
+[2026-06-08 10:58:56,924] INFO - [LalaPlugin:Lap Detector] lap_crossed source=CompletedLaps lap=17 prev_lap=16 trackpct.last=0.968 trackpct.cur=0.101 near_sf=False far_from_sf=False pct_impossible=False speed_kmh=258.0 session_state=4
+[2026-06-08 10:58:56,924] INFO - [LalaPlugin:Leader Lap] no valid leader lap time from any candidate – returning 0
+[2026-06-08 10:58:56,926] INFO - [LalaPlugin:PACE] Lap 17: ok=True reason=accepted lap_s=102.220 baseline_s=102.299 delta_s=-0.079 stint_avg_s=102.286 last5_avg_s=102.389 conf_pct=100 leader_lap_s=0.000 leader_avg_s=0.000 leader_samples=0 posClass=P3 posOverall=P3 gapLdr=3.3
+[2026-06-08 10:58:56,926] INFO - [LalaPlugin:FUEL PER LAP] Lap 17: ok=True reason=accepted mode=dry live_fpl=3.289 window_dry=5 window_wet=0 max_session_fpl=3.533 fuel_conf_pct=90 overall_conf_pct=90 pit_trip_active=False
+[2026-06-08 10:58:56,926] INFO - [LalaPlugin:FUEL DELTA] Lap 17: current_l=20.5 required_l=61.3 delta_l=-45.3 stable_fpl=3.250 stable_laps=18.86
+[2026-06-08 10:58:56,926] INFO - [LalaPlugin:RACE PROJECTION] Lap 17: after_zero_used_s=74.9 source=planner timer0_s=n/a session_remain_s=1843.2 projected_laps=18.86 projection_lap_s=102.200 projected_remain_s=1927.7
+[2026-06-08 10:58:56,928] INFO - [LalaPlugin:Drive Time Projection] tRemain=1843.2 after0Used=74.9s src=planner lapsProj=18.77 simLaps=35.44 lapRef=102.200s lapRefSrc=pace.stint after0Observed=0.0s state=4 mode=race-running
+[2026-06-08 10:58:57,163] INFO - [LalaPlugin:PitExit] Predicted class position changed -> P25 (ahead=24)
+[2026-06-08 10:58:58,441] INFO - [LalaPlugin:PitExit] Predicted class position changed -> P27 (ahead=26)
+[2026-06-08 10:58:58,706] INFO - New fuel stat aggregated 3.40/lap
+[2026-06-08 10:58:59,960] INFO - New fuel stat aggregated 2.84/lap
+[2026-06-08 10:59:00,473] INFO - New fuel stat aggregated 3.77/lap
+[2026-06-08 10:59:00,542] INFO - [LalaPlugin:PitExit] Predicted class position changed -> P27 (ahead=26)
+[2026-06-08 10:59:01,610] INFO - New fuel stat aggregated 3.13/lap
+[2026-06-08 10:59:01,911] INFO - Old map quality score : 7 / New map quality score : 5
+[2026-06-08 10:59:01,911] INFO - New valid lap detected : 00:01:42.5480000, (LapId :abd2b805-5659-4319-a937-9d7de3b5d2a7)
+[2026-06-08 10:59:01,912] INFO - Storing lap consumption : 3.32, lap start : 20.72, lap end : 17.40
+[2026-06-08 10:59:01,971] INFO - [LalaPlugin:PitExit] Predicted class position changed -> P26 (ahead=25)
+[2026-06-08 10:59:01,975] INFO - [LalaPlugin:Lap Detector] lap_crossed source=CompletedLaps lap=18 prev_lap=17 trackpct.last=0.881 trackpct.cur=0.059 near_sf=False far_from_sf=False pct_impossible=False speed_kmh=251.2 session_state=4
+[2026-06-08 10:59:01,975] INFO - [LalaPlugin:Leader Lap] no valid leader lap time from any candidate – returning 0
+[2026-06-08 10:59:01,975] INFO - [LalaPlugin:PACE] Lap 18: ok=False reason=incident:WrongWay lap_s=102.548 baseline_s=102.389 delta_s=+0.159 stint_avg_s=102.286 last5_avg_s=102.389 conf_pct=100 leader_lap_s=0.000 leader_avg_s=0.000 leader_samples=0 posClass=P2 posOverall=P2 gapLdr=3.7
+[2026-06-08 10:59:01,975] INFO - [LalaPlugin:FUEL PER LAP] Lap 18: ok=False reason=pace-rejected mode=dry live_fpl=3.289 window_dry=5 window_wet=0 max_session_fpl=3.533 fuel_conf_pct=90 overall_conf_pct=90 pit_trip_active=False
+[2026-06-08 10:59:01,975] INFO - [LalaPlugin:FUEL DELTA] Lap 18: current_l=17.4 required_l=59.0 delta_l=-45.9 stable_fpl=3.289 stable_laps=17.94
+[2026-06-08 10:59:01,975] INFO - [LalaPlugin:RACE PROJECTION] Lap 18: after_zero_used_s=74.9 source=planner timer0_s=n/a session_remain_s=1743.5 projected_laps=17.94 projection_lap_s=102.200 projected_remain_s=1833.2
+[2026-06-08 10:59:01,977] INFO - [LalaPlugin:Drive Time Projection] tRemain=1743.5 after0Used=74.9s src=planner lapsProj=17.79 simLaps=35.44 lapRef=102.200s lapRefSrc=pace.stint after0Observed=0.0s state=4 mode=race-running
+[2026-06-08 10:59:02,279] INFO - [LalaPlugin:PitExit] Predicted class position changed -> P23 (ahead=22)
+[2026-06-08 10:59:03,431] INFO - [LalaPlugin:PitExit] Predicted class position changed -> P24 (ahead=23)
+[2026-06-08 10:59:03,902] INFO - New fuel stat aggregated 3.48/lap
+[2026-06-08 10:59:03,908] INFO - [LalaPlugin:PitExit] Predicted class position changed -> P23 (ahead=22)
+[2026-06-08 10:59:05,675] INFO - New fuel stat aggregated 3.73/lap
+[2026-06-08 10:59:06,248] INFO - [LalaPlugin:PitExit] Predicted class position changed -> P23 (ahead=22)
+[2026-06-08 10:59:06,749] INFO - New fuel stat aggregated 3.36/lap
+[2026-06-08 10:59:06,757] INFO - [LalaPlugin:Lap Detector] lap_crossed source=CompletedLaps lap=19 prev_lap=18 trackpct.last=0.874 trackpct.cur=0.008 near_sf=False far_from_sf=False pct_impossible=False speed_kmh=239.1 session_state=4
+[2026-06-08 10:59:06,757] INFO - [LalaPlugin:Leader Lap] no valid leader lap time from any candidate – returning 0
+[2026-06-08 10:59:06,789] INFO - [LalaPlugin:PACE] Lap 19: ok=True reason=accepted lap_s=102.548 baseline_s=102.389 delta_s=+0.159 stint_avg_s=102.415 last5_avg_s=102.389 conf_pct=100 leader_lap_s=0.000 leader_avg_s=0.000 leader_samples=0 posClass=P2 posOverall=P2 gapLdr=3.3
+[2026-06-08 10:59:06,789] INFO - [LalaPlugin:FUEL PER LAP] Lap 19: ok=True reason=accepted mode=dry live_fpl=3.232 window_dry=5 window_wet=0 max_session_fpl=3.533 fuel_conf_pct=90 overall_conf_pct=90 pit_trip_active=False
+[2026-06-08 10:59:06,789] INFO - [LalaPlugin:FUEL DELTA] Lap 19: current_l=14.3 required_l=55.7 delta_l=-45.9 stable_fpl=3.289 stable_laps=16.95
+[2026-06-08 10:59:06,789] INFO - [LalaPlugin:RACE PROJECTION] Lap 19: after_zero_used_s=74.9 source=planner timer0_s=n/a session_remain_s=1644.9 projected_laps=16.95 projection_lap_s=102.200 projected_remain_s=1731.8
+[2026-06-08 10:59:06,791] INFO - [LalaPlugin:Drive Time Projection] tRemain=1644.9 after0Used=74.9s src=planner lapsProj=16.83 simLaps=35.44 lapRef=102.200s lapRefSrc=pace.stint after0Observed=0.0s state=4 mode=race-running
+[2026-06-08 10:59:07,008] INFO - Old map quality score : 7 / New map quality score : 4
+[2026-06-08 10:59:07,008] INFO - New valid lap detected : 00:01:42.2920000, (LapId :4fe0221f-2edd-43bd-8b5a-6a6f375a960c)
+[2026-06-08 10:59:07,009] INFO - Storing lap consumption : 3.28, lap start : 17.40, lap end : 14.12
+[2026-06-08 10:59:07,058] INFO - [LalaPlugin:PitExit] Predicted class position changed -> P21 (ahead=20)
+[2026-06-08 10:59:07,317] INFO - [LalaPlugin:PitExit] Predicted class position changed -> P19 (ahead=18)
+[2026-06-08 10:59:09,105] INFO - New fuel stat aggregated 3.52/lap
+[2026-06-08 10:59:09,395] INFO - [LalaPlugin:PitExit] Predicted class position changed -> P22 (ahead=21)
+[2026-06-08 10:59:10,837] INFO - New fuel stat aggregated 3.64/lap
+[2026-06-08 10:59:15,353] INFO - [LalaPlugin:PitExit] Predicted class position changed -> P21 (ahead=20)
+[2026-06-08 10:59:17,509] INFO - [LalaPlugin:PitExit] Predicted class position changed -> P22 (ahead=21)
+[2026-06-08 10:59:18,858] INFO - New fuel stat aggregated 3.27/lap
+[2026-06-08 10:59:19,434] INFO - Old map quality score : 7 / New map quality score : 6
+[2026-06-08 10:59:19,435] INFO - New valid lap detected : 00:01:42.0840000, (LapId :5aac1b88-d7c0-46bb-9810-ff5613e0f21d)
+[2026-06-08 10:59:19,435] INFO - Storing lap consumption : 3.21, lap start : 14.12, lap end : 10.91
+[2026-06-08 10:59:19,496] INFO - [LalaPlugin:PitExit] Predicted class position changed -> P19 (ahead=18)
+[2026-06-08 10:59:19,501] INFO - [LalaPlugin:Leader Lap] no valid leader lap time from any candidate – returning 0
+[2026-06-08 10:59:19,505] INFO - [LalaPlugin:PACE] Lap 20: ok=True reason=accepted lap_s=102.084 baseline_s=102.389 delta_s=-0.305 stint_avg_s=102.339 last5_avg_s=102.297 conf_pct=100 leader_lap_s=0.000 leader_avg_s=0.000 leader_samples=0 posClass=P2 posOverall=P2 gapLdr=3.3
+[2026-06-08 10:59:19,506] INFO - [LalaPlugin:FUEL PER LAP] Lap 20: ok=True reason=accepted mode=dry live_fpl=3.300 window_dry=5 window_wet=0 max_session_fpl=3.533 fuel_conf_pct=90 overall_conf_pct=90 pit_trip_active=False
+[2026-06-08 10:59:19,506] INFO - [LalaPlugin:FUEL DELTA] Lap 20: current_l=10.9 required_l=51.2 delta_l=-45.0 stable_fpl=3.232 stable_laps=15.84
+[2026-06-08 10:59:19,506] INFO - [LalaPlugin:RACE PROJECTION] Lap 20: after_zero_used_s=74.9 source=planner timer0_s=n/a session_remain_s=1540.2 projected_laps=15.84 projection_lap_s=102.200 projected_remain_s=1618.4
+[2026-06-08 10:59:19,518] INFO - [LalaPlugin:Drive Time Projection] tRemain=1540.2 after0Used=74.9s src=planner lapsProj=15.80 simLaps=35.44 lapRef=102.200s lapRefSrc=pace.stint after0Observed=0.0s state=4 mode=race-running
+[2026-06-08 10:59:21,666] INFO - [LalaPlugin:PitExit] Predicted class position changed -> P18 (ahead=17)
+[2026-06-08 10:59:23,831] INFO - [LalaPlugin:PitExit] Predicted class position changed -> P18 (ahead=17)
+[2026-06-08 10:59:26,888] INFO - [LalaPlugin:PitExit] Predicted class position changed -> P19 (ahead=18)
+[2026-06-08 10:59:32,965] INFO - [LalaPlugin:PitExit] Predicted class position changed -> P20 (ahead=19)
+[2026-06-08 10:59:41,165] INFO - [LalaPlugin:PitExit] Predicted class position changed -> P20 (ahead=19)
+[2026-06-08 10:59:48,243] INFO - [LalaPlugin:PitExit] Predicted class position changed -> P21 (ahead=20)
+[2026-06-08 10:59:55,348] INFO - [LalaPlugin:PitExit] Predicted class position changed -> P22 (ahead=21)
+[2026-06-08 10:59:58,333] INFO - [LalaPlugin:PitExit] Predicted class position changed -> P20 (ahead=19)
+[2026-06-08 11:00:00,423] INFO - [LalaPlugin:PitExit] Predicted class position changed -> P18 (ahead=17)
+[2026-06-08 11:00:04,493] INFO - [LalaPlugin:PitExit] Predicted class position changed -> P19 (ahead=18)
+[2026-06-08 11:00:09,659] INFO - [LalaPlugin:PitExit] Predicted class position changed -> P20 (ahead=19)
+[2026-06-08 11:00:15,816] INFO - [LalaPlugin:PitExit] Predicted class position changed -> P19 (ahead=18)
+[2026-06-08 11:00:20,653] INFO - New fuel stat aggregated 3.23/lap
+[2026-06-08 11:00:20,965] INFO - [LalaPlugin:Leader Lap] no valid leader lap time from any candidate – returning 0
+[2026-06-08 11:00:20,967] INFO - [LalaPlugin:PACE] Lap 21: ok=True reason=accepted lap_s=102.084 baseline_s=102.297 delta_s=-0.213 stint_avg_s=102.262 last5_avg_s=102.225 conf_pct=100 leader_lap_s=0.000 leader_avg_s=0.000 leader_samples=0 posClass=P2 posOverall=P2 gapLdr=3.0
+[2026-06-08 11:00:20,978] INFO - [LalaPlugin:FUEL PER LAP] Lap 21: ok=True reason=accepted mode=dry live_fpl=3.219 window_dry=5 window_wet=0 max_session_fpl=3.533 fuel_conf_pct=90 overall_conf_pct=90 pit_trip_active=False
+[2026-06-08 11:00:20,978] INFO - [LalaPlugin:FUEL DELTA] Lap 21: current_l=7.8 required_l=49.0 delta_l=-46.1 stable_fpl=3.300 stable_laps=14.84
+[2026-06-08 11:00:20,978] INFO - [LalaPlugin:RACE PROJECTION] Lap 21: after_zero_used_s=74.9 source=planner timer0_s=n/a session_remain_s=1441.1 projected_laps=14.84 projection_lap_s=102.200 projected_remain_s=1516.6
+[2026-06-08 11:00:20,980] INFO - [LalaPlugin:Drive Time Projection] tRemain=1441.1 after0Used=74.9s src=planner lapsProj=14.83 simLaps=35.44 lapRef=102.200s lapRefSrc=pace.stint after0Observed=0.0s state=4 mode=race-running
+[2026-06-08 11:00:21,894] INFO - [LalaPlugin:PitExit] Predicted class position changed -> P18 (ahead=17)
+[2026-06-08 11:00:22,256] INFO - Old map quality score : 7 / New map quality score : 5
+[2026-06-08 11:00:22,256] INFO - New valid lap detected : 00:01:41.8910000, (LapId :b179a979-4aca-4758-b564-d795825f1c8a)
+[2026-06-08 11:00:22,257] INFO - Storing lap consumption : 3.17, lap start : 10.91, lap end : 7.74
+[2026-06-08 11:00:28,950] INFO - [LalaPlugin:PitExit] Predicted class position changed -> P17 (ahead=16)
+[2026-06-08 11:00:49,328] INFO - [LalaPlugin:PitExit] Predicted class position changed -> P16 (ahead=15)
+[2026-06-08 11:00:52,411] INFO - [LalaPlugin:PitExit] Predicted class position changed -> P17 (ahead=16)
+[2026-06-08 11:00:58,687] INFO - [LalaPlugin:PitExit] Predicted class position changed -> P18 (ahead=17)
+[2026-06-08 11:01:00,404] INFO - [LalaPlugin:MonitorSystem] pit trigger=PredictiveTwoLapsFuelRemaining sessionTime=2362.333 sessionType=Race sessionState=4 phase=OnTrack monitorState=ON monitorEnum=3 monitorText=MFD FUEL LOW onPitRoad=False inPitStall=False currentFuel=6.588 mode=MAN data=LIVE mfdRefuelEnabled=True mfdFuelRequest=43 pluginRefuelValid=True pluginNextLitres=44.743 pluginFuelOnExit=51.331 warningText=MFD FUEL LOW warningEnum=3 reason=lapsRemainingInTank=2.05 threshold=2.05
+[2026-06-08 11:01:03,881] INFO - [LalaPlugin:PitExit] Predicted class position changed -> P17 (ahead=16)
+[2026-06-08 11:01:12,011] INFO - [LalaPlugin:PitExit] Predicted class position changed -> P18 (ahead=17)
+[2026-06-08 11:02:53,604] INFO - [LalaPlugin:PitFuelControl] PitFuelControlModeCycle action received
+[2026-06-08 11:02:53,612] INFO - [LalaPlugin:PitFuelControl] entry action=ModeCycle mode=MAN source=STBY data=LIVE autoArmed=False isAutoModeActive=False suppressFuelControl=False suppressReason=none iracingAutoFuelEnabled=False telemetryFuelFillEnabled=True targetLitres=0.00 overrideActive=False lastSentFuelLitres=none
+[2026-06-08 11:02:53,612] INFO - [LalaPlugin:PitFuelControl] blocked action=ModeCycle reason=source-stby
+[2026-06-08 11:02:53,614] INFO - [LalaPlugin:MonitorSystem] pit trigger=FuelControlModeChanged sessionTime=2381.75 sessionType=Race sessionState=4 phase=OnTrack monitorState=ON monitorEnum=3 monitorText=MFD FUEL LOW onPitRoad=False inPitStall=False currentFuel=6.063 mode=AUTO data=LIVE mfdRefuelEnabled=True mfdFuelRequest=43 pluginRefuelValid=True pluginNextLitres=44.657 pluginFuelOnExit=50.72 warningText=MFD FUEL LOW warningEnum=3 reason=from=MAN to=AUTO
+[2026-06-08 11:02:54,370] INFO - [LalaPlugin:PitFuelControl] PitFuelControlCycleData action received
+[2026-06-08 11:02:54,471] INFO - [LalaPlugin:PitFuelControl] entry action=CycleData mode=AUTO source=STBY data=LIVE autoArmed=False isAutoModeActive=True suppressFuelControl=False suppressReason=none iracingAutoFuelEnabled=False telemetryFuelFillEnabled=True targetLitres=0.00 overrideActive=False lastSentFuelLitres=none
+[2026-06-08 11:02:54,476] INFO - [LalaPlugin:MonitorSystem] pit trigger=FuelControlDataChanged sessionTime=2381.75 sessionType=Race sessionState=4 phase=OnTrack monitorState=ON monitorEnum=3 monitorText=MFD FUEL LOW onPitRoad=False inPitStall=False currentFuel=6.063 mode=AUTO data=PLAN mfdRefuelEnabled=True mfdFuelRequest=43 pluginRefuelValid=True pluginNextLitres=44.657 pluginFuelOnExit=50.72 warningText=none warningEnum=0 reason=from=LIVE to=PLAN
+[2026-06-08 11:02:54,785] INFO - [LalaPlugin:Dash] DeclutterMode action fired -> DeclutterMode=1.
+[2026-06-08 11:02:55,922] INFO - [LalaPlugin:PitFuelControl] PitFuelControlCycleData action received
+[2026-06-08 11:02:55,926] INFO - [LalaPlugin:PitFuelControl] entry action=CycleData mode=AUTO source=STBY data=PLAN autoArmed=False isAutoModeActive=True suppressFuelControl=False suppressReason=none iracingAutoFuelEnabled=False telemetryFuelFillEnabled=True targetLitres=0.00 overrideActive=False lastSentFuelLitres=none
+[2026-06-08 11:02:55,933] INFO - [LalaPlugin:MonitorSystem] pit trigger=FuelControlDataChanged sessionTime=2381.75 sessionType=Race sessionState=4 phase=OnTrack monitorState=ON monitorEnum=3 monitorText=MFD FUEL LOW onPitRoad=False inPitStall=False currentFuel=6.063 mode=AUTO data=LIVE mfdRefuelEnabled=True mfdFuelRequest=43 pluginRefuelValid=True pluginNextLitres=44.231 pluginFuelOnExit=50.294 warningText=none warningEnum=0 reason=from=PLAN to=LIVE
+[2026-06-08 11:04:47,665] INFO - [LalaPlugin:PitFuelControl] PitFuelControlSetPush action received
+[2026-06-08 11:04:47,667] INFO - [LalaPlugin:PitFuelControl] entry action=SetPush mode=AUTO source=STBY data=LIVE autoArmed=False isAutoModeActive=True suppressFuelControl=False suppressReason=none iracingAutoFuelEnabled=False telemetryFuelFillEnabled=True targetLitres=0.00 overrideActive=False lastSentFuelLitres=none
+[2026-06-08 11:04:47,710] WARN - [LalaPlugin:PitCommand] transport=postmessage abort=true reason=no-iracing-process chat-open-attempted=false text-send-attempted=false submit-attempted=false
+[2026-06-08 11:04:47,710] WARN - [LalaPlugin:PitCommand] raw-command transport=postmessage local-transport-issue reason=no-iracing-process raw='#fuel 50$' normalized='#fuel 50'
+[2026-06-08 11:04:47,711] INFO - [LalaPlugin:PitFuelControl] blocked action=Pit.FuelControl.SetPush reason=send-failed
+[2026-06-08 11:04:49,727] INFO - [LalaPlugin:PitFuelControl] PitFuelControlSetNorm action received
+[2026-06-08 11:04:49,727] INFO - [LalaPlugin:PitFuelControl] entry action=SetNorm mode=AUTO source=PUSH data=LIVE autoArmed=False isAutoModeActive=True suppressFuelControl=False suppressReason=none iracingAutoFuelEnabled=False telemetryFuelFillEnabled=True targetLitres=49.51 overrideActive=False lastSentFuelLitres=none
+[2026-06-08 11:04:49,745] WARN - [LalaPlugin:PitCommand] transport=postmessage abort=true reason=no-iracing-process chat-open-attempted=false text-send-attempted=false submit-attempted=false
+[2026-06-08 11:04:49,745] WARN - [LalaPlugin:PitCommand] raw-command transport=postmessage local-transport-issue reason=no-iracing-process raw='#fuel 45$' normalized='#fuel 45'
+[2026-06-08 11:04:49,745] INFO - [LalaPlugin:PitFuelControl] blocked action=Pit.FuelControl.SetNorm reason=send-failed
+[2026-06-08 11:07:34,940] INFO - [LalaPlugin:PitExit] Predicted class position changed -> P19 (ahead=18)
+[2026-06-08 11:07:36,963] INFO - [LalaPlugin:PitExit] Predicted class position changed -> P20 (ahead=19)
+[2026-06-08 11:07:41,010] INFO - [LalaPlugin:PitExit] Predicted class position changed -> P19 (ahead=18)
+[2026-06-08 11:07:43,258] INFO - [LalaPlugin:PitExit] Predicted class position changed -> P18 (ahead=17)
+[2026-06-08 11:07:45,357] INFO - [LalaPlugin:PitExit] Predicted class position changed -> P17 (ahead=16)
+[2026-06-08 11:07:52,450] INFO - [LalaPlugin:PitExit] Predicted class position changed -> P18 (ahead=17)
+[2026-06-08 11:08:06,707] INFO - New fuel stat aggregated 3.20/lap
+[2026-06-08 11:08:06,917] INFO - [LalaPlugin:Leader Lap] no valid leader lap time from any candidate – returning 0
+[2026-06-08 11:08:06,924] INFO - [LalaPlugin:PACE] Lap 22: ok=True reason=accepted lap_s=101.891 baseline_s=102.225 delta_s=-0.334 stint_avg_s=102.170 last5_avg_s=102.165 conf_pct=100 leader_lap_s=0.000 leader_avg_s=0.000 leader_samples=0 posClass=P2 posOverall=P2 gapLdr=3.6
+[2026-06-08 11:08:06,924] INFO - [LalaPlugin:FUEL PER LAP] Lap 22: ok=True reason=accepted mode=dry live_fpl=3.246 window_dry=5 window_wet=0 max_session_fpl=3.533 fuel_conf_pct=90 overall_conf_pct=90 pit_trip_active=False
+[2026-06-08 11:08:06,924] INFO - [LalaPlugin:FUEL DELTA] Lap 22: current_l=4.6 required_l=44.5 delta_l=-44.7 stable_fpl=3.219 stable_laps=13.84
+[2026-06-08 11:08:06,924] INFO - [LalaPlugin:RACE PROJECTION] Lap 22: after_zero_used_s=74.9 source=planner timer0_s=n/a session_remain_s=1338.8 projected_laps=13.84 projection_lap_s=102.200 projected_remain_s=1414.3
+[2026-06-08 11:08:06,927] INFO - [LalaPlugin:PitFuelControl] entry action=OnLapCross mode=AUTO source=NORM data=LIVE autoArmed=False isAutoModeActive=True suppressFuelControl=False suppressReason=none iracingAutoFuelEnabled=False telemetryFuelFillEnabled=True targetLitres=44.66 overrideActive=False lastSentFuelLitres=none
+[2026-06-08 11:08:06,927] INFO - [LalaPlugin:Drive Time Projection] tRemain=1338.8 after0Used=74.9s src=planner lapsProj=13.83 simLaps=35.44 lapRef=102.200s lapRefSrc=pace.stint after0Observed=0.0s state=4 mode=race-running
+[2026-06-08 11:08:07,744] INFO - [LalaPlugin:PitExit] Predicted class position changed -> P17 (ahead=16)
+[2026-06-08 11:08:08,581] INFO - Old map quality score : 7 / New map quality score : 5
+[2026-06-08 11:08:08,581] INFO - New valid lap detected : 00:01:42.4890000, (LapId :c2285614-f6f9-4609-811d-de9e42bb5a62)
+[2026-06-08 11:08:08,582] INFO - Storing lap consumption : 3.21, lap start : 7.74, lap end : 4.53
+[2026-06-08 11:08:13,946] INFO - [LalaPlugin:PitExit] Predicted class position changed -> P16 (ahead=15)
+[2026-06-08 11:08:17,037] INFO - [LalaPlugin:PitExit] Predicted class position changed -> P15 (ahead=14)
+[2026-06-08 11:08:31,669] INFO - [LalaPlugin:PitExit] Predicted class position changed -> P15 (ahead=14)
+[2026-06-08 11:08:40,870] INFO - [LalaPlugin:PitExit] Predicted class position changed -> P16 (ahead=15)
+[2026-06-08 11:08:45,879] INFO - [LalaPlugin:PitExit] Predicted class position changed -> P17 (ahead=16)
+[2026-06-08 11:08:48,960] INFO - [LalaPlugin:PitExit] Predicted class position changed -> P16 (ahead=15)
+[2026-06-08 11:08:50,981] INFO - [LalaPlugin:PitExit] Predicted class position changed -> P15 (ahead=14)
+[2026-06-08 11:09:06,450] INFO - [LalaPlugin:PitExit] Predicted class position changed -> P16 (ahead=15)
+[2026-06-08 11:09:17,649] INFO - [LalaPlugin:PitExit] Predicted class position changed -> P17 (ahead=16)
+[2026-06-08 11:09:27,276] INFO - [LalaPlugin:PitExit] Predicted class position changed -> P16 (ahead=15)
+[2026-06-08 11:09:37,757] INFO - [LalaPlugin:PitExit] Predicted class position changed -> P16 (ahead=15)
+[2026-06-08 11:09:43,233] INFO - [LalaPlugin:PitEntryAssist] ACTIVATE dToLineRaw=76.9m dToLineGuided=61.9m dReq=64.6m margin=-2.6m spdΔ=90.3kph decel=13.5 buffer=15.0 cue=3
+[2026-06-08 11:09:45,670] INFO - New fuel stat aggregated 3.16/lap
+[2026-06-08 11:09:45,674] INFO - [LalaPlugin:PitEntryAssist] ENTRY LINE SAFE: Speed Δ at Line -0.1kph, Below Limiter at 17.4m, Time Loss: +0.00s
+[2026-06-08 11:09:45,681] INFO - [LalaPlugin:MonitorSystem] pit trigger=PitRoadEntry sessionTime=2524 sessionType=Race sessionState=4 phase=PitRoad monitorState=ON monitorEnum=4 monitorText=MFD FUEL LOW onPitRoad=True inPitStall=False currentFuel=1.665 mode=AUTO data=LIVE mfdRefuelEnabled=True mfdFuelRequest=43 pluginRefuelValid=True pluginNextLitres=44.487 pluginFuelOnExit=46.152 warningText=MFD FUEL LOW warningEnum=4 reason=OnPitRoad false->true
+[2026-06-08 11:09:45,698] INFO - [LalaPlugin:PitExit] Predicted class position changed -> P17 (ahead=16)
+[2026-06-08 11:09:45,710] INFO - [LalaPlugin:PitExit] Pit-in snapshot: lap=23 t=2524.0 posClass=P2 posOverall=P2 gapLdr=n/a pitLoss=44.2s predPosClass=P17 carsAhead=16 srcPitLoss=profile_dtl laneRef=0.0s boxRef=0.0s directRef=0.0s entryGapLdr=23.9s gapLdrLive=n/a gapLdrUsed=n/a pitLossLive=44.2s pitLossUsed=44.2s predGapAfterPit=23.5s lock=True
+[2026-06-08 11:09:45,770] INFO - [LalaPlugin:PitEntryAssist] END
+[2026-06-08 11:09:45,912] INFO - [LalaPlugin:PitScreen] Active -> True (onPitRoad=True, dismissed=False, manual=False)
+[2026-06-08 11:09:49,330] INFO - [LalaPlugin:PitFuelControl] blocked action=OnTelemetryTick reason=external-mirror-change
+[2026-06-08 11:09:49,422] INFO - [LalaPlugin:MonitorSystem] pit trigger=FuelControlModeChanged sessionTime=2527.7 sessionType=Race sessionState=4 phase=PitRoad monitorState=ON monitorEnum=1 monitorText=MONITOR READY onPitRoad=True inPitStall=False currentFuel=1.512 mode=MAN data=LIVE mfdRefuelEnabled=True mfdFuelRequest=44 pluginRefuelValid=True pluginNextLitres=44.525 pluginFuelOnExit=46.037 warningText=none warningEnum=0 reason=from=AUTO to=MAN
+[2026-06-08 11:09:50,982] INFO - [LalaPlugin:PitExit] Predicted class position changed -> P15 (ahead=14)
+[2026-06-08 11:09:55,610] INFO - [LalaPlugin:PitExit] Predicted class position changed -> P14 (ahead=13)
+[2026-06-08 11:09:58,484] INFO - [LalaPlugin:PitExit] Predicted class position changed -> P13 (ahead=12)
+[2026-06-08 11:10:00,242] INFO - [LalaPlugin:PitExit] Predictor valid -> false
+[2026-06-08 11:10:00,372] INFO - [LalaPlugin:PitExit] Predictor valid -> true (pitLoss=44.5s)
+[2026-06-08 11:10:00,456] INFO - [LalaPlugin:Leader Lap] no valid leader lap time from any candidate – returning 0
+[2026-06-08 11:10:00,456] INFO - [LalaPlugin:PACE] Lap 23: ok=False reason=pit-lap lap_s=102.489 baseline_s=102.165 delta_s=+0.324 stint_avg_s=102.170 last5_avg_s=102.165 conf_pct=100 leader_lap_s=0.000 leader_avg_s=0.000 leader_samples=0 posClass=P2 posOverall=P2 gapLdr=0.7
+[2026-06-08 11:10:00,456] INFO - [LalaPlugin:FUEL PER LAP] Lap 23: ok=False reason=pace-rejected mode=dry live_fpl=3.246 window_dry=5 window_wet=0 max_session_fpl=3.533 fuel_conf_pct=90 overall_conf_pct=90 pit_trip_active=True
+[2026-06-08 11:10:00,456] INFO - [LalaPlugin:FUEL DELTA] Lap 23: current_l=1.1 required_l=41.0 delta_l=-44.6 stable_fpl=3.219 stable_laps=12.73
+[2026-06-08 11:10:00,457] INFO - [LalaPlugin:RACE PROJECTION] Lap 23: after_zero_used_s=74.9 source=planner timer0_s=n/a session_remain_s=1225.3 projected_laps=12.73 projection_lap_s=102.200 projected_remain_s=1300.7
+[2026-06-08 11:10:00,458] INFO - [LalaPlugin:Drive Time Projection] tRemain=1225.3 after0Used=74.9s src=planner lapsProj=12.72 simLaps=35.44 lapRef=102.200s lapRefSrc=pace.stint after0Observed=0.0s state=4 mode=race-running
+[2026-06-08 11:10:01,442] INFO - New valid lap detected : 00:01:53.5940000, (LapId :975f9c52-0304-4e55-836c-a314a02b9181)
+[2026-06-08 11:10:02,126] INFO - CurrentLap invalidated for Fuel stats
+[2026-06-08 11:10:02,209] INFO - [LalaPlugin:PitExit] Predicted class position changed -> P11 (ahead=10)
+[2026-06-08 11:10:02,305] INFO - [LalaPlugin:MonitorSystem] pit trigger=PitBoxEntry sessionTime=2540.633 sessionType=Race sessionState=4 phase=InBox monitorState=ON monitorEnum=1 monitorText=MONITOR READY onPitRoad=True inPitStall=True currentFuel=1.054 mode=MAN data=LIVE mfdRefuelEnabled=True mfdFuelRequest=44 pluginRefuelValid=True pluginNextLitres=44.584 pluginFuelOnExit=45.638 warningText=none warningEnum=0 reason=pit-box seam false->true
+[2026-06-08 11:10:08,966] INFO - [LalaPlugin:PitExit] Predicted class position changed -> P9 (ahead=8)
+[2026-06-08 11:10:11,387] INFO - [LalaPlugin:PitExit] Predicted class position changed -> P10 (ahead=9)
+[2026-06-08 11:10:13,403] INFO - [LalaPlugin:PitExit] Predicted class position changed -> P8 (ahead=7)
+[2026-06-08 11:10:15,900] INFO - [LalaPlugin:PitExit] Predicted class position changed -> P7 (ahead=6)
+[2026-06-08 11:10:19,276] INFO - [LalaPlugin:MonitorSystem] pit trigger=FuelControlModeChanged sessionTime=2557.6 sessionType=Race sessionState=4 phase=InBox monitorState=ON monitorEnum=1 monitorText=MONITOR READY onPitRoad=True inPitStall=True currentFuel=45.04 mode=OFF data=LIVE mfdRefuelEnabled=False mfdFuelRequest=44 pluginRefuelValid=True pluginNextLitres=0.058 pluginFuelOnExit=45.098 warningText=none warningEnum=0 reason=from=MAN to=OFF
+[2026-06-08 11:10:19,744] INFO - [LalaPlugin:Pit Window] state=4 label=SET FUEL! reqAdd=0.0 tankSpace=32.0 lap=24 confStable=90% confOverall=90% reqStops=1 closeLap=0
+[2026-06-08 11:10:19,744] INFO - [LalaPlugin:PitFuelControl] blocked action=OnTelemetryTick reason=external-mirror-change
+[2026-06-08 11:10:23,968] INFO - [LalaPlugin:PitExit] Predicted class position changed -> P6 (ahead=5)
+[2026-06-08 11:10:26,833] INFO - [LalaPlugin:PitExit] Predicted class position changed -> P5 (ahead=4)
+[2026-06-08 11:10:30,167] INFO - [LalaPlugin:PitScreen] Active -> False (onPitRoad=False, dismissed=False, manual=False)
+[2026-06-08 11:10:30,167] INFO - [LalaPlugin:Pit Cycle] Direct lane travel computed -> lane=44.49s, stop=17.11s, direct=27.38s
+[2026-06-08 11:10:30,167] INFO - [LalaPlugin:Pit Cycle] Pit exit detected – lane=44.49s, stop=17.11s, direct=27.38s. Awaiting pit-lap completion.
+[2026-06-08 11:10:30,171] INFO - [LalaPlugin:MonitorSystem] pit trigger=PitRoadExit sessionTime=2568.483 sessionType=Race sessionState=4 phase=OnTrack monitorState=ON monitorEnum=4 monitorText=EXIT FUEL SHORT onPitRoad=False inPitStall=False currentFuel=44.677 mode=OFF data=LIVE mfdRefuelEnabled=False mfdFuelRequest=44 pluginRefuelValid=True pluginNextLitres=0.073 pluginFuelOnExit=44.75 warningText=EXIT FUEL SHORT warningEnum=4 reason=OnPitRoad true->false; predictive reset
+[2026-06-08 11:10:30,192] INFO - [LalaPlugin:Runtime] fuel health check queued (reason: active driving edge).
+[2026-06-08 11:10:30,197] INFO - [LalaPlugin:Runtime] fuel health check passed reason=active driving edge raw=77.00 runtime=77.00 src=raw strategyMissing=False
+[2026-06-08 11:11:23,764] INFO - New fuel stat aggregated 3.42/lap
+[2026-06-08 11:11:24,270] INFO - [LalaPlugin:PitExit] Predicted class position changed -> P4 (ahead=3)
+[2026-06-08 11:11:25,178] INFO - New fuel stat aggregated 3.29/lap
+[2026-06-08 11:11:25,424] INFO - Old map quality score : 7 / New map quality score : 5
+[2026-06-08 11:11:25,425] INFO - New valid lap detected : 00:02:12.7080000, (LapId :ad90f7b6-9d41-44b9-9b9f-a9bebafd68dc)
+[2026-06-08 11:11:25,425] INFO - Fuel stats tracking resetted
+[2026-06-08 11:11:25,496] INFO - [LalaPlugin:Pit Cycle] Persist request: timeLoss=24.78 src=dtl lastDirect=27.38 existingLocked=True existingValue=25.00
+[2026-06-08 11:11:25,562] INFO - [LalaPlugin:Pit Cycle] Persist decision: action=BLOCKED_CANDIDATE seconds=24.78 src=dtl locked=True
+[2026-06-08 11:11:25,563] INFO - [LalaPlugin:Lap Detector] lap_crossed source=CompletedLaps lap=24 prev_lap=23 trackpct.last=0.956 trackpct.cur=0.062 near_sf=False far_from_sf=False pct_impossible=False speed_kmh=251.4 session_state=4
+[2026-06-08 11:11:25,563] INFO - [LalaPlugin:Leader Lap] no valid leader lap time from any candidate – returning 0
+[2026-06-08 11:11:25,563] INFO - [LalaPlugin:PACE] Lap 24: ok=False reason=pit-lap lap_s=132.708 baseline_s=102.165 delta_s=+30.543 stint_avg_s=102.170 last5_avg_s=102.165 conf_pct=100 leader_lap_s=0.000 leader_avg_s=0.000 leader_samples=0 posClass=P2 posOverall=P2 gapLdr=5.7
+[2026-06-08 11:11:25,563] INFO - [LalaPlugin:FUEL PER LAP] Lap 24: ok=False reason=pace-rejected mode=dry live_fpl=3.246 window_dry=5 window_wet=0 max_session_fpl=3.533 fuel_conf_pct=90 overall_conf_pct=90 pit_trip_active=True
+[2026-06-08 11:11:25,563] INFO - [LalaPlugin:FUEL DELTA] Lap 24: current_l=41.2 required_l=36.9 delta_l=-0.1 stable_fpl=3.219 stable_laps=11.46
+[2026-06-08 11:11:25,563] INFO - [LalaPlugin:RACE PROJECTION] Lap 24: after_zero_used_s=74.9 source=planner timer0_s=n/a session_remain_s=1088.2 projected_laps=11.46 projection_lap_s=102.200 projected_remain_s=1171.1
+[2026-06-08 11:11:25,565] INFO - [LalaPlugin:Drive Time Projection] tRemain=1088.2 after0Used=74.9s src=planner lapsProj=11.38 simLaps=35.44 lapRef=102.200s lapRefSrc=pace.stint after0Observed=0.0s state=4 mode=race-running
+[2026-06-08 11:11:25,579] INFO - [LalaPlugin:PitExit] Predicted class position changed -> P16 (ahead=15)
+[2026-06-08 11:11:26,586] INFO - New fuel stat aggregated 4.12/lap
+[2026-06-08 11:11:27,102] INFO - [LalaPlugin:PitExit] Predicted class position changed -> P16 (ahead=15)
+[2026-06-08 11:11:28,823] INFO - [LalaPlugin:PitExit] Predicted class position changed -> P14 (ahead=13)
+[2026-06-08 11:11:29,343] INFO - [LalaPlugin:PitExit] Predicted class position changed -> P17 (ahead=16)
+[2026-06-08 11:11:29,425] INFO - New fuel stat aggregated 3.39/lap
+[2026-06-08 11:11:30,468] INFO - [LalaPlugin:Pit Window] state=6 label=N/A reqAdd=0.0 tankSpace=38.4 lap=25 confStable=90% confOverall=90% reqStops=1 closeLap=0
+[2026-06-08 11:11:31,059] INFO - New fuel stat aggregated 3.87/lap
+[2026-06-08 11:11:31,065] INFO - [LalaPlugin:PitExit] Predicted class position changed -> P14 (ahead=13)
+[2026-06-08 11:11:31,067] INFO - [LalaPlugin:Pit Window] state=4 label=SET FUEL! reqAdd=0.0 tankSpace=38.8 lap=25 confStable=90% confOverall=90% reqStops=1 closeLap=0
+[2026-06-08 11:11:31,267] INFO - Old map quality score : 7 / New map quality score : 6
+[2026-06-08 11:11:31,267] INFO - New valid lap detected : 00:01:42.9040000, (LapId :221bcfad-3704-43fd-a890-dea5b991e688)
+[2026-06-08 11:11:31,268] INFO - Storing lap consumption : 3.19, lap start : 41.23, lap end : 38.03
+[2026-06-08 11:11:31,362] INFO - [LalaPlugin:Pit Cycle] Persist request: timeLoss=24.92 src=dtl lastDirect=27.38 existingLocked=True existingValue=25.00
+[2026-06-08 11:11:31,366] INFO - [LalaPlugin:Pit Cycle] Persist decision: action=BLOCKED_CANDIDATE seconds=24.92 src=dtl locked=True
+[2026-06-08 11:11:31,657] INFO - [LalaPlugin:Lap Detector] lap_crossed source=CompletedLaps lap=25 prev_lap=24 trackpct.last=0.999 trackpct.cur=0.131 near_sf=False far_from_sf=False pct_impossible=False speed_kmh=152.3 session_state=4
+[2026-06-08 11:11:31,657] INFO - [LalaPlugin:Leader Lap] no valid leader lap time from any candidate – returning 0
+[2026-06-08 11:11:31,657] INFO - [LalaPlugin:PACE] Lap 25: ok=False reason=pit-warmup lap_s=102.904 baseline_s=102.165 delta_s=+0.739 stint_avg_s=102.170 last5_avg_s=102.165 conf_pct=100 leader_lap_s=0.000 leader_avg_s=0.000 leader_samples=0 posClass=P2 posOverall=P2 gapLdr=3.2
+[2026-06-08 11:11:31,657] INFO - [LalaPlugin:FUEL PER LAP] Lap 25: ok=False reason=pace-rejected mode=dry live_fpl=3.246 window_dry=5 window_wet=0 max_session_fpl=3.533 fuel_conf_pct=90 overall_conf_pct=90 pit_trip_active=False
+[2026-06-08 11:11:31,657] INFO - [LalaPlugin:FUEL DELTA] Lap 25: current_l=37.9 required_l=33.5 delta_l=-0.1 stable_fpl=3.219 stable_laps=10.42
+[2026-06-08 11:11:31,657] INFO - [LalaPlugin:RACE PROJECTION] Lap 25: after_zero_used_s=74.9 source=planner timer0_s=n/a session_remain_s=980.3 projected_laps=10.42 projection_lap_s=102.200 projected_remain_s=1064.8
+[2026-06-08 11:11:31,657] INFO - [LalaPlugin:Drive Time Projection] tRemain=980.3 after0Used=74.9s src=planner lapsProj=10.33 simLaps=35.44 lapRef=102.200s lapRefSrc=pace.stint after0Observed=0.0s state=4 mode=race-running
+[2026-06-08 11:11:33,284] INFO - [LalaPlugin:PitExit] Predicted class position changed -> P16 (ahead=15)
+[2026-06-08 11:11:33,837] INFO - New fuel stat aggregated 3.39/lap
+[2026-06-08 11:11:33,842] INFO - [LalaPlugin:PitExit] Predicted class position changed -> P15 (ahead=14)
+[2026-06-08 11:11:34,370] INFO - [LalaPlugin:PitExit] Predicted class position changed -> P14 (ahead=13)
+[2026-06-08 11:11:35,570] INFO - New fuel stat aggregated 3.68/lap
+[2026-06-08 11:11:36,440] INFO - [LalaPlugin:PitExit] Predicted class position changed -> P14 (ahead=13)
+[2026-06-08 11:11:36,726] INFO - Old map quality score : 7 / New map quality score : 4
+[2026-06-08 11:11:36,726] INFO - New valid lap detected : 00:01:42.6350000, (LapId :58a9ed55-03b4-49fd-a07f-4c078988dd7d)
+[2026-06-08 11:11:36,727] INFO - Storing lap consumption : 3.14, lap start : 38.03, lap end : 34.90
+[2026-06-08 11:11:36,748] INFO - New fuel stat aggregated 3.25/lap
+[2026-06-08 11:11:36,795] INFO - [LalaPlugin:Pit Cycle] Persist request: timeLoss=24.92 src=dtl lastDirect=27.38 existingLocked=True existingValue=25.00
+[2026-06-08 11:11:36,796] INFO - [LalaPlugin:Lap Detector] lap_crossed source=CompletedLaps lap=26 prev_lap=25 trackpct.last=0.920 trackpct.cur=0.021 near_sf=False far_from_sf=False pct_impossible=False speed_kmh=241.7 session_state=4
+[2026-06-08 11:11:36,797] INFO - [LalaPlugin:Leader Lap] no valid leader lap time from any candidate – returning 0
+[2026-06-08 11:11:36,803] INFO - [LalaPlugin:PACE] Lap 26: ok=True reason=accepted lap_s=102.635 baseline_s=102.165 delta_s=+0.470 stint_avg_s=102.244 last5_avg_s=102.248 conf_pct=100 leader_lap_s=0.000 leader_avg_s=0.000 leader_samples=0 posClass=P2 posOverall=P2 gapLdr=6.3
+[2026-06-08 11:11:36,803] INFO - [LalaPlugin:FUEL PER LAP] Lap 26: ok=True reason=accepted mode=dry live_fpl=3.150 window_dry=5 window_wet=0 max_session_fpl=3.533 fuel_conf_pct=90 overall_conf_pct=90 pit_trip_active=False
+[2026-06-08 11:11:36,803] INFO - [LalaPlugin:FUEL DELTA] Lap 26: current_l=34.9 required_l=30.5 delta_l=0.0 stable_fpl=3.219 stable_laps=9.48
+[2026-06-08 11:11:36,804] INFO - [LalaPlugin:RACE PROJECTION] Lap 26: after_zero_used_s=74.9 source=planner timer0_s=n/a session_remain_s=885.6 projected_laps=9.48 projection_lap_s=102.200 projected_remain_s=968.6
+[2026-06-08 11:11:36,805] INFO - [LalaPlugin:Pit Window] state=6 label=N/A reqAdd=0.0 tankSpace=42.1 lap=27 confStable=90% confOverall=90% reqStops=1 closeLap=0
+[2026-06-08 11:11:36,805] INFO - [LalaPlugin:Drive Time Projection] tRemain=885.6 after0Used=74.9s src=planner lapsProj=9.40 simLaps=35.44 lapRef=102.200s lapRefSrc=pace.stint after0Observed=0.0s state=4 mode=race-running
+[2026-06-08 11:11:37,001] INFO - [LalaPlugin:PitExit] Predicted class position changed -> P12 (ahead=11)
+[2026-06-08 11:11:37,865] INFO - New fuel stat aggregated 3.03/lap
+[2026-06-08 11:11:38,098] INFO - [LalaPlugin:PitExit] Predicted class position changed -> P14 (ahead=13)
+[2026-06-08 11:11:38,589] INFO - [LalaPlugin:PitExit] Predicted class position changed -> P17 (ahead=16)
+[2026-06-08 11:11:38,814] INFO - New fuel stat aggregated 3.66/lap
+[2026-06-08 11:11:38,820] INFO - [LalaPlugin:PitExit] Predicted class position changed -> P14 (ahead=13)
+[2026-06-08 11:11:40,602] INFO - New fuel stat aggregated 3.06/lap
+[2026-06-08 11:11:40,871] INFO - [LalaPlugin:PitExit] Predicted class position changed -> P14 (ahead=13)
+[2026-06-08 11:11:41,384] INFO - New fuel stat aggregated 3.41/lap
+[2026-06-08 11:11:42,025] INFO - Old map quality score : 7 / New map quality score : 5
+[2026-06-08 11:11:42,026] INFO - New valid lap detected : 00:01:43.2270000, (LapId :ed0feee3-ff7f-4386-a248-4fb114f95884)
+[2026-06-08 11:11:42,026] INFO - Storing lap consumption : 3.36, lap start : 34.90, lap end : 31.54
+[2026-06-08 11:11:42,092] INFO - [LalaPlugin:Pit Cycle] Persist request: timeLoss=24.92 src=dtl lastDirect=27.38 existingLocked=True existingValue=25.00
+[2026-06-08 11:11:42,092] INFO - [LalaPlugin:Lap Detector] lap_crossed source=CompletedLaps lap=27 prev_lap=26 trackpct.last=0.900 trackpct.cur=0.063 near_sf=False far_from_sf=False pct_impossible=False speed_kmh=251.4 session_state=4
+[2026-06-08 11:11:42,092] INFO - [LalaPlugin:Leader Lap] no valid leader lap time from any candidate – returning 0
+[2026-06-08 11:11:42,094] INFO - [LalaPlugin:PACE] Lap 27: ok=False reason=incident:WrongWay lap_s=103.227 baseline_s=102.248 delta_s=+0.979 stint_avg_s=102.244 last5_avg_s=102.248 conf_pct=100 leader_lap_s=0.000 leader_avg_s=0.000 leader_samples=0 posClass=P2 posOverall=P2 gapLdr=6.9
+[2026-06-08 11:11:42,094] INFO - [LalaPlugin:FUEL PER LAP] Lap 27: ok=False reason=pace-rejected mode=dry live_fpl=3.150 window_dry=5 window_wet=0 max_session_fpl=3.533 fuel_conf_pct=90 overall_conf_pct=90 pit_trip_active=False
+[2026-06-08 11:11:42,094] INFO - [LalaPlugin:FUEL DELTA] Lap 27: current_l=31.5 required_l=26.7 delta_l=0.7 stable_fpl=3.150 stable_laps=8.49
+[2026-06-08 11:11:42,094] INFO - [LalaPlugin:RACE PROJECTION] Lap 27: after_zero_used_s=74.9 source=planner timer0_s=n/a session_remain_s=779.4 projected_laps=8.49 projection_lap_s=102.200 projected_remain_s=867.3
+[2026-06-08 11:11:42,095] INFO - [LalaPlugin:Drive Time Projection] tRemain=779.4 after0Used=74.9s src=planner lapsProj=8.36 simLaps=35.44 lapRef=102.200s lapRefSrc=pace.stint after0Observed=0.0s state=4 mode=race-running
+[2026-06-08 11:11:42,287] INFO - [LalaPlugin:PitExit] Predicted class position changed -> P12 (ahead=11)
+[2026-06-08 11:11:43,344] INFO - [LalaPlugin:PitExit] Predicted class position changed -> P14 (ahead=13)
+[2026-06-08 11:11:44,127] INFO - New fuel stat aggregated 4.07/lap
+[2026-06-08 11:11:45,203] INFO - New fuel stat aggregated 2.56/lap
+[2026-06-08 11:11:45,462] INFO - [LalaPlugin:PitExit] Predicted class position changed -> P15 (ahead=14)
+[2026-06-08 11:11:45,995] INFO - New fuel stat aggregated 3.57/lap
+[2026-06-08 11:11:46,857] INFO - New fuel stat aggregated 3.36/lap
+[2026-06-08 11:11:47,146] INFO - Old map quality score : 7 / New map quality score : 4
+[2026-06-08 11:11:47,147] INFO - New valid lap detected : 00:01:42.9200000, (LapId :25dca471-3bdb-4017-959c-42167a48cbf6)
+[2026-06-08 11:11:47,147] INFO - Storing lap consumption : 3.21, lap start : 31.54, lap end : 28.32
+[2026-06-08 11:11:47,202] INFO - [LalaPlugin:Pit Cycle] Persist request: timeLoss=24.89 src=dtl lastDirect=27.38 existingLocked=True existingValue=25.00
+[2026-06-08 11:11:47,213] INFO - [LalaPlugin:Pit Cycle] Persist decision: action=BLOCKED_CANDIDATE seconds=24.89 src=dtl locked=True
+[2026-06-08 11:11:47,214] INFO - [LalaPlugin:Lap Detector] lap_crossed source=CompletedLaps lap=28 prev_lap=27 trackpct.last=0.937 trackpct.cur=0.058 near_sf=False far_from_sf=False pct_impossible=False speed_kmh=250.7 session_state=4
+[2026-06-08 11:11:47,214] INFO - [LalaPlugin:Leader Lap] no valid leader lap time from any candidate – returning 0
+[2026-06-08 11:11:47,214] INFO - [LalaPlugin:PACE] Lap 28: ok=False reason=incident:WrongWay lap_s=102.920 baseline_s=102.248 delta_s=+0.672 stint_avg_s=102.244 last5_avg_s=102.248 conf_pct=100 leader_lap_s=0.000 leader_avg_s=0.000 leader_samples=0 posClass=P2 posOverall=P2 gapLdr=7.3
+[2026-06-08 11:11:47,214] INFO - [LalaPlugin:FUEL PER LAP] Lap 28: ok=False reason=pace-rejected mode=dry live_fpl=3.150 window_dry=5 window_wet=0 max_session_fpl=3.533 fuel_conf_pct=90 overall_conf_pct=90 pit_trip_active=False
+[2026-06-08 11:11:47,214] INFO - [LalaPlugin:FUEL DELTA] Lap 28: current_l=28.3 required_l=23.5 delta_l=0.6 stable_fpl=3.150 stable_laps=7.45
+[2026-06-08 11:11:47,214] INFO - [LalaPlugin:RACE PROJECTION] Lap 28: after_zero_used_s=74.9 source=planner timer0_s=n/a session_remain_s=676.8 projected_laps=7.45 projection_lap_s=102.200 projected_remain_s=760.9
+[2026-06-08 11:11:47,216] INFO - [LalaPlugin:Drive Time Projection] tRemain=676.8 after0Used=74.9s src=planner lapsProj=7.36 simLaps=35.44 lapRef=102.200s lapRefSrc=pace.stint after0Observed=0.0s state=4 mode=race-running
+[2026-06-08 11:11:47,435] INFO - [LalaPlugin:PitExit] Predicted class position changed -> P12 (ahead=11)
+[2026-06-08 11:11:49,256] INFO - New fuel stat aggregated 4.08/lap
+[2026-06-08 11:11:49,261] INFO - [LalaPlugin:PitExit] Predicted class position changed -> P14 (ahead=13)
+[2026-06-08 11:11:50,622] INFO - New fuel stat aggregated 2.95/lap
+[2026-06-08 11:11:51,426] INFO - [LalaPlugin:PitExit] Predicted class position changed -> P15 (ahead=14)
+[2026-06-08 11:11:52,093] INFO - New fuel stat aggregated 3.95/lap
+[2026-06-08 11:11:52,099] INFO - [LalaPlugin:PitExit] Predicted class position changed -> P14 (ahead=13)
+[2026-06-08 11:11:52,118] INFO - [LalaPlugin:Lap Detector] lap_crossed source=CompletedLaps lap=29 prev_lap=28 trackpct.last=0.908 trackpct.cur=0.001 near_sf=False far_from_sf=False pct_impossible=False speed_kmh=236.6 session_state=4
+[2026-06-08 11:11:52,118] INFO - [LalaPlugin:Leader Lap] no valid leader lap time from any candidate – returning 0
+[2026-06-08 11:11:52,118] INFO - [LalaPlugin:PACE] Lap 29: ok=False reason=incident:WrongWay lap_s=102.920 baseline_s=102.248 delta_s=+0.672 stint_avg_s=102.244 last5_avg_s=102.248 conf_pct=100 leader_lap_s=0.000 leader_avg_s=0.000 leader_samples=0 posClass=P2 posOverall=P2 gapLdr=7.9
+[2026-06-08 11:11:52,118] INFO - [LalaPlugin:FUEL PER LAP] Lap 29: ok=False reason=pace-rejected mode=dry live_fpl=3.150 window_dry=5 window_wet=0 max_session_fpl=3.533 fuel_conf_pct=90 overall_conf_pct=90 pit_trip_active=False
+[2026-06-08 11:11:52,119] INFO - [LalaPlugin:FUEL DELTA] Lap 29: current_l=25.3 required_l=20.4 delta_l=0.6 stable_fpl=3.150 stable_laps=6.46
+[2026-06-08 11:11:52,119] INFO - [LalaPlugin:RACE PROJECTION] Lap 29: after_zero_used_s=74.9 source=planner timer0_s=n/a session_remain_s=577.9 projected_laps=6.46 projection_lap_s=102.200 projected_remain_s=660.5
+[2026-06-08 11:11:52,120] INFO - [LalaPlugin:Drive Time Projection] tRemain=577.9 after0Used=74.9s src=planner lapsProj=6.39 simLaps=35.44 lapRef=102.200s lapRefSrc=pace.stint after0Observed=0.0s state=4 mode=race-running
+[2026-06-08 11:11:52,342] INFO - Old map quality score : 7 / New map quality score : 4
+[2026-06-08 11:11:52,342] INFO - New valid lap detected : 00:01:42.9970000, (LapId :cf464c8a-a64f-412a-8f1c-a2f926d10e59)
+[2026-06-08 11:11:52,343] INFO - Storing lap consumption : 3.33, lap start : 28.32, lap end : 25.00
+[2026-06-08 11:11:52,409] INFO - [LalaPlugin:Pit Cycle] Persist request: timeLoss=24.89 src=dtl lastDirect=27.38 existingLocked=True existingValue=25.00
+[2026-06-08 11:11:52,587] INFO - [LalaPlugin:PitExit] Predicted class position changed -> P12 (ahead=11)
+[2026-06-08 11:11:54,311] INFO - New fuel stat aggregated 3.23/lap
+[2026-06-08 11:11:54,602] INFO - [LalaPlugin:PitExit] Predicted class position changed -> P15 (ahead=14)
+[2026-06-08 11:11:55,902] INFO - New fuel stat aggregated 3.50/lap
+[2026-06-08 11:11:56,821] INFO - New fuel stat aggregated 2.93/lap
+[2026-06-08 11:11:57,066] INFO - [LalaPlugin:PitExit] Predicted class position changed -> P14 (ahead=13)
+[2026-06-08 11:11:57,330] INFO - Old map quality score : 7 / New map quality score : 6
+[2026-06-08 11:11:57,330] INFO - New valid lap detected : 00:01:42.6530000, (LapId :1229e8c2-a272-4bf2-854c-167a1e006a47)
+[2026-06-08 11:11:57,331] INFO - Storing lap consumption : 3.12, lap start : 25.00, lap end : 21.88
+[2026-06-08 11:11:57,399] INFO - [LalaPlugin:Pit Cycle] Persist request: timeLoss=24.89 src=dtl lastDirect=27.38 existingLocked=True existingValue=25.00
+[2026-06-08 11:11:57,895] INFO - [LalaPlugin:Lap Detector] lap_crossed source=CompletedLaps lap=30 prev_lap=29 trackpct.last=0.966 trackpct.cur=0.154 near_sf=False far_from_sf=False pct_impossible=False speed_kmh=133.3 session_state=4
+[2026-06-08 11:11:57,895] INFO - [LalaPlugin:Leader Lap] no valid leader lap time from any candidate – returning 0
+[2026-06-08 11:11:57,895] INFO - [LalaPlugin:PACE] Lap 30: ok=False reason=incident:WrongWay lap_s=102.653 baseline_s=102.248 delta_s=+0.405 stint_avg_s=102.244 last5_avg_s=102.248 conf_pct=100 leader_lap_s=0.000 leader_avg_s=0.000 leader_samples=0 posClass=P2 posOverall=P2 gapLdr=5.3
+[2026-06-08 11:11:57,895] INFO - [LalaPlugin:FUEL PER LAP] Lap 30: ok=False reason=pace-rejected mode=dry live_fpl=3.150 window_dry=5 window_wet=0 max_session_fpl=3.533 fuel_conf_pct=90 overall_conf_pct=90 pit_trip_active=False
+[2026-06-08 11:11:57,895] INFO - [LalaPlugin:FUEL DELTA] Lap 30: current_l=21.6 required_l=17.0 delta_l=0.4 stable_fpl=3.150 stable_laps=5.41
+[2026-06-08 11:11:57,895] INFO - [LalaPlugin:RACE PROJECTION] Lap 30: after_zero_used_s=74.9 source=planner timer0_s=n/a session_remain_s=462.6 projected_laps=5.41 projection_lap_s=102.200 projected_remain_s=552.9
+[2026-06-08 11:11:57,897] INFO - [LalaPlugin:Drive Time Projection] tRemain=462.6 after0Used=74.9s src=planner lapsProj=5.26 simLaps=35.44 lapRef=102.200s lapRefSrc=pace.stint after0Observed=0.0s state=4 mode=race-running
+[2026-06-08 11:11:58,650] INFO - [LalaPlugin:PitExit] Predicted class position changed -> P14 (ahead=13)
+[2026-06-08 11:11:59,459] INFO - New fuel stat aggregated 3.41/lap
+[2026-06-08 11:12:01,152] INFO - New fuel stat aggregated 3.27/lap
+[2026-06-08 11:12:02,144] INFO - New fuel stat aggregated 2.97/lap
+[2026-06-08 11:12:02,440] INFO - Old map quality score : 7 / New map quality score : 5
+[2026-06-08 11:12:02,441] INFO - New valid lap detected : 00:01:42.4540000, (LapId :939ca698-b606-4714-8bcc-3037622c3b3c)
+[2026-06-08 11:12:02,442] INFO - Storing lap consumption : 3.19, lap start : 21.88, lap end : 18.69
+[2026-06-08 11:12:02,511] INFO - [LalaPlugin:Pit Cycle] Persist request: timeLoss=24.89 src=dtl lastDirect=27.38 existingLocked=True existingValue=25.00
+[2026-06-08 11:12:02,706] INFO - [LalaPlugin:PitExit] Predicted class position changed -> P12 (ahead=11)
+[2026-06-08 11:12:02,709] INFO - [LalaPlugin:Lap Detector] lap_crossed source=CompletedLaps lap=31 prev_lap=30 trackpct.last=0.956 trackpct.cur=0.108 near_sf=False far_from_sf=False pct_impossible=False speed_kmh=259.7 session_state=4
+[2026-06-08 11:12:02,709] INFO - [LalaPlugin:Leader Lap] no valid leader lap time from any candidate – returning 0
+[2026-06-08 11:12:02,712] INFO - [LalaPlugin:PACE] Lap 31: ok=True reason=accepted lap_s=102.454 baseline_s=102.248 delta_s=+0.206 stint_avg_s=102.283 last5_avg_s=102.230 conf_pct=100 leader_lap_s=0.000 leader_avg_s=0.000 leader_samples=0 posClass=P2 posOverall=P2 gapLdr=4.9
+[2026-06-08 11:12:02,712] INFO - [LalaPlugin:FUEL PER LAP] Lap 31: ok=True reason=accepted mode=dry live_fpl=3.164 window_dry=5 window_wet=0 max_session_fpl=3.533 fuel_conf_pct=90 overall_conf_pct=90 pit_trip_active=False
+[2026-06-08 11:12:02,712] INFO - [LalaPlugin:FUEL DELTA] Lap 31: current_l=18.4 required_l=13.9 delta_l=0.4 stable_fpl=3.150 stable_laps=4.42
+[2026-06-08 11:12:02,712] INFO - [LalaPlugin:RACE PROJECTION] Lap 31: after_zero_used_s=74.9 source=planner timer0_s=n/a session_remain_s=365.3 projected_laps=4.42 projection_lap_s=102.200 projected_remain_s=451.2
+[2026-06-08 11:12:02,714] INFO - [LalaPlugin:Drive Time Projection] tRemain=365.3 after0Used=74.9s src=planner lapsProj=4.31 simLaps=35.44 lapRef=102.200s lapRefSrc=pace.stint after0Observed=0.0s state=4 mode=race-running
+[2026-06-08 11:12:03,594] INFO - New fuel stat aggregated 3.09/lap
+[2026-06-08 11:12:03,853] INFO - [LalaPlugin:PitExit] Predicted class position changed -> P14 (ahead=13)
+[2026-06-08 11:12:04,635] INFO - New fuel stat aggregated 4.05/lap
+[2026-06-08 11:12:05,558] INFO - New fuel stat aggregated 3.78/lap
+[2026-06-08 11:12:06,385] INFO - New fuel stat aggregated 4.27/lap
+[2026-06-08 11:12:07,445] INFO - New fuel stat aggregated 3.21/lap
+[2026-06-08 11:12:07,699] INFO - Old map quality score : 7 / New map quality score : 5
+[2026-06-08 11:12:07,700] INFO - New valid lap detected : 00:01:42.4060000, (LapId :d5f3ffcf-0e05-4113-bf57-6700e3000e57)
+[2026-06-08 11:12:07,700] INFO - Storing lap consumption : 3.39, lap start : 18.69, lap end : 15.29
+[2026-06-08 11:12:07,752] INFO - [LalaPlugin:PitExit] Predicted class position changed -> P13 (ahead=12)
+[2026-06-08 11:12:07,755] INFO - [LalaPlugin:Pit Cycle] Persist request: timeLoss=24.89 src=dtl lastDirect=27.38 existingLocked=True existingValue=25.00
+[2026-06-08 11:12:07,983] INFO - [LalaPlugin:PitExit] Predicted class position changed -> P11 (ahead=10)
+[2026-06-08 11:12:07,985] INFO - [LalaPlugin:Lap Detector] lap_crossed source=CompletedLaps lap=32 prev_lap=31 trackpct.last=0.992 trackpct.cur=0.137 near_sf=False far_from_sf=False pct_impossible=False speed_kmh=123.8 session_state=4
+[2026-06-08 11:12:07,986] INFO - [LalaPlugin:Leader Lap] no valid leader lap time from any candidate – returning 0
+[2026-06-08 11:12:07,986] INFO - [LalaPlugin:PACE] Lap 32: ok=False reason=incident:WrongWay lap_s=102.406 baseline_s=102.230 delta_s=+0.176 stint_avg_s=102.283 last5_avg_s=102.230 conf_pct=100 leader_lap_s=0.000 leader_avg_s=0.000 leader_samples=0 posClass=P2 posOverall=P2 gapLdr=4.0
+[2026-06-08 11:12:07,986] INFO - [LalaPlugin:FUEL PER LAP] Lap 32: ok=False reason=pace-rejected mode=dry live_fpl=3.164 window_dry=5 window_wet=0 max_session_fpl=3.533 fuel_conf_pct=90 overall_conf_pct=90 pit_trip_active=False
+[2026-06-08 11:12:07,986] INFO - [LalaPlugin:FUEL DELTA] Lap 32: current_l=15.2 required_l=10.7 delta_l=0.2 stable_fpl=3.150 stable_laps=3.39
+[2026-06-08 11:12:07,986] INFO - [LalaPlugin:RACE PROJECTION] Lap 32: after_zero_used_s=74.9 source=planner timer0_s=n/a session_remain_s=260.3 projected_laps=3.39 projection_lap_s=102.200 projected_remain_s=346.0
+[2026-06-08 11:12:07,988] INFO - [LalaPlugin:Drive Time Projection] tRemain=260.3 after0Used=74.9s src=planner lapsProj=3.28 simLaps=35.44 lapRef=102.200s lapRefSrc=pace.stint after0Observed=0.0s state=4 mode=race-running
+[2026-06-08 11:12:08,983] INFO - [LalaPlugin:PitExit] Predicted class position changed -> P14 (ahead=13)
+[2026-06-08 11:12:09,534] INFO - New fuel stat aggregated 2.50/lap
+[2026-06-08 11:12:10,847] INFO - New fuel stat aggregated 4.46/lap
+[2026-06-08 11:12:12,481] INFO - New fuel stat aggregated 2.81/lap
+[2026-06-08 11:12:12,706] INFO - Old map quality score : 7 / New map quality score : 4
+[2026-06-08 11:12:12,706] INFO - New valid lap detected : 00:01:43.5700000, (LapId :66072a1d-fcd5-444e-bd46-1825c74f0c99)
+[2026-06-08 11:12:12,707] INFO - Storing lap consumption : 3.11, lap start : 15.29, lap end : 12.19
+[2026-06-08 11:12:12,768] INFO - [LalaPlugin:Pit Cycle] Persist request: timeLoss=24.66 src=dtl lastDirect=27.38 existingLocked=True existingValue=25.00
+[2026-06-08 11:12:12,772] INFO - [LalaPlugin:Pit Cycle] Persist decision: action=BLOCKED_CANDIDATE seconds=24.66 src=dtl locked=True
+[2026-06-08 11:12:13,055] INFO - [LalaPlugin:Lap Detector] lap_crossed source=CompletedLaps lap=33 prev_lap=32 trackpct.last=0.964 trackpct.cur=0.098 near_sf=False far_from_sf=False pct_impossible=False speed_kmh=257.9 session_state=4
+[2026-06-08 11:12:13,055] INFO - [LalaPlugin:Leader Lap] no valid leader lap time from any candidate – returning 0
+[2026-06-08 11:12:13,058] INFO - [LalaPlugin:PACE] Lap 33: ok=True reason=accepted lap_s=103.570 baseline_s=102.230 delta_s=+1.340 stint_avg_s=102.453 last5_avg_s=102.527 conf_pct=100 leader_lap_s=0.000 leader_avg_s=0.000 leader_samples=0 posClass=P2 posOverall=P2 gapLdr=5.6
+[2026-06-08 11:12:13,058] INFO - [LalaPlugin:FUEL PER LAP] Lap 33: ok=True reason=accepted mode=dry live_fpl=3.127 window_dry=5 window_wet=0 max_session_fpl=3.533 fuel_conf_pct=100 overall_conf_pct=100 pit_trip_active=False
+[2026-06-08 11:12:13,058] INFO - [LalaPlugin:FUEL DELTA] Lap 33: current_l=12.0 required_l=7.5 delta_l=0.2 stable_fpl=3.150 stable_laps=2.39
+[2026-06-08 11:12:13,058] INFO - [LalaPlugin:RACE PROJECTION] Lap 33: after_zero_used_s=74.9 source=planner timer0_s=n/a session_remain_s=160.0 projected_laps=2.39 projection_lap_s=102.200 projected_remain_s=244.6
+[2026-06-08 11:12:13,060] INFO - [LalaPlugin:Drive Time Projection] tRemain=160.0 after0Used=74.9s src=planner lapsProj=2.30 simLaps=35.44 lapRef=102.200s lapRefSrc=pace.stint after0Observed=0.0s state=4 mode=race-running
+[2026-06-08 11:12:13,289] INFO - [LalaPlugin:PitExit] Predicted class position changed -> P12 (ahead=11)
+[2026-06-08 11:12:14,031] INFO - [LalaPlugin:PitExit] Predicted class position changed -> P14 (ahead=13)
+[2026-06-08 11:12:14,947] INFO - New fuel stat aggregated 3.35/lap
+[2026-06-08 11:12:16,664] INFO - New fuel stat aggregated 3.51/lap
+[2026-06-08 11:12:17,637] INFO - New fuel stat aggregated 3.97/lap
+[2026-06-08 11:12:17,864] INFO - Old map quality score : 7 / New map quality score : 5
+[2026-06-08 11:12:17,864] INFO - New valid lap detected : 00:01:42.9710000, (LapId :bb474f84-3d9e-4c8c-b51a-ee69e9f26af1)
+[2026-06-08 11:12:17,865] INFO - Storing lap consumption : 3.23, lap start : 12.19, lap end : 8.96
+[2026-06-08 11:12:17,933] INFO - [LalaPlugin:Pit Cycle] Persist request: timeLoss=24.66 src=dtl lastDirect=27.38 existingLocked=True existingValue=25.00
+[2026-06-08 11:12:17,934] INFO - [LalaPlugin:Lap Detector] lap_crossed source=CompletedLaps lap=34 prev_lap=33 trackpct.last=0.907 trackpct.cur=0.032 near_sf=False far_from_sf=False pct_impossible=False speed_kmh=245.0 session_state=4
+[2026-06-08 11:12:17,934] INFO - [LalaPlugin:Leader Lap] no valid leader lap time from any candidate – returning 0
+[2026-06-08 11:12:17,942] INFO - [LalaPlugin:PACE] Lap 34: ok=True reason=accepted lap_s=102.971 baseline_s=102.527 delta_s=+0.444 stint_avg_s=102.601 last5_avg_s=102.704 conf_pct=100 leader_lap_s=0.000 leader_avg_s=0.000 leader_samples=0 posClass=P2 posOverall=P2 gapLdr=8.9
+[2026-06-08 11:12:17,942] INFO - [LalaPlugin:FUEL PER LAP] Lap 34: ok=True reason=accepted mode=dry live_fpl=3.111 window_dry=5 window_wet=0 max_session_fpl=3.533 fuel_conf_pct=90 overall_conf_pct=90 pit_trip_active=False
+[2026-06-08 11:12:17,942] INFO - [LalaPlugin:FUEL DELTA] Lap 34: current_l=9.0 required_l=4.5 delta_l=0.2 stable_fpl=3.150 stable_laps=1.43
+[2026-06-08 11:12:17,942] INFO - [LalaPlugin:RACE PROJECTION] Lap 34: after_zero_used_s=74.9 source=planner timer0_s=n/a session_remain_s=61.6 projected_laps=1.43 projection_lap_s=102.200 projected_remain_s=146.6
+[2026-06-08 11:12:17,943] INFO - [LalaPlugin:Pace] source=pace.stint lap=102.600s stint=102.601s last5=102.704s profile=102.500s
+[2026-06-08 11:12:17,943] INFO - [LalaPlugin:Drive Time Projection] tRemain=61.6 after0Used=74.9s src=planner lapsProj=1.33 simLaps=35.44 lapRef=102.600s lapRefSrc=pace.stint after0Observed=0.0s state=4 mode=race-running
+[2026-06-08 11:12:31,476] INFO - [LalaPlugin:Drive Time Projection] After 0 Source Change from=planner to=live live valid=True timer0 seen=True
+[2026-06-08 11:12:31,736] INFO - [LalaPlugin:Finish] end_phase phase=AfterZeroLeaderRunning(2) conf=3 state=4 timed=True tRemain=0.0
+[2026-06-08 11:12:31,736] INFO - [LalaPlugin:Finish] last_lap_likely=True phase=AfterZeroLeaderRunning state=4 timed=True tRemain=0.0
+[2026-06-08 11:12:41,284] INFO - [LalaPlugin:Pit Window] state=4 label=SET FUEL! reqAdd=0.0 tankSpace=70.2 lap=35 confStable=90% confOverall=90% reqStops=1 closeLap=0
+[2026-06-08 11:12:56,240] INFO - [LalaPlugin:MonitorSystem] pit trigger=PredictiveTwoLapsFuelRemaining sessionTime=3788.55 sessionType=Race sessionState=4 phase=OnTrack monitorState=ON monitorEnum=1 monitorText=FUEL HEALTH OK onPitRoad=False inPitStall=False currentFuel=6.368 mode=OFF data=LIVE mfdRefuelEnabled=False mfdFuelRequest=44 pluginRefuelValid=True pluginNextLitres=0.485 pluginFuelOnExit=6.853 warningText=none warningEnum=0 reason=lapsRemainingInTank=2.05 threshold=2.05
+[2026-06-08 11:12:59,296] INFO - [LalaPlugin:Finish] end_phase phase=LeaderFinished(3) conf=3 state=5 timed=True tRemain=-1.0
+[2026-06-08 11:12:59,296] INFO - [LalaPlugin:Finish] overall_finish trigger=state_backup state=5 phase=LeaderFinished conf=3
+[2026-06-08 11:12:59,297] INFO - [LalaPlugin:Finish] class_finish trigger=single_class_mirror source=overall
+[2026-06-08 11:12:59,297] INFO - [LalaPlugin:Finish] leader_finish trigger=derived source=overall session_state=5 timer0_seen=True phase=LeaderFinished
+[2026-06-08 11:12:59,300] INFO - [LalaPlugin:After0Result] driver=28.0s leader=28.0s pred=74.9s lapsPred=0.73
+[2026-06-08 11:12:59,314] INFO - [LalaPlugin:RaceFinish] class snapshot captured state=5 source=live winner='Barry Wenman (P)'
+[2026-06-08 11:12:59,316] INFO - [LalaPlugin:Pit Window] state=6 label=N/A reqAdd=0.0 tankSpace=70.7 lap=35 confStable=90% confOverall=90% reqStops=1 closeLap=0
+[2026-06-08 11:13:05,450] INFO - [LalaPlugin:RaceFinish] player snapshot captured state=5 overall=2 class=2 finishGap=6.17s classBest=101.843s
+[2026-06-08 11:13:10,927] INFO - New fuel stat aggregated 3.33/lap
+[2026-06-08 11:13:10,930] INFO - [LalaPlugin:Finish] finish_latch trigger=driver_checkered timer0_s=3763.6 leader_chk_s=3791.6 driver_chk_s=3803.3 leader_after0_s=28.0s driver_after0_s=39.7 leader_finished=True class_finished=True overall_finished=True session_remain_s=149.8
+[2026-06-08 11:13:10,935] INFO - [LalaPlugin:SessionSummary] AppendSummaryRow called green=True checkered=True
+[2026-06-08 11:13:12,198] INFO - Old map quality score : 7 / New map quality score : 5
+[2026-06-08 11:13:12,198] INFO - New valid lap detected : 00:01:43.1460000, (LapId :2551551b-032d-4c93-af1e-3ec28800e6c5)
+[2026-06-08 11:13:12,199] INFO - Storing lap consumption : 3.09, lap start : 8.96, lap end : 5.86
+[2026-06-08 11:13:12,303] INFO - [LalaPlugin:Pit Cycle] Persist request: timeLoss=24.66 src=dtl lastDirect=27.38 existingLocked=True existingValue=25.00
+[2026-06-08 11:13:55,235] INFO - Replay mode : Live
+[2026-06-08 11:13:55,326] INFO - Game disconnected
+[2026-06-08 11:13:58,202] INFO - Web client disconnected : 127.0.0.1 Lala Fuel Calculator
+[2026-06-08 11:14:01,634] INFO - Web client disconnected : 127.0.0.1 Lala Strategy Secondary Dash
+[2026-06-08 11:14:05,526] INFO - Closing simhub.
+[2026-06-08 11:14:05,527] INFO - Application exit
+[2026-06-08 11:14:05,861] INFO - Stopping game manager
+[2026-06-08 11:14:05,975] INFO - Stopping plugin manager
+[2026-06-08 11:14:05,988] INFO - Saving plugin settings SimHub.Plugins.DataPlugins.DataCore.DataCorePlugin
+[2026-06-08 11:14:05,991] INFO - SimHub.Plugins.DataPlugins.DataCore.DataCorePlugin plugin settings saved
+[2026-06-08 11:14:05,991] INFO - Saving plugin settings SimHub.Plugins.DataPlugins.SystemInfosProvider
+[2026-06-08 11:14:05,999] INFO - SimHub.Plugins.DataPlugins.SystemInfosProvider plugin settings saved
+[2026-06-08 11:14:06,000] INFO - Saving plugin settings SimHub.Plugins.OutputPlugins.ControlRemapper.ControlMapperPlugin
+[2026-06-08 11:14:06,032] INFO - SimHub.Plugins.OutputPlugins.ControlRemapper.ControlMapperPlugin plugin settings saved
+[2026-06-08 11:14:06,032] INFO - Saving plugin settings SimHub.Plugins.Devices.DevicesPlugin
+[2026-06-08 11:14:06,277] INFO - SimHub.Plugins.Devices.DevicesPlugin plugin settings saved
+[2026-06-08 11:14:06,278] INFO - Saving plugin settings SimHub.Plugins.DataPlugins.ShakeItV3.ShakeITMotorsV3Plugin
+[2026-06-08 11:14:06,321] INFO - SimHub.Plugins.DataPlugins.ShakeItV3.ShakeITMotorsV3Plugin plugin settings saved
+[2026-06-08 11:14:06,322] INFO - Saving plugin settings SimHub.Plugins.InputPlugins.JoystickPlugin
+[2026-06-08 11:14:06,327] INFO - SimHub.Plugins.InputPlugins.JoystickPlugin plugin settings saved
+[2026-06-08 11:14:06,327] INFO - Saving plugin settings SimHub.Plugins.OutputPlugins.Dash.SerialDashPlugin
+[2026-06-08 11:14:06,363] INFO - SimHub.Plugins.OutputPlugins.Dash.SerialDashPlugin plugin settings saved
+[2026-06-08 11:14:06,363] INFO - Saving plugin settings SimHub.Plugins.OutputPlugins.GraphicalDash.GraphicalDashPlugin
+[2026-06-08 11:14:06,473] INFO - SimHub.Plugins.OutputPlugins.GraphicalDash.GraphicalDashPlugin plugin settings saved
+[2026-06-08 11:14:06,476] INFO - Stopping plugin SimHub.Plugins.Devices.DevicesPlugin
+[2026-06-08 11:14:06,476] INFO - Finalizing plugin SimHub.Plugins.Devices.DevicesPlugin
+[2026-06-08 11:14:06,476] INFO - Plugin end SimHub.Plugins.Devices.DevicesPlugin took 0.001s
+[2026-06-08 11:14:06,477] INFO - Stopping plugin SimHub.Plugins.OutputPlugins.Dash.SerialDashPlugin
+[2026-06-08 11:14:06,477] INFO - Stopping plugin SimHub.Plugins.DataPlugins.DataCore.DataCorePlugin
+[2026-06-08 11:14:06,478] INFO - Plugin end SimHub.Plugins.DataPlugins.DataCore.DataCorePlugin took 0.002s
+[2026-06-08 11:14:06,478] INFO - Stopping plugin SimHub.Plugins.DataPlugins.SystemInfosProvider
+[2026-06-08 11:14:06,495] INFO - Plugin end SimHub.Plugins.OutputPlugins.Dash.SerialDashPlugin took 0.019s
+[2026-06-08 11:14:06,497] INFO - Plugin end SimHub.Plugins.DataPlugins.SystemInfosProvider took 0.019s
+[2026-06-08 11:14:06,497] INFO - Stopping plugin SimHub.Plugins.DataPlugins.PersistantTracker.PersistantTrackerPlugin
+[2026-06-08 11:14:06,497] INFO - Plugin end SimHub.Plugins.DataPlugins.PersistantTracker.PersistantTrackerPlugin took 0.000s
+[2026-06-08 11:14:06,497] INFO - Stopping plugin LaunchPlugin.LalaLaunch
+[2026-06-08 11:14:06,505] INFO - Plugin end LaunchPlugin.LalaLaunch took 0.008s
+[2026-06-08 11:14:06,505] INFO - Stopping plugin LovelySimRacing.Plugin.LovelyPlugin
+[2026-06-08 11:14:06,546] INFO - Plugin end LovelySimRacing.Plugin.LovelyPlugin took 0.040s
+[2026-06-08 11:14:06,546] INFO - Stopping plugin SimHub.Plugins.OutputPlugins.ControlRemapper.ControlMapperPlugin
+[2026-06-08 11:14:06,546] INFO - Finalizing plugin SimHub.Plugins.OutputPlugins.ControlRemapper.ControlMapperPlugin
+[2026-06-08 11:14:06,562] INFO - Plugin end SimHub.Plugins.OutputPlugins.ControlRemapper.ControlMapperPlugin took 0.016s
+[2026-06-08 11:14:06,562] INFO - Stopping plugin SimHub.Plugins.DataPlugins.ShakeItV3.ShakeITMotorsV3Plugin
+[2026-06-08 11:14:06,562] INFO - Finalizing plugin SimHub.Plugins.DataPlugins.ShakeItV3.ShakeITMotorsV3Plugin
+[2026-06-08 11:14:06,562] INFO - Plugin end SimHub.Plugins.DataPlugins.ShakeItV3.ShakeITMotorsV3Plugin took 0.000s
+[2026-06-08 11:14:06,562] INFO - Stopping plugin SimHub.Plugins.DataPlugins.PersistantTracker.LapHitoryPlugin
+[2026-06-08 11:14:06,562] INFO - Plugin end SimHub.Plugins.DataPlugins.PersistantTracker.LapHitoryPlugin took 0.000s
+[2026-06-08 11:14:06,563] INFO - Stopping plugin SimHub.Plugins.AudioControl.AudioPlayPlugin
+[2026-06-08 11:14:06,563] INFO - Plugin end SimHub.Plugins.AudioControl.AudioPlayPlugin took 0.001s
+[2026-06-08 11:14:06,564] INFO - Stopping plugin SimHub.Plugins.DataPlugins.Shell.ShellPlugin
+[2026-06-08 11:14:06,564] INFO - Finalizing plugin SimHub.Plugins.DataPlugins.Shell.ShellPlugin
+[2026-06-08 11:14:06,564] INFO - Plugin end SimHub.Plugins.DataPlugins.Shell.ShellPlugin took 0.000s
+[2026-06-08 11:14:06,564] INFO - Stopping plugin SimHub.Plugins.InputPlugins.JoystickPlugin
+[2026-06-08 11:14:06,576] INFO - Plugin end SimHub.Plugins.InputPlugins.JoystickPlugin took 0.012s
+[2026-06-08 11:14:06,576] INFO - Stopping plugin SimHub.Plugins.InputPlugins.KeyboardReaderPlugin
+[2026-06-08 11:14:06,576] INFO - Finalizing plugin SimHub.Plugins.InputPlugins.KeyboardReaderPlugin
+[2026-06-08 11:14:06,579] INFO - Plugin end SimHub.Plugins.InputPlugins.KeyboardReaderPlugin took 0.002s
+[2026-06-08 11:14:06,579] INFO - Stopping plugin SimHub.Plugins.KeyboardEmulator.KeyboardEmulatorPlugin
+[2026-06-08 11:14:06,583] INFO - Plugin end SimHub.Plugins.KeyboardEmulator.KeyboardEmulatorPlugin took 0.004s
+[2026-06-08 11:14:06,583] INFO - Stopping plugin SimHub.Plugins.OutputPlugins.GraphicalDash.GraphicalDashPlugin
+[2026-06-08 11:14:06,583] INFO - Finalizing plugin SimHub.Plugins.OutputPlugins.GraphicalDash.GraphicalDashPlugin
+[2026-06-08 11:14:06,583] INFO - Plugin end SimHub.Plugins.OutputPlugins.GraphicalDash.GraphicalDashPlugin took 0.000s
+[2026-06-08 11:14:06,584] INFO - Stopping plugin SimHub.Plugins.Web.WebPlugin
+[2026-06-08 11:14:06,584] INFO - Finalizing plugin SimHub.Plugins.Web.WebPlugin
+[2026-06-08 11:14:06,584] INFO - Plugin end SimHub.Plugins.Web.WebPlugin took 0.001s
+[2026-06-08 11:14:06,584] INFO - Stopped all plugins
+[2026-06-08 11:14:06,593] INFO - Performance dump
+[2026-06-08 11:14:06,596] INFO - SimHub.Plugins.DataPlugins.DataCore.DataCorePlugin::DataUpdate	62741calls	14058.073ms	62741calls	0.224ms/call
+[2026-06-08 11:14:06,596] INFO - SimHub.Plugins.DataPlugins.SystemInfosProvider::DataUpdate	62741calls	759.036ms	62741calls	0.012ms/call
+[2026-06-08 11:14:06,596] INFO - SimHub.Plugins.DataPlugins.PersistantTracker.PersistantTrackerPlugin::DataUpdate	62741calls	10939.128ms	62741calls	0.174ms/call
+[2026-06-08 11:14:06,596] INFO - LaunchPlugin.LalaLaunch::DataUpdate	62741calls	439913.088ms	62741calls	7.012ms/call
+[2026-06-08 11:14:06,596] INFO - LovelySimRacing.Plugin.LovelyPlugin::DataUpdate	62741calls	136767.620ms	62741calls	2.180ms/call
+[2026-06-08 11:14:06,596] INFO - SimHub.Plugins.OutputPlugins.ControlRemapper.ControlMapperPlugin::DataUpdate	62741calls	151.005ms	62741calls	0.002ms/call
+[2026-06-08 11:14:06,596] INFO - SimHub.Plugins.Devices.DevicesPlugin::DataUpdate	62741calls	10163.899ms	62741calls	0.162ms/call
+[2026-06-08 11:14:06,596] INFO - SimHub.Plugins.DataPlugins.ShakeItV3.ShakeITMotorsV3Plugin::DataUpdate	62741calls	15749.620ms	62741calls	0.251ms/call
+[2026-06-08 11:14:06,596] INFO - SimHub.Plugins.DataPlugins.PersistantTracker.LapHitoryPlugin::DataUpdate	62741calls	109.102ms	62741calls	0.002ms/call
+[2026-06-08 11:14:06,596] INFO - SimHub.Plugins.OutputPlugins.Dash.SerialDashPlugin::DataUpdate	62741calls	7522.364ms	62741calls	0.120ms/call
+[2026-06-08 11:14:06,596] INFO - SimHub.Plugins.OutputPlugins.GraphicalDash.GraphicalDashPlugin::DataUpdate	62741calls	331.157ms	62741calls	0.005ms/call
+[2026-06-08 11:14:06,596] INFO - SimHub.Plugins.Web.WebPlugin::DataUpdate	62741calls	1847.687ms	62741calls	0.029ms/call
+[2026-06-08 11:14:06,598] INFO - Final Exit (took 0.98s)
