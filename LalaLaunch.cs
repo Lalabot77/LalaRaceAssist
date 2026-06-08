@@ -6991,6 +6991,7 @@ namespace LaunchPlugin
         private int _pitBoxLatchedTireChangeCount = 4;
         private bool _pitBoxTireCountLatched = false;
         private double _pitBoxLastDeltaSec = 0.0;
+        private bool _pitBoxLastDeltaValid = false;
         private const double PitBoxTargetLatchSettleSeconds = 1.0;
         private const double PitBoxModeledServiceOverheadSeconds = 1.0;
         private const double PitExitTransitionAllowanceSec = 2.00;
@@ -10064,6 +10065,9 @@ namespace LaunchPlugin
             _pitLite?.ResetCycle();
             _pitDebrief?.ResetAll();
             _pitDebriefWasInBox = false;
+            _pitBoxLastDeltaSec = 0.0;
+            _pitBoxLastDeltaValid = false;
+            ResetPitBoxCountdownState();
             _pit?.ResetPitPhaseState();
             _pitCommandEngine?.ResetFeedbackState();
             _opponentsEngine?.Reset();
@@ -21445,7 +21449,7 @@ namespace LaunchPlugin
                     phase);
             }
 
-            if (!_pitBoxCountdownActive && Math.Abs(_pitBoxLastDeltaSec) > 0.0001)
+            if (!_pitBoxCountdownActive && _pitBoxLastDeltaValid)
             {
                 _pitDebrief.RefreshBoxDeltaFromActualMinusPredicted(_pitBoxLastDeltaSec);
             }
@@ -21585,6 +21589,7 @@ namespace LaunchPlugin
                     }
 
                     _pitBoxLastDeltaSec = deltaSec;
+                    _pitBoxLastDeltaValid = true;
                 }
 
                 ResetPitBoxCountdownState();
@@ -21598,6 +21603,7 @@ namespace LaunchPlugin
             if (!wasActive)
             {
                 _pitBoxLastDeltaSec = 0.0;
+                _pitBoxLastDeltaValid = false;
                 int preServiceSelectedCount = _liveTireChangeCount;
                 if (preServiceSelectedCount < 0) preServiceSelectedCount = 0;
                 if (preServiceSelectedCount > 4) preServiceSelectedCount = 4;
