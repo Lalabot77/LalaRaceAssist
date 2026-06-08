@@ -6918,6 +6918,9 @@ namespace LaunchPlugin
         private readonly MonitorCarOppH2HCheckState _monitorOppTargetCheckState = new MonitorCarOppH2HCheckState("OppTarget", "OPP TARGET CHECK", MonitorSeverity.Caution);
         private readonly MonitorCarOppH2HCheckState _monitorCarSaSlotCheckState = new MonitorCarOppH2HCheckState("CarSASlot", "CARSA SLOT CHECK", MonitorSeverity.Caution);
         private readonly MonitorCarOppH2HCheckState _monitorH2HTargetCheckState = new MonitorCarOppH2HCheckState("H2HTarget", "H2H TARGET CHECK", MonitorSeverity.Watch);
+        private bool _monitorEventCsvFailed;
+        private bool _monitorEventCsvPathLogged;
+
 
         private sealed class MonitorCarOppH2HCheckState
         {
@@ -9867,7 +9870,7 @@ namespace LaunchPlugin
             _fuelRuntimeUnhealthyStreak = unhealthy ? (_fuelRuntimeUnhealthyStreak + 1) : 0;
             if (unhealthy)
             {
-                _monitorSystem.Publish(MonitorSeverity.Watch, "FUEL DATA CHECK");
+                PublishMonitorSystemEvent(MonitorSeverity.Watch, "FUEL DATA CHECK", "FuelHealth", _fuelRuntimeHealthCheckPending ? _fuelRuntimeHealthPendingReason : "health check failed", string.Empty);
             }
 
             bool shouldRecover = _fuelRuntimeUnhealthyStreak >= 2;
@@ -9880,16 +9883,19 @@ namespace LaunchPlugin
                 bool recovered = RunPlannerSafeFuelRuntimeRecovery(reason, out recoveryAttempted);
                 if (recoveryAttempted)
                 {
-                    _monitorSystem.Publish(
+                    PublishMonitorSystemEvent(
                         recovered ? MonitorSeverity.Recovered : MonitorSeverity.Fault,
-                        recovered ? "FUEL DATA RECOVERED" : "FUEL DATA FAULT");
+                        recovered ? "FUEL DATA RECOVERED" : "FUEL DATA FAULT",
+                        "FuelHealth",
+                        reason,
+                        recoveryAttempted ? "recoveryAttempted=true" : string.Empty);
                     _fuelRuntimeHealthCheckPending = false;
                     _fuelRuntimeHealthPendingReason = string.Empty;
                     _fuelRuntimeUnhealthyStreak = recovered ? 0 : 1;
                 }
                 else
                 {
-                    _monitorSystem.Publish(MonitorSeverity.Watch, "FUEL DATA CHECK");
+                    PublishMonitorSystemEvent(MonitorSeverity.Watch, "FUEL DATA CHECK", "FuelHealth", _fuelRuntimeHealthCheckPending ? _fuelRuntimeHealthPendingReason : "health check failed", string.Empty);
                 }
 
                 return;
@@ -9912,7 +9918,7 @@ namespace LaunchPlugin
 
                 if (publishMonitorOk)
                 {
-                    _monitorSystem.Publish(MonitorSeverity.Ok, "FUEL HEALTH OK");
+                    PublishMonitorSystemEvent(MonitorSeverity.Ok, "FUEL HEALTH OK", "FuelHealth", "health check passed", string.Empty);
                 }
             }
         }
@@ -9930,9 +9936,12 @@ namespace LaunchPlugin
                 bool recovered = RunPlannerSafeFuelRuntimeRecovery(reasonLabel, out recoveryAttempted);
                 if (recoveryAttempted)
                 {
-                    _monitorSystem.Publish(
+                    PublishMonitorSystemEvent(
                         recovered ? MonitorSeverity.Recovered : MonitorSeverity.Fault,
-                        recovered ? "FUEL DATA RECOVERED" : "FUEL DATA FAULT");
+                        recovered ? "FUEL DATA RECOVERED" : "FUEL DATA FAULT",
+                        "FuelHealth",
+                        reasonLabel,
+                        recoveryAttempted ? "recoveryAttempted=true" : string.Empty);
                     if (recovered)
                     {
                         return;
@@ -9940,7 +9949,7 @@ namespace LaunchPlugin
                 }
                 else
                 {
-                    _monitorSystem.Publish(MonitorSeverity.Watch, "FUEL DATA CHECK");
+                    PublishMonitorSystemEvent(MonitorSeverity.Watch, "FUEL DATA CHECK", "FuelHealth", _fuelRuntimeHealthCheckPending ? _fuelRuntimeHealthPendingReason : "health check failed", string.Empty);
                 }
             }
 
@@ -16012,13 +16021,160 @@ namespace LaunchPlugin
 
         private void OnMonitorSystemSettingsPropertyChanged(object sender, PropertyChangedEventArgs e)
         {
-            if (!string.Equals(e?.PropertyName, nameof(LaunchPluginSettings.MonitorSystemEnabled), StringComparison.Ordinal))
+            if (string.Equals(e?.PropertyName, nameof(LaunchPluginSettings.MonitorSystemEnabled), StringComparison.Ordinal))
+            {
+                _monitorSystem.SetEnabled(_subscribedMonitorSystemSettings?.MonitorSystemEnabled != false);
+                SaveSettings();
+                return;
+            }
+
+            if (string.Equals(e?.PropertyName, nameof(LaunchPluginSettings.EnableMonitorEventCsv), StringComparison.Ordinal))
+            {
+                SaveSettings();
+            }
+        }
+
+        private void PublishMonitorSystemEvent(MonitorSeverity severity, string text, string category, string reason, string extraDetail)
+        {
+            if (_monitorSystem == null)
             {
                 return;
             }
 
-            _monitorSystem.SetEnabled(_subscribedMonitorSystemSettings?.MonitorSystemEnabled != false);
-            SaveSettings();
+            bool changed = _monitorSystem.Publish(severity, text);
+            if (!changed)
+            {
+                return;
+            }
+
+            MaybeWriteMonitorEventCsv(severity, text, category, reason, extraDetail);
+        }
+
+        private void MaybeWriteMonitorEventCsv(MonitorSeverity severity, string text, string category, string reason, string extraDetail)
+        {
+            if (_monitorEventCsvFailed || Settings?.MonitorSystemEnabled != true || Settings?.EnableMonitorEventCsv != true)
+            {
+                return;
+            }
+
+            if (!IsMonitorEventCsvRecordable(severity, text))
+            {
+                return;
+            }
+
+            try
+            {
+                string folder = ResolvePropertySnapshotPrimaryLogsFolder();
+                string filePath = Path.Combine(folder, "MonitorSystem_Events.csv");
+                Directory.CreateDirectory(folder);
+                bool writeHeader = !File.Exists(filePath);
+                if (!_monitorEventCsvPathLogged)
+                {
+                    _monitorEventCsvPathLogged = true;
+                    SimHub.Logging.Current.Info($"[LalaPlugin:MonitorSystem] event CSV path='{filePath}'");
+                }
+
+                if (writeHeader)
+                {
+                    File.AppendAllText(filePath, GetMonitorEventCsvHeader() + Environment.NewLine);
+                }
+
+                File.AppendAllText(filePath, BuildMonitorEventCsvLine(severity, text, category, reason, extraDetail) + Environment.NewLine);
+            }
+            catch (Exception ex)
+            {
+                _monitorEventCsvFailed = true;
+                SimHub.Logging.Current.Warn($"[LalaPlugin:MonitorSystem] event CSV disabled after write failure: {ex.Message}");
+            }
+        }
+
+        private static bool IsMonitorEventCsvRecordable(MonitorSeverity severity, string text)
+        {
+            switch (severity)
+            {
+                case MonitorSeverity.Watch:
+                case MonitorSeverity.Caution:
+                case MonitorSeverity.Warning:
+                case MonitorSeverity.Fault:
+                case MonitorSeverity.Recovered:
+                    break;
+                default:
+                    return false;
+            }
+
+            string displayText = string.IsNullOrWhiteSpace(text) ? string.Empty : text.Trim();
+            if (string.Equals(displayText, "MONITOR READY", StringComparison.Ordinal) ||
+                string.Equals(displayText, "FUEL HEALTH OK", StringComparison.Ordinal) ||
+                string.Equals(displayText, "MONITOR OFF", StringComparison.Ordinal))
+            {
+                return false;
+            }
+
+            return true;
+        }
+
+        private static string ResolveMonitorEventCategory(string text)
+        {
+            string displayText = string.IsNullOrWhiteSpace(text) ? string.Empty : text.Trim();
+            switch (displayText)
+            {
+                case "FUEL DATA CHECK":
+                case "FUEL DATA RECOVERED":
+                case "FUEL DATA FAULT":
+                    return "FuelHealth";
+                case "REFUEL OFF":
+                case "MFD FUEL LOW":
+                case "EXIT FUEL SHORT":
+                    return "FuelPitStop";
+                case "BASELINE SHORT":
+                    return "BaselineFuel";
+                case "OPP TARGET CHECK":
+                case "CARSA SLOT CHECK":
+                case "H2H TARGET CHECK":
+                    return "CarOppH2H";
+                default:
+                    return "Unknown";
+            }
+        }
+
+        private static string GetMonitorEventCsvHeader()
+        {
+            return "Utc,SessionTimeSec,SessionType,SessionState,MonitorEnum,MonitorSeverityText,MonitorText,MonitorState,Category,Reason,CurrentFuelLitres,OnPitRoad,InPitStall,PlayerCarIdx,ExtraDetail";
+        }
+
+        private string BuildMonitorEventCsvLine(MonitorSeverity severity, string text, string category, string reason, string extraDetail)
+        {
+            var cells = new List<string>(15);
+            PluginManager pluginManager = PluginManager;
+            double sessionTimeSec = SafeReadDouble(pluginManager, "DataCorePlugin.GameRawData.Telemetry.SessionTime", double.NaN);
+            string sessionType = _currentTickGameData?.NewData?.SessionTypeName ?? string.Empty;
+            if (string.IsNullOrWhiteSpace(sessionType))
+            {
+                sessionType = GetString(pluginManager, "DataCorePlugin.GameData.SessionTypeName") ?? string.Empty;
+            }
+
+            int sessionState = ReadSessionStateInt(pluginManager);
+            double currentFuel = _currentTickGameData?.NewData?.Fuel ?? _lastFuelLevel;
+            bool onPitRoad = SafeReadBool(pluginManager, "DataCorePlugin.GameRawData.Telemetry.OnPitRoad", false);
+            bool inPitStall = SafeReadBool(pluginManager, "DataCorePlugin.GameRawData.Telemetry.PlayerCarInPitStall", false);
+            int playerCarIdx = SafeReadInt(pluginManager, "DataCorePlugin.GameRawData.Telemetry.PlayerCarIdx", -1);
+
+            AddCsvCell(cells, DateTime.UtcNow.ToString("o", CultureInfo.InvariantCulture));
+            AddCsvCell(cells, FormatCsvDouble(sessionTimeSec, "F3"));
+            AddCsvCell(cells, string.IsNullOrWhiteSpace(sessionType) ? "unknown" : sessionType.Trim());
+            AddCsvCell(cells, sessionState.ToString(CultureInfo.InvariantCulture));
+            AddCsvCell(cells, ((int)severity).ToString(CultureInfo.InvariantCulture));
+            AddCsvCell(cells, severity.ToString().ToUpperInvariant());
+            AddCsvCell(cells, string.IsNullOrWhiteSpace(text) ? string.Empty : text.Trim());
+            AddCsvCell(cells, _monitorSystem?.StateText ?? string.Empty);
+            AddCsvCell(cells, string.IsNullOrWhiteSpace(category) ? ResolveMonitorEventCategory(text) : category.Trim());
+            AddCsvCell(cells, string.IsNullOrWhiteSpace(reason) ? string.Empty : reason.Trim());
+            AddCsvCell(cells, FormatCsvDouble(currentFuel, "F3"));
+            AddCsvCell(cells, onPitRoad ? "1" : "0");
+            AddCsvCell(cells, inPitStall ? "1" : "0");
+            AddCsvCell(cells, playerCarIdx >= 0 ? playerCarIdx.ToString(CultureInfo.InvariantCulture) : string.Empty);
+            AddCsvCell(cells, string.IsNullOrWhiteSpace(extraDetail) ? string.Empty : extraDetail.Trim());
+            return BuildCsvLine(cells);
         }
 
         private void ResetMonitorCarOppH2HHealthStates()
@@ -16147,7 +16303,7 @@ namespace LaunchPlugin
                 return;
             }
 
-            _monitorSystem.Publish(state.Severity, state.Text);
+            PublishMonitorSystemEvent(state.Severity, state.Text, "CarOppH2H", state.Name, state.Detail);
         }
 
         private void ClearActiveMonitorCarOppH2HHealthWarningIfOwned()
@@ -16162,7 +16318,7 @@ namespace LaunchPlugin
                 return;
             }
 
-            _monitorSystem.Publish(MonitorSeverity.Ok, "MONITOR READY");
+            PublishMonitorSystemEvent(MonitorSeverity.Ok, "MONITOR READY", "Unknown", "clear", string.Empty);
         }
 
         private void LogMonitorCarOppH2HHealth(
@@ -16676,7 +16832,7 @@ namespace LaunchPlugin
 
             if (warning.HasWarning)
             {
-                _monitorSystem.Publish(warning.Severity, warning.Text);
+                PublishMonitorSystemEvent(warning.Severity, warning.Text, ResolveMonitorEventCategory(warning.Text), string.Empty, string.Empty);
                 return;
             }
 
@@ -16684,7 +16840,7 @@ namespace LaunchPlugin
                 (allowBaselineClear && _monitorSystem.IsBaselineFuelWarningActive);
             if (canClearActiveWarning)
             {
-                _monitorSystem.Publish(MonitorSeverity.Ok, "MONITOR READY");
+                PublishMonitorSystemEvent(MonitorSeverity.Ok, "MONITOR READY", "Unknown", "clear", string.Empty);
             }
         }
 
@@ -24273,6 +24429,17 @@ namespace LaunchPlugin
                 if (_monitorSystemEnabled == value) return;
                 _monitorSystemEnabled = value;
                 OnPropertyChanged(nameof(MonitorSystemEnabled));
+            }
+        }
+        private bool _enableMonitorEventCsv = false;
+        public bool EnableMonitorEventCsv
+        {
+            get { return _enableMonitorEventCsv; }
+            set
+            {
+                if (_enableMonitorEventCsv == value) return;
+                _enableMonitorEventCsv = value;
+                OnPropertyChanged(nameof(EnableMonitorEventCsv));
             }
         }
         private bool _strategyDashAdvancedMode = true;

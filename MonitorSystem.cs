@@ -56,24 +56,22 @@ namespace LaunchPlugin
             SetEnabled(true);
         }
 
-        public void SetEnabled(bool enabled)
+        public bool SetEnabled(bool enabled)
         {
             IsEnabled = enabled;
             if (enabled)
             {
-                SetOutput("ON", MonitorSeverity.Ok, "MONITOR READY", OkBackgroundColour, LightTextColour);
+                return SetOutput("ON", MonitorSeverity.Ok, "MONITOR READY", OkBackgroundColour, LightTextColour);
             }
-            else
-            {
-                SetOutput("OFF", MonitorSeverity.Off, "MONITOR OFF", OffBackgroundColour, OffTextColour);
-            }
+
+            return SetOutput("OFF", MonitorSeverity.Off, "MONITOR OFF", OffBackgroundColour, OffTextColour);
         }
 
-        public void Publish(MonitorSeverity severity, string text)
+        public bool Publish(MonitorSeverity severity, string text)
         {
             if (!IsEnabled)
             {
-                return;
+                return false;
             }
 
             string displayText = string.IsNullOrWhiteSpace(text) ? "MONITOR READY" : text.Trim();
@@ -83,8 +81,7 @@ namespace LaunchPlugin
             switch (severity)
             {
                 case MonitorSeverity.Off:
-                    SetEnabled(false);
-                    return;
+                    return SetEnabled(false);
                 case MonitorSeverity.Watch:
                 case MonitorSeverity.Caution:
                     backgroundColour = WatchBackgroundColour;
@@ -103,10 +100,10 @@ namespace LaunchPlugin
                     break;
             }
 
-            SetOutput("ON", severity, displayText, backgroundColour, textColour);
+            return SetOutput("ON", severity, displayText, backgroundColour, textColour);
         }
 
-        private void SetOutput(
+        private bool SetOutput(
             string stateText,
             MonitorSeverity severity,
             string displayText,
@@ -120,7 +117,7 @@ namespace LaunchPlugin
                 string.Equals(TextColour, textColour, StringComparison.Ordinal) &&
                 Enum == enumValue)
             {
-                return;
+                return false;
             }
 
             StateText = stateText;
@@ -128,6 +125,7 @@ namespace LaunchPlugin
             BackgroundColour = backgroundColour;
             TextColour = textColour;
             Enum = enumValue;
+            return true;
         }
     }
 }
