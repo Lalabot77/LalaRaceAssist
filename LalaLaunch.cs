@@ -21441,8 +21441,13 @@ namespace LaunchPlugin
                     Pit_AddedSoFar,
                     FuelCalculator?.EffectiveRefuelRateLps ?? 0.0,
                     double.NaN,
-                    -_pitBoxLastDeltaSec,
+                    _pitBoxLastDeltaSec,
                     phase);
+            }
+
+            if (!_pitBoxCountdownActive && Math.Abs(_pitBoxLastDeltaSec) > 0.0001)
+            {
+                _pitDebrief.RefreshBoxDeltaFromActualMinusPredicted(_pitBoxLastDeltaSec);
             }
 
             _pitDebriefWasInBox = inPitLane && inBoxPhase;
@@ -21573,7 +21578,7 @@ namespace LaunchPlugin
                         finalElapsedSec = Math.Max(0.0, _pitBoxElapsedSec);
                     }
 
-                    double deltaSec = lastTargetSec - finalElapsedSec;
+                    double deltaSec = finalElapsedSec - lastTargetSec;
                     if (double.IsNaN(deltaSec) || double.IsInfinity(deltaSec))
                     {
                         deltaSec = 0.0;

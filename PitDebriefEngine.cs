@@ -215,6 +215,17 @@ namespace LaunchPlugin
             RefreshProgressiveSummary();
         }
 
+        public void RefreshBoxDeltaFromActualMinusPredicted(double actualMinusPredictedSec)
+        {
+            if (!_collecting || Valid || !_boxSeen)
+            {
+                return;
+            }
+
+            LatchBoxDeltaFromActualMinusPredicted(actualMinusPredictedSec);
+            RefreshProgressiveSummary();
+        }
+
         public void LatchPitLaneExit(int actualPositionInClass)
         {
             if (!_collecting || Valid)
@@ -400,11 +411,19 @@ namespace LaunchPlugin
 
         private void LatchFuelTarget(double fuelTargetLitres)
         {
-            if (IsFiniteNonNegative(fuelTargetLitres))
+            if (!IsPositiveFinite(fuelTargetLitres))
+            {
+                return;
+            }
+
+            // Preserve the largest intended/requested add observed from existing Fuel.Pit seams so
+            // a later MFD/gauge reset to 0 cannot erase the completed-stop target evidence.
+            if (!_hasFuelTarget || fuelTargetLitres > ServiceFuelTargetLitres)
             {
                 ServiceFuelTargetLitres = fuelTargetLitres;
-                _hasFuelTarget = true;
             }
+
+            _hasFuelTarget = true;
         }
 
         private void LatchFuelAdded(double fuelAddedLitres)
