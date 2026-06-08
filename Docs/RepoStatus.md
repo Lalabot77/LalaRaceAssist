@@ -88,6 +88,11 @@
 
 # Repo Status
 
+- 2026-06-08 Pit Debrief V2 progressive summary refinement validated:
+  - `Pit.Debrief.SummaryText` now updates during collection and final-latches with `ENTRY ... (Δ ...) | BOX ... (Δ ...) | SVC ... | STRAT Δ ...`; driver-facing exit verdict text was removed from the summary while `Pit.Debrief.Exit.*` exports and final log fields remain intact;
+  - service summary uses actual fuel added plus tyre count, not target/exit/MFD request; `FuelTargetLitres` remains debug-only from the existing MFD-request/tank-space-clamped `Fuel.Pit.WillAdd`/latched source pending a clearer authoritative target seam;
+  - `RefuelDurationSec` latches the existing refuel-rate learner completed-flow duration when available; no new detector, fuel model, pit-loss model, PitExit model, settings, dashboard JSON/layout, or PitCycleLite changes. Property Snapshot list reviewed: yes; unchanged because `Pit.Debrief.*` remains covered by the existing `Pit.` -> Pit/PitExit group.
+
 - 2026-06-08 Pit Debrief PR #797 review sync commit validated:
   - added explicit code comments documenting that debrief service evidence is captured before `Pit_AddedSoFar` reset and that actual loss is normalized to total-stop-equivalent only for the debrief readout;
   - no runtime logic, export names, Property Snapshot grouping, PitCycleLite, fuel model, PitExit prediction, Rejoin, or dashboard JSON/layout changes beyond the already-present PR #797 fix semantics. Property Snapshot list reviewed: yes; unchanged because no exports/properties changed.

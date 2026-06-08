@@ -339,13 +339,13 @@ For each `.djson` dashboard file:
 
 ## Pit Stop Debrief bindings
 
-Dashboard layout files are not changed by the v1 Pit Debrief implementation. Dashboards consume plugin-owned latched outputs only and must not recompute service delta, loss delta, exit accuracy, or summary text.
+Dashboard layout files are not changed by the Pit Debrief V2 refinement. Dashboards consume plugin-owned outputs only and must not recompute service delta, box delta, loss delta, exit accuracy, or summary text. `SummaryText` can update before `Valid` becomes true, but overlay visibility remains dashboard-owned; existing alerts overlays that key on `Valid`/`AgeSec` continue to show only finalized, latched summaries.
 
 Alerts overlay contract:
 
 - Visible when `LalaLaunch.Pit.Debrief.Valid == true` and `LalaLaunch.Pit.Debrief.AgeSec < 15`.
 - Title: `PIT STOP DEBRIEF — STOP ` + `LalaLaunch.Pit.Debrief.StopIndex`.
-- Body: `LalaLaunch.Pit.Debrief.SummaryText`.
+- Body: `LalaLaunch.Pit.Debrief.SummaryText` (progressive while collecting, final-latched after `Valid`; format `ENTRY ... (Δ ...) | BOX ... (Δ ...) | SVC ... | STRAT Δ ...`, with no exit verdict text).
 
 Debug page fields:
 

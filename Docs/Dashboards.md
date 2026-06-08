@@ -312,13 +312,13 @@ Where a useful page-specific screenshot is not currently available in that folde
 
 ## Pit Stop Debrief bindings
 
-Dashboard layout files are not changed by the v1 Pit Debrief implementation. Dashboards consume plugin-owned latched outputs only and must not recompute service delta, loss delta, exit accuracy, or summary text.
+Dashboard layout files are not changed by the Pit Debrief V2 refinement. Dashboards consume plugin-owned outputs only and must not recompute service delta, box delta, loss delta, exit accuracy, or summary text. `SummaryText` can update before `Valid` becomes true, while existing overlays that key on `Valid`/`AgeSec` still show only finalized, latched summaries.
 
 Alerts overlay contract:
 
 - Visible when `LalaLaunch.Pit.Debrief.Valid == true` and `LalaLaunch.Pit.Debrief.AgeSec < 15`.
 - Title: `PIT STOP DEBRIEF — STOP ` + `LalaLaunch.Pit.Debrief.StopIndex`.
-- Body: `LalaLaunch.Pit.Debrief.SummaryText`.
+- Body: `LalaLaunch.Pit.Debrief.SummaryText` (format `ENTRY ... (Δ ...) | BOX ... (Δ ...) | SVC ... | STRAT Δ ...`; exit prediction is available in debug fields/logs, not the summary).
 
 Debug page fields:
 
