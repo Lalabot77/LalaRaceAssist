@@ -6991,6 +6991,7 @@ namespace LaunchPlugin
         private int _pitBoxLatchedTireChangeCount = 4;
         private bool _pitBoxTireCountLatched = false;
         private double _pitBoxLastDeltaSec = 0.0;
+        private bool _pitBoxLastDeltaValid = false;
         private const double PitBoxTargetLatchSettleSeconds = 1.0;
         private const double PitBoxModeledServiceOverheadSeconds = 1.0;
         private const double PitExitTransitionAllowanceSec = 2.00;
@@ -10109,6 +10110,9 @@ namespace LaunchPlugin
             _pitLite?.ResetCycle();
             _pitDebrief?.ResetAll();
             _pitDebriefWasInBox = false;
+            _pitBoxLastDeltaSec = 0.0;
+            _pitBoxLastDeltaValid = false;
+            ResetPitBoxCountdownState();
             _pit?.ResetPitPhaseState();
             _pitCommandEngine?.ResetFeedbackState();
             _opponentsEngine?.Reset();
@@ -11205,7 +11209,8 @@ namespace LaunchPlugin
                 _pitDebrief.RefreshServiceEvidence(
                     Pit_AddedSoFar,
                     debriefFuelTarget,
-                    FuelCalculator?.EffectiveRefuelRateLps ?? 0.0);
+                    FuelCalculator?.EffectiveRefuelRateLps ?? 0.0,
+                    !_isRefuelSelected);
             }
             UpdateMonitorPitStopFramework(data, pluginManager, sessionTime);
 
@@ -21831,18 +21836,25 @@ namespace LaunchPlugin
                 _pitDebrief.RefreshServiceEvidence(
                     Pit_AddedSoFar,
                     target,
-                    FuelCalculator?.EffectiveRefuelRateLps ?? 0.0);
+                    FuelCalculator?.EffectiveRefuelRateLps ?? 0.0,
+                    !_isRefuelSelected);
             }
 
             if (!inBoxPhase && _pitDebriefWasInBox)
             {
+                double debriefBoxDeltaSec = _pitBoxLastDeltaValid ? -_pitBoxLastDeltaSec : double.NaN;
                 _pitDebrief.LatchBoxExit(
                     _pit.PitStopDuration.TotalSeconds,
                     Pit_AddedSoFar,
                     FuelCalculator?.EffectiveRefuelRateLps ?? 0.0,
                     double.NaN,
-                    -_pitBoxLastDeltaSec,
+                    debriefBoxDeltaSec,
                     phase);
+            }
+
+            if (!_pitBoxCountdownActive && _pitBoxLastDeltaValid)
+            {
+                _pitDebrief.RefreshBoxDeltaFromActualMinusPredicted(-_pitBoxLastDeltaSec);
             }
 
             _pitDebriefWasInBox = inPitLane && inBoxPhase;
@@ -21863,6 +21875,7 @@ namespace LaunchPlugin
 
             if (pitEntryEdge)
             {
+                _pitBoxLastDeltaValid = false;
                 int predictedPosition = _opponentsEngine?.Outputs?.PitExit?.PredictedPositionInClass ?? 0;
                 _pitDebrief.StartPitEntry(
                     predictedTotalLossSec,
@@ -21980,6 +21993,7 @@ namespace LaunchPlugin
                     }
 
                     _pitBoxLastDeltaSec = deltaSec;
+                    _pitBoxLastDeltaValid = true;
                 }
 
                 ResetPitBoxCountdownState();
@@ -21993,6 +22007,7 @@ namespace LaunchPlugin
             if (!wasActive)
             {
                 _pitBoxLastDeltaSec = 0.0;
+                _pitBoxLastDeltaValid = false;
                 int preServiceSelectedCount = _liveTireChangeCount;
                 if (preServiceSelectedCount < 0) preServiceSelectedCount = 0;
                 if (preServiceSelectedCount > 4) preServiceSelectedCount = 4;

@@ -172,14 +172,22 @@ namespace LaunchPlugin
             RefreshProgressiveSummary();
         }
 
-        public void RefreshServiceEvidence(double fuelAddedLitres, double fuelTargetLitres, double refuelRateLps)
+        public void RefreshServiceEvidence(double fuelAddedLitres, double fuelTargetLitres, double refuelRateLps, bool fuelTargetClearedByInBoxCancel = false)
         {
             if (!_collecting || Valid)
             {
                 return;
             }
 
-            LatchFuelTarget(fuelTargetLitres);
+            if (fuelTargetClearedByInBoxCancel)
+            {
+                ClearFuelTarget();
+            }
+            else
+            {
+                LatchFuelTarget(fuelTargetLitres);
+            }
+
             LatchFuelAdded(fuelAddedLitres);
             LatchRefuelRate(refuelRateLps);
             RefreshProgressiveSummary();
@@ -212,6 +220,17 @@ namespace LaunchPlugin
             LatchBoxDeltaFromActualMinusPredicted(boxDeltaSec);
             _serviceKnown = true;
             ResolveBoxOutcome();
+            RefreshProgressiveSummary();
+        }
+
+        public void RefreshBoxDeltaFromActualMinusPredicted(double actualMinusPredictedSec)
+        {
+            if (!_collecting || Valid || !_boxSeen)
+            {
+                return;
+            }
+
+            LatchBoxDeltaFromActualMinusPredicted(actualMinusPredictedSec);
             RefreshProgressiveSummary();
         }
 
@@ -400,11 +419,26 @@ namespace LaunchPlugin
 
         private void LatchFuelTarget(double fuelTargetLitres)
         {
-            if (IsFiniteNonNegative(fuelTargetLitres))
+            if (!IsPositiveFinite(fuelTargetLitres))
+            {
+                return;
+            }
+
+            // Preserve the largest intended/requested add observed from existing Fuel.Pit seams so
+            // a later box-exit MFD/gauge reset to 0 cannot erase completed-stop target evidence.
+            // Explicit in-box refuel deselect uses ClearFuelTarget() before this positive latch.
+            if (!_hasFuelTarget || fuelTargetLitres > ServiceFuelTargetLitres)
             {
                 ServiceFuelTargetLitres = fuelTargetLitres;
-                _hasFuelTarget = true;
             }
+
+            _hasFuelTarget = true;
+        }
+
+        private void ClearFuelTarget()
+        {
+            ServiceFuelTargetLitres = 0.0;
+            _hasFuelTarget = true;
         }
 
         private void LatchFuelAdded(double fuelAddedLitres)
