@@ -7,6 +7,7 @@ For internal between-release development history, see `Docs/Internal/Development
 ## v1.1 (Unreleased)
 
 ### Added
+- **Pit Stop Debrief v1** exports latched post-stop verdict fields for alerts/debug dashboards (`LalaLaunch.Pit.Debrief.*`) and emits one structured final log line per completed debrief.
 - Strategy Dash Advanced/Simple mode toggle binding with dashboard-readable status exports (`LalaLaunch.StrategyDash.AdvancedMode`, `LalaLaunch.StrategyDash.ModeText`).
 - Pit Fuel Control DATA selector (`LIVE`/`PLAN`) with data actions/exports for dash and hardware bindings.
 - **Overview tab** as the plugin front door for quick links, release-check visibility, and at-a-glance status.
@@ -27,6 +28,7 @@ For internal between-release development history, see `Docs/Internal/Development
 - **Monitor System setting placement** moved from Launch UI / Bindings to Dash Control -> Global Dash Functions -> General. Phase 2B pit-stop monitoring now adds edge-triggered `REFUEL OFF`, `MFD FUEL LOW`, and `EXIT FUEL SHORT` warnings while preserving Phase 2A trigger evidence logs.
 
 ### Fixed
+- Fixed Pit Stop Debrief service/timing review latches so fuel-added evidence survives box-exit gauge reset and actual-vs-predicted loss compares total-stop-equivalent values.
 - Fixed PreRace/Friends export registration so dashboards should use single-prefixed `LalaLaunch.PreRace.*` and `LalaLaunch.Friends.Count` names instead of accidental `LalaLaunch.LalaLaunch.*` names.
 - Corrected one-stop feasibility checks to use pit-stop refill capacity rather than start-of-race free tank space.
 - Fixed wet/dry PB and pace persistence routing edge cases around lap-validation timing and wet-compound detection.

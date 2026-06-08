@@ -139,3 +139,9 @@ These values update **once per pit entry** and remain until the next assist acti
   - **GT3:** decel ≈ **14 m/s²**, buffer **≈15 m**.
   - **GTP:** similar decel, slightly **higher buffer** for hybrid regen variability.
 - Defaults auto-seed on profile creation/copy; adjust per track after reviewing `ENTRY LINE` logs.
+
+## Pit Debrief consumption
+
+Pit Debrief consumes existing Pit Entry Assist readouts after a completed stop. `Pit.EntryLineDebrief` maps to debrief entry quality (`safe` → `GOOD`, `normal` → `NORMAL`, `bad` → `POOR`) and limiter quality (`SAFE`/`NORMAL`/`POOR`), while `Pit.EntryLineTimeLoss_s` is latched as the entry line time-loss review value.
+
+The v1 debrief does not infer an actual deceleration quality. `Pit.Debrief.Entry.DecelQualityText` remains `UNKNOWN` until an existing authoritative actual-decel source is available and explicitly wired by a later task.

@@ -59,6 +59,21 @@
 
 # Repo Status
 
+- 2026-06-08 Pit Debrief PR #797 review sync commit validated:
+  - added explicit code comments documenting that debrief service evidence is captured before `Pit_AddedSoFar` reset and that actual loss is normalized to total-stop-equivalent only for the debrief readout;
+  - no runtime logic, export names, Property Snapshot grouping, PitCycleLite, fuel model, PitExit prediction, Rejoin, or dashboard JSON/layout changes beyond the already-present PR #797 fix semantics. Property Snapshot list reviewed: yes; unchanged because no exports/properties changed.
+
+- 2026-06-08 Pit Debrief service latch and total-loss normalization follow-up validated:
+  - `Pit.Debrief.Service.FuelAddedLitres` now preserves existing Fuel.Pit gauge evidence while the box countdown is still active, before box-exit gauge reset can clear `Pit_AddedSoFar`;
+  - `Pit.Debrief.Timing.ActualTotalLossSec` now compares against `Fuel.Live.TotalStopLoss` on a total-stop-equivalent basis by adding latched stationary box duration to existing DTL/direct lane-equivalent final loss for boxed stops;
+  - no PitCycleLite, fuel model, PitExit prediction, Rejoin, dashboard JSON/layout, new export, or refuel-duration detector changes. Property Snapshot list reviewed: yes; unchanged because `Pit.Debrief.*` remains covered by the existing `Pit.` -> Pit/PitExit group.
+
+
+- 2026-06-08 Pit Stop Debrief v1 latching/export layer validated:
+  - added `PitDebriefEngine.cs` plus `LalaLaunch` wiring for additive `Pit.Debrief.*` SimHub exports and one `[LalaPlugin:PitDebrief] final` structured log line per finalized stop;
+  - debrief values are latched from existing PitEngine, Fuel runtime, and Opponents/PitExit seams and do not change pit timing, fuel prediction, PitExit prediction, PitCycleLite, Rejoin, or dashboard layout JSON;
+  - docs updated for export inventory, log contract, Pit Timing, Pit Entry Assist, dash bindings, Pit Assist, changelog, and release notes. Property Snapshot list reviewed: yes; `Pit.Debrief.*` already maps to Pit/PitExit through the existing `Pit.` prefix in `ResolvePropertySnapshotGroup`.
+
 - 2026-06-08 Debug Cleanup Phase A landed:
   - removed Rejoin ThreatDebug internals, OffTrack Debug CSV settings/UI/writer/probe export, and verbose-only Pit/PitLite SimHub exports while preserving active core Pit/PitLite exports, DecelCapture, Property Snapshot, Event Marker, Trace Logging, launch traces/analysis, Shift Assist debug CSV, and CarSA debug/event CSV diagnostics;
   - removed approved dead/commented debug clutter (parked MsgCx helper block, commented PitExit pit-out snapshot logger/call, commented MSG.PitPhaseDebug export, commented Pit.Debug.LastTimeOnPitRoad alias, stale launch-trace skip comment, stale obsolete debug comment, and stale Session Summary scaffolding wording);

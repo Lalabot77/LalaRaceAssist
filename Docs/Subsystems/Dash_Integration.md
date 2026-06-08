@@ -332,3 +332,21 @@ For each `.djson` dashboard file:
 3. Propose new export only when visual equivalence is expected.
 4. Validate across: pre-grid, formation, race running, pit entry, in-box, pit exit, final stint, surplus, deficit, contingency transitions, and finish/post-finish if touched.
 5. Mark risk (`low/medium/high`) and keep compatibility export when risk is not low.
+
+## Pit Stop Debrief bindings
+
+Dashboard layout files are not changed by the v1 Pit Debrief implementation. Dashboards consume plugin-owned latched outputs only and must not recompute service delta, loss delta, exit accuracy, or summary text.
+
+Alerts overlay contract:
+
+- Visible when `LalaLaunch.Pit.Debrief.Valid == true` and `LalaLaunch.Pit.Debrief.AgeSec < 15`.
+- Title: `PIT STOP DEBRIEF — STOP ` + `LalaLaunch.Pit.Debrief.StopIndex`.
+- Body: `LalaLaunch.Pit.Debrief.SummaryText`.
+
+Debug page fields:
+
+- Entry: `LalaLaunch.Pit.Debrief.Entry.QualityText`, `LineTimeLossSec`, `DecelQualityText`, `LimiterQualityText`.
+- Box: `LalaLaunch.Pit.Debrief.Box.QualityText`, `MissedReason`, `StationarySec`.
+- Service: `LalaLaunch.Pit.Debrief.Service.FuelAddedLitres`, `FuelTargetLitres`, `RefuelDurationSec`, `RefuelRateLps`, `TyreChangeCount`.
+- Timing: `LalaLaunch.Pit.Debrief.Timing.PredictedTotalLossSec`, `ActualTotalLossSec`, `LossDeltaSec`, `LossSource`.
+- Exit: `LalaLaunch.Pit.Debrief.Exit.PredictedPositionInClass`, `ActualPositionInClass`, `PositionDelta`, `AccuracyText`.

@@ -278,3 +278,19 @@ Workflow routing note: `Docs/Internal/Property_Snapshot_Debug_Workflow.md` owns 
 
 
 - **Shift Assist urgent cue volume policy** — Urgent beep audio uses derived 50% of the main beep slider at runtime and has no separate urgent volume control.
+
+## `[LalaPlugin:PitDebrief]`
+
+Emitted once when a pit debrief finalizes after the existing out-lap/final pit-loss seam. This is a structured final readout for the latest completed stop and must not repeat while `Pit.Debrief.Valid` remains true. `actualLossSec` is total-stop-equivalent: current DTL/direct lane-equivalent final loss plus latched stationary box duration for boxed stops. Unavailable numeric fields use `na`; exported numeric fields publish safe `0` defaults.
+
+Contract:
+
+```text
+[LalaPlugin:PitDebrief] final stop=<int> entry=<token> entryLossSec=<sec|na> decelQuality=<token> limiter=<token> box=<token> missed=<token> fuelTargetL=<num|na> fuelAddedL=<num|na> refuelSec=<num|na> refuelRateLps=<num|na> tyres=<int|na> serviceSec=<num|na> predTotalLossSec=<num|na> actualLossSec=<num|na> lossDeltaSec=<num|na> lossSource=<dtl|direct|unavailable> exitPredPos=<int|na> exitActualPos=<int|na> exitPosDelta=<int|na> exitAccuracy=<token> summary="<summary text>"
+```
+
+Example:
+
+```text
+[LalaPlugin:PitDebrief] final stop=1 entry=POOR entryLossSec=1.20 decelQuality=UNKNOWN limiter=POOR box=OVERSHOT missed=long fuelTargetL=42.0 fuelAddedL=40.8 refuelSec=0.0 refuelRateLps=2.70 tyres=4 serviceSec=27.4 predTotalLossSec=46.0 actualLossSec=51.8 lossDeltaSec=5.8 lossSource=dtl exitPredPos=5 exitActualPos=8 exitPosDelta=3 exitAccuracy=MISS summary="ENTRY POOR | BOX OVERSHOT | LOSS +5.8s | EXIT MISS P8"
+```

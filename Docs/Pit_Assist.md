@@ -196,3 +196,7 @@ A good rule is:
 - **Trust the system once the underlying data is good.**
 - **Override it when the moment demands it.**
 - **Relearn or review the saved data if it is repeatedly wrong.**
+
+## Completed stop debrief
+
+After a pit stop finalizes, the plugin can publish a compact pit debrief verdict for dashboards, for example `ENTRY POOR | BOX OVERSHOT | LOSS +5.8s | EXIT MISS P8`. This is a post-stop review/readout: it freezes existing pit-entry, box, fuel-service, timing, and PitExit prediction values and does not change pit assist, fuel, or opponent calculations.

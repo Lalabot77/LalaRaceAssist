@@ -307,3 +307,9 @@ Reset semantics are centralised in:
 - TODO/VERIFY: Confirm whether DTL uses session-average or stint-average pace as baseline.
 - TODO/VERIFY: Confirm pit loss publication gating for non-race sessions (practice/qualifying).
 - TODO/VERIFY: Native/SDK pit service prediction remains limited in plugin scope. Current runtime authority confirms elapsed stall timing (`PlayerCarInPitStall`, `PitStopElapsedSec`, `GameData.LastPitStopDuration` validation), pit service selection flags (`dpFuelFill`, tyre change selectors), and boxed repair-left time where available (`PitRepairLeft`, optional `PitOptRepairLeft` when the user setting is enabled). Setup-adjustment timing remains intentionally out of scope.
+
+## Pit Debrief consumer layer
+
+Pit Debrief v1 is an additive latching/readout layer under Pit/PitExit presentation ownership. It consumes PitEngine timing outputs at lifecycle edges and does not replace or alter PitEngine phase detection, pit timers, DTL computation, direct-travel fallback, learned drive-through pit-lane-loss storage, or `Fuel.Live.TotalStopLoss`.
+
+For timing review, `Pit.Debrief.Timing.PredictedTotalLossSec` freezes the existing boxed-stop prediction (`Fuel.Live.TotalStopLoss`) at pit-entry baseline. Because current PitEngine/PitLite final DTL/direct seams are lane-equivalent values that exclude stationary box time, `Pit.Debrief.Timing.ActualTotalLossSec` normalizes them to total-stop-equivalent by adding the latched stationary box duration when a boxed stop occurred; drive-throughs add `0`. `Pit.Debrief.Timing.LossDeltaSec` is only the readout comparison (`actual total - predicted total`) and is not fed back into pit-loss learning or fuel prediction.

@@ -1,3 +1,19 @@
+## 2026-06-08 — Pit Debrief PR #797 review sync commit
+- Classification: **internal-only review traceability** (comments/docs only; no export names, dashboard JSON, fuel model, PitExit, PitCycleLite, or debrief runtime semantics changed beyond the already-present PR #797 fixes).
+- Added explicit code comments at the service-latch ordering and actual-loss normalization seams so the PR review can see why fuel-added evidence is captured before `Pit_AddedSoFar` reset and why boxed-stop actual loss adds stationary box time only inside the debrief readout.
+- Property Snapshot list reviewed: yes; no export/property add, remove, rename, or behavior-contract change. `Pit.Debrief.*` remains in Pit/PitExit through the existing `Pit.` prefix.
+
+## 2026-06-08 — Pit Debrief service latch/total-loss normalization follow-up
+- Classification: **both** (dashboard-visible debrief export correctness plus internal log-contract wording).
+- Preserved `Pit.Debrief.Service.FuelAddedLitres` from the existing Fuel.Pit gauge while the box countdown is still active, before the gauge reset can clear `Pit_AddedSoFar` on box exit; no new refuel detector or refuel-duration seam was added.
+- Normalized `Pit.Debrief.Timing.ActualTotalLossSec` to total-stop-equivalent by adding latched stationary box duration to existing DTL/direct lane-equivalent final loss for boxed stops, keeping drive-throughs at +0 and preserving pit-loss learning/fuel/PitExit/PitCycleLite behavior.
+- Property Snapshot list reviewed: yes; no export names were added/removed/renamed and `Pit.Debrief.*` remains in the existing Pit/PitExit group through the `Pit.` prefix.
+
+## 2026-06-08 — Pit Stop Debrief v1 latching/export layer
+- Classification: **both** (user-facing dashboard exports plus internal log/export contract).
+- Added additive `Pit.Debrief.*` SimHub exports for compact overlay verdict and debug-page post-stop review fields, with values latched from existing PitEngine, Fuel runtime, and Opponents/PitExit seams.
+- Added one structured `[LalaPlugin:PitDebrief] final` log line per finalized debrief; no per-tick logs, no per-stop history store.
+- Preserved PitEngine timing, Fuel.Live.TotalStopLoss/Fuel.Pit semantics, PitExit prediction logic, PitCycleLite, Rejoin, and dashboard layout JSON. Property Snapshot list reviewed: yes; `Pit.Debrief.*` uses the existing `Pit.` prefix and routes to Pit/PitExit.
 ## 2026-06-08 — MonitorSystem Phase 3A review follow-up
 - Classification: **both** (driver-visible MonitorSystem warning selection correctness and internal false-positive reduction; no new exports, property names, settings, dashboard JSON, subsystem target/gap logic, pit/fuel/strategy/planner/command behavior, or Property Snapshot grouping changes).
 - Active Car/Opp/H2H health publication now republishes the selected current active check whenever its text differs from the displayed MonitorSystem text, while still refusing to overwrite unresolved fuel-health alerts or active pit warnings.
