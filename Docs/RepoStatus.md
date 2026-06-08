@@ -49,6 +49,11 @@
 
 # Repo Status
 
+- 2026-06-08 MonitorSystem Phase 2C baseline warning review follow-up landed:
+  - `BASELINE SHORT` now fails silently unless current fuel is positive, so zero current-fuel readings on monitor edges do not produce baseline warnings;
+  - same-tick `PitRoadExit` suppresses the predictive check for that update, preventing a WARNING published on pit exit from being downgraded to a predictive CAUTION before the tick ends;
+  - predictive checks still run normally on later ticks, and no telemetry fallback/known-state logic, new warnings, exports, CSV, per-tick checks, `Fuel.Refuel.*`, Pit Fuel Control, Pit Command, planner, or Property Snapshot group changes were made. Property Snapshot list reviewed: yes; no export/property change.
+
 - 2026-06-08 MonitorSystem Phase 2C pit-exit baseline MFD context fix landed:
   - `PitRoadExit` `BASELINE SHORT` now evaluates actual exit fuel only and no longer counts still-selected `PitSvFuel`/`dpFuelFill` MFD fuel after the stop has completed;
   - predictive two-laps, pit-road entry, and pit-box entry baseline checks still include selected MFD fuel when refuel is enabled because that request can still be serviced in those contexts;

@@ -59,7 +59,7 @@ Formula:
 - required fuel = `Fuel_LitersPerLap * LapsRemaining`;
 - warning threshold = `required - available > Fuel_LitersPerLap * 1.0` (`MonitorBaselineFuelToleranceLaps`).
 
-The check fails silently when current fuel, fuel-per-lap, or remaining laps are invalid/non-positive. It adds no telemetry-validity layer, fallback substitution, planner/strategy consumption, contingency/formation/after-zero logic, `Fuel.Refuel.*` change, Pit Fuel Control change, Pit Command change, export, CSV, or per-tick evaluation. It only runs on existing MonitorSystem edges: predictive two-laps-remaining, pit-road entry, pit-box entry, and pit-road exit; the pit-road-exit edge intentionally excludes selected MFD fuel and evaluates actual exit fuel only.
+The check fails silently when current fuel is invalid or zero/non-positive, or when fuel-per-lap or remaining laps are invalid/non-positive. It adds no telemetry-validity layer, fallback substitution, planner/strategy consumption, contingency/formation/after-zero logic, `Fuel.Refuel.*` change, Pit Fuel Control change, Pit Command change, export, CSV, or per-tick evaluation. It only runs on existing MonitorSystem edges: predictive two-laps-remaining, pit-road entry, pit-box entry, and pit-road exit; the pit-road-exit edge intentionally excludes selected MFD fuel and evaluates actual exit fuel only. When pit-road exit fires, the same update skips the predictive block so a pit-exit WARNING is not downgraded to a predictive CAUTION before the tick ends.
 
 ## Inputs (source + cadence)
 ### Runtime telemetry

@@ -1,3 +1,10 @@
+## 2026-06-08 — MonitorSystem Phase 2C baseline warning review follow-up
+- Classification: **internal-only correctness follow-up** (baseline-warning numeric guard and same-tick trigger ordering; no export names, dashboard JSON, fuel/refuel math, planner, Pit Fuel Control, Pit Command, or message text changes).
+- `BASELINE SHORT` now requires positive current fuel before evaluating, so a zero current-fuel reading fails silently instead of producing a baseline warning. This is a simple numeric sanity guard, not telemetry fallback/known-state logic.
+- `UpdateMonitorPitStopFramework(...)` now tracks a local `pitRoadExitThisTick` flag and skips the predictive warning block for that same update when a pit-road-exit edge fired, preserving a just-published pit-exit WARNING from same-tick predictive CAUTION downgrade.
+- Preserved predictive checks on later ticks, trusted SimHub telemetry reads, no `MfdFuelRequestKnown`, no new warnings, no CSV, no per-tick checks, no `Fuel.Refuel.*` / Pit Fuel Control / Pit Command / Strategy planner changes, and no Property Snapshot group changes.
+- Property Snapshot list reviewed: yes; no export/property add, remove, rename, behavior-contract change, or group change because `MonitorSystem.*` remains in the existing Fuel/Strategy group.
+
 ## 2026-06-08 — MonitorSystem Phase 2C pit-exit MFD context fix
 - Classification: **internal-only correctness follow-up** (baseline-warning edge context fix; no export names, dashboard JSON, fuel/refuel math, planner, Pit Fuel Control, Pit Command, or message text changes).
 - Parameterized `IsMonitorBaselineFuelShort(...)` with `includeSelectedMfdFuel`, keeping selected `PitSvFuel` included for predictive, pit-road entry, and pit-box entry checks while excluding it on `PitRoadExit`.

@@ -16447,6 +16447,7 @@ namespace LaunchPlugin
             PitFuelControlData fuelControlData = _pitFuelControlEngine?.Data ?? PitFuelControlData.Live;
             string phase = ResolveMonitorPitPhase(onPitRoad, inPitBox);
             var snapshot = BuildMonitorPitStopSnapshot(data, pluginManager, sessionTimeSec, sessionType, sessionState, onPitRoad, inPitStall, inPitBox);
+            bool pitRoadExitThisTick = false;
 
             bool firstTick = !_monitorPitFrameworkPrimed;
             if (firstTick)
@@ -16511,6 +16512,7 @@ namespace LaunchPlugin
 
                 if (_monitorPitLastOnPitRoad && !onPitRoad)
                 {
+                    pitRoadExitThisTick = true;
                     MonitorPitWarningResult warning = EvaluateMonitorPitExitWarning(snapshot);
                     PublishMonitorPitWarningOrClear(warning);
                     LogMonitorPitTrigger("PitRoadExit", snapshot, "OnPitRoad true->false; predictive reset", warning);
@@ -16526,6 +16528,7 @@ namespace LaunchPlugin
 
             double lapsRemainingInTank = LapsRemainingInTank;
             bool predictiveEligible =
+                !pitRoadExitThisTick &&
                 !_monitorPitPredictiveTwoLapsTriggeredThisStint &&
                 IsMonitorPitPredictiveCheckEligible(sessionType, sessionState, onPitRoad);
 
@@ -16619,7 +16622,7 @@ namespace LaunchPlugin
 
         private bool IsMonitorBaselineFuelShort(MonitorPitStopSnapshot snapshot, bool includeSelectedMfdFuel)
         {
-            if (snapshot == null || !IsFiniteNonNegative(snapshot.CurrentFuel))
+            if (snapshot == null || !IsFinitePositive(snapshot.CurrentFuel))
             {
                 return false;
             }
