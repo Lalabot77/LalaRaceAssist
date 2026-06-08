@@ -17086,7 +17086,8 @@ namespace LaunchPlugin
             bool firstTick = !_monitorPitFrameworkPrimed;
             if (!firstTick)
             {
-                if (_monitorPostPitRefuelOffInhibitActive && snapshot.CompletedLaps > _monitorPostPitRefuelOffExitCompletedLap)
+                if (_monitorPostPitRefuelOffInhibitActive &&
+                    (onPitRoad || snapshot.CompletedLaps > _monitorPostPitRefuelOffExitCompletedLap))
                 {
                     _monitorPostPitRefuelOffInhibitActive = false;
                     _monitorPostPitRefuelOffSuppressionLoggedForWindow = false;
@@ -17438,6 +17439,11 @@ namespace LaunchPlugin
             }
 
             if (_monitorSystem.IsFuelHealthAlertActive)
+            {
+                return;
+            }
+
+            if (warning.RefuelOffSuppressed)
             {
                 return;
             }
