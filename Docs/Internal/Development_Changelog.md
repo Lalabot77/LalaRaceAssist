@@ -1,3 +1,7 @@
+## 2026-06-08 — Strategy Live Session zero-rain summary cleanup
+- Classification: **both** (user-visible Strategy tab LIVE SESSION wording/presentation cleanup; no Strategy calculations, Fuel Model, wet/dry authority, exports/properties, dashboard JSON, settings, or profile behavior changed).
+- Strategy LIVE SESSION weather/surface summary now hides the Rain segment when `TrackPrecipitation` parses as numeric zero (`0`, `0%`, `0.0%`, or comma-decimal equivalents), while positive precipitation keeps the existing compact `{x}% Rain` wording and unknown non-empty precipitation text preserves the previous display behavior.
+- Property Snapshot list reviewed: yes; no SimHub exports/properties were added, removed, renamed, or behavior-changed. Message catalogue reviewed: unchanged because no log/message text changed.
 ## 2026-06-08 — MonitorSystem post-pit REFUEL OFF inhibit review follow-up
 - Classification: **internal-only** (correctness follow-up for existing MonitorSystem.Text suppression behavior; no export/property names, schemas, settings, dashboard JSON, command paths, MSGV1 routing, fuel/refuel math, Pit Fuel Control, Pit Command, Strategy, or Planner changes).
 - Suppressed post-pit `REFUEL OFF` results now skip the pit-warning clear path entirely, preserving active `EXIT FUEL SHORT`, `MFD FUEL LOW`, and `BASELINE SHORT` warnings and avoiding unintended `MONITOR READY` publication.

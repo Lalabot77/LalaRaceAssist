@@ -23565,6 +23565,19 @@ namespace LaunchPlugin
             return value.Replace(" ", "").Trim();
         }
 
+        private static bool ShouldShowRainSegment(string value)
+        {
+            if (string.IsNullOrWhiteSpace(value)) return false;
+
+            string normalized = value.Trim().Replace("%", string.Empty).Replace(" ", string.Empty).Replace(',', '.');
+            if (!double.TryParse(normalized, NumberStyles.Float, CultureInfo.InvariantCulture, out var percentValue))
+            {
+                return true;
+            }
+
+            return percentValue > 0.0;
+        }
+
         private static string CompactTemp1dp(string value)
         {
             if (string.IsNullOrWhiteSpace(value)) return value;
@@ -23946,7 +23959,7 @@ namespace LaunchPlugin
 
             if (!string.IsNullOrWhiteSpace(humidity)) parts.Add($"{CompactPercent(humidity)} humid");
             if (!string.IsNullOrWhiteSpace(rubberState)) parts.Add($"Rubber {rubberState}");
-            if (!string.IsNullOrWhiteSpace(precipitation)) parts.Add($"{CompactPercent(precipitation)} Rain");
+            if (ShouldShowRainSegment(precipitation)) parts.Add($"{CompactPercent(precipitation)} Rain");
 
             string summary = parts.Count > 0 ? string.Join(" | ", parts) : "-";
 
