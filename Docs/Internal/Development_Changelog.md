@@ -4,6 +4,12 @@
 - Updated the MonitorSystem message catalogue, log-message contract, parameter inventory, Fuel subsystem wording, Project Index metadata, RepoStatus, and GitHub-facing dashboard/changelog notes so current behaviour uses the new driver-facing texts.
 - Monitor Event CSV category mapping now recognises `CHECK FUEL DATA` as `FuelHealth` and the three unreliable-data texts as `CarOppH2H`; skip rules for `MONITOR OFF`, `MONITOR READY`, and `FUEL HEALTH OK` remain unchanged.
 - Property Snapshot list reviewed: yes; no group change because no SimHub exports/properties were added, removed, renamed, or regrouped.
+## 2026-06-08 — Debug Options merge-fallout cleanup
+- Classification: **internal-only** (Settings Debug Options UI/docs alignment after merge conflict fallout; no runtime race logic, fuel math, pit math, CarSA slot/gap/checkpoint logic, MonitorSystem warning logic, Shift Assist cue/learning logic, SimHub export/property names, dashboard JSON, or CSV schemas changed).
+- Removed the stale General logging CarSA debug export/cadence/events controls and the visible legacy `PitExit Verbose Logging` row, leaving `CarSA diagnostics` as the single CarSA Debug CSV UI path and PitExit math-audit/detail logging under master debug + `Enable Debug Logging`.
+- Preserved `Enable Monitor Event CSV` in General logging with its existing MonitorSystem-enabled/default-off behavior.
+- Hid all Property Snapshot child controls until `Enable Property Snapshot` is on while preserving rolling combined CSV and FREQUENCY-only frequency visibility.
+- Verified OffTrack Debug CSV remains absent. Property Snapshot list reviewed: yes; no SimHub export/property add, remove, rename, behavior-contract change, or group change because this is UI visibility/docs cleanup only.
 
 ## 2026-06-08 — MonitorSystem optional event CSV + snapshot coverage audit
 - Classification: **internal-only** (debug/testing CSV + docs alignment; no new SimHub exports, dashboard JSON, health logic, MSGV1 routing, self-healing, fallback, or driver message queue/cancel behavior).

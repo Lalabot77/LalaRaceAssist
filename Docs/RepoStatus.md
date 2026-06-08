@@ -2,6 +2,11 @@
   - renamed the current driver/dashboard/CSV/log/catalogue texts from `FUEL DATA CHECK` to `CHECK FUEL DATA`, from `OPP TARGET CHECK` to `OPPONENT DATA UNRELIABLE`, from `CARSA SLOT CHECK` to `TRAFFIC DATA UNRELIABLE`, and from `H2H TARGET CHECK` to `H2H DATA UNRELIABLE`;
   - Monitor Event CSV category mapping now recognises `CHECK FUEL DATA` as `FuelHealth` and the three Car/Opp/H2H unreliable-data texts as `CarOppH2H`, while still skipping `MONITOR OFF`, `MONITOR READY`, and `FUEL HEALTH OK`;
   - wording-only change: no severity enum values, export/property names, CSV names/columns, trigger logic, fuel logic, pit logic, CarSA/Opp/H2H logic, MSGV1, dashboard JSON, settings UI, or Property Snapshot grouping changed. Property Snapshot list reviewed: yes; existing `MonitorSystem.*` exports remain mapped to FuelStrategy and no export/property add, remove, rename, or regroup is required.
+- 2026-06-08 Debug Options merge-fallout fix validated:
+  - removed the stale General logging CarSA debug export/cadence/events row and the visible legacy `PitExit Verbose Logging` toggle; `CarSA diagnostics` is now the only CarSA Debug CSV UI path while PitExit math-audit/detail logs remain under master debug + `Enable Debug Logging`;
+  - preserved the default-off `Enable Monitor Event CSV` control in General logging without changing MonitorSystem warning logic or CSV behavior;
+  - Property Snapshot child controls are hidden until `Enable Property Snapshot` is on, with rolling controls still hidden until `Write rolling combined CSV` is on and frequency still hidden unless rolling mode is `FREQUENCY`;
+  - verified OffTrack Debug CSV remains absent and no race logic, export/property names, dashboard JSON, or debug CSV schemas changed. Property Snapshot list reviewed: yes; UI visibility only, no export/property changes.
 
 - 2026-06-08 MonitorSystem optional event CSV + snapshot coverage audit landed:
   - added default-off Debug Options setting `Enable Monitor Event CSV`; when MonitorSystem is enabled it writes changed non-normal MonitorSystem publications only to `Logs/LalaPluginData/MonitorSystem_Events.csv`;
