@@ -1,7 +1,7 @@
 ## 2026-06-08 — MonitorSystem driver-facing wording update
 - Classification: **both** (driver/dashboard/CSV/log/catalogue wording plus internal Monitor Event CSV mapping alignment; no export names, property names, enum values, CSV schema, trigger logic, subsystem calculations, dashboard JSON, settings UI, MSGV1, or Property Snapshot grouping changes).
 - Renamed active MonitorSystem publications and ownership checks from `FUEL DATA CHECK` to `CHECK FUEL DATA`, `OPP TARGET CHECK` to `OPPONENT DATA UNRELIABLE`, `CARSA SLOT CHECK` to `TRAFFIC DATA UNRELIABLE`, and `H2H TARGET CHECK` to `H2H DATA UNRELIABLE`.
-- Updated the MonitorSystem message catalogue, log-message contract, parameter inventory, Fuel subsystem wording, RepoStatus, and GitHub-facing dashboard/changelog notes so current behaviour uses the new driver-facing texts.
+- Updated the MonitorSystem message catalogue, log-message contract, parameter inventory, Fuel subsystem wording, Project Index metadata, RepoStatus, and GitHub-facing dashboard/changelog notes so current behaviour uses the new driver-facing texts.
 - Monitor Event CSV category mapping now recognises `CHECK FUEL DATA` as `FuelHealth` and the three unreliable-data texts as `CarOppH2H`; skip rules for `MONITOR OFF`, `MONITOR READY`, and `FUEL HEALTH OK` remain unchanged.
 - Property Snapshot list reviewed: yes; no group change because no SimHub exports/properties were added, removed, renamed, or regrouped.
 
