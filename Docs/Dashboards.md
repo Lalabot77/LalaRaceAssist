@@ -22,9 +22,9 @@ The dashboard-facing Monitor System is enabled by default. Use **Dash Control ->
 
 - enabled: `LalaLaunch.MonitorSystem.State` is `ON` and the default message is `MONITOR READY`;
 - disabled: state is `OFF` and the message is `MONITOR OFF`;
-- re-enabling returns the monitor to the ready state before later fuel-health messages are published.
+- re-enabling returns the monitor to the ready state before later monitor messages are published.
 
-The current monitor reports existing runtime fuel-health status and records Phase 2A pit-stop trigger evidence in logs only. It does not publish pit-stop driver warnings, send pit commands, or replace `Pit.Command.*` feedback.
+The current monitor reports existing runtime fuel-health status, edge-triggered pit/fuel risk warnings, and small report-by-exception CarSA/Opponents/H2H impossible-state checks. It observes already-published subsystem outputs only; it does not send pit commands, select fallback targets, reset car/opponent/H2H state, or replace `Pit.Command.*` feedback.
 
 ## 2. Installation / import
 
@@ -307,3 +307,21 @@ Documentation pending.
 The screenshots embedded above are limited to images that are already present in the repo under `Docs/Images/PrimaryDash/`.
 
 Where a useful page-specific screenshot is not currently available in that folder, this guide uses a simple placeholder note rather than inventing a filename or implying an image exists when it does not.
+
+## Pit Stop Debrief bindings
+
+Dashboard layout files are not changed by the v1 Pit Debrief implementation. Dashboards consume plugin-owned latched outputs only and must not recompute service delta, loss delta, exit accuracy, or summary text.
+
+Alerts overlay contract:
+
+- Visible when `LalaLaunch.Pit.Debrief.Valid == true` and `LalaLaunch.Pit.Debrief.AgeSec < 15`.
+- Title: `PIT STOP DEBRIEF — STOP ` + `LalaLaunch.Pit.Debrief.StopIndex`.
+- Body: `LalaLaunch.Pit.Debrief.SummaryText`.
+
+Debug page fields:
+
+- Entry: `LalaLaunch.Pit.Debrief.Entry.QualityText`, `LineTimeLossSec`, `DecelQualityText`, `LimiterQualityText`.
+- Box: `LalaLaunch.Pit.Debrief.Box.QualityText`, `MissedReason`, `StationarySec`.
+- Service: `LalaLaunch.Pit.Debrief.Service.FuelAddedLitres`, `FuelTargetLitres`, `RefuelDurationSec`, `RefuelRateLps`, `TyreChangeCount`.
+- Timing: `LalaLaunch.Pit.Debrief.Timing.PredictedTotalLossSec`, `ActualTotalLossSec`, `LossDeltaSec`, `LossSource`.
+- Exit: `LalaLaunch.Pit.Debrief.Exit.PredictedPositionInClass`, `ActualPositionInClass`, `PositionDelta`, `AccuracyText`.

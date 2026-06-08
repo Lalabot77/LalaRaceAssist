@@ -1,3 +1,38 @@
+## 2026-06-08 — MonitorSystem optional event CSV + snapshot coverage audit
+- Classification: **internal-only** (debug/testing CSV + docs alignment; no new SimHub exports, dashboard JSON, health logic, MSGV1 routing, self-healing, fallback, or driver message queue/cancel behavior).
+- Added persisted Debug Options setting `Enable Monitor Event CSV` (default off) that writes changed non-normal MonitorSystem publications only (`WATCH`, `CAUTION`, `WARNING`, `FAULT`, `RECOVERED`) to `Logs/LalaPluginData/MonitorSystem_Events.csv` when MonitorSystem itself is enabled.
+- CSV rows include generic session/monitor/context columns and intentionally skip `MONITOR OFF`, `MONITOR READY`, `FUEL HEALTH OK`, unchanged repeat publications, and per-tick OK/default state spam; file I/O failure logs once and disables the writer.
+- Property Snapshot list reviewed: yes; existing `MonitorSystem.*` exports are already attached through `AttachCore` and mapped by `ResolvePropertySnapshotGroup(...)` to FuelStrategy, so no snapshot list or group change was required. Root `CHANGELOG.md` reviewed unchanged because this is an internal debug/testing tool.
+
+## 2026-06-08 — Pit Debrief PR #797 review sync commit
+- Classification: **internal-only review traceability** (comments/docs only; no export names, dashboard JSON, fuel model, PitExit, PitCycleLite, or debrief runtime semantics changed beyond the already-present PR #797 fixes).
+- Added explicit code comments at the service-latch ordering and actual-loss normalization seams so the PR review can see why fuel-added evidence is captured before `Pit_AddedSoFar` reset and why boxed-stop actual loss adds stationary box time only inside the debrief readout.
+- Property Snapshot list reviewed: yes; no export/property add, remove, rename, or behavior-contract change. `Pit.Debrief.*` remains in Pit/PitExit through the existing `Pit.` prefix.
+
+## 2026-06-08 — Pit Debrief service latch/total-loss normalization follow-up
+- Classification: **both** (dashboard-visible debrief export correctness plus internal log-contract wording).
+- Preserved `Pit.Debrief.Service.FuelAddedLitres` from the existing Fuel.Pit gauge while the box countdown is still active, before the gauge reset can clear `Pit_AddedSoFar` on box exit; no new refuel detector or refuel-duration seam was added.
+- Normalized `Pit.Debrief.Timing.ActualTotalLossSec` to total-stop-equivalent by adding latched stationary box duration to existing DTL/direct lane-equivalent final loss for boxed stops, keeping drive-throughs at +0 and preserving pit-loss learning/fuel/PitExit/PitCycleLite behavior.
+- Property Snapshot list reviewed: yes; no export names were added/removed/renamed and `Pit.Debrief.*` remains in the existing Pit/PitExit group through the `Pit.` prefix.
+
+## 2026-06-08 — Pit Stop Debrief v1 latching/export layer
+- Classification: **both** (user-facing dashboard exports plus internal log/export contract).
+- Added additive `Pit.Debrief.*` SimHub exports for compact overlay verdict and debug-page post-stop review fields, with values latched from existing PitEngine, Fuel runtime, and Opponents/PitExit seams.
+- Added one structured `[LalaPlugin:PitDebrief] final` log line per finalized debrief; no per-tick logs, no per-stop history store.
+- Preserved PitEngine timing, Fuel.Live.TotalStopLoss/Fuel.Pit semantics, PitExit prediction logic, PitCycleLite, Rejoin, and dashboard layout JSON. Property Snapshot list reviewed: yes; `Pit.Debrief.*` uses the existing `Pit.` prefix and routes to Pit/PitExit.
+## 2026-06-08 — MonitorSystem Phase 3A review follow-up
+- Classification: **both** (driver-visible MonitorSystem warning selection correctness and internal false-positive reduction; no new exports, property names, settings, dashboard JSON, subsystem target/gap logic, pit/fuel/strategy/planner/command behavior, or Property Snapshot grouping changes).
+- Active Car/Opp/H2H health publication now republishes the selected current active check whenever its text differs from the displayed MonitorSystem text, while still refusing to overwrite unresolved fuel-health alerts or active pit warnings.
+- Deferred `CARSA GAP CHECK` because no clean non-debug CarSA output currently proves the runtime gap scale/lap-time basis is valid; MonitorSystem now keeps only Opponent target, CarSA slot `CarIdx`, and H2H target impossible-state checks instead of guessing about gap-scale readiness.
+- Restored the main-branch `EXIT FUEL SHORT` tolerance to 1.5 L after the Phase 3A merge/rebase. Property Snapshot list reviewed: yes; existing `MonitorSystem.*` exports remain mapped to FuelStrategy and no export/property add, remove, rename, or regroup is required.
+
+## 2026-06-08 — MonitorSystem Phase 3A Car/Opp/H2H impossible-state checks
+- Classification: **both** (driver-visible MonitorSystem warning texts plus internal edge-gated health logs; no new exports, property names, settings, dashboard JSON, subsystem target/gap logic, pit/fuel/strategy/planner/command behavior, or Property Snapshot grouping changes).
+- Added report-by-exception MonitorSystem checks for already-published impossible states only: valid Opponents targets with invalid/player `CarIdx`, valid CarSA slots with invalid `CarIdx`, and valid H2H race/track targets with invalid/player `CarIdx`. `CARSA GAP CHECK` is deferred until a clean non-debug CarSA gap-scale readiness signal exists.
+- Checks are gated on eligible live sessions, valid player `CarIdx`, and a short 3 s session warmup; valid-false/blink-held rows are ignored, failures/recoveries are edge-logged, repeated still-failing evidence is log-only at 60 s, and publication does not override unresolved fuel-health alerts or active pit warnings.
+- Preserved CarSA selection/gap/checkpoint logic, Opponents race-order/gap logic, H2H selector/sector/gap logic, PitExit, fuel model, planner/strategy, dash JSON, settings UI, property names, exports, fallback paths, self-healing, and telemetry-known wrappers.
+- Property Snapshot list reviewed: yes; `ResolvePropertySnapshotGroup(...)` still maps existing `MonitorSystem.*` exports to FuelStrategy, and no export/property add, remove, rename, or regroup is required.
+
 ## 2026-06-08 — MonitorSystem Phase 2C baseline warning review follow-up
 - Classification: **internal-only correctness follow-up** (baseline-warning numeric guard and same-tick trigger ordering; no export names, dashboard JSON, fuel/refuel math, planner, Pit Fuel Control, Pit Command, or message text changes).
 - `BASELINE SHORT` now requires positive current fuel before evaluating, so a zero current-fuel reading fails silently instead of producing a baseline warning. This is a simple numeric sanity guard, not telemetry fallback/known-state logic.

@@ -27,6 +27,8 @@ Branch: work
 - `Dash Visibility` header tooltips make the short labels explicit: `DRIVER = Lala Race Dash`, `STRATEGY = Lala Strategy Dash`, and `OVERLAY = overlay surfaces`.
 - `Launch Mode`, `Event Marker`, and `Post-Launch Results Display Time` no longer appear in Dash Control after this tidy-up.
 
+## GlobalSettingsView.xaml
+- Debug Options: `Enable Monitor Event CSV` writes changed non-normal MonitorSystem publications to `Logs/LalaPluginData/MonitorSystem_Events.csv` for troubleshooting only. It is off by default and depends on `Enable Monitor System`.
 
 ## LaunchPluginSettingsUI.xaml
 - `Enable Monitor System` no longer appears in the Launch UI / Bindings section; the persisted setting is owned by Dash Control global functions.

@@ -1324,6 +1324,9 @@ namespace LaunchPlugin
         private DateTime _lastPitLaneSeenUtc = DateTime.MinValue;
         private bool _pitExitEntrySeenLast = false;
         private bool _pitExitExitSeenLast = false;
+        private PitDebriefEngine _pitDebrief;
+        private bool _pitDebriefWasInBox = false;
+
         private double _lastLoggedProjectedLaps = double.NaN;
         private DateTime _lastProjectionLogUtc = DateTime.MinValue;
         private string _lastProjectionLapSource = string.Empty;
@@ -4339,6 +4342,10 @@ namespace LaunchPlugin
                         _pitDbg_RawPitLapSec = dtlNow + (2.0 * _pitDbg_AvgPaceUsedSec) - _pitDbg_OutLapSec + stopNow;
                         _pitDbg_RawDTLFormulaSec = (_pitDbg_RawPitLapSec - stopNow + _pitDbg_OutLapSec) - (2.0 * _pitDbg_AvgPaceUsedSec);
 
+                        double debriefLossSec = (dtlNow > 0.0) ? dtlNow : directNow;
+                        string debriefLossSource = (dtlNow > 0.0) ? "dtl" : ((directNow > 0.0) ? "direct" : "unavailable");
+                        FinalizePitDebriefIfReady(debriefLossSec, debriefLossSource);
+
                         // Freeze everything until the next pit entry
                         _pitFreezeUntilNextCycle = true;
                     }
@@ -6964,6 +6971,8 @@ namespace LaunchPlugin
         private const double MonitorPitExitFuelShortToleranceLitres = 1.5;
         private const double MonitorPitRefuelCompleteToleranceLitres = 0.75;
         private const double MonitorBaselineFuelToleranceLaps = 1.0;
+        private const double MonitorCarOppH2HWarmupSeconds = 3.0;
+        private const double MonitorCarOppH2HRepeatLogSeconds = 60.0;
         private bool _monitorPitFrameworkPrimed = false;
         private PitFuelControlMode _monitorPitLastFuelControlMode = PitFuelControlMode.Off;
         private PitFuelControlData _monitorPitLastFuelControlData = PitFuelControlData.Live;
@@ -6972,6 +6981,51 @@ namespace LaunchPlugin
         private bool _monitorPitPredictiveTwoLapsTriggeredThisStint = false;
         private string _monitorPitPhase = "OnTrack";
         private MonitorPitStopSnapshot _monitorPitEntrySnapshot;
+        private string _monitorCarOppH2HSessionType = string.Empty;
+        private double _monitorCarOppH2HEligibleSinceSessionTimeSec = double.NaN;
+        private readonly MonitorCarOppH2HCheckState _monitorOppTargetCheckState = new MonitorCarOppH2HCheckState("OppTarget", "OPP TARGET CHECK", MonitorSeverity.Caution);
+        private readonly MonitorCarOppH2HCheckState _monitorCarSaSlotCheckState = new MonitorCarOppH2HCheckState("CarSASlot", "CARSA SLOT CHECK", MonitorSeverity.Caution);
+        private readonly MonitorCarOppH2HCheckState _monitorH2HTargetCheckState = new MonitorCarOppH2HCheckState("H2HTarget", "H2H TARGET CHECK", MonitorSeverity.Watch);
+        private bool _monitorEventCsvFailed;
+        private bool _monitorEventCsvPathLogged;
+
+
+        private sealed class MonitorCarOppH2HCheckState
+        {
+            public MonitorCarOppH2HCheckState(string name, string text, MonitorSeverity severity)
+            {
+                Name = name;
+                Text = text;
+                Severity = severity;
+            }
+
+            public string Name { get; private set; }
+            public string Text { get; private set; }
+            public MonitorSeverity Severity { get; private set; }
+            public bool Active { get; set; }
+            public string Detail { get; set; } = string.Empty;
+            public DateTime LastLogUtc { get; set; } = DateTime.MinValue;
+
+            public void Reset()
+            {
+                Active = false;
+                Detail = string.Empty;
+                LastLogUtc = DateTime.MinValue;
+            }
+        }
+
+        private struct MonitorCarOppH2HFailure
+        {
+            public static readonly MonitorCarOppH2HFailure None = new MonitorCarOppH2HFailure(null);
+
+            public MonitorCarOppH2HFailure(string detail)
+            {
+                Detail = detail;
+            }
+
+            public string Detail { get; private set; }
+            public bool HasFailure => !string.IsNullOrWhiteSpace(Detail);
+        }
 
         private sealed class MonitorPitStopSnapshot
         {
@@ -8207,6 +8261,7 @@ namespace LaunchPlugin
                 return s;
             });
             _pitLite = new PitCycleLite(_pit);
+            _pitDebrief = new PitDebriefEngine();
             _rejoinEngine.SetPitEngine(_pit);
 
             // --- New direct travel time property (CORE) ---
@@ -8231,6 +8286,31 @@ namespace LaunchPlugin
             AttachCore("Pit.Box.RemainingSec", () => _pitBoxRemainingSec);
             AttachCore("Pit.Box.TargetSec", () => _pitBoxTargetSec);
             AttachCore("Pit.Box.LastDeltaSec", () => _pitBoxLastDeltaSec);
+            AttachCore("Pit.Debrief.Valid", () => _pitDebrief?.Valid ?? false);
+            AttachCore("Pit.Debrief.AgeSec", () => _pitDebrief?.GetAgeSec(DateTime.UtcNow) ?? 0.0);
+            AttachCore("Pit.Debrief.StopIndex", () => _pitDebrief?.StopIndex ?? 0);
+            AttachCore("Pit.Debrief.SummaryText", () => _pitDebrief?.SummaryText ?? string.Empty);
+            AttachCore("Pit.Debrief.StateText", () => _pitDebrief?.StateText ?? "EMPTY");
+            AttachCore("Pit.Debrief.Entry.QualityText", () => _pitDebrief?.EntryQualityText ?? "UNKNOWN");
+            AttachCore("Pit.Debrief.Entry.LineTimeLossSec", () => _pitDebrief?.EntryLineTimeLossSec ?? 0.0);
+            AttachCore("Pit.Debrief.Entry.DecelQualityText", () => _pitDebrief?.EntryDecelQualityText ?? "UNKNOWN");
+            AttachCore("Pit.Debrief.Entry.LimiterQualityText", () => _pitDebrief?.EntryLimiterQualityText ?? "UNKNOWN");
+            AttachCore("Pit.Debrief.Box.QualityText", () => _pitDebrief?.BoxQualityText ?? "UNKNOWN");
+            AttachCore("Pit.Debrief.Box.MissedReason", () => _pitDebrief?.BoxMissedReason ?? "unknown");
+            AttachCore("Pit.Debrief.Box.StationarySec", () => _pitDebrief?.BoxStationarySec ?? 0.0);
+            AttachCore("Pit.Debrief.Service.FuelAddedLitres", () => _pitDebrief?.ServiceFuelAddedLitres ?? 0.0);
+            AttachCore("Pit.Debrief.Service.FuelTargetLitres", () => _pitDebrief?.ServiceFuelTargetLitres ?? 0.0);
+            AttachCore("Pit.Debrief.Service.RefuelDurationSec", () => _pitDebrief?.ServiceRefuelDurationSec ?? 0.0);
+            AttachCore("Pit.Debrief.Service.RefuelRateLps", () => _pitDebrief?.ServiceRefuelRateLps ?? 0.0);
+            AttachCore("Pit.Debrief.Service.TyreChangeCount", () => _pitDebrief?.ServiceTyreChangeCount ?? 0);
+            AttachCore("Pit.Debrief.Timing.PredictedTotalLossSec", () => _pitDebrief?.TimingPredictedTotalLossSec ?? 0.0);
+            AttachCore("Pit.Debrief.Timing.ActualTotalLossSec", () => _pitDebrief?.TimingActualTotalLossSec ?? 0.0);
+            AttachCore("Pit.Debrief.Timing.LossDeltaSec", () => _pitDebrief?.TimingLossDeltaSec ?? 0.0);
+            AttachCore("Pit.Debrief.Timing.LossSource", () => _pitDebrief?.TimingLossSource ?? "unavailable");
+            AttachCore("Pit.Debrief.Exit.PredictedPositionInClass", () => _pitDebrief?.ExitPredictedPositionInClass ?? 0);
+            AttachCore("Pit.Debrief.Exit.ActualPositionInClass", () => _pitDebrief?.ExitActualPositionInClass ?? 0);
+            AttachCore("Pit.Debrief.Exit.PositionDelta", () => _pitDebrief?.ExitPositionDelta ?? 0);
+            AttachCore("Pit.Debrief.Exit.AccuracyText", () => _pitDebrief?.ExitAccuracyText ?? "UNKNOWN");
             AttachCore("TrackMarkers.Trigger.FirstCapture", () => IsTrackMarkerPulseActive(_trackMarkerFirstCapturePulseUtc));
             AttachCore("TrackMarkers.Trigger.TrackLengthChanged", () => IsTrackMarkerPulseActive(_trackMarkerTrackLengthChangedPulseUtc));
             AttachCore("TrackMarkers.Trigger.LinesRefreshed", () => IsTrackMarkerPulseActive(_trackMarkerLinesRefreshedPulseUtc));
@@ -9858,7 +9938,7 @@ namespace LaunchPlugin
             _fuelRuntimeUnhealthyStreak = unhealthy ? (_fuelRuntimeUnhealthyStreak + 1) : 0;
             if (unhealthy)
             {
-                _monitorSystem.Publish(MonitorSeverity.Watch, "FUEL DATA CHECK");
+                PublishMonitorSystemEvent(MonitorSeverity.Watch, "FUEL DATA CHECK", "FuelHealth", _fuelRuntimeHealthCheckPending ? _fuelRuntimeHealthPendingReason : "health check failed", string.Empty);
             }
 
             bool shouldRecover = _fuelRuntimeUnhealthyStreak >= 2;
@@ -9871,16 +9951,19 @@ namespace LaunchPlugin
                 bool recovered = RunPlannerSafeFuelRuntimeRecovery(reason, out recoveryAttempted);
                 if (recoveryAttempted)
                 {
-                    _monitorSystem.Publish(
+                    PublishMonitorSystemEvent(
                         recovered ? MonitorSeverity.Recovered : MonitorSeverity.Fault,
-                        recovered ? "FUEL DATA RECOVERED" : "FUEL DATA FAULT");
+                        recovered ? "FUEL DATA RECOVERED" : "FUEL DATA FAULT",
+                        "FuelHealth",
+                        reason,
+                        recoveryAttempted ? "recoveryAttempted=true" : string.Empty);
                     _fuelRuntimeHealthCheckPending = false;
                     _fuelRuntimeHealthPendingReason = string.Empty;
                     _fuelRuntimeUnhealthyStreak = recovered ? 0 : 1;
                 }
                 else
                 {
-                    _monitorSystem.Publish(MonitorSeverity.Watch, "FUEL DATA CHECK");
+                    PublishMonitorSystemEvent(MonitorSeverity.Watch, "FUEL DATA CHECK", "FuelHealth", _fuelRuntimeHealthCheckPending ? _fuelRuntimeHealthPendingReason : "health check failed", string.Empty);
                 }
 
                 return;
@@ -9903,7 +9986,7 @@ namespace LaunchPlugin
 
                 if (publishMonitorOk)
                 {
-                    _monitorSystem.Publish(MonitorSeverity.Ok, "FUEL HEALTH OK");
+                    PublishMonitorSystemEvent(MonitorSeverity.Ok, "FUEL HEALTH OK", "FuelHealth", "health check passed", string.Empty);
                 }
             }
         }
@@ -9921,9 +10004,12 @@ namespace LaunchPlugin
                 bool recovered = RunPlannerSafeFuelRuntimeRecovery(reasonLabel, out recoveryAttempted);
                 if (recoveryAttempted)
                 {
-                    _monitorSystem.Publish(
+                    PublishMonitorSystemEvent(
                         recovered ? MonitorSeverity.Recovered : MonitorSeverity.Fault,
-                        recovered ? "FUEL DATA RECOVERED" : "FUEL DATA FAULT");
+                        recovered ? "FUEL DATA RECOVERED" : "FUEL DATA FAULT",
+                        "FuelHealth",
+                        reasonLabel,
+                        recoveryAttempted ? "recoveryAttempted=true" : string.Empty);
                     if (recovered)
                     {
                         return;
@@ -9931,7 +10017,7 @@ namespace LaunchPlugin
                 }
                 else
                 {
-                    _monitorSystem.Publish(MonitorSeverity.Watch, "FUEL DATA CHECK");
+                    PublishMonitorSystemEvent(MonitorSeverity.Watch, "FUEL DATA CHECK", "FuelHealth", _fuelRuntimeHealthCheckPending ? _fuelRuntimeHealthPendingReason : "health check failed", string.Empty);
                 }
             }
 
@@ -9941,6 +10027,8 @@ namespace LaunchPlugin
             _rejoinEngine?.Reset();
             _pit?.Reset();
             _pitLite?.ResetCycle();
+            _pitDebrief?.ResetAll();
+            _pitDebriefWasInBox = false;
             _pit?.ResetPitPhaseState();
             _pitCommandEngine?.ResetFeedbackState();
             _opponentsEngine?.Reset();
@@ -11026,7 +11114,19 @@ namespace LaunchPlugin
             }
             double currentFuelNow = data.NewData?.Fuel ?? 0.0;
             UpdatePitBoxCountdownValues(inLane, isInPitStall);
+
+            // PR #797: capture Pit.Debrief service evidence before UpdatePitRefuelGaugeValues can
+            // clear Pit_AddedSoFar on the first non-active box tick. This reads existing fuel seams only.
+            UpdatePitDebriefBoxServiceLatch(inLane, isInPitStall);
             UpdatePitRefuelGaugeValues(currentFuelNow);
+            if (_pitDebrief != null && _pitBoxCountdownActive)
+            {
+                double debriefFuelTarget = Pit_Box_WillAddLatched > 0.0 ? Pit_Box_WillAddLatched : Pit_WillAdd;
+                _pitDebrief.RefreshServiceEvidence(
+                    Pit_AddedSoFar,
+                    debriefFuelTarget,
+                    FuelCalculator?.EffectiveRefuelRateLps ?? 0.0);
+            }
             UpdateMonitorPitStopFramework(data, pluginManager, sessionTime);
 
             // --- Rejoin assist update & lap incident tracking ---
@@ -11112,6 +11212,7 @@ namespace LaunchPlugin
                 checkpointGapReader = _carSaEngine.TryGetCheckpointGapSec;
             }
             _opponentsEngine?.Update(data, pluginManager, isOpponentsEligibleSessionNow, isRaceSessionNow, completedLaps, myPaceSec, pitLossSec, pitTripActive, inLane, trackPct, sessionTimeSec, sessionTimeRemainingSec, verboseLogs, checkpointGapReader, BuildRaceContextLeagueClassMatchDelegate());
+            UpdatePitDebriefLifecycle(pitEntryEdge, pitExitEdge, pitLossSec, playerCarIdx);
             UpdatePitExitTimeToExitSec(pluginManager, inLane, speedKph);
             UpdatePlayerLapInvalidState(pluginManager, sessionTimeSec, playerCarIdx, carIdxLap);
             int[] carIdxSessionFlags = null;
@@ -11314,6 +11415,8 @@ namespace LaunchPlugin
                 ResetClassLeaderExports();
                 ResetClassBestExports();
             }
+
+            UpdateMonitorCarOppH2HHealth(sessionTypeName, sessionTimeSec, playerCarIdx, isOpponentsEligibleSessionNow);
 
             if (pitEntryEdge)
             {
@@ -11719,6 +11822,7 @@ namespace LaunchPlugin
                     _summaryPitStopIndex++;
 
                     Pit_OnValidPitStopTimeLossCalculated(lossSec, src);
+                    FinalizePitDebriefIfReady(lossSec, src);
                     _lastSavedLap = completedLaps;
                 }
             }
@@ -15991,13 +16095,501 @@ namespace LaunchPlugin
 
         private void OnMonitorSystemSettingsPropertyChanged(object sender, PropertyChangedEventArgs e)
         {
-            if (!string.Equals(e?.PropertyName, nameof(LaunchPluginSettings.MonitorSystemEnabled), StringComparison.Ordinal))
+            if (string.Equals(e?.PropertyName, nameof(LaunchPluginSettings.MonitorSystemEnabled), StringComparison.Ordinal))
+            {
+                _monitorSystem.SetEnabled(_subscribedMonitorSystemSettings?.MonitorSystemEnabled != false);
+                SaveSettings();
+                return;
+            }
+
+            if (string.Equals(e?.PropertyName, nameof(LaunchPluginSettings.EnableMonitorEventCsv), StringComparison.Ordinal))
+            {
+                SaveSettings();
+            }
+        }
+
+        private void PublishMonitorSystemEvent(MonitorSeverity severity, string text, string category, string reason, string extraDetail)
+        {
+            if (_monitorSystem == null)
             {
                 return;
             }
 
-            _monitorSystem.SetEnabled(_subscribedMonitorSystemSettings?.MonitorSystemEnabled != false);
-            SaveSettings();
+            bool changed = _monitorSystem.Publish(severity, text);
+            if (!changed)
+            {
+                return;
+            }
+
+            MaybeWriteMonitorEventCsv(severity, text, category, reason, extraDetail);
+        }
+
+        private void MaybeWriteMonitorEventCsv(MonitorSeverity severity, string text, string category, string reason, string extraDetail)
+        {
+            if (_monitorEventCsvFailed || Settings?.MonitorSystemEnabled != true || Settings?.EnableMonitorEventCsv != true)
+            {
+                return;
+            }
+
+            if (!IsMonitorEventCsvRecordable(severity, text))
+            {
+                return;
+            }
+
+            try
+            {
+                string folder = ResolvePropertySnapshotPrimaryLogsFolder();
+                string filePath = Path.Combine(folder, "MonitorSystem_Events.csv");
+                Directory.CreateDirectory(folder);
+                bool writeHeader = !File.Exists(filePath);
+                if (!_monitorEventCsvPathLogged)
+                {
+                    _monitorEventCsvPathLogged = true;
+                    SimHub.Logging.Current.Info($"[LalaPlugin:MonitorSystem] event CSV path='{filePath}'");
+                }
+
+                if (writeHeader)
+                {
+                    File.AppendAllText(filePath, GetMonitorEventCsvHeader() + Environment.NewLine);
+                }
+
+                File.AppendAllText(filePath, BuildMonitorEventCsvLine(severity, text, category, reason, extraDetail) + Environment.NewLine);
+            }
+            catch (Exception ex)
+            {
+                _monitorEventCsvFailed = true;
+                SimHub.Logging.Current.Warn($"[LalaPlugin:MonitorSystem] event CSV disabled after write failure: {ex.Message}");
+            }
+        }
+
+        private static bool IsMonitorEventCsvRecordable(MonitorSeverity severity, string text)
+        {
+            switch (severity)
+            {
+                case MonitorSeverity.Watch:
+                case MonitorSeverity.Caution:
+                case MonitorSeverity.Warning:
+                case MonitorSeverity.Fault:
+                case MonitorSeverity.Recovered:
+                    break;
+                default:
+                    return false;
+            }
+
+            string displayText = string.IsNullOrWhiteSpace(text) ? string.Empty : text.Trim();
+            if (string.Equals(displayText, "MONITOR READY", StringComparison.Ordinal) ||
+                string.Equals(displayText, "FUEL HEALTH OK", StringComparison.Ordinal) ||
+                string.Equals(displayText, "MONITOR OFF", StringComparison.Ordinal))
+            {
+                return false;
+            }
+
+            return true;
+        }
+
+        private static string ResolveMonitorEventCategory(string text)
+        {
+            string displayText = string.IsNullOrWhiteSpace(text) ? string.Empty : text.Trim();
+            switch (displayText)
+            {
+                case "FUEL DATA CHECK":
+                case "FUEL DATA RECOVERED":
+                case "FUEL DATA FAULT":
+                    return "FuelHealth";
+                case "REFUEL OFF":
+                case "MFD FUEL LOW":
+                case "EXIT FUEL SHORT":
+                    return "FuelPitStop";
+                case "BASELINE SHORT":
+                    return "BaselineFuel";
+                case "OPP TARGET CHECK":
+                case "CARSA SLOT CHECK":
+                case "H2H TARGET CHECK":
+                    return "CarOppH2H";
+                default:
+                    return "Unknown";
+            }
+        }
+
+        private static string GetMonitorEventCsvHeader()
+        {
+            return "Utc,SessionTimeSec,SessionType,SessionState,MonitorEnum,MonitorSeverityText,MonitorText,MonitorState,Category,Reason,CurrentFuelLitres,OnPitRoad,InPitStall,PlayerCarIdx,ExtraDetail";
+        }
+
+        private string BuildMonitorEventCsvLine(MonitorSeverity severity, string text, string category, string reason, string extraDetail)
+        {
+            var cells = new List<string>(15);
+            PluginManager pluginManager = PluginManager;
+            double sessionTimeSec = SafeReadDouble(pluginManager, "DataCorePlugin.GameRawData.Telemetry.SessionTime", double.NaN);
+            string sessionType = _currentTickGameData?.NewData?.SessionTypeName ?? string.Empty;
+            if (string.IsNullOrWhiteSpace(sessionType))
+            {
+                sessionType = GetString(pluginManager, "DataCorePlugin.GameData.SessionTypeName") ?? string.Empty;
+            }
+
+            int sessionState = ReadSessionStateInt(pluginManager);
+            double currentFuel = _currentTickGameData?.NewData?.Fuel ?? _lastFuelLevel;
+            bool onPitRoad = SafeReadBool(pluginManager, "DataCorePlugin.GameRawData.Telemetry.OnPitRoad", false);
+            bool inPitStall = SafeReadBool(pluginManager, "DataCorePlugin.GameRawData.Telemetry.PlayerCarInPitStall", false);
+            int playerCarIdx = SafeReadInt(pluginManager, "DataCorePlugin.GameRawData.Telemetry.PlayerCarIdx", -1);
+
+            AddCsvCell(cells, DateTime.UtcNow.ToString("o", CultureInfo.InvariantCulture));
+            AddCsvCell(cells, FormatCsvDouble(sessionTimeSec, "F3"));
+            AddCsvCell(cells, string.IsNullOrWhiteSpace(sessionType) ? "unknown" : sessionType.Trim());
+            AddCsvCell(cells, sessionState.ToString(CultureInfo.InvariantCulture));
+            AddCsvCell(cells, ((int)severity).ToString(CultureInfo.InvariantCulture));
+            AddCsvCell(cells, severity.ToString().ToUpperInvariant());
+            AddCsvCell(cells, string.IsNullOrWhiteSpace(text) ? string.Empty : text.Trim());
+            AddCsvCell(cells, _monitorSystem?.StateText ?? string.Empty);
+            AddCsvCell(cells, string.IsNullOrWhiteSpace(category) ? ResolveMonitorEventCategory(text) : category.Trim());
+            AddCsvCell(cells, string.IsNullOrWhiteSpace(reason) ? string.Empty : reason.Trim());
+            AddCsvCell(cells, FormatCsvDouble(currentFuel, "F3"));
+            AddCsvCell(cells, onPitRoad ? "1" : "0");
+            AddCsvCell(cells, inPitStall ? "1" : "0");
+            AddCsvCell(cells, playerCarIdx >= 0 ? playerCarIdx.ToString(CultureInfo.InvariantCulture) : string.Empty);
+            AddCsvCell(cells, string.IsNullOrWhiteSpace(extraDetail) ? string.Empty : extraDetail.Trim());
+            return BuildCsvLine(cells);
+        }
+
+        private void ResetMonitorCarOppH2HHealthStates()
+        {
+            _monitorOppTargetCheckState.Reset();
+            _monitorCarSaSlotCheckState.Reset();
+            _monitorH2HTargetCheckState.Reset();
+        }
+
+        private void UpdateMonitorCarOppH2HHealth(string sessionTypeName, double sessionTimeSec, int playerCarIdx, bool eligibleSession)
+        {
+            string normalizedSessionType = NormalizeSessionTypeName(sessionTypeName);
+            bool sessionChanged = !string.Equals(_monitorCarOppH2HSessionType, normalizedSessionType, StringComparison.OrdinalIgnoreCase);
+            if (sessionChanged)
+            {
+                _monitorCarOppH2HSessionType = normalizedSessionType;
+                _monitorCarOppH2HEligibleSinceSessionTimeSec = double.NaN;
+                ResetMonitorCarOppH2HHealthStates();
+                ClearActiveMonitorCarOppH2HHealthWarningIfOwned();
+            }
+
+            if (!eligibleSession || !IsMonitorCarIdxValid(playerCarIdx) || !IsFiniteNonNegative(sessionTimeSec))
+            {
+                _monitorCarOppH2HEligibleSinceSessionTimeSec = double.NaN;
+                ResetMonitorCarOppH2HHealthStates();
+                ClearActiveMonitorCarOppH2HHealthWarningIfOwned();
+                return;
+            }
+
+            if (double.IsNaN(_monitorCarOppH2HEligibleSinceSessionTimeSec) ||
+                sessionTimeSec < _monitorCarOppH2HEligibleSinceSessionTimeSec - 0.5)
+            {
+                _monitorCarOppH2HEligibleSinceSessionTimeSec = sessionTimeSec;
+                ResetMonitorCarOppH2HHealthStates();
+                ClearActiveMonitorCarOppH2HHealthWarningIfOwned();
+                return;
+            }
+
+            if (sessionTimeSec - _monitorCarOppH2HEligibleSinceSessionTimeSec < MonitorCarOppH2HWarmupSeconds)
+            {
+                return;
+            }
+
+            bool newFailure = false;
+            newFailure |= UpdateMonitorCarOppH2HCheckState(_monitorOppTargetCheckState, EvaluateMonitorOppTargetCheck(playerCarIdx), sessionTimeSec, normalizedSessionType, playerCarIdx);
+            newFailure |= UpdateMonitorCarOppH2HCheckState(_monitorCarSaSlotCheckState, EvaluateMonitorCarSaSlotCheck(), sessionTimeSec, normalizedSessionType, playerCarIdx);
+            newFailure |= UpdateMonitorCarOppH2HCheckState(_monitorH2HTargetCheckState, EvaluateMonitorH2HTargetCheck(playerCarIdx), sessionTimeSec, normalizedSessionType, playerCarIdx);
+
+            MonitorCarOppH2HCheckState activeState = SelectActiveMonitorCarOppH2HCheckState();
+            if (activeState != null)
+            {
+                bool activeTextDisplayed = _monitorSystem != null && string.Equals(_monitorSystem.DisplayText, activeState.Text, StringComparison.Ordinal);
+                if (newFailure || !activeTextDisplayed)
+                {
+                    PublishMonitorCarOppH2HHealthWarning(activeState);
+                }
+                return;
+            }
+
+            ClearActiveMonitorCarOppH2HHealthWarningIfOwned();
+        }
+
+        private bool UpdateMonitorCarOppH2HCheckState(
+            MonitorCarOppH2HCheckState state,
+            MonitorCarOppH2HFailure failure,
+            double sessionTimeSec,
+            string sessionTypeName,
+            int playerCarIdx)
+        {
+            if (state == null)
+            {
+                return false;
+            }
+
+            if (failure.HasFailure)
+            {
+                bool firstFailure = !state.Active;
+                bool detailChanged = state.Active && !string.Equals(state.Detail, failure.Detail, StringComparison.Ordinal);
+                bool repeatDue = state.Active && (DateTime.UtcNow - state.LastLogUtc).TotalSeconds >= MonitorCarOppH2HRepeatLogSeconds;
+                state.Active = true;
+                state.Detail = failure.Detail;
+
+                if (firstFailure || detailChanged)
+                {
+                    state.LastLogUtc = DateTime.UtcNow;
+                    LogMonitorCarOppH2HHealth("fail", state, sessionTimeSec, sessionTypeName, playerCarIdx, failure.Detail);
+                    return true;
+                }
+
+                if (repeatDue)
+                {
+                    state.LastLogUtc = DateTime.UtcNow;
+                    LogMonitorCarOppH2HHealth("still-failing", state, sessionTimeSec, sessionTypeName, playerCarIdx, failure.Detail);
+                }
+
+                return false;
+            }
+
+            if (state.Active)
+            {
+                string previousDetail = state.Detail;
+                state.Reset();
+                LogMonitorCarOppH2HHealth("recovered", state, sessionTimeSec, sessionTypeName, playerCarIdx, previousDetail);
+            }
+
+            return false;
+        }
+
+        private MonitorCarOppH2HCheckState SelectActiveMonitorCarOppH2HCheckState()
+        {
+            if (_monitorOppTargetCheckState.Active) return _monitorOppTargetCheckState;
+            if (_monitorCarSaSlotCheckState.Active) return _monitorCarSaSlotCheckState;
+            if (_monitorH2HTargetCheckState.Active) return _monitorH2HTargetCheckState;
+            return null;
+        }
+
+        private void PublishMonitorCarOppH2HHealthWarning(MonitorCarOppH2HCheckState state)
+        {
+            if (_monitorSystem == null || state == null)
+            {
+                return;
+            }
+
+            if (_monitorSystem.IsFuelHealthAlertActive || _monitorSystem.IsMonitorPitWarningActive)
+            {
+                return;
+            }
+
+            PublishMonitorSystemEvent(state.Severity, state.Text, "CarOppH2H", state.Name, state.Detail);
+        }
+
+        private void ClearActiveMonitorCarOppH2HHealthWarningIfOwned()
+        {
+            if (_monitorSystem == null || !_monitorSystem.IsCarOppH2HHealthWarningActive)
+            {
+                return;
+            }
+
+            if (_monitorSystem.IsFuelHealthAlertActive || _monitorSystem.IsMonitorPitWarningActive)
+            {
+                return;
+            }
+
+            PublishMonitorSystemEvent(MonitorSeverity.Ok, "MONITOR READY", "Unknown", "clear", string.Empty);
+        }
+
+        private void LogMonitorCarOppH2HHealth(
+            string status,
+            MonitorCarOppH2HCheckState state,
+            double sessionTimeSec,
+            string sessionTypeName,
+            int playerCarIdx,
+            string detail)
+        {
+            if (state == null)
+            {
+                return;
+            }
+
+            string statusText = string.IsNullOrWhiteSpace(status) ? "unknown" : status.Trim();
+            string detailText = string.IsNullOrWhiteSpace(detail) ? "none" : detail.Trim();
+            string sessionText = string.IsNullOrWhiteSpace(sessionTypeName) ? "unknown" : sessionTypeName.Trim();
+            string line = string.Format(
+                CultureInfo.InvariantCulture,
+                "[LalaPlugin:MonitorSystem] car health check={0} status={1} text={2} sessionTime={3} sessionType={4} playerCarIdx={5} reason={6}",
+                state.Name,
+                statusText,
+                state.Text,
+                FormatMonitorDouble(sessionTimeSec),
+                sessionText,
+                playerCarIdx,
+                detailText);
+
+            if (string.Equals(statusText, "fail", StringComparison.Ordinal) || string.Equals(statusText, "still-failing", StringComparison.Ordinal))
+            {
+                SimHub.Logging.Current.Warn(line);
+            }
+            else
+            {
+                SimHub.Logging.Current.Info(line);
+            }
+        }
+
+        private MonitorCarOppH2HFailure EvaluateMonitorOppTargetCheck(int playerCarIdx)
+        {
+            OpponentOutputs outputs = _opponentsEngine?.Outputs;
+            if (outputs == null)
+            {
+                return MonitorCarOppH2HFailure.None;
+            }
+
+            for (int i = 0; i < 5; i++)
+            {
+                var failure = EvaluateMonitorOppTarget("Ahead", i + 1, outputs.GetAheadSlot(i), playerCarIdx);
+                if (failure.HasFailure) return failure;
+
+                failure = EvaluateMonitorOppTarget("Behind", i + 1, outputs.GetBehindSlot(i), playerCarIdx);
+                if (failure.HasFailure) return failure;
+            }
+
+            return MonitorCarOppH2HFailure.None;
+        }
+
+        private static MonitorCarOppH2HFailure EvaluateMonitorOppTarget(string side, int slotNumber, OpponentsEngine.OpponentTargetOutput target, int playerCarIdx)
+        {
+            if (target == null || !target.IsValid)
+            {
+                return MonitorCarOppH2HFailure.None;
+            }
+
+            if (!IsMonitorCarIdxValid(target.CarIdx))
+            {
+                return new MonitorCarOppH2HFailure(string.Format(
+                    CultureInfo.InvariantCulture,
+                    "side={0} slot={1} carIdx={2} playerCarIdx={3} issue=valid_target_invalid_caridx",
+                    side,
+                    slotNumber,
+                    target.CarIdx,
+                    playerCarIdx));
+            }
+
+            if (target.CarIdx == playerCarIdx)
+            {
+                return new MonitorCarOppH2HFailure(string.Format(
+                    CultureInfo.InvariantCulture,
+                    "side={0} slot={1} carIdx={2} playerCarIdx={3} issue=valid_target_is_player",
+                    side,
+                    slotNumber,
+                    target.CarIdx,
+                    playerCarIdx));
+            }
+
+            return MonitorCarOppH2HFailure.None;
+        }
+
+        private MonitorCarOppH2HFailure EvaluateMonitorCarSaSlotCheck()
+        {
+            var outputs = _carSaEngine?.Outputs;
+            if (outputs == null)
+            {
+                return MonitorCarOppH2HFailure.None;
+            }
+
+            var failure = EvaluateMonitorCarSaSlotSet("Ahead", outputs.AheadSlots);
+            if (failure.HasFailure) return failure;
+
+            return EvaluateMonitorCarSaSlotSet("Behind", outputs.BehindSlots);
+        }
+
+        private static MonitorCarOppH2HFailure EvaluateMonitorCarSaSlotSet(string side, CarSASlot[] slots)
+        {
+            if (slots == null)
+            {
+                return MonitorCarOppH2HFailure.None;
+            }
+
+            for (int i = 0; i < slots.Length; i++)
+            {
+                CarSASlot slot = slots[i];
+                if (slot == null || !slot.IsValid)
+                {
+                    continue;
+                }
+
+                int slotNumber = i + 1;
+                if (!IsMonitorCarIdxValid(slot.CarIdx))
+                {
+                    return new MonitorCarOppH2HFailure(string.Format(
+                        CultureInfo.InvariantCulture,
+                        "side={0} slot={1} carIdx={2} issue=valid_slot_invalid_caridx",
+                        side,
+                        slotNumber,
+                        slot.CarIdx));
+                }
+            }
+
+            return MonitorCarOppH2HFailure.None;
+        }
+
+        private MonitorCarOppH2HFailure EvaluateMonitorH2HTargetCheck(int playerCarIdx)
+        {
+            H2HOutputs outputs = _h2hEngine?.Outputs;
+            if (outputs == null)
+            {
+                return MonitorCarOppH2HFailure.None;
+            }
+
+            var failure = EvaluateMonitorH2HFamily("H2HRace", outputs.Race, playerCarIdx);
+            if (failure.HasFailure) return failure;
+
+            return EvaluateMonitorH2HFamily("H2HTrack", outputs.Track, playerCarIdx);
+        }
+
+        private static MonitorCarOppH2HFailure EvaluateMonitorH2HFamily(string familyName, H2HEngine.H2HFamilyOutput family, int playerCarIdx)
+        {
+            if (family == null)
+            {
+                return MonitorCarOppH2HFailure.None;
+            }
+
+            var failure = EvaluateMonitorH2HTarget(familyName, "Ahead", family.Ahead, playerCarIdx);
+            if (failure.HasFailure) return failure;
+
+            return EvaluateMonitorH2HTarget(familyName, "Behind", family.Behind, playerCarIdx);
+        }
+
+        private static MonitorCarOppH2HFailure EvaluateMonitorH2HTarget(string familyName, string side, H2HParticipantOutput target, int playerCarIdx)
+        {
+            if (target == null || !target.Valid)
+            {
+                return MonitorCarOppH2HFailure.None;
+            }
+
+            if (!IsMonitorCarIdxValid(target.CarIdx))
+            {
+                return new MonitorCarOppH2HFailure(string.Format(
+                    CultureInfo.InvariantCulture,
+                    "family={0} side={1} carIdx={2} playerCarIdx={3} issue=valid_target_invalid_caridx",
+                    familyName,
+                    side,
+                    target.CarIdx,
+                    playerCarIdx));
+            }
+
+            if (target.CarIdx == playerCarIdx)
+            {
+                return new MonitorCarOppH2HFailure(string.Format(
+                    CultureInfo.InvariantCulture,
+                    "family={0} side={1} carIdx={2} playerCarIdx={3} issue=valid_target_is_player",
+                    familyName,
+                    side,
+                    target.CarIdx,
+                    playerCarIdx));
+            }
+
+            return MonitorCarOppH2HFailure.None;
+        }
+
+        private static bool IsMonitorCarIdxValid(int carIdx)
+        {
+            return carIdx >= 0 && carIdx < CarSAEngine.MaxCars;
         }
 
         private void ResetMonitorPitStopFrameworkState()
@@ -16314,7 +16906,7 @@ namespace LaunchPlugin
 
             if (warning.HasWarning)
             {
-                _monitorSystem.Publish(warning.Severity, warning.Text);
+                PublishMonitorSystemEvent(warning.Severity, warning.Text, ResolveMonitorEventCategory(warning.Text), string.Empty, string.Empty);
                 return;
             }
 
@@ -16322,7 +16914,7 @@ namespace LaunchPlugin
                 (allowBaselineClear && _monitorSystem.IsBaselineFuelWarningActive);
             if (canClearActiveWarning)
             {
-                _monitorSystem.Publish(MonitorSeverity.Ok, "MONITOR READY");
+                PublishMonitorSystemEvent(MonitorSeverity.Ok, "MONITOR READY", "Unknown", "clear", string.Empty);
             }
         }
 
@@ -20757,6 +21349,150 @@ namespace LaunchPlugin
             return (total < 0.0 || double.IsNaN(total) || double.IsInfinity(total)) ? 0.0 : total;
         }
 
+        private void UpdatePitDebriefBoxServiceLatch(bool inPitLane, bool isInPitStall)
+        {
+            if (_pitDebrief == null || _pit == null)
+            {
+                return;
+            }
+
+            PitPhase phase = _pit.CurrentPitPhase;
+            bool inBoxPhase = IsPitDebriefBoxPhase(phase) || isInPitStall;
+            _pitDebrief.ObservePitPhase(phase);
+
+            if (inBoxPhase && !_pitDebriefWasInBox)
+            {
+                double target = Pit_Box_WillAddLatched > 0.0 ? Pit_Box_WillAddLatched : Pit_WillAdd;
+                _pitDebrief.LatchBoxEntry(target, _liveTireChangeCount, GetEffectiveTireChangeTimeSeconds());
+            }
+
+            if (inBoxPhase)
+            {
+                double target = Pit_Box_WillAddLatched > 0.0 ? Pit_Box_WillAddLatched : Pit_WillAdd;
+                _pitDebrief.RefreshServiceEvidence(
+                    Pit_AddedSoFar,
+                    target,
+                    FuelCalculator?.EffectiveRefuelRateLps ?? 0.0);
+            }
+
+            if (!inBoxPhase && _pitDebriefWasInBox)
+            {
+                _pitDebrief.LatchBoxExit(
+                    _pit.PitStopDuration.TotalSeconds,
+                    Pit_AddedSoFar,
+                    FuelCalculator?.EffectiveRefuelRateLps ?? 0.0,
+                    double.NaN,
+                    phase);
+            }
+
+            _pitDebriefWasInBox = inPitLane && inBoxPhase;
+        }
+
+        private void UpdatePitDebriefLifecycle(
+            bool pitEntryEdge,
+            bool pitExitEdge,
+            double predictedTotalLossSec,
+            int playerCarIdx)
+        {
+            if (_pitDebrief == null || _pit == null)
+            {
+                return;
+            }
+
+            PitPhase phase = _pit.CurrentPitPhase;
+
+            if (pitEntryEdge)
+            {
+                int predictedPosition = _opponentsEngine?.Outputs?.PitExit?.PredictedPositionInClass ?? 0;
+                _pitDebrief.StartPitEntry(
+                    predictedTotalLossSec,
+                    predictedPosition,
+                    _pit.PitEntryLineDebrief,
+                    _pit.PitEntryLineTimeLoss_s);
+                _pitDebriefWasInBox = false;
+            }
+
+            _pitDebrief.RefreshEntryAssist(_pit.PitEntryLineDebrief, _pit.PitEntryLineTimeLoss_s);
+            _pitDebrief.ObservePitPhase(phase);
+
+            if (pitExitEdge)
+            {
+                int actualPosition = ResolvePitDebriefActualPositionInClass(playerCarIdx);
+                _pitDebrief.LatchPitLaneExit(actualPosition);
+            }
+
+        }
+
+        private static bool IsPitDebriefBoxPhase(PitPhase phase)
+        {
+            return phase == PitPhase.InBox
+                || phase == PitPhase.MissedBoxLong
+                || phase == PitPhase.MissedBoxShort
+                || phase == PitPhase.MissedBoxLeft
+                || phase == PitPhase.MissedBoxRight;
+        }
+
+        private int ResolvePitDebriefActualPositionInClass(int playerCarIdx)
+        {
+            if (_opponentsEngine != null && _opponentsEngine.TryGetEffectivePositionInClassByCarIdx(playerCarIdx, out var opponentPosition) && opponentPosition > 0)
+            {
+                return opponentPosition;
+            }
+
+            int nativePosition = (playerCarIdx >= 0 && playerCarIdx < _carSaClassPositionByIdx.Length)
+                ? _carSaClassPositionByIdx[playerCarIdx]
+                : (_carSaEngine?.Outputs?.PlayerSlot?.PositionInClass ?? 0);
+            return GetEffectivePositionInClassForPublishedContext(playerCarIdx, nativePosition);
+        }
+
+        private double NormalizePitDebriefActualTotalLossSeconds(double actualLossSec, string lossSource)
+        {
+            // Fuel.Live.TotalStopLoss is a boxed-stop total prediction. Current PitEngine/PitLite
+            // final DTL/direct seams are lane-equivalent, so boxed-stop debrief actuals add
+            // stationary box time here without feeding that normalization back into learning.
+            if (double.IsNaN(actualLossSec) || double.IsInfinity(actualLossSec) || actualLossSec <= 0.0)
+            {
+                return actualLossSec;
+            }
+
+            string normalizedSource = (lossSource ?? string.Empty).Trim().ToLowerInvariant();
+            bool laneEquivalentSource = normalizedSource == "dtl"
+                || normalizedSource == "direct"
+                || normalizedSource == "total";
+            if (!laneEquivalentSource)
+            {
+                return actualLossSec;
+            }
+
+            double stationarySec = _pitDebrief?.BoxStationarySec ?? 0.0;
+            if (stationarySec <= 0.0 && _pit != null)
+            {
+                stationarySec = _pit.PitStopDuration.TotalSeconds;
+            }
+
+            if (double.IsNaN(stationarySec) || double.IsInfinity(stationarySec) || stationarySec <= 0.0)
+            {
+                return actualLossSec;
+            }
+
+            return actualLossSec + stationarySec;
+        }
+
+        private void FinalizePitDebriefIfReady(double actualLossSec, string lossSource)
+        {
+            if (_pitDebrief == null)
+            {
+                return;
+            }
+
+            double actualTotalLossSec = NormalizePitDebriefActualTotalLossSeconds(actualLossSec, lossSource);
+            if (_pitDebrief.FinalizeDebrief(actualTotalLossSec, lossSource, DateTime.UtcNow)
+                && _pitDebrief.TryConsumeFinalLogLine(out var logLine))
+            {
+                SimHub.Logging.Current.Info(logLine);
+            }
+        }
+
         private void UpdatePitBoxCountdownValues(bool inPitLane, bool isInPitStall)
         {
             bool active = inPitLane
@@ -23767,6 +24503,17 @@ namespace LaunchPlugin
                 if (_monitorSystemEnabled == value) return;
                 _monitorSystemEnabled = value;
                 OnPropertyChanged(nameof(MonitorSystemEnabled));
+            }
+        }
+        private bool _enableMonitorEventCsv = false;
+        public bool EnableMonitorEventCsv
+        {
+            get { return _enableMonitorEventCsv; }
+            set
+            {
+                if (_enableMonitorEventCsv == value) return;
+                _enableMonitorEventCsv = value;
+                OnPropertyChanged(nameof(EnableMonitorEventCsv));
             }
         }
         private bool _strategyDashAdvancedMode = true;

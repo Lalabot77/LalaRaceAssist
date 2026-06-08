@@ -1,3 +1,18 @@
+- 2026-06-08 MonitorSystem optional event CSV + snapshot coverage audit landed:
+  - added default-off Debug Options setting `Enable Monitor Event CSV`; when MonitorSystem is enabled it writes changed non-normal MonitorSystem publications only to `Logs/LalaPluginData/MonitorSystem_Events.csv`;
+  - skips `MONITOR OFF`, `MONITOR READY`, `FUEL HEALTH OK`, unchanged repeats, and per-tick OK/default spam; I/O failure disables the CSV writer after a single warning;
+  - no health logic, self-healing, fallback, MSGV1 integration, driver-message queue/cancel semantics, new exports, or dashboard JSON changes. Property Snapshot list reviewed: yes; existing `MonitorSystem.*` exports remain mapped to FuelStrategy and no snapshot group/list update was required. Root `CHANGELOG.md` reviewed unchanged as internal debug tooling.
+
+- 2026-06-08 MonitorSystem Phase 3A review follow-up landed:
+  - active Car/Opp/H2H health publication now corrects the displayed MonitorSystem text when the selected active check changes, without overriding unresolved fuel-health alerts or active pit warnings;
+  - deferred `CARSA GAP CHECK` because no clean non-debug CarSA gap-scale/lap-time readiness output exists for MonitorSystem to observe without guessing, leaving only `OPP TARGET CHECK`, `CARSA SLOT CHECK`, and `H2H TARGET CHECK` active;
+  - restored main-branch `EXIT FUEL SHORT` tolerance to 1.5 L. Property Snapshot list reviewed: yes; existing `MonitorSystem.*` exports remain mapped to FuelStrategy and no export/property add, remove, rename, or regroup is required.
+
+- 2026-06-08 MonitorSystem Phase 3A Car/Opp/H2H impossible-state checks landed:
+  - added edge/low-frequency report-by-exception `OPP TARGET CHECK`, `CARSA SLOT CHECK`, and `H2H TARGET CHECK` messages using only existing Opponents, CarSA, and H2H outputs;
+  - checks are gated on eligible live sessions, valid player `CarIdx`, and a short 3 s warmup, ignore invalid/blink-held rows, do not override unresolved fuel-health alerts or active pit warnings, and clear only their own active MonitorSystem text;
+  - no race-order correctness, checkpoint freshness, TrackSec-vs-RelativeSec reconciliation, gap recalculation, fallback target selection, self-healing, telemetry-known wrappers, new exports, property names, settings, UI, dash JSON, PitExit, fuel, planner, strategy, command, or Property Snapshot group changes. Property Snapshot list reviewed: yes; existing `MonitorSystem.*` exports remain mapped to FuelStrategy and no export/property add, remove, rename, or regroup is required.
+
 - 2026-06-07 CarSA target-after-player checkpoint freshness guard landed:
   - target-after-player checkpoint truth now rejects player gate timestamps that are non-finite, future-dated, or older than `min(15 s, half the active lap-time scale)`, blocking prior-lap player timestamps from being normalized into fake close `Ahead01P`/`RelativeSec` values;
   - valid behind-car forward matches remain accepted when the player crossed the same gate shortly before the target, and reverse `reverse_player_after_target` matching for ahead cars remains unchanged;
@@ -62,6 +77,21 @@
   - `Gap.TrackSec`, visible `Gap.RelativeSec` semantics, CarSA slot selection/checkpoint recording, H2HTrack's current direct TrackSec baseline, H2HRace, Opponents, PitExit, dashboard JSON, and export names remain unchanged. Property Snapshot list reviewed: yes; no export/property add, remove, rename, or regroup.
 
 # Repo Status
+
+- 2026-06-08 Pit Debrief PR #797 review sync commit validated:
+  - added explicit code comments documenting that debrief service evidence is captured before `Pit_AddedSoFar` reset and that actual loss is normalized to total-stop-equivalent only for the debrief readout;
+  - no runtime logic, export names, Property Snapshot grouping, PitCycleLite, fuel model, PitExit prediction, Rejoin, or dashboard JSON/layout changes beyond the already-present PR #797 fix semantics. Property Snapshot list reviewed: yes; unchanged because no exports/properties changed.
+
+- 2026-06-08 Pit Debrief service latch and total-loss normalization follow-up validated:
+  - `Pit.Debrief.Service.FuelAddedLitres` now preserves existing Fuel.Pit gauge evidence while the box countdown is still active, before box-exit gauge reset can clear `Pit_AddedSoFar`;
+  - `Pit.Debrief.Timing.ActualTotalLossSec` now compares against `Fuel.Live.TotalStopLoss` on a total-stop-equivalent basis by adding latched stationary box duration to existing DTL/direct lane-equivalent final loss for boxed stops;
+  - no PitCycleLite, fuel model, PitExit prediction, Rejoin, dashboard JSON/layout, new export, or refuel-duration detector changes. Property Snapshot list reviewed: yes; unchanged because `Pit.Debrief.*` remains covered by the existing `Pit.` -> Pit/PitExit group.
+
+
+- 2026-06-08 Pit Stop Debrief v1 latching/export layer validated:
+  - added `PitDebriefEngine.cs` plus `LalaLaunch` wiring for additive `Pit.Debrief.*` SimHub exports and one `[LalaPlugin:PitDebrief] final` structured log line per finalized stop;
+  - debrief values are latched from existing PitEngine, Fuel runtime, and Opponents/PitExit seams and do not change pit timing, fuel prediction, PitExit prediction, PitCycleLite, Rejoin, or dashboard layout JSON;
+  - docs updated for export inventory, log contract, Pit Timing, Pit Entry Assist, dash bindings, Pit Assist, changelog, and release notes. Property Snapshot list reviewed: yes; `Pit.Debrief.*` already maps to Pit/PitExit through the existing `Pit.` prefix in `ResolvePropertySnapshotGroup`.
 
 - 2026-06-08 Debug Cleanup Phase A landed:
   - removed Rejoin ThreatDebug internals, OffTrack Debug CSV settings/UI/writer/probe export, and verbose-only Pit/PitLite SimHub exports while preserving active core Pit/PitLite exports, DecelCapture, Property Snapshot, Event Marker, Trace Logging, launch traces/analysis, Shift Assist debug CSV, and CarSA debug/event CSV diagnostics;

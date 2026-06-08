@@ -1,7 +1,7 @@
 # Property Snapshot Debug Workflow (Internal)
 
 Validated against commit: HEAD
-Last updated: 2026-05-20
+Last updated: 2026-06-08
 Branch: work
 
 ## Purpose and ownership
@@ -70,7 +70,7 @@ Replay caveats:
 ## Property Snapshot group usage
 Use groups to limit noise and preserve ownership boundaries.
 
-- **Fuel/Strategy**: runtime fuel, strategy basis, pre-race planning deltas.
+- **Fuel/Strategy**: runtime fuel, strategy basis, pre-race planning deltas, and the `MonitorSystem.*` dash-facing monitor surface.
 - **Car/Opp/H2H**: race context, opponents, pit-exit cohort/position surfaces, class context.
 - **Pit/PitExit**: pit control, pit timing, entry/exit trip surfaces.
 - **Shift Assist**: shift cues and related assist-state surfaces.

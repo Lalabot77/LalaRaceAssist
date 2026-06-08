@@ -311,3 +311,8 @@ Reset semantics are centralised in:
 
 ## Debug logging gate note (2026-06-08)
 - PitExit math-audit/detail logging is now controlled by the global Debug Options `Enable Debug Logging` gate and only emits while master `Enable debugging mode` is also on. The visible legacy `PitExit Verbose Logging` toggle was removed from the UI; normal Pit/PitLite/PitExit INFO/WARN operational logs are unchanged.
+## Pit Debrief consumer layer
+
+Pit Debrief v1 is an additive latching/readout layer under Pit/PitExit presentation ownership. It consumes PitEngine timing outputs at lifecycle edges and does not replace or alter PitEngine phase detection, pit timers, DTL computation, direct-travel fallback, learned drive-through pit-lane-loss storage, or `Fuel.Live.TotalStopLoss`.
+
+For timing review, `Pit.Debrief.Timing.PredictedTotalLossSec` freezes the existing boxed-stop prediction (`Fuel.Live.TotalStopLoss`) at pit-entry baseline. Because current PitEngine/PitLite final DTL/direct seams are lane-equivalent values that exclude stationary box time, `Pit.Debrief.Timing.ActualTotalLossSec` normalizes them to total-stop-equivalent by adding the latched stationary box duration when a boxed stop occurred; drive-throughs add `0`. `Pit.Debrief.Timing.LossDeltaSec` is only the readout comparison (`actual total - predicted total`) and is not fed back into pit-loss learning or fuel prediction.
