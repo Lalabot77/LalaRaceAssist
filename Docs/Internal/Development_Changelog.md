@@ -3,6 +3,7 @@
 - Replaced the bogus/unproven `DataCorePlugin.GameData.LeaderLastLapTime` and `DataCorePlugin.GameData.LeaderAverageLapTime` Leader Lap candidates with plugin-owned native CarIdx resolution.
 - Overall P1 identity now follows the existing finish-timing semantics: prefer `CarIdxPosition==1 && CarIdxClassPosition==1`, fall back to `CarIdxPosition==1`, and require the car to be in-world.
 - Primary samples come from current overall P1 `CarIdxLastLapTime`; a 3-sample rolling window keeps the last valid overall race-leading samples and intentionally survives overall-P1 identity changes.
+- Temporary overall-P1 identity/feed gaps now use a bounded held rolling average for up to 15 seconds; after hold expiry, missing authority fails closed instead of publishing stale pace indefinitely.
 - Current overall P1 `CarIdxBestLapTime` is only a low-confidence published fallback while the rolling window is empty and is not ingested into the rolling window.
 - Preserved class leader/class best/H2H/LapRef semantics, RaceFinish behavior, fuel math, lap acceptance/rejection, Opponents/H2H/CarSA target selection, dashboards, and iRacing ExtraProperties removal.
 - Property Snapshot list reviewed: yes; existing `Pace.*` exports remain covered by the Fuel/Strategy group, with no export/property additions, removals, or renames.

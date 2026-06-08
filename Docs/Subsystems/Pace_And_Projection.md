@@ -79,6 +79,8 @@ For timed-race projection, Leader Lap authority means **overall race-leading pac
 - identity resolves current overall P1 using the same semantics as finish timing (`CarIdxPosition == 1 && CarIdxClassPosition == 1`, then `CarIdxPosition == 1`, requiring an in-world car),
 - the primary sample is current overall P1 `CarIdxLastLapTime`,
 - the rolling window keeps the last 3 valid overall-P1 samples and is not tied to one `CarIdx`, so overall-leader changes do not clear the window by themselves,
+- if the overall-P1 identity/feed is temporarily unavailable after valid samples exist, the previous rolling average may be held for up to 15 seconds for projection continuity,
+- once that bounded hold expires without a valid overall P1 returning, leader authority fails closed,
 - when the rolling window is empty, current overall P1 `CarIdxBestLapTime` may seed the published leader pace as a low-confidence fallback, but it is not ingested into the rolling window,
 - class leader, class best, H2H class session-best, LapRef, and iRacing ExtraProperties are not valid Leader Lap authorities.
 
@@ -169,7 +171,7 @@ Runtime-health handling is now expected to prefer targeted fuel/live-snapshot re
 
 ## Failure modes / safeguards
 - **Heavy traffic / compromised laps:** confidence falls and fallback pace may legitimately take over.
-- **Dropped overall leader feed:** leader average clears rather than silently reusing stale values once no rolling overall-leader samples/fallback remain valid.
+- **Dropped overall leader feed:** a missing overall-P1 identity/feed can hold the previous rolling average for up to 15 seconds for projection continuity, then clears/fails closed if no valid overall P1 returns.
 - **Short or noisy sessions:** projection may stay profile/fallback driven for longer than the driver expects.
 - **Replay timing:** source changes should be verified with logs.
 
