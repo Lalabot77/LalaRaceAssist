@@ -11164,7 +11164,8 @@ namespace LaunchPlugin
                 _pitDebrief.RefreshServiceEvidence(
                     Pit_AddedSoFar,
                     debriefFuelTarget,
-                    FuelCalculator?.EffectiveRefuelRateLps ?? 0.0);
+                    FuelCalculator?.EffectiveRefuelRateLps ?? 0.0,
+                    !_isRefuelSelected);
             }
             UpdateMonitorPitStopFramework(data, pluginManager, sessionTime);
 
@@ -21435,23 +21436,25 @@ namespace LaunchPlugin
                 _pitDebrief.RefreshServiceEvidence(
                     Pit_AddedSoFar,
                     target,
-                    FuelCalculator?.EffectiveRefuelRateLps ?? 0.0);
+                    FuelCalculator?.EffectiveRefuelRateLps ?? 0.0,
+                    !_isRefuelSelected);
             }
 
             if (!inBoxPhase && _pitDebriefWasInBox)
             {
+                double debriefBoxDeltaSec = _pitBoxLastDeltaValid ? -_pitBoxLastDeltaSec : double.NaN;
                 _pitDebrief.LatchBoxExit(
                     _pit.PitStopDuration.TotalSeconds,
                     Pit_AddedSoFar,
                     FuelCalculator?.EffectiveRefuelRateLps ?? 0.0,
                     double.NaN,
-                    _pitBoxLastDeltaSec,
+                    debriefBoxDeltaSec,
                     phase);
             }
 
             if (!_pitBoxCountdownActive && _pitBoxLastDeltaValid)
             {
-                _pitDebrief.RefreshBoxDeltaFromActualMinusPredicted(_pitBoxLastDeltaSec);
+                _pitDebrief.RefreshBoxDeltaFromActualMinusPredicted(-_pitBoxLastDeltaSec);
             }
 
             _pitDebriefWasInBox = inPitLane && inBoxPhase;
@@ -21472,6 +21475,7 @@ namespace LaunchPlugin
 
             if (pitEntryEdge)
             {
+                _pitBoxLastDeltaValid = false;
                 int predictedPosition = _opponentsEngine?.Outputs?.PitExit?.PredictedPositionInClass ?? 0;
                 _pitDebrief.StartPitEntry(
                     predictedTotalLossSec,
@@ -21582,7 +21586,7 @@ namespace LaunchPlugin
                         finalElapsedSec = Math.Max(0.0, _pitBoxElapsedSec);
                     }
 
-                    double deltaSec = finalElapsedSec - lastTargetSec;
+                    double deltaSec = lastTargetSec - finalElapsedSec;
                     if (double.IsNaN(deltaSec) || double.IsInfinity(deltaSec))
                     {
                         deltaSec = 0.0;

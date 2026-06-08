@@ -172,14 +172,22 @@ namespace LaunchPlugin
             RefreshProgressiveSummary();
         }
 
-        public void RefreshServiceEvidence(double fuelAddedLitres, double fuelTargetLitres, double refuelRateLps)
+        public void RefreshServiceEvidence(double fuelAddedLitres, double fuelTargetLitres, double refuelRateLps, bool fuelTargetClearedByInBoxCancel = false)
         {
             if (!_collecting || Valid)
             {
                 return;
             }
 
-            LatchFuelTarget(fuelTargetLitres);
+            if (fuelTargetClearedByInBoxCancel)
+            {
+                ClearFuelTarget();
+            }
+            else
+            {
+                LatchFuelTarget(fuelTargetLitres);
+            }
+
             LatchFuelAdded(fuelAddedLitres);
             LatchRefuelRate(refuelRateLps);
             RefreshProgressiveSummary();
@@ -417,12 +425,19 @@ namespace LaunchPlugin
             }
 
             // Preserve the largest intended/requested add observed from existing Fuel.Pit seams so
-            // a later MFD/gauge reset to 0 cannot erase the completed-stop target evidence.
+            // a later box-exit MFD/gauge reset to 0 cannot erase completed-stop target evidence.
+            // Explicit in-box refuel deselect uses ClearFuelTarget() before this positive latch.
             if (!_hasFuelTarget || fuelTargetLitres > ServiceFuelTargetLitres)
             {
                 ServiceFuelTargetLitres = fuelTargetLitres;
             }
 
+            _hasFuelTarget = true;
+        }
+
+        private void ClearFuelTarget()
+        {
+            ServiceFuelTargetLitres = 0.0;
             _hasFuelTarget = true;
         }
 

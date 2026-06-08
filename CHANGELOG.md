@@ -30,7 +30,7 @@ For internal between-release development history, see `Docs/Internal/Development
 - **Monitor System warning wording** is clearer for drivers: `CHECK FUEL DATA`, `OPPONENT DATA UNRELIABLE`, `TRAFFIC DATA UNRELIABLE`, and `H2H DATA UNRELIABLE` replace the older internal-style wording without changing triggers, severity, exports, CSV schema, or dashboard JSON.
 
 ### Fixed
-- Fixed Pit Stop Debrief box delta and fuel-target latching so valid completed-box deltas use the existing `Pit.Box.LastDeltaSec` authority (`+` slower, `-` faster) instead of staying pending, and non-zero requested fuel targets survive later reset ticks.
+- Fixed Pit Stop Debrief box delta and fuel-target latching so valid completed-box deltas use the existing `Pit.Box.LastDeltaSec` authority without changing its dashboard sign contract, exact `0.0s` box deltas no longer stay pending, and non-zero requested fuel targets survive box-exit reset ticks while in-box refuel cancels clear the target.
 - Fixed Pit Stop Debrief service/timing review latches so fuel-added evidence survives box-exit gauge reset and actual-vs-predicted loss compares total-stop-equivalent values.
 - Fixed PreRace/Friends export registration so dashboards should use single-prefixed `LalaLaunch.PreRace.*` and `LalaLaunch.Friends.Count` names instead of accidental `LalaLaunch.LalaLaunch.*` names.
 - Corrected one-stop feasibility checks to use pit-stop refill capacity rather than start-of-race free tank space.
