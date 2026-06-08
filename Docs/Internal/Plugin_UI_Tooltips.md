@@ -28,15 +28,6 @@ Branch: work
 - `Launch Mode`, `Event Marker`, and `Post-Launch Results Display Time` no longer appear in Dash Control after this tidy-up.
 
 
-## GlobalSettingsView.xaml
-- `Enable debugging mode` is the master operational kill switch for debug capture/logging systems; turning it off hides Debug Options and stops/flushes runtime debug CSV/rolling capture state without clearing child preferences.
-- Debug Options is organized into sections: General logging, Property Snapshot, CarSA diagnostics, Car Tracking Probe CSV, Shift Assist diagnostics, and Debug Actions.
-- General logging: `Enable Debug Logging` controls extra/detail SimHub logs only while master debugging mode is enabled; the old visible `PitExit Verbose Logging` toggle is removed and PitExit math-audit/detail logs now use this gate.
-- Property Snapshot: group checkboxes are on their own row; options are on the next row; rolling controls/status are visible only when `Write rolling combined CSV` is enabled. `Frequency Hz` appears only in `FREQUENCY` mode and is normalized to the 1–2 Hz runtime cap.
-- CarSA diagnostics: `CarSA Debug CSV` enables the debug CSV writer while master debugging mode is on. Cadence options are `Tick`, `MiniSector`, and `Event changes only`; `Tick mode max Hz` appears only for `Tick`. `Write CarSA events CSV` keeps the separate events CSV behavior for event-change cadence diagnostics.
-- Car Tracking Probe CSV: child controls (`Probe A/B CarIdx`, frequency, START/STOP/RESET, and explanatory text) are visible only when `Enable Car Tracking Probe` is checked; runtime capture still requires master debugging mode and START.
-- Shift Assist diagnostics: `Shift Assist Debug Max Hz` is visible only when `Shift Assist Debug CSV` is checked; CSV writing is also master-gated. `Mute Shift Assist sound in replay` remains a normal Shift Assist debug preference.
-
 ## LaunchPluginSettingsUI.xaml
 - `Enable Monitor System` no longer appears in the Launch UI / Bindings section; the persisted setting is owned by Dash Control global functions.
 

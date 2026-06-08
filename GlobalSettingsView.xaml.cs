@@ -112,7 +112,10 @@ namespace LaunchPlugin
 
         private void PropertySnapshotRollingFrequencyTextBox_LostFocus(object sender, RoutedEventArgs e)
         {
+            var binding = PropertySnapshotRollingFrequencyTextBox?.GetBindingExpression(TextBox.TextProperty);
+            binding?.UpdateSource();
             Plugin?.NormalizePropertySnapshotRollingFrequencyForUi();
+            binding?.UpdateTarget();
             RefreshPropertySnapshotRollingStatusText();
         }
 
@@ -147,7 +150,7 @@ namespace LaunchPlugin
             if (PropertySnapshotRollingFrequencyTextBox != null && Plugin?.Settings != null)
             {
                 Plugin.NormalizePropertySnapshotRollingFrequencyForUi();
-                PropertySnapshotRollingFrequencyTextBox.Text = Plugin.Settings.PropertySnapshotRollingFrequencyHz.ToString("0.##", System.Globalization.CultureInfo.InvariantCulture);
+                PropertySnapshotRollingFrequencyTextBox.GetBindingExpression(TextBox.TextProperty)?.UpdateTarget();
             }
 
             if (PropertySnapshotStartRollingButton != null)

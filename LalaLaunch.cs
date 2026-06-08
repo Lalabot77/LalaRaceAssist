@@ -5927,6 +5927,7 @@ namespace LaunchPlugin
         private bool _propertySnapshotPathLogged = false;
         private bool _propertySnapshotRollingPersistedStateCleared = false;
         private const double PropertySnapshotRollingFrequencyDefaultHz = 1.0;
+        private const double PropertySnapshotRollingFrequencyMinHz = 1.0;
         private const double PropertySnapshotRollingFrequencyMaxHz = 2.0;
 
         // --- State: Timers ---
@@ -14928,6 +14929,7 @@ namespace LaunchPlugin
             {
                 hz = PropertySnapshotRollingFrequencyDefaultHz;
             }
+            if (hz < PropertySnapshotRollingFrequencyMinHz) hz = PropertySnapshotRollingFrequencyMinHz;
             if (hz > PropertySnapshotRollingFrequencyMaxHz) hz = PropertySnapshotRollingFrequencyMaxHz;
             if (Settings != null && Math.Abs(Settings.PropertySnapshotRollingFrequencyHz - hz) > 0.0001)
             {

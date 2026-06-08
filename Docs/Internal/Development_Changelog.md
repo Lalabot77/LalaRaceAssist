@@ -5,6 +5,13 @@
 - Preserved predictive checks on later ticks, trusted SimHub telemetry reads, no `MfdFuelRequestKnown`, no new warnings, no CSV, no per-tick checks, no `Fuel.Refuel.*` / Pit Fuel Control / Pit Command / Strategy planner changes, and no Property Snapshot group changes.
 - Property Snapshot list reviewed: yes; no export/property add, remove, rename, behavior-contract change, or group change because `MonitorSystem.*` remains in the existing Fuel/Strategy group.
 
+## 2026-06-08 — PR #798 Property Snapshot frequency binding follow-up
+- Classification: **internal-only review follow-up** (Property Snapshot Debug Options UI/runtime normalization fix; no export/property names, dashboard JSON, CSV schema, race logic, fuel math, pit math, CarSA logic, Shift Assist cue/learning logic, or launch trace behavior changed).
+- Added an explicit 1.0 Hz lower clamp for Property Snapshot rolling frequency while preserving invalid/zero/negative fallback and the existing 2.0 Hz max cap.
+- Replaced direct `PropertySnapshotRollingFrequencyTextBox.Text` assignment in rolling status refresh with binding-expression `UpdateSource`/`UpdateTarget` usage so the WPF TwoWay binding remains intact.
+- Consolidated the duplicated `GlobalSettingsView.xaml` Debug Options tooltip documentation introduced by PR #798.
+- Property Snapshot list reviewed: yes; no SimHub export/property add, remove, rename, behavior-contract change, or group change.
+
 ## 2026-06-08 — Debug Options UI tidy and master debug gate
 - Classification: **both** (user-facing Settings Debug Options UI cleanup plus internal debug operational gating; no dashboard JSON, runtime fuel/pit/CarSA/Shift/Launch calculation behavior, or SimHub export/property names changed).
 - `Enable debugging mode` / `SoftDebugEnabled` now acts as the operational kill switch for debug capture/logging systems: Property Snapshot manual/rolling capture, CarSA Debug CSV/Event CSV writing, Car Tracking Probe CSV, Shift Assist Debug CSV, and extra debug/detail logs are inert while master debug is off; active rolling/probe/debug CSV runtime state is stopped/flushed safely without clearing child preferences.

@@ -3,6 +3,12 @@
   - valid behind-car forward matches remain accepted when the player crossed the same gate shortly before the target, and reverse `reverse_player_after_target` matching for ahead cars remains unchanged;
   - checkpoint count/indexing, `NormalizeGateGapSec`, precision sign/tolerance handling, `Gap.TrackSec`, H2H, Opponents, PitExit, dashboard JSON, CSV headers, public exports, and Property Snapshot grouping remain unchanged. Property Snapshot list reviewed: yes; no SimHub export/property changes.
 
+- 2026-06-08 PR #798 Property Snapshot frequency binding follow-up validated:
+  - Property Snapshot rolling frequency normalization now clamps finite positive values below 1 Hz up to 1 Hz while preserving the existing 2 Hz maximum cap and invalid-value fallback.
+  - Settings UI refresh updates the rolling frequency TextBox through its WPF binding expression instead of assigning `Text` directly, preserving the TwoWay binding.
+  - Duplicate Debug Options tooltip documentation was consolidated. No export/property names, Property Snapshot groups, dashboard JSON, race logic, fuel math, pit math, CarSA logic, Shift Assist cue/learning logic, or CSV schemas changed.
+  - Property Snapshot list reviewed: yes; no export/property changes.
+
 - 2026-06-08 Debug Options UI tidy/master debug gate validated:
   - Settings Debug Options is split into General logging, Property Snapshot, CarSA diagnostics, Car Tracking Probe CSV, Shift Assist diagnostics, and Debug Actions sections with parent-driven child visibility.
   - `Enable debugging mode` is now the operational kill switch for debug capture/logging systems; active rolling/probe/debug CSV runtime state is stopped/flushed safely without clearing child preferences.
