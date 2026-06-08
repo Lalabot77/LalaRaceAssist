@@ -1,7 +1,7 @@
 # Shift Assist
 
 Validated against commit: b115732
-Last updated: 2026-03-06
+Last updated: 2026-06-08
 Branch: work
 
 ## Purpose
@@ -12,7 +12,7 @@ Branch: work
 ## Inputs (source + cadence)
 - Per-tick telemetry: gear, RPM, throttle.
 - Active car profile shift targets, resolved by active gear stack id.
-- Global Shift Assist settings: enable toggle, learning mode toggle, beep duration, lead-time ms, beep sound toggle/volume, urgent sound toggle, custom WAV enable/path, debug CSV toggle/max Hz, and debug-only replay audio mute toggle (`ShiftAssistMuteInReplay`, default enabled).
+- Global Shift Assist settings: enable toggle, learning mode toggle, beep duration, lead-time ms, beep sound toggle/volume, urgent sound toggle, custom WAV enable/path, debug CSV toggle/max Hz, and debug-only replay audio mute toggle (`ShiftAssistMuteInReplay`, default enabled). Debug CSV writing is operationally gated by master `Enable debugging mode` plus the Shift Assist Debug CSV toggle; the max-Hz field is visible only when the CSV toggle is on.
 - Audio fallback assets: embedded default WAV extracted to plugin common storage.
 
 ## Internal state
@@ -80,7 +80,7 @@ Branch: work
 
 ## Outputs (exports + logs)
 - Exports: `ShiftAssist.ActiveGearStackId`, `ShiftAssist.TargetRPM_CurrentGear`, `ShiftAssist.ShiftRPM_G1..G8`, `ShiftAssist.EffectiveTargetRPM_CurrentGear`, `ShiftAssist.RpmRate`, `ShiftAssist.Beep`, `ShiftAssist.ShiftLight`, `ShiftAssist.ShiftLightPrimary`, `ShiftAssist.ShiftLightUrgent`, `ShiftAssist.BeepLight`, `ShiftAssist.BeepPrimary`, `ShiftAssist.BeepUrgent`, `ShiftAssist.ShiftLightEnabled`, `ShiftAssist.Learn.Enabled`, `ShiftAssist.Learn.State`, `ShiftAssist.Learn.ActiveGear`, `ShiftAssist.Learn.WindowMs`, `ShiftAssist.Learn.PeakAccelMps2`, `ShiftAssist.Learn.PeakRpm`, `ShiftAssist.Learn.LastSampleRpm`, `ShiftAssist.Learn.SavedPulse`, `ShiftAssist.Learn.Samples_G1..G8`, `ShiftAssist.Learn.LearnedRpm_G1..G8`, `ShiftAssist.Learn.Locked_G1..G8`, `ShiftAssist.State`, `ShiftAssist.Debug.AudioDelayMs`, `ShiftAssist.Debug.AudioDelayAgeMs`, `ShiftAssist.Debug.AudioIssued`, `ShiftAssist.Debug.AudioBackend`, `ShiftAssist.Debug.CsvEnabled`, `ShiftAssist.DelayAvg_G1..G8`, `ShiftAssist.DelayN_G1..G8`, `ShiftAssist.Delay.Pending`, `ShiftAssist.Delay.PendingGear`, `ShiftAssist.Delay.PendingAgeMs`, `ShiftAssist.Delay.PendingRpmAtCue`, `ShiftAssist.Delay.RpmAtBeep`, `ShiftAssist.Delay.CaptureState`.
-- Logs: enable/toggle/debug-csv transitions, learning reset, active-stack reset/lock/apply-learned action outcomes, beep trigger context (including urgent/primary type and suppression flags), test beep, delay sample capture/reset, optional audio-delay telemetry, custom/default sound choice, and audio warning/error paths.
+- Logs: enable/toggle/debug-csv transitions, learning reset, active-stack reset/lock/apply-learned action outcomes, beep trigger context (including urgent/primary type and suppression flags), test beep, delay sample capture/reset, optional audio-delay telemetry gated by master debug + Enable Debug Logging, custom/default sound choice, and audio warning/error paths.
 
 ## Dependencies / ordering assumptions
 - Runs from `LalaLaunch.DataUpdate` once per tick after settings/profile resolution.
@@ -106,4 +106,4 @@ Branch: work
 - Trigger test beep and verify latch export + log line (and no audio when Beep Sound is disabled).
 - Run beep→upshift cycles and confirm `DelayAvg_G*` / `DelayN_G*` update per source gear.
 - Test custom WAV valid/invalid paths and verify fallback logs.
-- If debug CSV is enabled, verify file creation under `Logs/LalapluginData` and confirm rows are rate-limited by max Hz.
+- If master debug and Shift Assist Debug CSV are enabled, verify file creation under `Logs/LalapluginData` and confirm rows are rate-limited by max Hz.
