@@ -1248,9 +1248,8 @@ namespace LaunchPlugin
         private TimeSpan _lastSeenBestLap = TimeSpan.Zero;
         private readonly List<double> _recentLeaderLapTimes = new List<double>(); // seconds
         private const int LeaderLapTimeSampleCount = 3;
-        private const double LeaderLapHeldAuthorityMaxAgeSeconds = 15.0;
         private double _lastLeaderLapTimeSec = 0.0;
-        private double _lastLeaderAuthoritySessionTimeSec = double.NaN;
+        private int _lastLeaderAuthorityCompletedPlayerLap = -1;
         private int _lastLeaderSampleCarIdx = -1;
         private int _lastLeaderSampleLap = -1;
         private bool _leaderPaceClearedLogged = false;
@@ -3515,7 +3514,7 @@ namespace LaunchPlugin
             _recentLapTimes.Clear();
             _recentLeaderLapTimes.Clear();
             _lastLeaderLapTimeSec = 0.0;
-            _lastLeaderAuthoritySessionTimeSec = double.NaN;
+            _lastLeaderAuthorityCompletedPlayerLap = -1;
             _lastLeaderSampleCarIdx = -1;
             _lastLeaderSampleLap = -1;
             LiveLeaderAvgPaceSeconds = 0.0;
@@ -4164,7 +4163,8 @@ namespace LaunchPlugin
 
             if (lapCrossed)
             {
-                var leaderLap = ReadLeaderLapTimeSeconds(PluginManager, data, Pace_Last5LapAvgSec, LiveLeaderAvgPaceSeconds, sessionTime, IsVerboseDebugLoggingOn);
+                int completedPlayerLapForLeader = Convert.ToInt32(data.NewData?.CompletedLaps ?? 0);
+                var leaderLap = ReadLeaderLapTimeSeconds(PluginManager, data, Pace_Last5LapAvgSec, LiveLeaderAvgPaceSeconds, completedPlayerLapForLeader, IsVerboseDebugLoggingOn);
                 leaderLastLapSec = leaderLap.seconds;
                 leaderLapWasFallback = leaderLap.isFallback;
                 leaderSampleCarIdx = leaderLap.carIdx;
@@ -4182,7 +4182,7 @@ namespace LaunchPlugin
                     }
                     _recentLeaderLapTimes.Clear();
                     _lastLeaderLapTimeSec = 0.0;
-                    _lastLeaderAuthoritySessionTimeSec = double.NaN;
+                    _lastLeaderAuthorityCompletedPlayerLap = -1;
                     _lastLeaderSampleCarIdx = -1;
                     _lastLeaderSampleLap = -1;
                     LiveLeaderAvgPaceSeconds = 0.0;
@@ -4333,7 +4333,7 @@ namespace LaunchPlugin
                         }
 
                         _lastLeaderLapTimeSec = leaderLastLapSec;
-                        _lastLeaderAuthoritySessionTimeSec = sessionTime;
+                        _lastLeaderAuthorityCompletedPlayerLap = completedLapsNow;
                         _lastLeaderSampleCarIdx = leaderSampleCarIdx;
                         _lastLeaderSampleLap = leaderSampleLap;
                         LiveLeaderAvgPaceSeconds = _recentLeaderLapTimes.Average();
@@ -22824,7 +22824,7 @@ namespace LaunchPlugin
             GameData data,
             double playerRecentAvg,
             double leaderAvgFallback,
-            double sessionTimeSec,
+            int completedPlayerLap,
             bool verboseLoggingEnabled)
         {
             const int UnknownCarIdx = -1;
@@ -22843,7 +22843,7 @@ namespace LaunchPlugin
             bool racePostLeaderFinish = isRaceSession && sessionStateNumeric >= 5;
             if (racePreGreen || racePostLeaderFinish)
             {
-                if (TryUseHeldLeaderAverage(leaderAvgFallback, sessionTimeSec, "race_state", UnknownCarIdx, UnknownLap, out var heldRaceState))
+                if (TryUseHeldLeaderAverage(leaderAvgFallback, completedPlayerLap, "race_state", UnknownCarIdx, UnknownLap, out var heldRaceState))
                 {
                     if (verboseLoggingEnabled)
                     {
@@ -22883,7 +22883,7 @@ namespace LaunchPlugin
 
             if (overallLeaderIdx < 0)
             {
-                if (TryUseHeldLeaderAverage(leaderAvgFallback, sessionTimeSec, "overall_leader_identity_missing", UnknownCarIdx, UnknownLap, out var heldMissingIdentity))
+                if (TryUseHeldLeaderAverage(leaderAvgFallback, completedPlayerLap, "overall_leader_identity_missing", UnknownCarIdx, UnknownLap, out var heldMissingIdentity))
                 {
                     return heldMissingIdentity;
                 }
@@ -22892,24 +22892,10 @@ namespace LaunchPlugin
                 return (0.0, false, UnknownCarIdx, UnknownLap);
             }
 
-            if (!HasExplicitInWorldTrackSurface(trackSurfaces, overallLeaderIdx))
-            {
-                if (TryUseHeldLeaderAverage(leaderAvgFallback, sessionTimeSec, "overall_leader_not_in_world", overallLeaderIdx, UnknownLap, out var heldNotInWorld))
-                {
-                    return heldNotInWorld;
-                }
-
-                SimHub.Logging.Current.Info(string.Format(
-                    CultureInfo.InvariantCulture,
-                    "[LalaPlugin:Leader Lap] no valid overall leader identity (carIdx={0} not in world) – returning 0",
-                    overallLeaderIdx));
-                return (0.0, false, overallLeaderIdx, UnknownLap);
-            }
-
             int leaderLapCount = ReadCarIdxInt(lapCounts, overallLeaderIdx, UnknownLap);
             if (leaderLapCount < 1)
             {
-                if (TryUseHeldLeaderAverage(leaderAvgFallback, sessionTimeSec, "overall_leader_lap_unavailable", overallLeaderIdx, leaderLapCount, out var heldLapUnavailable))
+                if (TryUseHeldLeaderAverage(leaderAvgFallback, completedPlayerLap, "overall_leader_lap_unavailable", overallLeaderIdx, leaderLapCount, out var heldLapUnavailable))
                 {
                     return heldLapUnavailable;
                 }
@@ -22924,7 +22910,7 @@ namespace LaunchPlugin
 
             if (ReadCarIdxBool(onPitRoad, overallLeaderIdx) == true)
             {
-                if (TryUseHeldLeaderAverage(leaderAvgFallback, sessionTimeSec, "overall_leader_on_pit_road", overallLeaderIdx, leaderLapCount, out var heldOnPitRoad))
+                if (TryUseHeldLeaderAverage(leaderAvgFallback, completedPlayerLap, "overall_leader_on_pit_road", overallLeaderIdx, leaderLapCount, out var heldOnPitRoad))
                 {
                     return heldOnPitRoad;
                 }
@@ -22973,9 +22959,14 @@ namespace LaunchPlugin
                     lastRejectFloor));
             }
 
-            if (TryUseHeldLeaderAverage(leaderAvgFallback, sessionTimeSec, "overall_leader_last_lap_invalid", overallLeaderIdx, leaderLapCount, out var heldInvalidLastLap))
+            if (TryUseHeldLeaderAverage(leaderAvgFallback, completedPlayerLap, "overall_leader_last_lap_invalid", overallLeaderIdx, leaderLapCount, out var heldInvalidLastLap))
             {
                 return heldInvalidLastLap;
+            }
+
+            if (_recentLeaderLapTimes.Count > 0)
+            {
+                return (0.0, false, overallLeaderIdx, leaderLapCount);
             }
 
             double bestLapSec = ReadCarIdxTime(bestLapTimes, overallLeaderIdx);
@@ -23021,7 +23012,7 @@ namespace LaunchPlugin
 
         private bool TryUseHeldLeaderAverage(
             double leaderAvgFallback,
-            double sessionTimeSec,
+            int completedPlayerLap,
             string reason,
             int carIdx,
             int lap,
@@ -23033,43 +23024,32 @@ namespace LaunchPlugin
                 return false;
             }
 
-            double heldAgeSec = double.NaN;
-            bool holdFresh = false;
-            if (!double.IsNaN(sessionTimeSec) && !double.IsInfinity(sessionTimeSec) &&
-                !double.IsNaN(_lastLeaderAuthoritySessionTimeSec) && !double.IsInfinity(_lastLeaderAuthoritySessionTimeSec))
-            {
-                heldAgeSec = Math.Max(0.0, sessionTimeSec - _lastLeaderAuthoritySessionTimeSec);
-                holdFresh = heldAgeSec <= LeaderLapHeldAuthorityMaxAgeSeconds;
-            }
-
+            bool holdFresh = completedPlayerLap >= 0 &&
+                             _lastLeaderAuthorityCompletedPlayerLap >= 0 &&
+                             completedPlayerLap == _lastLeaderAuthorityCompletedPlayerLap;
             if (!holdFresh)
             {
                 SimHub.Logging.Current.Info(string.Format(
                     CultureInfo.InvariantCulture,
-                    "[LalaPlugin:Leader Lap] held overall leader pace expired reason={0} carIdx={1} lap={2} age_s={3} max_s={4:F1} – returning 0",
+                    "[LalaPlugin:Leader Lap] held overall leader pace expired reason={0} carIdx={1} lap={2} current_player_lap={3} last_valid_player_lap={4} – returning 0",
                     string.IsNullOrWhiteSpace(reason) ? "unknown" : reason,
                     carIdx,
                     lap,
-                    double.IsNaN(heldAgeSec) ? "NA" : heldAgeSec.ToString("F1", CultureInfo.InvariantCulture),
-                    LeaderLapHeldAuthorityMaxAgeSeconds));
+                    completedPlayerLap,
+                    _lastLeaderAuthorityCompletedPlayerLap));
                 return false;
             }
 
             SimHub.Logging.Current.Info(string.Format(
                 CultureInfo.InvariantCulture,
-                "[LalaPlugin:Leader Lap] holding overall leader rolling avg reason={0} carIdx={1} lap={2} age_s={3:F1} avg_s={4:F3}",
+                "[LalaPlugin:Leader Lap] holding overall leader rolling avg reason={0} carIdx={1} lap={2} completed_player_lap={3} avg_s={4:F3}",
                 string.IsNullOrWhiteSpace(reason) ? "unknown" : reason,
                 carIdx,
                 lap,
-                heldAgeSec,
+                completedPlayerLap,
                 leaderAvgFallback));
             held = (leaderAvgFallback, true, carIdx, lap);
             return true;
-        }
-
-        private static bool HasExplicitInWorldTrackSurface(int[] trackSurfaces, int index)
-        {
-            return trackSurfaces != null && index >= 0 && index < trackSurfaces.Length && trackSurfaces[index] >= 0;
         }
 
         private static bool TryAcceptLeaderLapCandidate(double seconds, double playerRecentAvg, out string rejectReason, out double rejectionFloor)
@@ -23085,7 +23065,7 @@ namespace LaunchPlugin
 
             if (!IsPlausibleLeaderLapTimeSec(seconds))
             {
-                rejectReason = seconds < 30.0 ? "too_small" : "too_large";
+                rejectReason = seconds <= 20.0 ? "too_small" : "too_large";
                 return false;
             }
 
@@ -23100,7 +23080,7 @@ namespace LaunchPlugin
 
         private static bool IsPlausibleLeaderLapTimeSec(double seconds)
         {
-            return seconds >= 30.0 && seconds < 900.0 && !double.IsNaN(seconds) && !double.IsInfinity(seconds);
+            return seconds > 20.0 && seconds < 900.0 && !double.IsNaN(seconds) && !double.IsInfinity(seconds);
         }
 
         private bool IsDuplicateLeaderLapSample(int carIdx, int lap, double seconds)
