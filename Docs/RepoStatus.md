@@ -1,3 +1,8 @@
+- 2026-06-08 PR #808 debug logging gate ownership completion landed:
+  - Lap Detector pending/reject/low-speed/atypical diagnostics, Leader Lap routine candidate/source/use/reject detail, PitFuelControlEngine entry snapshots and benign blocked/no-send churn, the MSGV1 optional session marker, and Property Snapshot manual/detailed summary logs now all require the existing effective verbose helper (`SoftDebugEnabled && EnableDebugLogging`) instead of master Soft Debug alone;
+  - master `Enable debugging mode` still exposes/allows debug tools and remains the kill switch for debug capture systems, while `Enable Debug Logging` owns extra SimHub Info diagnostic verbosity;
+  - always-on Leader authority unavailable/hold/recovery, PitFuelControl serious reasons (`snapshot-null`, `target-invalid`, `send-failed`), stale ownership expiry/recovery, PitDebrief final logs, PitCommand failures, MonitorSystem warnings, and race-finish summaries are preserved. No runtime fuel math, lap detection behavior, Leader Lap authority behavior, PitFuelControl command/mirror/fault behavior, PitDebrief, exports/properties, dashboard JSON, settings UI, or profile behavior changed. Property Snapshot list reviewed: yes; no group mapping change required.
+
 - 2026-06-08 PR #808 debug logging gate ownership fix landed:
   - Leader Lap routine candidate/source/accept/reject detail Info logs now require the existing effective verbose helper (`SoftDebugEnabled && EnableDebugLogging`) instead of master Soft Debug alone;
   - master `Enable debugging mode` still exposes/allows debug tools and remains the kill switch for debug capture systems, but it no longer enables this extra SimHub Info diagnostic verbosity by itself;
@@ -14,11 +19,11 @@
   - no export/property names, schemas, settings, dashboard JSON, command paths, fuel/refuel math, Pit Fuel Control, Pit Command, Strategy, Planner, or MSGV1 behavior changed beyond the intended `MonitorSystem.Text` suppression behavior. Property Snapshot list reviewed: yes; `MonitorSystem.*` remains in Fuel/Strategy.
 
 - 2026-06-08 PitFuelControl serious blocked-log hygiene follow-up landed:
-  - restored the documented always-on Info path for `snapshot-null`, `target-invalid`, and `send-failed` blocked reasons even when they are routed through the Soft-Debug helper;
-  - benign blocked/no-send churn remains Soft-Debug-gated and rate-limited, and no PitFuelControl command, mirror, fault, fuel math, export/property, dashboard JSON, settings UI, or profile behavior changed. Property Snapshot list reviewed: yes; no group mapping change required.
+  - restored the documented always-on Info path for `snapshot-null`, `target-invalid`, and `send-failed` blocked reasons even when they share the verbose diagnostic helper path;
+  - benign blocked/no-send churn remains `Enable Debug Logging`-gated and rate-limited, and no PitFuelControl command, mirror, fault, fuel math, export/property, dashboard JSON, settings UI, or profile behavior changed. Property Snapshot list reviewed: yes; no group mapping change required.
 
 - 2026-06-08 SimHub log hygiene cleanup landed:
-  - removed obsolete legacy ExtraProperties fallback-removal warnings and moved normal Lap Detector and benign PitFuelControl ownership churn behind Soft Debug Info, with Leader Lap routine candidate/source detail now behind the effective `Enable Debug Logging` gate, without using SimHub Debug-level logging in the touched paths;
+  - removed obsolete legacy ExtraProperties fallback-removal warnings and moved normal Lap Detector, benign PitFuelControl ownership churn, and Leader Lap routine candidate/source detail behind the effective `Enable Debug Logging` gate, without using SimHub Debug-level logging in the touched paths;
   - kept always-on failure/recovery boundaries, Leader Lap authority lost/recovered/hold transitions, PitCommand/PitFuelControl serious failures, PitDebrief final structured logs, pit-cycle/debrief context, and race-finish summaries;
   - Property Snapshot keeps START/STOP/RESET/guard/failure/path/schema logs while suppressing routine heartbeat and write-success/append-success spam. No runtime math, command behavior, lap detection behavior, Leader Lap authority behavior, exports/properties, dashboard JSON, settings UI, or profile schema changed. Property Snapshot list reviewed: yes; no group mapping change required.
 - 2026-06-08 Pit Debrief box delta/fuel-target follow-up landed:

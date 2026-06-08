@@ -138,7 +138,7 @@ namespace LaunchPlugin
                 BuildPitFuelControlSnapshot,
                 SendPitFuelControlCommand,
                 (actionName, message, raw) => _pitCommandEngine.PublishActionFeedback(actionName, message, raw),
-                () => SoftDebugEnabled);
+                () => IsVerboseDebugLoggingOn);
             _pitTyreControlEngine = new PitTyreControlEngine(
                 BuildPitTyreControlSnapshot,
                 SendPitTyreControlCommand,
@@ -3913,7 +3913,7 @@ namespace LaunchPlugin
 
         private bool ShouldLogLapDetector(string key)
         {
-            if (!SoftDebugEnabled)
+            if (!IsVerboseDebugLoggingOn)
             {
                 return false;
             }
@@ -11140,9 +11140,9 @@ namespace LaunchPlugin
             }
 
             UpdateLiveSurfaceSummary(pluginManager);
-            if (!_msgV1InfoLogged && _msgV1Engine != null && SoftDebugEnabled)
+            if (!_msgV1InfoLogged && _msgV1Engine != null && IsVerboseDebugLoggingOn)
             {
-                SimHub.Logging.Current.Info("[LalaPlugin:MSGV1] Session active (routine details suppressed; enable Soft Debug for message diagnostics).");
+                SimHub.Logging.Current.Info("[LalaPlugin:MSGV1] Session active (routine details suppressed; enable Debug Logging for message diagnostics).");
                 _msgV1InfoLogged = true;
             }
 
@@ -15195,7 +15195,7 @@ namespace LaunchPlugin
                 bool manualTriggered = pressCount != _propertySnapshotLastProcessedPressCount;
                 if (manualTriggered)
                 {
-                    WritePropertySnapshotCsv(sessionTimeSec, includeOneShot: true, includeRolling: Settings?.PropertySnapshotRollingCombinedCsv == true, captureReason: "manual-marker", detailedLogs: true);
+                    WritePropertySnapshotCsv(sessionTimeSec, includeOneShot: true, includeRolling: Settings?.PropertySnapshotRollingCombinedCsv == true, captureReason: "manual-marker", detailedLogs: IsVerboseDebugLoggingOn);
                     _propertySnapshotLastProcessedPressCount = pressCount;
                 }
 
@@ -15342,7 +15342,8 @@ namespace LaunchPlugin
                 }
                 buffer.AppendLine();
             }
-            if (detailedLogs)
+            bool emitDetailedLogs = detailedLogs && IsVerboseDebugLoggingOn;
+            if (emitDetailedLogs)
             {
                 SimHub.Logging.Current.Info($"[LalaPlugin:Debug] Property snapshot summary reason={captureReason} includeChanged={includeChanged} rows={rows.Count} changed1={changedOnes} changed0={changedZeros} changedNA={changedNa}.");
             }
@@ -15354,7 +15355,7 @@ namespace LaunchPlugin
             if (includeRolling)
             {
                 string rollingPath = Path.Combine(folder, "PropertySnapshot_Rolling.csv");
-                WriteSnapshotRollingWideWithFallback(rollingPath, utcStamp, rows, detailedLogs);
+                WriteSnapshotRollingWideWithFallback(rollingPath, utcStamp, rows, emitDetailedLogs);
             }
 
             _propertySnapshotPreviousValues = currentValues;
