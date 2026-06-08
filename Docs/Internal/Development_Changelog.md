@@ -9,6 +9,16 @@
 - Leader Lap routine candidate/source/accept/reject detail now uses the existing effective verbose helper (`SoftDebugEnabled && EnableDebugLogging`) instead of master Soft Debug alone, so `Enable debugging mode` can expose debug tools without enabling extra SimHub Info diagnostic verbosity.
 - Always-on transition/rate-limited authority unavailable/hold/recovery evidence remains unchanged; `SimHub.Logging.Current.Debug` is not used. Property Snapshot list reviewed: yes; no SimHub exports/properties or snapshot groups changed.
 
+## 2026-06-08 — MonitorSystem documentation consolidation cleanup
+- Classification: **internal-only** (documentation/current-state consolidation only; no C# code, exports, MonitorSystem messages, CSV schema, runtime behavior, dashboard JSON, or settings UI changed).
+- Merged duplicate Property Snapshot CSV inventory wording, updated Dash Integration/SimHub inventory to include active Phase 4A/4B stale-state checks, and documented the MonitorSystem priority order as unresolved fuel-health > pit/baseline > Car/Opp/H2H > stale-state.
+- Aligned `Docs/Internal/MonitorSystem_Messages.csv` categories with Monitor Event CSV category values, fixed the Project Index runtime Fuel System owner path to `Docs/Subsystems/Fuel_Model_Subsystem.md`, marked superseded `mfdRefuelKnown` RepoStatus history so removed telemetry-known wording is not mistaken for current state, and left `CARSA GAP CHECK` documented as deferred-only rather than current MonitorSystem behavior.
+- Property Snapshot list reviewed: yes; docs-only cleanup with no SimHub export/property additions, removals, renames, behavior-contract changes, or group changes. Root `CHANGELOG.md` reviewed unchanged because this is internal documentation consolidation.
+
+## 2026-06-08 — Strategy Live Session zero-rain summary cleanup
+- Classification: **both** (user-visible Strategy tab LIVE SESSION wording/presentation cleanup; no Strategy calculations, Fuel Model, wet/dry authority, exports/properties, dashboard JSON, settings, or profile behavior changed).
+- Strategy LIVE SESSION weather/surface summary now hides the Rain segment when `TrackPrecipitation` parses as numeric zero (`0`, `0%`, `0.0%`, or comma-decimal equivalents), while positive precipitation keeps the existing compact `{x}% Rain` wording and unknown non-empty precipitation text preserves the previous display behavior.
+- Property Snapshot list reviewed: yes; no SimHub exports/properties were added, removed, renamed, or behavior-changed. Message catalogue reviewed: unchanged because no log/message text changed.
 ## 2026-06-08 — MonitorSystem post-pit REFUEL OFF inhibit review follow-up
 - Classification: **internal-only** (correctness follow-up for existing MonitorSystem.Text suppression behavior; no export/property names, schemas, settings, dashboard JSON, command paths, MSGV1 routing, fuel/refuel math, Pit Fuel Control, Pit Command, Strategy, or Planner changes).
 - Suppressed post-pit `REFUEL OFF` results now skip the pit-warning clear path entirely, preserving active `EXIT FUEL SHORT`, `MFD FUEL LOW`, and `BASELINE SHORT` warnings and avoiding unintended `MONITOR READY` publication.

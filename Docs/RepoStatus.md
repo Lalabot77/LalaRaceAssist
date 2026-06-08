@@ -7,6 +7,15 @@
   - Leader Lap routine candidate/source/accept/reject detail Info logs now require the existing effective verbose helper (`SoftDebugEnabled && EnableDebugLogging`) instead of master Soft Debug alone;
   - master `Enable debugging mode` still exposes/allows debug tools and remains the kill switch for debug capture systems, but it no longer enables this extra SimHub Info diagnostic verbosity by itself;
   - always-on Leader Lap authority unavailable/hold/recovery transition evidence remains unchanged. No Leader Lap authority behavior, runtime fuel math, lap detection, PitFuelControl, PitDebrief, exports/properties, dashboard JSON, settings UI, or profile behavior changed. Property Snapshot list reviewed: yes; no group mapping change required.
+- 2026-06-08 MonitorSystem documentation consolidation cleanup landed:
+  - current MonitorSystem documentation now states the active Phase 4A/4B stale-state checks, the priority order (unresolved fuel-health > pit/baseline > Car/Opp/H2H > stale-state), and aligned MonitorSystem message catalogue categories with Monitor Event CSV categories (`FuelHealth`, `FuelPitStop`, `BaselineFuel`, `CarOppH2H`, `Launch`, `Rejoin`);
+  - duplicate Property Snapshot CSV inventory wording was merged, `MonitorSystem.Text` inventory provenance now includes Phase 4A/4B, and Project Index now points the runtime Fuel System to `Docs/Subsystems/Fuel_Model_Subsystem.md`;
+  - superseded Phase 2B telemetry-known / `mfdRefuelKnown` history is explicitly marked as superseded by the later trusted-telemetry simplification, and `CARSA GAP CHECK` remains deferred-only rather than current MonitorSystem behavior. Docs-only cleanup: no code, exports, runtime behavior, CSV schema, dashboard JSON, settings UI, or Property Snapshot grouping changed. Property Snapshot list reviewed: yes; no export/property changes. Root `CHANGELOG.md` reviewed unchanged because this is internal documentation consolidation.
+
+- 2026-06-08 Strategy Live Session zero-rain summary cleanup landed:
+  - Strategy tab LIVE SESSION weather/surface summary now suppresses the Rain segment when `DataCorePlugin.GameRawData.SessionData.WeekendInfo.TrackPrecipitation` resolves to numeric zero, avoiding misleading `0% Rain` text;
+  - positive precipitation and unknown non-empty precipitation text retain the existing compact Rain display path, and missing/blank precipitation still omits Rain;
+  - no Strategy calculation, Fuel Model, wet/dry condition authority, exports/properties, dashboard JSON, settings UI, logs, or Property Snapshot grouping changed. Property Snapshot list reviewed: yes; no group mapping change required.
 
 - 2026-06-08 MonitorSystem post-pit `REFUEL OFF` inhibit review follow-up landed:
   - suppressed post-pit `REFUEL OFF` results no longer enter the pit-warning clear path, so active `EXIT FUEL SHORT`, `MFD FUEL LOW`, and `BASELINE SHORT` publications are preserved and `MONITOR READY` is not published for a suppressed `REFUEL OFF`;
@@ -193,7 +202,7 @@
 
 - 2026-06-07 MonitorSystem Phase 2B latest review follow-up landed:
   - fuel-health priority now blocks Phase 2B pit warnings only for unresolved `CHECK FUEL DATA` / `FUEL DATA FAULT`; auto-recoverable `FUEL DATA RECOVERED` no longer suppresses urgent pit warnings;
-  - pit-service warnings now distinguish known vs missing `dpFuelFill` telemetry (`mfdRefuelKnown` in pit evidence logs), so missing MFD refuel telemetry fails closed instead of being treated as refuel disabled;
+  - superseded by the later trusted-telemetry simplification above: this entry originally noted temporary known-vs-missing `dpFuelFill` telemetry handling (`mfdRefuelKnown` in pit evidence logs), but current behavior uses direct trusted `dpFuelFill` reads and logs `mfdRefuelEnabled` only;
   - off-pit-road Fuel Control mode changes inside the predictive low-fuel window can publish/clear CAUTION-level predictive pit warnings even after the one-shot predictive threshold previously fired clean, without adding per-tick scans or off-road WARNINGs;
   - no `BASELINE SHORT`, `FUEL MODEL CHECK`, gross SimHub baseline maths, Fuel.Refuel calculation, Pit Fuel Control, Pit Command, CSV writer, new export, or Property Snapshot grouping changes. Property Snapshot list reviewed: yes; no group change.
 

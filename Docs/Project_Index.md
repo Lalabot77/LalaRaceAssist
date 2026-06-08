@@ -39,7 +39,7 @@ These pages are the GitHub-facing driver/user layer. They explain what the drive
 ## Subsystem documentation
 These pages are the technical/canonical subsystem layer. They explain internal ownership, inputs, outputs, calculations, persistence, caching, architecture boundaries, and the plugin-vs-dash contract where relevant.
 
-- [Subsystems/Fuel_Model.md](Subsystems/Fuel_Model.md)
+- [Subsystems/Fuel_Model_Subsystem.md](Subsystems/Fuel_Model_Subsystem.md)
 - [Subsystems/Fuel_Planner_Tab.md](Subsystems/Fuel_Planner_Tab.md)
 - [Subsystems/Launch_Mode.md](Subsystems/Launch_Mode.md)
 - [Subsystems/Shift_Assist.md](Subsystems/Shift_Assist.md)
@@ -80,7 +80,7 @@ These pages support maintainers, support work, and Codex tasks. They are not par
 ## Topic owner matrix
 | Topic | Canonical owner doc |
 |---|---|
-| Runtime Fuel System | `Docs/Subsystems/Fuel_Model.md` |
+| Runtime Fuel System | `Docs/Subsystems/Fuel_Model_Subsystem.md` |
 | Strategy planner behavior | `Docs/Subsystems/Fuel_Planner_Tab.md` |
 | User-facing fuel trust workflow | `Docs/Fuel_Model.md` |
 | Dash integration contract | `Docs/Subsystems/Dash_Integration.md` |
@@ -93,7 +93,7 @@ These pages support maintainers, support work, and Codex tasks. They are not par
 | User term | Technical term | Canonical owner |
 |---|---|---|
 | Strategy | Fuel Planner / Strategy Tab | `Docs/Subsystems/Fuel_Planner_Tab.md` |
-| Fuel Model | Runtime Fuel System | `Docs/Subsystems/Fuel_Model.md` |
+| Fuel Model | Runtime Fuel System | `Docs/Subsystems/Fuel_Model_Subsystem.md` |
 | Pit Assist | Pit Entry + Pit Timing + Pit Commands/Fuel Control | `Docs/Subsystems/Pit_Entry_Assist.md`, `Docs/Subsystems/Pit_Timing_And_PitLoss.md`, `Docs/Subsystems/Pit_Commands_And_Fuel_Control.md` |
 | Dashboards | Dash Integration contract + dashboard package usage | `Docs/Subsystems/Dash_Integration.md` + `Docs/Dashboards.md` |
 | RaceFinish | Finish lifecycle / end-phase contract | `Docs/Internal/SimHubParameterInventory.md` + `Docs/Internal/SimHubLogMessages.md` |
