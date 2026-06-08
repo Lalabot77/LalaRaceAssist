@@ -1,7 +1,7 @@
 # Property Snapshot Debug Workflow (Internal)
 
 Validated against commit: HEAD
-Last updated: 2026-05-20
+Last updated: 2026-06-08
 Branch: work
 
 ## Purpose and ownership
@@ -70,7 +70,7 @@ Replay caveats:
 ## Property Snapshot group usage
 Use groups to limit noise and preserve ownership boundaries.
 
-- **Fuel/Strategy**: runtime fuel, strategy basis, pre-race planning deltas.
+- **Fuel/Strategy**: runtime fuel, strategy basis, pre-race planning deltas, and the `MonitorSystem.*` dash-facing monitor surface.
 - **Car/Opp/H2H**: race context, opponents, pit-exit cohort/position surfaces, class context.
 - **Pit/PitExit**: pit control, pit timing, entry/exit trip surfaces.
 - **Shift Assist**: shift cues and related assist-state surfaces.
@@ -119,3 +119,11 @@ RaceFinish remains distributed ownership by design:
 - subsystem context: lifecycle explanation in existing subsystem docs.
 
 No standalone `Docs/Subsystems/RaceFinish.md` is introduced in this sweep.
+
+
+## 2026-06-08 Debug UI/master-gate update
+- `Enable debugging mode` / `EnableSoftDebug` is the operational master gate for Property Snapshot. When it is off, manual Event Marker captures and rolling captures are inert; an active rolling runtime state is stopped/fail-safe by the master gate without clearing the persisted child settings.
+- Settings UI visibility is parent-driven: all Property Snapshot child controls (Select All, group checkboxes, changed-vs-previous, rolling combined CSV, rolling mode/frequency/buttons/status, and helper text) are hidden until `Enable Property Snapshot` is on; rolling controls/status are hidden until `Write rolling combined CSV` is on; and `Frequency Hz` is hidden unless rolling mode is `FREQUENCY`.
+- Rolling frequency is normalized to the runtime cap of 1–2 Hz. Entering a higher value such as 20 is stored/displayed as 2, matching the capture interval used at runtime.
+- START/STOP/RESET status uses the existing rolling status resolver (`OFF` / `READY` / `RECORDING`) and is refreshed from settings UI button clicks, rolling mode/enable changes, master debug toggle changes, and the plugin debug-UI refresh callback fired by rolling START/STOP/RESET actions. Dashboard/plugin actions continue to resolve status through the same exported status text.
+- Event Marker still triggers a manual Property Snapshot only when both master debugging mode and `Enable Property Snapshot` are enabled; other Event Marker consumers are not changed.

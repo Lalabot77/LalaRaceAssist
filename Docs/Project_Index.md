@@ -1,7 +1,7 @@
 # Project Index
 
 Validated against commit: HEAD
-Last updated: 2026-05-29
+Last updated: 2026-06-08
 Branch: work
 
 ## What this repo is
@@ -87,6 +87,7 @@ These pages support maintainers, support work, and Codex tasks. They are not par
 | Dashboard user workflow | `Docs/Dashboards.md` |
 | Race end / finish lifecycle contract | `Docs/Internal/SimHubParameterInventory.md` (`RaceFinish.*`, `Race.EndPhase.*`) + `Docs/Internal/SimHubLogMessages.md` |
 | Property Snapshot debug workflow | `Docs/Internal/Property_Snapshot_Debug_Workflow.md` |
+| MonitorSystem health/warning messages | `Docs/Subsystems/Fuel_Model_Subsystem.md` + `Docs/Internal/MonitorSystem_Messages.csv` + `Docs/Internal/SimHubLogMessages.md` |
 
 ## Terminology matrix
 | User term | Technical term | Canonical owner |
@@ -115,5 +116,5 @@ These pages support maintainers, support work, and Codex tasks. They are not par
 
 ## Freshness
 - Validated against commit: HEAD
-- Date: 2026-03-22
+- Date: 2026-06-08
 - Branch: work

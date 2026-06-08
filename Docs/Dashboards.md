@@ -26,6 +26,8 @@ The dashboard-facing Monitor System is enabled by default. Use **Dash Control ->
 
 The current monitor reports existing runtime fuel-health status, edge-triggered pit/fuel risk warnings, and small report-by-exception CarSA/Opponents/H2H impossible-state checks. It observes already-published subsystem outputs only; it does not send pit commands, select fallback targets, reset car/opponent/H2H state, or replace `Pit.Command.*` feedback.
 
+Current driver-facing warning texts include `CHECK FUEL DATA`, `REFUEL OFF`, `MFD FUEL LOW`, `EXIT FUEL SHORT`, `BASELINE SHORT`, `OPPONENT DATA UNRELIABLE`, `TRAFFIC DATA UNRELIABLE`, and `H2H DATA UNRELIABLE`. Normal/clear messages remain `MONITOR READY`, `MONITOR OFF`, `FUEL HEALTH OK`, `FUEL DATA RECOVERED`, and `FUEL DATA FAULT`.
+
 ## 2. Installation / import
 
 At a high level, dashboard setup is:
@@ -310,13 +312,13 @@ Where a useful page-specific screenshot is not currently available in that folde
 
 ## Pit Stop Debrief bindings
 
-Dashboard layout files are not changed by the v1 Pit Debrief implementation. Dashboards consume plugin-owned latched outputs only and must not recompute service delta, loss delta, exit accuracy, or summary text.
+Dashboard layout files are not changed by the Pit Debrief V2 refinement. Dashboards consume plugin-owned outputs only and must not recompute service delta, box delta, loss delta, exit accuracy, or summary text. `SummaryText` can update before `Valid` becomes true, while existing overlays that key on `Valid`/`AgeSec` still show only finalized, latched summaries.
 
 Alerts overlay contract:
 
 - Visible when `LalaLaunch.Pit.Debrief.Valid == true` and `LalaLaunch.Pit.Debrief.AgeSec < 15`.
 - Title: `PIT STOP DEBRIEF — STOP ` + `LalaLaunch.Pit.Debrief.StopIndex`.
-- Body: `LalaLaunch.Pit.Debrief.SummaryText`.
+- Body: `LalaLaunch.Pit.Debrief.SummaryText` (format `ENTRY ... (Δ ...) | BOX ... (Δ ...) | SVC ... | STRAT Δ ...`; exit prediction is available in debug fields/logs, not the summary).
 
 Debug page fields:
 

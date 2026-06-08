@@ -8,6 +8,31 @@
 - Current overall P1 `CarIdxBestLapTime` is only a low-confidence published fallback while the rolling window is empty and is not ingested into the rolling window.
 - Preserved class leader/class best/H2H/LapRef semantics, RaceFinish behavior, fuel math, lap acceptance/rejection, Opponents/H2H/CarSA target selection, dashboards, and iRacing ExtraProperties removal.
 - Property Snapshot list reviewed: yes; existing `Pace.*` exports remain covered by the Fuel/Strategy group, with no export/property additions, removals, or renames.
+## 2026-06-08 — MonitorSystem driver-facing wording update
+- Classification: **both** (driver/dashboard/CSV/log/catalogue wording plus internal Monitor Event CSV mapping alignment; no export names, property names, enum values, CSV schema, trigger logic, subsystem calculations, dashboard JSON, settings UI, MSGV1, or Property Snapshot grouping changes).
+- Renamed active MonitorSystem publications and ownership checks from `FUEL DATA CHECK` to `CHECK FUEL DATA`, `OPP TARGET CHECK` to `OPPONENT DATA UNRELIABLE`, `CARSA SLOT CHECK` to `TRAFFIC DATA UNRELIABLE`, and `H2H TARGET CHECK` to `H2H DATA UNRELIABLE`.
+- Updated the MonitorSystem message catalogue, log-message contract, parameter inventory, Fuel subsystem wording, Project Index metadata, RepoStatus, and GitHub-facing dashboard/changelog notes so current behaviour uses the new driver-facing texts.
+- Monitor Event CSV category mapping now recognises `CHECK FUEL DATA` as `FuelHealth` and the three unreliable-data texts as `CarOppH2H`; skip rules for `MONITOR OFF`, `MONITOR READY`, and `FUEL HEALTH OK` remain unchanged.
+- Property Snapshot list reviewed: yes; no group change because no SimHub exports/properties were added, removed, renamed, or regrouped.
+## 2026-06-08 — Debug Options merge-fallout cleanup
+- Classification: **internal-only** (Settings Debug Options UI/docs alignment after merge conflict fallout; no runtime race logic, fuel math, pit math, CarSA slot/gap/checkpoint logic, MonitorSystem warning logic, Shift Assist cue/learning logic, SimHub export/property names, dashboard JSON, or CSV schemas changed).
+- Removed the stale General logging CarSA debug export/cadence/events controls and the visible legacy `PitExit Verbose Logging` row, leaving `CarSA diagnostics` as the single CarSA Debug CSV UI path and PitExit math-audit/detail logging under master debug + `Enable Debug Logging`.
+- Preserved `Enable Monitor Event CSV` in General logging with its existing MonitorSystem-enabled/default-off behavior.
+- Hid all Property Snapshot child controls until `Enable Property Snapshot` is on while preserving rolling combined CSV and FREQUENCY-only frequency visibility.
+- Verified OffTrack Debug CSV remains absent. Property Snapshot list reviewed: yes; no SimHub export/property add, remove, rename, behavior-contract change, or group change because this is UI visibility/docs cleanup only.
+
+## 2026-06-08 — MonitorSystem optional event CSV + snapshot coverage audit
+- Classification: **internal-only** (debug/testing CSV + docs alignment; no new SimHub exports, dashboard JSON, health logic, MSGV1 routing, self-healing, fallback, or driver message queue/cancel behavior).
+- Added persisted Debug Options setting `Enable Monitor Event CSV` (default off) that writes changed non-normal MonitorSystem publications only (`WATCH`, `CAUTION`, `WARNING`, `FAULT`, `RECOVERED`) to `Logs/LalaPluginData/MonitorSystem_Events.csv` when MonitorSystem itself is enabled.
+- CSV rows include generic session/monitor/context columns and intentionally skip `MONITOR OFF`, `MONITOR READY`, `FUEL HEALTH OK`, unchanged repeat publications, and per-tick OK/default state spam; file I/O failure logs once and disables the writer.
+- Property Snapshot list reviewed: yes; existing `MonitorSystem.*` exports are already attached through `AttachCore` and mapped by `ResolvePropertySnapshotGroup(...)` to FuelStrategy, so no snapshot list or group change was required. Root `CHANGELOG.md` reviewed unchanged because this is an internal debug/testing tool.
+
+## 2026-06-08 — Pit Debrief V2 progressive summary refinement
+- Classification: **both** (driver-facing `Pit.Debrief.SummaryText` wording/timing plus internal refuel-duration export semantics; no export names, settings, dashboard JSON/layout, PitCycleLite, pit-loss model, fuel model, or PitExit prediction model changed).
+- `Pit.Debrief.SummaryText` now updates progressively from existing lifecycle evidence, removes driver-facing exit verdict text, renames final `LOSS` wording to `STRAT Δ`, and formats entry/box signed deltas plus service from actual fuel added and tyre count.
+- Box delta uses the existing `Pit.Box.TargetSec`/`Pit.Box.LastDeltaSec` countdown seam as actual box/service duration minus predicted box/service duration; final strategy delta continues to use the existing debrief finalized loss comparison.
+- `Pit.Debrief.Service.RefuelDurationSec` now latches the existing refuel-rate learner's completed-flow duration when available; `FuelTargetLitres` remains debug-only from the existing MFD-request/tank-space-clamped `Fuel.Pit.WillAdd`/latched source because no clearer authoritative target seam was identified.
+- Property Snapshot list reviewed: yes; no export names were added/removed/renamed and `Pit.Debrief.*` remains in the existing Pit/PitExit group through the `Pit.` prefix.
 
 ## 2026-06-08 — Pit Debrief PR #797 review sync commit
 - Classification: **internal-only review traceability** (comments/docs only; no export names, dashboard JSON, fuel model, PitExit, PitCycleLite, or debrief runtime semantics changed beyond the already-present PR #797 fixes).
@@ -45,6 +70,22 @@
 - Preserved predictive checks on later ticks, trusted SimHub telemetry reads, no `MfdFuelRequestKnown`, no new warnings, no CSV, no per-tick checks, no `Fuel.Refuel.*` / Pit Fuel Control / Pit Command / Strategy planner changes, and no Property Snapshot group changes.
 - Property Snapshot list reviewed: yes; no export/property add, remove, rename, behavior-contract change, or group change because `MonitorSystem.*` remains in the existing Fuel/Strategy group.
 
+## 2026-06-08 — PR #798 Property Snapshot frequency binding follow-up
+- Classification: **internal-only review follow-up** (Property Snapshot Debug Options UI/runtime normalization fix; no export/property names, dashboard JSON, CSV schema, race logic, fuel math, pit math, CarSA logic, Shift Assist cue/learning logic, or launch trace behavior changed).
+- Added an explicit 1.0 Hz lower clamp for Property Snapshot rolling frequency while preserving invalid/zero/negative fallback and the existing 2.0 Hz max cap.
+- Replaced direct `PropertySnapshotRollingFrequencyTextBox.Text` assignment in rolling status refresh with binding-expression `UpdateSource`/`UpdateTarget` usage so the WPF TwoWay binding remains intact.
+- Consolidated the duplicated `GlobalSettingsView.xaml` Debug Options tooltip documentation introduced by PR #798.
+- Property Snapshot list reviewed: yes; no SimHub export/property add, remove, rename, behavior-contract change, or group change.
+
+## 2026-06-08 — Debug Options UI tidy and master debug gate
+- Classification: **both** (user-facing Settings Debug Options UI cleanup plus internal debug operational gating; no dashboard JSON, runtime fuel/pit/CarSA/Shift/Launch calculation behavior, or SimHub export/property names changed).
+- `Enable debugging mode` / `SoftDebugEnabled` now acts as the operational kill switch for debug capture/logging systems: Property Snapshot manual/rolling capture, CarSA Debug CSV/Event CSV writing, Car Tracking Probe CSV, Shift Assist Debug CSV, and extra debug/detail logs are inert while master debug is off; active rolling/probe/debug CSV runtime state is stopped/flushed safely without clearing child preferences.
+- Debug Options UI is split into General logging, Property Snapshot, CarSA diagnostics, Car Tracking Probe CSV, Shift Assist diagnostics, and Debug Actions sections. Child controls are hidden behind parent toggles/modes, including Property Snapshot rolling/frequency, CarSA tick Hz, Car Tracking Probe details, and Shift Assist max Hz.
+- Property Snapshot rolling frequency now normalizes and displays the runtime 1–2 Hz cap; rolling START/STOP/RESET UI state refreshes through the existing OFF/READY/RECORDING status resolver.
+- PitExit math-audit/detail logging now uses master debug + `Enable Debug Logging`; the visible legacy `PitExit Verbose Logging` toggle was removed while the persisted setting remains load-safe legacy data.
+- Verified OffTrack Debug CSV remains removed; preserved Property Snapshot, Event Marker, CarSA Debug CSV, CarSA Events CSV, Car Tracking Probe CSV, Shift Assist Debug CSV, DecelCapture, Launch traces/analysis, and Trace Logging.
+- Property Snapshot list reviewed: yes; no SimHub export/property was added, removed, renamed, or regrouped because this changes UI visibility and debug operational gates only.
+
 ## 2026-06-08 — MonitorSystem Phase 2C pit-exit MFD context fix
 - Classification: **internal-only correctness follow-up** (baseline-warning edge context fix; no export names, dashboard JSON, fuel/refuel math, planner, Pit Fuel Control, Pit Command, or message text changes).
 - Parameterized `IsMonitorBaselineFuelShort(...)` with `includeSelectedMfdFuel`, keeping selected `PitSvFuel` included for predictive, pit-road entry, and pit-box entry checks while excluding it on `PitRoadExit`.
@@ -65,12 +106,12 @@
 - Added `BASELINE SHORT`, a deliberately crude race-risk sanity check that trusts SimHub/iRacing telemetry directly: current fuel comes from `DataCorePlugin.GameData.NewData.Fuel`, fuel-per-lap from `DataCorePlugin.Computed.Fuel_LitersPerLap`, remaining laps from `DataCorePlugin.GameData.LapsRemaining`, MFD refuel state/request from `DataCorePlugin.GameRawData.Telemetry.dpFuelFill` / `PitSvFuel`, and pre-race available fuel can use the existing `Fuel.Setup.FuelLevel` seam.
 - Formula is intentionally simple: pre-race/grid `baselineAvailable = setup fuel when valid, otherwise current fuel`; race/pit context `baselineAvailable = current fuel + PitSvFuel when dpFuelFill is enabled`; `baselineRequired = fuelPerLap * remainingLaps`; publish only when shortfall is greater than `MonitorBaselineFuelToleranceLaps = 1.0` lap of fuel.
 - Evaluation is only on existing MonitorSystem trigger edges (`PredictiveTwoLapsFuelRemaining`, `PitRoadEntry`, `PitBoxEntry`, optional `PitRoadExit`); Fuel Control mode/data changes remain log/service-warning paths and do not introduce baseline checks.
-- Preserved fuel-health priority (`FUEL DATA CHECK` / `FUEL DATA FAULT` block pit/baseline warning publication), `Fuel.Refuel.*`, Pit Fuel Control, Pit Command, Strategy planner, fallback systems, CSV writers, dashboard JSON, exports, and per-tick cadence.
+- Preserved fuel-health priority (`CHECK FUEL DATA` / `FUEL DATA FAULT` block pit/baseline warning publication), `Fuel.Refuel.*`, Pit Fuel Control, Pit Command, Strategy planner, fallback systems, CSV writers, dashboard JSON, exports, and per-tick cadence.
 - Property Snapshot list reviewed: yes; no export/property add, remove, rename, behavior-contract change, or group change because `MonitorSystem.*` remains in the existing Fuel/Strategy group.
 
 ## 2026-06-07 — MonitorSystem Phase 2B latest review follow-up
 - Classification: **both** (driver-facing warning priority/correctness plus internal Phase 2B evidence-log wording; no export, fuel/refuel calculation, planner, Pit Fuel Control, or Pit Command behavior change).
-- Narrowed fuel-health blocking to unresolved `FUEL DATA CHECK` / `FUEL DATA FAULT` only, so auto-recoverable `FUEL DATA RECOVERED` no longer suppresses urgent Phase 2B pit warnings.
+- Narrowed fuel-health blocking to unresolved `CHECK FUEL DATA` / `FUEL DATA FAULT` only, so auto-recoverable `FUEL DATA RECOVERED` no longer suppresses urgent Phase 2B pit warnings.
 - Added known/unknown MFD refuel telemetry handling: `dpFuelFill` is read without defaulting missing values to `false`, snapshots carry `MfdRefuelKnown`, service warnings fail closed when refuel telemetry is unknown, and pit evidence logs include `mfdRefuelKnown`.
 - Off-pit-road Fuel Control mode changes now re-check CAUTION-level predictive risk while still inside the two-laps-fuel window, even after the one-shot predictive trigger previously fired clean, allowing later MFD/refuel changes to publish or clear predictive pit warnings before pit entry without per-tick scans or off-road WARNINGs.
 - Preserved Phase 2B tolerances, Fuel Control DATA log-only behavior, message texts/enums, independent `Fuel.Refuel.NextLitres` basis, fuel/refuel calculations, Strategy/planner math, Pit Fuel Control behavior, Pit Command behavior, CSV behavior, and export names. No `BASELINE SHORT`, `FUEL MODEL CHECK`, independent gross SimHub baseline maths, new exports, or Property Snapshot grouping changes were added.
@@ -78,7 +119,7 @@
 
 ## 2026-06-07 — MonitorSystem Phase 2B active review follow-up
 - Classification: **both** (driver-facing warning priority/correctness plus internal Phase 2B documentation; no export, fuel/refuel calculation, planner, Pit Fuel Control, or Pit Command behavior change).
-- Added a narrow fuel-health priority guard so Phase 2B pit warnings neither publish over nor clear `FUEL DATA CHECK`, `FUEL DATA FAULT`, or `FUEL DATA RECOVERED`; clean pit edges still clear only active Phase 2B pit-warning texts back to `MONITOR READY`.
+- Added a narrow fuel-health priority guard so Phase 2B pit warnings neither publish over nor clear `CHECK FUEL DATA`, `FUEL DATA FAULT`, or `FUEL DATA RECOVERED`; clean pit edges still clear only active Phase 2B pit-warning texts back to `MONITOR READY`.
 - Gated `EXIT FUEL SHORT` on a meaningful pit-entry required add (`PluginNextLitres > 0.5L` via the existing fuel-still-required helper), preventing no-refuel/no-required-add pit cycles from warning solely because pit-lane driving burned fuel below entry fuel.
 - Off-pit-road Fuel Control mode changes now evaluate CAUTION-level predictive risk when an active Phase 2B pit warning exists, allowing corrected predictive `REFUEL OFF` / `MFD FUEL LOW` warnings to clear before pit entry without publishing off-road service WARNINGs.
 - Preserved Phase 2B tolerances, edge-only behavior, Fuel Control DATA log-only behavior, message texts/enums, independent `Fuel.Refuel.NextLitres` basis, fuel/refuel calculations, Strategy/planner math, Pit Fuel Control behavior, Pit Command behavior, CSV behavior, and export names. No `BASELINE SHORT`, `FUEL MODEL CHECK`, independent gross SimHub baseline maths, new exports, or Property Snapshot grouping changes were added.
@@ -87,7 +128,7 @@
 ## 2026-06-07 — MonitorSystem Phase 2B PR #792 review follow-up
 - Classification: **both** (driver-facing warning correctness and internal Phase 2B evidence-log documentation; no export, fuel/refuel calculation, planner, Pit Fuel Control, or Pit Command behavior change).
 - Rebased Phase 2B pit-stop warning checks on the independent existing runtime recommendation seam `Fuel.Refuel.NextLitres` / `Fuel.Refuel.Valid` instead of `Pit_WillAdd` / current MFD-selected add mirrors. This allows `REFUEL OFF` to remain eligible when refuel is disabled and makes `MFD FUEL LOW` compare the MFD request against an independent recommendation. Invalid/missing recommendations fail closed.
-- Added narrow MonitorSystem ownership detection for active Phase 2B pit-warning texts; relevant clean evaluation edges now clear only `REFUEL OFF`, `MFD FUEL LOW`, or `EXIT FUEL SHORT` back to `MONITOR READY`, leaving `FUEL DATA CHECK`, `FUEL DATA FAULT`, and `FUEL DATA RECOVERED` untouched.
+- Added narrow MonitorSystem ownership detection for active Phase 2B pit-warning texts; relevant clean evaluation edges now clear only `REFUEL OFF`, `MFD FUEL LOW`, or `EXIT FUEL SHORT` back to `MONITOR READY`, leaving `CHECK FUEL DATA`, `FUEL DATA FAULT`, and `FUEL DATA RECOVERED` untouched.
 - First-tick priming while already on pit road now seeds the pit-entry snapshot and logs `PitRoadSnapshotSeeded` without warning publication, so later pit-road exit can still compare actual fuel against the seeded expected fuel-on-exit.
 - Preserved Phase 2B tolerances/guard style, edge-only warning publication, Fuel Control DATA log-only behavior, message texts/enums, fuel/refuel calculations, Strategy/planner math, Pit Fuel Control behavior, Pit Command behavior, CSV behavior, and export names. No `BASELINE SHORT`, `FUEL MODEL CHECK`, independent gross SimHub baseline maths, new exports, or Property Snapshot grouping changes were added.
 - Property Snapshot list reviewed: yes; no group change required because no SimHub exports/properties were added, removed, renamed, or regrouped.
@@ -156,7 +197,7 @@
 
 ## 2026-06-07 — PR #790 MonitorSystem fuel-health outcome follow-up
 - Classification: **both** (dash-facing fuel-health status correctness + internal recovery-result distinction; no export names, message texts/enums, fuel logic, or command behavior changes).
-- A prior `FUEL DATA CHECK` WATCH now clears to `FUEL HEALTH OK` on the next evaluation that satisfies the existing healthy pass basis, even when the queued-check flag was already cleared; the existing passed log remains queued-check-only.
+- A prior `CHECK FUEL DATA` WATCH now clears to `FUEL HEALTH OK` on the next evaluation that satisfies the existing healthy pass basis, even when the queued-check flag was already cleared; the existing passed log remains queued-check-only.
 - Planner-safe recovery now reports whether an attempt actually ran. Existing throttle/missing-manager deferrals retain WATCH instead of publishing FAULT; only an attempted unhealthy recovery publishes `FUEL DATA FAULT`. Recovery timing, side effects, pending-state clearing, and unhealthy-streak behavior remain unchanged.
 - Active-live-session manual targeted recovery now publishes the same RECOVERED/FAULT/WATCH monitor outcome as automatic recovery while preserving the existing successful early return and unsuccessful/deferred broad-reset fall-through.
 - Property Snapshot list reviewed: yes; no group change because the existing `MonitorSystem.*` exports remain in Fuel/Strategy. Message catalogue reviewed: unchanged because no emitted text or enum changed.
@@ -165,7 +206,7 @@
 - Classification: **both** (new dash-facing monitoring exports + internal framework/catalogue/docs; no fuel, planner, pit-control, or command behavior change).
 - Added independent `MonitorSystem.cs` presentation state with Phase 1 enum/colour/text contract and identical-output deduplication; it has no dependency on fuel calculators, Strategy, pit engines, Opponents, CarSA, or H2H.
 - Added `LalaLaunch.MonitorSystem.State`, `.Text`, `.BackgroundColour`, `.TextColour`, and `.Enum`; initial state is automatic `MONITOR READY`.
-- Mirrored existing fuel-health outcomes only: unhealthy observation -> `FUEL DATA CHECK`, unchanged pass -> `FUEL HEALTH OK`, unchanged recovery success -> `FUEL DATA RECOVERED`, unchanged recovery failure -> `FUEL DATA FAULT`. Existing trigger conditions, health checks, logs, 450 ms evaluation throttle, two-observation streak, two-second recovery throttle, recovery state mutations, fuel math, Strategy/PreRace, `Fuel.Refuel.*`, `Pit.FuelControl.*`, and `Pit.Command.*` remain unchanged.
+- Mirrored existing fuel-health outcomes only: unhealthy observation -> `CHECK FUEL DATA`, unchanged pass -> `FUEL HEALTH OK`, unchanged recovery success -> `FUEL DATA RECOVERED`, unchanged recovery failure -> `FUEL DATA FAULT`. Existing trigger conditions, health checks, logs, 450 ms evaluation throttle, two-observation streak, two-second recovery throttle, recovery state mutations, fuel math, Strategy/PreRace, `Fuel.Refuel.*`, `Pit.FuelControl.*`, and `Pit.Command.*` remain unchanged.
 - Added `Docs/Internal/MonitorSystem_Messages.csv`; no debug CSV writer was added in Phase 1. Pit-stop monitoring and independent gross SimHub baseline fuel checks remain future work.
 - Property Snapshot list reviewed: yes; `MonitorSystem.*` is assigned to the existing Fuel/Strategy group because Phase 1 surfaces the runtime fuel-health seam.
 

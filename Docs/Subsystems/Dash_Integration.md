@@ -1,7 +1,7 @@
 # Dash Integration
 
 Validated against commit: HEAD
-Last updated: 2026-06-07
+Last updated: 2026-06-08
 Branch: work
 
 ## Purpose
@@ -28,9 +28,13 @@ This document is the canonical dash-facing contract layer. It does **not** redef
 - `TextColour`,
 - `Enum` (`0=OFF`, `1=OK`, `2=WATCH`, `3=CAUTION`, `4=WARNING`, `5=FAULT`, `6=RECOVERED`).
 
-Phase 1 exposes the existing start/runtime fuel-health evaluation and planner-safe recovery outcomes. Phase 2A adds an internal pit-stop trigger framework that records edge-only evidence logs for Fuel Control mode/DATA changes, predictive two-laps-fuel remaining, pit-road entry/exit, and pit-box entry. Phase 2B uses those trigger edges for the first driver-facing pit-stop fuel warnings: `REFUEL OFF`, `MFD FUEL LOW`, and `EXIT FUEL SHORT`. Phase 2B still does not add race-risk baseline maths, an independent gross SimHub baseline fuel check, CSV output, new exports, automatic command sending, or pit/refuel strategy recalculation. `MonitorSystem.*` is presentation/health feedback only: it is not `Pit.Command`, does not send commands, and must not replace `Pit.Command.*` action feedback.
+Phase 1 exposes the existing start/runtime fuel-health evaluation and planner-safe recovery outcomes. Phase 2A adds an internal pit-stop trigger framework that records edge-only evidence logs for Fuel Control mode/DATA changes, predictive two-laps-fuel remaining, pit-road entry/exit, and pit-box entry. Phase 2B uses those trigger edges for the first driver-facing pit-stop fuel warnings: `REFUEL OFF`, `MFD FUEL LOW`, and `EXIT FUEL SHORT`; Phase 2C adds the independent baseline `BASELINE SHORT` sanity warning; Phase 3A adds Car/Opp/H2H impossible-state texts. MonitorSystem still does not add automatic command sending, pit/refuel strategy recalculation, self-healing, fallback target selection, MSGV1 routing, or new dashboard exports. `MonitorSystem.*` is presentation/health feedback only: it is not `Pit.Command`, does not send commands, and must not replace `Pit.Command.*` action feedback.
 
-Dashboard logic should use `MonitorSystem.Text` and the paired colour exports rather than reconstructing fuel-health conditions. The persisted `Enable Monitor System` setting defaults on and is shown under `Dash Control -> Global Dash Functions -> General`: enabled state starts as `ON` / `MONITOR READY` / enum `1`; disabled state is `OFF` / `MONITOR OFF` / enum `0`; re-enabling returns to the enabled ready state. Fuel-health and pit-stop warning messages publish only while enabled. CAUTION/WATCH styling is yellow background with black text; WARNING/FAULT styling is red background with yellow text. Message definitions follow `Docs/Internal/MonitorSystem_Messages.csv`.
+Dashboard logic should use `MonitorSystem.Text` and the paired colour exports rather than reconstructing fuel-health conditions. The persisted `Enable Monitor System` setting defaults on and is shown under `Dash Control -> Global Dash Functions -> General`: enabled state starts as `ON` / `MONITOR READY` / enum `1`; disabled state is `OFF` / `MONITOR OFF` / enum `0`; re-enabling returns to the enabled ready state. Fuel-health, pit-stop, baseline, and Car/Opp/H2H warning messages publish only while enabled. CAUTION/WATCH styling is yellow background with black text; WARNING/FAULT styling is red background with yellow text. Message definitions follow `Docs/Internal/MonitorSystem_Messages.csv`.
+
+The debug-only `Enable Monitor Event CSV` setting writes non-normal MonitorSystem publication changes (`WATCH`, `CAUTION`, `WARNING`, `FAULT`, `RECOVERED`) to `Logs/LalaPluginData/MonitorSystem_Events.csv`. It does not write `MONITOR OFF`, `MONITOR READY`, `FUEL HEALTH OK`, or per-tick OK rows; file I/O failure disables the CSV writer after one warning.
+
+Future MonitorSystem phases may analyse launch active >60 s, rejoin active/screen-visible >60 s, and Strategy/fuel dynamic output freeze or zero-value symptoms while moving/on track. Shift Assist should remain out of MonitorSystem unless real logs prove a monitoring need.
 
 ## High-level dash ownership map
 ### Strategy / fuel / pace
@@ -335,13 +339,13 @@ For each `.djson` dashboard file:
 
 ## Pit Stop Debrief bindings
 
-Dashboard layout files are not changed by the v1 Pit Debrief implementation. Dashboards consume plugin-owned latched outputs only and must not recompute service delta, loss delta, exit accuracy, or summary text.
+Dashboard layout files are not changed by the Pit Debrief V2 refinement. Dashboards consume plugin-owned outputs only and must not recompute service delta, box delta, loss delta, exit accuracy, or summary text. `SummaryText` can update before `Valid` becomes true, but overlay visibility remains dashboard-owned; existing alerts overlays that key on `Valid`/`AgeSec` continue to show only finalized, latched summaries.
 
 Alerts overlay contract:
 
 - Visible when `LalaLaunch.Pit.Debrief.Valid == true` and `LalaLaunch.Pit.Debrief.AgeSec < 15`.
 - Title: `PIT STOP DEBRIEF — STOP ` + `LalaLaunch.Pit.Debrief.StopIndex`.
-- Body: `LalaLaunch.Pit.Debrief.SummaryText`.
+- Body: `LalaLaunch.Pit.Debrief.SummaryText` (progressive while collecting, final-latched after `Valid`; format `ENTRY ... (Δ ...) | BOX ... (Δ ...) | SVC ... | STRAT Δ ...`, with no exit verdict text).
 
 Debug page fields:
 

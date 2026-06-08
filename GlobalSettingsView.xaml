@@ -1,4 +1,4 @@
-﻿<UserControl x:Class="LaunchPlugin.GlobalSettingsView"
+<UserControl x:Class="LaunchPlugin.GlobalSettingsView"
              xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
@@ -385,7 +385,7 @@
                 <styles:SHToggleCheckbox x:Name="DebugMasterToggle"
                                          Content="Enable debugging mode"
                                          Margin="0,10,0,0"
-                                         Click="PropertySnapshotRollingStatusRefresh_Click"
+                                         Click="DebugMasterToggle_Click"
                                          IsChecked="{Binding Settings.EnableSoftDebug, Mode=TwoWay}"
                                          ToolTip="Master toggle that enables debug UI and debug processing."/>
                 <TextBlock Margin="0,6,0,0"
@@ -398,88 +398,114 @@
                           IsExpanded="{Binding ElementName=DebugMasterToggle, Path=IsChecked}"
                           Visibility="{Binding ElementName=DebugMasterToggle, Path=IsChecked, Converter={StaticResource BooleanToVisibilityConverter}}">
                     <StackPanel Margin="10,5,0,0">
-                        <styles:SHToggleCheckbox Content="Enable Debug Logging" Margin="0,10,0,0"
+                        <TextBlock Text="General logging" FontWeight="SemiBold" Margin="0,10,0,4"/>
+                        <Separator Margin="0,0,0,6"/>
+                        <styles:SHToggleCheckbox Content="Enable Debug Logging"
                                                  IsChecked="{Binding Settings.EnableDebugLogging, Mode=TwoWay}"
-                                                 ToolTip="Enables verbose logging for troubleshooting the plugin."/>
-                        <StackPanel Orientation="Horizontal" Margin="0,10,0,0">
-                            <styles:SHToggleCheckbox Content="Enable CarSA Debug Export" Margin="0,0,15,0"
-                                                     IsChecked="{Binding Settings.EnableCarSADebugExport, Mode=TwoWay}"
-                                                     ToolTip="Writes CarSA debug CSV logs to SimHub\Logs\LalapluginData."/>
-                            <TextBlock Text="CarSA debug cadence mode" VerticalAlignment="Center" Margin="0,0,8,0"/>
-                            <ComboBox Width="220" SelectedIndex="{Binding Settings.CarSADebugExportCadence, Mode=TwoWay}">
-                                <ComboBoxItem Content="Tick (Hz capped)" />
-                                <ComboBoxItem Content="MiniSector (default)" />
-                                <ComboBoxItem Content="EventOnly" />
-                            </ComboBox>
-                            <TextBlock Text="Tick mode max Hz" VerticalAlignment="Center" Margin="15,0,8,0"/>
-                            <TextBox Width="80" Text="{Binding Settings.CarSADebugExportTickMaxHz, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" />
-                            <styles:SHToggleCheckbox Content="EventOnly: write CarSA_Events CSV" Margin="15,0,0,0"
-                                                     IsChecked="{Binding Settings.CarSADebugExportWriteEventsCsv, Mode=TwoWay}"/>
-                        </StackPanel>
-                        <styles:SHToggleCheckbox Content="PitExit Verbose Logging" Margin="0,10,0,0"
-                                                 IsChecked="{Binding Settings.PitExitVerboseLogging, Mode=TwoWay}"
-                                                 ToolTip="Adds PitExit math audit details to pit-in snapshots for troubleshooting."/>
+                                                 ToolTip="Enables extra troubleshooting/detail logs only while master debugging mode is also enabled."/>
+                        <styles:SHToggleCheckbox Content="Enable Monitor Event CSV" Margin="0,10,0,0"
+                                                 IsChecked="{Binding Settings.EnableMonitorEventCsv, Mode=TwoWay}"
+                                                 ToolTip="Writes non-normal MonitorSystem event rows to SimHub\Logs\LalaPluginData\MonitorSystem_Events.csv for troubleshooting."/>
                         <StackPanel Orientation="Vertical" Margin="0,10,0,0">
                             <styles:SHToggleCheckbox x:Name="PropertySnapshotToggle"
                                                      Content="Enable Property Snapshot"
                                                      Click="PropertySnapshotRollingStatusRefresh_Click"
                                                      IsChecked="{Binding Settings.EnablePropertySnapshot, Mode=TwoWay}"
                                                      ToolTip="When enabled, pressing Event Marker writes a CSV snapshot of plugin properties."/>
-                            <WrapPanel Margin="22,6,0,0"
-                                       IsEnabled="{Binding ElementName=PropertySnapshotToggle, Path=IsChecked}">
-                                <CheckBox x:Name="PropertySnapshotSelectAllCheckBox"
-                                          Content="Select All"
-                                          Margin="0,0,12,6"
-                                          Click="PropertySnapshotSelectAll_Click"
-                                          IsChecked="{Binding Settings.PropertySnapshotSelectAllGroups, Mode=TwoWay}"/>
-                                <CheckBox x:Name="PropertySnapshotFuelStrategyCheckBox" Content="Fuel/Strategy" Margin="0,0,12,6" Click="PropertySnapshotGroup_Click" IsChecked="{Binding Settings.PropertySnapshotGroupFuelStrategy, Mode=TwoWay}"/>
-                                <CheckBox x:Name="PropertySnapshotCarOppH2HCheckBox" Content="Car/Opp/H2H" Margin="0,0,12,6" Click="PropertySnapshotGroup_Click" IsChecked="{Binding Settings.PropertySnapshotGroupCarOppH2H, Mode=TwoWay}"/>
-                                <CheckBox x:Name="PropertySnapshotPitPitExitCheckBox" Content="Pit/PitExit" Margin="0,0,12,6" Click="PropertySnapshotGroup_Click" IsChecked="{Binding Settings.PropertySnapshotGroupPitPitExit, Mode=TwoWay}"/>
-                                <CheckBox x:Name="PropertySnapshotShiftAssistCheckBox" Content="Shift Assist" Margin="0,0,12,6" Click="PropertySnapshotGroup_Click" IsChecked="{Binding Settings.PropertySnapshotGroupShiftAssist, Mode=TwoWay}"/>
-                                <CheckBox x:Name="PropertySnapshotMessageSystemCheckBox" Content="Message System" Margin="0,0,12,6" Click="PropertySnapshotGroup_Click" IsChecked="{Binding Settings.PropertySnapshotGroupMessageSystem, Mode=TwoWay}"/>
-                                <CheckBox x:Name="PropertySnapshotLeagueClassCheckBox" Content="League Class" Margin="0,0,12,6" Click="PropertySnapshotGroup_Click" IsChecked="{Binding Settings.PropertySnapshotGroupLeagueClass, Mode=TwoWay}"/>
-                                <CheckBox x:Name="PropertySnapshotRawDebugCheckBox" Content="Raw Debug" Margin="0,0,12,6" Click="PropertySnapshotGroup_Click" IsChecked="{Binding Settings.PropertySnapshotGroupRawDebug, Mode=TwoWay}"/>
-                                <CheckBox Content="Include changed vs previous" Margin="0,0,12,6" IsChecked="{Binding Settings.PropertySnapshotIncludeChangedValues, Mode=TwoWay}"/>
-                                <CheckBox Content="Write rolling combined CSV" Margin="0,0,12,6" Click="PropertySnapshotRollingStatusRefresh_Click" IsChecked="{Binding Settings.PropertySnapshotRollingCombinedCsv, Mode=TwoWay}"/>
-                                <TextBlock Text="Rolling mode" VerticalAlignment="Center" Margin="0,0,8,6"/>
-                                <ComboBox Width="170" Margin="0,0,12,6" SelectionChanged="PropertySnapshotRollingStatusRefresh_Click" SelectedIndex="{Binding Settings.PropertySnapshotRollingMode, Mode=TwoWay}">
-                                    <ComboBoxItem Content="MANUAL"/>
-                                    <ComboBoxItem Content="FREQUENCY"/>
-                                    <ComboBoxItem Content="PER LAP"/>
-                                </ComboBox>
-                                <TextBlock Text="Frequency Hz" VerticalAlignment="Center" Margin="0,0,8,6"/>
-                                <TextBox Width="60" Margin="0,0,12,6" Text="{Binding Settings.PropertySnapshotRollingFrequencyHz, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" ToolTip="Used in FREQUENCY mode. Valid range 1 to 2 Hz."/>
-                                <Button x:Name="PropertySnapshotStartRollingButton" Content="START" Margin="0,0,8,6" Padding="10,2" Click="PropertySnapshotStartRolling_Click"/>
-                                <Button x:Name="PropertySnapshotStopRollingButton" Content="STOP" Margin="0,0,8,6" Padding="10,2" Click="PropertySnapshotStopRolling_Click"/>
-                                <Button Content="RESET ROLLING CSV" Margin="0,0,12,6" Padding="10,2" Click="PropertySnapshotResetRollingCsv_Click"/>
-                            </WrapPanel>
-                            <StackPanel Orientation="Horizontal" Margin="22,0,0,0">
-                                <TextBlock Margin="0,0,8,0" VerticalAlignment="Center" Foreground="LightGray" Text="ROLLING CSV:"/>
-                                <Border x:Name="PropertySnapshotRollingStatusBorder"
-                                        Padding="8,1"
-                                        CornerRadius="10"
-                                        BorderThickness="1"
-                                        Background="#222222"
-                                        BorderBrush="#666666">
-                                    <TextBlock x:Name="PropertySnapshotRollingStatusTextBlock"
-                                               VerticalAlignment="Center"
-                                               FontWeight="SemiBold"
-                                               Foreground="#D8D8D8"
-                                               Text="OFF"/>
-                                </Border>
+                            <StackPanel Margin="22,6,0,0"
+                                        Visibility="{Binding ElementName=PropertySnapshotToggle, Path=IsChecked, Converter={StaticResource BooleanToVisibilityConverter}}">
+                                <WrapPanel>
+                                    <CheckBox x:Name="PropertySnapshotSelectAllCheckBox"
+                                              Content="Select All"
+                                              Margin="0,0,12,6"
+                                              Click="PropertySnapshotSelectAll_Click"
+                                              IsChecked="{Binding Settings.PropertySnapshotSelectAllGroups, Mode=TwoWay}"/>
+                                    <CheckBox x:Name="PropertySnapshotFuelStrategyCheckBox" Content="Fuel/Strategy" Margin="0,0,12,6" Click="PropertySnapshotGroup_Click" IsChecked="{Binding Settings.PropertySnapshotGroupFuelStrategy, Mode=TwoWay}"/>
+                                    <CheckBox x:Name="PropertySnapshotCarOppH2HCheckBox" Content="Car/Opp/H2H" Margin="0,0,12,6" Click="PropertySnapshotGroup_Click" IsChecked="{Binding Settings.PropertySnapshotGroupCarOppH2H, Mode=TwoWay}"/>
+                                    <CheckBox x:Name="PropertySnapshotPitPitExitCheckBox" Content="Pit/PitExit" Margin="0,0,12,6" Click="PropertySnapshotGroup_Click" IsChecked="{Binding Settings.PropertySnapshotGroupPitPitExit, Mode=TwoWay}"/>
+                                    <CheckBox x:Name="PropertySnapshotShiftAssistCheckBox" Content="Shift Assist" Margin="0,0,12,6" Click="PropertySnapshotGroup_Click" IsChecked="{Binding Settings.PropertySnapshotGroupShiftAssist, Mode=TwoWay}"/>
+                                    <CheckBox x:Name="PropertySnapshotMessageSystemCheckBox" Content="Message System" Margin="0,0,12,6" Click="PropertySnapshotGroup_Click" IsChecked="{Binding Settings.PropertySnapshotGroupMessageSystem, Mode=TwoWay}"/>
+                                    <CheckBox x:Name="PropertySnapshotLeagueClassCheckBox" Content="League Class" Margin="0,0,12,6" Click="PropertySnapshotGroup_Click" IsChecked="{Binding Settings.PropertySnapshotGroupLeagueClass, Mode=TwoWay}"/>
+                                    <CheckBox x:Name="PropertySnapshotRawDebugCheckBox" Content="Raw Debug" Margin="0,0,12,6" Click="PropertySnapshotGroup_Click" IsChecked="{Binding Settings.PropertySnapshotGroupRawDebug, Mode=TwoWay}"/>
+                                </WrapPanel>
+                                <WrapPanel Margin="0,0,0,2">
+                                    <CheckBox Content="Include changed vs previous" Margin="0,0,12,6" IsChecked="{Binding Settings.PropertySnapshotIncludeChangedValues, Mode=TwoWay}"/>
+                                    <CheckBox x:Name="PropertySnapshotRollingCombinedCsvCheckBox" Content="Write rolling combined CSV" Margin="0,0,12,6" Click="PropertySnapshotRollingStatusRefresh_Click" IsChecked="{Binding Settings.PropertySnapshotRollingCombinedCsv, Mode=TwoWay}"/>
+                                </WrapPanel>
+                                <StackPanel Margin="0,2,0,0"
+                                            Visibility="{Binding ElementName=PropertySnapshotRollingCombinedCsvCheckBox, Path=IsChecked, Converter={StaticResource BooleanToVisibilityConverter}}">
+                                    <WrapPanel>
+                                        <TextBlock Text="Rolling mode" VerticalAlignment="Center" Margin="0,0,8,6"/>
+                                        <ComboBox x:Name="PropertySnapshotRollingModeComboBox" Width="170" Margin="0,0,12,6" SelectionChanged="PropertySnapshotRollingStatusRefresh_Click" SelectedIndex="{Binding Settings.PropertySnapshotRollingMode, Mode=TwoWay}">
+                                            <ComboBoxItem Content="MANUAL"/>
+                                            <ComboBoxItem Content="FREQUENCY"/>
+                                            <ComboBoxItem Content="PER LAP"/>
+                                        </ComboBox>
+                                        <StackPanel Orientation="Horizontal" Margin="0,0,12,6">
+                                            <StackPanel.Style>
+                                                <Style TargetType="StackPanel">
+                                                    <Setter Property="Visibility" Value="Collapsed"/>
+                                                    <Style.Triggers>
+                                                        <DataTrigger Binding="{Binding ElementName=PropertySnapshotRollingModeComboBox, Path=SelectedIndex}" Value="1">
+                                                            <Setter Property="Visibility" Value="Visible"/>
+                                                        </DataTrigger>
+                                                    </Style.Triggers>
+                                                </Style>
+                                            </StackPanel.Style>
+                                            <TextBlock Text="Frequency Hz" VerticalAlignment="Center" Margin="0,0,8,0"/>
+                                            <TextBox x:Name="PropertySnapshotRollingFrequencyTextBox" Width="60" LostFocus="PropertySnapshotRollingFrequencyTextBox_LostFocus" Text="{Binding Settings.PropertySnapshotRollingFrequencyHz, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" ToolTip="Used in FREQUENCY mode. Valid range 1 to 2 Hz; higher entries are normalized to 2."/>
+                                        </StackPanel>
+                                        <Button x:Name="PropertySnapshotStartRollingButton" Content="START" Margin="0,0,8,6" Padding="10,2" Click="PropertySnapshotStartRolling_Click"/>
+                                        <Button x:Name="PropertySnapshotStopRollingButton" Content="STOP" Margin="0,0,8,6" Padding="10,2" Click="PropertySnapshotStopRolling_Click"/>
+                                        <Button x:Name="PropertySnapshotResetRollingCsvButton" Content="RESET ROLLING CSV" Margin="0,0,12,6" Padding="10,2" Click="PropertySnapshotResetRollingCsv_Click"/>
+                                    </WrapPanel>
+                                    <StackPanel Orientation="Horizontal" Margin="0,0,0,0">
+                                        <TextBlock Margin="0,0,8,0" VerticalAlignment="Center" Foreground="LightGray" Text="ROLLING CSV:"/>
+                                        <Border x:Name="PropertySnapshotRollingStatusBorder" Padding="8,1" CornerRadius="10" BorderThickness="1" Background="#222222" BorderBrush="#666666">
+                                            <TextBlock x:Name="PropertySnapshotRollingStatusTextBlock" VerticalAlignment="Center" FontWeight="SemiBold" Foreground="#D8D8D8" Text="OFF"/>
+                                        </Border>
+                                    </StackPanel>
+                                    <TextBlock Margin="0,2,0,0" Foreground="LightGray" TextWrapping="Wrap" Text="MANUAL: Event Marker writes one snapshot. FREQUENCY: START/STOP captures rolling snapshots at 1–2 snapshots/sec. PER LAP: START/STOP captures one rolling snapshot per completed lap."/>
+                                </StackPanel>
                             </StackPanel>
-                            <TextBlock Margin="22,2,0,0"
-                                       Foreground="LightGray"
-                                       TextWrapping="Wrap"
-                                       Text="MANUAL: Event Marker writes one snapshot. FREQUENCY: START/STOP captures rolling snapshots at configured snapshots/sec. PER LAP: START/STOP captures one rolling snapshot per completed lap."/>
                         </StackPanel>
-                        <StackPanel Orientation="Vertical" Margin="0,10,0,0">
-                            <styles:SHToggleCheckbox x:Name="CarTrackingProbeCsvToggle"
-                                                     Content="Enable Car Tracking Probe"
-                                                     IsChecked="{Binding Settings.EnableCarTrackingProbeCsv, Mode=TwoWay}"
-                                                     ToolTip="Enable targeted diagnostic CSV capture for player plus Probe A/B CarIdx values."/>
-                            <WrapPanel Margin="22,6,0,0"
-                                       IsEnabled="{Binding ElementName=CarTrackingProbeCsvToggle, Path=IsChecked}">
+
+                        <TextBlock Text="CarSA diagnostics" FontWeight="SemiBold" Margin="0,16,0,4"/>
+                        <Separator Margin="0,0,0,6"/>
+                        <styles:SHToggleCheckbox x:Name="CarSADebugCsvToggle" Content="CarSA Debug CSV"
+                                                 IsChecked="{Binding Settings.EnableCarSADebugExport, Mode=TwoWay}"
+                                                 ToolTip="Writes CarSA debug CSV logs to SimHub\Logs\LalapluginData while master debugging mode is enabled."/>
+                        <StackPanel Margin="22,6,0,0" Visibility="{Binding ElementName=CarSADebugCsvToggle, Path=IsChecked, Converter={StaticResource BooleanToVisibilityConverter}}">
+                            <WrapPanel>
+                                <TextBlock Text="Cadence" VerticalAlignment="Center" Margin="0,0,8,6"/>
+                                <ComboBox x:Name="CarSADebugCadenceComboBox" Width="220" Margin="0,0,12,6" SelectedIndex="{Binding Settings.CarSADebugExportCadence, Mode=TwoWay}">
+                                    <ComboBoxItem Content="Tick" />
+                                    <ComboBoxItem Content="MiniSector" />
+                                    <ComboBoxItem Content="Event changes only" />
+                                </ComboBox>
+                                <StackPanel Orientation="Horizontal" Margin="0,0,12,6">
+                                    <StackPanel.Style>
+                                        <Style TargetType="StackPanel">
+                                            <Setter Property="Visibility" Value="Collapsed"/>
+                                            <Style.Triggers>
+                                                <DataTrigger Binding="{Binding ElementName=CarSADebugCadenceComboBox, Path=SelectedIndex}" Value="0">
+                                                    <Setter Property="Visibility" Value="Visible"/>
+                                                </DataTrigger>
+                                            </Style.Triggers>
+                                        </Style>
+                                    </StackPanel.Style>
+                                    <TextBlock Text="Tick mode max Hz" VerticalAlignment="Center" Margin="0,0,8,0"/>
+                                    <TextBox Width="80" Text="{Binding Settings.CarSADebugExportTickMaxHz, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" />
+                                </StackPanel>
+                                <styles:SHToggleCheckbox Content="Write CarSA events CSV" Margin="0,0,0,6" IsChecked="{Binding Settings.CarSADebugExportWriteEventsCsv, Mode=TwoWay}"/>
+                            </WrapPanel>
+                        </StackPanel>
+
+                        <TextBlock Text="Car Tracking Probe CSV" FontWeight="SemiBold" Margin="0,16,0,4"/>
+                        <Separator Margin="0,0,0,6"/>
+                        <styles:SHToggleCheckbox x:Name="CarTrackingProbeCsvToggle" Content="Enable Car Tracking Probe" IsChecked="{Binding Settings.EnableCarTrackingProbeCsv, Mode=TwoWay}" ToolTip="Enable targeted diagnostic CSV capture for player plus Probe A/B CarIdx values."/>
+                        <StackPanel Margin="22,6,0,0" Visibility="{Binding ElementName=CarTrackingProbeCsvToggle, Path=IsChecked, Converter={StaticResource BooleanToVisibilityConverter}}">
+                            <WrapPanel>
                                 <TextBlock Text="Probe A CarIdx" VerticalAlignment="Center" Margin="0,0,8,6"/>
                                 <TextBox Width="70" Margin="0,0,12,6" Text="{Binding Settings.CarTrackingProbeACarIdx, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"/>
                                 <TextBlock Text="Probe B CarIdx" VerticalAlignment="Center" Margin="0,0,8,6"/>
@@ -490,33 +516,21 @@
                                 <Button Content="STOP" Margin="0,0,8,6" Padding="10,2" Click="CarTrackingProbeStop_Click"/>
                                 <Button Content="RESET CSV" Margin="0,0,12,6" Padding="10,2" Click="CarTrackingProbeResetCsv_Click"/>
                             </WrapPanel>
-                            <TextBlock Margin="22,0,0,0"
-                                       Foreground="LightGray"
-                                       TextWrapping="Wrap"
-                                       Text="Writes player + Probe A/B raw CarIdx telemetry and CarSA/Opp/H2H correlation fields for diagnostics only."/>
+                            <TextBlock Foreground="LightGray" TextWrapping="Wrap" Text="Writes player + Probe A/B raw CarIdx telemetry and CarSA/Opp/H2H correlation fields for diagnostics only."/>
                         </StackPanel>
-                        <StackPanel Orientation="Horizontal" Margin="0,10,0,0">
-                            <styles:SHToggleCheckbox Content="Mute Shift Assist sound in replay"
-                                                     Margin="0,0,15,0"
-                                                     IsChecked="{Binding Settings.ShiftAssistMuteInReplay, Mode=TwoWay}"
-                                                     ToolTip="Suppress Shift Assist sound during replay sessions. Shift lights, learning, and other Shift Assist logic continue to run normally."/>
-                        </StackPanel>
-                        <StackPanel Orientation="Horizontal" Margin="0,10,0,0">
-                            <styles:SHToggleCheckbox x:Name="ShiftAssistDebugCsvToggle"
-                                                     Content="Shift Assist Debug CSV"
-                                                     Margin="0,0,15,0"
-                                                     IsChecked="{Binding Settings.EnableShiftAssistDebugCsv, Mode=TwoWay}"
-                                                     ToolTip="Writes a diagnostic CSV for Shift Assist triggering and suppression analysis."/>
+
+                        <TextBlock Text="Shift Assist diagnostics" FontWeight="SemiBold" Margin="0,16,0,4"/>
+                        <Separator Margin="0,0,0,6"/>
+                        <styles:SHToggleCheckbox Content="Mute Shift Assist sound in replay" IsChecked="{Binding Settings.ShiftAssistMuteInReplay, Mode=TwoWay}" ToolTip="Suppress Shift Assist sound during replay sessions. Shift lights, learning, and other Shift Assist logic continue to run normally."/>
+                        <styles:SHToggleCheckbox x:Name="ShiftAssistDebugCsvToggle" Content="Shift Assist Debug CSV" Margin="0,8,0,0" IsChecked="{Binding Settings.EnableShiftAssistDebugCsv, Mode=TwoWay}" ToolTip="Writes a diagnostic CSV for Shift Assist triggering and suppression analysis while master debugging mode is enabled."/>
+                        <StackPanel Orientation="Horizontal" Margin="22,6,0,0" Visibility="{Binding ElementName=ShiftAssistDebugCsvToggle, Path=IsChecked, Converter={StaticResource BooleanToVisibilityConverter}}">
                             <TextBlock Text="Shift Assist Debug Max Hz" VerticalAlignment="Center" Margin="0,0,8,0"/>
-                            <TextBox Width="80"
-                                     Text="{Binding Settings.ShiftAssistDebugCsvMaxHz, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
-                                     IsEnabled="{Binding ElementName=ShiftAssistDebugCsvToggle, Path=IsChecked}"
-                                     ToolTip="Allowed range: 1 to 60 Hz."/>
+                            <TextBox Width="80" Text="{Binding Settings.ShiftAssistDebugCsvMaxHz, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" ToolTip="Allowed range: 1 to 60 Hz."/>
                         </StackPanel>
-                        <TextBlock Text="Debug Actions" FontWeight="SemiBold" Margin="0,14,0,6"/>
-                        <ui:ControlsEditor ActionName="LalaLaunch.EventMarker"
-                                           FriendlyName="Event Marker"
-                                           ToolTip="Assign a button to fire a short event marker pulse for dashboards and CSV exports."/>
+
+                        <TextBlock Text="Debug Actions" FontWeight="SemiBold" Margin="0,16,0,4"/>
+                        <Separator Margin="0,0,0,6"/>
+                        <ui:ControlsEditor ActionName="LalaLaunch.EventMarker" FriendlyName="Event Marker" ToolTip="Assign a button to fire a short event marker pulse for dashboards and CSV exports."/>
                     </StackPanel>
                 </Expander>
             </StackPanel>

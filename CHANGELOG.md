@@ -16,6 +16,7 @@ For internal between-release development history, see `Docs/Internal/Development
 - **ClassBest export family** for class session-best holder visibility on dashboards.
 
 ### Changed
+- Pit Stop Debrief summary wording now becomes progressively useful during the stop, reports entry/box signed deltas, service from actual fuel added plus tyres, and `STRAT Δ` for the final strategy comparison while keeping exit prediction in debug/log fields instead of the driver-facing summary.
 - Documentation sweep: added canonical technical subsystem doc `Docs/Subsystems/League_Class_System.md` and aligned cross-references in H2H/Dash/internal docs for League Class behavior.
 - League Class presentation alignment now extends to CarSA-facing class identity fields and H2HTrack class colors: `Car.Player.ClassName/ClassColor/ClassColorHex`, `Car.Ahead01..05.*` and `Car.Behind01..05.*` class-facing fields, plus `H2HTrack.Ahead/Behind.ClassColor/ClassColorHex` now publish effective League Class presentation when enabled/resolved, with native fallback unchanged.
 - Pit Fuel Control SOURCE no longer includes PLAN. SOURCE is now `STBY`/`NORM`/`PUSH`/`SAVE`; DATA chooses whether `PUSH`/`SAVE` use live or planner/profile memory burn assumptions. Legacy `SetPlan` remains as a compatibility action that selects DATA PLAN and parks SOURCE at STBY.
@@ -26,6 +27,7 @@ For internal between-release development history, see `Docs/Internal/Development
 - **Pit feedback severity visual mapping** updated for dashboards: `Caution` is steady (no blink) and `Warning` blinks for 1 second at 750ms.
 - **Dashboard/navigation documentation** and Overview-first workflow guidance were aligned across user docs.
 - **Monitor System setting placement** moved from Launch UI / Bindings to Dash Control -> Global Dash Functions -> General. Phase 2B pit-stop monitoring now adds edge-triggered `REFUEL OFF`, `MFD FUEL LOW`, and `EXIT FUEL SHORT` warnings while preserving Phase 2A trigger evidence logs.
+- **Monitor System warning wording** is clearer for drivers: `CHECK FUEL DATA`, `OPPONENT DATA UNRELIABLE`, `TRAFFIC DATA UNRELIABLE`, and `H2H DATA UNRELIABLE` replace the older internal-style wording without changing triggers, severity, exports, CSV schema, or dashboard JSON.
 
 ### Fixed
 - Fixed Pit Stop Debrief service/timing review latches so fuel-added evidence survives box-exit gauge reset and actual-vs-predicted loss compares total-stop-equivalent values.
