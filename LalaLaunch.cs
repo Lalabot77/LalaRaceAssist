@@ -4258,7 +4258,7 @@ namespace LaunchPlugin
             if (lapCrossed)
             {
                 int completedPlayerLapForLeader = Convert.ToInt32(data.NewData?.CompletedLaps ?? 0);
-                var leaderLap = ReadLeaderLapTimeSeconds(PluginManager, data, LiveLeaderAvgPaceSeconds, completedPlayerLapForLeader, SoftDebugEnabled);
+                var leaderLap = ReadLeaderLapTimeSeconds(PluginManager, data, LiveLeaderAvgPaceSeconds, completedPlayerLapForLeader, IsVerboseDebugLoggingOn);
                 leaderLastLapSec = leaderLap.seconds;
                 leaderLapWasFallback = leaderLap.isFallback;
                 leaderSampleCarIdx = leaderLap.carIdx;

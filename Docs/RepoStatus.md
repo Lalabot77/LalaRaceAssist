@@ -1,3 +1,8 @@
+- 2026-06-08 PR #808 debug logging gate ownership fix landed:
+  - Leader Lap routine candidate/source/accept/reject detail Info logs now require the existing effective verbose helper (`SoftDebugEnabled && EnableDebugLogging`) instead of master Soft Debug alone;
+  - master `Enable debugging mode` still exposes/allows debug tools and remains the kill switch for debug capture systems, but it no longer enables this extra SimHub Info diagnostic verbosity by itself;
+  - always-on Leader Lap authority unavailable/hold/recovery transition evidence remains unchanged. No Leader Lap authority behavior, runtime fuel math, lap detection, PitFuelControl, PitDebrief, exports/properties, dashboard JSON, settings UI, or profile behavior changed. Property Snapshot list reviewed: yes; no group mapping change required.
+
 - 2026-06-08 MonitorSystem post-pit `REFUEL OFF` inhibit review follow-up landed:
   - suppressed post-pit `REFUEL OFF` results no longer enter the pit-warning clear path, so active `EXIT FUEL SHORT`, `MFD FUEL LOW`, and `BASELINE SHORT` publications are preserved and `MONITOR READY` is not published for a suppressed `REFUEL OFF`;
   - re-entering pit road before outlap completion clears the inhibit so suppression applies only to off-pit-road post-exit checks;
@@ -13,7 +18,7 @@
   - benign blocked/no-send churn remains Soft-Debug-gated and rate-limited, and no PitFuelControl command, mirror, fault, fuel math, export/property, dashboard JSON, settings UI, or profile behavior changed. Property Snapshot list reviewed: yes; no group mapping change required.
 
 - 2026-06-08 SimHub log hygiene cleanup landed:
-  - removed obsolete legacy ExtraProperties fallback-removal warnings and moved normal Lap Detector, Leader Lap candidate/source detail, and benign PitFuelControl ownership churn behind Soft Debug Info without using SimHub Debug-level logging in the touched paths;
+  - removed obsolete legacy ExtraProperties fallback-removal warnings and moved normal Lap Detector and benign PitFuelControl ownership churn behind Soft Debug Info, with Leader Lap routine candidate/source detail now behind the effective `Enable Debug Logging` gate, without using SimHub Debug-level logging in the touched paths;
   - kept always-on failure/recovery boundaries, Leader Lap authority lost/recovered/hold transitions, PitCommand/PitFuelControl serious failures, PitDebrief final structured logs, pit-cycle/debrief context, and race-finish summaries;
   - Property Snapshot keeps START/STOP/RESET/guard/failure/path/schema logs while suppressing routine heartbeat and write-success/append-success spam. No runtime math, command behavior, lap detection behavior, Leader Lap authority behavior, exports/properties, dashboard JSON, settings UI, or profile schema changed. Property Snapshot list reviewed: yes; no group mapping change required.
 - 2026-06-08 Pit Debrief box delta/fuel-target follow-up landed:
