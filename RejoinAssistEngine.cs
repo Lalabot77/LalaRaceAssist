@@ -201,7 +201,6 @@ namespace LaunchPlugin
             _threatDemoteTarget = ThreatLevel.CLEAR;
             _threatDemoteSinceUtc = DateTime.MinValue;
             _threatInit = false;
-            ThreatDebug = string.Empty;
         }
 
         public void Reset()
@@ -226,7 +225,6 @@ namespace LaunchPlugin
             _threatDemoteTarget = ThreatLevel.CLEAR;
             _threatDemoteSinceUtc = DateTime.MinValue;
             _threatInit = false;
-            ThreatDebug = string.Empty;
         }
 
 
@@ -281,12 +279,11 @@ namespace LaunchPlugin
         private const double HoldWarningToCautionSec = 0.80;
         private const double HoldCautionToClearSec = 1.00;
 
-        // Threat module state (you already have these if you pasted earlier)
+        // Threat module state
         private ThreatLevel _threatDemoteTarget = ThreatLevel.CLEAR;
         private DateTime _threatDemoteSinceUtc = DateTime.MinValue;
         private bool _threatInit = false;
         private double _smoothedTtc = 99.0;
-        public string ThreatDebug { get; private set; } = "";
 
         // ----- Typed wrappers around PluginManager.GetPropertyValue -----
         
@@ -317,7 +314,6 @@ namespace LaunchPlugin
             if (data == null || pluginManager == null ||
                 !string.Equals(data.GameName, "IRacing", StringComparison.OrdinalIgnoreCase))
             {
-                ThreatDebug = "guard:GameName";
                 return;
             }
 
@@ -326,7 +322,6 @@ namespace LaunchPlugin
 
             if (!(pluginManager.GetPropertyValue("DataCorePlugin.GameRawData.Telemetry.CarIdxLapDistPct") is float[] lapPctArr) || lapPctArr.Length == 0)
             {
-                ThreatDebug = "guard:LapDistPct";
                 return;
             }
 
@@ -472,8 +467,6 @@ namespace LaunchPlugin
             }
             CurrentThreatLevel = nextLevel;
 
-            // Debug
-            ThreatDebug = $"slots:{accepted} estOnly:{estOnly} TTC:{TimeToThreatSeconds:F1}s Min:{(minDist == double.MaxValue ? 0 : minDist):F0}m Lvl:{CurrentThreatLevel}";
         }
 
 

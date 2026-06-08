@@ -6,8 +6,7 @@ using System.IO;
 namespace LaunchPlugin
 {
     /// <summary>
-    /// Owns session summary CSV output and lap-based trace writing.
-    /// NOTE: scaffolding only — no live telemetry reads or automatic hooks yet.
+    /// Owns active session summary CSV output and lap-based trace writing.
     /// </summary>
     public sealed class SessionSummaryLogger
     {

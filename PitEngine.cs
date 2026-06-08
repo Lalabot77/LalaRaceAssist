@@ -14,7 +14,7 @@ namespace LaunchPlugin
         private const double MinTrackLengthM = 500.0;
         private const double MaxTrackLengthM = 20000.0;
 
-        // --- Public surface (used by MSG.PitPhaseDebug) ---
+        // --- Public pit phase/timing surface ---
         public PitPhase CurrentPitPhase { get; private set; } = PitPhase.None;
         public bool IsOnPitRoad { get; private set; } = false;
         // Live while in lane; frozen (latched) after exit until next pit event

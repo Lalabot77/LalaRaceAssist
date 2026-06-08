@@ -4,17 +4,17 @@
 
 Validated against: HEAD
 Last reviewed: 2026-04-24
-Last updated: 2026-06-05
+Last updated: 2026-06-08
 Branch: work
 
-Scope: Info/Warn logs emitted via `SimHub.Logging.Current.Info(...)` and `SimHub.Logging.Current.Warn(...)`. Use the tag prefixes to filter in SimHub’s log view. Placeholder logs are noted; no deprecated messages are currently removed in code. Legacy/alternate copies of this list do not exist.
+Scope: Info/Warn logs emitted via `SimHub.Logging.Current.Info(...)` and `SimHub.Logging.Current.Warn(...)`. Use the tag prefixes to filter in SimHub’s log view. Placeholder logs are noted; Debug Cleanup Phase A removed obsolete/debug-only messages and stale documentation as noted in Development_Changelog. Legacy/alternate copies of this list do not exist.
 
 ## How to read logs for debugging
 Workflow routing note: `Docs/Internal/Property_Snapshot_Debug_Workflow.md` owns debugging workflow/triage guidance; this page remains the canonical log-message/tag contract.
 
 - **Filter by tag prefix** (e.g., `[LalaPlugin:Fuel Burn]`, `[LalaPlugin:Pit Cycle]`, `[LalaPlugin:Finish]`) to isolate subsystems.
 - **Lap-coupled logs** (PACE/FUEL/RACE PROJECTION) appear once per completed lap and include acceptance reasons; correlate them with lap numbers.
-- **Pit-cycle logs** appear on pit entry/exit/out-lap completion. Use them with PitLite status exports.
+- **Pit-cycle logs** appear on pit entry/exit/out-lap completion. Use them with active Pit/PitLite core exports.
 - **Session/identity logs** (`[LalaPlugin:Session]`, `[LalaPlugin:Finish]`) mark resets and finish detection; pair with `Reset.*` SimHub exports.
 - **Message system logs** (`MSGV1`) surface missing evaluators and active stack debug—check when adding new messages.
 
@@ -112,7 +112,6 @@ Workflow routing note: `Docs/Internal/Property_Snapshot_Debug_Workflow.md` owns 
 - **`[LalaPlugin:PitExit] Predictor valid -> false`** — Pit-exit predictor lost validity (native prerequisites unavailable).
 - **`[LalaPlugin:PitExit] Pit-in snapshot: lap=... t=... posClass=... posOverall=... gapLdr=... pitLoss=... predPosClass=... carsAhead=... srcPitLoss=... laneRef=... boxRef=... directRef=... entryGapLdr=... gapLdrLive=... gapLdrUsed=... pitLossLive=... pitLossUsed=... predGapAfterPit=... lock=...`** — One-time pit entry snapshot logging player positions, pit loss inputs, locked pit-trip gap/pit loss, and prediction summary (see trailing lock/used/live fields).【F:LalaLaunch.cs†L4712-L4747】
 - **`[LalaPlugin:PitExit] Math audit: native progress model active (...)`** — Pit-in audit line confirming native progress/pit-loss-lock model context.
-- **`[LalaPlugin:PitExit] Pit-out snapshot: lap=... t=... posClass=... posOverall=... predPosClassNow=... carsAheadNow=... lane=... box=... direct=... pitTripActive=... entryGapLdr=... gapLdrLiveNow=... gapLdrUsed=... predGapAfterPit=... lock=...`** — One-time pit exit snapshot logging rejoin position, latched pit lane timings, and locked pit-trip context values.【F:LalaLaunch.cs†L4754-L4784】
 
 ## H2H and messaging fallback-removal warnings
 - **`[LalaPlugin:H2H] Native class session-best lap unavailable; legacy IRacingExtraProperties fallback is removed. H2H class-best output remains 0 until native class-best is available.`** — One-time warning emitted when H2H class-best has no native authority; output remains `0` until native class-best recovers.
