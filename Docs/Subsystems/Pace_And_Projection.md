@@ -1,7 +1,7 @@
 # Pace and Projection
 
 Validated against commit: HEAD
-Last updated: 2026-04-21
+Last updated: 2026-06-08
 Branch: work
 
 ## Purpose
@@ -41,7 +41,7 @@ Out of scope:
 - Session type / time remaining / timer-zero state.
 - Pit-trip state and pit-exit warmup context.
 - Incident / off-track state used to reject compromised laps.
-- Leader-lap timing when available.
+- Overall race-leading pace timing when available from native CarIdx telemetry.
 
 ### Baselines and fallbacks
 - Profile lap-time averages.
@@ -52,7 +52,7 @@ Out of scope:
 ### Recent pace windows
 - Recent accepted clean laps for live pace.
 - Last-5 / rolling-average style windows.
-- Leader-lap rolling average when the feed is available.
+- Overall leader rolling pace: last 3 valid samples from the car that is overall P1 at each sample point.
 
 ### Stable projection state
 - Current stable projection lap time.
@@ -75,6 +75,14 @@ Common reject paths include:
 ### 2) Rolling pace maintenance
 Accepted laps update the runtime clean-lap windows.
 Leader-lap timing is maintained separately so the plugin can use it as context without letting it silently replace the player-focused live pace path.
+For timed-race projection, Leader Lap authority means **overall race-leading pace**, not player-class leader pace:
+- identity resolves current overall P1 using the same semantics as finish timing (`CarIdxPosition == 1 && CarIdxClassPosition == 1`, then `CarIdxPosition == 1`, requiring an in-world car),
+- the primary sample is current overall P1 `CarIdxLastLapTime`, validated by absolute plausibility only (`>20s`/`<900s`, finite/positive) with no player-pace comparison floor,
+- the rolling window keeps the last 3 valid overall-P1 samples and is not tied to one `CarIdx`, so overall-leader changes do not clear the window by themselves,
+- if the overall-P1 identity/feed is temporarily unavailable after valid samples exist, the previous rolling average may be held through the same completed-player-lap interval for projection continuity,
+- once that bounded hold expires without a valid overall P1 returning, leader authority fails closed,
+- when the rolling window is empty, current overall P1 `CarIdxBestLapTime` may seed the published leader pace as a low-confidence fallback, but it is not ingested into the rolling window,
+- class leader, class best, H2H class session-best, LapRef, and iRacing ExtraProperties are not valid Leader Lap authorities.
 
 ### 3) Baseline selection
 When enough live pace is not available, the subsystem falls back through guarded baseline choices such as:
@@ -105,7 +113,7 @@ Session phase split:
 Representative outputs include:
 - `Pace.StintAvgLapTimeSec`
 - `Pace.Last5LapAvgSec`
-- `Pace.LeaderLapAvgSec`
+- `Pace.LeaderAvgLapTimeSec` (overall race-leading rolling/fallback pace)
 - `ProjectionLapTime_Stable`
 - `ProjectionLapTime_StableSource`
 - overall/live pace confidence values used elsewhere in the plugin
@@ -163,7 +171,7 @@ Runtime-health handling is now expected to prefer targeted fuel/live-snapshot re
 
 ## Failure modes / safeguards
 - **Heavy traffic / compromised laps:** confidence falls and fallback pace may legitimately take over.
-- **Dropped leader feed:** leader average clears rather than silently reusing stale values.
+- **Dropped overall leader feed:** a missing overall-P1 identity/feed can hold the previous rolling average through the same completed-player-lap interval for projection continuity, then clears/fails closed if no valid overall P1 returns.
 - **Short or noisy sessions:** projection may stay profile/fallback driven for longer than the driver expects.
 - **Replay timing:** source changes should be verified with logs.
 

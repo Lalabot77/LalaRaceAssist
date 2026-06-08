@@ -1,3 +1,13 @@
+## 2026-06-08 — Overall Leader Lap authority from native CarIdx overall P1
+- Classification: **both** (existing dashboard/strategy-facing `Pace.LeaderAvgLapTimeSec` / `Pace.LeaderDeltaToPlayerSec` behavior now has valid overall race leader authority; no export names or dashboard JSON changed).
+- Replaced the bogus/unproven `DataCorePlugin.GameData.LeaderLastLapTime` and `DataCorePlugin.GameData.LeaderAverageLapTime` Leader Lap candidates with plugin-owned native CarIdx resolution.
+- Overall P1 identity now follows the existing finish-timing semantics: prefer `CarIdxPosition==1 && CarIdxClassPosition==1`, fall back to `CarIdxPosition==1`, and require the car to be in-world.
+- Primary samples come from current overall P1 `CarIdxLastLapTime`; a 3-sample rolling window keeps the last valid overall race-leading samples and intentionally survives overall-P1 identity changes.
+- Overall Leader Lap candidate validation now uses absolute plausibility only (`>20s` and `<900s`, finite/positive) and no longer rejects overall P1 pace against `playerRecentAvg * 0.5`, preserving timed multiclass cases where overall P1 is legitimately less than half the player-class pace.
+- Temporary overall-P1 identity/feed gaps now use a bounded held rolling average through the same completed-player-lap interval; on the next completed player lap, if authority is still missing, the hold expires and Leader Lap fails closed instead of publishing stale pace indefinitely.
+- Current overall P1 `CarIdxBestLapTime` is only a low-confidence published fallback while the rolling window is empty and is not ingested into the rolling window.
+- Preserved class leader/class best/H2H/LapRef semantics, RaceFinish behavior, fuel math, lap acceptance/rejection, Opponents/H2H/CarSA target selection, dashboards, and iRacing ExtraProperties removal.
+- Property Snapshot list reviewed: yes; existing `Pace.*` exports remain covered by the Fuel/Strategy group, with no export/property additions, removals, or renames.
 ## 2026-06-08 — MonitorSystem driver-facing wording update
 - Classification: **both** (driver/dashboard/CSV/log/catalogue wording plus internal Monitor Event CSV mapping alignment; no export names, property names, enum values, CSV schema, trigger logic, subsystem calculations, dashboard JSON, settings UI, MSGV1, or Property Snapshot grouping changes).
 - Renamed active MonitorSystem publications and ownership checks from `FUEL DATA CHECK` to `CHECK FUEL DATA`, `OPP TARGET CHECK` to `OPPONENT DATA UNRELIABLE`, `CARSA SLOT CHECK` to `TRAFFIC DATA UNRELIABLE`, and `H2H TARGET CHECK` to `H2H DATA UNRELIABLE`.
