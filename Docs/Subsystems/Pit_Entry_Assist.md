@@ -104,7 +104,7 @@ Three structured INFO logs (edge-triggered):
 
 - **`ACTIVATE`** — once when assist arms. Fields: raw + guided distance, required distance, margin, speed delta, decel, buffer, cue. Used to confirm arming context and baseline margin.
 - **`ENTRY LINE SAFE/NORMAL`** — once on pit lane entry when you are at/below the pit limit. Includes speed delta, first compliant distance (if captured), and **time loss vs limiter** based on the compliance distance. Used to evaluate braking timing and track-specific tuning.
-- **`ENTRY LINE BAD`** — once on pit lane entry when still above the limit. Includes speed delta and how late you braked (metres). Time loss is omitted/zero in this case.
+- **`ENTRY LINE BAD`** — once on pit lane entry when still above the limit. Includes speed delta and how late you braked (metres). The compliance threshold is strict at the line (`Pit.EntrySpeedDelta_kph <= 0.0` is compliant); the separate first-compliant capture uses `<= +1.0 kph` only to find an early-limiter time-loss reference. Time loss is omitted/forced to zero in the bad/overspeed case because no valid positive early-limiter time-loss estimate exists.
 - **`END`** — once when assist disarms (pit entry or invalidation). Used to confirm clean teardown.
 
 ---
@@ -114,7 +114,7 @@ Three structured INFO logs (edge-triggered):
 On the pit-entry line, the subsystem latches a **debrief** that dashboards or telemetry overlays can show:
 - **`Pit.EntryLineDebrief`**: `safe`, `normal`, or `bad`.
 - **`Pit.EntryLineDebriefText`**: plain-English summary string (includes time loss when computed).
-- **`Pit.EntryLineTimeLoss_s`**: seconds lost versus the pit limiter based on the distance from the first compliant point to the line.
+- **`Pit.EntryLineTimeLoss_s`**: seconds lost versus the pit limiter based on the distance from the first compliant point to the line; `0` in a `bad` line verdict means no valid positive time-loss estimate was computed, not that the line-speed compliance verdict was good.
 
 These values update **once per pit entry** and remain until the next assist activation.
 
@@ -142,6 +142,6 @@ These values update **once per pit entry** and remain until the next assist acti
 
 ## Pit Debrief consumption
 
-Pit Debrief consumes existing Pit Entry Assist readouts after a completed stop, but it deliberately separates the Pit Entry Assist safety/compliance verdict from the debrief performance headline. `Pit.EntryLineDebrief` remains the original assist verdict (`safe`/`normal`/`bad`) and still maps to `Pit.Debrief.Entry.LimiterQualityText` (`SAFE`/`NORMAL`/`POOR`) for debug/log evidence. `Pit.Debrief.Entry.QualityText` and the `ENTRY ...` headline are performance-oriented from `Pit.EntryLineTimeLoss_s`: `>0.5s` is `POOR`, `>0.1s` is `NORMAL`, and `≤0.1s` is `GOOD`, so a compliance `bad` with `0.0s` time loss does not become `ENTRY POOR`.
+Pit Debrief consumes existing Pit Entry Assist readouts after a completed stop, but it deliberately separates the Pit Entry Assist safety/compliance verdict from the debrief performance headline. `Pit.EntryLineDebrief` remains the original assist verdict (`safe`/`normal`/`bad`) and still maps to `Pit.Debrief.Entry.LimiterQualityText` (`SAFE`/`NORMAL`/`POOR`) for debug/log evidence. `Pit.Debrief.Entry.QualityText` and the `ENTRY ...` headline are performance-oriented from `Pit.EntryLineTimeLoss_s`: `>0.5s` is `POOR`, `>0.1s` is `NORMAL`, and `≤0.1s` is `GOOD`, so a compliance `bad` with `0.0s`/no-positive-estimate time loss can appear as `ENTRY GOOD` while `LimiterQualityText` remains `POOR`. This is a deliberate separation between performance/readout and safety/compliance evidence; black-flag protection remains owned by the original Pit Entry Assist line verdict.
 
 The v1 debrief does not infer an actual deceleration quality. `Pit.Debrief.Entry.DecelQualityText` remains `UNKNOWN` until an existing authoritative actual-decel source is available and explicitly wired by a later task.
