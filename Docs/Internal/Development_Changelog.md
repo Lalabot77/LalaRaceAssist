@@ -1,3 +1,8 @@
+## 2026-06-08 — Strategy Live Session zero-rain summary cleanup
+- Classification: **both** (user-visible Strategy tab LIVE SESSION wording/presentation cleanup; no Strategy calculations, Fuel Model, wet/dry authority, exports/properties, dashboard JSON, settings, or profile behavior changed).
+- Strategy LIVE SESSION weather/surface summary now hides the Rain segment when `TrackPrecipitation` parses as numeric zero (`0`, `0%`, `0.0%`, or comma-decimal equivalents), while positive precipitation keeps the existing compact `{x}% Rain` wording and unknown non-empty precipitation text preserves the previous display behavior.
+- Property Snapshot list reviewed: yes; no SimHub exports/properties were added, removed, renamed, or behavior-changed. Message catalogue reviewed: unchanged because no log/message text changed.
+
 ## 2026-06-08 — PitFuelControl serious blocked-log hygiene follow-up
 - Classification: **internal-only** (observability contract fix only; no PitFuelControl command, mirror, fault, fuel math, export/property, dashboard JSON, settings UI, or profile behavior changed).
 - Restored always-on Info logging for serious PitFuelControl blocked reasons routed through the Soft-Debug helper (`snapshot-null`, `target-invalid`, and existing `send-failed`) while preserving Soft-Debug/rate-limited logging for benign ownership/no-op churn such as `external-mirror-change`, `source-stby`, `auto-not-armed`, and `lap-cross-no-material-delta`.

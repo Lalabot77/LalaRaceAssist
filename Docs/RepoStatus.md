@@ -1,3 +1,8 @@
+- 2026-06-08 Strategy Live Session zero-rain summary cleanup landed:
+  - Strategy tab LIVE SESSION weather/surface summary now suppresses the Rain segment when `DataCorePlugin.GameRawData.SessionData.WeekendInfo.TrackPrecipitation` resolves to numeric zero, avoiding misleading `0% Rain` text;
+  - positive precipitation and unknown non-empty precipitation text retain the existing compact Rain display path, and missing/blank precipitation still omits Rain;
+  - no Strategy calculation, Fuel Model, wet/dry condition authority, exports/properties, dashboard JSON, settings UI, logs, or Property Snapshot grouping changed. Property Snapshot list reviewed: yes; no group mapping change required.
+
 - 2026-06-08 PitFuelControl serious blocked-log hygiene follow-up landed:
   - restored the documented always-on Info path for `snapshot-null`, `target-invalid`, and `send-failed` blocked reasons even when they are routed through the Soft-Debug helper;
   - benign blocked/no-send churn remains Soft-Debug-gated and rate-limited, and no PitFuelControl command, mirror, fault, fuel math, export/property, dashboard JSON, settings UI, or profile behavior changed. Property Snapshot list reviewed: yes; no group mapping change required.
