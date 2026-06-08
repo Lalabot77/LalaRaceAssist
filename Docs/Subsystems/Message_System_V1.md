@@ -66,3 +66,7 @@ Evaluate message definitions against telemetry and plugin signals, maintain an a
 - Load plugin and check log for missing evaluators; verify `MissingEvaluatorsCsv` export matches log.
 - Trigger MsgCx action and confirm `ClearAllPulse` or cancel IDs update, stack clears.
 - Simulate pit window open, fuel deficit, or flag changes to see message activations per catalog.
+
+
+## Log hygiene note
+- MSGV1 no longer emits obsolete legacy ExtraProperties fallback-removal warnings for unavailable legacy signal IDs. The optional session marker is Soft-Debug-gated and uses current Soft Debug terminology.

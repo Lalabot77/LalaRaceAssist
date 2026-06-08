@@ -1,3 +1,13 @@
+## 2026-06-08 — SimHub log hygiene cleanup
+- Classification: **internal-only** (normal SimHub log noise reduction and observability-contract documentation; no runtime math, command behavior, lap detection behavior, Leader Lap authority behavior, exports/properties, settings UI, dashboard JSON, or profile schema changed).
+- Removed obsolete legacy ExtraProperties fallback-removal warnings from Messaging/MSGV1/H2H and updated the optional MSGV1 session marker to use current Soft Debug terminology.
+- Property Snapshot now keeps START/STOP/RESET/ignored START guards/path/schema/failure logs while suppressing routine auto-capture heartbeat and successful write/append lines that duplicated the CSV output itself.
+- Lap Detector normal pending/reject/low-speed/atypical crossing diagnostics are Soft-Debug-gated; normal lap-cross success details no longer appear in always-on logs.
+- Leader Lap keeps transition/rate-limited always-on visibility for authority unavailable/fail-closed, hold start, hold expiry, and authority recovery, while routine candidate/source/accept/reject/fallback details are Soft-Debug-gated Info and PR #799 authority behavior is unchanged.
+- PitFuelControl keeps compact LalaLaunch action-received logs, serious blocked reasons, stale ownership expiry, and suppression-clear recovery always-on; full action-entry state and benign ownership/mirror/suppression churn including `external-mirror-change` are Soft-Debug-gated and rate-limited.
+- PitDebrief final structured stop logs, useful pit-cycle/debrief event logs, PitCommand warnings/failures, race-finish summaries, and Warn/Error failure paths remain always-on.
+- Property Snapshot list reviewed: yes; no SimHub exports/properties were added, removed, renamed, or behavior-changed, so `ResolvePropertySnapshotGroup(...)` required no change.
+
 - 2026-06-08 Pit Debrief entry wording and box delta audit landed:
   - Pit Debrief entry headline now uses `Pit.EntryLineTimeLoss_s` as the performance verdict (`GOOD` ≤0.1s, `NORMAL` >0.1s, `POOR` >0.5s) while keeping the original Pit Entry Assist safety/compliance token in `Pit.Debrief.Entry.LimiterQualityText` and final logs;
   - box delta source remains the existing pit-box countdown seam, with the first box-exit edge falling back to the last live elapsed countdown when PitEngine stop duration is not ready, and implausible `abs(delta) > 10.0s` values suppressed to `Δ PENDING` in `SummaryText`;

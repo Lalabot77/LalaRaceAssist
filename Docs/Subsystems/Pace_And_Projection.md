@@ -84,6 +84,8 @@ For timed-race projection, Leader Lap authority means **overall race-leading pac
 - when the rolling window is empty, current overall P1 `CarIdxBestLapTime` may seed the published leader pace as a low-confidence fallback, but it is not ingested into the rolling window,
 - class leader, class best, H2H class session-best, LapRef, and iRacing ExtraProperties are not valid Leader Lap authorities.
 
+Leader Lap observability keeps always-on transition/rate-limited Info for authority loss/fail-closed, hold start, hold expiry, and authority recovery. Routine candidate sampling, accept/use, reject, and low-confidence fallback details are Soft-Debug-gated Info so normal sessions do not spam SimHub logs while retaining focused diagnostics.
+
 ### 3) Baseline selection
 When enough live pace is not available, the subsystem falls back through guarded baseline choices such as:
 - profile average,

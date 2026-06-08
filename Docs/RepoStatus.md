@@ -1,3 +1,8 @@
+- 2026-06-08 SimHub log hygiene cleanup landed:
+  - removed obsolete legacy ExtraProperties fallback-removal warnings and moved normal Lap Detector, Leader Lap candidate/source detail, and benign PitFuelControl ownership churn behind Soft Debug Info without using SimHub Debug-level logging in the touched paths;
+  - kept always-on failure/recovery boundaries, Leader Lap authority lost/recovered/hold transitions, PitCommand/PitFuelControl serious failures, PitDebrief final structured logs, pit-cycle/debrief context, and race-finish summaries;
+  - Property Snapshot keeps START/STOP/RESET/guard/failure/path/schema logs while suppressing routine heartbeat and write-success/append-success spam. No runtime math, command behavior, lap detection behavior, Leader Lap authority behavior, exports/properties, dashboard JSON, settings UI, or profile schema changed. Property Snapshot list reviewed: yes; no group mapping change required.
+
 - 2026-06-08 Pit Debrief entry wording and box delta audit landed:
   - Pit Debrief entry headline now uses `Pit.EntryLineTimeLoss_s` as the performance verdict (`GOOD` ≤0.1s, `NORMAL` >0.1s, `POOR` >0.5s) while keeping the original Pit Entry Assist safety/compliance token in `Pit.Debrief.Entry.LimiterQualityText` and final logs;
   - box delta source remains the existing pit-box countdown seam, with the first box-exit edge falling back to the last live elapsed countdown when PitEngine stop duration is not ready, and implausible `abs(delta) > 10.0s` values suppressed to `Δ PENDING` in `SummaryText`;
