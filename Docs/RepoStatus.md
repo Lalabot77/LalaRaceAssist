@@ -1,3 +1,9 @@
+- 2026-06-08 Debug Options merge-fallout fix validated:
+  - removed the stale General logging CarSA debug export/cadence/events row and the visible legacy `PitExit Verbose Logging` toggle; `CarSA diagnostics` is now the only CarSA Debug CSV UI path while PitExit math-audit/detail logs remain under master debug + `Enable Debug Logging`;
+  - preserved the default-off `Enable Monitor Event CSV` control in General logging without changing MonitorSystem warning logic or CSV behavior;
+  - Property Snapshot child controls are hidden until `Enable Property Snapshot` is on, with rolling controls still hidden until `Write rolling combined CSV` is on and frequency still hidden unless rolling mode is `FREQUENCY`;
+  - verified OffTrack Debug CSV remains absent and no race logic, export/property names, dashboard JSON, or debug CSV schemas changed. Property Snapshot list reviewed: yes; UI visibility only, no export/property changes.
+
 - 2026-06-08 MonitorSystem optional event CSV + snapshot coverage audit landed:
   - added default-off Debug Options setting `Enable Monitor Event CSV`; when MonitorSystem is enabled it writes changed non-normal MonitorSystem publications only to `Logs/LalaPluginData/MonitorSystem_Events.csv`;
   - skips `MONITOR OFF`, `MONITOR READY`, `FUEL HEALTH OK`, unchanged repeats, and per-tick OK/default spam; I/O failure disables the CSV writer after a single warning;
