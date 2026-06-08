@@ -722,37 +722,6 @@ namespace LaunchPlugin
             }
         }
 
-        /*
-        // --- Legacy/experimental MsgCx helpers (parked) ---
-        // Only keep if you still actively bind to these from somewhere.
-        public void MsgCxTimeOnly()
-        {
-            RegisterMsgCxPress();
-            _msgSystem?.TriggerTimedSilence();
-        }
-
-        public void MsgCxStateOnly()
-        {
-            RegisterMsgCxPress();
-            _msgSystem?.TriggerStateClear();
-        }
-
-        public void MsgCxActionOnly()
-        {
-            RegisterMsgCxPress();
-            _msgSystem?.TriggerAction();
-        }
-
-        public void SetMsgCxTimeMessage(string message, TimeSpan? silence = null)
-            => _msgSystem?.PublishTimedMessage(message, silence);
-
-        public void SetMsgCxStateMessage(string message, string stateToken)
-            => _msgSystem?.PublishStateMessage(message, stateToken);
-
-        public void SetMsgCxActionMessage(string message)
-            => _msgSystem?.PublishActionMessage(message);
-        */
-
         // --- Fuel Calculator Engine ---
         public FuelCalcs FuelCalculator { get; private set; }
         public TrackStats EnsureTrackRecord(string carProfileName, string trackName)
@@ -5939,87 +5908,6 @@ namespace LaunchPlugin
             _eventMarkerCooldownTimer.Restart();
         }
 
-        private struct OffTrackDebugSnapshot
-        {
-            public int EventFired;
-            public int SessionState;
-            public int SessionFlagsRaw;
-            public int ProbeCarIdx;
-            public int TrackSurface;
-            public int TrackSurfaceMaterial;
-            public int CarSessionFlags;
-            public bool? CarOnPitRoad;
-            public int CarLap;
-            public double CarLapDistPct;
-            public bool? OffTrackNow;
-            public bool? SurfaceOffTrackNow;
-            public bool? DefinitiveOffTrackNow;
-            public bool? BoundaryEvidenceNow;
-            public int OffTrackStreak;
-            public double OffTrackFirstSeenTimeSec;
-            public bool? SuspectOffTrackNow;
-            public int SuspectOffTrackStreak;
-            public double SuspectOffTrackFirstSeenTimeSec;
-            public bool? SuspectOffTrackActive;
-            public int SuspectEventId;
-            public double SuspectPulseUntilTimeSec;
-            public bool? SuspectPulseActive;
-            public int CompromisedUntilLap;
-            public bool? CompromisedOffTrackActive;
-            public bool? CompromisedPenaltyActive;
-            public bool? AllowLatches;
-            public int PlayerCarIdx;
-            public int PlayerIncidentCount;
-            public int PlayerIncidentDelta;
-        }
-
-        private static bool OffTrackDebugSnapshotEquals(
-            OffTrackDebugSnapshot left,
-            OffTrackDebugSnapshot right,
-            bool ignoreContextFields)
-        {
-            return left.EventFired == right.EventFired
-                && left.SessionState == right.SessionState
-                && left.SessionFlagsRaw == right.SessionFlagsRaw
-                && left.ProbeCarIdx == right.ProbeCarIdx
-                && left.TrackSurface == right.TrackSurface
-                && left.TrackSurfaceMaterial == right.TrackSurfaceMaterial
-                && left.CarSessionFlags == right.CarSessionFlags
-                && left.CarOnPitRoad == right.CarOnPitRoad
-                && left.CarLap == right.CarLap
-                && (ignoreContextFields || OffTrackDebugDoubleEquals(left.CarLapDistPct, right.CarLapDistPct))
-                && left.OffTrackNow == right.OffTrackNow
-                && left.SurfaceOffTrackNow == right.SurfaceOffTrackNow
-                && left.DefinitiveOffTrackNow == right.DefinitiveOffTrackNow
-                && left.BoundaryEvidenceNow == right.BoundaryEvidenceNow
-                && (ignoreContextFields || left.OffTrackStreak == right.OffTrackStreak)
-                && (ignoreContextFields || OffTrackDebugDoubleEquals(left.OffTrackFirstSeenTimeSec, right.OffTrackFirstSeenTimeSec))
-                && left.SuspectOffTrackNow == right.SuspectOffTrackNow
-                && (ignoreContextFields || left.SuspectOffTrackStreak == right.SuspectOffTrackStreak)
-                && (ignoreContextFields || OffTrackDebugDoubleEquals(left.SuspectOffTrackFirstSeenTimeSec, right.SuspectOffTrackFirstSeenTimeSec))
-                && left.SuspectOffTrackActive == right.SuspectOffTrackActive
-                && left.SuspectEventId == right.SuspectEventId
-                && (ignoreContextFields || OffTrackDebugDoubleEquals(left.SuspectPulseUntilTimeSec, right.SuspectPulseUntilTimeSec))
-                && left.SuspectPulseActive == right.SuspectPulseActive
-                && (ignoreContextFields || left.CompromisedUntilLap == right.CompromisedUntilLap)
-                && left.CompromisedOffTrackActive == right.CompromisedOffTrackActive
-                && left.CompromisedPenaltyActive == right.CompromisedPenaltyActive
-                && left.AllowLatches == right.AllowLatches
-                && left.PlayerCarIdx == right.PlayerCarIdx
-                && left.PlayerIncidentCount == right.PlayerIncidentCount
-                && left.PlayerIncidentDelta == right.PlayerIncidentDelta;
-        }
-
-        private static bool OffTrackDebugDoubleEquals(double left, double right)
-        {
-            if (double.IsNaN(left))
-            {
-                return double.IsNaN(right);
-            }
-
-            return left.Equals(right);
-        }
-
         // Centralized state machine for launch phases
         private void SetLaunchState(LaunchState newState)
         {
@@ -6070,15 +5958,6 @@ namespace LaunchPlugin
         private string _carSaDebugExportPath;
         private string _carSaDebugExportToken;
         private int _carSaDebugExportPendingLines;
-        private StringBuilder _offTrackDebugExportBuffer;
-        private string _offTrackDebugExportPath;
-        private string _offTrackDebugExportToken;
-        private int _offTrackDebugExportPendingLines;
-        private double _offTrackDebugLastSessionTimeSec = double.NaN;
-        private double _offTrackDebugEventWindowUntilSessionTimeSec = double.NaN;
-        private OffTrackDebugSnapshot _offTrackDebugLastSnapshot;
-        private bool _offTrackDebugSnapshotInitialized;
-        private bool _offTrackDebugLastChangeOnlyEnabled;
         private bool _playerLapInvalid;
         private int _playerLapInvalidLap = int.MinValue;
         private int _playerLastIncidentCount = int.MinValue;
@@ -7943,11 +7822,10 @@ namespace LaunchPlugin
             AttachCore("Reset.ThisSessionType", () => _finishTimingSessionType);
             AttachCore("car.player.LapInvalid", () => _playerLapInvalid);
 
-            // --- Pit time-loss (finals kept CORE; raw & debug VERBOSE) ---
+            // --- Pit time-loss (CORE) ---
             AttachCore("Pit.LastDirectTravelTime", () => _pit.LastDirectTravelTime);
             AttachCore("Pit.LastTotalPitCycleTimeLoss", () => _pit.LastTotalPitCycleTimeLoss);
             AttachCore("Pit.LastPaceDeltaNetLoss", () => _pit.LastPaceDeltaNetLoss);
-            AttachVerbose("Pit.Debug.TimeOnPitRoad", () => _pit.TimeOnPitRoad.TotalSeconds);
 
             // --- Pit Entry Assist (CORE + optional driver/debug) ---
             AttachCore("Pit.EntryAssistActive", () => _pit.PitEntryAssistActive);
@@ -7961,63 +7839,16 @@ namespace LaunchPlugin
             AttachCore("Pit.EntryBuffer_m", () => _pit.PitEntryBuffer_m);
 
 
-            // AttachVerbose("Pit.Debug.LastTimeOnPitRoad",  () => _pit.TimeOnPitRoad.TotalSeconds);
-            AttachVerbose("Pit.Debug.LastPitStopDuration", () => _pit?.PitStopElapsedSec ?? 0.0);
-
-            // --- PIT TEST / RAW (all VERBOSE) ---
+            // --- Pit pace provenance (CORE) ---
             AttachCore("Lala.Pit.AvgPaceUsedSec", () => _pitDbg_AvgPaceUsedSec);
             AttachCore("Lala.Pit.AvgPaceSource", () => _pitDbg_AvgPaceSource);
-            AttachVerbose("Lala.Pit.Raw.PitLapSec", () => _pitDbg_RawPitLapSec);
-            AttachVerbose("Lala.Pit.Raw.DTLFormulaSec", () => _pitDbg_RawDTLFormulaSec);
-            AttachVerbose("Lala.Pit.InLapSec", () => _pitDbg_InLapSec);
-            AttachVerbose("Lala.Pit.OutLapSec", () => _pitDbg_OutLapSec);
-            AttachVerbose("Lala.Pit.DeltaInSec", () => _pitDbg_DeltaInSec);
-            AttachVerbose("Lala.Pit.DeltaOutSec", () => _pitDbg_DeltaOutSec);
-            AttachVerbose("Lala.Pit.DriveThroughLossSec", () => _pit?.LastTotalPitCycleTimeLoss ?? 0.0);
-            AttachVerbose("Lala.Pit.DirectTravelSec", () => _pit?.LastDirectTravelTime ?? 0.0);
-            AttachVerbose("Lala.Pit.StopSeconds", () => _pit?.PitStopDuration.TotalSeconds ?? 0.0);
 
-            // Service stop loss = DTL + stationary stop (VERBOSE)
-            AttachVerbose("Lala.Pit.ServiceStopLossSec", () =>
-            {
-                var dtl = _pit?.LastTotalPitCycleTimeLoss ?? 0.0;
-                var stop = _pit?.PitStopDuration.TotalSeconds ?? 0.0;
-                var val = dtl + stop;
-                return val < 0 ? 0.0 : val;
-            });
-
-            // Profile lane loss + “last saved” provenance (VERBOSE)
-            AttachVerbose("Lala.Pit.Profile.PitLaneLossSec", () =>
-            {
-                var ts = ActiveProfile?.FindTrack(CurrentTrackKey);
-                return ts?.PitLaneLossSeconds ?? 0.0;
-            });
-            AttachVerbose("Lala.Pit.CandidateSavedSec", () => _pitDbg_CandidateSavedSec);
-            AttachVerbose("Lala.Pit.CandidateSource", () => _pitDbg_CandidateSource);
-
-            // --- PitLite (test dash; VERBOSE) ---
-            AttachVerbose("PitLite.InLapSec", () => _pitLite?.InLapSec ?? 0.0);
-            AttachVerbose("PitLite.OutLapSec", () => _pitLite?.OutLapSec ?? 0.0);
-            AttachVerbose("PitLite.DeltaInSec", () => _pitLite?.DeltaInSec ?? 0.0);
-            AttachVerbose("PitLite.DeltaOutSec", () => _pitLite?.DeltaOutSec ?? 0.0);
-            AttachVerbose("PitLite.TimePitLaneSec", () => _pitLite?.TimePitLaneSec ?? 0.0);
-            AttachVerbose("PitLite.TimePitBoxSec", () => _pitLite?.TimePitBoxSec ?? 0.0);
-            AttachVerbose("PitLite.DirectSec", () => _pitLite?.DirectSec ?? 0.0);
-            AttachVerbose("PitLite.DTLSec", () => _pitLite?.DTLSec ?? 0.0);
-            AttachVerbose("PitLite.Status", () => _pitLite?.Status.ToString() ?? "None");
+            // --- PitLite (CORE) ---
             AttachCore("PitLite.Live.TimeOnPitRoadSec", () => _pit?.TimeOnPitRoad.TotalSeconds ?? 0.0);
             AttachCore("PitLite.Live.TimeInBoxSec", () => _pit?.PitStopElapsedSec ?? 0.0);
-            AttachVerbose("PitLite.CurrentLapType", () => _pitLite?.CurrentLapType.ToString() ?? "Normal");
-            AttachVerbose("PitLite.LastLapType", () => _pitLite?.LastLapType.ToString() ?? "None");
             AttachCore("PitLite.TotalLossSec", () => _pitLite?.TotalLossSec ?? 0.0);
-            AttachVerbose("PitLite.LossSource", () => _pitLite?.TotalLossSource ?? "None");
             AttachCore("PitLite.LastSaved.Sec", () => _pitDbg_CandidateSavedSec);
-            AttachVerbose("PitLite.LastSaved.Source", () => _pitDbg_CandidateSource ?? "none");
             AttachCore("PitLite.TotalLossPlusBoxSec", () => _pitLite?.TotalLossPlusBoxSec ?? 0.0);
-
-            // Live edge flags (VERBOSE)
-            AttachVerbose("PitLite.Live.SeenEntryThisLap", () => _pitLite?.EntrySeenThisLap ?? false);
-            AttachVerbose("PitLite.Live.SeenExitThisLap", () => _pitLite?.ExitSeenThisLap ?? false);
 
             // --- DELEGATES FOR DASHBOARD STATE & OVERLAYS (CORE) ---
             AttachCore("CurrentDashPage", () => Screens.CurrentPage);
@@ -8099,9 +7930,6 @@ namespace LaunchPlugin
             AttachCore("RejoinIsExitingPits", () => _rejoinEngine.IsExitingPits);
             AttachCore("RejoinCurrentPitPhaseName", () => _rejoinEngine.CurrentPitPhase.ToString());
             AttachCore("RejoinCurrentPitPhase", () => (int)_rejoinEngine.CurrentPitPhase);
-            // REMOVED: obsolete RejoinAssist_PitExitTime (always 0.0)
-            // AttachCore("RejoinAssist_PitExitTime",         () => _rejoinEngine.PitExitTimerSeconds);
-
             AttachCore("RejoinThreatLevel", () => (int)_rejoinEngine.CurrentThreatLevel);
             AttachCore("RejoinThreatLevelName", () => _rejoinEngine.CurrentThreatLevel.ToString());
             AttachCore("RejoinTimeToThreat", () => _rejoinEngine.TimeToThreatSeconds);
@@ -8261,10 +8089,6 @@ namespace LaunchPlugin
             AttachCore("ShiftAssist.Delay.PendingRpmAtCue", () => _shiftAssistPendingDelayRpmAtCue);
             AttachCore("ShiftAssist.Delay.RpmAtBeep", () => _shiftAssistLastBeepRpmLatched);
             AttachCore("ShiftAssist.Delay.CaptureState", () => _shiftAssistDelayCaptureState);
-
-            // --- TESTING / DEBUGGING (VERBOSE) ---
-            // REMOVED: MSG.PitPhaseDebug (old vs new) — PitEngine is single source of truth now.
-            // AttachVerbose("MSG.PitPhaseDebug", ...);
 
             // --- Link engines (unchanged) ---
             _rejoinEngine = new RejoinAssistEngine(
@@ -8770,7 +8594,6 @@ namespace LaunchPlugin
             AttachCore("Car.Debug.PlayerLapPct", () => SoftDebugEnabled ? (_carSaEngine?.Outputs.Debug.PlayerLapPct ?? double.NaN) : double.NaN);
             AttachCore("Car.Debug.PlayerLap", () => SoftDebugEnabled ? (_carSaEngine?.Outputs.Debug.PlayerLap ?? 0) : 0);
             AttachCore("Car.Debug.SessionTimeSec", () => SoftDebugEnabled ? (_carSaEngine?.Outputs.Debug.SessionTimeSec ?? 0.0) : 0.0);
-            AttachCore("Car.Debug.OffTrack.ProbeCarIdx", () => SoftDebugEnabled ? (Settings?.OffTrackDebugProbeCarIdx ?? -1) : -1);
             AttachCore("Car.Debug.SourceFastPathUsed", () => SoftDebugEnabled ? (_carSaEngine?.Outputs.Debug.SourceFastPathUsed ?? false) : false);
             AttachCore("Car.Debug.HasCarIdxPaceFlags", () => SoftDebugEnabled ? (_carSaEngine?.Outputs.Debug.HasCarIdxPaceFlags ?? false) : false);
             AttachCore("Car.Debug.HasCarIdxSessionFlags", () => SoftDebugEnabled ? (_carSaEngine?.Outputs.Debug.HasCarIdxSessionFlags ?? false) : false);
@@ -9007,7 +8830,6 @@ namespace LaunchPlugin
             // Explicit runtime abort/invalid paths own discard decisions.
             _telemetryTraceLogger?.EndService();
 
-            ResetOffTrackDebugExportState();
             ResetCarTrackingProbeCsvState();
             ResetCarSaDebugExportState();
 
@@ -10062,7 +9884,6 @@ namespace LaunchPlugin
             ResetCarSaIdentityState();
             ResetCarSaLapTimeUpdateState();
             ResetCarSaDebugExportState();
-            ResetOffTrackDebugExportState();
             ResetPlayerLapInvalidState();
 
             _lastSeenCar = string.Empty;
@@ -11281,29 +11102,6 @@ namespace LaunchPlugin
                     UpdateCarSaRawTelemetryDebug(pluginManager, _carSaEngine.Outputs, playerCarIdx, verboseLogs);
                 }
 
-                int probeCarIdx = Settings?.OffTrackDebugProbeCarIdx ?? -1;
-                bool offTrackDebugEnabled = Settings?.EnableOffTrackDebugCsv == true && probeCarIdx >= 0;
-                int sessionFlagsRaw = -1;
-                if (offTrackDebugEnabled)
-                {
-                    sessionFlagsRaw = SafeReadInt(pluginManager, "DataCorePlugin.GameRawData.Telemetry.SessionFlags", -1);
-                }
-                WriteOffTrackDebugExport(
-                    pluginManager,
-                    sessionTimeSec,
-                    sessionState,
-                    sessionFlagsRaw,
-                    probeCarIdx,
-                    playerCarIdx,
-                    _playerIncidentCount,
-                    _playerIncidentDelta,
-                    carIdxTrackSurface,
-                    carIdxTrackSurfaceMaterial,
-                    carIdxSessionFlags,
-                    carIdxOnPitRoad,
-                    carIdxLap,
-                    carIdxLapDistPct);
-
                 WriteCarSaDebugExport(pluginManager, _carSaEngine.Outputs, sessionState, sessionTypeName, debugMaster);
                 RefreshCarSaSlotIdentities(pluginManager, sessionTimeSec);
                 UpdateCarSaSlotTelemetry(pluginManager, _carSaEngine.Outputs.AheadSlots, carIdxLapDistPct, sessionTimeSec);
@@ -11460,7 +11258,6 @@ namespace LaunchPlugin
                 ResetBurnAnalysisCurrentStint();
                 _tyreLearnLastPitExitSessionTimeSec = sessionTime;
                 _opponentsEngine?.NotifyPitExitLine(completedLaps, sessionTime, trackPct);
-                // LogPitExitPitOutSnapshot(sessionTime, completedLaps + 1, pitTripActive);
             }
 
             // === TYRE CHANGE TIME LEARNING (all four tyre flags only) ===
@@ -12863,7 +12660,6 @@ namespace LaunchPlugin
 
         private double ResolveShiftAssistSessionTimeSec(PluginManager pluginManager)
         {
-            // Keep session-time resolution aligned with OffTrack debug CSV path:
             // DataCorePlugin.GameRawData.Telemetry.SessionTime with 0.0 fallback.
             return SafeReadDouble(pluginManager, "DataCorePlugin.GameRawData.Telemetry.SessionTime", 0.0);
         }
@@ -13264,207 +13060,6 @@ namespace LaunchPlugin
                 {
                     _carSaDebugExportBuffer.Clear();
                 }
-            }
-        }
-
-        private void WriteOffTrackDebugExport(
-            PluginManager pluginManager,
-            double sessionTimeSec,
-            int sessionState,
-            int sessionFlagsRaw,
-            int probeCarIdx,
-            int playerCarIdx,
-            int playerIncidentCount,
-            int playerIncidentDelta,
-            int[] carIdxTrackSurface,
-            int[] carIdxTrackSurfaceMaterial,
-            int[] carIdxSessionFlags,
-            bool[] carIdxOnPitRoad,
-            int[] carIdxLap,
-            float[] carIdxLapDistPct)
-        {
-            if (Settings?.EnableOffTrackDebugCsv != true || probeCarIdx < 0)
-            {
-                ResetOffTrackDebugExportState();
-                return;
-            }
-
-            bool changeOnlyEnabled = Settings?.OffTrackDebugLogChangesOnly == true;
-            if (_offTrackDebugLastChangeOnlyEnabled != changeOnlyEnabled)
-            {
-                _offTrackDebugLastChangeOnlyEnabled = changeOnlyEnabled;
-                _offTrackDebugSnapshotInitialized = false;
-            }
-
-            if (!double.IsNaN(_offTrackDebugLastSessionTimeSec)
-                && sessionTimeSec < _offTrackDebugLastSessionTimeSec - 0.5)
-            {
-                ResetOffTrackDebugExportState();
-            }
-
-            EnsureOffTrackDebugExportFile(pluginManager);
-
-            if (_eventMarkerPressed)
-            {
-                _offTrackDebugEventWindowUntilSessionTimeSec = sessionTimeSec + 5.0;
-            }
-
-            bool eventActive = !double.IsNaN(_offTrackDebugEventWindowUntilSessionTimeSec)
-                && sessionTimeSec <= _offTrackDebugEventWindowUntilSessionTimeSec;
-            if (!eventActive)
-            {
-                _offTrackDebugEventWindowUntilSessionTimeSec = double.NaN;
-            }
-
-            int eventFired = eventActive ? 1 : 0;
-
-            int trackSurface = ReadCarIdxInt(carIdxTrackSurface, probeCarIdx, int.MinValue);
-            int trackSurfaceMaterial = ReadCarIdxInt(carIdxTrackSurfaceMaterial, probeCarIdx, int.MinValue);
-            int carSessionFlags = ReadCarIdxInt(carIdxSessionFlags, probeCarIdx, int.MinValue);
-            bool? carOnPitRoad = ReadCarIdxBool(carIdxOnPitRoad, probeCarIdx);
-            int carLap = ReadCarIdxInt(carIdxLap, probeCarIdx, int.MinValue);
-            double carLapDistPct = ReadCarIdxFloat(carIdxLapDistPct, probeCarIdx);
-
-            CarSAEngine.OffTrackDebugState offTrackState = default;
-            bool hasState = false;
-            if (_carSaEngine != null)
-            {
-                hasState = _carSaEngine.TryGetOffTrackDebugState(probeCarIdx, out offTrackState);
-            }
-            bool? offTrackNow = hasState ? (bool?)offTrackState.OffTrackNow : null;
-            bool? surfaceOffTrackNow = hasState ? (bool?)offTrackState.SurfaceOffTrackNow : null;
-            bool? definitiveOffTrackNow = hasState ? (bool?)offTrackState.DefinitiveOffTrackNow : null;
-            bool? boundaryEvidenceNow = hasState ? (bool?)offTrackState.BoundaryEvidenceNow : null;
-            int offTrackStreak = hasState ? offTrackState.OffTrackStreak : int.MinValue;
-            double offTrackFirstSeenTimeSec = hasState ? offTrackState.OffTrackFirstSeenTimeSec : double.NaN;
-            bool? suspectOffTrackNow = hasState ? (bool?)offTrackState.SuspectOffTrackNow : null;
-            int suspectOffTrackStreak = hasState ? offTrackState.SuspectOffTrackStreak : int.MinValue;
-            double suspectOffTrackFirstSeenTimeSec = hasState ? offTrackState.SuspectOffTrackFirstSeenTimeSec : double.NaN;
-            bool? suspectOffTrackActive = hasState ? (bool?)offTrackState.SuspectOffTrackActive : null;
-            int suspectEventId = hasState ? offTrackState.SuspectEventId : 0;
-            double suspectPulseUntilTimeSec = hasState ? offTrackState.SuspectPulseUntilTimeSec : double.NaN;
-            bool? suspectPulseActive = hasState ? (bool?)offTrackState.SuspectPulseActive : null;
-            int compromisedUntilLap = hasState ? offTrackState.CompromisedUntilLap : int.MinValue;
-            bool? compromisedOffTrackActive = hasState ? (bool?)offTrackState.CompromisedOffTrackActive : null;
-            bool? compromisedPenaltyActive = hasState ? (bool?)offTrackState.CompromisedPenaltyActive : null;
-            bool? allowLatches = hasState ? (bool?)offTrackState.AllowLatches : null;
-
-            OffTrackDebugSnapshot snapshot = new OffTrackDebugSnapshot
-            {
-                EventFired = eventFired,
-                SessionState = sessionState,
-                SessionFlagsRaw = sessionFlagsRaw,
-                ProbeCarIdx = probeCarIdx,
-                TrackSurface = trackSurface,
-                TrackSurfaceMaterial = trackSurfaceMaterial,
-                CarSessionFlags = carSessionFlags,
-                CarOnPitRoad = carOnPitRoad,
-                CarLap = carLap,
-                CarLapDistPct = carLapDistPct,
-                OffTrackNow = offTrackNow,
-                SurfaceOffTrackNow = surfaceOffTrackNow,
-                DefinitiveOffTrackNow = definitiveOffTrackNow,
-                BoundaryEvidenceNow = boundaryEvidenceNow,
-                OffTrackStreak = offTrackStreak,
-                OffTrackFirstSeenTimeSec = offTrackFirstSeenTimeSec,
-                SuspectOffTrackNow = suspectOffTrackNow,
-                SuspectOffTrackStreak = suspectOffTrackStreak,
-                SuspectOffTrackFirstSeenTimeSec = suspectOffTrackFirstSeenTimeSec,
-                SuspectOffTrackActive = suspectOffTrackActive,
-                SuspectEventId = suspectEventId,
-                SuspectPulseUntilTimeSec = suspectPulseUntilTimeSec,
-                SuspectPulseActive = suspectPulseActive,
-                CompromisedUntilLap = compromisedUntilLap,
-                CompromisedOffTrackActive = compromisedOffTrackActive,
-                CompromisedPenaltyActive = compromisedPenaltyActive,
-                AllowLatches = allowLatches,
-                PlayerCarIdx = playerCarIdx,
-                PlayerIncidentCount = playerIncidentCount,
-                PlayerIncidentDelta = playerIncidentDelta
-            };
-
-            bool shouldWrite = true;
-            if (changeOnlyEnabled)
-            {
-                shouldWrite = !_offTrackDebugSnapshotInitialized
-                    || eventActive
-                    || !OffTrackDebugSnapshotEquals(snapshot, _offTrackDebugLastSnapshot, ignoreContextFields: true);
-                if (!shouldWrite)
-                {
-                    return;
-                }
-
-                _offTrackDebugLastSnapshot = snapshot;
-                _offTrackDebugSnapshotInitialized = true;
-            }
-
-            StringBuilder buffer = _offTrackDebugExportBuffer ?? (_offTrackDebugExportBuffer = new StringBuilder(512));
-            buffer.Append(sessionTimeSec.ToString("F3", CultureInfo.InvariantCulture)).Append(',');
-            buffer.Append(eventFired).Append(',');
-            buffer.Append(sessionState).Append(',');
-            AppendCsvHexValue(buffer, sessionFlagsRaw);
-            buffer.Append(',');
-            AppendCsvOptionalInt(buffer, sessionFlagsRaw, -1);
-            buffer.Append(',');
-            buffer.Append(probeCarIdx).Append(',');
-            AppendCsvOptionalInt(buffer, trackSurface, int.MinValue);
-            buffer.Append(',');
-            AppendCsvOptionalInt(buffer, trackSurfaceMaterial, int.MinValue);
-            buffer.Append(',');
-            AppendCsvHexValue(buffer, carSessionFlags);
-            buffer.Append(',');
-            AppendCsvOptionalInt(buffer, carSessionFlags, int.MinValue);
-            buffer.Append(',');
-            AppendCsvOptionalBool(buffer, carOnPitRoad);
-            buffer.Append(',');
-            AppendCsvOptionalInt(buffer, carLap, int.MinValue);
-            buffer.Append(',');
-            AppendCsvOptionalDouble(buffer, carLapDistPct, "F6");
-            buffer.Append(',');
-            AppendCsvOptionalBool(buffer, surfaceOffTrackNow);
-            buffer.Append(',');
-            AppendCsvOptionalBool(buffer, definitiveOffTrackNow);
-            buffer.Append(',');
-            AppendCsvOptionalBool(buffer, boundaryEvidenceNow);
-            buffer.Append(',');
-            AppendCsvOptionalInt(buffer, offTrackStreak, int.MinValue);
-            buffer.Append(',');
-            AppendCsvOptionalDouble(buffer, offTrackFirstSeenTimeSec, "F3");
-            buffer.Append(',');
-            AppendCsvOptionalBool(buffer, suspectOffTrackNow);
-            buffer.Append(',');
-            AppendCsvOptionalInt(buffer, suspectOffTrackStreak, int.MinValue);
-            buffer.Append(',');
-            AppendCsvOptionalDouble(buffer, suspectOffTrackFirstSeenTimeSec, "F3");
-            buffer.Append(',');
-            AppendCsvOptionalBool(buffer, suspectOffTrackActive);
-            buffer.Append(',');
-            AppendCsvOptionalInt(buffer, suspectEventId, 0);
-            buffer.Append(',');
-            AppendCsvOptionalDouble(buffer, suspectPulseUntilTimeSec, "F3");
-            buffer.Append(',');
-            AppendCsvOptionalBool(buffer, suspectPulseActive);
-            buffer.Append(',');
-            AppendCsvOptionalInt(buffer, compromisedUntilLap, int.MinValue);
-            buffer.Append(',');
-            AppendCsvOptionalBool(buffer, compromisedOffTrackActive);
-            buffer.Append(',');
-            AppendCsvOptionalBool(buffer, compromisedPenaltyActive);
-            buffer.Append(',');
-            AppendCsvOptionalBool(buffer, allowLatches);
-            buffer.Append(',');
-            AppendCsvOptionalInt(buffer, playerCarIdx, -1);
-            buffer.Append(',');
-            AppendCsvOptionalInt(buffer, playerIncidentCount, -1);
-            buffer.Append(',');
-            AppendCsvOptionalInt(buffer, playerIncidentDelta, int.MinValue);
-            buffer.AppendLine();
-
-            _offTrackDebugLastSessionTimeSec = sessionTimeSec;
-            _offTrackDebugExportPendingLines++;
-            if (_offTrackDebugExportPendingLines >= 20 || buffer.Length >= 4096)
-            {
-                FlushOffTrackDebugExportBuffer();
             }
         }
 
@@ -14080,7 +13675,7 @@ namespace LaunchPlugin
             _carTrackingProbeCsvToken = token;
             string folder = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "Logs", "LalapluginData");
             Directory.CreateDirectory(folder);
-            string trackName = SanitizeOffTrackDebugExportName(ResolveCarTrackingProbeTrackName(pluginManager));
+            string trackName = SanitizeCarSaDebugExportName(ResolveCarTrackingProbeTrackName(pluginManager));
             string timestamp = DateTime.UtcNow.ToString("yyyy-MM-dd_HH-mm-ss", CultureInfo.InvariantCulture);
             _carTrackingProbeCsvPath = Path.Combine(folder, $"CarTrackingProbe_{trackName}_{timestamp}.csv");
             if (!File.Exists(_carTrackingProbeCsvPath))
@@ -15177,17 +14772,6 @@ namespace LaunchPlugin
             return new string(cleaned, start, length);
         }
 
-        private static string SanitizeOffTrackDebugExportName(string input)
-        {
-            string sanitized = SanitizeCarSaDebugExportName(input);
-            if (string.Equals(sanitized, "Unknown", StringComparison.OrdinalIgnoreCase))
-            {
-                return "UnknownTrack";
-            }
-
-            return sanitized;
-        }
-
         private void FlushCarSaDebugExportBuffer()
         {
             if (string.IsNullOrWhiteSpace(_carSaDebugExportPath) || _carSaDebugExportBuffer == null || _carSaDebugExportBuffer.Length == 0)
@@ -15200,69 +14784,6 @@ namespace LaunchPlugin
             _carSaDebugExportPendingLines = 0;
         }
 
-        private void EnsureOffTrackDebugExportFile(PluginManager pluginManager)
-        {
-            string token = string.IsNullOrWhiteSpace(_currentSessionToken) ? "na" : _currentSessionToken.Replace(":", "_");
-            if (string.Equals(token, _offTrackDebugExportToken, StringComparison.Ordinal) && !string.IsNullOrWhiteSpace(_offTrackDebugExportPath))
-            {
-                return;
-            }
-
-            FlushOffTrackDebugExportBuffer();
-            _offTrackDebugExportToken = token;
-            string folder = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "Logs", "LalapluginData");
-            Directory.CreateDirectory(folder);
-            string trackNameSource = !string.IsNullOrWhiteSpace(CurrentTrackName)
-                ? CurrentTrackName
-                : CurrentTrackKey;
-            if (string.IsNullOrWhiteSpace(trackNameSource))
-            {
-                trackNameSource = GetSessionInfoTrackName(pluginManager);
-            }
-            if (string.IsNullOrWhiteSpace(trackNameSource))
-            {
-                trackNameSource = "UnknownTrack";
-            }
-
-            string trackName = SanitizeOffTrackDebugExportName(trackNameSource);
-            string timestamp = DateTime.UtcNow.ToString("yyyy-MM-dd_HH-mm-ss", CultureInfo.InvariantCulture);
-            _offTrackDebugExportPath = Path.Combine(folder, $"OffTrackDebug_{trackName}_{timestamp}.csv");
-            if (!File.Exists(_offTrackDebugExportPath))
-            {
-                File.WriteAllText(_offTrackDebugExportPath, GetOffTrackDebugExportHeader() + Environment.NewLine);
-            }
-        }
-
-        private void FlushOffTrackDebugExportBuffer()
-        {
-            if (string.IsNullOrWhiteSpace(_offTrackDebugExportPath) || _offTrackDebugExportBuffer == null || _offTrackDebugExportBuffer.Length == 0)
-            {
-                return;
-            }
-
-            File.AppendAllText(_offTrackDebugExportPath, _offTrackDebugExportBuffer.ToString());
-            _offTrackDebugExportBuffer.Clear();
-            _offTrackDebugExportPendingLines = 0;
-        }
-
-        private void ResetOffTrackDebugExportState()
-        {
-            if (string.IsNullOrWhiteSpace(_offTrackDebugExportPath) && (_offTrackDebugExportBuffer == null || _offTrackDebugExportBuffer.Length == 0))
-            {
-                return;
-            }
-
-            FlushOffTrackDebugExportBuffer();
-            _offTrackDebugExportPath = null;
-            _offTrackDebugExportToken = null;
-            _offTrackDebugExportPendingLines = 0;
-            _offTrackDebugLastSessionTimeSec = double.NaN;
-            _offTrackDebugEventWindowUntilSessionTimeSec = double.NaN;
-            _offTrackDebugLastSnapshot = default;
-            _offTrackDebugSnapshotInitialized = false;
-            _offTrackDebugLastChangeOnlyEnabled = false;
-        }
-
         private void ResetPlayerLapInvalidState()
         {
             _playerLapInvalid = false;
@@ -15271,20 +14792,6 @@ namespace LaunchPlugin
             _playerIncidentDelta = int.MinValue;
             _playerIncidentCount = -1;
             _playerLapInvalidLastSessionTimeSec = double.NaN;
-        }
-
-        private static string GetOffTrackDebugExportHeader()
-        {
-            StringBuilder buffer = new StringBuilder(512);
-            buffer.Append("SessionTimeSec,EventFired,SessionState,SessionFlagsHex,SessionFlagsDec,ProbeCarIdx,");
-            buffer.Append("CarIdxTrackSurface,CarIdxTrackSurfaceMaterial,CarIdxSessionFlagsHex,CarIdxSessionFlagsDec,");
-            buffer.Append("CarIdxOnPitRoad,CarIdxLap,CarIdxLapDistPct,");
-            buffer.Append("SurfaceOffTrackNow,DefinitiveOffTrackNow,BoundaryEvidenceNow,OffTrackStreak,OffTrackFirstSeenTimeSec,");
-            buffer.Append("SuspectOffTrackNow,SuspectOffTrackStreak,SuspectOffTrackFirstSeenTimeSec,SuspectOffTrackActive,");
-            buffer.Append("SuspectEventId,SuspectPulseUntilTimeSec,SuspectPulseActive,");
-            buffer.Append("CompromisedUntilLap,CompromisedOffTrackActive,CompromisedPenaltyActive,AllowLatches,");
-            buffer.Append("PlayerCarIdx,PlayerIncidentCount,PlayerIncidentDelta");
-            return buffer.ToString();
         }
 
         private static string GetCarSaDebugExportHeader()
@@ -21407,37 +20914,6 @@ namespace LaunchPlugin
                 SimHub.Logging.Current.Info($"[LalaPlugin:PitExit] {auditLine}");
             }
         }
-        /*
-                private void LogPitExitPitOutSnapshot(double sessionTime, int lapNumber, bool pitTripActive)
-                {
-                    if (_opponentsEngine == null) return;
-
-                    var hasSnapshot = _opponentsEngine.TryGetPitExitSnapshot(out var snapshot);
-                    int posClass = hasSnapshot ? snapshot.PlayerPositionInClass : 0;
-                    int posOverall = hasSnapshot ? snapshot.PlayerPositionOverall : 0;
-                    int predPosClass = hasSnapshot ? snapshot.PredictedPositionInClass : 0;
-                    int carsAhead = hasSnapshot ? snapshot.CarsAheadAfterPit : 0;
-                    double entryGapLdr = hasSnapshot ? snapshot.PitEntryGapToLeaderSec : double.NaN;
-                    double gapLdrLive = hasSnapshot ? snapshot.GapToLeaderLiveSec : double.NaN;
-                    double gapLdrUsed = hasSnapshot ? snapshot.GapToLeaderUsedSec : double.NaN;
-                    double predGapAfterPit = hasSnapshot ? snapshot.PredGapAfterPitSec : double.NaN;
-                    bool pitTripLockActive = hasSnapshot && snapshot.PitTripLockActive;
-
-                    double laneRef = _pitLite?.TimePitLaneSec ?? 0.0;
-                    double boxRef = _pitLite?.TimePitBoxSec ?? 0.0;
-                    double directRef = _pitLite?.DirectSec ?? 0.0;
-
-                    SimHub.Logging.Current.Info(
-                        $"[LalaPlugin:PitExit] Pit-out snapshot: lap={lapNumber} t={sessionTime:F1} " +
-                        $"posClass=P{posClass} posOverall=P{posOverall} predPosClassNow=P{predPosClass} " +
-                        $"carsAheadNow={carsAhead} lane={FormatSecondsWithSuffix(laneRef)} box={FormatSecondsWithSuffix(boxRef)} " +
-                        $"direct={FormatSecondsWithSuffix(directRef)} pitTripActive={pitTripActive} " +
-                        $"entryGapLdr={FormatSecondsWithSuffix(entryGapLdr)} gapLdrLiveNow={FormatSecondsWithSuffix(gapLdrLive)} " +
-                        $"gapLdrUsed={FormatSecondsWithSuffix(gapLdrUsed)} predGapAfterPit={FormatSecondsWithSuffix(predGapAfterPit)} " +
-                        $"lock={pitTripLockActive}"
-                    );
-                }
-        */
         private void ResetSmoothedOutputs()
         {
             // Reset internal EMA state
@@ -24151,8 +23627,6 @@ namespace LaunchPlugin
         public bool OfflineDataModule { get; set; } = false;
         public bool EnableDebugLogging { get; set; } = false;
         public bool EnableCarSADebugExport { get; set; } = false;
-        public bool EnableOffTrackDebugCsv { get; set; } = false;
-        public bool OffTrackDebugLogChangesOnly { get; set; } = false;
         public bool EnableCarTrackingProbeCsv { get; set; } = false;
         public int CarTrackingProbeACarIdx { get; set; } = -1;
         public int CarTrackingProbeBCarIdx { get; set; } = -1;
@@ -24175,7 +23649,6 @@ namespace LaunchPlugin
         public int CarSADebugExportTickMaxHz { get; set; } = 20;
         public bool CarSADebugExportWriteEventsCsv { get; set; } = true;
         public int CarSARawTelemetryMode { get; set; } = 1;
-        public int OffTrackDebugProbeCarIdx { get; set; } = -1;
         public bool PitExitVerboseLogging { get; set; } = false;
         public bool PitBoxIncludeOptionalRepairs { get; set; } = false;
         public bool PitCommandsAutoFocusPreview { get; set; } = false;
@@ -24495,18 +23968,14 @@ namespace LaunchPlugin
         /// </summary>
         /// <returns>The default path.</returns>
 
-        // Renamed from GetDefaultLaunchTracePath
         public string GetCurrentTracePath()
         {
-            // Check if a custom path is set in the settings
             if (!string.IsNullOrWhiteSpace(_plugin.Settings.TraceLogPath))
             {
-                // Use the custom path
                 return _plugin.Settings.TraceLogPath.Trim();
             }
             else
             {
-                // Fall back to the default path
                 string pluginInstallPath = Path.GetDirectoryName(System.Reflection.Assembly.GetExecutingAssembly().Location);
                 return Path.Combine(pluginInstallPath, "Logs", "LaunchData", "LaunchTraces");
             }
@@ -24544,10 +24013,6 @@ namespace LaunchPlugin
                 {
                     SimHub.Logging.Current.Error($"[LalaPlugin:Launch Trace] Failed to write telemetry data: {ex.Message}");
                 }
-            }
-            else if (!_plugin.Settings.EnableTelemetryTracing)
-            {
-                //SimHub.Logging.Current.Debug("TelemetryTraceLogger: Skipping trace logging — disabled in plugin settings.");
             }
         }
 
@@ -24664,10 +24129,8 @@ namespace LaunchPlugin
         /// Gets a list of all launch trace files in the default trace directory.
         /// </summary>
         /// <returns>A list of full file paths to trace files.</returns>
-        public List<string> GetLaunchTraceFiles(string tracePath) // We receive the path as a parameter
+        public List<string> GetLaunchTraceFiles(string tracePath)
         {
-            // NO LONGER NEEDED: string tracePath = GetCurrentTracePath(); <-- DELETE THIS LINE if it exists
-
             if (!System.IO.Directory.Exists(tracePath))
             {
                 SimHub.Logging.Current.Warn($"[LalaPlugin:Launch Trace] Trace directory not found: {tracePath}");

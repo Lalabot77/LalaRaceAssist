@@ -448,7 +448,7 @@
                                     <ComboBoxItem Content="PER LAP"/>
                                 </ComboBox>
                                 <TextBlock Text="Frequency Hz" VerticalAlignment="Center" Margin="0,0,8,6"/>
-                                <TextBox Width="60" Margin="0,0,12,6" Text="{Binding Settings.PropertySnapshotRollingFrequencyHz, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" ToolTip="Used in FREQUENCY mode. Valid range 1 to 5 Hz."/>
+                                <TextBox Width="60" Margin="0,0,12,6" Text="{Binding Settings.PropertySnapshotRollingFrequencyHz, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" ToolTip="Used in FREQUENCY mode. Valid range 1 to 2 Hz."/>
                                 <Button x:Name="PropertySnapshotStartRollingButton" Content="START" Margin="0,0,8,6" Padding="10,2" Click="PropertySnapshotStartRolling_Click"/>
                                 <Button x:Name="PropertySnapshotStopRollingButton" Content="STOP" Margin="0,0,8,6" Padding="10,2" Click="PropertySnapshotStopRolling_Click"/>
                                 <Button Content="RESET ROLLING CSV" Margin="0,0,12,6" Padding="10,2" Click="PropertySnapshotResetRollingCsv_Click"/>
@@ -472,18 +472,6 @@
                                        Foreground="LightGray"
                                        TextWrapping="Wrap"
                                        Text="MANUAL: Event Marker writes one snapshot. FREQUENCY: START/STOP captures rolling snapshots at configured snapshots/sec. PER LAP: START/STOP captures one rolling snapshot per completed lap."/>
-                        </StackPanel>
-                        <StackPanel Orientation="Horizontal" Margin="0,10,0,0">
-                            <styles:SHToggleCheckbox Content="OffTrack Debug CSV" Margin="0,0,15,0"
-                                                     IsChecked="{Binding Settings.EnableOffTrackDebugCsv, Mode=TwoWay}"
-                                                     ToolTip="Enable per-tick OffTrack debug CSV logging for the probed car."/>
-                            <styles:SHToggleCheckbox Content="Log changes/events only" Margin="0,0,15,0"
-                                                     IsChecked="{Binding Settings.OffTrackDebugLogChangesOnly, Mode=TwoWay}"
-                                                     ToolTip="When enabled, only logs when values change or event marker is active."/>
-                            <TextBlock Text="Probe CarIdx" VerticalAlignment="Center" Margin="0,0,8,0"/>
-                            <TextBox Width="80" Text="{Binding Settings.OffTrackDebugProbeCarIdx, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" />
-                            <TextBlock Margin="15,0,0,0" Foreground="LightGray" VerticalAlignment="Center"
-                                       Text="Tip: find your PlayerCarIdx in SimHub property list"/>
                         </StackPanel>
                         <StackPanel Orientation="Vertical" Margin="0,10,0,0">
                             <styles:SHToggleCheckbox x:Name="CarTrackingProbeCsvToggle"
