@@ -375,7 +375,7 @@ namespace LaunchPlugin
                 if (!_warnedMissingCustom)
                 {
                     _warnedMissingCustom = true;
-                    SimHub.Logging.Current.Info("[LalaPlugin:ShiftAssist] WARNING custom wav missing/invalid, falling back to embedded default");
+                    SimHub.Logging.Current.Warn("[LalaPlugin:ShiftAssist] custom wav missing/invalid, falling back to embedded default");
                 }
             }
 

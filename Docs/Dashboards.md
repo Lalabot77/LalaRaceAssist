@@ -318,11 +318,11 @@ Alerts overlay contract:
 
 - Visible when `LalaLaunch.Pit.Debrief.Valid == true` and `LalaLaunch.Pit.Debrief.AgeSec < 15`.
 - Title: `PIT STOP DEBRIEF — STOP ` + `LalaLaunch.Pit.Debrief.StopIndex`.
-- Body: `LalaLaunch.Pit.Debrief.SummaryText` (format `ENTRY ... (Δ ...) | BOX ... (Δ .../PENDING) | SVC ... | STRAT Δ ...`; exit prediction is available in debug fields/logs, not the summary). The entry headline is performance-oriented from line time loss, while limiter/safety quality remains in debug fields; box delta is shown only when the plugin source is plausible, otherwise `Δ PENDING`.
+- Body: `LalaLaunch.Pit.Debrief.SummaryText` (format `ENTRY ... (Δ ...) | BOX ... (Δ .../PENDING) | SVC ... | STRAT Δ ...`; exit prediction is available in debug fields/logs, not the summary). The entry headline is performance-oriented from line time loss, while limiter/safety quality remains in debug fields and can be `POOR` for a bad line-speed compliance verdict even when the headline remains `GOOD`. Box delta comes from `Pit.Box.LastDeltaSec` inverted to Pit Debrief sign (`actual elapsed - predicted target`; positive slower, negative faster) and is shown only when the plugin source is plausible, otherwise `Δ PENDING`.
 
 Debug page fields:
 
-- Entry: `LalaLaunch.Pit.Debrief.Entry.QualityText`, `LineTimeLossSec`, `DecelQualityText`, `LimiterQualityText`.
+- Entry: `LalaLaunch.Pit.Debrief.Entry.QualityText`, `LineTimeLossSec`, `DecelQualityText`, `LimiterQualityText`. Numeric `LineTimeLossSec` exports are raw doubles; debug dashboards should format them to two decimals when detailed review is needed.
 - Box: `LalaLaunch.Pit.Debrief.Box.QualityText`, `MissedReason`, `StationarySec`.
 - Service: `LalaLaunch.Pit.Debrief.Service.FuelAddedLitres`, `FuelTargetLitres`, `RefuelDurationSec`, `RefuelRateLps`, `TyreChangeCount`.
 - Timing: `LalaLaunch.Pit.Debrief.Timing.PredictedTotalLossSec`, `ActualTotalLossSec`, `LossDeltaSec`, `LossSource`.

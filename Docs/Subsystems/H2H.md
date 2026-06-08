@@ -101,3 +101,7 @@ Both `H2HRace.*` and `H2HTrack.*` expose the same flat shape:
   - H2H lap/sector/delta calculation ownership and behavior remain unchanged.
 
 - 2026-05-04 League Race Final Behaviour phase: `H2HTrack.*` remains unchanged and CarSA-owned; no H2H sector/delta behavior changes.
+
+
+## Log hygiene note
+- Native class-best unresolved diagnostics remain transition-latched Info. Obsolete legacy ExtraProperties fallback-removal warnings are not emitted; missing native authority is represented by the current unresolved-reason diagnostics instead.

@@ -52,6 +52,7 @@ namespace LaunchPlugin
         private readonly Func<PitFuelControlSnapshot> _snapshotProvider;
         private readonly Func<string, string, string, bool> _chatCommandSender;
         private readonly Action<string, string, string> _feedbackPublisher;
+        private readonly Func<bool> _softDebugEnabledProvider;
 
         private DateTime _suppressManualOverrideUntilUtc = DateTime.MinValue;
         private bool _maxOverrideArmed;
@@ -67,6 +68,8 @@ namespace LaunchPlugin
         private bool _telemetrySuppressionActive;
         private string _lastTelemetrySuppressionReason = "none";
         private DateTime _lastTelemetrySuppressionLogUtc = DateTime.MinValue;
+        private string _lastSoftDebugBlockedLogKey = string.Empty;
+        private DateTime _lastSoftDebugBlockedLogUtc = DateTime.MinValue;
 
         public PitFuelControlSource Source { get; private set; } = PitFuelControlSource.Stby;
         public PitFuelControlData Data { get; private set; } = PitFuelControlData.Live;
@@ -82,11 +85,13 @@ namespace LaunchPlugin
         public PitFuelControlEngine(
             Func<PitFuelControlSnapshot> snapshotProvider,
             Func<string, string, string, bool> chatCommandSender,
-            Action<string, string, string> feedbackPublisher)
+            Action<string, string, string> feedbackPublisher,
+            Func<bool> softDebugEnabledProvider = null)
         {
             _snapshotProvider = snapshotProvider;
             _chatCommandSender = chatCommandSender;
             _feedbackPublisher = feedbackPublisher;
+            _softDebugEnabledProvider = softDebugEnabledProvider;
         }
 
         public void ResetToOffStby()
@@ -103,6 +108,8 @@ namespace LaunchPlugin
             Fault = 0;
             _maxOverrideArmed = false;
             _suppressManualOverrideUntilUtc = DateTime.MinValue;
+            _lastSoftDebugBlockedLogKey = string.Empty;
+            _lastSoftDebugBlockedLogUtc = DateTime.MinValue;
             RefreshDerivedState();
         }
 
@@ -257,7 +264,7 @@ namespace LaunchPlugin
         {
             if (TryApplySuppressedState())
             {
-                LogActionBlockedDebug("OnLapCross", "suppressed:" + ResolveSuppressionReason(_snapshotProvider()));
+                LogActionBlockedSoftDebug("OnLapCross", "suppressed:" + ResolveSuppressionReason(_snapshotProvider()));
                 return;
             }
 
@@ -269,20 +276,20 @@ namespace LaunchPlugin
 
             if (!IsAutoModeActive || !AutoArmed)
             {
-                LogActionBlockedDebug("OnLapCross", "auto-not-armed");
+                LogActionBlockedSoftDebug("OnLapCross", "auto-not-armed");
                 return;
             }
 
             if (Source == PitFuelControlSource.Stby)
             {
-                LogActionBlockedDebug("OnLapCross", "source-stby");
+                LogActionBlockedSoftDebug("OnLapCross", "source-stby");
                 return;
             }
 
             int targetRounded = ComputeRoundedTargetLitres();
             if (targetRounded < 0)
             {
-                LogActionBlockedDebug("OnLapCross", "target-invalid");
+                LogActionBlockedSoftDebug("OnLapCross", "target-invalid");
                 return;
             }
 
@@ -291,7 +298,7 @@ namespace LaunchPlugin
                 int delta = Math.Abs(targetRounded - LastSentFuelLitres);
                 if (delta < 1 || targetRounded == LastSentFuelLitres)
                 {
-                    LogActionBlockedDebug("OnLapCross", "lap-cross-no-material-delta");
+                    LogActionBlockedSoftDebug("OnLapCross", "lap-cross-no-material-delta");
                     return;
                 }
             }
@@ -307,7 +314,7 @@ namespace LaunchPlugin
             if (snapshot == null)
             {
                 Fault = 0;
-                LogActionBlockedDebug("OnTelemetryTick", "snapshot-null");
+                LogActionBlockedSoftDebug("OnTelemetryTick", "snapshot-null");
                 return;
             }
 
@@ -365,7 +372,7 @@ namespace LaunchPlugin
                 {
                     if (TryConsumeOwnedMirrorChange(currentRequestedLitres, currentFuelFillEnabled, requestedFuelChanged, fuelFillChanged))
                     {
-                        LogActionBlockedDebug("OnTelemetryTick", "owned-mirror-consumed");
+                        LogActionBlockedSoftDebug("OnTelemetryTick", "owned-mirror-consumed");
                     }
                     else
                     {
@@ -713,6 +720,11 @@ namespace LaunchPlugin
 
         private void LogActionEntry(string actionName)
         {
+            if (!IsSoftDebugEnabled())
+            {
+                return;
+            }
+
             var snapshot = _snapshotProvider();
             string targetText = snapshot == null ? "n/a" : TargetLitres.ToString("F2");
             string lastSentText = LastSentFuelLitres >= 0 ? LastSentFuelLitres.ToString() : "none";
@@ -723,12 +735,58 @@ namespace LaunchPlugin
 
         private void LogActionBlockedInfo(string actionName, string reason)
         {
-            SimHub.Logging.Current.Info($"[LalaPlugin:PitFuelControl] blocked action={actionName} reason={reason}");
+            if (IsAlwaysOnBlockedReason(reason) || ShouldLogSoftDebugBlocked(actionName, reason))
+            {
+                SimHub.Logging.Current.Info($"[LalaPlugin:PitFuelControl] blocked action={actionName} reason={reason}");
+            }
         }
 
-        private void LogActionBlockedDebug(string actionName, string reason)
+        private void LogActionBlockedSoftDebug(string actionName, string reason)
         {
-            SimHub.Logging.Current.Debug($"[LalaPlugin:PitFuelControl] blocked action={actionName} reason={reason}");
+            if (IsAlwaysOnBlockedReason(reason))
+            {
+                LogActionBlockedInfo(actionName, reason);
+                return;
+            }
+
+            if (ShouldLogSoftDebugBlocked(actionName, reason))
+            {
+                SimHub.Logging.Current.Info($"[LalaPlugin:PitFuelControl] blocked action={actionName} reason={reason}");
+            }
+        }
+
+        private bool IsSoftDebugEnabled()
+        {
+            return _softDebugEnabledProvider != null && _softDebugEnabledProvider();
+        }
+
+        private static bool IsAlwaysOnBlockedReason(string reason)
+        {
+            if (string.IsNullOrWhiteSpace(reason)) return false;
+            string normalized = reason.Trim();
+            return string.Equals(normalized, "send-failed", StringComparison.Ordinal) ||
+                string.Equals(normalized, "target-invalid", StringComparison.Ordinal) ||
+                string.Equals(normalized, "snapshot-null", StringComparison.Ordinal);
+        }
+
+        private bool ShouldLogSoftDebugBlocked(string actionName, string reason)
+        {
+            if (!IsSoftDebugEnabled())
+            {
+                return false;
+            }
+
+            string key = string.Format("{0}|{1}", actionName ?? string.Empty, reason ?? string.Empty);
+            DateTime now = DateTime.UtcNow;
+            if (!string.Equals(key, _lastSoftDebugBlockedLogKey, StringComparison.Ordinal) ||
+                (now - _lastSoftDebugBlockedLogUtc).TotalSeconds >= 5.0)
+            {
+                _lastSoftDebugBlockedLogKey = key;
+                _lastSoftDebugBlockedLogUtc = now;
+                return true;
+            }
+
+            return false;
         }
 
         private static string SourceToActionLabel(string actionName)

@@ -149,9 +149,9 @@ Canonical log wording and meaning live in `Docs/Internal/SimHubLogMessages.md`; 
 - tyre compound attempt + single-window confirmation diagnostics.
 - Fuel Control action-path diagnostics:
   - `LalaLaunch` Fuel Control action entry logs are intentionally emitted (`PitFuelControl* action received`) to prove SimHub binding reached plugin action methods;
-  - `PitFuelControlEngine` emits compact entry snapshots (`entry action=... mode=... source=... suppressReason=...`) for button paths and gated AUTO lap-cross paths;
-  - blocked/no-send branches emit explicit reasons (`snapshot-null`, `suppressed:<reason>`, `off-hard-guard`, `source-stby`, `target-invalid`, `send-failed`, `auto-not-armed`, `lap-cross-no-material-delta`, `iracing-autofuel-ownership`, `external-mirror-change`, `owned-mirror-consumed`);
-  - telemetry suppression diagnostics are transition/throttled only (no per-tick spam), with explicit suppression-clear transition logging.
+  - `PitFuelControlEngine` entry snapshots (`entry action=... mode=... source=... suppressReason=...`) are now Soft-Debug-gated for focused ownership diagnostics;
+  - blocked/no-send branches preserve always-on evidence for serious cases (`snapshot-null`, `target-invalid`, `send-failed`) while benign ownership/mirror/suppression churn (`suppressed:<reason>`, `off-hard-guard`, `source-stby`, `auto-not-armed`, `lap-cross-no-material-delta`, `iracing-autofuel-ownership`, `external-mirror-change`, `owned-mirror-consumed`) is emitted only when Soft Debug is enabled and is transition/rate-limited;
+  - telemetry suppression diagnostics are transition/throttled Soft-Debug details (no per-tick spam), with explicit always-on suppression-clear transition logging.
 - tyre mode transitions, one-shot command sends, and truth-mirror / AUTO-cancel reasons.
 
 ## Dependencies / ordering assumptions

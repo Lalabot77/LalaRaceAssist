@@ -137,7 +137,8 @@ namespace LaunchPlugin
             _pitFuelControlEngine = new PitFuelControlEngine(
                 BuildPitFuelControlSnapshot,
                 SendPitFuelControlCommand,
-                (actionName, message, raw) => _pitCommandEngine.PublishActionFeedback(actionName, message, raw));
+                (actionName, message, raw) => _pitCommandEngine.PublishActionFeedback(actionName, message, raw),
+                () => SoftDebugEnabled);
             _pitTyreControlEngine = new PitTyreControlEngine(
                 BuildPitTyreControlSnapshot,
                 SendPitTyreControlCommand,
@@ -1329,6 +1330,12 @@ namespace LaunchPlugin
         private int _lastLeaderSampleCarIdx = -1;
         private int _lastLeaderSampleLap = -1;
         private bool _leaderPaceClearedLogged = false;
+        private bool _leaderLapAuthorityIssueActive = false;
+        private string _leaderLapAuthorityIssueKey = string.Empty;
+        private DateTime _leaderLapAuthorityIssueLogUtc = DateTime.MinValue;
+        private bool _leaderLapHoldActive = false;
+        private string _leaderLapHoldKey = string.Empty;
+        private DateTime _leaderLapHoldLogUtc = DateTime.MinValue;
         public double LiveLeaderAvgPaceSeconds { get; private set; }
         public double Pace_LeaderDeltaToPlayerSec { get; private set; }
         private double _lastPitLossSaved = 0.0;
@@ -3595,6 +3602,12 @@ namespace LaunchPlugin
             _lastLeaderSampleLap = -1;
             LiveLeaderAvgPaceSeconds = 0.0;
             _leaderPaceClearedLogged = false;
+            _leaderLapAuthorityIssueActive = false;
+            _leaderLapAuthorityIssueKey = string.Empty;
+            _leaderLapAuthorityIssueLogUtc = DateTime.MinValue;
+            _leaderLapHoldActive = false;
+            _leaderLapHoldKey = string.Empty;
+            _leaderLapHoldLogUtc = DateTime.MinValue;
             Pace_StintAvgLapTimeSec = 0.0;
             Pace_Last5LapAvgSec = 0.0;
             Pace_LeaderDeltaToPlayerSec = 0.0;
@@ -3900,6 +3913,11 @@ namespace LaunchPlugin
 
         private bool ShouldLogLapDetector(string key)
         {
+            if (!SoftDebugEnabled)
+            {
+                return false;
+            }
+
             var now = DateTime.UtcNow;
             if (key != _lapDetectorLastLogKey || (now - _lapDetectorLastLogUtc).TotalSeconds > 1.0)
             {
@@ -4240,7 +4258,7 @@ namespace LaunchPlugin
             if (lapCrossed)
             {
                 int completedPlayerLapForLeader = Convert.ToInt32(data.NewData?.CompletedLaps ?? 0);
-                var leaderLap = ReadLeaderLapTimeSeconds(PluginManager, data, LiveLeaderAvgPaceSeconds, completedPlayerLapForLeader, IsVerboseDebugLoggingOn);
+                var leaderLap = ReadLeaderLapTimeSeconds(PluginManager, data, LiveLeaderAvgPaceSeconds, completedPlayerLapForLeader, SoftDebugEnabled);
                 leaderLastLapSec = leaderLap.seconds;
                 leaderLapWasFallback = leaderLap.isFallback;
                 leaderSampleCarIdx = leaderLap.carIdx;
@@ -4312,7 +4330,7 @@ namespace LaunchPlugin
 
                     if (IsVerboseDebugLoggingOn)
                     {
-                        SimHub.Logging.Current.Debug(
+                        SimHub.Logging.Current.Info(
                             $"[LalaPlugin:Pace] baseline_used chosen={paceSource} baseline_s={stableAvgPace:F3} " +
                             $"live_median_s={liveMedianPace:F3} profile_avg_s={profileAvgPace:F3} session_pb_s={sessionPbPace:F3}");
                     }
@@ -4413,6 +4431,7 @@ namespace LaunchPlugin
                         _lastLeaderSampleCarIdx = leaderSampleCarIdx;
                         _lastLeaderSampleLap = leaderSampleLap;
                         LiveLeaderAvgPaceSeconds = _recentLeaderLapTimes.Average();
+                        LogLeaderLapAuthorityRecovered("overall_p1_last_lap", leaderSampleCarIdx, leaderSampleLap, leaderLastLapSec);
                         UpdateLeaderDelta();
                     }
                     else if (leaderLapWasFallback && IsPlausibleLeaderLapTimeSec(leaderLastLapSec) && _recentLeaderLapTimes.Count == 0)
@@ -4420,6 +4439,7 @@ namespace LaunchPlugin
                         // Low-confidence current overall-P1 best-lap fallback only seeds the published authority while
                         // the rolling overall leader pace window is empty; it is not ingested into the window.
                         LiveLeaderAvgPaceSeconds = leaderLastLapSec;
+                        LogLeaderLapAuthorityRecovered("overall_p1_best_lap_low_conf", leaderSampleCarIdx, leaderSampleLap, leaderLastLapSec);
                         UpdateLeaderDelta();
                     }
                     else if (_recentLeaderLapTimes.Count == 0)
@@ -4505,7 +4525,7 @@ namespace LaunchPlugin
                         {
                             if (IsVerboseDebugLoggingOn)
                             {
-                                SimHub.Logging.Current.Debug($"[LalaPlugin:Pace] Gross outlier lap {lastLapSec:F2}s (avg={paceBaselineForLog:F2}s, Δ={delta:F1}s)");
+                                SimHub.Logging.Current.Info($"[LalaPlugin:Pace] Gross outlier lap {lastLapSec:F2}s (avg={paceBaselineForLog:F2}s, Δ={delta:F1}s)");
                             }
                             paceRejected = true;
                             paceRejectReason = "gross-outlier";
@@ -4516,7 +4536,7 @@ namespace LaunchPlugin
                         {
                             if (IsVerboseDebugLoggingOn)
                             {
-                                SimHub.Logging.Current.Debug($"[LalaPlugin:Pace] Rejected too-slow lap {lastLapSec:F2}s (avg={paceBaselineForLog:F2}s, Δ={delta:F1}s)");
+                                SimHub.Logging.Current.Info($"[LalaPlugin:Pace] Rejected too-slow lap {lastLapSec:F2}s (avg={paceBaselineForLog:F2}s, Δ={delta:F1}s)");
                             }
                             paceRejected = true;
                             paceRejectReason = "slow-outlier";
@@ -4606,7 +4626,7 @@ namespace LaunchPlugin
                             }
                             else if (IsVerboseDebugLoggingOn)
                             {
-                                SimHub.Logging.Current.Debug(pbLog);
+                                SimHub.Logging.Current.Info(pbLog);
                             }
                         }
                     }
@@ -5834,7 +5854,7 @@ namespace LaunchPlugin
                             runtimeRateLps = ActiveProfile.RefuelRate;
                             if (IsVerboseDebugLoggingOn)
                             {
-                                SimHub.Logging.Current.Debug($"[LalaPlugin:Refuel Rate] Locked; blocked learned overwrite for '{ActiveProfile.ProfileName}' (candidate {rateLps:F2}L/s).");
+                                SimHub.Logging.Current.Info($"[LalaPlugin:Refuel Rate] Locked; blocked learned overwrite for '{ActiveProfile.ProfileName}' (candidate {rateLps:F2}L/s).");
                             }
                             return RefuelRateSaveOutcome.BlockedLocked;
                         }
@@ -5846,7 +5866,7 @@ namespace LaunchPlugin
                     runtimeRateLps = ActiveProfile.RefuelRate;
                     if (IsVerboseDebugLoggingOn)
                     {
-                        SimHub.Logging.Current.Debug($"[LalaPlugin:Profiles] Refuel rate saved for '{ActiveProfile.ProfileName}': {rateLps:F3}L/s");
+                        SimHub.Logging.Current.Info($"[LalaPlugin:Profiles] Refuel rate saved for '{ActiveProfile.ProfileName}': {rateLps:F3}L/s");
                     }
                     return RefuelRateSaveOutcome.Saved;
                 }
@@ -5947,7 +5967,6 @@ namespace LaunchPlugin
         private bool _lastDebugMasterOperationalState = false;
         private DateTime _propertySnapshotLastAutoCaptureUtc = DateTime.MinValue;
         private int _propertySnapshotLastLapCaptured = -1;
-        private DateTime _propertySnapshotLastAutoSnapshotLogUtc = DateTime.MinValue;
         private bool _msgCxPressed = false;
         private bool _pitScreenActive = false;
         private bool _pitScreenDismissed = false;
@@ -6041,7 +6060,6 @@ namespace LaunchPlugin
         private OpponentsEngine _opponentsEngine;
         private CarSAEngine _carSaEngine;
         private H2HEngine _h2hEngine;
-        private bool _h2hClassSessionBestNativeMissingWarned;
         private LapReferenceEngine _lapReferenceEngine;
         private readonly RadioFrequencyNameCache _radioFrequencyNameCache = new RadioFrequencyNameCache();
         private int _lastTransmitCarIdx = -1;
@@ -6991,6 +7009,7 @@ namespace LaunchPlugin
         private int _pitBoxLatchedTireChangeCount = 4;
         private bool _pitBoxTireCountLatched = false;
         private double _pitBoxLastDeltaSec = 0.0;
+        private bool _pitBoxLastDeltaValid = false;
         private const double PitBoxTargetLatchSettleSeconds = 1.0;
         private const double PitBoxModeledServiceOverheadSeconds = 1.0;
         private const double PitExitTransitionAllowanceSec = 2.00;
@@ -10113,6 +10132,9 @@ namespace LaunchPlugin
             _pitLite?.ResetCycle();
             _pitDebrief?.ResetAll();
             _pitDebriefWasInBox = false;
+            _pitBoxLastDeltaSec = 0.0;
+            _pitBoxLastDeltaValid = false;
+            ResetPitBoxCountdownState();
             _pit?.ResetPitPhaseState();
             _pitCommandEngine?.ResetFeedbackState();
             _opponentsEngine?.Reset();
@@ -10223,7 +10245,6 @@ namespace LaunchPlugin
 
         private void ResetH2HClassBestResolveLogLatch()
         {
-            _h2hClassSessionBestNativeMissingWarned = false;
             _classBestResolveLastLogReason = string.Empty;
         }
 
@@ -11119,9 +11140,9 @@ namespace LaunchPlugin
             }
 
             UpdateLiveSurfaceSummary(pluginManager);
-            if (!_msgV1InfoLogged && _msgV1Engine != null)
+            if (!_msgV1InfoLogged && _msgV1Engine != null && SoftDebugEnabled)
             {
-                SimHub.Logging.Current.Info("[LalaPlugin:MSGV1] Session active (logs suppressed; set DEBUG to view details)");
+                SimHub.Logging.Current.Info("[LalaPlugin:MSGV1] Session active (routine details suppressed; enable Soft Debug for message diagnostics).");
                 _msgV1InfoLogged = true;
             }
 
@@ -11209,7 +11230,8 @@ namespace LaunchPlugin
                 _pitDebrief.RefreshServiceEvidence(
                     Pit_AddedSoFar,
                     debriefFuelTarget,
-                    FuelCalculator?.EffectiveRefuelRateLps ?? 0.0);
+                    FuelCalculator?.EffectiveRefuelRateLps ?? 0.0,
+                    !_isRefuelSelected);
             }
             UpdateMonitorPitStopFramework(data, pluginManager, sessionTime);
 
@@ -11817,7 +11839,7 @@ namespace LaunchPlugin
 
                             if (IsVerboseDebugLoggingOn)
                             {
-                                SimHub.Logging.Current.Debug($"[LalaPlugin:Refuel] Refuel started at {_refuelStartTime:F1}s (fuel {_refuelStartFuel:F1}L).");
+                                SimHub.Logging.Current.Info($"[LalaPlugin:Refuel] Refuel started at {_refuelStartTime:F1}s (fuel {_refuelStartFuel:F1}L).");
                             }
                         }
 
@@ -11877,7 +11899,7 @@ namespace LaunchPlugin
 
                         if (IsVerboseDebugLoggingOn)
                         {
-                            SimHub.Logging.Current.Debug($"[LalaPlugin:Refuel] Refuel ended at {stopTime:F1} s.");
+                            SimHub.Logging.Current.Info($"[LalaPlugin:Refuel] Refuel ended at {stopTime:F1} s.");
                         }
 
                         // Reset state
@@ -12006,7 +12028,7 @@ namespace LaunchPlugin
                         {
                             if (IsVerboseDebugLoggingOn)
                             {
-                                SimHub.Logging.Current.Debug($"[LalaPlugin:Profiles] Ensure car and track: car='{CurrentCarModel}', trackKey='{CurrentTrackKey}'");
+                                SimHub.Logging.Current.Info($"[LalaPlugin:Profiles] Ensure car and track: car='{CurrentCarModel}', trackKey='{CurrentTrackKey}'");
                             }
 
                             ProfilesViewModel.EnsureCarTrack(CurrentCarModel, CurrentTrackKey);
@@ -12015,7 +12037,7 @@ namespace LaunchPlugin
                         {
                             if (IsVerboseDebugLoggingOn)
                             {
-                                SimHub.Logging.Current.Debug($"[LalaPlugin:Profile] EnsureCarTrack fallback -> car='{CurrentCarModel}', trackName='{trackIdentity}'");
+                                SimHub.Logging.Current.Info($"[LalaPlugin:Profile] EnsureCarTrack fallback -> car='{CurrentCarModel}', trackName='{trackIdentity}'");
                             }
                             ProfilesViewModel.EnsureCarTrack(CurrentCarModel, trackIdentity);
                         }
@@ -14824,7 +14846,7 @@ namespace LaunchPlugin
 
             lastLogs[carIdx] = now;
             int xor = previous ^ current;
-            SimHub.Logging.Current.Debug($"[LalaPlugin:CarSA] {label} changed carIdx={carIdx} {previous} -> {current} (xor=0x{xor:X})");
+            SimHub.Logging.Current.Info($"[LalaPlugin:CarSA] {label} changed carIdx={carIdx} {previous} -> {current} (xor=0x{xor:X})");
         }
 
         private void AppendSlotDebugRow(StringBuilder buffer, CarSASlot slot, bool isAhead)
@@ -15324,11 +15346,6 @@ namespace LaunchPlugin
             {
                 SimHub.Logging.Current.Info($"[LalaPlugin:Debug] Property snapshot summary reason={captureReason} includeChanged={includeChanged} rows={rows.Count} changed1={changedOnes} changed0={changedZeros} changedNA={changedNa}.");
             }
-            else if ((DateTime.UtcNow - _propertySnapshotLastAutoSnapshotLogUtc).TotalSeconds >= 10.0)
-            {
-                _propertySnapshotLastAutoSnapshotLogUtc = DateTime.UtcNow;
-                SimHub.Logging.Current.Info($"[LalaPlugin:Debug] Property snapshot auto capture heartbeat reason={captureReason} rows={rows.Count}.");
-            }
             if (includeOneShot)
             {
                 WriteSnapshotWithFallback(filePath, buffer.ToString());
@@ -15381,7 +15398,6 @@ namespace LaunchPlugin
             {
                 Directory.CreateDirectory(Path.GetDirectoryName(primaryFilePath));
                 File.WriteAllText(primaryFilePath, content);
-                SimHub.Logging.Current.Info($"[LalaPlugin:Debug] Property snapshot write success: {primaryFilePath}");
             }
             catch (Exception primaryEx)
             {
@@ -15403,7 +15419,6 @@ namespace LaunchPlugin
                     File.AppendAllText(primaryFilePath, header + Environment.NewLine);
                 }
                 File.AppendAllText(primaryFilePath, content);
-                SimHub.Logging.Current.Info($"[LalaPlugin:Debug] Property snapshot rolling append success: {primaryFilePath}");
             }
             catch (Exception primaryEx)
             {
@@ -15440,10 +15455,6 @@ namespace LaunchPlugin
             try
             {
                 WriteSnapshotRollingWide(primaryFilePath, captureStamp, rows);
-                if (detailedLogs)
-                {
-                    SimHub.Logging.Current.Info($"[LalaPlugin:Debug] Property snapshot rolling append success: {primaryFilePath}");
-                }
             }
             catch (Exception primaryEx)
             {
@@ -19401,7 +19412,7 @@ namespace LaunchPlugin
                 {
                     if (IsVerboseDebugLoggingOn)
                     {
-                        SimHub.Logging.Current.Debug($"[LalaPlugin:CarSA] Identity unresolved for carIdx={carIdx} after slot change.");
+                        SimHub.Logging.Current.Info($"[LalaPlugin:CarSA] Identity unresolved for carIdx={carIdx} after slot change.");
                     }
                 }
 
@@ -20835,20 +20846,11 @@ namespace LaunchPlugin
 
             if (classBestLapSec > 0.0)
             {
-                _h2hClassSessionBestNativeMissingWarned = false;
                 return classBestLapSec;
             }
 
             bool isMultiClassSession = IsMultiClassSession(pluginManager);
             MaybeLogClassBestResolveFailure(resolveFailureReason, playerCarIdx, isMultiClassSession);
-
-            if (!_h2hClassSessionBestNativeMissingWarned)
-            {
-                _h2hClassSessionBestNativeMissingWarned = true;
-                SimHub.Logging.Current.Warn(
-                    "[LalaPlugin:H2H] Native class session-best lap unavailable; legacy IRacingExtraProperties fallback is removed. " +
-                    "H2H class-best output remains 0 until native class-best is available.");
-            }
 
             return 0.0;
         }
@@ -21922,18 +21924,25 @@ namespace LaunchPlugin
                 _pitDebrief.RefreshServiceEvidence(
                     Pit_AddedSoFar,
                     target,
-                    FuelCalculator?.EffectiveRefuelRateLps ?? 0.0);
+                    FuelCalculator?.EffectiveRefuelRateLps ?? 0.0,
+                    !_isRefuelSelected);
             }
 
             if (!inBoxPhase && _pitDebriefWasInBox)
             {
+                double debriefBoxDeltaSec = _pitBoxLastDeltaValid ? -_pitBoxLastDeltaSec : double.NaN;
                 _pitDebrief.LatchBoxExit(
                     _pit.PitStopDuration.TotalSeconds,
                     Pit_AddedSoFar,
                     FuelCalculator?.EffectiveRefuelRateLps ?? 0.0,
                     double.NaN,
-                    -_pitBoxLastDeltaSec,
+                    debriefBoxDeltaSec,
                     phase);
+            }
+
+            if (!_pitBoxCountdownActive && _pitBoxLastDeltaValid)
+            {
+                _pitDebrief.RefreshBoxDeltaFromActualMinusPredicted(-_pitBoxLastDeltaSec);
             }
 
             _pitDebriefWasInBox = inPitLane && inBoxPhase;
@@ -21954,6 +21963,7 @@ namespace LaunchPlugin
 
             if (pitEntryEdge)
             {
+                _pitBoxLastDeltaValid = false;
                 int predictedPosition = _opponentsEngine?.Outputs?.PitExit?.PredictedPositionInClass ?? 0;
                 _pitDebrief.StartPitEntry(
                     predictedTotalLossSec,
@@ -22071,6 +22081,7 @@ namespace LaunchPlugin
                     }
 
                     _pitBoxLastDeltaSec = deltaSec;
+                    _pitBoxLastDeltaValid = true;
                 }
 
                 ResetPitBoxCountdownState();
@@ -22084,6 +22095,7 @@ namespace LaunchPlugin
             if (!wasActive)
             {
                 _pitBoxLastDeltaSec = 0.0;
+                _pitBoxLastDeltaValid = false;
                 int preServiceSelectedCount = _liveTireChangeCount;
                 if (preServiceSelectedCount < 0) preServiceSelectedCount = 0;
                 if (preServiceSelectedCount > 4) preServiceSelectedCount = 4;
@@ -23587,7 +23599,7 @@ namespace LaunchPlugin
 
             if (pluginManager == null)
             {
-                SimHub.Logging.Current.Info("[LalaPlugin:Leader Lap] no valid overall leader lap time (plugin unavailable) – returning 0");
+                LogLeaderLapAuthorityUnavailable("plugin_unavailable", "[LalaPlugin:Leader Lap] no valid overall leader lap time (plugin unavailable) – returning 0");
                 return (0.0, false, UnknownCarIdx, UnknownLap);
             }
 
@@ -23600,19 +23612,16 @@ namespace LaunchPlugin
             {
                 if (TryUseHeldLeaderAverage(leaderAvgFallback, completedPlayerLap, "race_state", UnknownCarIdx, UnknownLap, out var heldRaceState))
                 {
-                    if (verboseLoggingEnabled)
-                    {
-                        SimHub.Logging.Current.Debug(string.Format(
-                            CultureInfo.InvariantCulture,
-                            "[LalaPlugin:Leader Lap] overall leader sampling paused state={0} session='{1}', using held rolling avg={2:F3}s",
-                            sessionStateNumeric,
-                            sessionTypeName,
-                            leaderAvgFallback));
-                    }
+                    LogLeaderLapDetail(verboseLoggingEnabled, string.Format(
+                        CultureInfo.InvariantCulture,
+                        "[LalaPlugin:Leader Lap] overall leader sampling paused state={0} session='{1}', using held rolling avg={2:F3}s",
+                        sessionStateNumeric,
+                        sessionTypeName,
+                        leaderAvgFallback));
                     return heldRaceState;
                 }
 
-                SimHub.Logging.Current.Info(string.Format(
+                LogLeaderLapAuthorityUnavailable("race_state", string.Format(
                     CultureInfo.InvariantCulture,
                     "[LalaPlugin:Leader Lap] no valid overall leader lap time (race state={0}, session='{1}') – returning 0",
                     sessionStateNumeric,
@@ -23643,7 +23652,7 @@ namespace LaunchPlugin
                     return heldMissingIdentity;
                 }
 
-                SimHub.Logging.Current.Info("[LalaPlugin:Leader Lap] no valid overall leader identity – returning 0");
+                LogLeaderLapAuthorityUnavailable("overall_leader_identity_missing", "[LalaPlugin:Leader Lap] no valid overall leader identity – returning 0");
                 return (0.0, false, UnknownCarIdx, UnknownLap);
             }
 
@@ -23655,7 +23664,7 @@ namespace LaunchPlugin
                     return heldLapUnavailable;
                 }
 
-                SimHub.Logging.Current.Info(string.Format(
+                LogLeaderLapAuthorityUnavailable("overall_leader_lap_unavailable", string.Format(
                     CultureInfo.InvariantCulture,
                     "[LalaPlugin:Leader Lap] no valid overall leader lap time (carIdx={0} lap={1}) – returning 0",
                     overallLeaderIdx,
@@ -23670,7 +23679,7 @@ namespace LaunchPlugin
                     return heldOnPitRoad;
                 }
 
-                SimHub.Logging.Current.Info(string.Format(
+                LogLeaderLapAuthorityUnavailable("overall_leader_on_pit_road", string.Format(
                     CultureInfo.InvariantCulture,
                     "[LalaPlugin:Leader Lap] no valid overall leader lap time (carIdx={0} on pit road) – returning 0",
                     overallLeaderIdx));
@@ -23678,20 +23687,17 @@ namespace LaunchPlugin
             }
 
             double lastLapSec = ReadCarIdxTime(lastLapTimes, overallLeaderIdx);
-            if (verboseLoggingEnabled)
-            {
-                SimHub.Logging.Current.Debug(string.Format(
-                    CultureInfo.InvariantCulture,
-                    "[LalaPlugin:Leader Lap] candidate source=overall_p1_last_lap identity={0} carIdx={1} lap={2} parsed_s={3:F3}",
-                    identitySource,
-                    overallLeaderIdx,
-                    leaderLapCount,
-                    lastLapSec));
-            }
+            LogLeaderLapDetail(verboseLoggingEnabled, string.Format(
+                CultureInfo.InvariantCulture,
+                "[LalaPlugin:Leader Lap] candidate source=overall_p1_last_lap identity={0} carIdx={1} lap={2} parsed_s={3:F3}",
+                identitySource,
+                overallLeaderIdx,
+                leaderLapCount,
+                lastLapSec));
 
             if (TryAcceptLeaderLapCandidate(lastLapSec, out string lastRejectReason))
             {
-                SimHub.Logging.Current.Info(string.Format(
+                LogLeaderLapDetail(verboseLoggingEnabled, string.Format(
                     CultureInfo.InvariantCulture,
                     "[LalaPlugin:Leader Lap] using overall leader lap from overall_p1_last_lap carIdx={0} lap={1} identity={2} = {3:F3}s",
                     overallLeaderIdx,
@@ -23703,7 +23709,7 @@ namespace LaunchPlugin
 
             if (!string.IsNullOrWhiteSpace(lastRejectReason))
             {
-                SimHub.Logging.Current.Info(string.Format(
+                LogLeaderLapDetail(verboseLoggingEnabled, string.Format(
                     CultureInfo.InvariantCulture,
                     "[LalaPlugin:Leader Lap] reject source=overall_p1_last_lap carIdx={0} lap={1} sec={2:F3} reason={3}",
                     overallLeaderIdx,
@@ -23723,20 +23729,17 @@ namespace LaunchPlugin
             }
 
             double bestLapSec = ReadCarIdxTime(bestLapTimes, overallLeaderIdx);
-            if (verboseLoggingEnabled)
-            {
-                SimHub.Logging.Current.Debug(string.Format(
-                    CultureInfo.InvariantCulture,
-                    "[LalaPlugin:Leader Lap] candidate source=overall_p1_best_lap_low_conf identity={0} carIdx={1} lap={2} parsed_s={3:F3}",
-                    identitySource,
-                    overallLeaderIdx,
-                    leaderLapCount,
-                    bestLapSec));
-            }
+            LogLeaderLapDetail(verboseLoggingEnabled, string.Format(
+                CultureInfo.InvariantCulture,
+                "[LalaPlugin:Leader Lap] candidate source=overall_p1_best_lap_low_conf identity={0} carIdx={1} lap={2} parsed_s={3:F3}",
+                identitySource,
+                overallLeaderIdx,
+                leaderLapCount,
+                bestLapSec));
 
             if (TryAcceptLeaderLapCandidate(bestLapSec, out string bestRejectReason))
             {
-                SimHub.Logging.Current.Info(string.Format(
+                LogLeaderLapDetail(verboseLoggingEnabled, string.Format(
                     CultureInfo.InvariantCulture,
                     "[LalaPlugin:Leader Lap] using low-confidence overall leader best lap fallback carIdx={0} lap={1} identity={2} = {3:F3}s",
                     overallLeaderIdx,
@@ -23748,7 +23751,7 @@ namespace LaunchPlugin
 
             if (!string.IsNullOrWhiteSpace(bestRejectReason))
             {
-                SimHub.Logging.Current.Info(string.Format(
+                LogLeaderLapDetail(verboseLoggingEnabled, string.Format(
                     CultureInfo.InvariantCulture,
                     "[LalaPlugin:Leader Lap] reject source=overall_p1_best_lap_low_conf carIdx={0} lap={1} sec={2:F3} reason={3}",
                     overallLeaderIdx,
@@ -23757,7 +23760,7 @@ namespace LaunchPlugin
                     bestRejectReason));
             }
 
-            SimHub.Logging.Current.Info("[LalaPlugin:Leader Lap] no valid overall leader lap time from native CarIdx candidates – returning 0");
+            LogLeaderLapAuthorityUnavailable("native_candidates_unavailable", "[LalaPlugin:Leader Lap] no valid overall leader lap time from native CarIdx candidates – returning 0");
             return (0.0, false, overallLeaderIdx, leaderLapCount);
         }
 
@@ -23780,27 +23783,100 @@ namespace LaunchPlugin
                              completedPlayerLap == _lastLeaderAuthorityCompletedPlayerLap;
             if (!holdFresh)
             {
+                LogLeaderLapHoldExpired(reason, carIdx, lap, completedPlayerLap, _lastLeaderAuthorityCompletedPlayerLap);
+                return false;
+            }
+
+            LogLeaderLapHoldStarted(reason, carIdx, lap, completedPlayerLap, leaderAvgFallback);
+            held = (leaderAvgFallback, true, carIdx, lap);
+            return true;
+        }
+
+        private void LogLeaderLapDetail(bool enabled, string message)
+        {
+            if (enabled && !string.IsNullOrWhiteSpace(message))
+            {
+                SimHub.Logging.Current.Info(message);
+            }
+        }
+
+        private void LogLeaderLapAuthorityUnavailable(string key, string message)
+        {
+            string safeKey = string.IsNullOrWhiteSpace(key) ? "unknown" : key.Trim();
+            DateTime now = DateTime.UtcNow;
+            bool shouldLog = !_leaderLapAuthorityIssueActive ||
+                !string.Equals(_leaderLapAuthorityIssueKey, safeKey, StringComparison.Ordinal) ||
+                (now - _leaderLapAuthorityIssueLogUtc).TotalSeconds >= 30.0;
+
+            _leaderLapAuthorityIssueActive = true;
+            _leaderLapAuthorityIssueKey = safeKey;
+            if (shouldLog)
+            {
+                _leaderLapAuthorityIssueLogUtc = now;
+                SimHub.Logging.Current.Info(message);
+            }
+        }
+
+        private void LogLeaderLapHoldStarted(string reason, int carIdx, int lap, int completedPlayerLap, double leaderAvgFallback)
+        {
+            string safeReason = string.IsNullOrWhiteSpace(reason) ? "unknown" : reason.Trim();
+            string key = string.Format(CultureInfo.InvariantCulture, "{0}|{1}|{2}|{3}", safeReason, carIdx, lap, completedPlayerLap);
+            DateTime now = DateTime.UtcNow;
+            bool shouldLog = !_leaderLapHoldActive ||
+                !string.Equals(_leaderLapHoldKey, key, StringComparison.Ordinal) ||
+                (now - _leaderLapHoldLogUtc).TotalSeconds >= 30.0;
+
+            _leaderLapHoldActive = true;
+            _leaderLapHoldKey = key;
+            if (shouldLog)
+            {
+                _leaderLapHoldLogUtc = now;
                 SimHub.Logging.Current.Info(string.Format(
                     CultureInfo.InvariantCulture,
-                    "[LalaPlugin:Leader Lap] held overall leader pace expired reason={0} carIdx={1} lap={2} current_player_lap={3} last_valid_player_lap={4} – returning 0",
-                    string.IsNullOrWhiteSpace(reason) ? "unknown" : reason,
+                    "[LalaPlugin:Leader Lap] hold started reason={0} carIdx={1} lap={2} completed_player_lap={3} avg_s={4:F3}",
+                    safeReason,
                     carIdx,
                     lap,
                     completedPlayerLap,
-                    _lastLeaderAuthorityCompletedPlayerLap));
-                return false;
+                    leaderAvgFallback));
+            }
+        }
+
+        private void LogLeaderLapHoldExpired(string reason, int carIdx, int lap, int completedPlayerLap, int lastValidPlayerLap)
+        {
+            string safeReason = string.IsNullOrWhiteSpace(reason) ? "unknown" : reason.Trim();
+            string message = string.Format(
+                CultureInfo.InvariantCulture,
+                "[LalaPlugin:Leader Lap] hold expired reason={0} carIdx={1} lap={2} current_player_lap={3} last_valid_player_lap={4} – returning 0",
+                safeReason,
+                carIdx,
+                lap,
+                completedPlayerLap,
+                lastValidPlayerLap);
+            _leaderLapHoldActive = false;
+            _leaderLapHoldKey = string.Empty;
+            LogLeaderLapAuthorityUnavailable("hold_expired:" + safeReason, message);
+        }
+
+        private void LogLeaderLapAuthorityRecovered(string source, int carIdx, int lap, double seconds)
+        {
+            if (!_leaderLapAuthorityIssueActive && !_leaderLapHoldActive)
+            {
+                return;
             }
 
             SimHub.Logging.Current.Info(string.Format(
                 CultureInfo.InvariantCulture,
-                "[LalaPlugin:Leader Lap] holding overall leader rolling avg reason={0} carIdx={1} lap={2} completed_player_lap={3} avg_s={4:F3}",
-                string.IsNullOrWhiteSpace(reason) ? "unknown" : reason,
+                "[LalaPlugin:Leader Lap] authority recovered source={0} carIdx={1} lap={2} seconds={3:F3}",
+                string.IsNullOrWhiteSpace(source) ? "unknown" : source,
                 carIdx,
                 lap,
-                completedPlayerLap,
-                leaderAvgFallback));
-            held = (leaderAvgFallback, true, carIdx, lap);
-            return true;
+                seconds));
+
+            _leaderLapAuthorityIssueActive = false;
+            _leaderLapAuthorityIssueKey = string.Empty;
+            _leaderLapHoldActive = false;
+            _leaderLapHoldKey = string.Empty;
         }
 
         private static bool TryAcceptLeaderLapCandidate(double seconds, out string rejectReason)
@@ -25445,7 +25521,7 @@ namespace LaunchPlugin
                 {
                     if (_plugin?.IsVerboseDebugLoggingEnabledForExternal == true)
                     {
-                        SimHub.Logging.Current.Debug($"[LalaPlugin:Launch Trace] Skip discard for finalized trace: {_currentFilePath}");
+                        SimHub.Logging.Current.Info($"[LalaPlugin:Launch Trace] Skip discard for finalized trace: {_currentFilePath}");
                     }
                     return;
                 }
@@ -25455,7 +25531,7 @@ namespace LaunchPlugin
                     File.Delete(_currentFilePath);
                     if (_plugin?.IsVerboseDebugLoggingEnabledForExternal == true)
                     {
-                        SimHub.Logging.Current.Debug($"[LalaPlugin:Launch Trace] Discarded trace file: {_currentFilePath}");
+                        SimHub.Logging.Current.Info($"[LalaPlugin:Launch Trace] Discarded trace file: {_currentFilePath}");
                     }
                 }
             }
@@ -25512,7 +25588,7 @@ namespace LaunchPlugin
 
             if (_plugin?.IsVerboseDebugLoggingEnabledForExternal == true)
             {
-                SimHub.Logging.Current.Debug($"[LalaPlugin:Launch Trace] New launch trace file opened: {_currentFilePath}");
+                SimHub.Logging.Current.Info($"[LalaPlugin:Launch Trace] New launch trace file opened: {_currentFilePath}");
             }
                 return _currentFilePath;
             }
@@ -25610,7 +25686,7 @@ namespace LaunchPlugin
                 _currentTraceHasUsableSummary = true;
             if (_plugin?.IsVerboseDebugLoggingEnabledForExternal == true)
             {
-                SimHub.Logging.Current.Debug($"[LalaPlugin:Launch Trace] Successfully appended launch summary to {_currentFilePath}");
+                SimHub.Logging.Current.Info($"[LalaPlugin:Launch Trace] Successfully appended launch summary to {_currentFilePath}");
             }
             }
             catch (Exception ex)
@@ -25643,7 +25719,7 @@ namespace LaunchPlugin
                     _traceWriter.Dispose(); // This closes the underlying file stream and disposes the writer
                 if (_plugin?.IsVerboseDebugLoggingEnabledForExternal == true)
                 {
-                    SimHub.Logging.Current.Debug($"[LalaPlugin:Launch Trace] Closed launch trace file: {_currentFilePath}");
+                    SimHub.Logging.Current.Info($"[LalaPlugin:Launch Trace] Closed launch trace file: {_currentFilePath}");
                 }
                 }
                 catch (Exception ex)
@@ -25831,7 +25907,7 @@ namespace LaunchPlugin
                     File.Delete(_currentFilePath);
                     if (_plugin?.IsVerboseDebugLoggingEnabledForExternal == true)
                     {
-                        SimHub.Logging.Current.Debug($"[LalaPlugin:Launch Trace] Removed empty launch trace on shutdown: {_currentFilePath}");
+                        SimHub.Logging.Current.Info($"[LalaPlugin:Launch Trace] Removed empty launch trace on shutdown: {_currentFilePath}");
                     }
                     ResetCurrentTraceState();
                 }
@@ -25874,7 +25950,7 @@ namespace LaunchPlugin
                 File.Delete(filePath);
                 if (_plugin?.IsVerboseDebugLoggingEnabledForExternal == true)
                 {
-                    SimHub.Logging.Current.Debug($"[LalaPlugin:Launch Trace] Removed empty launch trace file: {filePath}");
+                    SimHub.Logging.Current.Info($"[LalaPlugin:Launch Trace] Removed empty launch trace file: {filePath}");
                 }
                 return true;
             }
