@@ -7008,6 +7008,13 @@ namespace LaunchPlugin
         private const double MonitorBaselineFuelToleranceLaps = 1.0;
         private const double MonitorCarOppH2HWarmupSeconds = 3.0;
         private const double MonitorCarOppH2HRepeatLogSeconds = 60.0;
+        private const double MonitorStaleRepeatLogSeconds = 60.0;
+        private const double MonitorLaunchActiveTooLongSeconds = 60.0;
+        private const double MonitorRejoinActiveTooLongSeconds = 60.0;
+        private const double MonitorFuelProjectionStaleSeconds = 30.0;
+        private const double MonitorFuelModelStaleSeconds = 5.0;
+        private const int MonitorFuelLearningMinimumCompletedLap = 5;
+        private const int MonitorFuelLearningStaleCompletedLapThreshold = 3;
         private bool _monitorPitFrameworkPrimed = false;
         private PitFuelControlMode _monitorPitLastFuelControlMode = PitFuelControlMode.Off;
         private PitFuelControlData _monitorPitLastFuelControlData = PitFuelControlData.Live;
@@ -7021,6 +7028,18 @@ namespace LaunchPlugin
         private readonly MonitorCarOppH2HCheckState _monitorOppTargetCheckState = new MonitorCarOppH2HCheckState("OppTarget", "OPPONENT DATA UNRELIABLE", MonitorSeverity.Caution);
         private readonly MonitorCarOppH2HCheckState _monitorCarSaSlotCheckState = new MonitorCarOppH2HCheckState("CarSASlot", "TRAFFIC DATA UNRELIABLE", MonitorSeverity.Caution);
         private readonly MonitorCarOppH2HCheckState _monitorH2HTargetCheckState = new MonitorCarOppH2HCheckState("H2HTarget", "H2H DATA UNRELIABLE", MonitorSeverity.Watch);
+        private readonly MonitorStaleCheckState _monitorLaunchActiveTooLongState = new MonitorStaleCheckState("LaunchActiveTooLong", "LAUNCH ACTIVE TOO LONG", "Launch");
+        private readonly MonitorStaleCheckState _monitorRejoinActiveTooLongState = new MonitorStaleCheckState("RejoinActiveTooLong", "REJOIN ACTIVE TOO LONG", "Rejoin");
+        private readonly MonitorStaleCheckState _monitorFuelProjectionStaleState = new MonitorStaleCheckState("FuelProjectionStale", "FUEL PROJECTION STALE", "FuelHealth");
+        private readonly MonitorStaleCheckState _monitorFuelModelStaleState = new MonitorStaleCheckState("FuelModelStale", "FUEL MODEL STALE", "FuelHealth");
+        private readonly MonitorStaleCheckState _monitorFuelLearningStaleState = new MonitorStaleCheckState("FuelLearningStale", "FUEL LEARNING STALE", "FuelHealth");
+        private string _monitorStaleSessionToken = string.Empty;
+        private bool _monitorFuelProjectionHasValue;
+        private double _monitorFuelProjectionLastValue;
+        private DateTime _monitorFuelProjectionLastMovementUtc = DateTime.MinValue;
+        private int _monitorFuelLearningLastSampleCount = -1;
+        private int _monitorFuelLearningLastCompletedLap = -1;
+        private int _monitorFuelLearningNoProgressStartLap = -1;
         private bool _monitorEventCsvFailed;
         private bool _monitorEventCsvPathLogged;
 
@@ -7060,6 +7079,32 @@ namespace LaunchPlugin
 
             public string Detail { get; private set; }
             public bool HasFailure => !string.IsNullOrWhiteSpace(Detail);
+        }
+
+        private sealed class MonitorStaleCheckState
+        {
+            public MonitorStaleCheckState(string name, string text, string category)
+            {
+                Name = name ?? string.Empty;
+                Text = text ?? string.Empty;
+                Category = category ?? string.Empty;
+            }
+
+            public string Name { get; private set; }
+            public string Text { get; private set; }
+            public string Category { get; private set; }
+            public bool Active { get; set; }
+            public string Detail { get; set; }
+            public DateTime PendingSinceUtc { get; set; }
+            public DateTime LastLogUtc { get; set; }
+
+            public void Reset()
+            {
+                Active = false;
+                Detail = string.Empty;
+                PendingSinceUtc = DateTime.MinValue;
+                LastLogUtc = DateTime.MinValue;
+            }
         }
 
         private sealed class MonitorPitStopSnapshot
@@ -12130,6 +12175,7 @@ namespace LaunchPlugin
             }
 
             EvaluateFuelRuntimeHealth(pluginManager);
+            UpdateMonitorStaleHealth(data, pluginManager);
 
             // --- Decel capture instrumentation (toggle = pit screen active) ---
             {
@@ -16249,6 +16295,9 @@ namespace LaunchPlugin
                 case "CHECK FUEL DATA":
                 case "FUEL DATA RECOVERED":
                 case "FUEL DATA FAULT":
+                case "FUEL PROJECTION STALE":
+                case "FUEL MODEL STALE":
+                case "FUEL LEARNING STALE":
                     return "FuelHealth";
                 case "REFUEL OFF":
                 case "MFD FUEL LOW":
@@ -16260,6 +16309,10 @@ namespace LaunchPlugin
                 case "TRAFFIC DATA UNRELIABLE":
                 case "H2H DATA UNRELIABLE":
                     return "CarOppH2H";
+                case "LAUNCH ACTIVE TOO LONG":
+                    return "Launch";
+                case "REJOIN ACTIVE TOO LONG":
+                    return "Rejoin";
                 default:
                     return "Unknown";
             }
@@ -16303,6 +16356,352 @@ namespace LaunchPlugin
             AddCsvCell(cells, playerCarIdx >= 0 ? playerCarIdx.ToString(CultureInfo.InvariantCulture) : string.Empty);
             AddCsvCell(cells, string.IsNullOrWhiteSpace(extraDetail) ? string.Empty : extraDetail.Trim());
             return BuildCsvLine(cells);
+        }
+
+        private void ResetMonitorStaleHealthStates()
+        {
+            _monitorLaunchActiveTooLongState.Reset();
+            _monitorRejoinActiveTooLongState.Reset();
+            _monitorFuelProjectionStaleState.Reset();
+            _monitorFuelModelStaleState.Reset();
+            _monitorFuelLearningStaleState.Reset();
+            _monitorFuelProjectionHasValue = false;
+            _monitorFuelProjectionLastValue = 0.0;
+            _monitorFuelProjectionLastMovementUtc = DateTime.MinValue;
+            _monitorFuelLearningLastSampleCount = -1;
+            _monitorFuelLearningLastCompletedLap = -1;
+            _monitorFuelLearningNoProgressStartLap = -1;
+        }
+
+        private void UpdateMonitorStaleHealth(GameData data, PluginManager pluginManager)
+        {
+            if (_monitorSystem == null || !_monitorSystem.IsEnabled || Settings?.MonitorSystemEnabled != true || data?.NewData == null)
+            {
+                ResetMonitorStaleHealthStates();
+                return;
+            }
+
+            string sessionToken = _currentSessionToken ?? string.Empty;
+            if (!string.Equals(_monitorStaleSessionToken, sessionToken, StringComparison.Ordinal))
+            {
+                _monitorStaleSessionToken = sessionToken;
+                ResetMonitorStaleHealthStates();
+                ClearActiveMonitorStaleHealthWarningIfOwned();
+            }
+
+            DateTime nowUtc = DateTime.UtcNow;
+            string sessionType = data.NewData.SessionTypeName ?? string.Empty;
+            int sessionState = ReadSessionStateInt(pluginManager);
+            double speedKph = data.NewData.SpeedKmh;
+            bool onPitRoad = SafeReadBool(pluginManager, "DataCorePlugin.GameRawData.Telemetry.OnPitRoad", false);
+            bool inPitStall = SafeReadBool(pluginManager, "DataCorePlugin.GameRawData.Telemetry.PlayerCarInPitStall", false);
+            bool raceRunning = IsRaceSession(sessionType) && sessionState == 4;
+            bool activeDriving = speedKph > 30.0 && !onPitRoad && !inPitStall;
+            bool highConfidenceDriving = speedKph > 50.0 && !onPitRoad && !inPitStall;
+
+            UpdateMonitorStaleCheckState(
+                _monitorLaunchActiveTooLongState,
+                IsLaunchActive && !IsCompleted,
+                string.Format(CultureInfo.InvariantCulture, "state={0}", _currentLaunchState),
+                nowUtc,
+                MonitorLaunchActiveTooLongSeconds);
+
+            RejoinReason rejoinReason = _rejoinEngine?.CurrentLogicCode ?? RejoinReason.None;
+            string rejoinMessage = _rejoinEngine?.CurrentMessage ?? string.Empty;
+            bool visibleRejoinAlert = (int)rejoinReason >= 100 && !string.IsNullOrWhiteSpace(rejoinMessage);
+            UpdateMonitorStaleCheckState(
+                _monitorRejoinActiveTooLongState,
+                visibleRejoinAlert,
+                string.Format(CultureInfo.InvariantCulture, "reason={0} message={1}", rejoinReason, rejoinMessage),
+                nowUtc,
+                MonitorRejoinActiveTooLongSeconds);
+
+            UpdateMonitorFuelProjectionStale(nowUtc, pluginManager, raceRunning, highConfidenceDriving, onPitRoad, inPitStall);
+            UpdateMonitorFuelModelStale(nowUtc, activeDriving);
+            UpdateMonitorFuelLearningStale(nowUtc, sessionType, sessionState, activeDriving, onPitRoad, inPitStall, Convert.ToInt32(data.NewData.CompletedLaps));
+
+            MonitorStaleCheckState activeState = SelectActiveMonitorStaleHealthState();
+            if (activeState != null)
+            {
+                bool activeTextDisplayed = string.Equals(_monitorSystem.DisplayText, activeState.Text, StringComparison.Ordinal);
+                if (!activeTextDisplayed && CanPublishMonitorStaleHealthWarning())
+                {
+                    PublishMonitorSystemEvent(MonitorSeverity.Watch, activeState.Text, activeState.Category, activeState.Name, activeState.Detail);
+                }
+                return;
+            }
+
+            ClearActiveMonitorStaleHealthWarningIfOwned();
+        }
+
+        private void UpdateMonitorFuelProjectionStale(
+            DateTime nowUtc,
+            PluginManager pluginManager,
+            bool raceRunning,
+            bool activeDriving,
+            bool onPitRoad,
+            bool inPitStall)
+        {
+            double sessionTimeRemainingSec = SafeReadDouble(pluginManager, "DataCorePlugin.GameRawData.Telemetry.SessionTimeRemain", double.NaN);
+            bool eligible = raceRunning &&
+                activeDriving &&
+                !onPitRoad &&
+                !inPitStall &&
+                IsFinitePositive(sessionTimeRemainingSec) &&
+                IsFinitePositive(LiveProjectedDriveSecondsRemaining) &&
+                IsFinitePositive(LiveLapsRemainingInRace_Stable) &&
+                IsFinitePositive(LiveFuelPerLap_Stable);
+
+            if (!eligible)
+            {
+                _monitorFuelProjectionHasValue = false;
+                _monitorFuelProjectionLastMovementUtc = DateTime.MinValue;
+                UpdateMonitorStaleCheckState(_monitorFuelProjectionStaleState, false, string.Empty, nowUtc, MonitorFuelProjectionStaleSeconds);
+                return;
+            }
+
+            double currentValue = LiveProjectedDriveSecondsRemaining;
+            if (!_monitorFuelProjectionHasValue || Math.Abs(currentValue - _monitorFuelProjectionLastValue) > 0.01)
+            {
+                _monitorFuelProjectionHasValue = true;
+                _monitorFuelProjectionLastValue = currentValue;
+                _monitorFuelProjectionLastMovementUtc = nowUtc;
+                UpdateMonitorStaleCheckState(_monitorFuelProjectionStaleState, false, string.Empty, nowUtc, MonitorFuelProjectionStaleSeconds);
+                return;
+            }
+
+            double unchangedSeconds = _monitorFuelProjectionLastMovementUtc == DateTime.MinValue
+                ? 0.0
+                : (nowUtc - _monitorFuelProjectionLastMovementUtc).TotalSeconds;
+            string detail = string.Format(
+                CultureInfo.InvariantCulture,
+                "projectedDriveSeconds={0:F3} unchangedSeconds={1:F1} lapsRemaining={2:F3}",
+                currentValue,
+                unchangedSeconds,
+                LiveLapsRemainingInRace_Stable);
+            UpdateMonitorStaleCheckState(_monitorFuelProjectionStaleState, unchangedSeconds >= MonitorFuelProjectionStaleSeconds, detail, nowUtc, 0.0);
+        }
+
+        private void UpdateMonitorFuelModelStale(DateTime nowUtc, bool activeDriving)
+        {
+            double threshold = GetFuelReadyConfidenceThreshold();
+            bool liveReady = activeDriving &&
+                IsFinitePositive(LiveFuelPerLap) &&
+                Confidence >= threshold;
+            bool stableLive = string.Equals(LiveFuelPerLap_StableSource ?? string.Empty, "Live", StringComparison.OrdinalIgnoreCase);
+            bool stale = liveReady && !stableLive;
+            string detail = string.Format(
+                CultureInfo.InvariantCulture,
+                "liveFuel={0:F3} confidence={1} threshold={2:F1} stableSource={3}",
+                LiveFuelPerLap,
+                Confidence,
+                threshold,
+                LiveFuelPerLap_StableSource ?? string.Empty);
+            UpdateMonitorStaleCheckState(_monitorFuelModelStaleState, stale, detail, nowUtc, MonitorFuelModelStaleSeconds);
+        }
+
+        private void UpdateMonitorFuelLearningStale(
+            DateTime nowUtc,
+            string sessionType,
+            int sessionState,
+            bool activeDriving,
+            bool onPitRoad,
+            bool inPitStall,
+            int completedLaps)
+        {
+            int sampleCount = Fuel_Burn_Analysis_SessionSampleCount;
+            if (_monitorFuelLearningLastSampleCount < 0)
+            {
+                _monitorFuelLearningLastSampleCount = sampleCount;
+                _monitorFuelLearningLastCompletedLap = completedLaps;
+                _monitorFuelLearningNoProgressStartLap = -1;
+            }
+
+            if (sampleCount > _monitorFuelLearningLastSampleCount)
+            {
+                _monitorFuelLearningLastSampleCount = sampleCount;
+                _monitorFuelLearningLastCompletedLap = completedLaps;
+                _monitorFuelLearningNoProgressStartLap = -1;
+                UpdateMonitorStaleCheckState(_monitorFuelLearningStaleState, false, string.Empty, nowUtc, 0.0);
+                return;
+            }
+
+            if (completedLaps < _monitorFuelLearningLastCompletedLap)
+            {
+                _monitorFuelLearningLastSampleCount = sampleCount;
+                _monitorFuelLearningLastCompletedLap = completedLaps;
+                _monitorFuelLearningNoProgressStartLap = -1;
+                UpdateMonitorStaleCheckState(_monitorFuelLearningStaleState, false, string.Empty, nowUtc, 0.0);
+                return;
+            }
+
+            bool eligibleSession = (IsPracticeLikeSession(sessionType) || IsQualLikeSession(sessionType) || IsRaceSession(sessionType)) &&
+                !IsOfflineTestingSession(sessionType);
+            bool eligible = eligibleSession &&
+                sessionState == 4 &&
+                activeDriving &&
+                !onPitRoad &&
+                !inPitStall &&
+                completedLaps >= MonitorFuelLearningMinimumCompletedLap;
+
+            if (!eligible)
+            {
+                if (onPitRoad || inPitStall)
+                {
+                    _monitorFuelLearningNoProgressStartLap = -1;
+                }
+                UpdateMonitorStaleCheckState(_monitorFuelLearningStaleState, false, string.Empty, nowUtc, 0.0);
+                _monitorFuelLearningLastCompletedLap = completedLaps;
+                return;
+            }
+
+            if (completedLaps > _monitorFuelLearningLastCompletedLap)
+            {
+                if (_monitorFuelLearningNoProgressStartLap < 0)
+                {
+                    _monitorFuelLearningNoProgressStartLap = completedLaps;
+                }
+                _monitorFuelLearningLastCompletedLap = completedLaps;
+            }
+
+            int staleLapCount = _monitorFuelLearningNoProgressStartLap < 0
+                ? 0
+                : completedLaps - _monitorFuelLearningNoProgressStartLap;
+            bool stale = staleLapCount >= MonitorFuelLearningStaleCompletedLapThreshold;
+            string detail = string.Format(
+                CultureInfo.InvariantCulture,
+                "completedLaps={0} sampleCount={1} noProgressStartLap={2} staleLapCount={3}",
+                completedLaps,
+                sampleCount,
+                _monitorFuelLearningNoProgressStartLap,
+                staleLapCount);
+            UpdateMonitorStaleCheckState(_monitorFuelLearningStaleState, stale, detail, nowUtc, 0.0);
+        }
+
+        private void UpdateMonitorStaleCheckState(
+            MonitorStaleCheckState state,
+            bool predicateActive,
+            string detail,
+            DateTime nowUtc,
+            double thresholdSeconds)
+        {
+            if (state == null)
+            {
+                return;
+            }
+
+            if (!predicateActive)
+            {
+                if (state.Active)
+                {
+                    string previousDetail = state.Detail;
+                    state.Reset();
+                    LogMonitorStaleHealth("recovered", state, previousDetail);
+                }
+                else
+                {
+                    state.PendingSinceUtc = DateTime.MinValue;
+                    state.Detail = string.Empty;
+                }
+                return;
+            }
+
+            if (state.PendingSinceUtc == DateTime.MinValue)
+            {
+                state.PendingSinceUtc = nowUtc;
+                state.Detail = detail ?? string.Empty;
+                return;
+            }
+
+            if ((nowUtc - state.PendingSinceUtc).TotalSeconds < thresholdSeconds)
+            {
+                state.Detail = detail ?? string.Empty;
+                return;
+            }
+
+            string detailText = detail ?? string.Empty;
+            bool firstFailure = !state.Active;
+            bool repeatDue = state.Active && (nowUtc - state.LastLogUtc).TotalSeconds >= MonitorStaleRepeatLogSeconds;
+            state.Active = true;
+            state.Detail = detailText;
+
+            if (firstFailure)
+            {
+                state.LastLogUtc = nowUtc;
+                LogMonitorStaleHealth("fail", state, detailText);
+            }
+            else if (repeatDue)
+            {
+                state.LastLogUtc = nowUtc;
+                LogMonitorStaleHealth("still-failing", state, detailText);
+            }
+        }
+
+        private MonitorStaleCheckState SelectActiveMonitorStaleHealthState()
+        {
+            if (_monitorLaunchActiveTooLongState.Active) return _monitorLaunchActiveTooLongState;
+            if (_monitorRejoinActiveTooLongState.Active) return _monitorRejoinActiveTooLongState;
+            if (_monitorFuelProjectionStaleState.Active) return _monitorFuelProjectionStaleState;
+            if (_monitorFuelModelStaleState.Active) return _monitorFuelModelStaleState;
+            if (_monitorFuelLearningStaleState.Active) return _monitorFuelLearningStaleState;
+            return null;
+        }
+
+        private bool CanPublishMonitorStaleHealthWarning()
+        {
+            return _monitorSystem != null &&
+                _monitorSystem.IsEnabled &&
+                !_monitorSystem.IsFuelHealthAlertActive &&
+                !_monitorSystem.IsMonitorPitWarningActive;
+        }
+
+        private void ClearActiveMonitorStaleHealthWarningIfOwned()
+        {
+            if (_monitorSystem == null || !_monitorSystem.IsStaleHealthWarningActive)
+            {
+                return;
+            }
+
+            if (_monitorSystem.IsFuelHealthAlertActive || _monitorSystem.IsMonitorPitWarningActive)
+            {
+                return;
+            }
+
+            MonitorStaleCheckState activeState = SelectActiveMonitorStaleHealthState();
+            if (activeState != null)
+            {
+                PublishMonitorSystemEvent(MonitorSeverity.Watch, activeState.Text, activeState.Category, activeState.Name, activeState.Detail);
+                return;
+            }
+
+            PublishMonitorSystemEvent(MonitorSeverity.Ok, "MONITOR READY", "Unknown", "clear", string.Empty);
+        }
+
+        private void LogMonitorStaleHealth(string status, MonitorStaleCheckState state, string detail)
+        {
+            if (state == null)
+            {
+                return;
+            }
+
+            string statusText = string.IsNullOrWhiteSpace(status) ? "unknown" : status.Trim();
+            string detailText = string.IsNullOrWhiteSpace(detail) ? "none" : detail.Trim();
+            string line = string.Format(
+                CultureInfo.InvariantCulture,
+                "[LalaPlugin:MonitorSystem] stale check={0} status={1} text={2} reason={3}",
+                state.Name,
+                statusText,
+                state.Text,
+                detailText);
+
+            if (string.Equals(statusText, "fail", StringComparison.Ordinal) || string.Equals(statusText, "still-failing", StringComparison.Ordinal))
+            {
+                SimHub.Logging.Current.Warn(line);
+            }
+            else
+            {
+                SimHub.Logging.Current.Info(line);
+            }
         }
 
         private void ResetMonitorCarOppH2HHealthStates()

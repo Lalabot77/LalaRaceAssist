@@ -41,6 +41,13 @@ Out of scope:
 - dashboard artwork/layout decisions,
 - Pit Fuel Control DATA/SOURCE/MODE behavior (for example DATA PLAN assisted Push/Save target selection), which is owned by the Pit Commands/Fuel Control subsystem.
 
+## MonitorSystem stale-state observations
+MonitorSystem Phase 4B adds report-only WATCH observations for plugin-owned Fuel Model/projection/learning staleness. These checks do not validate fuel correctness, compare against SimHub telemetry, recalculate fuel burn, reinterpret Strategy/planner expectations, mutate Fuel Model state, reset learning, send commands, or route through MSGV1.
+
+- `FUEL PROJECTION STALE` observes the plugin-owned `Fuel.Live.ProjectedDriveSecondsRemaining` projection while race-running, actively driving, not in pit lane/stall, and projection inputs are already valid. It warns only when the projection output remains unchanged for about 30 seconds, and clears when movement resumes or the gate is no longer valid.
+- `FUEL MODEL STALE` observes the existing live-authority handoff: when `Fuel.LiveFuelPerLap > 0` and `Fuel.Confidence >= Fuel.FuelReadyConfidenceThreshold`, the stable source is expected to transition to `Live`; if `Fuel.LiveFuelPerLap_StableSource` remains non-`Live` beyond a 5 second grace, MonitorSystem reports the stale publication. It does not judge the burn value itself.
+- `FUEL LEARNING STALE` observes accepted fuel-learning sample progression only. It uses existing accepted-sample counters/windows and waits until at least lap 5, then requires roughly 3 completed laps without accepted fuel-learning progress before warning. It does not decide whether any particular lap should have been accepted.
+
 ## MonitorSystem baseline gross fuel check
 MonitorSystem Phase 2C adds a separate, intentionally crude `BASELINE SHORT` sanity check. It is documented here because it reads fuel telemetry, but it does **not** become Fuel Model ownership and does not replace runtime fuel/refuel math.
 

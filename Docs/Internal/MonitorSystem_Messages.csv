@@ -15,3 +15,8 @@ Enum,Severity,Text,Category,Trigger,Description,DriverAction,AutoRecoverable
 3,CAUTION,OPPONENT DATA UNRELIABLE,CarOppH2H,ImpossibleState,Published Opp target is valid but has an impossible CarIdx or matches the player,Check target data,Yes
 3,CAUTION,TRAFFIC DATA UNRELIABLE,CarOppH2H,ImpossibleState,Published CarSA slot is valid but has an impossible CarIdx,Check car awareness data,Yes
 2,WATCH,H2H DATA UNRELIABLE,CarOppH2H,ImpossibleState,Published H2H target is valid but has an impossible CarIdx or matches the player,Check H2H data,Yes
+2,WATCH,LAUNCH ACTIVE TOO LONG,Launch,StaleState,Launch state remained active for more than 60 seconds,Check launch state,No
+2,WATCH,REJOIN ACTIVE TOO LONG,Rejoin,StaleState,Visible rejoin alert remained active for more than 60 seconds,Check rejoin situation,No
+2,WATCH,FUEL PROJECTION STALE,FuelHealth,StaleState,Plugin-owned fuel projection output did not move while race-running and actively driving,Check fuel projection display,No
+2,WATCH,FUEL MODEL STALE,FuelHealth,StaleState,Live fuel authority is ready but stable fuel publication has not transitioned to Live,Check fuel model display,No
+2,WATCH,FUEL LEARNING STALE,FuelHealth,StaleState,Accepted fuel-learning sample count has not progressed across multiple completed laps,Review recent lap acceptance,No

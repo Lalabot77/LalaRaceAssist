@@ -1,3 +1,8 @@
+- 2026-06-08 MonitorSystem Phase 4A/4B stale-state checks landed:
+  - added report-only WATCH messages `LAUNCH ACTIVE TOO LONG`, `REJOIN ACTIVE TOO LONG`, `FUEL PROJECTION STALE`, `FUEL MODEL STALE`, and `FUEL LEARNING STALE`;
+  - Launch/Rejoin checks observe existing active/visible states only, exclude completed Launch visibility, suppressed Rejoin states, hidden Rejoin messages, and PitExit, and never reset or mutate those subsystems;
+  - Fuel checks observe plugin-owned projection/model/accepted-learning state only, do not validate SimHub telemetry, recalculate fuel/projection/strategy correctness, reset learning, send commands, route through MSGV1, or add exports; Monitor Event CSV category support includes the new Launch/Rejoin/FuelHealth messages. Property Snapshot list reviewed: yes; no exports/properties were added, removed, renamed, or regrouped, so `MonitorSystem.*` remains in the existing Fuel/Strategy group.
+
 - 2026-06-08 Pit Debrief entry wording and box delta audit landed:
   - Pit Debrief entry headline now uses `Pit.EntryLineTimeLoss_s` as the performance verdict (`GOOD` ≤0.1s, `NORMAL` >0.1s, `POOR` >0.5s) while keeping the original Pit Entry Assist safety/compliance token in `Pit.Debrief.Entry.LimiterQualityText` and final logs;
   - box delta source remains the existing pit-box countdown seam, with the first box-exit edge falling back to the last live elapsed countdown when PitEngine stop duration is not ready, and implausible `abs(delta) > 10.0s` values suppressed to `Δ PENDING` in `SummaryText`;

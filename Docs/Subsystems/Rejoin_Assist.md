@@ -78,6 +78,9 @@ Branch: work
 - Manual cancel (`MsgCx`) resets state during the first second of the override; leaving the car (`NotInCar`) also clears timers and reasons.
 - Spin hold and manual override timers self-expire at 3 s and 30 s respectively; linger clears once both time and speed gates are met.
 
+## MonitorSystem observation
+MonitorSystem Phase 4A observes existing Rejoin alert visibility and can publish `REJOIN ACTIVE TOO LONG` as a WATCH when a real visible alert reason (`StoppedOnTrack`, `OffTrackLowSpeed`, `OffTrackHighSpeed`, `Spin`, or `WrongWay`) remains visible for 60 seconds. Suppressed states (`NotInCar`, `InPit`, `RaceStart`, `LaunchModeActive`, `MsgCxPressed`), hidden/blank-message linger states, and the transitional `PitExit` reason are excluded. The check is report-only: it does not clear Rejoin state, reset timers, send commands, or route through MSGV1, and it does not override active fuel-health or pit warnings.
+
 ## Failure Modes / Safeguards
 - Threat scan falls back to `CLEAR` if required iRacing arrays or lap distance data are missing; debug string records the guard cause for diagnostics.
 - Wrong-way detection guards against start/finish crossings (lap pct wrap) to avoid false positives; still relies on forward gear check to reduce reverse-stint noise.

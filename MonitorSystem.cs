@@ -50,6 +50,13 @@ namespace LaunchPlugin
             (string.Equals(DisplayText, "OPPONENT DATA UNRELIABLE", StringComparison.Ordinal) ||
              string.Equals(DisplayText, "TRAFFIC DATA UNRELIABLE", StringComparison.Ordinal) ||
              string.Equals(DisplayText, "H2H DATA UNRELIABLE", StringComparison.Ordinal));
+        public bool IsStaleHealthWarningActive =>
+            IsEnabled &&
+            (string.Equals(DisplayText, "LAUNCH ACTIVE TOO LONG", StringComparison.Ordinal) ||
+             string.Equals(DisplayText, "REJOIN ACTIVE TOO LONG", StringComparison.Ordinal) ||
+             string.Equals(DisplayText, "FUEL PROJECTION STALE", StringComparison.Ordinal) ||
+             string.Equals(DisplayText, "FUEL MODEL STALE", StringComparison.Ordinal) ||
+             string.Equals(DisplayText, "FUEL LEARNING STALE", StringComparison.Ordinal));
 
         public MonitorSystem()
         {
