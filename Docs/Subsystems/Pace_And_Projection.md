@@ -77,7 +77,7 @@ Accepted laps update the runtime clean-lap windows.
 Leader-lap timing is maintained separately so the plugin can use it as context without letting it silently replace the player-focused live pace path.
 For timed-race projection, Leader Lap authority means **overall race-leading pace**, not player-class leader pace:
 - identity resolves current overall P1 using the same semantics as finish timing (`CarIdxPosition == 1 && CarIdxClassPosition == 1`, then `CarIdxPosition == 1`, requiring an in-world car),
-- the primary sample is current overall P1 `CarIdxLastLapTime`,
+- the primary sample is current overall P1 `CarIdxLastLapTime`, validated by absolute plausibility only (`>20s`/`<900s`, finite/positive) with no player-pace comparison floor,
 - the rolling window keeps the last 3 valid overall-P1 samples and is not tied to one `CarIdx`, so overall-leader changes do not clear the window by themselves,
 - if the overall-P1 identity/feed is temporarily unavailable after valid samples exist, the previous rolling average may be held through the same completed-player-lap interval for projection continuity,
 - once that bounded hold expires without a valid overall P1 returning, leader authority fails closed,

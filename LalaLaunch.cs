@@ -4164,7 +4164,7 @@ namespace LaunchPlugin
             if (lapCrossed)
             {
                 int completedPlayerLapForLeader = Convert.ToInt32(data.NewData?.CompletedLaps ?? 0);
-                var leaderLap = ReadLeaderLapTimeSeconds(PluginManager, data, Pace_Last5LapAvgSec, LiveLeaderAvgPaceSeconds, completedPlayerLapForLeader, IsVerboseDebugLoggingOn);
+                var leaderLap = ReadLeaderLapTimeSeconds(PluginManager, data, LiveLeaderAvgPaceSeconds, completedPlayerLapForLeader, IsVerboseDebugLoggingOn);
                 leaderLastLapSec = leaderLap.seconds;
                 leaderLapWasFallback = leaderLap.isFallback;
                 leaderSampleCarIdx = leaderLap.carIdx;
@@ -22822,7 +22822,6 @@ namespace LaunchPlugin
         private (double seconds, bool isFallback, int carIdx, int lap) ReadLeaderLapTimeSeconds(
             PluginManager pluginManager,
             GameData data,
-            double playerRecentAvg,
             double leaderAvgFallback,
             int completedPlayerLap,
             bool verboseLoggingEnabled)
@@ -22934,7 +22933,7 @@ namespace LaunchPlugin
                     lastLapSec));
             }
 
-            if (TryAcceptLeaderLapCandidate(lastLapSec, playerRecentAvg, out string lastRejectReason, out double lastRejectFloor))
+            if (TryAcceptLeaderLapCandidate(lastLapSec, out string lastRejectReason))
             {
                 SimHub.Logging.Current.Info(string.Format(
                     CultureInfo.InvariantCulture,
@@ -22950,13 +22949,11 @@ namespace LaunchPlugin
             {
                 SimHub.Logging.Current.Info(string.Format(
                     CultureInfo.InvariantCulture,
-                    "[LalaPlugin:Leader Lap] reject source=overall_p1_last_lap carIdx={0} lap={1} sec={2:F3} reason={3} player_last5_sec={4:F3} min_sec={5:F3}",
+                    "[LalaPlugin:Leader Lap] reject source=overall_p1_last_lap carIdx={0} lap={1} sec={2:F3} reason={3}",
                     overallLeaderIdx,
                     leaderLapCount,
                     lastLapSec,
-                    lastRejectReason,
-                    playerRecentAvg,
-                    lastRejectFloor));
+                    lastRejectReason));
             }
 
             if (TryUseHeldLeaderAverage(leaderAvgFallback, completedPlayerLap, "overall_leader_last_lap_invalid", overallLeaderIdx, leaderLapCount, out var heldInvalidLastLap))
@@ -22981,7 +22978,7 @@ namespace LaunchPlugin
                     bestLapSec));
             }
 
-            if (TryAcceptLeaderLapCandidate(bestLapSec, playerRecentAvg, out string bestRejectReason, out double bestRejectFloor))
+            if (TryAcceptLeaderLapCandidate(bestLapSec, out string bestRejectReason))
             {
                 SimHub.Logging.Current.Info(string.Format(
                     CultureInfo.InvariantCulture,
@@ -22997,13 +22994,11 @@ namespace LaunchPlugin
             {
                 SimHub.Logging.Current.Info(string.Format(
                     CultureInfo.InvariantCulture,
-                    "[LalaPlugin:Leader Lap] reject source=overall_p1_best_lap_low_conf carIdx={0} lap={1} sec={2:F3} reason={3} player_last5_sec={4:F3} min_sec={5:F3}",
+                    "[LalaPlugin:Leader Lap] reject source=overall_p1_best_lap_low_conf carIdx={0} lap={1} sec={2:F3} reason={3}",
                     overallLeaderIdx,
                     leaderLapCount,
                     bestLapSec,
-                    bestRejectReason,
-                    playerRecentAvg,
-                    bestRejectFloor));
+                    bestRejectReason));
             }
 
             SimHub.Logging.Current.Info("[LalaPlugin:Leader Lap] no valid overall leader lap time from native CarIdx candidates – returning 0");
@@ -23052,10 +23047,9 @@ namespace LaunchPlugin
             return true;
         }
 
-        private static bool TryAcceptLeaderLapCandidate(double seconds, double playerRecentAvg, out string rejectReason, out double rejectionFloor)
+        private static bool TryAcceptLeaderLapCandidate(double seconds, out string rejectReason)
         {
             rejectReason = string.Empty;
-            rejectionFloor = playerRecentAvg > 0.0 ? playerRecentAvg * 0.5 : 0.0;
 
             if (double.IsNaN(seconds) || double.IsInfinity(seconds) || seconds <= 0.0)
             {
@@ -23066,12 +23060,6 @@ namespace LaunchPlugin
             if (!IsPlausibleLeaderLapTimeSec(seconds))
             {
                 rejectReason = seconds <= 20.0 ? "too_small" : "too_large";
-                return false;
-            }
-
-            if (rejectionFloor > 0.0 && seconds < rejectionFloor)
-            {
-                rejectReason = "below_player_half";
                 return false;
             }
 
