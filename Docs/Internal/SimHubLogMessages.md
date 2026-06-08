@@ -288,7 +288,7 @@ Workflow routing note: `Docs/Internal/Property_Snapshot_Debug_Workflow.md` owns 
 - Shift Assist audio-delay telemetry logs are treated as extra debug/detail logs and use the same master-debug + `Enable Debug Logging` gate; Shift Assist Debug CSV rows remain controlled by master debug plus `Shift Assist Debug CSV`.
 ## `[LalaPlugin:PitDebrief]`
 
-Emitted once when a pit debrief finalizes after the existing out-lap/final pit-loss seam. This is a structured final readout for the latest completed stop and must not repeat while `Pit.Debrief.Valid` remains true. `actualLossSec` is total-stop-equivalent: current DTL/direct lane-equivalent final loss plus latched stationary box duration for boxed stops. Unavailable numeric fields use `na`; exported numeric fields publish safe `0` defaults.
+Emitted once when a pit debrief finalizes after the existing out-lap/final pit-loss seam. This is a structured final readout for the latest completed stop and must not repeat while `Pit.Debrief.Valid` remains true. `actualLossSec` is total-stop-equivalent: current DTL/direct lane-equivalent final loss plus latched stationary box duration for boxed stops. Unavailable numeric fields use `na`; exported numeric fields publish safe `0` defaults. Exit prediction evidence remains in the structured fields; the quoted `summary` intentionally omits exit wording and uses progressive-summary wording latched at finalization.
 
 Contract:
 
@@ -299,5 +299,5 @@ Contract:
 Example:
 
 ```text
-[LalaPlugin:PitDebrief] final stop=1 entry=POOR entryLossSec=1.20 decelQuality=UNKNOWN limiter=POOR box=OVERSHOT missed=long fuelTargetL=42.0 fuelAddedL=40.8 refuelSec=0.0 refuelRateLps=2.70 tyres=4 serviceSec=27.4 predTotalLossSec=46.0 actualLossSec=51.8 lossDeltaSec=5.8 lossSource=dtl exitPredPos=5 exitActualPos=8 exitPosDelta=3 exitAccuracy=MISS summary="ENTRY POOR | BOX OVERSHOT | LOSS +5.8s | EXIT MISS P8"
+[LalaPlugin:PitDebrief] final stop=1 entry=POOR entryLossSec=1.20 decelQuality=UNKNOWN limiter=POOR box=OVERSHOT missed=long fuelTargetL=42.0 fuelAddedL=40.8 refuelSec=15.1 refuelRateLps=2.70 tyres=4 serviceSec=27.4 predTotalLossSec=46.0 actualLossSec=51.8 lossDeltaSec=5.8 lossSource=dtl exitPredPos=5 exitActualPos=8 exitPosDelta=3 exitAccuracy=MISS summary="ENTRY POOR (Δ +1.2s) | BOX OVERSHOT (Δ +5.8s) | SVC 40.8L & 4Ts | STRAT Δ +5.8s"
 ```

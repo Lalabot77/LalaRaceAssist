@@ -28,6 +28,10 @@ namespace LaunchPlugin
         private bool _hasRefuelRate;
         private bool _hasTyreCount;
         private bool _hasServiceSec;
+        private bool _hasBoxDelta;
+        private bool _serviceKnown;
+        private bool _boxOutcomeResolved;
+        private bool _summaryFinalized;
         private bool _hasPredictedPosition;
         private bool _hasActualPosition;
         private bool _hasPositionDelta;
@@ -48,6 +52,7 @@ namespace LaunchPlugin
         public string BoxQualityText { get; private set; } = Unknown;
         public string BoxMissedReason { get; private set; } = "unknown";
         public double BoxStationarySec { get; private set; }
+        public double BoxDeltaSec { get; private set; }
 
         public double ServiceFuelAddedLitres { get; private set; }
         public double ServiceFuelTargetLitres { get; private set; }
@@ -106,6 +111,7 @@ namespace LaunchPlugin
             }
 
             LatchEntry(entryDebriefToken, entryLineTimeLossSec);
+            RefreshProgressiveSummary();
         }
 
         public void RefreshEntryAssist(string entryDebriefToken, double entryLineTimeLossSec)
@@ -116,6 +122,7 @@ namespace LaunchPlugin
             }
 
             LatchEntry(entryDebriefToken, entryLineTimeLossSec);
+            RefreshProgressiveSummary();
         }
 
         public void ObservePitPhase(PitPhase phase)
@@ -132,7 +139,7 @@ namespace LaunchPlugin
             }
         }
 
-        public void LatchBoxEntry(double fuelTargetLitres, int tyreChangeCount, double serviceSec)
+        public void LatchBoxEntry(double fuelTargetLitres, int tyreChangeCount, double serviceSec, double predictedBoxSec, double elapsedBoxSec)
         {
             if (!_collecting || Valid || _boxSeen)
             {
@@ -155,6 +162,9 @@ namespace LaunchPlugin
             {
                 _hasServiceSec = true;
             }
+
+            LatchBoxDelta(predictedBoxSec, elapsedBoxSec);
+            RefreshProgressiveSummary();
         }
 
         public void RefreshServiceEvidence(double fuelAddedLitres, double fuelTargetLitres, double refuelRateLps)
@@ -167,9 +177,10 @@ namespace LaunchPlugin
             LatchFuelTarget(fuelTargetLitres);
             LatchFuelAdded(fuelAddedLitres);
             LatchRefuelRate(refuelRateLps);
+            RefreshProgressiveSummary();
         }
 
-        public void LatchBoxExit(double stationarySec, double fuelAddedLitres, double refuelRateLps, double refuelDurationSec, PitPhase finalPitPhase)
+        public void LatchBoxExit(double stationarySec, double fuelAddedLitres, double refuelRateLps, double refuelDurationSec, double boxDeltaSec, PitPhase finalPitPhase)
         {
             if (!_collecting || Valid)
             {
@@ -193,7 +204,10 @@ namespace LaunchPlugin
                 _hasRefuelDuration = true;
             }
 
+            LatchBoxDeltaFromActualMinusPredicted(boxDeltaSec);
+            _serviceKnown = true;
             ResolveBoxOutcome();
+            RefreshProgressiveSummary();
         }
 
         public void LatchPitLaneExit(int actualPositionInClass)
@@ -215,6 +229,7 @@ namespace LaunchPlugin
             }
 
             ResolveExitAccuracy();
+            RefreshProgressiveSummary();
             if (!string.Equals(StateText, FinalState, StringComparison.Ordinal))
             {
                 StateText = AwaitingOutLapState;
@@ -248,7 +263,9 @@ namespace LaunchPlugin
 
             ResolveBoxOutcome();
             ResolveExitAccuracy();
+            _serviceKnown = true;
             SummaryText = BuildSummaryText();
+            _summaryFinalized = true;
             Valid = true;
             _collecting = false;
             StateText = FinalState;
@@ -283,6 +300,7 @@ namespace LaunchPlugin
             BoxQualityText = Unknown;
             BoxMissedReason = "unknown";
             BoxStationarySec = 0.0;
+            BoxDeltaSec = 0.0;
             ServiceFuelAddedLitres = 0.0;
             ServiceFuelTargetLitres = 0.0;
             ServiceRefuelDurationSec = 0.0;
@@ -307,6 +325,10 @@ namespace LaunchPlugin
             _hasRefuelRate = false;
             _hasTyreCount = false;
             _hasServiceSec = false;
+            _hasBoxDelta = false;
+            _serviceKnown = false;
+            _boxOutcomeResolved = false;
+            _summaryFinalized = false;
             _hasPredictedPosition = false;
             _hasActualPosition = false;
             _hasPositionDelta = false;
@@ -376,6 +398,36 @@ namespace LaunchPlugin
             _hasFuelAdded = true;
         }
 
+        public void LatchRefuelDuration(double refuelDurationSec)
+        {
+            if (!_collecting || Valid || !IsFiniteNonNegative(refuelDurationSec))
+            {
+                return;
+            }
+
+            ServiceRefuelDurationSec = refuelDurationSec;
+            _hasRefuelDuration = true;
+            RefreshProgressiveSummary();
+        }
+
+        private void LatchBoxDelta(double predictedBoxSec, double elapsedBoxSec)
+        {
+            if (IsPositiveFinite(predictedBoxSec) && IsFiniteNonNegative(elapsedBoxSec))
+            {
+                BoxDeltaSec = elapsedBoxSec - predictedBoxSec;
+                _hasBoxDelta = true;
+            }
+        }
+
+        private void LatchBoxDeltaFromActualMinusPredicted(double actualMinusPredictedSec)
+        {
+            if (IsFiniteNonNegative(Math.Abs(actualMinusPredictedSec)))
+            {
+                BoxDeltaSec = actualMinusPredictedSec;
+                _hasBoxDelta = true;
+            }
+        }
+
         private void LatchRefuelRate(double refuelRateLps)
         {
             if (IsPositiveFinite(refuelRateLps))
@@ -415,6 +467,7 @@ namespace LaunchPlugin
                     BoxMissedReason = "unknown";
                 }
 
+                _boxOutcomeResolved = true;
                 return;
             }
 
@@ -422,12 +475,90 @@ namespace LaunchPlugin
             {
                 BoxQualityText = "GOOD";
                 BoxMissedReason = "none";
+                _boxOutcomeResolved = true;
             }
             else
             {
                 BoxQualityText = Unknown;
                 BoxMissedReason = "unknown";
+                _boxOutcomeResolved = true;
             }
+        }
+
+        private void RefreshProgressiveSummary()
+        {
+            if (_collecting && !_summaryFinalized)
+            {
+                SummaryText = BuildSummaryText();
+            }
+        }
+
+        private string FormatEntrySection()
+        {
+            string quality;
+            if (string.Equals(EntryQualityText, "POOR", StringComparison.Ordinal)) quality = "POOR";
+            else if (string.Equals(EntryQualityText, "GOOD", StringComparison.Ordinal)
+                || string.Equals(EntryQualityText, "NORMAL", StringComparison.Ordinal)) quality = "GOOD";
+            else quality = Unknown;
+
+            string delta = _hasEntryLoss
+                ? EntryLineTimeLossSec.ToString("+0.0;-0.0;+0.0", CultureInfo.InvariantCulture) + "s"
+                : "PENDING";
+            return "ENTRY " + quality + " (Δ " + delta + ")";
+        }
+
+        private string FormatBoxSection()
+        {
+            if (!_boxOutcomeResolved)
+            {
+                return "BOX PENDING";
+            }
+
+            string quality = string.IsNullOrWhiteSpace(BoxQualityText) ? Unknown : BoxQualityText;
+            string delta = _hasBoxDelta
+                ? BoxDeltaSec.ToString("+0.0;-0.0;+0.0", CultureInfo.InvariantCulture) + "s"
+                : "PENDING";
+            return "BOX " + quality + " (Δ " + delta + ")";
+        }
+
+        private string FormatServiceSection()
+        {
+            double fuel = _hasFuelAdded ? Math.Max(0.0, ServiceFuelAddedLitres) : 0.0;
+            if (!_serviceKnown && fuel <= 0.05)
+            {
+                return "SVC PENDING";
+            }
+
+            int tyres = _hasTyreCount ? ServiceTyreChangeCount : 0;
+            if (tyres < 0) tyres = 0;
+            if (tyres > 4) tyres = 4;
+
+            bool hasFuel = fuel > 0.05;
+            bool hasTyres = tyres > 0;
+            if (hasFuel && hasTyres)
+            {
+                return "SVC " + fuel.ToString("0.0", CultureInfo.InvariantCulture) + "L & " + tyres.ToString(CultureInfo.InvariantCulture) + "Ts";
+            }
+
+            if (hasFuel)
+            {
+                return "SVC " + fuel.ToString("0.0", CultureInfo.InvariantCulture) + "L";
+            }
+
+            if (hasTyres)
+            {
+                return "SVC " + tyres.ToString(CultureInfo.InvariantCulture) + "Ts";
+            }
+
+            return "NO SVC";
+        }
+
+        private string FormatStrategySection()
+        {
+            string delta = _hasLossDelta
+                ? TimingLossDeltaSec.ToString("+0.0;-0.0;+0.0", CultureInfo.InvariantCulture) + "s"
+                : "PENDING";
+            return "STRAT Δ " + delta;
         }
 
         private void ResolveExitAccuracy()
@@ -459,21 +590,10 @@ namespace LaunchPlugin
 
         private string BuildSummaryText()
         {
-            string lossText = _hasLossDelta
-                ? TimingLossDeltaSec.ToString("+0.0;-0.0;0.0", CultureInfo.InvariantCulture) + "s"
-                : "NA";
-            string exitText;
-            if (string.Equals(ExitAccuracyText, "EXACT", StringComparison.Ordinal)) exitText = "OK";
-            else if (string.Equals(ExitAccuracyText, "CLOSE", StringComparison.Ordinal)) exitText = "CLOSE";
-            else if (string.Equals(ExitAccuracyText, "MISS", StringComparison.Ordinal)) exitText = "MISS";
-            else exitText = Unknown;
-
-            if (_hasActualPosition && ExitActualPositionInClass > 0)
-            {
-                exitText += " P" + ExitActualPositionInClass.ToString(CultureInfo.InvariantCulture);
-            }
-
-            return "ENTRY " + EntryQualityText + " | BOX " + BoxQualityText + " | LOSS " + lossText + " | EXIT " + exitText;
+            return FormatEntrySection() + " | "
+                + FormatBoxSection() + " | "
+                + FormatServiceSection() + " | "
+                + FormatStrategySection();
         }
 
         private string BuildFinalLogLine()

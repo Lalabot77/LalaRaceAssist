@@ -199,4 +199,4 @@ A good rule is:
 
 ## Completed stop debrief
 
-After a pit stop finalizes, the plugin can publish a compact pit debrief verdict for dashboards, for example `ENTRY POOR | BOX OVERSHOT | LOSS +5.8s | EXIT MISS P8`. This is a post-stop review/readout: it freezes existing pit-entry, box, fuel-service, timing, and PitExit prediction values and does not change pit assist, fuel, or opponent calculations.
+During and after a pit stop, the plugin can publish a compact pit debrief summary for dashboards, for example `ENTRY GOOD (Δ +0.0s) | BOX GOOD (Δ -0.9s) | SVC 44.0L & 4Ts | STRAT Δ -2.9s`. The summary becomes progressively useful as entry, box/service, and final strategy-delta evidence arrives, then freezes after finalization. PitExit prediction values remain in debug exports and the final log line, but driver-facing `SummaryText` no longer includes `EXIT ...` verdict text. This readout does not change pit assist, fuel, or opponent calculations.

@@ -16,6 +16,7 @@ For internal between-release development history, see `Docs/Internal/Development
 - **ClassBest export family** for class session-best holder visibility on dashboards.
 
 ### Changed
+- Pit Stop Debrief summary wording now becomes progressively useful during the stop, reports entry/box signed deltas, service from actual fuel added plus tyres, and `STRAT Δ` for the final strategy comparison while keeping exit prediction in debug/log fields instead of the driver-facing summary.
 - Documentation sweep: added canonical technical subsystem doc `Docs/Subsystems/League_Class_System.md` and aligned cross-references in H2H/Dash/internal docs for League Class behavior.
 - League Class presentation alignment now extends to CarSA-facing class identity fields and H2HTrack class colors: `Car.Player.ClassName/ClassColor/ClassColorHex`, `Car.Ahead01..05.*` and `Car.Behind01..05.*` class-facing fields, plus `H2HTrack.Ahead/Behind.ClassColor/ClassColorHex` now publish effective League Class presentation when enabled/resolved, with native fallback unchanged.
 - Pit Fuel Control SOURCE no longer includes PLAN. SOURCE is now `STBY`/`NORM`/`PUSH`/`SAVE`; DATA chooses whether `PUSH`/`SAVE` use live or planner/profile memory burn assumptions. Legacy `SetPlan` remains as a compatibility action that selects DATA PLAN and parks SOURCE at STBY.

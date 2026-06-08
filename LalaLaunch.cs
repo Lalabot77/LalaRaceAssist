@@ -11761,6 +11761,7 @@ namespace LaunchPlugin
 
                         if (fuelAdded > 0.0)
                         {
+                            _pitDebrief?.LatchRefuelDuration(duration);
                             SessionSummaryRuntime.OnFuelAdded(_currentSessionToken, fuelAdded);
                         }
 
@@ -21363,7 +21364,12 @@ namespace LaunchPlugin
             if (inBoxPhase && !_pitDebriefWasInBox)
             {
                 double target = Pit_Box_WillAddLatched > 0.0 ? Pit_Box_WillAddLatched : Pit_WillAdd;
-                _pitDebrief.LatchBoxEntry(target, _liveTireChangeCount, GetEffectiveTireChangeTimeSeconds());
+                _pitDebrief.LatchBoxEntry(
+                    target,
+                    _liveTireChangeCount,
+                    GetEffectiveTireChangeTimeSeconds(),
+                    _pitBoxTargetSec,
+                    _pitBoxElapsedSec);
             }
 
             if (inBoxPhase)
@@ -21382,6 +21388,7 @@ namespace LaunchPlugin
                     Pit_AddedSoFar,
                     FuelCalculator?.EffectiveRefuelRateLps ?? 0.0,
                     double.NaN,
+                    -_pitBoxLastDeltaSec,
                     phase);
             }
 

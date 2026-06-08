@@ -4,6 +4,13 @@
 - CSV rows include generic session/monitor/context columns and intentionally skip `MONITOR OFF`, `MONITOR READY`, `FUEL HEALTH OK`, unchanged repeat publications, and per-tick OK/default state spam; file I/O failure logs once and disables the writer.
 - Property Snapshot list reviewed: yes; existing `MonitorSystem.*` exports are already attached through `AttachCore` and mapped by `ResolvePropertySnapshotGroup(...)` to FuelStrategy, so no snapshot list or group change was required. Root `CHANGELOG.md` reviewed unchanged because this is an internal debug/testing tool.
 
+## 2026-06-08 — Pit Debrief V2 progressive summary refinement
+- Classification: **both** (driver-facing `Pit.Debrief.SummaryText` wording/timing plus internal refuel-duration export semantics; no export names, settings, dashboard JSON/layout, PitCycleLite, pit-loss model, fuel model, or PitExit prediction model changed).
+- `Pit.Debrief.SummaryText` now updates progressively from existing lifecycle evidence, removes driver-facing exit verdict text, renames final `LOSS` wording to `STRAT Δ`, and formats entry/box signed deltas plus service from actual fuel added and tyre count.
+- Box delta uses the existing `Pit.Box.TargetSec`/`Pit.Box.LastDeltaSec` countdown seam as actual box/service duration minus predicted box/service duration; final strategy delta continues to use the existing debrief finalized loss comparison.
+- `Pit.Debrief.Service.RefuelDurationSec` now latches the existing refuel-rate learner's completed-flow duration when available; `FuelTargetLitres` remains debug-only from the existing MFD-request/tank-space-clamped `Fuel.Pit.WillAdd`/latched source because no clearer authoritative target seam was identified.
+- Property Snapshot list reviewed: yes; no export names were added/removed/renamed and `Pit.Debrief.*` remains in the existing Pit/PitExit group through the `Pit.` prefix.
+
 ## 2026-06-08 — Pit Debrief PR #797 review sync commit
 - Classification: **internal-only review traceability** (comments/docs only; no export names, dashboard JSON, fuel model, PitExit, PitCycleLite, or debrief runtime semantics changed beyond the already-present PR #797 fixes).
 - Added explicit code comments at the service-latch ordering and actual-loss normalization seams so the PR review can see why fuel-added evidence is captured before `Pit_AddedSoFar` reset and why boxed-stop actual loss adds stationary box time only inside the debrief readout.
