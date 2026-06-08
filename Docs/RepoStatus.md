@@ -49,6 +49,12 @@
 
 # Repo Status
 
+
+- 2026-06-08 Pit Stop Debrief v1 latching/export layer validated:
+  - added `PitDebriefEngine.cs` plus `LalaLaunch` wiring for additive `Pit.Debrief.*` SimHub exports and one `[LalaPlugin:PitDebrief] final` structured log line per finalized stop;
+  - debrief values are latched from existing PitEngine, Fuel runtime, and Opponents/PitExit seams and do not change pit timing, fuel prediction, PitExit prediction, PitCycleLite, Rejoin, or dashboard layout JSON;
+  - docs updated for export inventory, log contract, Pit Timing, Pit Entry Assist, dash bindings, Pit Assist, changelog, and release notes. Property Snapshot list reviewed: yes; `Pit.Debrief.*` already maps to Pit/PitExit through the existing `Pit.` prefix in `ResolvePropertySnapshotGroup`.
+
 - 2026-06-08 Debug Cleanup Phase A landed:
   - removed Rejoin ThreatDebug internals, OffTrack Debug CSV settings/UI/writer/probe export, and verbose-only Pit/PitLite SimHub exports while preserving active core Pit/PitLite exports, DecelCapture, Property Snapshot, Event Marker, Trace Logging, launch traces/analysis, Shift Assist debug CSV, and CarSA debug/event CSV diagnostics;
   - removed approved dead/commented debug clutter (parked MsgCx helper block, commented PitExit pit-out snapshot logger/call, commented MSG.PitPhaseDebug export, commented Pit.Debug.LastTimeOnPitRoad alias, stale launch-trace skip comment, stale obsolete debug comment, and stale Session Summary scaffolding wording);

@@ -123,6 +123,7 @@
     <Compile Include="SessionSummaryRuntime.cs" />
     <Compile Include="SessionTraceLapRow.cs" />
     <Compile Include="PitCommandEngine.cs" />
+    <Compile Include="PitDebriefEngine.cs" />
     <Compile Include="PitFuelControlEngine.cs" />
     <Compile Include="PitTyreControlEngine.cs" />
     <Compile Include="PlannerLiveSessionMatchHelper.cs" />

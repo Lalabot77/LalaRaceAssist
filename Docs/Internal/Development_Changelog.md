@@ -1,3 +1,9 @@
+## 2026-06-08 — Pit Stop Debrief v1 latching/export layer
+- Classification: **both** (user-facing dashboard exports plus internal log/export contract).
+- Added additive `Pit.Debrief.*` SimHub exports for compact overlay verdict and debug-page post-stop review fields, with values latched from existing PitEngine, Fuel runtime, and Opponents/PitExit seams.
+- Added one structured `[LalaPlugin:PitDebrief] final` log line per finalized debrief; no per-tick logs, no per-stop history store.
+- Preserved PitEngine timing, Fuel.Live.TotalStopLoss/Fuel.Pit semantics, PitExit prediction logic, PitCycleLite, Rejoin, and dashboard layout JSON. Property Snapshot list reviewed: yes; `Pit.Debrief.*` uses the existing `Pit.` prefix and routes to Pit/PitExit.
+
 ## 2026-06-08 — MonitorSystem Phase 2C baseline warning review follow-up
 - Classification: **internal-only correctness follow-up** (baseline-warning numeric guard and same-tick trigger ordering; no export names, dashboard JSON, fuel/refuel math, planner, Pit Fuel Control, Pit Command, or message text changes).
 - `BASELINE SHORT` now requires positive current fuel before evaluating, so a zero current-fuel reading fails silently instead of producing a baseline warning. This is a simple numeric sanity guard, not telemetry fallback/known-state logic.

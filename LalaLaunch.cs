@@ -1258,6 +1258,9 @@ namespace LaunchPlugin
         private DateTime _lastPitLaneSeenUtc = DateTime.MinValue;
         private bool _pitExitEntrySeenLast = false;
         private bool _pitExitExitSeenLast = false;
+        private PitDebriefEngine _pitDebrief;
+        private bool _pitDebriefWasInBox = false;
+
         private double _lastLoggedProjectedLaps = double.NaN;
         private DateTime _lastProjectionLogUtc = DateTime.MinValue;
         private string _lastProjectionLapSource = string.Empty;
@@ -4272,6 +4275,10 @@ namespace LaunchPlugin
                         FuelCalculator?.SetLastTyreChangeSeconds(stopNow);
                         _pitDbg_RawPitLapSec = dtlNow + (2.0 * _pitDbg_AvgPaceUsedSec) - _pitDbg_OutLapSec + stopNow;
                         _pitDbg_RawDTLFormulaSec = (_pitDbg_RawPitLapSec - stopNow + _pitDbg_OutLapSec) - (2.0 * _pitDbg_AvgPaceUsedSec);
+
+                        double debriefLossSec = (dtlNow > 0.0) ? dtlNow : directNow;
+                        string debriefLossSource = (dtlNow > 0.0) ? "dtl" : ((directNow > 0.0) ? "direct" : "unavailable");
+                        FinalizePitDebriefIfReady(debriefLossSec, debriefLossSource);
 
                         // Freeze everything until the next pit entry
                         _pitFreezeUntilNextCycle = true;
@@ -8139,6 +8146,7 @@ namespace LaunchPlugin
                 return s;
             });
             _pitLite = new PitCycleLite(_pit);
+            _pitDebrief = new PitDebriefEngine();
             _rejoinEngine.SetPitEngine(_pit);
 
             // --- New direct travel time property (CORE) ---
@@ -8163,6 +8171,31 @@ namespace LaunchPlugin
             AttachCore("Pit.Box.RemainingSec", () => _pitBoxRemainingSec);
             AttachCore("Pit.Box.TargetSec", () => _pitBoxTargetSec);
             AttachCore("Pit.Box.LastDeltaSec", () => _pitBoxLastDeltaSec);
+            AttachCore("Pit.Debrief.Valid", () => _pitDebrief?.Valid ?? false);
+            AttachCore("Pit.Debrief.AgeSec", () => _pitDebrief?.GetAgeSec(DateTime.UtcNow) ?? 0.0);
+            AttachCore("Pit.Debrief.StopIndex", () => _pitDebrief?.StopIndex ?? 0);
+            AttachCore("Pit.Debrief.SummaryText", () => _pitDebrief?.SummaryText ?? string.Empty);
+            AttachCore("Pit.Debrief.StateText", () => _pitDebrief?.StateText ?? "EMPTY");
+            AttachCore("Pit.Debrief.Entry.QualityText", () => _pitDebrief?.EntryQualityText ?? "UNKNOWN");
+            AttachCore("Pit.Debrief.Entry.LineTimeLossSec", () => _pitDebrief?.EntryLineTimeLossSec ?? 0.0);
+            AttachCore("Pit.Debrief.Entry.DecelQualityText", () => _pitDebrief?.EntryDecelQualityText ?? "UNKNOWN");
+            AttachCore("Pit.Debrief.Entry.LimiterQualityText", () => _pitDebrief?.EntryLimiterQualityText ?? "UNKNOWN");
+            AttachCore("Pit.Debrief.Box.QualityText", () => _pitDebrief?.BoxQualityText ?? "UNKNOWN");
+            AttachCore("Pit.Debrief.Box.MissedReason", () => _pitDebrief?.BoxMissedReason ?? "unknown");
+            AttachCore("Pit.Debrief.Box.StationarySec", () => _pitDebrief?.BoxStationarySec ?? 0.0);
+            AttachCore("Pit.Debrief.Service.FuelAddedLitres", () => _pitDebrief?.ServiceFuelAddedLitres ?? 0.0);
+            AttachCore("Pit.Debrief.Service.FuelTargetLitres", () => _pitDebrief?.ServiceFuelTargetLitres ?? 0.0);
+            AttachCore("Pit.Debrief.Service.RefuelDurationSec", () => _pitDebrief?.ServiceRefuelDurationSec ?? 0.0);
+            AttachCore("Pit.Debrief.Service.RefuelRateLps", () => _pitDebrief?.ServiceRefuelRateLps ?? 0.0);
+            AttachCore("Pit.Debrief.Service.TyreChangeCount", () => _pitDebrief?.ServiceTyreChangeCount ?? 0);
+            AttachCore("Pit.Debrief.Timing.PredictedTotalLossSec", () => _pitDebrief?.TimingPredictedTotalLossSec ?? 0.0);
+            AttachCore("Pit.Debrief.Timing.ActualTotalLossSec", () => _pitDebrief?.TimingActualTotalLossSec ?? 0.0);
+            AttachCore("Pit.Debrief.Timing.LossDeltaSec", () => _pitDebrief?.TimingLossDeltaSec ?? 0.0);
+            AttachCore("Pit.Debrief.Timing.LossSource", () => _pitDebrief?.TimingLossSource ?? "unavailable");
+            AttachCore("Pit.Debrief.Exit.PredictedPositionInClass", () => _pitDebrief?.ExitPredictedPositionInClass ?? 0);
+            AttachCore("Pit.Debrief.Exit.ActualPositionInClass", () => _pitDebrief?.ExitActualPositionInClass ?? 0);
+            AttachCore("Pit.Debrief.Exit.PositionDelta", () => _pitDebrief?.ExitPositionDelta ?? 0);
+            AttachCore("Pit.Debrief.Exit.AccuracyText", () => _pitDebrief?.ExitAccuracyText ?? "UNKNOWN");
             AttachCore("TrackMarkers.Trigger.FirstCapture", () => IsTrackMarkerPulseActive(_trackMarkerFirstCapturePulseUtc));
             AttachCore("TrackMarkers.Trigger.TrackLengthChanged", () => IsTrackMarkerPulseActive(_trackMarkerTrackLengthChangedPulseUtc));
             AttachCore("TrackMarkers.Trigger.LinesRefreshed", () => IsTrackMarkerPulseActive(_trackMarkerLinesRefreshedPulseUtc));
@@ -9873,6 +9906,8 @@ namespace LaunchPlugin
             _rejoinEngine?.Reset();
             _pit?.Reset();
             _pitLite?.ResetCycle();
+            _pitDebrief?.ResetAll();
+            _pitDebriefWasInBox = false;
             _pit?.ResetPitPhaseState();
             _pitCommandEngine?.ResetFeedbackState();
             _opponentsEngine?.Reset();
@@ -11043,6 +11078,7 @@ namespace LaunchPlugin
                 checkpointGapReader = _carSaEngine.TryGetCheckpointGapSec;
             }
             _opponentsEngine?.Update(data, pluginManager, isOpponentsEligibleSessionNow, isRaceSessionNow, completedLaps, myPaceSec, pitLossSec, pitTripActive, inLane, trackPct, sessionTimeSec, sessionTimeRemainingSec, verboseLogs, checkpointGapReader, BuildRaceContextLeagueClassMatchDelegate());
+            UpdatePitDebriefLifecycle(pitEntryEdge, pitExitEdge, inLane, isInPitStall, pitLossSec, playerCarIdx);
             UpdatePitExitTimeToExitSec(pluginManager, inLane, speedKph);
             UpdatePlayerLapInvalidState(pluginManager, sessionTimeSec, playerCarIdx, carIdxLap);
             int[] carIdxSessionFlags = null;
@@ -11650,6 +11686,7 @@ namespace LaunchPlugin
                     _summaryPitStopIndex++;
 
                     Pit_OnValidPitStopTimeLossCalculated(lossSec, src);
+                    FinalizePitDebriefIfReady(lossSec, src);
                     _lastSavedLap = completedLaps;
                 }
             }
@@ -20681,6 +20718,97 @@ namespace LaunchPlugin
             double boxTime = Math.Max(modeledBoxTargetSec, repairRemainingSec);
             double total = pitLaneLoss + boxTime + PitExitTransitionAllowanceSec;
             return (total < 0.0 || double.IsNaN(total) || double.IsInfinity(total)) ? 0.0 : total;
+        }
+
+        private void UpdatePitDebriefLifecycle(
+            bool pitEntryEdge,
+            bool pitExitEdge,
+            bool inPitLane,
+            bool isInPitStall,
+            double predictedTotalLossSec,
+            int playerCarIdx)
+        {
+            if (_pitDebrief == null || _pit == null)
+            {
+                return;
+            }
+
+            PitPhase phase = _pit.CurrentPitPhase;
+            bool inBoxPhase = IsPitDebriefBoxPhase(phase) || isInPitStall;
+
+            if (pitEntryEdge)
+            {
+                int predictedPosition = _opponentsEngine?.Outputs?.PitExit?.PredictedPositionInClass ?? 0;
+                _pitDebrief.StartPitEntry(
+                    predictedTotalLossSec,
+                    predictedPosition,
+                    _pit.PitEntryLineDebrief,
+                    _pit.PitEntryLineTimeLoss_s);
+                _pitDebriefWasInBox = false;
+            }
+
+            _pitDebrief.RefreshEntryAssist(_pit.PitEntryLineDebrief, _pit.PitEntryLineTimeLoss_s);
+            _pitDebrief.ObservePitPhase(phase);
+
+            if (inBoxPhase && !_pitDebriefWasInBox)
+            {
+                double target = Pit_Box_WillAddLatched > 0.0 ? Pit_Box_WillAddLatched : Pit_WillAdd;
+                _pitDebrief.LatchBoxEntry(target, _liveTireChangeCount, GetEffectiveTireChangeTimeSeconds());
+            }
+
+            if (!inBoxPhase && _pitDebriefWasInBox)
+            {
+                _pitDebrief.LatchBoxExit(
+                    _pit.PitStopDuration.TotalSeconds,
+                    Pit_AddedSoFar,
+                    FuelCalculator?.EffectiveRefuelRateLps ?? 0.0,
+                    double.NaN,
+                    phase);
+            }
+
+            if (pitExitEdge)
+            {
+                int actualPosition = ResolvePitDebriefActualPositionInClass(playerCarIdx);
+                _pitDebrief.LatchPitLaneExit(actualPosition);
+            }
+
+            _pitDebriefWasInBox = inPitLane && inBoxPhase;
+        }
+
+        private static bool IsPitDebriefBoxPhase(PitPhase phase)
+        {
+            return phase == PitPhase.InBox
+                || phase == PitPhase.MissedBoxLong
+                || phase == PitPhase.MissedBoxShort
+                || phase == PitPhase.MissedBoxLeft
+                || phase == PitPhase.MissedBoxRight;
+        }
+
+        private int ResolvePitDebriefActualPositionInClass(int playerCarIdx)
+        {
+            if (_opponentsEngine != null && _opponentsEngine.TryGetEffectivePositionInClassByCarIdx(playerCarIdx, out var opponentPosition) && opponentPosition > 0)
+            {
+                return opponentPosition;
+            }
+
+            int nativePosition = (playerCarIdx >= 0 && playerCarIdx < _carSaClassPositionByIdx.Length)
+                ? _carSaClassPositionByIdx[playerCarIdx]
+                : (_carSaEngine?.Outputs?.PlayerSlot?.PositionInClass ?? 0);
+            return GetEffectivePositionInClassForPublishedContext(playerCarIdx, nativePosition);
+        }
+
+        private void FinalizePitDebriefIfReady(double actualLossSec, string lossSource)
+        {
+            if (_pitDebrief == null)
+            {
+                return;
+            }
+
+            if (_pitDebrief.FinalizeDebrief(actualLossSec, lossSource, DateTime.UtcNow)
+                && _pitDebrief.TryConsumeFinalLogLine(out var logLine))
+            {
+                SimHub.Logging.Current.Info(logLine);
+            }
         }
 
         private void UpdatePitBoxCountdownValues(bool inPitLane, bool isInPitStall)
