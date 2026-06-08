@@ -1,17 +1,17 @@
 Enum,Severity,Text,Category,Trigger,Description,DriverAction,AutoRecoverable
 0,OFF,MONITOR OFF,System,Disabled,Monitor system disabled,None,No
 1,OK,MONITOR READY,System,Enabled,Monitor system enabled and no current caution,None,Yes
-1,OK,FUEL HEALTH OK,Fuel,StartupFuelHealth,Existing fuel health check passed,None,Yes
-2,WATCH,CHECK FUEL DATA,Fuel,StartupFuelHealth,Existing fuel health check detected questionable runtime fuel data,Check fuel display,No
-6,RECOVERED,FUEL DATA RECOVERED,Fuel,StartupFuelHealth,Existing fuel health recovery refreshed runtime fuel data,None,Yes
-5,FAULT,FUEL DATA FAULT,Fuel,StartupFuelHealth,Existing fuel health check failed after recovery,Review fuel data before racing,No
+1,OK,FUEL HEALTH OK,FuelHealth,StartupFuelHealth,Existing fuel health check passed,None,Yes
+2,WATCH,CHECK FUEL DATA,FuelHealth,StartupFuelHealth,Existing fuel health check detected questionable runtime fuel data,Check fuel display,No
+6,RECOVERED,FUEL DATA RECOVERED,FuelHealth,StartupFuelHealth,Existing fuel health recovery refreshed runtime fuel data,None,Yes
+5,FAULT,FUEL DATA FAULT,FuelHealth,StartupFuelHealth,Existing fuel health check failed after recovery,Review fuel data before racing,No
 3,CAUTION,REFUEL OFF,FuelPitStop,PredictivePitCheck,Refuel is disabled while fuel is expected soon,Enable refuel,No
 4,WARNING,REFUEL OFF,FuelPitStop,PitRoadOrBox,Refuel is disabled while fuel is still required during pit service,Enable refuel,No
 3,CAUTION,MFD FUEL LOW,FuelPitStop,PredictivePitCheck,Selected MFD fuel is below expected required add,Increase fuel request,No
 4,WARNING,MFD FUEL LOW,FuelPitStop,PitRoadOrBox,Selected MFD fuel is below expected required add during pit service,Increase fuel request,No
 4,WARNING,EXIT FUEL SHORT,FuelPitStop,PitExitCheck,Fuel on pit exit is below expected safe amount,Fuel save or plan another stop,No
-3,CAUTION,BASELINE SHORT,FuelPitStop,PredictivePitCheck,Baseline gross fuel check is short by more than one SimHub fuel lap,Review fuel before pitting,No
-4,WARNING,BASELINE SHORT,FuelPitStop,PitRoadOrBox,Baseline gross fuel check is short by more than one SimHub fuel lap during pit context,Add fuel or plan another stop,No
+3,CAUTION,BASELINE SHORT,BaselineFuel,PredictivePitCheck,Baseline gross fuel check is short by more than one SimHub fuel lap,Review fuel before pitting,No
+4,WARNING,BASELINE SHORT,BaselineFuel,PitRoadOrBox,Baseline gross fuel check is short by more than one SimHub fuel lap during pit context,Add fuel or plan another stop,No
 3,CAUTION,OPPONENT DATA UNRELIABLE,CarOppH2H,ImpossibleState,Published Opp target is valid but has an impossible CarIdx or matches the player,Check target data,Yes
 3,CAUTION,TRAFFIC DATA UNRELIABLE,CarOppH2H,ImpossibleState,Published CarSA slot is valid but has an impossible CarIdx,Check car awareness data,Yes
 2,WATCH,H2H DATA UNRELIABLE,CarOppH2H,ImpossibleState,Published H2H target is valid but has an impossible CarIdx or matches the player,Check H2H data,Yes
