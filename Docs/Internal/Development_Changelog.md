@@ -1,3 +1,10 @@
+## 2026-06-08 — MonitorSystem Phase 3A Car/Opp/H2H impossible-state checks
+- Classification: **both** (driver-visible MonitorSystem warning texts plus internal edge-gated health logs; no new exports, property names, settings, dashboard JSON, subsystem target/gap logic, pit/fuel/strategy/planner/command behavior, or Property Snapshot grouping changes).
+- Added report-by-exception MonitorSystem checks for already-published impossible states only: valid Opponents targets with invalid/player `CarIdx`, valid CarSA slots with invalid `CarIdx`, valid live CarSA slots with non-finite `Gap.TrackSec`, and valid H2H race/track targets with invalid/player `CarIdx`.
+- Checks are gated on eligible live sessions, valid player `CarIdx`, and a short 3 s session warmup; valid-false/blink-held rows are ignored, failures/recoveries are edge-logged, repeated still-failing evidence is log-only at 60 s, and publication does not override unresolved fuel-health alerts or active pit warnings.
+- Preserved CarSA selection/gap/checkpoint logic, Opponents race-order/gap logic, H2H selector/sector/gap logic, PitExit, fuel model, planner/strategy, dash JSON, settings UI, property names, exports, fallback paths, self-healing, and telemetry-known wrappers.
+- Property Snapshot list reviewed: yes; `ResolvePropertySnapshotGroup(...)` still maps existing `MonitorSystem.*` exports to FuelStrategy, and no export/property add, remove, rename, or regroup is required.
+
 ## 2026-06-08 — MonitorSystem Phase 2C baseline warning review follow-up
 - Classification: **internal-only correctness follow-up** (baseline-warning numeric guard and same-tick trigger ordering; no export names, dashboard JSON, fuel/refuel math, planner, Pit Fuel Control, Pit Command, or message text changes).
 - `BASELINE SHORT` now requires positive current fuel before evaluating, so a zero current-fuel reading fails silently instead of producing a baseline warning. This is a simple numeric sanity guard, not telemetry fallback/known-state logic.
