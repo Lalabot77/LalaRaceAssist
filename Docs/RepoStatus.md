@@ -2,6 +2,10 @@
   - Pit Debrief entry headline now uses `Pit.EntryLineTimeLoss_s` as the performance verdict (`GOOD` ≤0.1s, `NORMAL` >0.1s, `POOR` >0.5s) while keeping the original Pit Entry Assist safety/compliance token in `Pit.Debrief.Entry.LimiterQualityText` and final logs;
   - box delta source remains the existing pit-box countdown seam, with the first box-exit edge falling back to the last live elapsed countdown when PitEngine stop duration is not ready, and implausible `abs(delta) > 10.0s` values suppressed to `Δ PENDING` in `SummaryText`;
   - no Pit Entry Assist safety/compliance logic, PitEngine phase/timing/loss logic, PitCycleLite, fuel model, PitExit prediction, dashboard JSON/layout, settings, export names, or Property Snapshot grouping changed. Property Snapshot list reviewed: yes; existing `Pit.*`/`PitExit.*` exports remain in the Pit/PitExit group. Root `CHANGELOG.md` reviewed unchanged because this is a post-release internal refinement already covered by the current Pit Stop Debrief release-note family.
+- 2026-06-08 Car Tracking Probe CSV status UI polish landed:
+  - added a `PROBE CSV:` Debug UI status pill with `OFF` / `READY` / `RECORDING` / `FAILED` states and immediate START/STOP/RESET enablement refresh matching the Property Snapshot rolling control pattern;
+  - status refresh now follows START, STOP, RESET, master-debug gate shutdown, Enable Car Tracking Probe toggle changes, and write-failure disable paths;
+  - no Car Tracking Probe CSV schema, SimHub export/property names, dashboard JSON, CarSA/Opponents/H2H/PitExit runtime logic, Property Snapshot behavior, or frequency normalization changed. Property Snapshot list reviewed: yes; no export/property additions, removals, renames, or behavior changes required snapshot group updates.
 
 - 2026-06-08 Overall Leader Lap authority landed:
   - Leader Lap no longer reads bogus/unproven `DataCorePlugin.GameData.LeaderLastLapTime` / `LeaderAverageLapTime` candidates;

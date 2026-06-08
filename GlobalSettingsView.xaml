@@ -1,4 +1,4 @@
-<UserControl x:Class="LaunchPlugin.GlobalSettingsView"
+﻿<UserControl x:Class="LaunchPlugin.GlobalSettingsView"
              xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
@@ -503,7 +503,7 @@
 
                         <TextBlock Text="Car Tracking Probe CSV" FontWeight="SemiBold" Margin="0,16,0,4"/>
                         <Separator Margin="0,0,0,6"/>
-                        <styles:SHToggleCheckbox x:Name="CarTrackingProbeCsvToggle" Content="Enable Car Tracking Probe" IsChecked="{Binding Settings.EnableCarTrackingProbeCsv, Mode=TwoWay}" ToolTip="Enable targeted diagnostic CSV capture for player plus Probe A/B CarIdx values."/>
+                        <styles:SHToggleCheckbox x:Name="CarTrackingProbeCsvToggle" Content="Enable Car Tracking Probe" IsChecked="{Binding Settings.EnableCarTrackingProbeCsv, Mode=TwoWay}" Click="CarTrackingProbeCsvToggle_Click" ToolTip="Enable targeted diagnostic CSV capture for player plus Probe A/B CarIdx values."/>
                         <StackPanel Margin="22,6,0,0" Visibility="{Binding ElementName=CarTrackingProbeCsvToggle, Path=IsChecked, Converter={StaticResource BooleanToVisibilityConverter}}">
                             <WrapPanel>
                                 <TextBlock Text="Probe A CarIdx" VerticalAlignment="Center" Margin="0,0,8,6"/>
@@ -512,10 +512,16 @@
                                 <TextBox Width="70" Margin="0,0,12,6" Text="{Binding Settings.CarTrackingProbeBCarIdx, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"/>
                                 <TextBlock Text="Frequency Hz" VerticalAlignment="Center" Margin="0,0,8,6"/>
                                 <TextBox Width="60" Margin="0,0,12,6" Text="{Binding Settings.CarTrackingProbeCsvFrequencyHz, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" ToolTip="Allowed range: 1 to 20 Hz."/>
-                                <Button Content="START" Margin="0,0,8,6" Padding="10,2" Click="CarTrackingProbeStart_Click"/>
-                                <Button Content="STOP" Margin="0,0,8,6" Padding="10,2" Click="CarTrackingProbeStop_Click"/>
-                                <Button Content="RESET CSV" Margin="0,0,12,6" Padding="10,2" Click="CarTrackingProbeResetCsv_Click"/>
+                                <Button x:Name="CarTrackingProbeStartButton" Content="START" Margin="0,0,8,6" Padding="10,2" Click="CarTrackingProbeStart_Click"/>
+                                <Button x:Name="CarTrackingProbeStopButton" Content="STOP" Margin="0,0,8,6" Padding="10,2" Click="CarTrackingProbeStop_Click"/>
+                                <Button x:Name="CarTrackingProbeResetCsvButton" Content="RESET CSV" Margin="0,0,12,6" Padding="10,2" Click="CarTrackingProbeResetCsv_Click"/>
                             </WrapPanel>
+                            <StackPanel Orientation="Horizontal" Margin="0,0,0,2">
+                                <TextBlock Margin="0,0,8,0" VerticalAlignment="Center" Foreground="LightGray" Text="PROBE CSV:"/>
+                                <Border x:Name="CarTrackingProbeCsvStatusBorder" Padding="8,1" CornerRadius="10" BorderThickness="1" Background="#222222" BorderBrush="#666666">
+                                    <TextBlock x:Name="CarTrackingProbeCsvStatusTextBlock" VerticalAlignment="Center" FontWeight="SemiBold" Foreground="#D8D8D8" Text="OFF"/>
+                                </Border>
+                            </StackPanel>
                             <TextBlock Foreground="LightGray" TextWrapping="Wrap" Text="Writes player + Probe A/B raw CarIdx telemetry and CarSA/Opp/H2H correlation fields for diagnostics only."/>
                         </StackPanel>
 

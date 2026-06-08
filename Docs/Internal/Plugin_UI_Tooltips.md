@@ -29,6 +29,7 @@ Branch: work
 
 ## GlobalSettingsView.xaml
 - Debug Options: `Enable Monitor Event CSV` writes changed non-normal MonitorSystem publications to `Logs/LalaPluginData/MonitorSystem_Events.csv` for troubleshooting only. It is off by default and depends on `Enable Monitor System`.
+- Debug Options: Car Tracking Probe CSV shows a `PROBE CSV:` status pill (`OFF`, `READY`, `RECORDING`, `FAILED`) under the START/STOP/RESET row; START is enabled only in `READY`, STOP only in `RECORDING`, and RESET in `READY`/`RECORDING`/`FAILED`.
 
 ## LaunchPluginSettingsUI.xaml
 - `Enable Monitor System` no longer appears in the Launch UI / Bindings section; the persisted setting is owned by Dash Control global functions.
@@ -238,7 +239,7 @@ Branch: work
 - `GlobalSettingsView.xaml` DEBUG section hosts the master debug toggle and sectioned Debug Options (`General logging`, `Property Snapshot`, `CarSA diagnostics`, `Car Tracking Probe CSV`, `Shift Assist diagnostics`, `Debug Actions`); Launch Settings sits above this block inside its own collapsed expander.
 - `GlobalSettingsView.xaml` shows the warning text `Debug mode is for troubleshooting only. Leave this off unless asked to enable it.` directly below `Enable debugging mode`.
 - `GlobalSettingsView.xaml` `Enable Debug Logging` tooltip says it enables extra troubleshooting/detail logs only while master debugging mode is also enabled.
-- `GlobalSettingsView.xaml` Property Snapshot rolling frequency tooltip documents the runtime 1–2 Hz cap and normalizes higher entries; all Property Snapshot children are hidden unless `Enable Property Snapshot` is enabled, rolling controls are hidden unless `Write rolling combined CSV` is enabled, and frequency is hidden unless `FREQUENCY` mode is selected. Debug Options includes parent-hidden `Enable Car Tracking Probe`, Probe A/B `CarIdx` inputs, `Frequency Hz`, `START`, `STOP`, and `RESET CSV` controls for a diagnostics-only CSV writer. The removed OffTrack Debug CSV controls are no longer documented. The Car Tracking Probe frequency tooltip documents the 1–20 Hz range.
+- `GlobalSettingsView.xaml` Property Snapshot rolling frequency tooltip documents the runtime 1–2 Hz cap and normalizes higher entries; all Property Snapshot children are hidden unless `Enable Property Snapshot` is enabled, rolling controls are hidden unless `Write rolling combined CSV` is enabled, and frequency is hidden unless `FREQUENCY` mode is selected. Debug Options includes parent-hidden `Enable Car Tracking Probe`, Probe A/B `CarIdx` inputs, `Frequency Hz`, `START`, `STOP`, `RESET CSV`, and a `PROBE CSV:` status pill (`OFF`, `READY`, `RECORDING`, `FAILED`) for a diagnostics-only CSV writer. The removed OffTrack Debug CSV controls are no longer documented. The Car Tracking Probe frequency tooltip documents the 1–20 Hz range.
 - `GlobalSettingsView.xaml` no longer exposes `PitExit Verbose Logging`; PitExit math-audit/detail logs are controlled by master debugging mode plus `Enable Debug Logging`.
 - `GlobalSettingsView.xaml` `Pit.Box: include optional repairs in service countdown` toggle tooltip says optional repair time is included in Pit.Box target/remaining and shared total-stop-loss prediction when enabled; mandatory repairs remain included by default when valid while boxed.
 - `GlobalSettingsView.xaml` now includes a collapsed `Pit Commands` expander in Settings with:

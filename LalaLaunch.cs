@@ -743,6 +743,7 @@ namespace LaunchPlugin
             _carTrackingProbeCsvActiveRuntime = true;
             _carTrackingProbeCsvFailed = false;
             _carTrackingProbeCsvLastWriteSessionSec = double.NaN;
+            RequestDebugUiRefresh();
             SimHub.Logging.Current.Info("[LalaPlugin:CarTrackingProbe] CSV capture START.");
         }
 
@@ -751,7 +752,13 @@ namespace LaunchPlugin
             _carTrackingProbeCsvActiveRuntime = false;
             _carSaEngine?.ClearCheckpointTruthDiagnosticSnapshots();
             TryFlushCarTrackingProbeCsvBuffer();
+            RequestDebugUiRefresh();
             SimHub.Logging.Current.Info("[LalaPlugin:CarTrackingProbe] CSV capture STOP.");
+        }
+
+        public string GetCarTrackingProbeCsvStatusTextForUi()
+        {
+            return ResolveCarTrackingProbeCsvStatusText();
         }
 
         public void ResetCarTrackingProbeCsv()
@@ -760,8 +767,9 @@ namespace LaunchPlugin
             {
                 _carTrackingProbeCsvActiveRuntime = false;
                 _carSaEngine?.ClearCheckpointTruthDiagnosticSnapshots();
-                if (!TryFlushCarTrackingProbeCsvBuffer())
+                if (!_carTrackingProbeCsvFailed && !TryFlushCarTrackingProbeCsvBuffer())
                 {
+                    RequestDebugUiRefresh();
                     return;
                 }
 
@@ -780,10 +788,12 @@ namespace LaunchPlugin
                     _carTrackingProbeCsvBuffer.Clear();
                 }
 
+                RequestDebugUiRefresh();
                 SimHub.Logging.Current.Info("[LalaPlugin:CarTrackingProbe] CSV reset completed.");
             }
             catch (Exception ex)
             {
+                RequestDebugUiRefresh();
                 SimHub.Logging.Current.Warn($"[LalaPlugin:CarTrackingProbe] CSV reset failed: {ex.Message}");
             }
         }
@@ -13933,11 +13943,13 @@ namespace LaunchPlugin
                     _carTrackingProbeCsvBuffer.Clear();
                 }
 
+                RequestDebugUiRefresh();
                 SimHub.Logging.Current.Warn($"[LalaPlugin:CarTrackingProbe] CSV disabled after write failure: {ex.Message}");
                 return;
             }
 
             _carTrackingProbeCsvActiveRuntime = false;
+            RequestDebugUiRefresh();
         }
 
         private void ResetCarTrackingProbeCsvState()
@@ -15040,6 +15052,22 @@ namespace LaunchPlugin
                 case 2: return "PER LAP";
                 default: return "MANUAL";
             }
+        }
+
+
+        private string ResolveCarTrackingProbeCsvStatusText()
+        {
+            if (!SoftDebugEnabled || Settings?.EnableCarTrackingProbeCsv != true)
+            {
+                return "OFF";
+            }
+
+            if (_carTrackingProbeCsvFailed)
+            {
+                return "FAILED";
+            }
+
+            return _carTrackingProbeCsvActiveRuntime ? "RECORDING" : "READY";
         }
 
         private string ResolvePropertySnapshotRollingStatusText()
