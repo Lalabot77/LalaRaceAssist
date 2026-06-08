@@ -1,3 +1,15 @@
+## 2026-06-08 — MonitorSystem Phase 4A/4B PR #807 review follow-up
+- Classification: **internal-only** (priority/reset bug fix for newly added MonitorSystem stale-state checks; no new driver-facing texts, exports, settings, dashboard JSON, command paths, MSGV1 routing, or fuel-learning behavior changes).
+- Stale-state WATCH publication now preserves active Car/Opp/H2H reliability warnings in addition to existing fuel-health and pit-warning priority guards.
+- `FUEL LEARNING STALE` now treats accepted burn-analysis sample-count resets/decreases as monitor-baseline progress and clears/rebaselines stale observation immediately.
+- Property Snapshot list reviewed: yes; no SimHub exports/properties were added, removed, renamed, or behavior-changed. Existing `MonitorSystem.*` remains in the Fuel/Strategy group.
+
+## 2026-06-08 — MonitorSystem Phase 4A/4B stale-state checks
+- Classification: **both** (driver-facing MonitorSystem WATCH texts plus internal stale-state observability; no new settings, exports, dashboard JSON, commands, recovery, or subsystem mutation).
+- Added edge/low-frequency report-only `LAUNCH ACTIVE TOO LONG`, `REJOIN ACTIVE TOO LONG`, `FUEL PROJECTION STALE`, `FUEL MODEL STALE`, and `FUEL LEARNING STALE` warnings with concise fail/recovered logs and Monitor Event CSV category support.
+- Launch/Rejoin checks observe existing active/visible state only and do not reset/cancel/mutate; Fuel checks observe plugin-owned projection, stable live-authority handoff, and accepted-learning sample progression only, with no SimHub telemetry-health checks, fuel/projection recomputation, Strategy validation, self-healing, MSGV1 routing, or command sending.
+- Property Snapshot list reviewed: yes; no SimHub exports/properties were added, removed, renamed, or behavior-changed, and existing `MonitorSystem.*` remains in the Fuel/Strategy group. Root `CHANGELOG.md` reviewed unchanged because this is between-release MonitorSystem observability until release notes are prepared.
+
 - 2026-06-08 Pit Debrief entry wording and box delta audit landed:
   - Pit Debrief entry headline now uses `Pit.EntryLineTimeLoss_s` as the performance verdict (`GOOD` ≤0.1s, `NORMAL` >0.1s, `POOR` >0.5s) while keeping the original Pit Entry Assist safety/compliance token in `Pit.Debrief.Entry.LimiterQualityText` and final logs;
   - box delta source remains the existing pit-box countdown seam, with the first box-exit edge falling back to the last live elapsed countdown when PitEngine stop duration is not ready, and implausible `abs(delta) > 10.0s` values suppressed to `Δ PENDING` in `SummaryText`;
