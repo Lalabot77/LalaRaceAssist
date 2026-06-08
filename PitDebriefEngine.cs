@@ -143,11 +143,7 @@ namespace LaunchPlugin
             BoxQualityText = Unknown;
             BoxMissedReason = "unknown";
 
-            if (IsFiniteNonNegative(fuelTargetLitres))
-            {
-                ServiceFuelTargetLitres = fuelTargetLitres;
-                _hasFuelTarget = true;
-            }
+            LatchFuelTarget(fuelTargetLitres);
 
             if (tyreChangeCount >= 0)
             {
@@ -159,6 +155,18 @@ namespace LaunchPlugin
             {
                 _hasServiceSec = true;
             }
+        }
+
+        public void RefreshServiceEvidence(double fuelAddedLitres, double fuelTargetLitres, double refuelRateLps)
+        {
+            if (!_collecting || Valid)
+            {
+                return;
+            }
+
+            LatchFuelTarget(fuelTargetLitres);
+            LatchFuelAdded(fuelAddedLitres);
+            LatchRefuelRate(refuelRateLps);
         }
 
         public void LatchBoxExit(double stationarySec, double fuelAddedLitres, double refuelRateLps, double refuelDurationSec, PitPhase finalPitPhase)
@@ -176,17 +184,8 @@ namespace LaunchPlugin
                 _hasServiceSec = true;
             }
 
-            if (IsFiniteNonNegative(fuelAddedLitres))
-            {
-                ServiceFuelAddedLitres = fuelAddedLitres;
-                _hasFuelAdded = true;
-            }
-
-            if (IsPositiveFinite(refuelRateLps))
-            {
-                ServiceRefuelRateLps = refuelRateLps;
-                _hasRefuelRate = true;
-            }
+            LatchFuelAdded(fuelAddedLitres);
+            LatchRefuelRate(refuelRateLps);
 
             if (IsFiniteNonNegative(refuelDurationSec))
             {
@@ -348,6 +347,39 @@ namespace LaunchPlugin
             {
                 EntryLineTimeLossSec = entryLineTimeLossSec;
                 _hasEntryLoss = true;
+            }
+        }
+
+        private void LatchFuelTarget(double fuelTargetLitres)
+        {
+            if (IsFiniteNonNegative(fuelTargetLitres))
+            {
+                ServiceFuelTargetLitres = fuelTargetLitres;
+                _hasFuelTarget = true;
+            }
+        }
+
+        private void LatchFuelAdded(double fuelAddedLitres)
+        {
+            if (!IsFiniteNonNegative(fuelAddedLitres))
+            {
+                return;
+            }
+
+            if (!_hasFuelAdded || fuelAddedLitres > ServiceFuelAddedLitres)
+            {
+                ServiceFuelAddedLitres = fuelAddedLitres;
+            }
+
+            _hasFuelAdded = true;
+        }
+
+        private void LatchRefuelRate(double refuelRateLps)
+        {
+            if (IsPositiveFinite(refuelRateLps))
+            {
+                ServiceRefuelRateLps = refuelRateLps;
+                _hasRefuelRate = true;
             }
         }
 

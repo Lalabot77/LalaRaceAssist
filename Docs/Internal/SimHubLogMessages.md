@@ -280,7 +280,7 @@ Workflow routing note: `Docs/Internal/Property_Snapshot_Debug_Workflow.md` owns 
 
 ## `[LalaPlugin:PitDebrief]`
 
-Emitted once when a pit debrief finalizes after the existing out-lap/final pit-loss seam. This is a structured final readout for the latest completed stop and must not repeat while `Pit.Debrief.Valid` remains true. Unavailable numeric fields use `na`; exported numeric fields publish safe `0` defaults.
+Emitted once when a pit debrief finalizes after the existing out-lap/final pit-loss seam. This is a structured final readout for the latest completed stop and must not repeat while `Pit.Debrief.Valid` remains true. `actualLossSec` is total-stop-equivalent: current DTL/direct lane-equivalent final loss plus latched stationary box duration for boxed stops. Unavailable numeric fields use `na`; exported numeric fields publish safe `0` defaults.
 
 Contract:
 

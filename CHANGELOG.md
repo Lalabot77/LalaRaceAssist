@@ -28,6 +28,7 @@ For internal between-release development history, see `Docs/Internal/Development
 - **Monitor System setting placement** moved from Launch UI / Bindings to Dash Control -> Global Dash Functions -> General. Phase 2B pit-stop monitoring now adds edge-triggered `REFUEL OFF`, `MFD FUEL LOW`, and `EXIT FUEL SHORT` warnings while preserving Phase 2A trigger evidence logs.
 
 ### Fixed
+- Fixed Pit Stop Debrief service/timing review latches so fuel-added evidence survives box-exit gauge reset and actual-vs-predicted loss compares total-stop-equivalent values.
 - Fixed PreRace/Friends export registration so dashboards should use single-prefixed `LalaLaunch.PreRace.*` and `LalaLaunch.Friends.Count` names instead of accidental `LalaLaunch.LalaLaunch.*` names.
 - Corrected one-stop feasibility checks to use pit-stop refill capacity rather than start-of-race free tank space.
 - Fixed wet/dry PB and pace persistence routing edge cases around lap-validation timing and wet-compound detection.

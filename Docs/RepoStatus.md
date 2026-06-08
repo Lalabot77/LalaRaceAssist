@@ -49,6 +49,11 @@
 
 # Repo Status
 
+- 2026-06-08 Pit Debrief service latch and total-loss normalization follow-up validated:
+  - `Pit.Debrief.Service.FuelAddedLitres` now preserves existing Fuel.Pit gauge evidence while the box countdown is still active, before box-exit gauge reset can clear `Pit_AddedSoFar`;
+  - `Pit.Debrief.Timing.ActualTotalLossSec` now compares against `Fuel.Live.TotalStopLoss` on a total-stop-equivalent basis by adding latched stationary box duration to existing DTL/direct lane-equivalent final loss for boxed stops;
+  - no PitCycleLite, fuel model, PitExit prediction, Rejoin, dashboard JSON/layout, new export, or refuel-duration detector changes. Property Snapshot list reviewed: yes; unchanged because `Pit.Debrief.*` remains covered by the existing `Pit.` -> Pit/PitExit group.
+
 
 - 2026-06-08 Pit Stop Debrief v1 latching/export layer validated:
   - added `PitDebriefEngine.cs` plus `LalaLaunch` wiring for additive `Pit.Debrief.*` SimHub exports and one `[LalaPlugin:PitDebrief] final` structured log line per finalized stop;
