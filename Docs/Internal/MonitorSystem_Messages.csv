@@ -10,3 +10,5 @@ Enum,Severity,Text,Category,Trigger,Description,DriverAction,AutoRecoverable
 3,CAUTION,MFD FUEL LOW,FuelPitStop,PredictivePitCheck,Selected MFD fuel is below expected required add,Increase fuel request,No
 4,WARNING,MFD FUEL LOW,FuelPitStop,PitRoadOrBox,Selected MFD fuel is below expected required add during pit service,Increase fuel request,No
 4,WARNING,EXIT FUEL SHORT,FuelPitStop,PitExitCheck,Fuel on pit exit is below expected safe amount,Fuel save or plan another stop,No
+3,CAUTION,BASELINE SHORT,FuelPitStop,PredictivePitCheck,Baseline gross fuel check is short by more than one SimHub fuel lap,Review fuel before pitting,No
+4,WARNING,BASELINE SHORT,FuelPitStop,PitRoadOrBox,Baseline gross fuel check is short by more than one SimHub fuel lap during pit context,Add fuel or plan another stop,No

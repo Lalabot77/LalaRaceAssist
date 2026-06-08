@@ -1,3 +1,17 @@
+## 2026-06-08 — MonitorSystem Phase 2C baseline warning review follow-up
+- Classification: **internal-only correctness follow-up** (baseline-warning numeric guard and same-tick trigger ordering; no export names, dashboard JSON, fuel/refuel math, planner, Pit Fuel Control, Pit Command, or message text changes).
+- `BASELINE SHORT` now requires positive current fuel before evaluating, so a zero current-fuel reading fails silently instead of producing a baseline warning. This is a simple numeric sanity guard, not telemetry fallback/known-state logic.
+- `UpdateMonitorPitStopFramework(...)` now tracks a local `pitRoadExitThisTick` flag and skips the predictive warning block for that same update when a pit-road-exit edge fired, preserving a just-published pit-exit WARNING from same-tick predictive CAUTION downgrade.
+- Preserved predictive checks on later ticks, trusted SimHub telemetry reads, no `MfdFuelRequestKnown`, no new warnings, no CSV, no per-tick checks, no `Fuel.Refuel.*` / Pit Fuel Control / Pit Command / Strategy planner changes, and no Property Snapshot group changes.
+- Property Snapshot list reviewed: yes; no export/property add, remove, rename, behavior-contract change, or group change because `MonitorSystem.*` remains in the existing Fuel/Strategy group.
+
+## 2026-06-08 — MonitorSystem Phase 2C pit-exit MFD context fix
+- Classification: **internal-only correctness follow-up** (baseline-warning edge context fix; no export names, dashboard JSON, fuel/refuel math, planner, Pit Fuel Control, Pit Command, or message text changes).
+- Parameterized `IsMonitorBaselineFuelShort(...)` with `includeSelectedMfdFuel`, keeping selected `PitSvFuel` included for predictive, pit-road entry, and pit-box entry checks while excluding it on `PitRoadExit`.
+- Pit-road exit `BASELINE SHORT` now uses actual exit fuel only, so a still-selected MFD fuel request after leaving pit road cannot hide a real post-stop shortfall.
+- Preserved trusted SimHub telemetry reads, no telemetry fallback/known-state layer, no `MfdFuelRequestKnown`, no new warnings, no CSV, no per-tick checks, no `Fuel.Refuel.*` / Pit Fuel Control / Pit Command / Strategy planner changes, and no Property Snapshot group changes.
+- Property Snapshot list reviewed: yes; no export/property add, remove, rename, behavior-contract change, or group change because `MonitorSystem.*` remains in the existing Fuel/Strategy group.
+
 ## 2026-06-08 — MonitorSystem trusted SimHub telemetry simplification
 - Classification: **internal-only correctness/scope cleanup** (Phase 2B monitor implementation and internal docs; no export, message text/enum, fuel/refuel calculation, planner, Pit Fuel Control, or Pit Command behavior change).
 - Removed the `MfdRefuelKnown` snapshot field and `TryReadMonitorPitBool` helper so Phase 2B service checks again read trusted SimHub/iRacing `dpFuelFill` through the existing simple bool-read path.
@@ -5,6 +19,14 @@
 - Reverted the pit evidence log wording/format to `mfdRefuelEnabled` without `mfdRefuelKnown`.
 - Preserved Phase 2B tolerances, edge-only behavior, Fuel Control DATA log-only behavior, message texts/enums, independent `Fuel.Refuel.NextLitres` basis, fuel/refuel calculations, Strategy/planner math, Pit Fuel Control behavior, Pit Command behavior, CSV behavior, and export names. No `BASELINE SHORT`, `FUEL MODEL CHECK`, independent gross SimHub baseline maths, new exports, or Property Snapshot grouping changes were added.
 - Property Snapshot list reviewed: yes; no group change required because no SimHub exports/properties were added, removed, renamed, or regrouped.
+
+## 2026-06-08 — MonitorSystem Phase 2C baseline gross fuel check
+- Classification: **internal-only** (new MonitorSystem warning text using existing MonitorSystem exports; no new export names or dashboard JSON changed).
+- Added `BASELINE SHORT`, a deliberately crude race-risk sanity check that trusts SimHub/iRacing telemetry directly: current fuel comes from `DataCorePlugin.GameData.NewData.Fuel`, fuel-per-lap from `DataCorePlugin.Computed.Fuel_LitersPerLap`, remaining laps from `DataCorePlugin.GameData.LapsRemaining`, MFD refuel state/request from `DataCorePlugin.GameRawData.Telemetry.dpFuelFill` / `PitSvFuel`, and pre-race available fuel can use the existing `Fuel.Setup.FuelLevel` seam.
+- Formula is intentionally simple: pre-race/grid `baselineAvailable = setup fuel when valid, otherwise current fuel`; race/pit context `baselineAvailable = current fuel + PitSvFuel when dpFuelFill is enabled`; `baselineRequired = fuelPerLap * remainingLaps`; publish only when shortfall is greater than `MonitorBaselineFuelToleranceLaps = 1.0` lap of fuel.
+- Evaluation is only on existing MonitorSystem trigger edges (`PredictiveTwoLapsFuelRemaining`, `PitRoadEntry`, `PitBoxEntry`, optional `PitRoadExit`); Fuel Control mode/data changes remain log/service-warning paths and do not introduce baseline checks.
+- Preserved fuel-health priority (`FUEL DATA CHECK` / `FUEL DATA FAULT` block pit/baseline warning publication), `Fuel.Refuel.*`, Pit Fuel Control, Pit Command, Strategy planner, fallback systems, CSV writers, dashboard JSON, exports, and per-tick cadence.
+- Property Snapshot list reviewed: yes; no export/property add, remove, rename, behavior-contract change, or group change because `MonitorSystem.*` remains in the existing Fuel/Strategy group.
 
 ## 2026-06-07 — MonitorSystem Phase 2B latest review follow-up
 - Classification: **both** (driver-facing warning priority/correctness plus internal Phase 2B evidence-log wording; no export, fuel/refuel calculation, planner, Pit Fuel Control, or Pit Command behavior change).
