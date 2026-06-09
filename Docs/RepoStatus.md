@@ -1,3 +1,7 @@
+- 2026-06-09 Strategy Dash idle control-centre exports landed:
+  - added plugin-owned `Plugin.VersionNumberText`, `Plugin.StatusText`, and `Plugin.StatusLineText` SimHub exports for the idle/control-centre top row; `Plugin.StatusText` prioritizes reserved update-available state, Soft Debug, zero profiles, then READY, and intentionally excludes League Class missing/unloaded status;
+  - `Fuel.Refuel.DataMode` now follows the selected DATA mode (`LIVE`/`SAVED`) while idle/no live session/no profile and after DATA actions/settings changes, without changing refuel math, invalid/default recommendation values, or pit command transport;
+  - added `MonitorSystemToggle` as the single dashboard action for the existing Monitor System enabled setting; no new MonitorSystem output property was added. Property Snapshot list reviewed: yes; `Plugin.*` now maps to the Fuel/Strategy group.
 - 2026-06-09 MonitorSystem late-race fuel-guidance suppression landed:
   - existing finish authority (`Race.EndPhase >= 2`) now suppresses only late-race actionable `REFUEL OFF`, `MFD FUEL LOW`, and predictive/off-pit-road CAUTION `BASELINE SHORT` MonitorSystem results;
   - pit-road/pit-box/pit-exit WARNING `BASELINE SHORT`, `EXIT FUEL SHORT`, fuel-health faults/stale checks, Car/Opp/H2H reliability warnings, Launch/Rejoin stale-state warnings, fuel math, strategy/planner, RaceFinish, Race.EndPhase calculation, exports, settings, dashboard JSON, MSGV1, pit commands, and Monitor Event CSV schema are unchanged;

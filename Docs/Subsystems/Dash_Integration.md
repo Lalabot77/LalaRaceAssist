@@ -1,7 +1,7 @@
 # Dash Integration
 
 Validated against commit: HEAD
-Last updated: 2026-06-08
+Last updated: 2026-06-09
 Branch: work
 
 ## Purpose
@@ -20,6 +20,15 @@ This document is the canonical dash-facing contract layer. It does **not** redef
 - **Clear state aggressively on session transitions** so stale visuals do not linger.
 - Use single plugin-qualified public names in dashboard formulas. For example, use `LalaLaunch.PreRace.StatusText` and `LalaLaunch.Friends.Count`; do not bind accidental double-prefix names such as `LalaLaunch.LalaLaunch.PreRace.*`.
 
+
+## Plugin idle/control-centre status contract
+The Strategy Dash idle/control-centre top row should use plugin-owned status exports instead of rebuilding priority in dashboard formulas:
+- `LalaLaunch.Plugin.VersionNumberText` — version number only, with no leading `v`.
+- `LalaLaunch.Plugin.StatusText` — one of `UPDATE AVAILABLE`, `DEBUG ACTIVE`, `NO PROFILES`, or `READY`. Priority is update-available state first, then Soft Debug, then zero loaded profiles, then READY. The current plugin-owned state does not expose a reliable release-check flag, so `UPDATE AVAILABLE` is reserved and not currently emitted; the Overview tab's GitHub check remains UI-local.
+- `LalaLaunch.Plugin.StatusLineText` — composed as `LALA RACE ASSIST v<VersionNumberText>    <StatusText>`.
+
+League Class missing/unloaded state is intentionally not part of `Plugin.StatusText`, because League Class is optional for many users and must not make the plugin appear unhealthy.
+
 ## MonitorSystem contract
 `LalaLaunch.MonitorSystem.*` is the dedicated dash-facing monitoring surface. Dashboards should bind directly to:
 - `State` (`OFF` when disabled, `ON` when enabled; active runtime no longer emits `AUTO`),
@@ -30,7 +39,7 @@ This document is the canonical dash-facing contract layer. It does **not** redef
 
 Phase 1 exposes the existing start/runtime fuel-health evaluation and planner-safe recovery outcomes. Phase 2A adds an internal pit-stop trigger framework that records edge-only evidence logs for Fuel Control mode/DATA changes, predictive two-laps-fuel remaining, pit-road entry/exit, and pit-box entry. Phase 2B uses those trigger edges for the first driver-facing pit-stop fuel warnings: `REFUEL OFF`, `MFD FUEL LOW`, and `EXIT FUEL SHORT`; Phase 2C adds the independent baseline `BASELINE SHORT` sanity warning; Phase 3A adds Car/Opp/H2H impossible-state texts; Phase 4A/4B adds report-only stale-state WATCH texts for long-running active Launch/Rejoin alerts and plugin-owned Fuel projection/model/learning staleness. MonitorSystem still does not add automatic command sending, pit/refuel strategy recalculation, self-healing, fallback target selection, MSGV1 routing, or new dashboard exports. `MonitorSystem.*` is presentation/health feedback only: it is not `Pit.Command`, does not send commands, and must not replace `Pit.Command.*` action feedback.
 
-Dashboard logic should use `MonitorSystem.Text` and the paired colour exports rather than reconstructing fuel-health conditions. The persisted `Enable Monitor System` setting defaults on and is shown under `Dash Control -> Global Dash Functions -> General`: enabled state starts as `ON` / `MONITOR READY` / enum `1`; disabled state is `OFF` / `MONITOR OFF` / enum `0`; re-enabling returns to the enabled ready state. Fuel-health, pit-stop, baseline, Car/Opp/H2H, and stale-state warning messages publish only while enabled. CAUTION/WATCH styling is yellow background with black text; WARNING/FAULT styling is red background with yellow text. Message definitions follow `Docs/Internal/MonitorSystem_Messages.csv`; its categories intentionally match the Monitor Event CSV `Category` values.
+Dashboard logic should use `MonitorSystem.Text` and the paired colour exports rather than reconstructing fuel-health conditions. The persisted `Enable Monitor System` setting defaults on and is shown under `Dash Control -> Global Dash Functions -> General`; dashboards/hardware can toggle it with `LalaLaunch.MonitorSystemToggle`: enabled state starts as `ON` / `MONITOR READY` / enum `1`; disabled state is `OFF` / `MONITOR OFF` / enum `0`; re-enabling returns to the enabled ready state. Fuel-health, pit-stop, baseline, Car/Opp/H2H, and stale-state warning messages publish only while enabled. CAUTION/WATCH styling is yellow background with black text; WARNING/FAULT styling is red background with yellow text. Message definitions follow `Docs/Internal/MonitorSystem_Messages.csv`; its categories intentionally match the Monitor Event CSV `Category` values.
 
 MonitorSystem warning ownership/priority is: unresolved fuel-health alerts (`CHECK FUEL DATA` / `FUEL DATA FAULT`) first; pit-stop and baseline fuel warnings (`REFUEL OFF`, `MFD FUEL LOW`, `EXIT FUEL SHORT`, `BASELINE SHORT`) second; Car/Opp/H2H reliability warnings (`OPPONENT DATA UNRELIABLE`, `TRAFFIC DATA UNRELIABLE`, `H2H DATA UNRELIABLE`) third; stale-state WATCH messages (`LAUNCH ACTIVE TOO LONG`, `REJOIN ACTIVE TOO LONG`, `FUEL PROJECTION STALE`, `FUEL MODEL STALE`, `FUEL LEARNING STALE`) last. Lower-priority checks observe and log as documented by their subsystems, but they do not publish over higher-priority active MonitorSystem texts. Once the existing finish authority reports `Race.EndPhase >= 2` (`AfterZeroLeaderRunning` or later), MonitorSystem suppresses only late-race actionable fuel guidance (`REFUEL OFF`, `MFD FUEL LOW`, and predictive/off-pit-road CAUTION `BASELINE SHORT`). This suppression does not clear active warnings, does not create Monitor Event CSV rows, and does not affect `EXIT FUEL SHORT`, pit/box/exit WARNING `BASELINE SHORT`, fuel-health, Car/Opp/H2H, Launch, or Rejoin stale-state messages.
 
@@ -38,7 +47,7 @@ The debug-only `Enable Monitor Event CSV` setting writes non-normal MonitorSyste
 
 ## High-level dash ownership map
 ### Strategy / fuel / pace
-- Use stable strategy/fuel exports for labels and decision widgets.
+- Use stable strategy/fuel exports for labels and decision widgets. `LalaLaunch.Fuel.Refuel.DataMode` is allowed to reflect the selected DATA mode (`LIVE`/`SAVED`) while idle/no live game/no profile, even when refuel recommendation values remain invalid/default.
 - Treat `LalaLaunch.PreRace.*` as a separate on-grid/pre-race info layer, not a replacement for live `Fuel.*` or Strategy planner ownership.
 - Consume `LalaLaunch.PreRace.StatusText` together with `LalaLaunch.PreRace.StatusColour` (`green`/`orange`/`red`) for simple dash styling; do not recreate planner/live mismatch or multi-stop decision logic in dash scripts.
 - `LalaLaunch.PreRace.FuelDelta` is a live on-grid seam and should be expected to move immediately with fuel changes:
