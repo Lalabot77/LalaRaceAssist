@@ -1,3 +1,8 @@
+- 2026-06-09 Pit Debrief Daytona box target/refuel-completion fix landed:
+  - Pit box modeled targets now latch the current-stop tyre-selection evidence captured in pit lane; confirmed fuel-only stops use `0` tyres for target modeling instead of carrying a stale/default 4-tyre service time, while the conservative 4-tyre fallback remains only when tyre evidence is unavailable;
+  - Pit Debrief normal refuel completion now preserves `Pit.Debrief.Service.FuelTargetLitres` when added fuel is within the completion-tolerance window (e.g. ~42L target / ~41L added), while explicit in-box deselect before natural completion still clears the target to `0.0`;
+  - `[LalaPlugin:PitDebriefBoxDiag]` now includes target tyre count/evidence and `[LalaPlugin:PitDebriefFuelDiag]` includes completion tolerance. No exports/settings/dashboard JSON/layout/PitCycleLite/fuel model/PitExit prediction paths changed. Property Snapshot list reviewed: yes; no group mapping change required.
+
 - 2026-06-09 MonitorSystem late-race fuel-guidance suppression landed:
   - existing finish authority (`Race.EndPhase >= 2`) now suppresses only late-race actionable `REFUEL OFF`, `MFD FUEL LOW`, and predictive/off-pit-road CAUTION `BASELINE SHORT` MonitorSystem results;
   - pit-road/pit-box/pit-exit WARNING `BASELINE SHORT`, `EXIT FUEL SHORT`, fuel-health faults/stale checks, Car/Opp/H2H reliability warnings, Launch/Rejoin stale-state warnings, fuel math, strategy/planner, RaceFinish, Race.EndPhase calculation, exports, settings, dashboard JSON, MSGV1, pit commands, and Monitor Event CSV schema are unchanged;

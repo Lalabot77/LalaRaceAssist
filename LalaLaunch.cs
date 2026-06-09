@@ -1271,6 +1271,9 @@ namespace LaunchPlugin
         public string StrategyDash_ContingencyText { get; private set; } = "CONT 0";
         private bool _isRefuelSelected = true;
         private int _liveTireChangeCount = 4;
+        private bool _liveTireChangeCountHasEvidence = false;
+        private int _pitStopSelectedTireChangeCount = 4;
+        private bool _pitStopTireChangeCountHasEvidence = false;
         public double LiveCarMaxFuel { get; private set; }
         public double EffectiveLiveMaxTank { get; private set; }
         private double _lastValidLiveMaxFuel = 0.0;
@@ -7008,6 +7011,7 @@ namespace LaunchPlugin
         private bool _pitBoxTargetLatched = false;
         private int _pitBoxLatchedTireChangeCount = 4;
         private bool _pitBoxTireCountLatched = false;
+        private bool _pitBoxLatchedTireChangeCountHadEvidence = false;
         private double _pitBoxLastDeltaSec = 0.0;
         private bool _pitBoxLastDeltaValid = false;
         private const double PitBoxTargetLatchSettleSeconds = 1.0;
@@ -7026,7 +7030,7 @@ namespace LaunchPlugin
         private bool _pitDebriefFuelRefuelDeselectDiagLogged = false;
         private bool _pitDebriefRefuelSelectedWasTrueInBox = false;
         private bool _pitDebriefExplicitRefuelCancelLatched = false;
-        private const double PitDebriefFuelCompletionToleranceLitres = 0.5;
+        private const double PitDebriefFuelCompletionToleranceLitres = 1.10;
         private const double PitExitSpeedEpsilonMps = 0.1;
         private const double MonitorPitPredictiveFuelLapsThreshold = 2.05;
         private const double MonitorPitMinRequiredAddLitres = 0.5;
@@ -11081,7 +11085,7 @@ namespace LaunchPlugin
             if (!data.GameRunning || data.NewData == null) return;
 
             _isRefuelSelected = IsRefuelSelected(pluginManager);
-            _liveTireChangeCount = ResolveLiveSelectedTireChangeCount(pluginManager);
+            _liveTireChangeCount = ResolveLiveSelectedTireChangeCount(pluginManager, out _liveTireChangeCountHasEvidence);
             if (_liveTireChangeCount < 0) _liveTireChangeCount = 0;
             if (_liveTireChangeCount > 4) _liveTireChangeCount = 4;
 
@@ -11214,6 +11218,13 @@ namespace LaunchPlugin
                 _pitExitEntrySeenLast = _pitLite.EntrySeenThisLap;
                 _pitExitExitSeenLast = _pitLite.ExitSeenThisLap;
             }
+
+            if (pitEntryEdge)
+            {
+                ResetPitStopTireSelectionEvidence();
+            }
+
+            TrackCurrentPitStopTireSelectionEvidence(inLane);
 
             // Per-tick pit-exit display values (only while in pit lane)
             if (inLane)
@@ -21757,8 +21768,9 @@ namespace LaunchPlugin
             return true;
         }
 
-        private int ResolveLiveSelectedTireChangeCount(PluginManager pluginManager)
+        private int ResolveLiveSelectedTireChangeCount(PluginManager pluginManager, out bool hasTireSelectionEvidence)
         {
+            hasTireSelectionEvidence = false;
             bool? lf = TryReadDpTyreFlag(pluginManager, "DataCorePlugin.GameRawData.Telemetry.dpLFTireChange");
             bool? rf = TryReadDpTyreFlag(pluginManager, "DataCorePlugin.GameRawData.Telemetry.dpRFTireChange");
             bool? lr = TryReadDpTyreFlag(pluginManager, "DataCorePlugin.GameRawData.Telemetry.dpLRTireChange");
@@ -21777,9 +21789,54 @@ namespace LaunchPlugin
             if (lr.Value) count++;
             if (rr.Value) count++;
 
-            if (count < 0) return 0;
-            if (count > 4) return 4;
+            if (count < 0) count = 0;
+            if (count > 4) count = 4;
+            hasTireSelectionEvidence = true;
             return count;
+        }
+
+        private void ResetPitStopTireSelectionEvidence()
+        {
+            _pitStopSelectedTireChangeCount = 4;
+            _pitStopTireChangeCountHasEvidence = false;
+        }
+
+        private void TrackCurrentPitStopTireSelectionEvidence(bool inPitLane)
+        {
+            if (!inPitLane)
+            {
+                ResetPitStopTireSelectionEvidence();
+                return;
+            }
+
+            if (!_liveTireChangeCountHasEvidence)
+            {
+                return;
+            }
+
+            _pitStopSelectedTireChangeCount = _liveTireChangeCount;
+            if (_pitStopSelectedTireChangeCount < 0) _pitStopSelectedTireChangeCount = 0;
+            if (_pitStopSelectedTireChangeCount > 4) _pitStopSelectedTireChangeCount = 4;
+            _pitStopTireChangeCountHasEvidence = true;
+        }
+
+        private int ResolvePitBoxTargetTireChangeCount(out bool hasTireSelectionEvidence)
+        {
+            if (_pitStopTireChangeCountHasEvidence)
+            {
+                hasTireSelectionEvidence = true;
+                return _pitStopSelectedTireChangeCount;
+            }
+
+            if (_liveTireChangeCountHasEvidence)
+            {
+                hasTireSelectionEvidence = true;
+                return _liveTireChangeCount;
+            }
+
+            // Preserve the existing conservative fallback only when tyre selection evidence is unavailable.
+            hasTireSelectionEvidence = false;
+            return 4;
         }
 
         private static bool? TryReadDpTyreFlag(PluginManager pluginManager, string propertyName)
@@ -21806,7 +21863,8 @@ namespace LaunchPlugin
                 return _pitBoxLatchedTireChangeCount;
             }
 
-            return _liveTireChangeCount;
+            bool hasEvidence;
+            return ResolvePitBoxTargetTireChangeCount(out hasEvidence);
         }
 
         private double GetEffectiveTireChangeTimeSeconds()
@@ -21906,6 +21964,7 @@ namespace LaunchPlugin
             _pitBoxTargetLatched = false;
             _pitBoxLatchedTireChangeCount = 4;
             _pitBoxTireCountLatched = false;
+            _pitBoxLatchedTireChangeCountHadEvidence = false;
         }
 
         private bool IsInValidPitBoxServiceState()
@@ -22021,7 +22080,13 @@ namespace LaunchPlugin
                 return false;
             }
 
-            return GetPitDebriefFuelAddedEvidenceLitres() >= Math.Max(0.0, targetEvidence - PitDebriefFuelCompletionToleranceLitres);
+            double completionToleranceLitres = GetPitDebriefFuelCompletionToleranceLitres();
+            return GetPitDebriefFuelAddedEvidenceLitres() >= Math.Max(0.0, targetEvidence - completionToleranceLitres);
+        }
+
+        private static double GetPitDebriefFuelCompletionToleranceLitres()
+        {
+            return Math.Max(PitDebriefFuelCompletionToleranceLitres, MonitorPitRefuelCompleteToleranceLitres);
         }
 
         private void UpdatePitDebriefRefuelCancelState(bool inBoxPhase, double fuelTargetLitres)
@@ -22110,6 +22175,8 @@ namespace LaunchPlugin
             SimHub.Logging.Current.Info("[LalaPlugin:PitDebriefBoxDiag] edge=" + edge
                 + BuildPitDebriefCommonDiagFields()
                 + " targetSec=" + FormatPitDebriefDiagDouble(_pitBoxTargetSec, "0.000")
+                + " targetTireCount=" + _pitBoxLatchedTireChangeCount.ToString(CultureInfo.InvariantCulture)
+                + " targetTireEvidence=" + (_pitBoxLatchedTireChangeCountHadEvidence ? "true" : "false")
                 + " elapsedSec=" + FormatPitDebriefDiagDouble(_pitBoxElapsedSec, "0.000")
                 + " finalElapsedUsedSec=" + FormatPitDebriefDiagDouble(finalElapsedUsedSec, "0.000")
                 + " pitBoxLastDeltaSec=" + FormatPitDebriefDiagDouble(_pitBoxLastDeltaSec, "0.000")
@@ -22172,6 +22239,7 @@ namespace LaunchPlugin
                 + " refuelSelectedWasTrueInBox=" + (_pitDebriefRefuelSelectedWasTrueInBox ? "true" : "false")
                 + " explicitRefuelCancelLatched=" + (_pitDebriefExplicitRefuelCancelLatched ? "true" : "false")
                 + " naturalCompletion=" + (HasPitDebriefRefuelCompletedNaturally(fuelTargetLitres) ? "true" : "false")
+                + " completionToleranceL=" + FormatPitDebriefDiagDouble(GetPitDebriefFuelCompletionToleranceLitres(), "0.000")
                 + " refuelCancelSent=" + (clearFuelTarget ? "true" : "false")
                 + " fuelTargetPassed=" + FormatPitDebriefDiagDouble(fuelTargetLitres, "0.000")
                 + " debriefFuelTarget=" + FormatPitDebriefDiagDouble(_pitDebrief?.ServiceFuelTargetLitres ?? double.NaN, "0.000")
@@ -22196,7 +22264,7 @@ namespace LaunchPlugin
                 LogPitDebriefFuelDiag("box-entry", currentFuel, false, target);
                 _pitDebrief.LatchBoxEntry(
                     target,
-                    _liveTireChangeCount,
+                    _pitBoxTireCountLatched ? _pitBoxLatchedTireChangeCount : _liveTireChangeCount,
                     GetEffectiveTireChangeTimeSeconds(),
                     _pitBoxTargetSec,
                     _pitBoxElapsedSec);
@@ -22414,10 +22482,12 @@ namespace LaunchPlugin
                 LogPitDebriefBoxDiag("countdown-start", "Pit.Box countdown became active", elapsedSec, double.NaN);
                 _pitBoxLastDeltaSec = 0.0;
                 _pitBoxLastDeltaValid = false;
-                int preServiceSelectedCount = _liveTireChangeCount;
+                bool hasTireSelectionEvidence;
+                int preServiceSelectedCount = ResolvePitBoxTargetTireChangeCount(out hasTireSelectionEvidence);
                 if (preServiceSelectedCount < 0) preServiceSelectedCount = 0;
                 if (preServiceSelectedCount > 4) preServiceSelectedCount = 4;
                 _pitBoxLatchedTireChangeCount = preServiceSelectedCount;
+                _pitBoxLatchedTireChangeCountHadEvidence = hasTireSelectionEvidence;
                 _pitBoxTireCountLatched = true;
             }
 

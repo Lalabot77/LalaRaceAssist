@@ -358,4 +358,4 @@ Debug page fields:
 
 ## Pit Debrief diagnostics note
 
-Pit Debrief box/fuel diagnostics added on 2026-06-08 are SimHub log-only source traces. They add no dashboard JSON/layout contract, no new exports, and no regrouping. `Pit.Debrief.Service.FuelTargetLitres` remains debug/readout-only and now preserves positive requested-add evidence through normal refuel completion/reset while still clearing explicit in-box refuel-cancel and true no-refuel/pre-flow cancel cases.
+Pit Debrief box/fuel diagnostics are SimHub log-only source traces. They add no dashboard JSON/layout contract, no new exports, and no regrouping. Box target modeling uses the current-stop latched tyre count, so confirmed fuel-only stops must not carry stale/default 4-tyre timing; the 4-tyre fallback is retained only when tyre-service evidence is unavailable. `Pit.Debrief.Service.FuelTargetLitres` remains debug/readout-only and preserves positive requested-add evidence through normal refuel completion/reset or deselect when added fuel is within the completion-tolerance window, while still clearing explicit in-box refuel-cancel before natural completion and true no-refuel/pre-flow cancel cases.
