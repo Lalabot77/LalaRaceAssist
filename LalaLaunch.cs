@@ -7043,6 +7043,7 @@ namespace LaunchPlugin
         private bool _monitorPostPitRefuelOffInhibitActive = false;
         private bool _monitorPostPitRefuelOffSuppressionLoggedForWindow = false;
         private int _monitorPostPitRefuelOffExitCompletedLap = -1;
+        private string _monitorRaceEndingFuelGuidanceSuppressionLastKey = string.Empty;
         private string _monitorPitPhase = "OnTrack";
         private MonitorPitStopSnapshot _monitorPitEntrySnapshot;
         private string _monitorCarOppH2HSessionType = string.Empty;
@@ -17073,6 +17074,7 @@ namespace LaunchPlugin
             _monitorPostPitRefuelOffInhibitActive = false;
             _monitorPostPitRefuelOffSuppressionLoggedForWindow = false;
             _monitorPostPitRefuelOffExitCompletedLap = -1;
+            _monitorRaceEndingFuelGuidanceSuppressionLastKey = string.Empty;
             _monitorPitPhase = "OnTrack";
             _monitorPitEntrySnapshot = null;
         }
@@ -17199,13 +17201,13 @@ namespace LaunchPlugin
             if (predictiveEligible)
             {
                 MonitorPitWarningResult warning = EvaluateMonitorPitServiceWarnings(snapshot, MonitorSeverity.Caution, true);
-                if (!warning.RefuelOffSuppressed)
+                if (!warning.IsSuppressed)
                 {
                     _monitorPitPredictiveTwoLapsTriggeredThisStint = true;
                 }
 
                 PublishMonitorPitWarningOrClear(warning);
-                if (!warning.RefuelOffSuppressed)
+                if (!warning.IsSuppressed)
                 {
                     LogMonitorPitTrigger("PredictiveTwoLapsFuelRemaining", snapshot, string.Format(
                         CultureInfo.InvariantCulture,
@@ -17232,20 +17234,28 @@ namespace LaunchPlugin
             public static readonly MonitorPitWarningResult None = new MonitorPitWarningResult(MonitorSeverity.Off, null);
 
             public MonitorPitWarningResult(MonitorSeverity severity, string text)
-                : this(severity, text, false)
+                : this(severity, text, false, false)
             {
             }
 
             public MonitorPitWarningResult(MonitorSeverity severity, string text, bool refuelOffSuppressed)
+                : this(severity, text, refuelOffSuppressed, false)
+            {
+            }
+
+            public MonitorPitWarningResult(MonitorSeverity severity, string text, bool refuelOffSuppressed, bool raceEndingSuppressed)
             {
                 Severity = severity;
                 Text = text;
                 RefuelOffSuppressed = refuelOffSuppressed;
+                RaceEndingSuppressed = raceEndingSuppressed;
             }
 
             public MonitorSeverity Severity { get; }
             public string Text { get; }
             public bool RefuelOffSuppressed { get; }
+            public bool RaceEndingSuppressed { get; }
+            public bool IsSuppressed => RefuelOffSuppressed || RaceEndingSuppressed;
             public bool HasWarning => !string.IsNullOrWhiteSpace(Text);
         }
 
@@ -17258,6 +17268,12 @@ namespace LaunchPlugin
 
             if (includeBaselineFuelCheck && IsMonitorBaselineFuelShort(snapshot, includeSelectedMfdFuel: true))
             {
+                if (ShouldSuppressMonitorRaceEndingFuelGuidance("BASELINE SHORT", serviceSeverity, includeBaselineFuelCheck))
+                {
+                    LogMonitorRaceEndingFuelGuidanceSuppressed(snapshot, serviceSeverity, "BASELINE SHORT");
+                    return new MonitorPitWarningResult(serviceSeverity, null, false, true);
+                }
+
                 return new MonitorPitWarningResult(serviceSeverity, "BASELINE SHORT");
             }
 
@@ -17269,6 +17285,11 @@ namespace LaunchPlugin
                     LogMonitorPostPitRefuelOffSuppressed(snapshot, serviceSeverity);
                     refuelOffSuppressed = true;
                 }
+                else if (ShouldSuppressMonitorRaceEndingFuelGuidance("REFUEL OFF", serviceSeverity, includeBaselineFuelCheck))
+                {
+                    LogMonitorRaceEndingFuelGuidanceSuppressed(snapshot, serviceSeverity, "REFUEL OFF");
+                    return new MonitorPitWarningResult(serviceSeverity, null, false, true);
+                }
                 else
                 {
                     return new MonitorPitWarningResult(serviceSeverity, "REFUEL OFF");
@@ -17277,12 +17298,71 @@ namespace LaunchPlugin
 
             if (IsMonitorPitMfdFuelLow(snapshot))
             {
+                if (ShouldSuppressMonitorRaceEndingFuelGuidance("MFD FUEL LOW", serviceSeverity, includeBaselineFuelCheck))
+                {
+                    LogMonitorRaceEndingFuelGuidanceSuppressed(snapshot, serviceSeverity, "MFD FUEL LOW");
+                    return new MonitorPitWarningResult(serviceSeverity, null, false, true);
+                }
+
                 return new MonitorPitWarningResult(serviceSeverity, "MFD FUEL LOW");
             }
 
             return refuelOffSuppressed
                 ? new MonitorPitWarningResult(serviceSeverity, null, true)
                 : MonitorPitWarningResult.None;
+        }
+
+        private bool ShouldSuppressMonitorRaceEndingFuelGuidance(string warningText, MonitorSeverity severity, bool includeBaselineFuelCheck)
+        {
+            if (RaceEndPhase < 2)
+            {
+                return false;
+            }
+
+            if (string.Equals(warningText, "REFUEL OFF", StringComparison.Ordinal) ||
+                string.Equals(warningText, "MFD FUEL LOW", StringComparison.Ordinal))
+            {
+                return true;
+            }
+
+            return string.Equals(warningText, "BASELINE SHORT", StringComparison.Ordinal) &&
+                severity == MonitorSeverity.Caution &&
+                includeBaselineFuelCheck;
+        }
+
+        private void LogMonitorRaceEndingFuelGuidanceSuppressed(MonitorPitStopSnapshot snapshot, MonitorSeverity severity, string warningText)
+        {
+            if (snapshot == null)
+            {
+                return;
+            }
+
+            string text = string.IsNullOrWhiteSpace(warningText) ? "unknown" : warningText.Trim();
+            string key = string.Format(CultureInfo.InvariantCulture, "{0}|{1}|{2}", text, (int)severity, RaceEndPhase);
+            if (string.Equals(_monitorRaceEndingFuelGuidanceSuppressionLastKey, key, StringComparison.Ordinal))
+            {
+                return;
+            }
+
+            _monitorRaceEndingFuelGuidanceSuppressionLastKey = key;
+            SimHub.Logging.Current.Info(string.Format(
+                CultureInfo.InvariantCulture,
+                "[LalaPlugin:MonitorSystem] fuel guidance suppressed race-ending text={0} severity={1} phase={2} phaseText={3} sessionTime={4} sessionType={5} sessionState={6} onPitRoad={7} inPitStall={8} currentFuel={9} mfdRefuelEnabled={10} mfdFuelRequest={11} pluginRefuelValid={12} pluginNextLitres={13} pluginFuelOnExit={14}",
+                text,
+                (int)severity,
+                RaceEndPhase,
+                RaceEndPhaseText,
+                FormatMonitorDouble(snapshot.SessionTimeSec),
+                snapshot.SessionType,
+                snapshot.SessionState,
+                snapshot.OnPitRoad,
+                snapshot.InPitStall || snapshot.InPitBox,
+                FormatMonitorDouble(snapshot.CurrentFuel),
+                snapshot.MfdRefuelEnabled,
+                FormatMonitorDouble(snapshot.MfdFuelRequest),
+                snapshot.PluginRefuelValid,
+                FormatMonitorDouble(snapshot.PluginNextLitres),
+                FormatMonitorDouble(snapshot.PluginFuelOnExit)));
         }
 
         private MonitorPitWarningResult EvaluateMonitorPitExitWarning(MonitorPitStopSnapshot snapshot)
@@ -17455,7 +17535,7 @@ namespace LaunchPlugin
                 return;
             }
 
-            if (warning.RefuelOffSuppressed)
+            if (warning.IsSuppressed)
             {
                 return;
             }

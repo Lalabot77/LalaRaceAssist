@@ -1,3 +1,9 @@
+## 2026-06-09 — MonitorSystem late-race fuel-guidance suppression
+- Classification: **both** (driver-visible MonitorSystem warning-noise reduction plus internal suppression evidence logging; no export/property, settings, dashboard JSON, CSV schema, fuel math, strategy/planner, RaceFinish, Race.EndPhase, MSGV1, or pit-command change).
+- Added a narrow MonitorSystem race-ending suppression gate using existing finish authority (`Race.EndPhase >= 2`) for selected actionable fuel guidance only: `REFUEL OFF`, `MFD FUEL LOW`, and predictive/off-pit-road CAUTION `BASELINE SHORT`.
+- Preserved `EXIT FUEL SHORT`, pit-road/pit-box/pit-exit WARNING `BASELINE SHORT`, fuel-health faults/stale checks, Car/Opp/H2H reliability warnings, Launch/Rejoin stale-state warnings, warning priority, and active-warning clear behavior; suppressed results return without publishing `MONITOR READY` and without Monitor Event CSV rows.
+- Added concise, de-duplicated SimHub evidence logging for late-race fuel-guidance suppression. Property Snapshot list reviewed: yes; no group change because no SimHub exports/properties were added, removed, renamed, or regrouped.
+
 ## 2026-06-08 — PR #808 debug logging gate ownership completion
 - Classification: **internal-only** (SimHub Info diagnostic logging gate correction only; no runtime fuel math, Leader Lap authority decisions, lap detection behavior, PitFuelControl command/mirror/fault behavior, PitDebrief, exports/properties, dashboard JSON, or debug UI layout changed).
 - Completed the PR #808 audit so Lap Detector diagnostics, the PitFuelControlEngine diagnostic provider, MSGV1 optional session marker, and Property Snapshot manual/detailed summary logs all use the effective child logging gate (`SoftDebugEnabled && EnableDebugLogging`) instead of master Soft Debug alone. Leader Lap routine candidate/source/use/reject detail remains on the same effective gate.

@@ -1,3 +1,8 @@
+- 2026-06-09 MonitorSystem late-race fuel-guidance suppression landed:
+  - existing finish authority (`Race.EndPhase >= 2`) now suppresses only late-race actionable `REFUEL OFF`, `MFD FUEL LOW`, and predictive/off-pit-road CAUTION `BASELINE SHORT` MonitorSystem results;
+  - pit-road/pit-box/pit-exit WARNING `BASELINE SHORT`, `EXIT FUEL SHORT`, fuel-health faults/stale checks, Car/Opp/H2H reliability warnings, Launch/Rejoin stale-state warnings, fuel math, strategy/planner, RaceFinish, Race.EndPhase calculation, exports, settings, dashboard JSON, MSGV1, pit commands, and Monitor Event CSV schema are unchanged;
+  - suppressed late-race results log concise evidence only, do not publish/clear MonitorSystem output, and do not create Monitor Event CSV rows. Property Snapshot list reviewed: yes; no export/property add, remove, rename, or regroup required.
+
 - 2026-06-08 PR #808 debug logging gate ownership completion landed:
   - Lap Detector pending/reject/low-speed/atypical diagnostics, Leader Lap routine candidate/source/use/reject detail, PitFuelControlEngine entry snapshots and benign blocked/no-send churn, the MSGV1 optional session marker, and Property Snapshot manual/detailed summary logs now all require the existing effective verbose helper (`SoftDebugEnabled && EnableDebugLogging`) instead of master Soft Debug alone;
   - master `Enable debugging mode` still exposes/allows debug tools and remains the kill switch for debug capture systems, while `Enable Debug Logging` owns extra SimHub Info diagnostic verbosity;
