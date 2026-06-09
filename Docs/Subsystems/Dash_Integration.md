@@ -354,3 +354,8 @@ Debug page fields:
 - Service: `LalaLaunch.Pit.Debrief.Service.FuelAddedLitres`, `FuelTargetLitres`, `RefuelDurationSec`, `RefuelRateLps`, `TyreChangeCount`.
 - Timing: `LalaLaunch.Pit.Debrief.Timing.PredictedTotalLossSec`, `ActualTotalLossSec`, `LossDeltaSec`, `LossSource`.
 - Exit: `LalaLaunch.Pit.Debrief.Exit.PredictedPositionInClass`, `ActualPositionInClass`, `PositionDelta`, `AccuracyText`.
+
+
+## Pit Debrief diagnostics note
+
+Pit Debrief box/fuel diagnostics added on 2026-06-08 are SimHub log-only source traces. They add no dashboard JSON/layout contract, no new exports, and no regrouping. `Pit.Debrief.Service.FuelTargetLitres` remains debug/readout-only and now preserves positive requested-add evidence through normal refuel completion/reset while still clearing explicit in-box refuel-cancel and true no-refuel/pre-flow cancel cases.
