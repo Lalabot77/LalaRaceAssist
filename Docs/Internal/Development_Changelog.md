@@ -1,8 +1,14 @@
+## 2026-06-09 — Pit Debrief explicit refuel-cancel preservation follow-up
+- Classification: **both** (bounded Pit Debrief service-target behavior correction plus diagnostic field wording; no export names, settings, dashboard JSON/layout, PitCycleLite, fuel model, PitExit prediction, or `Pit.Box.LastDeltaSec` sign change).
+- Refined the previous fuel-target protection so normal completed refuels preserve positive requested-add evidence when `_isRefuelSelected` drops false after natural completion/reset, but an explicit in-box selected→deselected edge before natural completion latches a cancel and clears `Pit.Debrief.Service.FuelTargetLitres` to `0.0`.
+- True no-refuel/pre-flow cancel stops still clear stale target evidence, while `Pit.Debrief.Service.FuelAddedLitres` remains independent actual-added evidence. `[LalaPlugin:PitDebriefFuelDiag]` now includes explicit-cancel and natural-completion fields/action text.
+- Property Snapshot list reviewed: yes; no SimHub exports/properties were added, removed, renamed, behavior-recontracted, or regrouped, and existing `Pit.*` / `PitExit.*` properties remain in the Pit/PitExit group.
+
 ## 2026-06-08 — Pit Debrief Daytona box/fuel-target diagnostics
 - Classification: **both** (Pit Debrief diagnostic logging plus a bounded debrief target-preservation fix; no export names, settings, dashboard JSON/layout, PitCycleLite, fuel model, PitExit prediction, or `Pit.Box.LastDeltaSec` sign change).
 - Added one-shot `[LalaPlugin:PitDebriefBoxDiag]` lifecycle diagnostics at pit-entry/debrief start, first box edge, first post-box edge, countdown finalization, completed-delta refresh, and final pending/suppressed review so Daytona can be compared against Imola/Algarve without per-tick log spam.
 - Added bounded `[LalaPlugin:PitDebriefFuelDiag]` source-trace diagnostics at pit entry, box entry, first active service refresh, positive target observation, refuel deselect, box exit, and final debrief, carrying existing `Fuel.Pit.*` seams and the value passed into Pit Debrief.
-- Bounded fix: Pit Debrief no longer treats `_isRefuelSelected == false` as a target clear when there is positive requested-add or actual-added evidence, preserving the previous largest positive `Fuel.Pit.Box.WillAddLatched` / `Fuel.Pit.WillAdd` target through normal refuel completion/reset while still allowing true no-target/no-add deselects to clear to `0.0`.
+- Bounded fix: Pit Debrief now distinguishes explicit in-box refuel-cancel edges from normal completion/reset. Normal completed refuels preserve the previous largest positive `Fuel.Pit.Box.WillAddLatched` / `Fuel.Pit.WillAdd` target, while explicit in-box deselect before natural completion and true no-refuel/pre-flow cancel stops clear the current debrief target to `0.0`.
 - Property Snapshot list reviewed: yes; no SimHub exports/properties were added, removed, renamed, or regrouped, and existing `Pit.*` / `PitExit.*` properties remain in the Pit/PitExit group.
 
 ## 2026-06-08 — PR #808 debug logging gate ownership completion
