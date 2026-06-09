@@ -1,3 +1,9 @@
+## 2026-06-09 — MonitorSystem FUEL DATA RECOVERED auto-clear
+- Classification: **both** (driver/dashboard-facing MonitorSystem text behavior plus internal documentation; no export/property names, enum values, settings, dashboard JSON, MSGV1, fuel health/recovery logic, pit warning logic, stale-state logic, or Monitor Event CSV schema changes).
+- Added a narrow 10 second hold for `FUEL DATA RECOVERED` that clears directly to `MONITOR READY` only when MonitorSystem is still enabled and the active text is still exactly `FUEL DATA RECOVERED`. Replacement warnings, faults, pit/baseline, Car/Opp/H2H, and stale-state messages are left untouched.
+- Preserved `FUEL HEALTH OK` as a separate existing health-pass publication path; the automatic recovered clear does not step through it and remains skipped by existing Monitor Event CSV normal/OK filtering.
+- Property Snapshot list reviewed: yes; `MonitorSystem.Text` behavior intentionally changed, but no SimHub export/property names, schemas, snapshot groups, settings, or dashboard JSON changed. Root `CHANGELOG.md` updated because this changes driver-visible MonitorSystem behavior in the unreleased user-facing history.
+
 ## 2026-06-09 — Strategy Dash idle control-centre exports
 - Classification: **both** (new dashboard-facing SimHub exports/action plus internal publication/docs alignment; no dashboard JSON, fuel/refuel math, pit command transport, League Class behavior, or MonitorSystem output-property additions).
 - Added plugin-owned idle/control-centre exports `Plugin.VersionNumberText`, `Plugin.StatusText`, and `Plugin.StatusLineText`; status priority is reserved update-available state, Soft Debug, zero profiles, then READY, and League Class missing/unloaded is intentionally excluded. The existing Overview latest-release check is UI-local, so `UPDATE AVAILABLE` remains reserved and is not currently emitted by plugin-owned state.

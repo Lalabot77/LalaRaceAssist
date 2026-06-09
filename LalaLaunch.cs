@@ -7056,6 +7056,7 @@ namespace LaunchPlugin
         private const double MonitorRejoinActiveTooLongSeconds = 60.0;
         private const double MonitorFuelProjectionStaleSeconds = 30.0;
         private const double MonitorFuelModelStaleSeconds = 5.0;
+        private const double MonitorFuelDataRecoveredHoldSeconds = 10.0;
         private const int MonitorFuelLearningMinimumCompletedLap = 5;
         private const int MonitorFuelLearningStaleCompletedLapThreshold = 3;
         private bool _monitorPitFrameworkPrimed = false;
@@ -7087,6 +7088,7 @@ namespace LaunchPlugin
         private int _monitorFuelLearningLastSampleCount = -1;
         private int _monitorFuelLearningLastCompletedLap = -1;
         private int _monitorFuelLearningNoProgressStartLap = -1;
+        private DateTime _monitorFuelDataRecoveredSinceUtc = DateTime.MinValue;
         private bool _monitorEventCsvFailed;
         private bool _monitorEventCsvPathLogged;
 
@@ -12294,6 +12296,7 @@ namespace LaunchPlugin
 
             EvaluateFuelRuntimeHealth(pluginManager);
             UpdateMonitorStaleHealth(data, pluginManager);
+            UpdateMonitorFuelDataRecoveredAutoClear();
 
             // --- Decel capture instrumentation (toggle = pit screen active) ---
             {
@@ -16324,13 +16327,54 @@ namespace LaunchPlugin
                 return;
             }
 
+            bool fuelDataRecovered = severity == MonitorSeverity.Recovered &&
+                string.Equals(string.IsNullOrWhiteSpace(text) ? string.Empty : text.Trim(), "FUEL DATA RECOVERED", StringComparison.Ordinal);
+
             bool changed = _monitorSystem.Publish(severity, text);
+            if (fuelDataRecovered && _monitorSystem.IsEnabled && string.Equals(_monitorSystem.DisplayText, "FUEL DATA RECOVERED", StringComparison.Ordinal))
+            {
+                _monitorFuelDataRecoveredSinceUtc = DateTime.UtcNow;
+            }
+            else if (changed && _monitorFuelDataRecoveredSinceUtc != DateTime.MinValue &&
+                !string.Equals(_monitorSystem.DisplayText, "FUEL DATA RECOVERED", StringComparison.Ordinal))
+            {
+                _monitorFuelDataRecoveredSinceUtc = DateTime.MinValue;
+            }
+
             if (!changed)
             {
                 return;
             }
 
             MaybeWriteMonitorEventCsv(severity, text, category, reason, extraDetail);
+        }
+
+        private void UpdateMonitorFuelDataRecoveredAutoClear()
+        {
+            if (_monitorFuelDataRecoveredSinceUtc == DateTime.MinValue)
+            {
+                return;
+            }
+
+            if (_monitorSystem == null || !_monitorSystem.IsEnabled || Settings?.MonitorSystemEnabled != true)
+            {
+                _monitorFuelDataRecoveredSinceUtc = DateTime.MinValue;
+                return;
+            }
+
+            if (!string.Equals(_monitorSystem.DisplayText, "FUEL DATA RECOVERED", StringComparison.Ordinal))
+            {
+                _monitorFuelDataRecoveredSinceUtc = DateTime.MinValue;
+                return;
+            }
+
+            if ((DateTime.UtcNow - _monitorFuelDataRecoveredSinceUtc).TotalSeconds < MonitorFuelDataRecoveredHoldSeconds)
+            {
+                return;
+            }
+
+            _monitorFuelDataRecoveredSinceUtc = DateTime.MinValue;
+            PublishMonitorSystemEvent(MonitorSeverity.Ok, "MONITOR READY", "FuelHealth", "fuel data recovered hold expired", string.Empty);
         }
 
         private void MaybeWriteMonitorEventCsv(MonitorSeverity severity, string text, string category, string reason, string extraDetail)
