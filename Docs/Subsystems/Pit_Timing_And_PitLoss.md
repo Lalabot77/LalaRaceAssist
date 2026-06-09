@@ -36,7 +36,7 @@ Out of scope:
 
 - **Learned/stored pit lane loss is drive-through baseline only** (clean limiter-speed pass through pit lane, no box stop).
 - Boxed-stop runtime predictions add stopped-box components separately:
-  - boxed service model (`max(fuelTime, tireTime) + 1.0s` stationary service overhead, repair-aware), where runtime `tireTime` is selected-tyre-count aware (`Fuel.Live.TireChangeCount` + scaled `Fuel.Live.TireChangeTime_S`, fail-open to 4 tyres only when tyre flags/evidence are unavailable or partial, strategy-slider independent (profile full-4 base)); the boxed-target latch uses current-stop tyre-selection evidence captured in pit lane and freezes that evidence before service, so fuel-only stops with confirmed `0` tyres do not carry a stale/default 4-tyre target, while real tyre stops are not reduced by in-service flag clear-down,
+  - boxed service model (`max(fuelTime, tireTime) + 1.0s` stationary service overhead, repair-aware), where runtime `tireTime` is selected-tyre-count aware (`Fuel.Live.TireChangeCount` + scaled `Fuel.Live.TireChangeTime_S`, fail-open to 4 tyres only when tyre flags/evidence are unavailable or partial, strategy-slider independent (profile full-4 base)); the boxed-target latch uses current-stop tyre-selection evidence captured in pit lane, keeps accepting pre-service selection changes (including `0` → non-zero MFD updates), and freezes that evidence only when valid box service/countdown starts, so fuel-only stops with confirmed `0` tyres do not carry a stale/default 4-tyre target, while real tyre stops are not reduced by in-service flag clear-down,
   - fixed pit-box transition allowance `+2.00s` (slow-in/settle/launch-out to limiter).
 
 Canonical boxed-stop prediction contract:

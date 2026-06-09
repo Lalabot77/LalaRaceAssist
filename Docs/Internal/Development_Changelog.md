@@ -1,6 +1,6 @@
 ## 2026-06-09 — Pit Debrief tyre-evidence freeze and small-refuel cancel follow-up
 - Classification: **both** (bounded Pit Debrief/Pit box timing correctness follow-up; no export names, settings, dashboard JSON/layout, PitCycleLite, fuel model, PitExit prediction, or `Pit.Box.LastDeltaSec` sign change).
-- Current-stop tyre evidence now freezes once captured before service, and live in-service DP tyre flag clear-down is no longer allowed to replace a real pre-service tyre count before the box target latches; confirmed pre-service `0`-tyre evidence remains valid for fuel-only stops.
+- Current-stop tyre evidence now keeps updating while the car is in pit lane before valid box service/countdown starts, so an initial confirmed `0`-tyre fuel-only selection can become a later non-zero MFD tyre selection before the stall; live in-service DP tyre flag clear-down is still frozen out once service starts, and confirmed pre-service `0`-tyre evidence remains valid for fuel-only stops.
 - Natural refuel completion now requires positive added-fuel movement before applying the completion-tolerance check, so small requested-add/pre-flow deselects still clear `Pit.Debrief.Service.FuelTargetLitres` while large near-complete refuels preserve it.
 - Property Snapshot list reviewed: yes; no SimHub exports/properties were added, removed, renamed, behavior-recontracted, or regrouped, and existing `Pit.*` / `PitExit.*` properties remain in the Pit/PitExit group.
 

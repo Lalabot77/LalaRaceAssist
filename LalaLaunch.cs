@@ -11224,7 +11224,7 @@ namespace LaunchPlugin
                 ResetPitStopTireSelectionEvidence();
             }
 
-            TrackCurrentPitStopTireSelectionEvidence(inLane, isInPitStall);
+            TrackCurrentPitStopTireSelectionEvidence(inLane);
 
             // Per-tick pit-exit display values (only while in pit lane)
             if (inLane)
@@ -21801,7 +21801,7 @@ namespace LaunchPlugin
             _pitStopTireChangeCountHasEvidence = false;
         }
 
-        private void TrackCurrentPitStopTireSelectionEvidence(bool inPitLane, bool isInPitStall)
+        private void TrackCurrentPitStopTireSelectionEvidence(bool inPitLane)
         {
             if (!inPitLane)
             {
@@ -21809,12 +21809,7 @@ namespace LaunchPlugin
                 return;
             }
 
-            if (_pitStopTireChangeCountHasEvidence)
-            {
-                return;
-            }
-
-            if (isInPitStall || _pitBoxCountdownActive)
+            if (_pitBoxCountdownActive || IsInValidPitBoxServiceState())
             {
                 return;
             }
