@@ -7018,6 +7018,15 @@ namespace LaunchPlugin
         private bool _pitRefuelWasBoxed = false;
         private double _pitRefuelBoxEntryFuelCandidate = 0.0;
         private double _pitRefuelLastObservedFuel = 0.0;
+        private bool _pitDebriefBoxCountdownFinalizeDiagLogged = false;
+        private bool _pitDebriefBoxDeltaRefreshDiagLogged = false;
+        private bool _pitDebriefFinalPendingBoxDeltaDiagLogged = false;
+        private bool _pitDebriefFuelActiveRefreshDiagLogged = false;
+        private bool _pitDebriefFuelPositiveTargetDiagLogged = false;
+        private bool _pitDebriefFuelRefuelDeselectDiagLogged = false;
+        private bool _pitDebriefRefuelSelectedWasTrueInBox = false;
+        private bool _pitDebriefExplicitRefuelCancelLatched = false;
+        private const double PitDebriefFuelCompletionToleranceLitres = 0.5;
         private const double PitExitSpeedEpsilonMps = 0.1;
         private const double MonitorPitPredictiveFuelLapsThreshold = 2.05;
         private const double MonitorPitMinRequiredAddLitres = 0.5;
@@ -11223,16 +11232,19 @@ namespace LaunchPlugin
 
             // PR #797: capture Pit.Debrief service evidence before UpdatePitRefuelGaugeValues can
             // clear Pit_AddedSoFar on the first non-active box tick. This reads existing fuel seams only.
-            UpdatePitDebriefBoxServiceLatch(inLane, isInPitStall);
+            UpdatePitDebriefBoxServiceLatch(inLane, isInPitStall, currentFuelNow);
             UpdatePitRefuelGaugeValues(currentFuelNow);
             if (_pitDebrief != null && _pitBoxCountdownActive)
             {
                 double debriefFuelTarget = Pit_Box_WillAddLatched > 0.0 ? Pit_Box_WillAddLatched : Pit_WillAdd;
+                UpdatePitDebriefRefuelCancelState(_pit != null && IsPitDebriefBoxPhase(_pit.CurrentPitPhase), debriefFuelTarget);
+                bool clearFuelTarget = ShouldClearPitDebriefFuelTargetForRefuelDeselect(debriefFuelTarget);
                 _pitDebrief.RefreshServiceEvidence(
                     Pit_AddedSoFar,
                     debriefFuelTarget,
                     FuelCalculator?.EffectiveRefuelRateLps ?? 0.0,
-                    !_isRefuelSelected);
+                    clearFuelTarget);
+                LogPitDebriefFuelDiagOnce("active-service-refresh", currentFuelNow, clearFuelTarget, debriefFuelTarget);
             }
             UpdateMonitorPitStopFramework(data, pluginManager, sessionTime);
 
@@ -21977,7 +21989,196 @@ namespace LaunchPlugin
             return (total < 0.0 || double.IsNaN(total) || double.IsInfinity(total)) ? 0.0 : total;
         }
 
-        private void UpdatePitDebriefBoxServiceLatch(bool inPitLane, bool isInPitStall)
+        private void ResetPitDebriefDiagnosticLogState()
+        {
+            _pitDebriefBoxCountdownFinalizeDiagLogged = false;
+            _pitDebriefBoxDeltaRefreshDiagLogged = false;
+            _pitDebriefFinalPendingBoxDeltaDiagLogged = false;
+            _pitDebriefFuelActiveRefreshDiagLogged = false;
+            _pitDebriefFuelPositiveTargetDiagLogged = false;
+            _pitDebriefFuelRefuelDeselectDiagLogged = false;
+            _pitDebriefRefuelSelectedWasTrueInBox = false;
+            _pitDebriefExplicitRefuelCancelLatched = false;
+        }
+
+        private double GetPitDebriefFuelTargetEvidenceLitres(double fuelTargetLitres)
+        {
+            double debriefTarget = _pitDebrief?.ServiceFuelTargetLitres ?? 0.0;
+            return Math.Max(Math.Max(0.0, fuelTargetLitres), Math.Max(Math.Max(0.0, Pit_Box_WillAddLatched), Math.Max(0.0, debriefTarget)));
+        }
+
+        private double GetPitDebriefFuelAddedEvidenceLitres()
+        {
+            double debriefAdded = _pitDebrief?.ServiceFuelAddedLitres ?? 0.0;
+            return Math.Max(Math.Max(0.0, Pit_AddedSoFar), Math.Max(0.0, debriefAdded));
+        }
+
+        private bool HasPitDebriefRefuelCompletedNaturally(double fuelTargetLitres)
+        {
+            double targetEvidence = GetPitDebriefFuelTargetEvidenceLitres(fuelTargetLitres);
+            if (targetEvidence <= FuelNoiseEps)
+            {
+                return false;
+            }
+
+            return GetPitDebriefFuelAddedEvidenceLitres() >= Math.Max(0.0, targetEvidence - PitDebriefFuelCompletionToleranceLitres);
+        }
+
+        private void UpdatePitDebriefRefuelCancelState(bool inBoxPhase, double fuelTargetLitres)
+        {
+            if (!inBoxPhase || !_pitBoxCountdownActive)
+            {
+                _pitDebriefRefuelSelectedWasTrueInBox = false;
+                return;
+            }
+
+            if (_isRefuelSelected)
+            {
+                _pitDebriefRefuelSelectedWasTrueInBox = true;
+                return;
+            }
+
+            if (_pitDebriefRefuelSelectedWasTrueInBox && !HasPitDebriefRefuelCompletedNaturally(fuelTargetLitres))
+            {
+                _pitDebriefExplicitRefuelCancelLatched = true;
+            }
+        }
+
+        private bool ShouldClearPitDebriefFuelTargetForRefuelDeselect(double fuelTargetLitres)
+        {
+            if (_pitDebriefExplicitRefuelCancelLatched)
+            {
+                return true;
+            }
+
+            if (_isRefuelSelected)
+            {
+                return false;
+            }
+
+            // iRacing can drop the selected-refuel flag after normal fuel completion/reset;
+            // that must not erase the already latched requested-add evidence for the completed stop.
+            if (HasPitDebriefRefuelCompletedNaturally(fuelTargetLitres))
+            {
+                return false;
+            }
+
+            // A stop that never added fuel and currently has refuel deselected is a true no-refuel
+            // / pre-flow cancel case even if a stale requested-add source was visible earlier.
+            return GetPitDebriefFuelAddedEvidenceLitres() <= FuelNoiseEps;
+        }
+
+        private static string FormatPitDebriefDiagDouble(double value, string format = "0.000")
+        {
+            if (double.IsNaN(value) || double.IsInfinity(value))
+            {
+                return "na";
+            }
+
+            return value.ToString(format, CultureInfo.InvariantCulture);
+        }
+
+        private int ReadPitDebriefLapNumber()
+        {
+            return SafeReadInt(PluginManager, "DataCorePlugin.GameRawData.Telemetry.Lap", -1);
+        }
+
+        private double ReadPitDebriefSessionTimeSec()
+        {
+            return ResolveShiftAssistSessionTimeSec(PluginManager);
+        }
+
+        private string BuildPitDebriefCommonDiagFields()
+        {
+            PitPhase phase = _pit?.CurrentPitPhase ?? PitPhase.None;
+            return " track='" + (CurrentTrackName ?? string.Empty).Replace("'", "") + "'"
+                + " trackKey='" + (CurrentTrackKey ?? string.Empty).Replace("'", "") + "'"
+                + " driverPitTrkPct=" + FormatPitDebriefDiagDouble(_pit?.PlayerPitBoxTrackPct ?? double.NaN, "0.000000")
+                + " playerTrackPct=" + FormatPitDebriefDiagDouble(_pit?.PlayerTrackPercentNormalized ?? _carPlayerTrackPct, "0.000000")
+                + " sessionTime=" + FormatPitDebriefDiagDouble(ReadPitDebriefSessionTimeSec(), "0.000")
+                + " lap=" + ReadPitDebriefLapNumber().ToString(CultureInfo.InvariantCulture)
+                + " pitPhase=" + phase
+                + " inPitLane=" + ((_pit?.IsOnPitRoad ?? false) ? "true" : "false")
+                + " inPitStall=" + (IsInValidPitBoxServiceState() ? "true" : "false")
+                + " inBoxPhase=" + (IsPitDebriefBoxPhase(phase) ? "true" : "false")
+                + " debriefWasInBox=" + (_pitDebriefWasInBox ? "true" : "false")
+                + " countdownActive=" + (_pitBoxCountdownActive ? "true" : "false");
+        }
+
+        private void LogPitDebriefBoxDiag(string edge, string reason, double finalElapsedUsedSec, double debriefBoxDeltaSec)
+        {
+            SimHub.Logging.Current.Info("[LalaPlugin:PitDebriefBoxDiag] edge=" + edge
+                + BuildPitDebriefCommonDiagFields()
+                + " targetSec=" + FormatPitDebriefDiagDouble(_pitBoxTargetSec, "0.000")
+                + " elapsedSec=" + FormatPitDebriefDiagDouble(_pitBoxElapsedSec, "0.000")
+                + " finalElapsedUsedSec=" + FormatPitDebriefDiagDouble(finalElapsedUsedSec, "0.000")
+                + " pitBoxLastDeltaSec=" + FormatPitDebriefDiagDouble(_pitBoxLastDeltaSec, "0.000")
+                + " pitBoxLastDeltaValid=" + (_pitBoxLastDeltaValid ? "true" : "false")
+                + " debriefBoxDeltaPassed=" + FormatPitDebriefDiagDouble(debriefBoxDeltaSec, "0.000")
+                + " exportedSign='Pit.Box.LastDeltaSec=target-actual positive_quicker'"
+                + " reason='" + (reason ?? string.Empty).Replace("'", "") + "'");
+        }
+
+        private void LogPitDebriefFuelDiagOnce(string edge, double currentFuel, bool clearFuelTarget, double fuelTargetLitres)
+        {
+            if (edge == "active-service-refresh")
+            {
+                bool positiveTarget = fuelTargetLitres > 0.0 || Pit_Box_WillAddLatched > 0.0 || Pit_WillAdd > 0.0;
+                bool refuelDeselected = !_isRefuelSelected;
+                if (!_pitDebriefFuelActiveRefreshDiagLogged)
+                {
+                    LogPitDebriefFuelDiag(edge, currentFuel, clearFuelTarget, fuelTargetLitres);
+                    _pitDebriefFuelActiveRefreshDiagLogged = true;
+                }
+                else if (positiveTarget && !_pitDebriefFuelPositiveTargetDiagLogged)
+                {
+                    LogPitDebriefFuelDiag("active-service-positive-target", currentFuel, clearFuelTarget, fuelTargetLitres);
+                    _pitDebriefFuelPositiveTargetDiagLogged = true;
+                }
+                else if (refuelDeselected && !_pitDebriefFuelRefuelDeselectDiagLogged)
+                {
+                    LogPitDebriefFuelDiag("refuel-deselect", currentFuel, clearFuelTarget, fuelTargetLitres);
+                    _pitDebriefFuelRefuelDeselectDiagLogged = true;
+                }
+            }
+        }
+
+        private string ResolvePitDebriefFuelDiagAction(bool clearFuelTarget)
+        {
+            if (_pitDebriefExplicitRefuelCancelLatched)
+            {
+                return clearFuelTarget ? "clear-explicit-in-box-cancel" : "explicit-in-box-cancel-latched";
+            }
+
+            if (!_isRefuelSelected && !clearFuelTarget)
+            {
+                return "preserve-normal-completion-reset-or-positive-evidence";
+            }
+
+            return clearFuelTarget ? "clear-no-target-no-add-deselect" : "latch-or-preserve-largest-positive-target";
+        }
+
+        private void LogPitDebriefFuelDiag(string edge, double currentFuel, bool clearFuelTarget, double fuelTargetLitres)
+        {
+            SimHub.Logging.Current.Info("[LalaPlugin:PitDebriefFuelDiag] edge=" + edge
+                + BuildPitDebriefCommonDiagFields()
+                + " pitWillAdd=" + FormatPitDebriefDiagDouble(Pit_WillAdd, "0.000")
+                + " pitBoxWillAddLatched=" + FormatPitDebriefDiagDouble(Pit_Box_WillAddLatched, "0.000")
+                + " pitAddedSoFar=" + FormatPitDebriefDiagDouble(Pit_AddedSoFar, "0.000")
+                + " pitEntryFuel=" + FormatPitDebriefDiagDouble(Pit_Box_EntryFuel, "0.000")
+                + " currentFuel=" + FormatPitDebriefDiagDouble(currentFuel, "0.000")
+                + " isRefuelSelected=" + (_isRefuelSelected ? "true" : "false")
+                + " isRefuelling=" + (_isRefuelling ? "true" : "false")
+                + " refuelSelectedWasTrueInBox=" + (_pitDebriefRefuelSelectedWasTrueInBox ? "true" : "false")
+                + " explicitRefuelCancelLatched=" + (_pitDebriefExplicitRefuelCancelLatched ? "true" : "false")
+                + " naturalCompletion=" + (HasPitDebriefRefuelCompletedNaturally(fuelTargetLitres) ? "true" : "false")
+                + " refuelCancelSent=" + (clearFuelTarget ? "true" : "false")
+                + " fuelTargetPassed=" + FormatPitDebriefDiagDouble(fuelTargetLitres, "0.000")
+                + " debriefFuelTarget=" + FormatPitDebriefDiagDouble(_pitDebrief?.ServiceFuelTargetLitres ?? double.NaN, "0.000")
+                + " action='" + ResolvePitDebriefFuelDiagAction(clearFuelTarget) + "'");
+        }
+
+        private void UpdatePitDebriefBoxServiceLatch(bool inPitLane, bool isInPitStall, double currentFuel)
         {
             if (_pitDebrief == null || _pit == null)
             {
@@ -21991,6 +22192,8 @@ namespace LaunchPlugin
             if (inBoxPhase && !_pitDebriefWasInBox)
             {
                 double target = Pit_Box_WillAddLatched > 0.0 ? Pit_Box_WillAddLatched : Pit_WillAdd;
+                LogPitDebriefBoxDiag("box-entry", "first in-box edge before LatchBoxEntry", double.NaN, double.NaN);
+                LogPitDebriefFuelDiag("box-entry", currentFuel, false, target);
                 _pitDebrief.LatchBoxEntry(
                     target,
                     _liveTireChangeCount,
@@ -22002,16 +22205,21 @@ namespace LaunchPlugin
             if (inBoxPhase)
             {
                 double target = Pit_Box_WillAddLatched > 0.0 ? Pit_Box_WillAddLatched : Pit_WillAdd;
+                UpdatePitDebriefRefuelCancelState(inBoxPhase, target);
+                bool clearFuelTarget = ShouldClearPitDebriefFuelTargetForRefuelDeselect(target);
                 _pitDebrief.RefreshServiceEvidence(
                     Pit_AddedSoFar,
                     target,
                     FuelCalculator?.EffectiveRefuelRateLps ?? 0.0,
-                    !_isRefuelSelected);
+                    clearFuelTarget);
+                LogPitDebriefFuelDiagOnce("active-service-refresh", currentFuel, clearFuelTarget, target);
             }
 
             if (!inBoxPhase && _pitDebriefWasInBox)
             {
                 double debriefBoxDeltaSec = _pitBoxLastDeltaValid ? -_pitBoxLastDeltaSec : double.NaN;
+                LogPitDebriefBoxDiag("box-exit", _pitBoxLastDeltaValid ? "passing completed Pit.Box.LastDeltaSec inverted for debrief" : "no completed Pit.Box.LastDeltaSec available", _pit.PitStopDuration.TotalSeconds, debriefBoxDeltaSec);
+                LogPitDebriefFuelDiag("box-exit", currentFuel, false, Pit_Box_WillAddLatched > 0.0 ? Pit_Box_WillAddLatched : Pit_WillAdd);
                 _pitDebrief.LatchBoxExit(
                     _pit.PitStopDuration.TotalSeconds,
                     Pit_AddedSoFar,
@@ -22024,6 +22232,11 @@ namespace LaunchPlugin
             if (!_pitBoxCountdownActive && _pitBoxLastDeltaValid)
             {
                 _pitDebrief.RefreshBoxDeltaFromActualMinusPredicted(-_pitBoxLastDeltaSec);
+                if (!_pitDebriefBoxDeltaRefreshDiagLogged)
+                {
+                    LogPitDebriefBoxDiag("box-delta-refresh", "refreshed debrief from completed Pit.Box.LastDeltaSec; exported sign is target-actual (positive quicker), debrief stores actual-predicted", _pit.PitStopDuration.TotalSeconds, -_pitBoxLastDeltaSec);
+                    _pitDebriefBoxDeltaRefreshDiagLogged = true;
+                }
             }
 
             _pitDebriefWasInBox = inPitLane && inBoxPhase;
@@ -22044,6 +22257,7 @@ namespace LaunchPlugin
 
             if (pitEntryEdge)
             {
+                ResetPitDebriefDiagnosticLogState();
                 _pitBoxLastDeltaValid = false;
                 int predictedPosition = _opponentsEngine?.Outputs?.PitExit?.PredictedPositionInClass ?? 0;
                 _pitDebrief.StartPitEntry(
@@ -22052,6 +22266,8 @@ namespace LaunchPlugin
                     _pit.PitEntryLineDebrief,
                     _pit.PitEntryLineTimeLoss_s);
                 _pitDebriefWasInBox = false;
+                LogPitDebriefBoxDiag("pit-entry", "debrief start; cleared completed box delta validity", double.NaN, double.NaN);
+                LogPitDebriefFuelDiag("pit-entry", double.NaN, false, Pit_Box_WillAddLatched > 0.0 ? Pit_Box_WillAddLatched : Pit_WillAdd);
             }
 
             _pitDebrief.RefreshEntryAssist(_pit.PitEntryLineDebrief, _pit.PitEntryLineTimeLoss_s);
@@ -22131,6 +22347,16 @@ namespace LaunchPlugin
             if (_pitDebrief.FinalizeDebrief(actualTotalLossSec, lossSource, DateTime.UtcNow)
                 && _pitDebrief.TryConsumeFinalLogLine(out var logLine))
             {
+                if (!_pitDebriefFinalPendingBoxDeltaDiagLogged
+                    && _pitDebrief.BoxStationarySec > 0.0
+                    && !_pitDebrief.BoxDeltaSuppressed
+                    && logLine.IndexOf("boxDeltaSec=na", StringComparison.OrdinalIgnoreCase) >= 0)
+                {
+                    LogPitDebriefBoxDiag("final-pending", "final debrief still has stationary service but no valid/suppressed box delta", _pitDebrief.BoxStationarySec, double.NaN);
+                    _pitDebriefFinalPendingBoxDeltaDiagLogged = true;
+                }
+
+                LogPitDebriefFuelDiag("final", double.NaN, false, Pit_Box_WillAddLatched > 0.0 ? Pit_Box_WillAddLatched : Pit_WillAdd);
                 SimHub.Logging.Current.Info(logLine);
             }
         }
@@ -22163,6 +22389,16 @@ namespace LaunchPlugin
 
                     _pitBoxLastDeltaSec = deltaSec;
                     _pitBoxLastDeltaValid = true;
+                    if (!_pitDebriefBoxCountdownFinalizeDiagLogged)
+                    {
+                        LogPitDebriefBoxDiag("countdown-finalize", "Pit.Box.LastDeltaSec finalized as target-actual; positive means quicker/better", finalElapsedSec, -_pitBoxLastDeltaSec);
+                        _pitDebriefBoxCountdownFinalizeDiagLogged = true;
+                    }
+                }
+                else if (wasActive && !_pitDebriefBoxCountdownFinalizeDiagLogged)
+                {
+                    LogPitDebriefBoxDiag("countdown-finalize", "countdown ended without positive target; no delta finalized", _pitBoxElapsedSec, double.NaN);
+                    _pitDebriefBoxCountdownFinalizeDiagLogged = true;
                 }
 
                 ResetPitBoxCountdownState();
@@ -22175,6 +22411,7 @@ namespace LaunchPlugin
 
             if (!wasActive)
             {
+                LogPitDebriefBoxDiag("countdown-start", "Pit.Box countdown became active", elapsedSec, double.NaN);
                 _pitBoxLastDeltaSec = 0.0;
                 _pitBoxLastDeltaValid = false;
                 int preServiceSelectedCount = _liveTireChangeCount;
