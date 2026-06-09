@@ -17201,7 +17201,7 @@ namespace LaunchPlugin
             if (predictiveEligible)
             {
                 MonitorPitWarningResult warning = EvaluateMonitorPitServiceWarnings(snapshot, MonitorSeverity.Caution, true);
-                if (!warning.IsSuppressed)
+                if (!warning.RefuelOffSuppressed)
                 {
                     _monitorPitPredictiveTwoLapsTriggeredThisStint = true;
                 }
