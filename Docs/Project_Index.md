@@ -116,5 +116,5 @@ These pages support maintainers, support work, and Codex tasks. They are not par
 
 ## Freshness
 - Validated against commit: HEAD
-- Date: 2026-06-08
+- Date: 2026-06-09
 - Branch: work

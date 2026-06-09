@@ -1,3 +1,7 @@
+## 2026-06-09 current PR follow-up status
+- Pit Debrief same-tick refuel completion evidence is validated in code/docs: when `_isRefuelSelected` drops on the same tick as the latest fuel sample reaches the completion window, cancel detection includes current-fuel-derived added evidence before the fuel gauge refresh, preventing a normal completion/reset from being latched as an explicit cancel.
+- True no-refuel/pre-flow cancels remain protected by the positive fuel movement requirement; no export names, settings, dashboard JSON/layout, PitCycleLite, fuel model, PitExit prediction, or `Pit.Box.LastDeltaSec` sign changed. Property Snapshot list reviewed: yes; no group mapping change required.
+
 - 2026-06-09 Pit Debrief tyre-evidence freeze and small-refuel cancel follow-up landed:
   - current-stop tyre evidence now keeps updating while the car is in pit lane before valid box service/countdown starts, so an initial confirmed 0-tyre fuel-only selection can become a later non-zero MFD tyre selection before the stall; live in-service DP tyre flag clear-down is still frozen out once service starts, and confirmed pre-service 0-tyre evidence still drives fuel-only targets;
   - natural refuel completion now requires positive added-fuel movement before applying the completion-tolerance check, so small requested-add/pre-flow deselects still clear `Pit.Debrief.Service.FuelTargetLitres` while large near-complete refuels preserve it;

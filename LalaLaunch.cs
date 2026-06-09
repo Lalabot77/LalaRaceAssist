@@ -11248,10 +11248,11 @@ namespace LaunchPlugin
             if (_pitDebrief != null && _pitBoxCountdownActive)
             {
                 double debriefFuelTarget = Pit_Box_WillAddLatched > 0.0 ? Pit_Box_WillAddLatched : Pit_WillAdd;
-                UpdatePitDebriefRefuelCancelState(_pit != null && IsPitDebriefBoxPhase(_pit.CurrentPitPhase), debriefFuelTarget);
-                bool clearFuelTarget = ShouldClearPitDebriefFuelTargetForRefuelDeselect(debriefFuelTarget);
+                UpdatePitDebriefRefuelCancelState(_pit != null && IsPitDebriefBoxPhase(_pit.CurrentPitPhase), debriefFuelTarget, currentFuelNow);
+                bool clearFuelTarget = ShouldClearPitDebriefFuelTargetForRefuelDeselect(debriefFuelTarget, currentFuelNow);
+                double debriefFuelAdded = GetPitDebriefFuelAddedEvidenceLitres(currentFuelNow);
                 _pitDebrief.RefreshServiceEvidence(
-                    Pit_AddedSoFar,
+                    debriefFuelAdded,
                     debriefFuelTarget,
                     FuelCalculator?.EffectiveRefuelRateLps ?? 0.0,
                     clearFuelTarget);
@@ -22074,11 +22075,38 @@ namespace LaunchPlugin
 
         private double GetPitDebriefFuelAddedEvidenceLitres()
         {
+            return GetPitDebriefFuelAddedEvidenceLitres(double.NaN);
+        }
+
+        private double GetPitDebriefFuelAddedEvidenceLitres(double currentFuelLitres)
+        {
             double debriefAdded = _pitDebrief?.ServiceFuelAddedLitres ?? 0.0;
-            return Math.Max(Math.Max(0.0, Pit_AddedSoFar), Math.Max(0.0, debriefAdded));
+            double addedEvidence = Math.Max(Math.Max(0.0, Pit_AddedSoFar), Math.Max(0.0, debriefAdded));
+
+            // UpdatePitDebriefBoxServiceLatch intentionally runs before UpdatePitRefuelGaugeValues
+            // so box-exit resets cannot erase completed-flow evidence. On a refuel-selected reset tick,
+            // include the same tick's current fuel sample so a normal completion is not mislatched as
+            // an explicit cancel before the gauge has refreshed Pit_AddedSoFar.
+            double entryFuelEvidence = _pitRefuelEntryLatched
+                ? Pit_Box_EntryFuel
+                : (_pitRefuelWasBoxed ? _pitRefuelBoxEntryFuelCandidate : double.NaN);
+            if (!double.IsNaN(currentFuelLitres)
+                && !double.IsInfinity(currentFuelLitres)
+                && !double.IsNaN(entryFuelEvidence)
+                && !double.IsInfinity(entryFuelEvidence))
+            {
+                addedEvidence = Math.Max(addedEvidence, Math.Max(0.0, currentFuelLitres - entryFuelEvidence));
+            }
+
+            return addedEvidence;
         }
 
         private bool HasPitDebriefRefuelCompletedNaturally(double fuelTargetLitres)
+        {
+            return HasPitDebriefRefuelCompletedNaturally(fuelTargetLitres, double.NaN);
+        }
+
+        private bool HasPitDebriefRefuelCompletedNaturally(double fuelTargetLitres, double currentFuelLitres)
         {
             double targetEvidence = GetPitDebriefFuelTargetEvidenceLitres(fuelTargetLitres);
             if (targetEvidence <= FuelNoiseEps)
@@ -22086,7 +22114,7 @@ namespace LaunchPlugin
                 return false;
             }
 
-            double addedEvidence = GetPitDebriefFuelAddedEvidenceLitres();
+            double addedEvidence = GetPitDebriefFuelAddedEvidenceLitres(currentFuelLitres);
             if (addedEvidence <= FuelNoiseEps)
             {
                 return false;
@@ -22103,6 +22131,11 @@ namespace LaunchPlugin
 
         private void UpdatePitDebriefRefuelCancelState(bool inBoxPhase, double fuelTargetLitres)
         {
+            UpdatePitDebriefRefuelCancelState(inBoxPhase, fuelTargetLitres, double.NaN);
+        }
+
+        private void UpdatePitDebriefRefuelCancelState(bool inBoxPhase, double fuelTargetLitres, double currentFuelLitres)
+        {
             if (!inBoxPhase || !_pitBoxCountdownActive)
             {
                 _pitDebriefRefuelSelectedWasTrueInBox = false;
@@ -22115,13 +22148,18 @@ namespace LaunchPlugin
                 return;
             }
 
-            if (_pitDebriefRefuelSelectedWasTrueInBox && !HasPitDebriefRefuelCompletedNaturally(fuelTargetLitres))
+            if (_pitDebriefRefuelSelectedWasTrueInBox && !HasPitDebriefRefuelCompletedNaturally(fuelTargetLitres, currentFuelLitres))
             {
                 _pitDebriefExplicitRefuelCancelLatched = true;
             }
         }
 
         private bool ShouldClearPitDebriefFuelTargetForRefuelDeselect(double fuelTargetLitres)
+        {
+            return ShouldClearPitDebriefFuelTargetForRefuelDeselect(fuelTargetLitres, double.NaN);
+        }
+
+        private bool ShouldClearPitDebriefFuelTargetForRefuelDeselect(double fuelTargetLitres, double currentFuelLitres)
         {
             if (_pitDebriefExplicitRefuelCancelLatched)
             {
@@ -22135,14 +22173,14 @@ namespace LaunchPlugin
 
             // iRacing can drop the selected-refuel flag after normal fuel completion/reset;
             // that must not erase the already latched requested-add evidence for the completed stop.
-            if (HasPitDebriefRefuelCompletedNaturally(fuelTargetLitres))
+            if (HasPitDebriefRefuelCompletedNaturally(fuelTargetLitres, currentFuelLitres))
             {
                 return false;
             }
 
             // A stop that never added fuel and currently has refuel deselected is a true no-refuel
             // / pre-flow cancel case even if a stale requested-add source was visible earlier.
-            return GetPitDebriefFuelAddedEvidenceLitres() <= FuelNoiseEps;
+            return GetPitDebriefFuelAddedEvidenceLitres(currentFuelLitres) <= FuelNoiseEps;
         }
 
         private static string FormatPitDebriefDiagDouble(double value, string format = "0.000")
@@ -22250,7 +22288,8 @@ namespace LaunchPlugin
                 + " isRefuelling=" + (_isRefuelling ? "true" : "false")
                 + " refuelSelectedWasTrueInBox=" + (_pitDebriefRefuelSelectedWasTrueInBox ? "true" : "false")
                 + " explicitRefuelCancelLatched=" + (_pitDebriefExplicitRefuelCancelLatched ? "true" : "false")
-                + " naturalCompletion=" + (HasPitDebriefRefuelCompletedNaturally(fuelTargetLitres) ? "true" : "false")
+                + " currentAddedEvidence=" + FormatPitDebriefDiagDouble(GetPitDebriefFuelAddedEvidenceLitres(currentFuel), "0.000")
+                + " naturalCompletion=" + (HasPitDebriefRefuelCompletedNaturally(fuelTargetLitres, currentFuel) ? "true" : "false")
                 + " completionToleranceL=" + FormatPitDebriefDiagDouble(GetPitDebriefFuelCompletionToleranceLitres(), "0.000")
                 + " refuelCancelSent=" + (clearFuelTarget ? "true" : "false")
                 + " fuelTargetPassed=" + FormatPitDebriefDiagDouble(fuelTargetLitres, "0.000")
@@ -22285,10 +22324,11 @@ namespace LaunchPlugin
             if (inBoxPhase)
             {
                 double target = Pit_Box_WillAddLatched > 0.0 ? Pit_Box_WillAddLatched : Pit_WillAdd;
-                UpdatePitDebriefRefuelCancelState(inBoxPhase, target);
-                bool clearFuelTarget = ShouldClearPitDebriefFuelTargetForRefuelDeselect(target);
+                UpdatePitDebriefRefuelCancelState(inBoxPhase, target, currentFuel);
+                bool clearFuelTarget = ShouldClearPitDebriefFuelTargetForRefuelDeselect(target, currentFuel);
+                double debriefFuelAdded = GetPitDebriefFuelAddedEvidenceLitres(currentFuel);
                 _pitDebrief.RefreshServiceEvidence(
-                    Pit_AddedSoFar,
+                    debriefFuelAdded,
                     target,
                     FuelCalculator?.EffectiveRefuelRateLps ?? 0.0,
                     clearFuelTarget);
