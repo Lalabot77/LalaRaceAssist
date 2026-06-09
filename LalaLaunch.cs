@@ -11224,7 +11224,7 @@ namespace LaunchPlugin
                 ResetPitStopTireSelectionEvidence();
             }
 
-            TrackCurrentPitStopTireSelectionEvidence(inLane);
+            TrackCurrentPitStopTireSelectionEvidence(inLane, isInPitStall);
 
             // Per-tick pit-exit display values (only while in pit lane)
             if (inLane)
@@ -21801,11 +21801,21 @@ namespace LaunchPlugin
             _pitStopTireChangeCountHasEvidence = false;
         }
 
-        private void TrackCurrentPitStopTireSelectionEvidence(bool inPitLane)
+        private void TrackCurrentPitStopTireSelectionEvidence(bool inPitLane, bool isInPitStall)
         {
             if (!inPitLane)
             {
                 ResetPitStopTireSelectionEvidence();
+                return;
+            }
+
+            if (_pitStopTireChangeCountHasEvidence)
+            {
+                return;
+            }
+
+            if (isInPitStall || _pitBoxCountdownActive)
+            {
                 return;
             }
 
@@ -21828,13 +21838,14 @@ namespace LaunchPlugin
                 return _pitStopSelectedTireChangeCount;
             }
 
-            if (_liveTireChangeCountHasEvidence)
+            if (!_pitBoxCountdownActive && !IsInValidPitBoxServiceState() && _liveTireChangeCountHasEvidence)
             {
                 hasTireSelectionEvidence = true;
                 return _liveTireChangeCount;
             }
 
-            // Preserve the existing conservative fallback only when tyre selection evidence is unavailable.
+            // Preserve the existing conservative fallback when tyre selection evidence is unavailable
+            // before service, or when service has started without a frozen current-stop count.
             hasTireSelectionEvidence = false;
             return 4;
         }
@@ -22080,8 +22091,14 @@ namespace LaunchPlugin
                 return false;
             }
 
+            double addedEvidence = GetPitDebriefFuelAddedEvidenceLitres();
+            if (addedEvidence <= FuelNoiseEps)
+            {
+                return false;
+            }
+
             double completionToleranceLitres = GetPitDebriefFuelCompletionToleranceLitres();
-            return GetPitDebriefFuelAddedEvidenceLitres() >= Math.Max(0.0, targetEvidence - completionToleranceLitres);
+            return addedEvidence >= Math.Max(0.0, targetEvidence - completionToleranceLitres);
         }
 
         private static double GetPitDebriefFuelCompletionToleranceLitres()

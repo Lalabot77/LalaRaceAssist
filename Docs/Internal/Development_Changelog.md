@@ -1,3 +1,9 @@
+## 2026-06-09 — Pit Debrief tyre-evidence freeze and small-refuel cancel follow-up
+- Classification: **both** (bounded Pit Debrief/Pit box timing correctness follow-up; no export names, settings, dashboard JSON/layout, PitCycleLite, fuel model, PitExit prediction, or `Pit.Box.LastDeltaSec` sign change).
+- Current-stop tyre evidence now freezes once captured before service, and live in-service DP tyre flag clear-down is no longer allowed to replace a real pre-service tyre count before the box target latches; confirmed pre-service `0`-tyre evidence remains valid for fuel-only stops.
+- Natural refuel completion now requires positive added-fuel movement before applying the completion-tolerance check, so small requested-add/pre-flow deselects still clear `Pit.Debrief.Service.FuelTargetLitres` while large near-complete refuels preserve it.
+- Property Snapshot list reviewed: yes; no SimHub exports/properties were added, removed, renamed, behavior-recontracted, or regrouped, and existing `Pit.*` / `PitExit.*` properties remain in the Pit/PitExit group.
+
 ## 2026-06-09 — Pit Debrief Daytona box target/refuel-completion fix
 - Classification: **both** (bounded Pit Debrief/Pit box timing behavior correction plus diagnostic fields; no export names, settings, dashboard JSON/layout, PitCycleLite, fuel model, PitExit prediction, or `Pit.Box.LastDeltaSec` sign change).
 - Pit box modeled targets now latch the current-stop tyre-selection evidence captured in pit lane; confirmed fuel-only stops use `0` tyres for target modeling instead of carrying a stale/default 4-tyre service time, while the conservative 4-tyre fallback remains only when tyre evidence is unavailable.
