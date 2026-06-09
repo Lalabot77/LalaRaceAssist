@@ -28,6 +28,7 @@ For internal between-release development history, see `Docs/Internal/Development
 - **Dashboard/navigation documentation** and Overview-first workflow guidance were aligned across user docs.
 - **Monitor System setting placement** moved from Launch UI / Bindings to Dash Control -> Global Dash Functions -> General. Phase 2B pit-stop monitoring now adds edge-triggered `REFUEL OFF`, `MFD FUEL LOW`, and `EXIT FUEL SHORT` warnings while preserving Phase 2A trigger evidence logs.
 - **Monitor System warning wording** is clearer for drivers: `CHECK FUEL DATA`, `OPPONENT DATA UNRELIABLE`, `TRAFFIC DATA UNRELIABLE`, and `H2H DATA UNRELIABLE` replace the older internal-style wording without changing triggers, severity, exports, CSV schema, or dashboard JSON.
+- **Monitor System late-race fuel guidance** now suppresses end-of-race `REFUEL OFF`, `MFD FUEL LOW`, and predictive `BASELINE SHORT` noise once finish authority says the race is effectively ending, while preserving `EXIT FUEL SHORT` and system-health/reliability warnings.
 
 ### Fixed
 - Fixed Pit Stop Debrief box delta and fuel-target latching so valid completed-box deltas use the existing `Pit.Box.LastDeltaSec` authority without changing its dashboard sign contract, exact `0.0s` box deltas no longer stay pending, and non-zero requested fuel targets survive box-exit reset ticks while in-box refuel cancels clear the target.

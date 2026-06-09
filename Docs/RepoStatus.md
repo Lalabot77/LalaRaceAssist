@@ -1,3 +1,7 @@
+- 2026-06-09 MonitorSystem late-race fuel-guidance suppression landed:
+  - existing finish authority (`Race.EndPhase >= 2`) now suppresses only late-race actionable `REFUEL OFF`, `MFD FUEL LOW`, and predictive/off-pit-road CAUTION `BASELINE SHORT` MonitorSystem results;
+  - pit-road/pit-box/pit-exit WARNING `BASELINE SHORT`, `EXIT FUEL SHORT`, fuel-health faults/stale checks, Car/Opp/H2H reliability warnings, Launch/Rejoin stale-state warnings, fuel math, strategy/planner, RaceFinish, Race.EndPhase calculation, exports, settings, dashboard JSON, MSGV1, pit commands, and Monitor Event CSV schema are unchanged;
+  - suppressed late-race results log concise evidence only, do not publish/clear MonitorSystem output, and do not create Monitor Event CSV rows. Property Snapshot list reviewed: yes; no export/property add, remove, rename, or regroup required.
 - 2026-06-09 Pit Debrief explicit refuel-cancel preservation follow-up landed:
   - normal completed refuels continue to preserve positive `Pit.Debrief.Service.FuelTargetLitres` when `_isRefuelSelected` drops false after natural completion/reset;
   - explicit in-box refuel selected→deselected edges before natural completion now latch a cancel and clear the current debrief target to `0.0`, and true no-refuel/pre-flow cancel stops still clear stale target evidence;
