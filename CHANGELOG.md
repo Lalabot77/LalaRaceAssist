@@ -14,6 +14,7 @@ For internal between-release development history, see `Docs/Internal/Development
 - **Plugin-owned pit/custom command workflow** with built-in pit actions, custom-message slots, and fixed direct in-plugin transport.
 - **Pit Fuel Control + Tyre Control** command surfaces for dashboard/hardware bindings (`LalaLaunch.Pit.FuelControl.*`, `LalaLaunch.Pit.TyreControl.*`).
 - **ClassBest export family** for class session-best holder visibility on dashboards.
+- Strategy Dash idle/control-centre status exports (`LalaLaunch.Plugin.VersionNumberText`, `LalaLaunch.Plugin.StatusText`, `LalaLaunch.Plugin.StatusLineText`) and dashboard action `LalaLaunch.MonitorSystemToggle`.
 
 ### Changed
 - Pit Stop Debrief summary wording now becomes progressively useful during the stop, reports entry/box signed deltas, service from actual fuel added plus tyres, and `STRAT Δ` for the final strategy comparison while keeping exit prediction in debug/log fields instead of the driver-facing summary.
@@ -31,6 +32,7 @@ For internal between-release development history, see `Docs/Internal/Development
 - **Monitor System late-race fuel guidance** now suppresses end-of-race `REFUEL OFF`, `MFD FUEL LOW`, and predictive `BASELINE SHORT` noise once finish authority says the race is effectively ending, while preserving `EXIT FUEL SHORT` and system-health/reliability warnings.
 
 ### Fixed
+- Fixed the Fuel Data selector display while idle/no live session/no profile so `LalaLaunch.Fuel.Refuel.DataMode` visibly follows the selected DATA mode without sending pit commands or changing refuel math.
 - Fixed Pit Stop Debrief box delta and fuel-target latching so valid completed-box deltas use the existing `Pit.Box.LastDeltaSec` authority without changing its dashboard sign contract, exact `0.0s` box deltas no longer stay pending, and non-zero requested fuel targets survive box-exit reset ticks while in-box refuel cancels clear the target.
 - Fixed Pit Stop Debrief service/timing review latches so fuel-added evidence survives box-exit gauge reset and actual-vs-predicted loss compares total-stop-equivalent values.
 - Fixed PreRace/Friends export registration so dashboards should use single-prefixed `LalaLaunch.PreRace.*` and `LalaLaunch.Friends.Count` names instead of accidental `LalaLaunch.LalaLaunch.*` names.

@@ -65,6 +65,17 @@ Dashboard status is plugin-owned:
 
 Dashboards should use those exports only for presentation/visibility. Strategy math, fuel advice, and PreRace logic remain owned by the plugin.
 
+
+### Strategy Dash idle Control Centre status
+
+The Strategy Dash idle/control-centre top row has plugin-owned status exports so dashboards do not need to rebuild health priority:
+
+- `LalaLaunch.Plugin.VersionNumberText` — version number only (for example `1.0`).
+- `LalaLaunch.Plugin.StatusText` — `READY`, `DEBUG ACTIVE`, `NO PROFILES`, or reserved `UPDATE AVAILABLE` when a plugin-owned update state exists. League Class missing/unloaded is intentionally excluded from this status.
+- `LalaLaunch.Plugin.StatusLineText` — ready-made text such as `LALA RACE ASSIST v1.0    READY`.
+
+The Fuel Data selector can be used before joining a live session: `LalaLaunch.Fuel.Refuel.DataMode` mirrors the selected DATA mode (`LIVE`/`SAVED`) while idle, while refuel recommendation values remain safely invalid/default until runtime context is available. Monitor System can be toggled from dashboards with `LalaLaunch.MonitorSystemToggle`; dashboards should continue to read `LalaLaunch.MonitorSystem.Text` for monitor state.
+
 ### Strategy Dash fuel-burn analysis binding
 
 A Strategy Dash fuel-burn popup or page can use the plugin-owned `LalaLaunch.Fuel.Burn.DisplayAnalysis` state. Toggle it with `LalaLaunch.BurnDisplayToggle`.

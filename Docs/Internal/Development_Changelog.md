@@ -1,3 +1,9 @@
+## 2026-06-09 — Strategy Dash idle control-centre exports
+- Classification: **both** (new dashboard-facing SimHub exports/action plus internal publication/docs alignment; no dashboard JSON, fuel/refuel math, pit command transport, League Class behavior, or MonitorSystem output-property additions).
+- Added plugin-owned idle/control-centre exports `Plugin.VersionNumberText`, `Plugin.StatusText`, and `Plugin.StatusLineText`; status priority is reserved update-available state, Soft Debug, zero profiles, then READY, and League Class missing/unloaded is intentionally excluded. The existing Overview latest-release check is UI-local, so `UPDATE AVAILABLE` remains reserved and is not currently emitted by plugin-owned state.
+- `Fuel.Refuel.DataMode` now mirrors the selected Pit Fuel Control DATA mode (`LIVE`/`SAVED`) during invalid/no-session/idle paths and immediately after DATA actions/settings changes, while runtime refuel validity/math and pit command sending remain unchanged.
+- Added SimHub action `MonitorSystemToggle` to toggle the existing monitor setting; `MonitorSystem.Text` remains the sole monitor status text export. Property Snapshot list reviewed: yes; `Plugin.*` exports are grouped with Fuel/Strategy dashboard status exports.
+
 ## 2026-06-09 — MonitorSystem late-race fuel-guidance suppression
 - Classification: **both** (driver-visible MonitorSystem warning-noise reduction plus internal suppression evidence logging; no export/property, settings, dashboard JSON, CSV schema, fuel math, strategy/planner, RaceFinish, Race.EndPhase, MSGV1, or pit-command change).
 - Added a narrow MonitorSystem race-ending suppression gate using existing finish authority (`Race.EndPhase >= 2`) for selected actionable fuel guidance only: `REFUEL OFF`, `MFD FUEL LOW`, and predictive/off-pit-road CAUTION `BASELINE SHORT`.
@@ -369,8 +375,6 @@
   - CSV rows include `DriverInfo.Drivers##` identity/class fields only, raw CarIdx telemetry/flag arrays, player-vs-probe raw/derived progress deltas, read-only CarSA checkpoint gap diagnostics when available, and CarSA/Opp/H2H correlation fields.
   - Preserved runtime invariants: no CarSA gap math changes, no Opponents ordering changes, no H2H selector changes, no dashboard contract/export changes, no Property Snapshot changes, and no `DriverInfo.CompetingDrivers` normal-driver fallback for the probe.
   - Property Snapshot list reviewed: yes; unchanged because Car Tracking Probe is a separate debug CSV system and no exported property capture contract changed.
-
-# Development Changelog
 
 ## 2026-06-08 — Debug Cleanup Phase A
 - Classification: **internal-only** (debug/export cleanup and documentation alignment; no driver-facing runtime math, telemetry gating, learning, or dashboard-consumed core exports changed).

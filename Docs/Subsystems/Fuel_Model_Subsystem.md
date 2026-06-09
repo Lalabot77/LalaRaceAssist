@@ -253,7 +253,7 @@ Setup-fuel fallback export semantics:
 - This seam is read-only and does not overwrite `Telemetry.FuelLevel`, `Fuel.LiveFuelPerLap`, pit math, planner math, max tank, or PreRace strategy logic.
 
 Contingency-aware tactical contract:
-- Runtime race-running next-stop guidance is canonical on `Fuel.Refuel.*` (`NextLitres`, `NextLitresCeil`, `NextText`, `Valid`, `BurnSource`, `LapSource`, `DataMode`, `BurnMode`).
+- Runtime race-running next-stop guidance is canonical on `Fuel.Refuel.*` (`NextLitres`, `NextLitresCeil`, `NextText`, `Valid`, `BurnSource`, `LapSource`, `DataMode`, `BurnMode`). `Fuel.Refuel.DataMode` may update while idle/no live session/no profile to mirror the selected DATA mode (`LIVE`/`SAVED`); calculation validity and recommendation values remain governed by normal runtime context.
 - `StrategyDash.NextRefuel*` remains supported for pre-green/planning pages and is not obsolete, but new race-running dash work should prefer `Fuel.Refuel.*`.
 - Export cleanup caution: do not remove/rename exports until both checks are complete: dashboard JSON usage audit and internal C# reference/consumer audit.
 - `Fuel.RequiredBurnToEnd*` provides driver-facing burn-to-end guidance while protecting active contingency reserve.
