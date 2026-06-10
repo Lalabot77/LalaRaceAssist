@@ -1,8 +1,26 @@
+<<<<<<< codex/update-pit-debrief-for-box-delta-visibility
+## 2026-06-10 — Pit Debrief repair summary/export split follow-up
+- Classification: **both** (Pit Debrief presentation/export contract correction; no export names, settings, dashboard JSON/layout, PitCycleLite, fuel model, PitExit prediction, target construction, or `Pit.Box.LastDeltaSec` sign change).
+- `Pit.Debrief.Box.QualityText` remains the documented quality enum only (`GOOD`, `OVERSHOT`, `MISSED`, `UNKNOWN`); repair influence wording is now `SummaryText` presentation only (`BOX MAND REPAIR`, `BOX OPT REPAIR`, `BOX REPAIRS`) while valid non-missed boxed stops still export `BoxQualityText=GOOD`.
+- Previous completed repair influence is cleared at pit-entry/debrief start and before a new phase-lag box-entry refresh can read fallback state, preventing a normal next stop from inheriting the prior stop's repair label. Property Snapshot list reviewed: yes; no SimHub exports/properties were added, removed, renamed, or regrouped.
+
+## 2026-06-10 — Pit Debrief repair latch and entry-delta review follow-up
+- Classification: **both** (bounded Pit Debrief repair-label and completed-delta correctness follow-up; no export names, settings, dashboard JSON/layout, PitCycleLite, fuel model, PitExit prediction, or `Pit.Box.LastDeltaSec` sign change).
+- Pit Debrief no longer latches preliminary box-entry target/elapsed evidence as a completed box delta, so first box-entry summaries remain `BOX ... (Δ PENDING)` until completed `Pit.Box.LastDeltaSec` evidence (inverted to `actual - target`) is available. Large finite completed deltas still display; NaN/infinite/unavailable/not-completed sources remain pending.
+- Repair influence can now be preserved after `_pitBoxTargetLatched` when positive repair remaining governs `Pit.Box.RemainingSec`, so mandatory/optional repair labels survive late repair-left telemetry while target construction remains unchanged. Property Snapshot list reviewed: yes; no SimHub exports/properties were added, removed, renamed, or regrouped.
+
+## 2026-06-10 — Pit Debrief repair-aware box delta follow-up
+- Classification: **both** (driver-facing Pit Debrief box-delta/repair wording semantics plus bounded diagnostics; no export names, settings, dashboard JSON/layout, PitCycleLite, fuel model, PitExit prediction, or `Pit.Box.LastDeltaSec` sign change).
+- Pit Debrief now displays any finite valid completed `Pit.Box.LastDeltaSec` after inverting it for the debrief summary (`actual - target`), including large positive/negative deltas; `BOX ... (Δ PENDING)` now means the completed box-delta source was missing or invalid, not that the delta was too large.
+- Box targets remain Option A repair-aware: `Pit.Box.TargetSec` is the expected stop time for all currently selected/active services, including fuel, tyres, mandatory repairs, and optional repairs when selected/active/telemetry-reported as part of service. Repair-influenced targets label the driver-facing box section as `BOX MAND REPAIR`, `BOX OPT REPAIR`, or generic `BOX REPAIRS`; optional repair abandonment can therefore produce a large negative debrief delta.
+- `[LalaPlugin:PitDebriefBoxDiag]` now includes bounded edge-only `targetRepairInfluence` detail. Property Snapshot list reviewed: yes; no SimHub exports/properties were added, removed, renamed, or regrouped; existing `Pit.Box.LastDeltaSec` remains `target - actual` and Pit Debrief remains `actual - target`.
+=======
 ## 2026-06-10 — Dash Visibility pit assist split
 - Classification: **both** (Settings UI and dashboard-facing visibility export contract cleanup; no pit timing, pit entry, pit box, pit limiter runtime logic, telemetry gating, or dashboard JSON/layout changes).
 - Replaced the broad Dash Visibility `Pit Assists` row with independent `Pit Entry Assist`, `Pit Box Assist`, and `Pit Limiter` rows for DRIVER/STRATEGY/OVERLAY. `Show Automatic Pit Screen` remains a separate row and setting.
 - Added preferred `DashVisibility.<Driver|Strategy|Overlay>.PitEntryAssist`, `.PitBoxAssist`, `.PitLimiter`, and `.AutoPitScreen` exports, plus same-family `*ShowPitEntryAssist` / `*ShowPitBoxAssist` compatibility aliases. Existing `*ShowPitLimiter` and `*ShowPitScreen` exports/settings remain exported so old dashboards continue to resolve; new dashboards should use the clear `DashVisibility.*` names.
 - Property Snapshot list reviewed: yes; `ResolvePropertySnapshotGroup(...)` now explicitly leaves `DashVisibility.*` in `RawDebug`, and no Pit/PitExit runtime export grouping changed. Root `CHANGELOG.md` reviewed unchanged because this is unreleased settings/export contract cleanup documented in internal/user docs.
+>>>>>>> main
 
 ## 2026-06-10 — Pit Debrief phase-lag service tyre-count follow-up
 - Classification: **both** (bounded Pit Debrief service readout correctness follow-up plus user-facing debrief service semantics; no export names, settings, dashboard JSON/layout, PitCycleLite, fuel model, PitExit prediction, or `Pit.Box.LastDeltaSec` sign change).

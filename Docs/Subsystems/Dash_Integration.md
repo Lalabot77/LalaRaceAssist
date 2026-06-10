@@ -369,12 +369,12 @@ Alerts overlay contract:
 
 - Visible when `LalaLaunch.Pit.Debrief.Valid == true` and `LalaLaunch.Pit.Debrief.AgeSec < 15`.
 - Title: `PIT STOP DEBRIEF — STOP ` + `LalaLaunch.Pit.Debrief.StopIndex`.
-- Body: `LalaLaunch.Pit.Debrief.SummaryText` (progressive while collecting, final-latched after `Valid`; format `ENTRY ... (Δ ...) | BOX ... (Δ .../PENDING) | SVC ... | STRAT Δ ...`, with no exit verdict text). The entry headline is performance-oriented from line time loss, while limiter/safety quality remains in debug fields and can be `POOR` when the line-speed compliance verdict was bad. Box delta comes from the existing `Pit.Box.LastDeltaSec` seam inverted to Pit Debrief sign (`actual elapsed - predicted target`; positive slower, negative faster) and is shown only when the plugin source is plausible, otherwise `Δ PENDING`.
+- Body: `LalaLaunch.Pit.Debrief.SummaryText` (progressive while collecting, final-latched after `Valid`; format `ENTRY ... (Δ ...) | BOX ... (Δ .../PENDING) | SVC ... | STRAT Δ ...`, with no exit verdict text). The entry headline is performance-oriented from line time loss, while limiter/safety quality remains in debug fields and can be `POOR` when the line-speed compliance verdict was bad. Box delta comes from the existing `Pit.Box.LastDeltaSec` seam inverted to Pit Debrief sign (`actual elapsed - predicted target`; positive slower, negative faster) and any finite valid value is shown regardless of magnitude; `Δ PENDING` means the completed source is unavailable, invalid, or not completed yet; preliminary box-entry target/elapsed evidence is not treated as a completed box delta. Repair-influenced targets can label the `SummaryText` box section as `BOX MAND REPAIR`, `BOX OPT REPAIR`, or `BOX REPAIRS`; `Pit.Debrief.Box.QualityText` remains the quality enum (`GOOD`/`OVERSHOT`/`MISSED`/`UNKNOWN`), and optional repair abandonment can produce a large negative box delta.
 
 Debug page fields:
 
 - Entry: `LalaLaunch.Pit.Debrief.Entry.QualityText`, `LineTimeLossSec`, `DecelQualityText`, `LimiterQualityText`. `LineTimeLossSec` is a raw numeric export; debug pages should format it to two decimals for review.
-- Box: `LalaLaunch.Pit.Debrief.Box.QualityText`, `MissedReason`, `StationarySec`.
+- Box: `LalaLaunch.Pit.Debrief.Box.QualityText`, `MissedReason`, `StationarySec`. `Box.QualityText` is a quality enum (`GOOD`/`OVERSHOT`/`MISSED`/`UNKNOWN`); repair wording is only in `SummaryText`.
 - Service: `LalaLaunch.Pit.Debrief.Service.FuelAddedLitres`, `FuelTargetLitres`, `RefuelDurationSec`, `RefuelRateLps`, `TyreChangeCount`.
 - Timing: `LalaLaunch.Pit.Debrief.Timing.PredictedTotalLossSec`, `ActualTotalLossSec`, `LossDeltaSec`, `LossSource`.
 - Exit: `LalaLaunch.Pit.Debrief.Exit.PredictedPositionInClass`, `ActualPositionInClass`, `PositionDelta`, `AccuracyText`.

@@ -40,7 +40,7 @@ namespace LaunchPlugin
         private bool _boxSeen;
         private bool _missedBoxObserved;
         private PitPhase _missedBoxPhase = PitPhase.None;
-        private const double MaxPlausibleBoxDeltaSec = 10.0;
+        private string _boxRepairInfluenceText = string.Empty;
 
         public bool Valid { get; private set; }
         public int StopIndex { get; private set; }
@@ -144,7 +144,7 @@ namespace LaunchPlugin
             }
         }
 
-        public void LatchBoxEntry(double fuelTargetLitres, int tyreChangeCount, double serviceSec, double predictedBoxSec, double elapsedBoxSec)
+        public void LatchBoxEntry(double fuelTargetLitres, int tyreChangeCount, double serviceSec)
         {
             if (!_collecting || Valid || _boxSeen)
             {
@@ -168,7 +168,6 @@ namespace LaunchPlugin
                 _hasServiceSec = true;
             }
 
-            LatchBoxDelta(predictedBoxSec, elapsedBoxSec);
             RefreshProgressiveSummary();
         }
 
@@ -231,6 +230,23 @@ namespace LaunchPlugin
             }
 
             LatchBoxDeltaFromActualMinusPredicted(actualMinusPredictedSec);
+            RefreshProgressiveSummary();
+        }
+
+        public void RefreshBoxRepairInfluence(string repairInfluenceText)
+        {
+            if (!_collecting || Valid)
+            {
+                return;
+            }
+
+            string normalized = NormalizeBoxRepairInfluence(repairInfluenceText);
+            if (string.IsNullOrWhiteSpace(normalized) || string.Equals(normalized, _boxRepairInfluenceText, StringComparison.Ordinal))
+            {
+                return;
+            }
+
+            _boxRepairInfluenceText = normalized;
             RefreshProgressiveSummary();
         }
 
@@ -363,6 +379,7 @@ namespace LaunchPlugin
             _boxSeen = false;
             _missedBoxObserved = false;
             _missedBoxPhase = PitPhase.None;
+            _boxRepairInfluenceText = string.Empty;
             _finalLogPending = false;
             _finalLogLine = string.Empty;
             _finalizedUtc = DateTime.MinValue;
@@ -470,14 +487,6 @@ namespace LaunchPlugin
             RefreshProgressiveSummary();
         }
 
-        private void LatchBoxDelta(double predictedBoxSec, double elapsedBoxSec)
-        {
-            if (IsPositiveFinite(predictedBoxSec) && IsFiniteNonNegative(elapsedBoxSec))
-            {
-                LatchBoxDeltaCandidate(elapsedBoxSec - predictedBoxSec);
-            }
-        }
-
         private void LatchBoxDeltaFromActualMinusPredicted(double actualMinusPredictedSec)
         {
             LatchBoxDeltaCandidate(actualMinusPredictedSec);
@@ -492,15 +501,6 @@ namespace LaunchPlugin
 
             RawBoxDeltaSec = actualMinusPredictedSec;
             _hasRawBoxDelta = true;
-
-            if (Math.Abs(actualMinusPredictedSec) > MaxPlausibleBoxDeltaSec)
-            {
-                BoxDeltaSec = 0.0;
-                _hasBoxDelta = false;
-                BoxDeltaSuppressed = true;
-                _boxDeltaSuppressed = true;
-                return;
-            }
 
             BoxDeltaSec = actualMinusPredictedSec;
             _hasBoxDelta = true;
@@ -594,7 +594,9 @@ namespace LaunchPlugin
                 return "BOX PENDING";
             }
 
-            string quality = string.IsNullOrWhiteSpace(BoxQualityText) ? Unknown : BoxQualityText;
+            string quality = (!_missedBoxObserved && !string.IsNullOrWhiteSpace(_boxRepairInfluenceText))
+                ? _boxRepairInfluenceText
+                : (string.IsNullOrWhiteSpace(BoxQualityText) ? Unknown : BoxQualityText);
             string delta = _hasBoxDelta
                 ? BoxDeltaSec.ToString("+0.0;-0.0;+0.0", CultureInfo.InvariantCulture) + "s"
                 : "PENDING";
@@ -724,6 +726,15 @@ namespace LaunchPlugin
                 || phase == PitPhase.MissedBoxShort
                 || phase == PitPhase.MissedBoxLeft
                 || phase == PitPhase.MissedBoxRight;
+        }
+
+        private static string NormalizeBoxRepairInfluence(string repairInfluenceText)
+        {
+            string normalized = (repairInfluenceText ?? string.Empty).Trim().ToUpperInvariant();
+            if (normalized == "MANDATORY" || normalized == "MAND" || normalized == "MAND REPAIR") return "MAND REPAIR";
+            if (normalized == "OPTIONAL" || normalized == "OPT" || normalized == "OPT REPAIR") return "OPT REPAIR";
+            if (normalized == "REPAIR" || normalized == "REPAIRS" || normalized == "GENERIC" || normalized == "UNKNOWN" || normalized == "BOX REPAIRS") return "REPAIRS";
+            return string.Empty;
         }
 
         private static string NormalizeLossSource(string source)
