@@ -3,7 +3,7 @@
 Validated against commit: HEAD
 Last updated: 2026-06-10
 Branch: work
-Current note: Pit Debrief repair-aware box-delta docs are current; first box-entry target/elapsed evidence stays pending until completed box-delta evidence is available, finite completed deltas are displayed regardless of magnitude, and repair influence labels can be captured after target latch when repair remaining governs countdown remaining.
+Current note: Pit Debrief repair-aware box-delta docs are current; BoxQualityText remains a quality enum, repair labels are SummaryText-only presentation, stale completed repair fallback is cleared for new stops, and finite completed deltas are displayed regardless of magnitude.
 
 ## What this repo is
 Lala Race Assist Plugin is a SimHub plugin for iRacing that provides strategy planning, fuel learning, dashboards, launch instrumentation, pit assistance, rejoin support, Shift Assist cueing, profile-backed persistence, and H2H race context.

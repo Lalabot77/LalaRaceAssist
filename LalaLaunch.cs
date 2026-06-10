@@ -22495,6 +22495,11 @@ namespace LaunchPlugin
 
             if (inBoxPhase && !_pitDebriefWasInBox)
             {
+                if (!_pitBoxCountdownActive)
+                {
+                    _pitBoxLastCompletedRepairInfluence = string.Empty;
+                }
+
                 double target = Pit_Box_WillAddLatched > 0.0 ? Pit_Box_WillAddLatched : Pit_WillAdd;
                 LogPitDebriefBoxDiag("box-entry", "first in-box edge before LatchBoxEntry", double.NaN, double.NaN);
                 LogPitDebriefFuelDiag("box-entry", currentFuel, false, target);
@@ -22566,6 +22571,7 @@ namespace LaunchPlugin
             {
                 ResetPitDebriefDiagnosticLogState();
                 _pitBoxLastDeltaValid = false;
+                _pitBoxLastCompletedRepairInfluence = string.Empty;
                 int predictedPosition = _opponentsEngine?.Outputs?.PitExit?.PredictedPositionInClass ?? 0;
                 _pitDebrief.StartPitEntry(
                     predictedTotalLossSec,

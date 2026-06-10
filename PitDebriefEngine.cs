@@ -247,11 +247,6 @@ namespace LaunchPlugin
             }
 
             _boxRepairInfluenceText = normalized;
-            if (_boxOutcomeResolved && !_missedBoxObserved)
-            {
-                BoxQualityText = normalized;
-            }
-
             RefreshProgressiveSummary();
         }
 
@@ -558,7 +553,7 @@ namespace LaunchPlugin
 
             if (_boxSeen)
             {
-                BoxQualityText = !string.IsNullOrWhiteSpace(_boxRepairInfluenceText) ? _boxRepairInfluenceText : "GOOD";
+                BoxQualityText = "GOOD";
                 BoxMissedReason = "none";
                 _boxOutcomeResolved = true;
             }
@@ -599,7 +594,9 @@ namespace LaunchPlugin
                 return "BOX PENDING";
             }
 
-            string quality = string.IsNullOrWhiteSpace(BoxQualityText) ? Unknown : BoxQualityText;
+            string quality = (!_missedBoxObserved && !string.IsNullOrWhiteSpace(_boxRepairInfluenceText))
+                ? _boxRepairInfluenceText
+                : (string.IsNullOrWhiteSpace(BoxQualityText) ? Unknown : BoxQualityText);
             string delta = _hasBoxDelta
                 ? BoxDeltaSec.ToString("+0.0;-0.0;+0.0", CultureInfo.InvariantCulture) + "s"
                 : "PENDING";
