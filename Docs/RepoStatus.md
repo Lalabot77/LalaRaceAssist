@@ -1,4 +1,7 @@
 ## 2026-06-10 current PR follow-up status
+- Review-comment verification found the reset concern valid for `ResetLiveFuelModelForNewSession(...)` and `ResetAllValues()`: those paths cleared the legacy integer pit-window exports but not the new selected-burn smooth pit-window exports/backing basis. They now clear `Fuel.PitWindow.SelectedOpeningLap`, `Fuel.PitWindow.SelectedClosingLap`, and selected-basis backing fields alongside the legacy reset fields. No pit-window calculations, existing integer exports, dashboard JSON, or XAML changed.
+
+## 2026-06-10 current PR follow-up status
 - Added dashboard-facing `Fuel.PitWindow.SelectedOpeningLap` and `Fuel.PitWindow.SelectedClosingLap` exports for smooth pit-window range bars. They use the runtime selected burn/refuel basis (`Fuel.Refuel.SelectedBurnPerLap` authority), publish decimal lap points rounded to 2 decimals, and return safe `0.0` outside valid race/projection/tank context.
 - Existing `Fuel.PitWindowOpeningLap` / `Fuel.PitWindowClosingLap` integer state-machine markers, `Fuel.Refuel.*`, `Fuel.Burn.Target*`, strategy planner, pit/refuel command logic, dashboard JSON, and XAML remain unchanged. Property Snapshot list reviewed: yes; new `Fuel.*` exports resolve to the existing Fuel/Strategy group through `ResolvePropertySnapshotGroup(...)`.
 

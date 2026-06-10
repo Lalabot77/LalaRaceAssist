@@ -1,3 +1,7 @@
+## 2026-06-10 — Selected-burn pit-window reset follow-up
+- Classification: **internal-only correctness follow-up** (reset hygiene for newly added dashboard exports; no pit-window calculation, existing integer export behavior, dashboard JSON/XAML, Strategy planner, `Fuel.Refuel.*`, `Fuel.Burn.Target*`, pit/refuel command logic, learning, or fuel acceptance change).
+- Confirmed the review concern was valid for `ResetLiveFuelModelForNewSession(...)` and `ResetAllValues()` and cleared `Fuel.PitWindow.SelectedOpeningLap`, `Fuel.PitWindow.SelectedClosingLap`, and selected-basis backing fields in those reset paths. Existing invalid/refuel reset paths already cleared them.
+
 ## 2026-06-10 — Selected-burn pit-window indicator exports
 - Classification: **both** (new dashboard-facing SimHub exports plus internal export/snapshot documentation; no dashboard JSON/XAML, Strategy planner, `Fuel.Refuel.*` behavior, existing pit-window state-machine markers, `Fuel.Burn.Target*`, pit/refuel command logic, learning, or fuel acceptance changes).
 - Added `Fuel.PitWindow.SelectedOpeningLap` and `Fuel.PitWindow.SelectedClosingLap` as parallel double exports for smooth pit-window range bars. They reuse the runtime selected-burn refuel authority, publish decimal completed-lap points rounded to 2 decimals, and safely publish `0.0` when race/session/projection/fuel/tank context is invalid.

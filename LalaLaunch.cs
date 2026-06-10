@@ -3609,6 +3609,11 @@ namespace LaunchPlugin
             IsPitWindowOpen = false;
             PitWindowOpeningLap = 0;
             PitWindowClosingLap = 0;
+            PitWindowSelectedOpeningLap = 0.0;
+            PitWindowSelectedClosingLap = 0.0;
+            _runtimeRefuelSelectedProjectionLapSeconds = 0.0;
+            _runtimeRefuelSelectedProjectedLapsRemaining = 0.0;
+            _runtimeRefuelSelectedContingencyLitres = 0.0;
             _lastPitWindowState = -1;
             _lastPitWindowLabel = string.Empty;
             _lastPitWindowLogUtc = DateTime.MinValue;
@@ -9664,6 +9669,11 @@ namespace LaunchPlugin
             IsPitWindowOpen = false;
             PitWindowOpeningLap = 0;
             PitWindowClosingLap = 0;
+            PitWindowSelectedOpeningLap = 0.0;
+            PitWindowSelectedClosingLap = 0.0;
+            _runtimeRefuelSelectedProjectionLapSeconds = 0.0;
+            _runtimeRefuelSelectedProjectedLapsRemaining = 0.0;
+            _runtimeRefuelSelectedContingencyLitres = 0.0;
             _lastPitWindowState = -1;
             _lastPitWindowLabel = string.Empty;
             _lastPitWindowLogUtc = DateTime.MinValue;
