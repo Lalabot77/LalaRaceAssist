@@ -8256,8 +8256,24 @@ namespace LaunchPlugin
             AttachCore("RejoinThreatLevelName", () => _rejoinEngine.CurrentThreatLevel.ToString());
             AttachCore("RejoinTimeToThreat", () => _rejoinEngine.TimeToThreatSeconds);
 
-            // --- LalaDash Options (CORE) ---
+            // --- Dash Visibility Options (CORE) ---
+            AttachCore("DashVisibility.Driver.PitEntryAssist", () => Settings.LalaDashShowPitEntryAssist);
+            AttachCore("DashVisibility.Driver.PitBoxAssist", () => Settings.LalaDashShowPitBoxAssist);
+            AttachCore("DashVisibility.Driver.PitLimiter", () => Settings.LalaDashShowPitLimiter);
+            AttachCore("DashVisibility.Driver.AutoPitScreen", () => Settings.LalaDashShowPitScreen);
+            AttachCore("DashVisibility.Strategy.PitEntryAssist", () => Settings.MsgDashShowPitEntryAssist);
+            AttachCore("DashVisibility.Strategy.PitBoxAssist", () => Settings.MsgDashShowPitBoxAssist);
+            AttachCore("DashVisibility.Strategy.PitLimiter", () => Settings.MsgDashShowPitLimiter);
+            AttachCore("DashVisibility.Strategy.AutoPitScreen", () => Settings.MsgDashShowPitScreen);
+            AttachCore("DashVisibility.Overlay.PitEntryAssist", () => Settings.OverlayDashShowPitEntryAssist);
+            AttachCore("DashVisibility.Overlay.PitBoxAssist", () => Settings.OverlayDashShowPitBoxAssist);
+            AttachCore("DashVisibility.Overlay.PitLimiter", () => Settings.OverlayDashShowPitLimiter);
+            AttachCore("DashVisibility.Overlay.AutoPitScreen", () => Settings.OverlayDashShowPitScreen);
+
+            // --- LalaDash Options (CORE, legacy names retained for existing dashboards) ---
             AttachCore("LalaDashShowLaunchScreen", () => Settings.LalaDashShowLaunchScreen);
+            AttachCore("LalaDashShowPitEntryAssist", () => Settings.LalaDashShowPitEntryAssist);
+            AttachCore("LalaDashShowPitBoxAssist", () => Settings.LalaDashShowPitBoxAssist);
             AttachCore("LalaDashShowPitLimiter", () => Settings.LalaDashShowPitLimiter);
             AttachCore("LalaDashShowPitScreen", () => Settings.LalaDashShowPitScreen);
             AttachCore("LalaDashShowRejoinAssist", () => Settings.LalaDashShowRejoinAssist);
@@ -8266,8 +8282,10 @@ namespace LaunchPlugin
             AttachCore("LalaDashShowRadioMessages", () => Settings.LalaDashShowRadioMessages);
             AttachCore("LalaDashShowTraffic", () => Settings.LalaDashShowTraffic);
 
-            // --- MsgDash Options (CORE) ---
+            // --- MsgDash Options (CORE, legacy names retained for existing dashboards) ---
             AttachCore("MsgDashShowLaunchScreen", () => Settings.MsgDashShowLaunchScreen);
+            AttachCore("MsgDashShowPitEntryAssist", () => Settings.MsgDashShowPitEntryAssist);
+            AttachCore("MsgDashShowPitBoxAssist", () => Settings.MsgDashShowPitBoxAssist);
             AttachCore("MsgDashShowPitLimiter", () => Settings.MsgDashShowPitLimiter);
             AttachCore("MsgDashShowPitScreen", () => Settings.MsgDashShowPitScreen);
             AttachCore("MsgDashShowRejoinAssist", () => Settings.MsgDashShowRejoinAssist);
@@ -8276,8 +8294,10 @@ namespace LaunchPlugin
             AttachCore("MsgDashShowRadioMessages", () => Settings.MsgDashShowRadioMessages);
             AttachCore("MsgDashShowTraffic", () => Settings.MsgDashShowTraffic);
 
-            // --- Overlay Options (CORE) ---
+            // --- Overlay Options (CORE, legacy names retained for existing dashboards) ---
             AttachCore("OverlayDashShowLaunchScreen", () => Settings.OverlayDashShowLaunchScreen);
+            AttachCore("OverlayDashShowPitEntryAssist", () => Settings.OverlayDashShowPitEntryAssist);
+            AttachCore("OverlayDashShowPitBoxAssist", () => Settings.OverlayDashShowPitBoxAssist);
             AttachCore("OverlayDashShowPitLimiter", () => Settings.OverlayDashShowPitLimiter);
             AttachCore("OverlayDashShowPitScreen", () => Settings.OverlayDashShowPitScreen);
             AttachCore("OverlayDashShowRejoinAssist", () => Settings.OverlayDashShowRejoinAssist);
@@ -15714,6 +15734,7 @@ namespace LaunchPlugin
             }
 
             if (propertyName.StartsWith("Pit.", StringComparison.Ordinal) || propertyName.StartsWith("PitExit.", StringComparison.Ordinal)) return "PitPitExit";
+            if (propertyName.StartsWith("DashVisibility.", StringComparison.Ordinal)) return "RawDebug";
             if (propertyName.StartsWith("ShiftAssist.", StringComparison.Ordinal)) return "ShiftAssist";
             if (propertyName.StartsWith("MSG", StringComparison.Ordinal) || propertyName.StartsWith("Message", StringComparison.Ordinal)) return "MessageSystem";
             if (propertyName.StartsWith("LeagueClass.", StringComparison.Ordinal)) return "LeagueClass";
@@ -26125,6 +26146,8 @@ namespace LaunchPlugin
 
         // --- LalaDash Toggles (Default ON) ---
         public bool LalaDashShowLaunchScreen { get; set; } = true;
+        public bool LalaDashShowPitEntryAssist { get; set; } = true;
+        public bool LalaDashShowPitBoxAssist { get; set; } = true;
         public bool LalaDashShowPitLimiter { get; set; } = true;
         public bool LalaDashShowPitScreen { get; set; } = true;
         public bool LalaDashShowRejoinAssist { get; set; } = true;
@@ -26135,6 +26158,8 @@ namespace LaunchPlugin
 
         // --- Message System Toggles (Default ON) ---
         public bool MsgDashShowLaunchScreen { get; set; } = true;
+        public bool MsgDashShowPitEntryAssist { get; set; } = true;
+        public bool MsgDashShowPitBoxAssist { get; set; } = true;
         public bool MsgDashShowPitLimiter { get; set; } = true;
         public bool MsgDashShowPitScreen { get; set; } = true;
         public bool MsgDashShowRejoinAssist { get; set; } = true;
@@ -26145,6 +26170,8 @@ namespace LaunchPlugin
 
         // --- Overlay Toggles (Default ON) ---
         public bool OverlayDashShowLaunchScreen { get; set; } = true;
+        public bool OverlayDashShowPitEntryAssist { get; set; } = true;
+        public bool OverlayDashShowPitBoxAssist { get; set; } = true;
         public bool OverlayDashShowPitLimiter { get; set; } = true;
         public bool OverlayDashShowPitScreen { get; set; } = true;
         public bool OverlayDashShowRejoinAssist { get; set; } = true;

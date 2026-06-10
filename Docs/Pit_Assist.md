@@ -12,16 +12,18 @@ The pit-facing driver aids include:
 
 - **pit popups** and pit-context screens,
 - **Pit Entry Assist** braking guidance,
+- **Pit Box Assist** stopping/box-entry guidance,
+- **Pit Limiter** assist visibility,
 - profile-backed pit-loss and marker behavior that affects what the driver sees.
 
 These systems are there to reduce avoidable mistakes under pressure. They do not remove the need for driver judgment.
 
 ## 2. Pit popups and pit screens
 
-Pit popups are the driver-facing pit-context prompts shown on supported dashboards. They are useful for things like:
+Pit popups are the driver-facing pit-context prompts shown on supported dashboards. Settings → Dash Control → Dash Visibility now exposes pit presentation as separate per-dash-family controls for **Pit Entry Assist**, **Pit Box Assist**, **Pit Limiter**, and **Show Automatic Pit Screen**. They are useful for things like:
 
 - pit screen context,
-- pit-assist visibility,
+- focused pit-entry, pit-box, or pit-limiter visibility,
 - automatic pit-related prompts.
 
 ### What to trust
