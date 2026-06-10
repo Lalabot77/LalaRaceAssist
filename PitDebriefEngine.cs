@@ -144,7 +144,7 @@ namespace LaunchPlugin
             }
         }
 
-        public void LatchBoxEntry(double fuelTargetLitres, int tyreChangeCount, double serviceSec, double predictedBoxSec, double elapsedBoxSec)
+        public void LatchBoxEntry(double fuelTargetLitres, int tyreChangeCount, double serviceSec)
         {
             if (!_collecting || Valid || _boxSeen)
             {
@@ -168,7 +168,6 @@ namespace LaunchPlugin
                 _hasServiceSec = true;
             }
 
-            LatchBoxDelta(predictedBoxSec, elapsedBoxSec);
             RefreshProgressiveSummary();
         }
 
@@ -491,14 +490,6 @@ namespace LaunchPlugin
             ServiceRefuelDurationSec = refuelDurationSec;
             _hasRefuelDuration = true;
             RefreshProgressiveSummary();
-        }
-
-        private void LatchBoxDelta(double predictedBoxSec, double elapsedBoxSec)
-        {
-            if (IsPositiveFinite(predictedBoxSec) && IsFiniteNonNegative(elapsedBoxSec))
-            {
-                LatchBoxDeltaCandidate(elapsedBoxSec - predictedBoxSec);
-            }
         }
 
         private void LatchBoxDeltaFromActualMinusPredicted(double actualMinusPredictedSec)

@@ -22502,9 +22502,7 @@ namespace LaunchPlugin
                 _pitDebrief.LatchBoxEntry(
                     target,
                     serviceTireChangeCount,
-                    GetEffectiveTireChangeTimeSeconds(),
-                    _pitBoxTargetSec,
-                    _pitBoxElapsedSec);
+                    GetEffectiveTireChangeTimeSeconds());
                 _pitDebrief.RefreshBoxRepairInfluence(GetPitBoxDebriefRepairInfluence());
             }
 
@@ -22757,7 +22755,13 @@ namespace LaunchPlugin
             }
 
             double targetSec = _pitBoxTargetLatched ? _pitBoxLatchedTargetSec : effectiveTargetSec;
-            double remainingSec = Math.Max(Math.Max(0.0, targetSec - elapsedSec), repairRemainingSec);
+            double modeledRemainingSec = Math.Max(0.0, targetSec - elapsedSec);
+            if (repairRemainingSec > 0.0 && repairRemainingSec >= modeledRemainingSec && !string.IsNullOrWhiteSpace(repairInfluence))
+            {
+                _pitBoxLatchedRepairInfluence = repairInfluence;
+            }
+
+            double remainingSec = Math.Max(modeledRemainingSec, repairRemainingSec);
 
             _pitBoxCountdownActive = true;
             _pitBoxElapsedSec = elapsedSec;

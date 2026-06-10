@@ -1,3 +1,8 @@
+## 2026-06-10 — Pit Debrief repair latch and entry-delta review follow-up
+- Classification: **both** (bounded Pit Debrief repair-label and completed-delta correctness follow-up; no export names, settings, dashboard JSON/layout, PitCycleLite, fuel model, PitExit prediction, or `Pit.Box.LastDeltaSec` sign change).
+- Pit Debrief no longer latches preliminary box-entry target/elapsed evidence as a completed box delta, so first box-entry summaries remain `BOX ... (Δ PENDING)` until completed `Pit.Box.LastDeltaSec` evidence (inverted to `actual - target`) is available. Large finite completed deltas still display; NaN/infinite/unavailable/not-completed sources remain pending.
+- Repair influence can now be preserved after `_pitBoxTargetLatched` when positive repair remaining governs `Pit.Box.RemainingSec`, so mandatory/optional repair labels survive late repair-left telemetry while target construction remains unchanged. Property Snapshot list reviewed: yes; no SimHub exports/properties were added, removed, renamed, or regrouped.
+
 ## 2026-06-10 — Pit Debrief repair-aware box delta follow-up
 - Classification: **both** (driver-facing Pit Debrief box-delta/repair wording semantics plus bounded diagnostics; no export names, settings, dashboard JSON/layout, PitCycleLite, fuel model, PitExit prediction, or `Pit.Box.LastDeltaSec` sign change).
 - Pit Debrief now displays any finite valid completed `Pit.Box.LastDeltaSec` after inverting it for the debrief summary (`actual - target`), including large positive/negative deltas; `BOX ... (Δ PENDING)` now means the completed box-delta source was missing or invalid, not that the delta was too large.
