@@ -3,7 +3,7 @@
 **Subsystem doc**
 
 Validated against commit: HEAD
-Last updated: 2026-06-08
+Last updated: 2026-06-10
 Last reviewed: 2026-01-14
 Branch: work
 
@@ -103,8 +103,8 @@ Cue level is derived from **margin vs. buffer** (buffer = profile slider):
 Three structured INFO logs (edge-triggered):
 
 - **`ACTIVATE`** — once when assist arms. Fields: raw + guided distance, required distance, margin, speed delta, decel, buffer, cue. Used to confirm arming context and baseline margin.
-- **`ENTRY LINE SAFE/NORMAL`** — once on pit lane entry when you are at/below the pit limit. Includes speed delta, first compliant distance (if captured), and **time loss vs limiter** based on the compliance distance. Used to evaluate braking timing and track-specific tuning.
-- **`ENTRY LINE BAD`** — once on pit lane entry when still above the limit. Includes speed delta and how late you braked (metres). The compliance threshold is strict at the line (`Pit.EntrySpeedDelta_kph <= 0.0` is compliant); the separate first-compliant capture uses `<= +1.0 kph` only to find an early-limiter time-loss reference. Time loss is omitted/forced to zero in the bad/overspeed case because no valid positive early-limiter time-loss estimate exists.
+- **`ENTRY LINE SAFE/NORMAL`** — once on pit lane entry when you are at/below the pit limit, or when line overspeed is within the named **+1.0 kph debrief tolerance**. At/below-limit entries include speed delta, first compliant distance (if captured), and **time loss vs limiter** based on the compliance distance. Marginal overspeed entries keep the existing `normal` token and state that the speed delta is within the 1.0 kph margin. Used to evaluate braking timing and track-specific tuning.
+- **`ENTRY LINE BAD`** — once on pit lane entry when still more than +1.0 kph above the limit. Includes speed delta and how late you braked (metres) only when the rounded late distance is meaningful; it no longer says `braked 0.0m too late`. The strict at/below-limit path remains `Pit.EntrySpeedDelta_kph <= 0.0`; the separate first-compliant capture uses `<= +1.0 kph` as the compliance/marginal tolerance and as the early-limiter time-loss reference. Time loss is omitted/forced to zero in true bad/overspeed cases because no valid positive early-limiter time-loss estimate exists.
 - **`END`** — once when assist disarms (pit entry or invalidation). Used to confirm clean teardown.
 
 ---
@@ -112,9 +112,9 @@ Three structured INFO logs (edge-triggered):
 ## Pit Entry Line Debrief Outputs
 
 On the pit-entry line, the subsystem latches a **debrief** that dashboards or telemetry overlays can show:
-- **`Pit.EntryLineDebrief`**: `safe`, `normal`, or `bad`.
-- **`Pit.EntryLineDebriefText`**: plain-English summary string (includes time loss when computed).
-- **`Pit.EntryLineTimeLoss_s`**: seconds lost versus the pit limiter based on the distance from the first compliant point to the line; `0` in a `bad` line verdict means no valid positive time-loss estimate was computed, not that the line-speed compliance verdict was good.
+- **`Pit.EntryLineDebrief`**: `safe`, `normal`, or `bad`. The export contract is intentionally unchanged: overspeed within +1.0 kph maps to `normal` rather than adding a new token.
+- **`Pit.EntryLineDebriefText`**: plain-English summary string (includes time loss when computed). For marginal overspeed it reports `NORMAL entry: Speed Δ at line +0.3kph within 1.0kph margin.`
+- **`Pit.EntryLineTimeLoss_s`**: raw double seconds lost versus the pit limiter based on the distance from the first compliant/marginal point (`Pit.EntrySpeedDelta_kph <= +1.0`) to the line, calculated as `max(0, distance/currentLineSpeed - distance/pitLimitSpeed)`. `0` in a `bad` line verdict means no valid positive time-loss estimate was computed, not that the line-speed compliance verdict was good.
 
 These values update **once per pit entry** and remain until the next assist activation.
 
@@ -125,7 +125,7 @@ These values update **once per pit entry** and remain until the next assist acti
 - Developer-only instrumentation to empirically measure braking decel between **200→50 kph** with straight-line filtering.
 - **Master switch:** `MASTER_ENABLED` (constant, default `false`). When false, module is inert at runtime and safe to ship compiled.
 - When explicitly enabled/armed, it logs high-frequency decel samples (dv/dt and lon accel) and distance between 200–50 kph for the current car/track/session token. START/END logs bracket each run; per-tick logs emit at 20 Hz.
-- **Not part of normal behaviour:** requires explicit enable + toggle; otherwise no logs, no side effects.
+- **Not part of normal behaviour:** requires explicit enable + toggle; otherwise no logs, no side effects. It remains diagnostic-only and is not wired into runtime Pit Entry Line Debrief classification.
 
 ---
 
@@ -142,6 +142,6 @@ These values update **once per pit entry** and remain until the next assist acti
 
 ## Pit Debrief consumption
 
-Pit Debrief consumes existing Pit Entry Assist readouts after a completed stop, but it deliberately separates the Pit Entry Assist safety/compliance verdict from the debrief performance headline. `Pit.EntryLineDebrief` remains the original assist verdict (`safe`/`normal`/`bad`) and still maps to `Pit.Debrief.Entry.LimiterQualityText` (`SAFE`/`NORMAL`/`POOR`) for debug/log evidence. `Pit.Debrief.Entry.QualityText` and the `ENTRY ...` headline are performance-oriented from `Pit.EntryLineTimeLoss_s`: `>0.5s` is `POOR`, `>0.1s` is `NORMAL`, and `≤0.1s` is `GOOD`, so a compliance `bad` with `0.0s`/no-positive-estimate time loss can appear as `ENTRY GOOD` while `LimiterQualityText` remains `POOR`. This is a deliberate separation between performance/readout and safety/compliance evidence; black-flag protection remains owned by the original Pit Entry Assist line verdict.
+Pit Debrief consumes existing Pit Entry Assist readouts after a completed stop, but it deliberately separates the Pit Entry Assist safety/compliance verdict from the debrief performance headline. `Pit.EntryLineDebrief` remains the assist verdict (`safe`/`normal`/`bad`); marginal line overspeed within +1.0 kph is classified as `normal` to preserve the existing token contract and maps to `Pit.Debrief.Entry.LimiterQualityText=NORMAL`. True bad overspeed above +1.0 kph still maps to `Pit.Debrief.Entry.LimiterQualityText=POOR` for debug/log evidence. `Pit.Debrief.Entry.QualityText` and the `ENTRY ...` headline are performance-oriented from the raw double `Pit.EntryLineTimeLoss_s`: `>0.5s` is `POOR`, `>0.1s` is `NORMAL`, and `≤0.1s` is `GOOD`, so a compliance `bad` with `0.0s`/no-positive-estimate time loss can appear as `ENTRY GOOD` while `LimiterQualityText` remains `POOR`. This is a deliberate separation between performance/readout and safety/compliance evidence; black-flag protection remains owned by the original Pit Entry Assist line verdict.
 
 The v1 debrief does not infer an actual deceleration quality. `Pit.Debrief.Entry.DecelQualityText` remains `UNKNOWN` until an existing authoritative actual-decel source is available and explicitly wired by a later task.

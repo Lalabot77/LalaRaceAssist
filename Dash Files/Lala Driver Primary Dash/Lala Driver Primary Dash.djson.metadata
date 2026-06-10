@@ -10,7 +10,7 @@
   "MetadataVersion": 2.0,
   "EnableOnDashboardMessaging": true,
   "PitScreensIndexs": [],
-  "SimHubVersion": "9.11.12",
+  "SimHubVersion": "9.11.14",
   "Category": "",
   "Title": "Lala Driver Primary Dash",
   "Description": "Main Driver Tactical Dash in Primary FOV",

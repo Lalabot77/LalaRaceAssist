@@ -1,6 +1,29 @@
+
 ## 2026-06-10 — Selected-burn pit-window review follow-up
 - Classification: **both** (dashboard-facing selected export behavior correction plus internal docs; no existing integer pit-window export, PitWindowState/IsPitWindowOpen, Strategy planner, `Fuel.Refuel.*`, `Fuel.Burn.Target*`, pit/refuel command, learning, dashboard JSON, or XAML change).
 - Removed the selected smooth pit-window export dependency on the existing stable/NORM `reserveAwarePitWindowNeeded` gate so selected PUSH/NORM/SAVE endpoints can publish whenever their own race/session/fuel/projection/tank basis is valid. Impossible selected intervals where opening would be after closing now fail closed to `0.0` / `0.0` instead of publishing an inverted range.
+
+## 2026-06-10 — Pit Entry Assist line-speed tolerance review
+- Classification: **both** (driver-facing Pit Entry Line Debrief wording/classification plus internal log/parameter docs; no export names, settings, dashboard JSON/layout, PitCycleLite, fuel model, PitExit prediction, pit timing/loss learning, or Property Snapshot grouping changes).
+- Added a named +1.0 kph Pit Entry Line Debrief speed tolerance: `Pit.EntrySpeedDelta_kph <= 0.0` keeps the existing safe/normal path, `0.0 < delta <= 1.0` now remains the existing `normal` token with text/log wording that says it is within the 1.0 kph margin, and `delta > 1.0` remains `bad`.
+- True bad-entry text/logs no longer claim `braked 0.0m too late` when the rounded late distance is effectively zero. `Pit.Debrief.Entry.LimiterQualityText` continues to map the existing token set (`safe`/`normal`/`bad`) to `SAFE`/`NORMAL`/`POOR`; entry performance headline and `SummaryText` remain driven by raw `Pit.EntryLineTimeLoss_s`, with final Pit Debrief logs retaining two-decimal `entryLossSec`.
+- Time-loss calculation and DecelCapture were reviewed but not rewritten: the current method uses first `<= +1.0 kph` compliance/marginal capture and `max(0, distance/currentLineSpeed - distance/pitLimitSpeed)`, so it can understate/zero cases where the car dips below the limit and rises again; DecelCapture remains diagnostic-only. Property Snapshot list reviewed: yes; no SimHub export/property additions, removals, renames, or behavior regrouping were made, so existing `Pit.*` exports remain in `PitPitExit`.
+
+## 2026-06-10 — Pit Debrief repair summary/export split follow-up
+- Classification: **both** (Pit Debrief presentation/export contract correction; no export names, settings, dashboard JSON/layout, PitCycleLite, fuel model, PitExit prediction, target construction, or `Pit.Box.LastDeltaSec` sign change).
+- `Pit.Debrief.Box.QualityText` remains the documented quality enum only (`GOOD`, `OVERSHOT`, `MISSED`, `UNKNOWN`); repair influence wording is now `SummaryText` presentation only (`BOX MAND REPAIR`, `BOX OPT REPAIR`, `BOX REPAIRS`) while valid non-missed boxed stops still export `BoxQualityText=GOOD`.
+- Previous completed repair influence is cleared at pit-entry/debrief start and before a new phase-lag box-entry refresh can read fallback state, preventing a normal next stop from inheriting the prior stop's repair label. Property Snapshot list reviewed: yes; no SimHub exports/properties were added, removed, renamed, or regrouped.
+
+## 2026-06-10 — Pit Debrief repair latch and entry-delta review follow-up
+- Classification: **both** (bounded Pit Debrief repair-label and completed-delta correctness follow-up; no export names, settings, dashboard JSON/layout, PitCycleLite, fuel model, PitExit prediction, or `Pit.Box.LastDeltaSec` sign change).
+- Pit Debrief no longer latches preliminary box-entry target/elapsed evidence as a completed box delta, so first box-entry summaries remain `BOX ... (Δ PENDING)` until completed `Pit.Box.LastDeltaSec` evidence (inverted to `actual - target`) is available. Large finite completed deltas still display; NaN/infinite/unavailable/not-completed sources remain pending.
+- Repair influence can now be preserved after `_pitBoxTargetLatched` when positive repair remaining governs `Pit.Box.RemainingSec`, so mandatory/optional repair labels survive late repair-left telemetry while target construction remains unchanged. Property Snapshot list reviewed: yes; no SimHub exports/properties were added, removed, renamed, or regrouped.
+
+## 2026-06-10 — Pit Debrief repair-aware box delta follow-up
+- Classification: **both** (driver-facing Pit Debrief box-delta/repair wording semantics plus bounded diagnostics; no export names, settings, dashboard JSON/layout, PitCycleLite, fuel model, PitExit prediction, or `Pit.Box.LastDeltaSec` sign change).
+- Pit Debrief now displays any finite valid completed `Pit.Box.LastDeltaSec` after inverting it for the debrief summary (`actual - target`), including large positive/negative deltas; `BOX ... (Δ PENDING)` now means the completed box-delta source was missing or invalid, not that the delta was too large.
+- Box targets remain Option A repair-aware: `Pit.Box.TargetSec` is the expected stop time for all currently selected/active services, including fuel, tyres, mandatory repairs, and optional repairs when selected/active/telemetry-reported as part of service. Repair-influenced targets label the driver-facing box section as `BOX MAND REPAIR`, `BOX OPT REPAIR`, or generic `BOX REPAIRS`; optional repair abandonment can therefore produce a large negative debrief delta.
+- `[LalaPlugin:PitDebriefBoxDiag]` now includes bounded edge-only `targetRepairInfluence` detail. Property Snapshot list reviewed: yes; no SimHub exports/properties were added, removed, renamed, or regrouped; existing `Pit.Box.LastDeltaSec` remains `target - actual` and Pit Debrief remains `actual - target`.
 
 ## 2026-06-10 — Dash Visibility pit assist split
 - Classification: **both** (Settings UI and dashboard-facing visibility export contract cleanup; no pit timing, pit entry, pit box, pit limiter runtime logic, telemetry gating, or dashboard JSON/layout changes).
