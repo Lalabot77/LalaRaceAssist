@@ -21869,15 +21869,24 @@ namespace LaunchPlugin
             }
         }
 
-        private int GetSelectedTireChangeCountForPrediction()
+        private int ResolvePitBoxServiceTireChangeCount(out bool hasTireSelectionEvidence)
         {
-            if (_pitBoxCountdownActive && _pitBoxTireCountLatched)
+            if (_pitBoxTireCountLatched)
             {
-                return _pitBoxLatchedTireChangeCount;
+                hasTireSelectionEvidence = _pitBoxLatchedTireChangeCountHadEvidence;
+                int latchedCount = _pitBoxLatchedTireChangeCount;
+                if (latchedCount < 0) latchedCount = 0;
+                if (latchedCount > 4) latchedCount = 4;
+                return latchedCount;
             }
 
+            return ResolvePitBoxTargetTireChangeCount(out hasTireSelectionEvidence);
+        }
+
+        private int GetSelectedTireChangeCountForPrediction()
+        {
             bool hasEvidence;
-            return ResolvePitBoxTargetTireChangeCount(out hasEvidence);
+            return ResolvePitBoxServiceTireChangeCount(out hasEvidence);
         }
 
         private double GetEffectiveTireChangeTimeSeconds()
@@ -22228,11 +22237,14 @@ namespace LaunchPlugin
 
         private void LogPitDebriefBoxDiag(string edge, string reason, double finalElapsedUsedSec, double debriefBoxDeltaSec)
         {
+            bool targetTireEvidence;
+            int targetTireCount = ResolvePitBoxServiceTireChangeCount(out targetTireEvidence);
+
             SimHub.Logging.Current.Info("[LalaPlugin:PitDebriefBoxDiag] edge=" + edge
                 + BuildPitDebriefCommonDiagFields()
                 + " targetSec=" + FormatPitDebriefDiagDouble(_pitBoxTargetSec, "0.000")
-                + " targetTireCount=" + _pitBoxLatchedTireChangeCount.ToString(CultureInfo.InvariantCulture)
-                + " targetTireEvidence=" + (_pitBoxLatchedTireChangeCountHadEvidence ? "true" : "false")
+                + " targetTireCount=" + targetTireCount.ToString(CultureInfo.InvariantCulture)
+                + " targetTireEvidence=" + (targetTireEvidence ? "true" : "false")
                 + " elapsedSec=" + FormatPitDebriefDiagDouble(_pitBoxElapsedSec, "0.000")
                 + " finalElapsedUsedSec=" + FormatPitDebriefDiagDouble(finalElapsedUsedSec, "0.000")
                 + " pitBoxLastDeltaSec=" + FormatPitDebriefDiagDouble(_pitBoxLastDeltaSec, "0.000")
@@ -22319,9 +22331,10 @@ namespace LaunchPlugin
                 double target = Pit_Box_WillAddLatched > 0.0 ? Pit_Box_WillAddLatched : Pit_WillAdd;
                 LogPitDebriefBoxDiag("box-entry", "first in-box edge before LatchBoxEntry", double.NaN, double.NaN);
                 LogPitDebriefFuelDiag("box-entry", currentFuel, false, target);
+                int serviceTireChangeCount = ResolvePitBoxServiceTireChangeCount(out _);
                 _pitDebrief.LatchBoxEntry(
                     target,
-                    _pitBoxTireCountLatched ? _pitBoxLatchedTireChangeCount : _liveTireChangeCount,
+                    serviceTireChangeCount,
                     GetEffectiveTireChangeTimeSeconds(),
                     _pitBoxTargetSec,
                     _pitBoxElapsedSec);
