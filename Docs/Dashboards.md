@@ -84,6 +84,10 @@ Optional reset actions are `LalaLaunch.BurnAnalysisResetAverages`, `LalaLaunch.B
 
 When manually editing dashboard formulas, use the single plugin-qualified property prefix only (for example `LalaLaunch.PreRace.StatusText`, not `LalaLaunch.LalaLaunch.PreRace.StatusText`).
 
+### Strategy Dash pit-window range bars
+
+For smooth pit-window range bars, use the plugin-owned selected-burn endpoints `LalaLaunch.Fuel.PitWindow.SelectedOpeningLap` and `LalaLaunch.Fuel.PitWindow.SelectedClosingLap`. They are decimal lap values rounded by the plugin and follow the currently selected runtime PUSH/NORM/SAVE burn basis. Keep using `LalaLaunch.Fuel.PitWindowOpeningLap` and `LalaLaunch.Fuel.PitWindowClosingLap` only for the existing state-machine integer markers; dashboards should not rebuild pit-window fuel math in formulas.
+
 ### Binding scope in SimHub
 
 Depending on how you organise your SimHub setup, those bindings can be configured:

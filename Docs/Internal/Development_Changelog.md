@@ -1,10 +1,14 @@
+
+## 2026-06-10 — Selected-burn pit-window review follow-up
+- Classification: **both** (dashboard-facing selected export behavior correction plus internal docs; no existing integer pit-window export, PitWindowState/IsPitWindowOpen, Strategy planner, `Fuel.Refuel.*`, `Fuel.Burn.Target*`, pit/refuel command, learning, dashboard JSON, or XAML change).
+- Removed the selected smooth pit-window export dependency on the existing stable/NORM `reserveAwarePitWindowNeeded` gate so selected PUSH/NORM/SAVE endpoints can publish whenever their own race/session/fuel/projection/tank basis is valid. Impossible selected intervals where opening would be after closing now fail closed to `0.0` / `0.0` instead of publishing an inverted range.
+
 ## 2026-06-10 — Pit Entry Assist line-speed tolerance review
 - Classification: **both** (driver-facing Pit Entry Line Debrief wording/classification plus internal log/parameter docs; no export names, settings, dashboard JSON/layout, PitCycleLite, fuel model, PitExit prediction, pit timing/loss learning, or Property Snapshot grouping changes).
 - Added a named +1.0 kph Pit Entry Line Debrief speed tolerance: `Pit.EntrySpeedDelta_kph <= 0.0` keeps the existing safe/normal path, `0.0 < delta <= 1.0` now remains the existing `normal` token with text/log wording that says it is within the 1.0 kph margin, and `delta > 1.0` remains `bad`.
 - True bad-entry text/logs no longer claim `braked 0.0m too late` when the rounded late distance is effectively zero. `Pit.Debrief.Entry.LimiterQualityText` continues to map the existing token set (`safe`/`normal`/`bad`) to `SAFE`/`NORMAL`/`POOR`; entry performance headline and `SummaryText` remain driven by raw `Pit.EntryLineTimeLoss_s`, with final Pit Debrief logs retaining two-decimal `entryLossSec`.
 - Time-loss calculation and DecelCapture were reviewed but not rewritten: the current method uses first `<= +1.0 kph` compliance/marginal capture and `max(0, distance/currentLineSpeed - distance/pitLimitSpeed)`, so it can understate/zero cases where the car dips below the limit and rises again; DecelCapture remains diagnostic-only. Property Snapshot list reviewed: yes; no SimHub export/property additions, removals, renames, or behavior regrouping were made, so existing `Pit.*` exports remain in `PitPitExit`.
 
-<<<<<<< codex/update-pit-debrief-for-box-delta-visibility
 ## 2026-06-10 — Pit Debrief repair summary/export split follow-up
 - Classification: **both** (Pit Debrief presentation/export contract correction; no export names, settings, dashboard JSON/layout, PitCycleLite, fuel model, PitExit prediction, target construction, or `Pit.Box.LastDeltaSec` sign change).
 - `Pit.Debrief.Box.QualityText` remains the documented quality enum only (`GOOD`, `OVERSHOT`, `MISSED`, `UNKNOWN`); repair influence wording is now `SummaryText` presentation only (`BOX MAND REPAIR`, `BOX OPT REPAIR`, `BOX REPAIRS`) while valid non-missed boxed stops still export `BoxQualityText=GOOD`.
@@ -20,13 +24,21 @@
 - Pit Debrief now displays any finite valid completed `Pit.Box.LastDeltaSec` after inverting it for the debrief summary (`actual - target`), including large positive/negative deltas; `BOX ... (Δ PENDING)` now means the completed box-delta source was missing or invalid, not that the delta was too large.
 - Box targets remain Option A repair-aware: `Pit.Box.TargetSec` is the expected stop time for all currently selected/active services, including fuel, tyres, mandatory repairs, and optional repairs when selected/active/telemetry-reported as part of service. Repair-influenced targets label the driver-facing box section as `BOX MAND REPAIR`, `BOX OPT REPAIR`, or generic `BOX REPAIRS`; optional repair abandonment can therefore produce a large negative debrief delta.
 - `[LalaPlugin:PitDebriefBoxDiag]` now includes bounded edge-only `targetRepairInfluence` detail. Property Snapshot list reviewed: yes; no SimHub exports/properties were added, removed, renamed, or regrouped; existing `Pit.Box.LastDeltaSec` remains `target - actual` and Pit Debrief remains `actual - target`.
-=======
+
 ## 2026-06-10 — Dash Visibility pit assist split
 - Classification: **both** (Settings UI and dashboard-facing visibility export contract cleanup; no pit timing, pit entry, pit box, pit limiter runtime logic, telemetry gating, or dashboard JSON/layout changes).
 - Replaced the broad Dash Visibility `Pit Assists` row with independent `Pit Entry Assist`, `Pit Box Assist`, and `Pit Limiter` rows for DRIVER/STRATEGY/OVERLAY. `Show Automatic Pit Screen` remains a separate row and setting.
 - Added preferred `DashVisibility.<Driver|Strategy|Overlay>.PitEntryAssist`, `.PitBoxAssist`, `.PitLimiter`, and `.AutoPitScreen` exports, plus same-family `*ShowPitEntryAssist` / `*ShowPitBoxAssist` compatibility aliases. Existing `*ShowPitLimiter` and `*ShowPitScreen` exports/settings remain exported so old dashboards continue to resolve; new dashboards should use the clear `DashVisibility.*` names.
 - Property Snapshot list reviewed: yes; `ResolvePropertySnapshotGroup(...)` now explicitly leaves `DashVisibility.*` in `RawDebug`, and no Pit/PitExit runtime export grouping changed. Root `CHANGELOG.md` reviewed unchanged because this is unreleased settings/export contract cleanup documented in internal/user docs.
->>>>>>> main
+
+## 2026-06-10 — Selected-burn pit-window reset follow-up
+- Classification: **internal-only correctness follow-up** (reset hygiene for newly added dashboard exports; no pit-window calculation, existing integer export behavior, dashboard JSON/XAML, Strategy planner, `Fuel.Refuel.*`, `Fuel.Burn.Target*`, pit/refuel command logic, learning, or fuel acceptance change).
+- Confirmed the review concern was valid for `ResetLiveFuelModelForNewSession(...)` and `ResetAllValues()` and cleared `Fuel.PitWindow.SelectedOpeningLap`, `Fuel.PitWindow.SelectedClosingLap`, and selected-basis backing fields in those reset paths. Existing invalid/refuel reset paths already cleared them.
+
+## 2026-06-10 — Selected-burn pit-window indicator exports
+- Classification: **both** (new dashboard-facing SimHub exports plus internal export/snapshot documentation; no dashboard JSON/XAML, Strategy planner, `Fuel.Refuel.*` behavior, existing pit-window state-machine markers, `Fuel.Burn.Target*`, pit/refuel command logic, learning, or fuel acceptance changes).
+- Added `Fuel.PitWindow.SelectedOpeningLap` and `Fuel.PitWindow.SelectedClosingLap` as parallel double exports for smooth pit-window range bars. They reuse the runtime selected-burn refuel authority, publish decimal completed-lap points rounded to 2 decimals, and safely publish `0.0` when race/session/projection/fuel/tank context is invalid.
+- Preserved `Fuel.PitWindowOpeningLap` and `Fuel.PitWindowClosingLap` as unchanged integer state-machine markers. Property Snapshot list reviewed: yes; the new `Fuel.*` exports resolve to the existing Fuel/Strategy group via the `Fuel.` prefix in `ResolvePropertySnapshotGroup(...)`.
 
 ## 2026-06-10 — Pit Debrief phase-lag service tyre-count follow-up
 - Classification: **both** (bounded Pit Debrief service readout correctness follow-up plus user-facing debrief service semantics; no export names, settings, dashboard JSON/layout, PitCycleLite, fuel model, PitExit prediction, or `Pit.Box.LastDeltaSec` sign change).
