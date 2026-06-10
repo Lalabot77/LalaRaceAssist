@@ -1,3 +1,9 @@
+## 2026-06-10 — Dash Visibility pit assist split
+- Classification: **both** (Settings UI and dashboard-facing visibility export contract cleanup; no pit timing, pit entry, pit box, pit limiter runtime logic, telemetry gating, or dashboard JSON/layout changes).
+- Replaced the broad Dash Visibility `Pit Assists` row with independent `Pit Entry Assist`, `Pit Box Assist`, and `Pit Limiter` rows for DRIVER/STRATEGY/OVERLAY. `Show Automatic Pit Screen` remains a separate row and setting.
+- Added preferred `DashVisibility.<Driver|Strategy|Overlay>.PitEntryAssist`, `.PitBoxAssist`, `.PitLimiter`, and `.AutoPitScreen` exports, plus same-family `*ShowPitEntryAssist` / `*ShowPitBoxAssist` compatibility aliases. Existing `*ShowPitLimiter` and `*ShowPitScreen` exports/settings remain exported so old dashboards continue to resolve; new dashboards should use the clear `DashVisibility.*` names.
+- Property Snapshot list reviewed: yes; `ResolvePropertySnapshotGroup(...)` now explicitly leaves `DashVisibility.*` in `RawDebug`, and no Pit/PitExit runtime export grouping changed. Root `CHANGELOG.md` reviewed unchanged because this is unreleased settings/export contract cleanup documented in internal/user docs.
+
 ## 2026-06-10 — Selected-burn pit-window reset follow-up
 - Classification: **internal-only correctness follow-up** (reset hygiene for newly added dashboard exports; no pit-window calculation, existing integer export behavior, dashboard JSON/XAML, Strategy planner, `Fuel.Refuel.*`, `Fuel.Burn.Target*`, pit/refuel command logic, learning, or fuel acceptance change).
 - Confirmed the review concern was valid for `ResetLiveFuelModelForNewSession(...)` and `ResetAllValues()` and cleared `Fuel.PitWindow.SelectedOpeningLap`, `Fuel.PitWindow.SelectedClosingLap`, and selected-basis backing fields in those reset paths. Existing invalid/refuel reset paths already cleared them.
@@ -6,12 +12,6 @@
 - Classification: **both** (new dashboard-facing SimHub exports plus internal export/snapshot documentation; no dashboard JSON/XAML, Strategy planner, `Fuel.Refuel.*` behavior, existing pit-window state-machine markers, `Fuel.Burn.Target*`, pit/refuel command logic, learning, or fuel acceptance changes).
 - Added `Fuel.PitWindow.SelectedOpeningLap` and `Fuel.PitWindow.SelectedClosingLap` as parallel double exports for smooth pit-window range bars. They reuse the runtime selected-burn refuel authority, publish decimal completed-lap points rounded to 2 decimals, and safely publish `0.0` when race/session/projection/fuel/tank context is invalid.
 - Preserved `Fuel.PitWindowOpeningLap` and `Fuel.PitWindowClosingLap` as unchanged integer state-machine markers. Property Snapshot list reviewed: yes; the new `Fuel.*` exports resolve to the existing Fuel/Strategy group via the `Fuel.` prefix in `ResolvePropertySnapshotGroup(...)`.
-
-## 2026-06-10 — Dash Visibility pit assist split
-- Classification: **both** (Settings UI and dashboard-facing visibility export contract cleanup; no pit timing, pit entry, pit box, pit limiter runtime logic, telemetry gating, or dashboard JSON/layout changes).
-- Replaced the broad Dash Visibility `Pit Assists` row with independent `Pit Entry Assist`, `Pit Box Assist`, and `Pit Limiter` rows for DRIVER/STRATEGY/OVERLAY. `Show Automatic Pit Screen` remains a separate row and setting.
-- Added preferred `DashVisibility.<Driver|Strategy|Overlay>.PitEntryAssist`, `.PitBoxAssist`, `.PitLimiter`, and `.AutoPitScreen` exports, plus same-family `*ShowPitEntryAssist` / `*ShowPitBoxAssist` compatibility aliases. Existing `*ShowPitLimiter` and `*ShowPitScreen` exports/settings remain exported so old dashboards continue to resolve; new dashboards should use the clear `DashVisibility.*` names.
-- Property Snapshot list reviewed: yes; `ResolvePropertySnapshotGroup(...)` now explicitly leaves `DashVisibility.*` in `RawDebug`, and no Pit/PitExit runtime export grouping changed. Root `CHANGELOG.md` reviewed unchanged because this is unreleased settings/export contract cleanup documented in internal/user docs.
 
 ## 2026-06-10 — Pit Debrief phase-lag service tyre-count follow-up
 - Classification: **both** (bounded Pit Debrief service readout correctness follow-up plus user-facing debrief service semantics; no export names, settings, dashboard JSON/layout, PitCycleLite, fuel model, PitExit prediction, or `Pit.Box.LastDeltaSec` sign change).
