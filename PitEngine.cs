@@ -13,6 +13,7 @@ namespace LaunchPlugin
     {
         private const double MinTrackLengthM = 500.0;
         private const double MaxTrackLengthM = 20000.0;
+        private const double PitEntryLineSpeedToleranceKph = 1.0;
 
         // --- Public pit phase/timing surface ---
         public PitPhase CurrentPitPhase { get; private set; } = PitPhase.None;
@@ -451,8 +452,8 @@ namespace LaunchPlugin
                 );
             }
 
-            // Capture first compliant point AFTER ACTIVATE reset
-            if (!_pitEntryFirstCompliantCaptured && PitEntrySpeedDelta_kph <= 1.0)
+            // Capture first compliant/marginal point AFTER ACTIVATE reset
+            if (!_pitEntryFirstCompliantCaptured && PitEntrySpeedDelta_kph <= PitEntryLineSpeedToleranceKph)
             {
                 _pitEntryFirstCompliantCaptured = true;
                 _pitEntryFirstCompliantDToLine_m = PitEntryDistanceToLine_m;
@@ -491,7 +492,21 @@ namespace LaunchPlugin
 
                     SimHub.Logging.Current.Info(
                         $"[LalaPlugin:PitEntryAssist] ENTRY LINE {PitEntryLineDebrief.ToUpperInvariant()}: " +
-                        $"Speed Δ at Line {PitEntrySpeedDelta_kph:F1}kph, " +
+                        $"Speed Δ at Line {PitEntrySpeedDelta_kph:+0.0;-0.0;0.0}kph, " +
+                        $"Below Limiter at {firstOkText}, " +
+                        $"Time Loss: +{timeLossSec:F2}s"
+                    );
+                }
+                else if (PitEntrySpeedDelta_kph <= PitEntryLineSpeedToleranceKph)
+                {
+                    PitEntryLineDebrief = "normal";
+                    PitEntryLineDebriefText =
+                        $"NORMAL entry: Speed Δ at line {PitEntrySpeedDelta_kph:+0.0;-0.0;0.0}kph within {PitEntryLineSpeedToleranceKph:F1}kph margin.";
+
+                    SimHub.Logging.Current.Info(
+                        $"[LalaPlugin:PitEntryAssist] ENTRY LINE NORMAL: " +
+                        $"Speed Δ at Line {PitEntrySpeedDelta_kph:+0.0;-0.0;0.0}kph, " +
+                        $"Within {PitEntryLineSpeedToleranceKph:F1}kph Margin, " +
                         $"Below Limiter at {firstOkText}, " +
                         $"Time Loss: +{timeLossSec:F2}s"
                     );
@@ -500,14 +515,17 @@ namespace LaunchPlugin
                 {
                     PitEntryLineDebrief = "bad";
                     double lateByM = Math.Max(0.0, -PitEntryMargin_m);
+                    string lateText = lateByM >= 0.05
+                        ? $", braked {lateByM:F1}m too late"
+                        : string.Empty;
                     PitEntryLineDebriefText =
-                        $"BAD entry: Speed Δ at line {PitEntrySpeedDelta_kph:F1}kph, braked {lateByM:F1}m too late.";
+                        $"BAD entry: Speed Δ at line {PitEntrySpeedDelta_kph:+0.0;-0.0;0.0}kph{lateText}.";
                     PitEntryLineTimeLoss_s = 0.0;
 
                     SimHub.Logging.Current.Info(
                         $"[LalaPlugin:PitEntryAssist] ENTRY LINE BAD: " +
-                        $"Speed Δ at Line {PitEntrySpeedDelta_kph:F1}kph, " +
-                        $"Braked {lateByM:F1}m too late"
+                        $"Speed Δ at Line {PitEntrySpeedDelta_kph:+0.0;-0.0;0.0}kph" +
+                        (lateByM >= 0.05 ? $", Braked {lateByM:F1}m too late" : string.Empty)
                     );
                 }
             }

@@ -1,3 +1,8 @@
+- 2026-06-10 Pit Entry Assist line-speed tolerance review landed:
+  - `Pit.EntryLineDebrief` keeps the existing `safe`/`normal`/`bad` token contract; line overspeed within +1.0 kph now maps to `normal` and says it is within the 1.0 kph margin, while overspeed above +1.0 kph remains `bad`.
+  - `Pit.EntryLineDebriefText`/PitEntryAssist line logs no longer claim `braked 0.0m too late` when rounded late distance is effectively zero. Pit Debrief entry headline remains performance-based from raw `Pit.EntryLineTimeLoss_s`, limiter/compliance detail remains separate in `Pit.Debrief.Entry.LimiterQualityText`, and final `entryLossSec` logging remains two decimals.
+  - No export names, settings, dashboard JSON/layout, PitCycleLite, fuel model, PitExit prediction, pit timing/loss learning, or DecelCapture runtime wiring changed. Property Snapshot list reviewed: yes; no group mapping change required because existing `Pit.*` exports remain in Pit/PitExit.
+
 - Pit Debrief PR #818 export/presentation split follow-up is validated in code/docs: `Pit.Debrief.Box.QualityText` remains a quality enum (`GOOD` / `OVERSHOT` / `MISSED` / `UNKNOWN`) and repair wording is `SummaryText`-only presentation (`BOX MAND REPAIR`, `BOX OPT REPAIR`, `BOX REPAIRS`).
 - Previous completed repair influence is cleared at pit-entry/debrief start and before a new phase-lag box-entry refresh can read fallback state, so normal following stops do not inherit prior repair labels. No export names, settings, dashboard JSON/layout, PitCycleLite, fuel model, PitExit prediction, target construction, or `Pit.Box.LastDeltaSec` sign changed. Property Snapshot list reviewed: yes; no group mapping change required.
 

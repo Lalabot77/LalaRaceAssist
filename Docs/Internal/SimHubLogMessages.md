@@ -255,14 +255,15 @@ Workflow routing note: `Docs/Internal/Property_Snapshot_Debug_Workflow.md` owns 
 ## Pit Entry Assist
 - **`[LalaPlugin:PitEntryAssist] Stored pit-entry marker unavailable for track='...'. Legacy iRacingExtraProperties pit-entry fallbacks are disabled (DistanceToPitEntry, PitEntryTrkPct).`** — Warns once while stored marker authority is unavailable; assist outputs are reset/off until stored marker inputs become valid again (warning can fire again after stored inputs recover and later drop).【F:PitEngine.cs†L336-L348】
 - **`[LalaPlugin:PitEntryAssist] Session pit-speed authority unavailable. Legacy IRacingExtraProperties pit-speed fallback is removed; Pit Entry Assist outputs remain reset/off until session pit limit is valid.`** — Warns once while session pit-speed authority is unavailable; assist outputs remain reset/off until native session pit limit recovers.
-- **`[LalaPlugin:PitEntryAssist] ACTIVATE dToLineRaw=... dToLineGuided=... dReq=... margin=... spdΔ=... decel=... buffer=... cue=...`** — Edge-triggered when the assist arms (EnteringPits, limiter overspeed, or pit-screen manual arming). Captures raw/guided distance, constant-decel requirement, margin, speed delta, profiled decel, buffer, and cue at arming time.【F:PitEngine.cs†L428-L446】
-- **`[LalaPlugin:PitEntryAssist] ENTRY LINE SAFE/NORMAL: Speed Δ at Line ...kph, Below Limiter at ...m, Time Loss: +...s`** — Edge-triggered on the pit-lane entry transition when below the limiter. Includes the first compliant distance and computed time loss vs the limiter.【F:PitEngine.cs†L460-L495】
-- **`[LalaPlugin:PitEntryAssist] ENTRY LINE BAD: Speed Δ at Line ...kph, Braked ...m too late`** — Edge-triggered on the pit-lane entry transition when still above the limiter; time loss is omitted/zero.【F:PitEngine.cs†L496-L507】
-- **`[LalaPlugin:PitEntryAssist] END`** — Edge-triggered when the assist disarms (pit entry handled, invalid inputs, distance ≥500 m, or arming removed).【F:PitEngine.cs†L376-L398】
+- **`[LalaPlugin:PitEntryAssist] ACTIVATE dToLineRaw=... dToLineGuided=... dReq=... margin=... spdΔ=... decel=... buffer=... cue=...`** — Edge-triggered when the assist arms (EnteringPits, limiter overspeed, or pit-screen manual arming). Captures raw/guided distance, constant-decel requirement, margin, speed delta, profiled decel, buffer, and cue at arming time.【F:PitEngine.cs†L442-L451】
+- **`[LalaPlugin:PitEntryAssist] ENTRY LINE SAFE/NORMAL: Speed Δ at Line ...kph, Below Limiter at ...m, Time Loss: +...s`** — Edge-triggered on the pit-lane entry transition when below the limiter, or `ENTRY LINE NORMAL` when line overspeed is within the +1.0 kph debrief tolerance. Includes the first compliant/marginal distance and computed time loss vs the limiter; marginal overspeed logs `Within 1.0kph Margin`.【F:PitEngine.cs†L493-L511】
+- **`[LalaPlugin:PitEntryAssist] ENTRY LINE BAD: Speed Δ at Line ...kph[, Braked ...m too late]`** — Edge-triggered on the pit-lane entry transition when still more than +1.0 kph above the limiter; the late-distance phrase is omitted when it would round to `0.0m`, and time loss is omitted/zero.【F:PitEngine.cs†L516-L529】
+- **`[LalaPlugin:PitEntryAssist] END`** — Edge-triggered when the assist disarms (pit entry handled, invalid inputs, distance ≥500 m, or arming removed).【F:PitEngine.cs†L573-L585】
 
 **Example pit entry lines:**
 - `[LalaPlugin:PitEntryAssist] ACTIVATE dToLineRaw=185.3m dToLineGuided=170.3m dReq=142.7m margin=27.6m spdΔ=35.2kph decel=14.0 buffer=15.0 cue=2`
 - `[LalaPlugin:PitEntryAssist] ENTRY LINE SAFE: Speed Δ at Line -2.1kph, Below Limiter at 58.4m, Time Loss: +0.62s`
+- `[LalaPlugin:PitEntryAssist] ENTRY LINE NORMAL: Speed Δ at Line +0.3kph, Within 1.0kph Margin, Below Limiter at 0.0m, Time Loss: +0.00s`
 - `[LalaPlugin:PitEntryAssist] END`
 
 ## Pit markers and track length
