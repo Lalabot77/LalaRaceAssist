@@ -1,3 +1,25 @@
+## 2026-06-10 current PR follow-up status
+- Pit Debrief box-entry tyre-count behavior is validated in code/docs: when `PlayerCarInPitStall` becomes true before PitEngine has advanced to `InBox` and before the pit-box countdown latch is active, `Pit.Debrief.Service.TyreChangeCount` now resolves through the same current-stop tyre evidence path as the boxed target instead of falling back to stale/default live tyre count.
+- Preserved pre-service tyre-selection updates, confirmed fuel-only `0`-tyre targets, frozen in-service tyre evidence, reset-in-lane stale-evidence clearing, normal refuel-completion target preservation, true pre-flow cancel clearing, and the conservative 4-tyre fallback when current-stop tyre evidence is unavailable. No export names, settings, dashboard JSON/layout, PitCycleLite, fuel model, PitExit prediction, or `Pit.Box.LastDeltaSec` sign changed. Property Snapshot list reviewed: yes; no group mapping change required.
+
+## 2026-06-10 current PR follow-up status
+- Pit Debrief tyre-evidence reset behavior is validated in code/docs: manual recovery and session-transition reset paths clear current-stop tyre-selection evidence before any planner-safe live-recovery early return and alongside the pit-box countdown latch on full reset, so a reset while still on pit road/in-stall cannot reuse the prior stop/session's saved tyre count when live DP tyre flags are unavailable or partial.
+- Preserved pre-service tyre-selection updates, confirmed fuel-only `0`-tyre targets, frozen in-service tyre evidence, normal refuel-completion target preservation, true pre-flow cancel clearing, and the conservative 4-tyre fallback when current-stop tyre evidence is unavailable. No export names, settings, dashboard JSON/layout, PitCycleLite, fuel model, PitExit prediction, or `Pit.Box.LastDeltaSec` sign changed. Property Snapshot list reviewed: yes; no group mapping change required.
+
+## 2026-06-09 current PR follow-up status
+- Pit Debrief same-tick refuel completion evidence is validated in code/docs: when `_isRefuelSelected` drops on the same tick as the latest fuel sample reaches the completion window, cancel detection includes current-fuel-derived added evidence before the fuel gauge refresh, preventing a normal completion/reset from being latched as an explicit cancel.
+- True no-refuel/pre-flow cancels remain protected by the positive fuel movement requirement; no export names, settings, dashboard JSON/layout, PitCycleLite, fuel model, PitExit prediction, or `Pit.Box.LastDeltaSec` sign changed. Property Snapshot list reviewed: yes; no group mapping change required.
+
+- 2026-06-09 Pit Debrief tyre-evidence freeze and small-refuel cancel follow-up landed:
+  - current-stop tyre evidence now keeps updating while the car is in pit lane before valid box service/countdown starts, so an initial confirmed 0-tyre fuel-only selection can become a later non-zero MFD tyre selection before the stall; live in-service DP tyre flag clear-down is still frozen out once service starts, and confirmed pre-service 0-tyre evidence still drives fuel-only targets;
+  - natural refuel completion now requires positive added-fuel movement before applying the completion-tolerance check, so small requested-add/pre-flow deselects still clear `Pit.Debrief.Service.FuelTargetLitres` while large near-complete refuels preserve it;
+  - no exports/settings/dashboard JSON/layout/PitCycleLite/fuel model/PitExit prediction paths changed. Property Snapshot list reviewed: yes; no group mapping change required.
+
+- 2026-06-09 Pit Debrief Daytona box target/refuel-completion fix landed:
+  - Pit box modeled targets now latch the current-stop tyre-selection evidence captured in pit lane; confirmed fuel-only stops use `0` tyres for target modeling instead of carrying a stale/default 4-tyre service time, while the conservative 4-tyre fallback remains only when tyre evidence is unavailable;
+  - Pit Debrief normal refuel completion now preserves `Pit.Debrief.Service.FuelTargetLitres` when added fuel is within the completion-tolerance window (e.g. ~42L target / ~41L added), while explicit in-box deselect before natural completion still clears the target to `0.0`;
+  - `[LalaPlugin:PitDebriefBoxDiag]` now includes target tyre count/evidence and `[LalaPlugin:PitDebriefFuelDiag]` includes completion tolerance. No exports/settings/dashboard JSON/layout/PitCycleLite/fuel model/PitExit prediction paths changed. Property Snapshot list reviewed: yes; no group mapping change required.
+
 - 2026-06-09 MonitorSystem fuel-data-recovered auto-clear landed:
   - `FUEL DATA RECOVERED` now acts as a 10 second confirmation surface and then clears directly to `MONITOR READY` only if MonitorSystem remains enabled and the active text is still exactly `FUEL DATA RECOVERED`;
   - replacement warnings, faults, pit/baseline, Car/Opp/H2H, and stale-state messages are not cleared by the hold expiry, and the clear does not step through `FUEL HEALTH OK`;
