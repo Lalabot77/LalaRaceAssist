@@ -10149,6 +10149,7 @@ namespace LaunchPlugin
             _pitBoxLastDeltaSec = 0.0;
             _pitBoxLastDeltaValid = false;
             ResetPitBoxCountdownState();
+            ResetPitStopTireSelectionEvidence();
             _pit?.ResetPitPhaseState();
             _pitCommandEngine?.ResetFeedbackState();
             _opponentsEngine?.Reset();

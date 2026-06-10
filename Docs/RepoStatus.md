@@ -1,4 +1,8 @@
 ## 2026-06-09 current PR follow-up status
+- Pit Debrief tyre-evidence reset behavior is validated in code/docs: manual recovery and session-transition reset paths clear current-stop tyre-selection evidence alongside the pit-box countdown latch, so a reset while still on pit road/in-stall cannot reuse the prior stop/session's saved tyre count when live DP tyre flags are unavailable or partial.
+- Preserved pre-service tyre-selection updates, confirmed fuel-only `0`-tyre targets, frozen in-service tyre evidence, normal refuel-completion target preservation, true pre-flow cancel clearing, and the conservative 4-tyre fallback when current-stop tyre evidence is unavailable. No export names, settings, dashboard JSON/layout, PitCycleLite, fuel model, PitExit prediction, or `Pit.Box.LastDeltaSec` sign changed. Property Snapshot list reviewed: yes; no group mapping change required.
+
+## 2026-06-09 current PR follow-up status
 - Pit Debrief same-tick refuel completion evidence is validated in code/docs: when `_isRefuelSelected` drops on the same tick as the latest fuel sample reaches the completion window, cancel detection includes current-fuel-derived added evidence before the fuel gauge refresh, preventing a normal completion/reset from being latched as an explicit cancel.
 - True no-refuel/pre-flow cancels remain protected by the positive fuel movement requirement; no export names, settings, dashboard JSON/layout, PitCycleLite, fuel model, PitExit prediction, or `Pit.Box.LastDeltaSec` sign changed. Property Snapshot list reviewed: yes; no group mapping change required.
 

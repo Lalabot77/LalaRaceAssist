@@ -3,6 +3,7 @@
 Validated against commit: HEAD
 Last updated: 2026-06-09
 Branch: work
+Current note: Pit Debrief tyre-evidence reset follow-up docs are current; reset-in-lane cases clear prior-stop tyre evidence before the next boxed-target latch.
 
 ## What this repo is
 Lala Race Assist Plugin is a SimHub plugin for iRacing that provides strategy planning, fuel learning, dashboards, launch instrumentation, pit assistance, rejoin support, Shift Assist cueing, profile-backed persistence, and H2H race context.

@@ -36,7 +36,7 @@ Out of scope:
 
 - **Learned/stored pit lane loss is drive-through baseline only** (clean limiter-speed pass through pit lane, no box stop).
 - Boxed-stop runtime predictions add stopped-box components separately:
-  - boxed service model (`max(fuelTime, tireTime) + 1.0s` stationary service overhead, repair-aware), where runtime `tireTime` is selected-tyre-count aware (`Fuel.Live.TireChangeCount` + scaled `Fuel.Live.TireChangeTime_S`, fail-open to 4 tyres only when tyre flags/evidence are unavailable or partial, strategy-slider independent (profile full-4 base)); the boxed-target latch uses current-stop tyre-selection evidence captured in pit lane, keeps accepting pre-service selection changes (including `0` → non-zero MFD updates), and freezes that evidence only when valid box service/countdown starts, so fuel-only stops with confirmed `0` tyres do not carry a stale/default 4-tyre target, while real tyre stops are not reduced by in-service flag clear-down,
+  - boxed service model (`max(fuelTime, tireTime) + 1.0s` stationary service overhead, repair-aware), where runtime `tireTime` is selected-tyre-count aware (`Fuel.Live.TireChangeCount` + scaled `Fuel.Live.TireChangeTime_S`, fail-open to 4 tyres only when tyre flags/evidence are unavailable or partial, strategy-slider independent (profile full-4 base)); the boxed-target latch uses current-stop tyre-selection evidence captured in pit lane, keeps accepting pre-service selection changes (including `0` → non-zero MFD updates), freezes that evidence only when valid box service/countdown starts, and clears it on manual/session reset paths, so fuel-only stops with confirmed `0` tyres do not carry a stale/default 4-tyre target, reset-in-lane cases fail open instead of reusing prior-stop evidence, and real tyre stops are not reduced by in-service flag clear-down,
   - fixed pit-box transition allowance `+2.00s` (slow-in/settle/launch-out to limiter).
 
 Canonical boxed-stop prediction contract:
@@ -249,8 +249,9 @@ Pit Timing state resets on:
 
 On reset:
 - All latched pit timings are cleared.
-- No stale pit loss is reused.
-- Next valid cycle starts fresh.
+- Current-stop tyre-selection evidence used by the boxed-target latch is cleared with the pit-box countdown state.
+- No stale pit loss or prior-stop tyre count is reused.
+- Next valid cycle starts fresh; if live tyre flags are unavailable/partial, the boxed-target model uses the conservative 4-tyre fallback until current-stop evidence is available.
 
 Reset semantics are centralised in:
 `Docs/Reset_And_Session_Identity.md`.
