@@ -5764,11 +5764,16 @@ namespace LaunchPlugin
             bool hasSelectedPitWindowBasis =
                 isRaceSession &&
                 sessionRunning &&
-                reserveAwarePitWindowNeeded &&
                 LiveFuelPerLap_StableConfidence >= fuelReadyConfidence &&
                 Fuel_Refuel_SelectedBurnPerLap > 0.0 &&
+                !double.IsNaN(Fuel_Refuel_SelectedBurnPerLap) &&
+                !double.IsInfinity(Fuel_Refuel_SelectedBurnPerLap) &&
                 _runtimeRefuelSelectedProjectedLapsRemaining > 0.0 &&
+                !double.IsNaN(_runtimeRefuelSelectedProjectedLapsRemaining) &&
+                !double.IsInfinity(_runtimeRefuelSelectedProjectedLapsRemaining) &&
                 maxTankCapacity > 0.0 &&
+                !double.IsNaN(maxTankCapacity) &&
+                !double.IsInfinity(maxTankCapacity) &&
                 currentFuel >= 0.0 &&
                 !double.IsNaN(currentFuel) &&
                 !double.IsInfinity(currentFuel) &&
@@ -5785,8 +5790,20 @@ namespace LaunchPlugin
                 selectedPitWindowOpeningLap = completedLaps + (selectedFuelToBurnBeforeOpen / selectedBurn);
                 selectedPitWindowClosingLap = completedLaps + (currentFuel / selectedBurn);
 
-                if (selectedPitWindowOpeningLap < 0.0 || double.IsNaN(selectedPitWindowOpeningLap) || double.IsInfinity(selectedPitWindowOpeningLap)) selectedPitWindowOpeningLap = 0.0;
-                if (selectedPitWindowClosingLap < 0.0 || double.IsNaN(selectedPitWindowClosingLap) || double.IsInfinity(selectedPitWindowClosingLap)) selectedPitWindowClosingLap = 0.0;
+                bool selectedIntervalInvalid =
+                    selectedPitWindowOpeningLap < 0.0 ||
+                    selectedPitWindowClosingLap < 0.0 ||
+                    double.IsNaN(selectedPitWindowOpeningLap) ||
+                    double.IsNaN(selectedPitWindowClosingLap) ||
+                    double.IsInfinity(selectedPitWindowOpeningLap) ||
+                    double.IsInfinity(selectedPitWindowClosingLap) ||
+                    selectedPitWindowOpeningLap > selectedPitWindowClosingLap;
+
+                if (selectedIntervalInvalid)
+                {
+                    selectedPitWindowOpeningLap = 0.0;
+                    selectedPitWindowClosingLap = 0.0;
+                }
             }
 
             PitWindowSelectedOpeningLap = Math.Round(selectedPitWindowOpeningLap, 2, MidpointRounding.AwayFromZero);

@@ -1,4 +1,7 @@
 ## 2026-06-10 current PR follow-up status
+- Addressed PR #820 selected pit-window review comments: selected smooth exports no longer depend on the existing stable/NORM `reserveAwarePitWindowNeeded` state-machine gate, and computed selected intervals now fail closed to `0.0` / `0.0` when selected opening would be after selected closing. Existing integer pit-window exports, PitWindowState/IsPitWindowOpen, selected-burn calculation basis, reset hygiene, dashboard JSON, and XAML remain unchanged.
+
+## 2026-06-10 current PR follow-up status
 - Review-comment verification found the reset concern valid for `ResetLiveFuelModelForNewSession(...)` and `ResetAllValues()`: those paths cleared the legacy integer pit-window exports but not the new selected-burn smooth pit-window exports/backing basis. They now clear `Fuel.PitWindow.SelectedOpeningLap`, `Fuel.PitWindow.SelectedClosingLap`, and selected-basis backing fields alongside the legacy reset fields. No pit-window calculations, existing integer exports, dashboard JSON, or XAML changed.
 
 ## 2026-06-10 current PR follow-up status

@@ -1,3 +1,7 @@
+## 2026-06-10 — Selected-burn pit-window review follow-up
+- Classification: **both** (dashboard-facing selected export behavior correction plus internal docs; no existing integer pit-window export, PitWindowState/IsPitWindowOpen, Strategy planner, `Fuel.Refuel.*`, `Fuel.Burn.Target*`, pit/refuel command, learning, dashboard JSON, or XAML change).
+- Removed the selected smooth pit-window export dependency on the existing stable/NORM `reserveAwarePitWindowNeeded` gate so selected PUSH/NORM/SAVE endpoints can publish whenever their own race/session/fuel/projection/tank basis is valid. Impossible selected intervals where opening would be after closing now fail closed to `0.0` / `0.0` instead of publishing an inverted range.
+
 ## 2026-06-10 — Dash Visibility pit assist split
 - Classification: **both** (Settings UI and dashboard-facing visibility export contract cleanup; no pit timing, pit entry, pit box, pit limiter runtime logic, telemetry gating, or dashboard JSON/layout changes).
 - Replaced the broad Dash Visibility `Pit Assists` row with independent `Pit Entry Assist`, `Pit Box Assist`, and `Pit Limiter` rows for DRIVER/STRATEGY/OVERLAY. `Show Automatic Pit Screen` remains a separate row and setting.
