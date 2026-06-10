@@ -1,4 +1,8 @@
 ## 2026-06-10 current PR follow-up status
+- Added dashboard-facing `Fuel.PitWindow.SelectedOpeningLap` and `Fuel.PitWindow.SelectedClosingLap` exports for smooth pit-window range bars. They use the runtime selected burn/refuel basis (`Fuel.Refuel.SelectedBurnPerLap` authority), publish decimal lap points rounded to 2 decimals, and return safe `0.0` outside valid race/projection/tank context.
+- Existing `Fuel.PitWindowOpeningLap` / `Fuel.PitWindowClosingLap` integer state-machine markers, `Fuel.Refuel.*`, `Fuel.Burn.Target*`, strategy planner, pit/refuel command logic, dashboard JSON, and XAML remain unchanged. Property Snapshot list reviewed: yes; new `Fuel.*` exports resolve to the existing Fuel/Strategy group through `ResolvePropertySnapshotGroup(...)`.
+
+## 2026-06-10 current PR follow-up status
 - Dash Visibility pit controls are split in code/docs: the previous broad `Pit Assists` UI row is replaced by independent `Pit Entry Assist`, `Pit Box Assist`, and `Pit Limiter` rows for DRIVER/STRATEGY/OVERLAY, while `Show Automatic Pit Screen` remains a separate row.
 - Added preferred `DashVisibility.<Driver|Strategy|Overlay>.<PitEntryAssist|PitBoxAssist|PitLimiter|AutoPitScreen>` exports plus same-family `*ShowPitEntryAssist` / `*ShowPitBoxAssist` aliases; existing `*ShowPitLimiter` and `*ShowPitScreen` exports/settings remain for dashboard/settings compatibility. No pit timing, pit entry, pit box, pit limiter, or dashboard JSON/layout logic changed. Property Snapshot list reviewed: yes; new `DashVisibility.*` exports are explicitly grouped as `RawDebug` because Dash Visibility is a settings/export contract rather than a fuel/pit runtime subsystem output.
 

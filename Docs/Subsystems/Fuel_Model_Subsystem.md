@@ -1,7 +1,7 @@
 # Fuel Model
 
 Validated against commit: HEAD
-Last updated: 2026-06-07
+Last updated: 2026-06-10
 Branch: work
 
 ## Purpose
@@ -224,6 +224,12 @@ Typical states include:
 - If contingency is configured in litres, the same litres value is applied across PUSH/STD/ECO pit-window checks.
 - If contingency is configured in laps, contingency litres are resolved per burn basis (PUSH uses push burn, RACE PACE uses stable burn, FUEL SAVE uses save burn).
 - Fuel-only `N/A` now means no stop is needed after reserve protection too; base-distance no-stop without reserve coverage still enters pit-window feasibility states.
+
+Selected-burn dashboard range markers are parallel outputs only:
+- `Fuel.PitWindow.SelectedOpeningLap` and `Fuel.PitWindow.SelectedClosingLap` do not replace the state machine markers above.
+- They use the same runtime selected burn authority as `Fuel.Refuel.SelectedBurnPerLap` so PUSH/NORM/SAVE selection changes can move the smooth visual range bar.
+- They publish decimal completed-lap points rounded to 2 decimals: closing is current fuel endurance under selected burn; opening is the point where selected-burn fuel-to-finish plus active contingency can fit available tank capacity.
+- Invalid/no-race/no-projection/no-tank contexts publish `0.0`.
 
 ## Outputs (exports + logs)
 ### Core exports

@@ -1111,6 +1111,8 @@ namespace LaunchPlugin
         private double _lastSimLapsRemaining;
         private double _lastProjectionLapSecondsUsed;
         private double _runtimeRefuelSelectedProjectionLapSeconds;
+        private double _runtimeRefuelSelectedProjectedLapsRemaining;
+        private double _runtimeRefuelSelectedContingencyLitres;
         private bool _afterZeroResultLogged;
 
         // New per-mode rolling windows
@@ -1208,6 +1210,8 @@ namespace LaunchPlugin
         public bool IsPitWindowOpen { get; private set; }
         public int PitWindowOpeningLap { get; private set; }
         public int PitWindowClosingLap { get; private set; }
+        public double PitWindowSelectedOpeningLap { get; private set; }
+        public double PitWindowSelectedClosingLap { get; private set; }
         public int PitWindowState { get; private set; }
         public string PitWindowLabel { get; private set; } = "N/A";
         public double LapsRemainingInTank { get; private set; }
@@ -5060,6 +5064,8 @@ namespace LaunchPlugin
                 IsPitWindowOpen = false;
                 PitWindowOpeningLap = 0;
                 PitWindowClosingLap = 0;
+                PitWindowSelectedOpeningLap = 0.0;
+                PitWindowSelectedClosingLap = 0.0;
                 LapsRemainingInTank = 0;
 
                 Pit_TotalNeededToEnd = 0;
@@ -5611,6 +5617,8 @@ namespace LaunchPlugin
             bool isRaceSession = IsRaceSession(data.NewData?.SessionTypeName);
             double fuelPerLapForPitWindow = LiveFuelPerLap_Stable > 0.0 ? LiveFuelPerLap_Stable : fuelPerLapForCalc;
             int pitWindowClosingLap = 0;
+            double selectedPitWindowOpeningLap = 0.0;
+            double selectedPitWindowClosingLap = 0.0;
             double fuelReadyConfidence = GetFuelReadyConfidenceThreshold();
             bool reserveAwarePitWindowNeeded = true;
             if (PitStopsRequiredByFuel <= 0)
@@ -5747,6 +5755,37 @@ namespace LaunchPlugin
             PitWindowLabel = pitWindowLabel;
             PitWindowOpeningLap = pitWindowOpeningLap;
             PitWindowClosingLap = pitWindowClosingLap;
+
+            bool hasSelectedPitWindowBasis =
+                isRaceSession &&
+                sessionRunning &&
+                reserveAwarePitWindowNeeded &&
+                LiveFuelPerLap_StableConfidence >= fuelReadyConfidence &&
+                Fuel_Refuel_SelectedBurnPerLap > 0.0 &&
+                _runtimeRefuelSelectedProjectedLapsRemaining > 0.0 &&
+                maxTankCapacity > 0.0 &&
+                currentFuel >= 0.0 &&
+                !double.IsNaN(currentFuel) &&
+                !double.IsInfinity(currentFuel) &&
+                !double.IsNaN(_runtimeRefuelSelectedContingencyLitres) &&
+                !double.IsInfinity(_runtimeRefuelSelectedContingencyLitres);
+
+            if (hasSelectedPitWindowBasis)
+            {
+                double selectedBurn = Fuel_Refuel_SelectedBurnPerLap;
+                double selectedNeedAdd = Math.Max(0.0, (_runtimeRefuelSelectedProjectedLapsRemaining * selectedBurn) + Math.Max(0.0, _runtimeRefuelSelectedContingencyLitres) - currentFuel);
+                double selectedTankSpace = Math.Max(0.0, maxTankCapacity - currentFuel);
+                double selectedFuelToBurnBeforeOpen = Math.Max(0.0, selectedNeedAdd - selectedTankSpace);
+
+                selectedPitWindowOpeningLap = completedLaps + (selectedFuelToBurnBeforeOpen / selectedBurn);
+                selectedPitWindowClosingLap = completedLaps + (currentFuel / selectedBurn);
+
+                if (selectedPitWindowOpeningLap < 0.0 || double.IsNaN(selectedPitWindowOpeningLap) || double.IsInfinity(selectedPitWindowOpeningLap)) selectedPitWindowOpeningLap = 0.0;
+                if (selectedPitWindowClosingLap < 0.0 || double.IsNaN(selectedPitWindowClosingLap) || double.IsInfinity(selectedPitWindowClosingLap)) selectedPitWindowClosingLap = 0.0;
+            }
+
+            PitWindowSelectedOpeningLap = Math.Round(selectedPitWindowOpeningLap, 2, MidpointRounding.AwayFromZero);
+            PitWindowSelectedClosingLap = Math.Round(selectedPitWindowClosingLap, 2, MidpointRounding.AwayFromZero);
 
             if ((pitWindowState != _lastPitWindowState ||
                 !string.Equals(pitWindowLabel, _lastPitWindowLabel, StringComparison.Ordinal)) &&
@@ -7947,6 +7986,8 @@ namespace LaunchPlugin
             AttachCore("Fuel.IsPitWindowOpen", () => IsPitWindowOpen);
             AttachCore("Fuel.PitWindowOpeningLap", () => PitWindowOpeningLap);
             AttachCore("Fuel.PitWindowClosingLap", () => PitWindowClosingLap);
+            AttachCore("Fuel.PitWindow.SelectedOpeningLap", () => PitWindowSelectedOpeningLap);
+            AttachCore("Fuel.PitWindow.SelectedClosingLap", () => PitWindowSelectedClosingLap);
             AttachCore("Brake.PreviousPeakPct", () => _brakePreviousPeakPct);
             AttachCore("Fuel.PitWindowState", () => PitWindowState);
             AttachCore("Fuel.PitWindowLabel", () => PitWindowLabel);
@@ -10844,6 +10885,10 @@ namespace LaunchPlugin
             Fuel_Refuel_BurnMode = GetRefuelBurnModeText(_pitFuelControlEngine?.Source ?? PitFuelControlSource.Stby);
             Fuel_Refuel_SelectedBurnPerLap = 0.0;
             _runtimeRefuelSelectedProjectionLapSeconds = 0.0;
+            _runtimeRefuelSelectedProjectedLapsRemaining = 0.0;
+            _runtimeRefuelSelectedContingencyLitres = 0.0;
+            PitWindowSelectedOpeningLap = 0.0;
+            PitWindowSelectedClosingLap = 0.0;
             Fuel_Live_RemainingStints = 0.0;
             Fuel_Live_RemainingStintsValid = false;
         }
@@ -10883,6 +10928,8 @@ namespace LaunchPlugin
                 driveTimeAfterZero,
                 out projectedLapsRemaining);
 
+            _runtimeRefuelSelectedProjectedLapsRemaining = hasProjection ? projectedLapsRemaining : 0.0;
+
             bool hasCurrentFuel = currentFuel >= 0.0 && !double.IsNaN(currentFuel) && !double.IsInfinity(currentFuel);
             bool hasDecisionCap = nextStopDecisionCapacityLitres >= 0.0 && !double.IsNaN(nextStopDecisionCapacityLitres) && !double.IsInfinity(nextStopDecisionCapacityLitres);
             bool hasDisplayAddCap = multiStopDisplayAddCapLitres >= 0.0 && !double.IsNaN(multiStopDisplayAddCapLitres) && !double.IsInfinity(multiStopDisplayAddCapLitres);
@@ -10916,6 +10963,7 @@ namespace LaunchPlugin
                 ? Math.Max(0.0, contingency.Laps) * selectedBurn
                 : Math.Max(0.0, contingency.Litres);
             bool hasContingency = !double.IsNaN(contingencyLitres) && !double.IsInfinity(contingencyLitres);
+            _runtimeRefuelSelectedContingencyLitres = hasContingency ? Math.Max(0.0, contingencyLitres) : 0.0;
             if (!hasContingency)
             {
                 ResetRuntimeRefuelOutputsInvalid();
@@ -22996,6 +23044,10 @@ namespace LaunchPlugin
             Fuel_Refuel_BurnMode = "STBY";
             Fuel_Refuel_SelectedBurnPerLap = 0;
             _runtimeRefuelSelectedProjectionLapSeconds = 0.0;
+            _runtimeRefuelSelectedProjectedLapsRemaining = 0.0;
+            _runtimeRefuelSelectedContingencyLitres = 0.0;
+            PitWindowSelectedOpeningLap = 0.0;
+            PitWindowSelectedClosingLap = 0.0;
             StrategyDash_BurnPlanText = "NORM";
             StrategyDash_ContingencyText = "CONT 0";
 
