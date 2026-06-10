@@ -1,3 +1,9 @@
+## 2026-06-10 — Pit Entry Assist line-speed tolerance review
+- Classification: **both** (driver-facing Pit Entry Line Debrief wording/classification plus internal log/parameter docs; no export names, settings, dashboard JSON/layout, PitCycleLite, fuel model, PitExit prediction, pit timing/loss learning, or Property Snapshot grouping changes).
+- Added a named +1.0 kph Pit Entry Line Debrief speed tolerance: `Pit.EntrySpeedDelta_kph <= 0.0` keeps the existing safe/normal path, `0.0 < delta <= 1.0` now remains the existing `normal` token with text/log wording that says it is within the 1.0 kph margin, and `delta > 1.0` remains `bad`.
+- True bad-entry text/logs no longer claim `braked 0.0m too late` when the rounded late distance is effectively zero. `Pit.Debrief.Entry.LimiterQualityText` continues to map the existing token set (`safe`/`normal`/`bad`) to `SAFE`/`NORMAL`/`POOR`; entry performance headline and `SummaryText` remain driven by raw `Pit.EntryLineTimeLoss_s`, with final Pit Debrief logs retaining two-decimal `entryLossSec`.
+- Time-loss calculation and DecelCapture were reviewed but not rewritten: the current method uses first `<= +1.0 kph` compliance/marginal capture and `max(0, distance/currentLineSpeed - distance/pitLimitSpeed)`, so it can understate/zero cases where the car dips below the limit and rises again; DecelCapture remains diagnostic-only. Property Snapshot list reviewed: yes; no SimHub export/property additions, removals, renames, or behavior regrouping were made, so existing `Pit.*` exports remain in `PitPitExit`.
+
 <<<<<<< codex/update-pit-debrief-for-box-delta-visibility
 ## 2026-06-10 — Pit Debrief repair summary/export split follow-up
 - Classification: **both** (Pit Debrief presentation/export contract correction; no export names, settings, dashboard JSON/layout, PitCycleLite, fuel model, PitExit prediction, target construction, or `Pit.Box.LastDeltaSec` sign change).

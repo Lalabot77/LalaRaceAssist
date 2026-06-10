@@ -165,6 +165,8 @@ Pit Entry Assist helps you arrive at the pit entry line at the right speed. It u
 - braking now,
 - already late.
 
+Pit Entry Assist debriefs use a small 1.0 kph line-speed margin for review wording: an entry that is only slightly over the limit (for example `+0.3kph`) is reported as normal/within margin instead of a bad entry. Larger overspeed remains bad.
+
 ### What to trust
 
 Trust Pit Entry Assist most when:
@@ -201,7 +203,7 @@ A good rule is:
 
 ## Completed stop debrief
 
-During and after a pit stop, the plugin can publish a compact pit debrief summary for dashboards, for example `ENTRY GOOD (Δ +0.0s) | BOX GOOD (Δ +0.7s) | SVC 44.0L & 4Ts | STRAT Δ -2.9s`. The summary becomes progressively useful as entry, box/service, and final strategy-delta evidence arrives, then freezes after finalization. The entry headline is a performance readout from entry time loss, not the same thing as the Pit Entry Assist safety/compliance verdict; compliance evidence remains in debug/log fields, so `LimiterQualityText=POOR` can coexist with an `ENTRY GOOD` headline when the line-speed compliance verdict was bad but the performance time-loss export is zero/no-positive-estimate. Box delta uses the existing `Pit.Box.LastDeltaSec` completed-box seam inverted to debrief sign convention (`actual elapsed - predicted target`; positive = slower, negative = faster) and is displayed only when plausible, so impossible values are suppressed as `Δ PENDING`. PitExit prediction values remain in debug exports and the final log line, but driver-facing `SummaryText` no longer includes `EXIT ...` verdict text. This readout does not change pit assist, fuel, or opponent calculations.
+During and after a pit stop, the plugin can publish a compact pit debrief summary for dashboards, for example `ENTRY GOOD (Δ +0.0s) | BOX GOOD (Δ +0.7s) | SVC 44.0L & 4Ts | STRAT Δ -2.9s`. The summary becomes progressively useful as entry, box/service, and final strategy-delta evidence arrives, then freezes after finalization. The entry headline is a performance readout from entry time loss, not the same thing as the Pit Entry Assist safety/compliance verdict; compliance evidence remains in debug/log fields, so `LimiterQualityText=POOR` can coexist with an `ENTRY GOOD` headline when the line-speed compliance verdict was bad but the performance time-loss export is zero/no-positive-estimate. Marginal line overspeed within 1.0 kph is reported as normal/within margin and keeps `LimiterQualityText=NORMAL`; overspeed above that remains poor/bad. Box delta uses the existing `Pit.Box.LastDeltaSec` completed-box seam inverted to debrief sign convention (`actual elapsed - predicted target`; positive = slower, negative = faster) and is displayed for finite completed evidence; `Δ PENDING` means the completed source is missing, invalid, or not completed yet. PitExit prediction values remain in debug exports and the final log line, but driver-facing `SummaryText` no longer includes `EXIT ...` verdict text. This readout does not change pit assist, fuel, or opponent calculations.
 
 
 ### 2026-06-08 Pit Debrief diagnostic note
