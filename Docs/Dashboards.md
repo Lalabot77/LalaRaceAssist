@@ -283,7 +283,15 @@ These shared widgets belong to the dashboard package, but the plugin still owns 
 
 ### PitEntryAssist
 
-PitEntryAssist is the focused pit-entry braking aid. It is there to help you judge the approach to pit speed and the entry line using plugin-owned pit-entry outputs.
+PitEntryAssist is the focused pit-entry braking aid. It is there to help you judge the approach to pit speed and the entry line using plugin-owned pit-entry outputs. Gate this surface with the matching `DashVisibility.<Driver|Strategy|Overlay>.PitEntryAssist` export (or the same-family `*ShowPitEntryAssist` alias).
+
+### PitBoxAssist
+
+PitBoxAssist is the focused box-stopping aid for the final pit-box approach. Gate this surface with `DashVisibility.<Driver|Strategy|Overlay>.PitBoxAssist` (or the same-family `*ShowPitBoxAssist` alias), not with the pit-entry or pit-limiter visibility controls.
+
+### PitLimiter
+
+Pit-limiter assist visuals are independent from pit-entry and pit-box assist visibility. Gate this surface with `DashVisibility.<Driver|Strategy|Overlay>.PitLimiter`. Existing dashboard JSON may still use `LalaDashShowPitLimiter`, `MsgDashShowPitLimiter`, or `OverlayDashShowPitLimiter`; those exports remain compatibility aliases.
 
 See also [Pit Assist](Pit_Assist.md) for the wider pit-support explanation.
 

@@ -167,6 +167,21 @@ Use the exported visibility families as hard gates:
 - `MsgDashShow*` = `STRATEGY` column in Dash Control = Lala Strategy Dash visibility
 - `OverlayDashShow*` = `OVERLAY` column in Dash Control = overlay visibility
 
+Pit visibility is intentionally split into four independent rows per dash family:
+- `Pit Entry Assist` gates pit-entry approach/braking widgets. New dashboards should prefer `DashVisibility.<Driver|Strategy|Overlay>.PitEntryAssist`; legacy-family aliases are `LalaDashShowPitEntryAssist`, `MsgDashShowPitEntryAssist`, and `OverlayDashShowPitEntryAssist`.
+- `Pit Box Assist` gates pit-box stopping/box-entry widgets. New dashboards should prefer `DashVisibility.<Driver|Strategy|Overlay>.PitBoxAssist`; legacy-family aliases are `LalaDashShowPitBoxAssist`, `MsgDashShowPitBoxAssist`, and `OverlayDashShowPitBoxAssist`.
+- `Pit Limiter` gates pit-limiter assist widgets. New dashboards should prefer `DashVisibility.<Driver|Strategy|Overlay>.PitLimiter`; legacy-family aliases are `LalaDashShowPitLimiter`, `MsgDashShowPitLimiter`, and `OverlayDashShowPitLimiter`. The old `*ShowPitLimiter` exports are retained as compatibility aliases because existing dashboard JSON uses them.
+- `Show Automatic Pit Screen` remains separate from the assist rows. New dashboards should prefer `DashVisibility.<Driver|Strategy|Overlay>.AutoPitScreen`; legacy-family aliases remain `LalaDashShowPitScreen`, `MsgDashShowPitScreen`, and `OverlayDashShowPitScreen`.
+
+Dash Visibility pit-control mapping:
+
+| UI label | Backing settings | Preferred SimHub exports | Dashboard intended use | Current consumers / compatibility path |
+| --- | --- | --- | --- | --- |
+| Pit Entry Assist | `LalaDashShowPitEntryAssist`, `MsgDashShowPitEntryAssist`, `OverlayDashShowPitEntryAssist` | `DashVisibility.Driver.PitEntryAssist`, `DashVisibility.Strategy.PitEntryAssist`, `DashVisibility.Overlay.PitEntryAssist` | Gate pit-entry approach/braking widgets. | New row/export family; no dashboard JSON changes in this cleanup. Use same-family `*ShowPitEntryAssist` aliases if a dash follows legacy naming. |
+| Pit Box Assist | `LalaDashShowPitBoxAssist`, `MsgDashShowPitBoxAssist`, `OverlayDashShowPitBoxAssist` | `DashVisibility.Driver.PitBoxAssist`, `DashVisibility.Strategy.PitBoxAssist`, `DashVisibility.Overlay.PitBoxAssist` | Gate pit-box stopping / box-entry widgets. | New row/export family; no dashboard JSON changes in this cleanup. Use same-family `*ShowPitBoxAssist` aliases if a dash follows legacy naming. |
+| Pit Limiter | `LalaDashShowPitLimiter`, `MsgDashShowPitLimiter`, `OverlayDashShowPitLimiter` | `DashVisibility.Driver.PitLimiter`, `DashVisibility.Strategy.PitLimiter`, `DashVisibility.Overlay.PitLimiter` | Gate pit-limiter assist widgets only. | Existing dashboards consume `*ShowPitLimiter`; those exports remain and now explicitly mean Pit Limiter compatibility aliases. |
+| Show Automatic Pit Screen | `LalaDashShowPitScreen`, `MsgDashShowPitScreen`, `OverlayDashShowPitScreen` | `DashVisibility.Driver.AutoPitScreen`, `DashVisibility.Strategy.AutoPitScreen`, `DashVisibility.Overlay.AutoPitScreen` | Gate automatic pit screen/page presentation. | Existing dashboards consume `*ShowPitScreen`; those exports remain unchanged as compatibility aliases. |
+
 These toggles are the contract between plugin settings and dash layout visibility. The short UI labels are only there to fit the matrix width; dashboards should still treat the exported families above as the canonical technical meaning. Dash JSON should not fight them.
 
 ### Session-reset expectations
