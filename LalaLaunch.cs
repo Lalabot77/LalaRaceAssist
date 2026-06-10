@@ -10113,6 +10113,12 @@ namespace LaunchPlugin
             string reasonLabel = string.IsNullOrWhiteSpace(reason) ? "unspecified" : reason.Trim();
             SimHub.Logging.Current.Info($"[LalaPlugin:Runtime] manual recovery reset triggered (reason: {reasonLabel}).");
 
+            // Clear current-stop tyre evidence before any planner-safe recovery early return.
+            // A live recovery can happen while the car remains in pit lane/stall; keeping the
+            // prior stop/session count would bypass the documented conservative 4-tyre fallback
+            // if the next target latch only sees unavailable or partial DP tyre flags.
+            ResetPitStopTireSelectionEvidence();
+
             bool sessionTransitionReset = string.Equals(reasonLabel, "Session transition", StringComparison.OrdinalIgnoreCase);
             bool isLiveSessionActive = FuelCalculator != null && FuelCalculator.IsLiveSessionActive;
             if (!sessionTransitionReset && isLiveSessionActive)
@@ -10149,7 +10155,6 @@ namespace LaunchPlugin
             _pitBoxLastDeltaSec = 0.0;
             _pitBoxLastDeltaValid = false;
             ResetPitBoxCountdownState();
-            ResetPitStopTireSelectionEvidence();
             _pit?.ResetPitPhaseState();
             _pitCommandEngine?.ResetFeedbackState();
             _opponentsEngine?.Reset();

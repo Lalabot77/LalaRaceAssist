@@ -1,3 +1,8 @@
+## 2026-06-10 — Pit Debrief tyre-evidence live-recovery reset follow-up
+- Classification: **both** (bounded Pit Debrief/Pit box target correctness follow-up plus user-facing debrief target semantics; no export names, settings, dashboard JSON/layout, PitCycleLite, fuel model, PitExit prediction, or `Pit.Box.LastDeltaSec` sign change).
+- Manual recovery now clears current-stop tyre-selection evidence before the planner-safe live-session recovery branch can return early, so a successful recovery while the car remains on pit road or in the stall cannot carry prior-stop/session tyre evidence into the next boxed-target latch when live DP tyre flags are unavailable or partial.
+- Preserved pre-service tyre-selection updates, confirmed fuel-only `0`-tyre Daytona targets, frozen in-service tyre evidence after countdown/service start, full-reset pit-box countdown behavior, and the conservative 4-tyre fallback when no current-stop evidence is available. Property Snapshot list reviewed: yes; no SimHub exports/properties were added, removed, renamed, behavior-recontracted, or regrouped.
+
 ## 2026-06-09 — Pit Debrief tyre-evidence reset follow-up
 - Classification: **both** (bounded Pit Debrief/Pit box target correctness follow-up plus user-facing debrief target semantics; no export names, settings, dashboard JSON/layout, PitCycleLite, fuel model, PitExit prediction, or `Pit.Box.LastDeltaSec` sign change).
 - Manual recovery and session-transition reset paths now clear current-stop tyre-selection evidence together with the pit-box countdown latch, so a reset while the car remains on pit road or in the stall cannot let the previous stop/session's confirmed tyre count feed the next boxed target when live DP tyre flags are unavailable or partial.
