@@ -1,3 +1,9 @@
+## 2026-06-10 — Dash Visibility pit assist split
+- Classification: **both** (Settings UI and dashboard-facing visibility export contract cleanup; no pit timing, pit entry, pit box, pit limiter runtime logic, telemetry gating, or dashboard JSON/layout changes).
+- Replaced the broad Dash Visibility `Pit Assists` row with independent `Pit Entry Assist`, `Pit Box Assist`, and `Pit Limiter` rows for DRIVER/STRATEGY/OVERLAY. `Show Automatic Pit Screen` remains a separate row and setting.
+- Added preferred `DashVisibility.<Driver|Strategy|Overlay>.PitEntryAssist`, `.PitBoxAssist`, `.PitLimiter`, and `.AutoPitScreen` exports, plus same-family `*ShowPitEntryAssist` / `*ShowPitBoxAssist` compatibility aliases. Existing `*ShowPitLimiter` and `*ShowPitScreen` exports/settings remain exported so old dashboards continue to resolve; new dashboards should use the clear `DashVisibility.*` names.
+- Property Snapshot list reviewed: yes; `ResolvePropertySnapshotGroup(...)` now explicitly leaves `DashVisibility.*` in `RawDebug`, and no Pit/PitExit runtime export grouping changed. Root `CHANGELOG.md` reviewed unchanged because this is unreleased settings/export contract cleanup documented in internal/user docs.
+
 ## 2026-06-10 — Pit Debrief phase-lag service tyre-count follow-up
 - Classification: **both** (bounded Pit Debrief service readout correctness follow-up plus user-facing debrief service semantics; no export names, settings, dashboard JSON/layout, PitCycleLite, fuel model, PitExit prediction, or `Pit.Box.LastDeltaSec` sign change).
 - Pit Debrief box-entry now resolves `Service.TyreChangeCount` through the same current-stop tyre-selection evidence helper used by the boxed target when the pit-stall signal arrives before PitEngine `InBox` / countdown latch state, so confirmed fuel-only stops keep `0` tyres and pre-service tyre selections are not replaced by stale/default live tyre counts on the phase-lag tick.
