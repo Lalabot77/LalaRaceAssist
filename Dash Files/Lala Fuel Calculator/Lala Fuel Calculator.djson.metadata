@@ -15,9 +15,7 @@
   "OverlaySizeWarning": true,
   "MetadataVersion": 2.0,
   "EnableOnDashboardMessaging": true,
-  "PitScreensIndexs": [
-    2
-  ],
+  "PitScreensIndexs": [],
   "SimHubVersion": "9.11.14",
   "Category": null,
   "Title": null,
