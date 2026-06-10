@@ -7027,6 +7027,8 @@ namespace LaunchPlugin
         private int _pitBoxLatchedTireChangeCount = 4;
         private bool _pitBoxTireCountLatched = false;
         private bool _pitBoxLatchedTireChangeCountHadEvidence = false;
+        private string _pitBoxLatchedRepairInfluence = string.Empty;
+        private string _pitBoxLastCompletedRepairInfluence = string.Empty;
         private double _pitBoxLastDeltaSec = 0.0;
         private bool _pitBoxLastDeltaValid = false;
         private const double PitBoxTargetLatchSettleSeconds = 1.0;
@@ -10235,6 +10237,7 @@ namespace LaunchPlugin
             _pitDebriefWasInBox = false;
             _pitBoxLastDeltaSec = 0.0;
             _pitBoxLastDeltaValid = false;
+            _pitBoxLastCompletedRepairInfluence = string.Empty;
             ResetPitBoxCountdownState();
             _pit?.ResetPitPhaseState();
             _pitCommandEngine?.ResetFeedbackState();
@@ -22071,29 +22074,52 @@ namespace LaunchPlugin
 
         private double CalculatePitBoxRepairRemainingSeconds()
         {
+            string repairInfluence;
+            return CalculatePitBoxRepairRemainingSeconds(out repairInfluence);
+        }
+
+        private double CalculatePitBoxRepairRemainingSeconds(out string repairInfluence)
+        {
+            repairInfluence = string.Empty;
             if (!IsInValidPitBoxServiceState())
             {
                 return 0.0;
             }
 
-            double repairRemainingSec = 0.0;
             double mandatoryRepairSec = ReadPitRepairSeconds(
                 "DataCorePlugin.GameRawData.Telemetry.PitRepairLeft",
                 "DataCorePlugin.GameData.PitRepairLeft");
-            if (mandatoryRepairSec > 0.0)
-            {
-                repairRemainingSec = Math.Max(repairRemainingSec, mandatoryRepairSec);
-            }
-
+            double optionalRepairSec = 0.0;
             if (Settings?.PitBoxIncludeOptionalRepairs == true)
             {
-                double optionalRepairSec = ReadPitRepairSeconds(
+                optionalRepairSec = ReadPitRepairSeconds(
                     "DataCorePlugin.GameRawData.Telemetry.PitOptRepairLeft",
                     "DataCorePlugin.GameData.PitOptRepairLeft");
-                if (optionalRepairSec > 0.0)
-                {
-                    repairRemainingSec = Math.Max(repairRemainingSec, optionalRepairSec);
-                }
+            }
+
+            double repairRemainingSec = Math.Max(mandatoryRepairSec, optionalRepairSec);
+            if (repairRemainingSec <= 0.0)
+            {
+                return 0.0;
+            }
+
+            bool hasMandatory = mandatoryRepairSec > 0.0;
+            bool hasOptional = optionalRepairSec > 0.0;
+            if (hasMandatory && hasOptional && Math.Abs(mandatoryRepairSec - optionalRepairSec) <= 0.001)
+            {
+                repairInfluence = "REPAIRS";
+            }
+            else if (hasOptional && optionalRepairSec >= mandatoryRepairSec)
+            {
+                repairInfluence = "OPT REPAIR";
+            }
+            else if (hasMandatory)
+            {
+                repairInfluence = "MAND REPAIR";
+            }
+            else
+            {
+                repairInfluence = "REPAIRS";
             }
 
             return repairRemainingSec;
@@ -22102,7 +22128,8 @@ namespace LaunchPlugin
         private double CalculatePitBoxRemainingSeconds(double elapsedSec, double modeledTargetSec)
         {
             double modeledRemainingSec = Math.Max(0.0, modeledTargetSec - elapsedSec);
-            double repairRemainingSec = CalculatePitBoxRepairRemainingSeconds();
+            string repairInfluence;
+            double repairRemainingSec = CalculatePitBoxRepairRemainingSeconds(out repairInfluence);
             return Math.Max(modeledRemainingSec, repairRemainingSec);
         }
 
@@ -22117,6 +22144,7 @@ namespace LaunchPlugin
             _pitBoxLatchedTireChangeCount = 4;
             _pitBoxTireCountLatched = false;
             _pitBoxLatchedTireChangeCountHadEvidence = false;
+            _pitBoxLatchedRepairInfluence = string.Empty;
         }
 
         private bool IsInValidPitBoxServiceState()
@@ -22194,10 +22222,18 @@ namespace LaunchPlugin
             if (pitLaneLoss < 0.0) pitLaneLoss = 0.0;
 
             double modeledBoxTargetSec = CalculatePitBoxModeledTargetSeconds();
-            double repairRemainingSec = CalculatePitBoxRepairRemainingSeconds();
+            string repairInfluence;
+            double repairRemainingSec = CalculatePitBoxRepairRemainingSeconds(out repairInfluence);
             double boxTime = Math.Max(modeledBoxTargetSec, repairRemainingSec);
             double total = pitLaneLoss + boxTime + PitExitTransitionAllowanceSec;
             return (total < 0.0 || double.IsNaN(total) || double.IsInfinity(total)) ? 0.0 : total;
+        }
+
+        private string GetPitBoxDebriefRepairInfluence()
+        {
+            return !string.IsNullOrWhiteSpace(_pitBoxLatchedRepairInfluence)
+                ? _pitBoxLatchedRepairInfluence
+                : (_pitBoxLastCompletedRepairInfluence ?? string.Empty);
         }
 
         private void ResetPitDebriefDiagnosticLogState()
@@ -22375,6 +22411,7 @@ namespace LaunchPlugin
                 + " targetSec=" + FormatPitDebriefDiagDouble(_pitBoxTargetSec, "0.000")
                 + " targetTireCount=" + targetTireCount.ToString(CultureInfo.InvariantCulture)
                 + " targetTireEvidence=" + (targetTireEvidence ? "true" : "false")
+                + " targetRepairInfluence='" + GetPitBoxDebriefRepairInfluence().Replace("'", "") + "'"
                 + " elapsedSec=" + FormatPitDebriefDiagDouble(_pitBoxElapsedSec, "0.000")
                 + " finalElapsedUsedSec=" + FormatPitDebriefDiagDouble(finalElapsedUsedSec, "0.000")
                 + " pitBoxLastDeltaSec=" + FormatPitDebriefDiagDouble(_pitBoxLastDeltaSec, "0.000")
@@ -22468,6 +22505,7 @@ namespace LaunchPlugin
                     GetEffectiveTireChangeTimeSeconds(),
                     _pitBoxTargetSec,
                     _pitBoxElapsedSec);
+                _pitDebrief.RefreshBoxRepairInfluence(GetPitBoxDebriefRepairInfluence());
             }
 
             if (inBoxPhase)
@@ -22481,6 +22519,7 @@ namespace LaunchPlugin
                     target,
                     FuelCalculator?.EffectiveRefuelRateLps ?? 0.0,
                     clearFuelTarget);
+                _pitDebrief.RefreshBoxRepairInfluence(GetPitBoxDebriefRepairInfluence());
                 LogPitDebriefFuelDiagOnce("active-service-refresh", currentFuel, clearFuelTarget, target);
             }
 
@@ -22496,6 +22535,7 @@ namespace LaunchPlugin
                     double.NaN,
                     debriefBoxDeltaSec,
                     phase);
+                _pitDebrief.RefreshBoxRepairInfluence(GetPitBoxDebriefRepairInfluence());
             }
 
             if (!_pitBoxCountdownActive && _pitBoxLastDeltaValid)
@@ -22621,7 +22661,7 @@ namespace LaunchPlugin
                     && !_pitDebrief.BoxDeltaSuppressed
                     && logLine.IndexOf("boxDeltaSec=na", StringComparison.OrdinalIgnoreCase) >= 0)
                 {
-                    LogPitDebriefBoxDiag("final-pending", "final debrief still has stationary service but no valid/suppressed box delta", _pitDebrief.BoxStationarySec, double.NaN);
+                    LogPitDebriefBoxDiag("final-pending", "final debrief still has stationary service but no valid box delta", _pitDebrief.BoxStationarySec, double.NaN);
                     _pitDebriefFinalPendingBoxDeltaDiagLogged = true;
                 }
 
@@ -22658,6 +22698,7 @@ namespace LaunchPlugin
 
                     _pitBoxLastDeltaSec = deltaSec;
                     _pitBoxLastDeltaValid = true;
+                    _pitBoxLastCompletedRepairInfluence = _pitBoxLatchedRepairInfluence ?? string.Empty;
                     if (!_pitDebriefBoxCountdownFinalizeDiagLogged)
                     {
                         LogPitDebriefBoxDiag("countdown-finalize", "Pit.Box.LastDeltaSec finalized as target-actual; positive means quicker/better", finalElapsedSec, -_pitBoxLastDeltaSec);
@@ -22683,6 +22724,7 @@ namespace LaunchPlugin
                 LogPitDebriefBoxDiag("countdown-start", "Pit.Box countdown became active", elapsedSec, double.NaN);
                 _pitBoxLastDeltaSec = 0.0;
                 _pitBoxLastDeltaValid = false;
+                _pitBoxLastCompletedRepairInfluence = string.Empty;
                 bool hasTireSelectionEvidence;
                 int preServiceSelectedCount = ResolvePitBoxTargetTireChangeCount(out hasTireSelectionEvidence);
                 if (preServiceSelectedCount < 0) preServiceSelectedCount = 0;
@@ -22696,15 +22738,18 @@ namespace LaunchPlugin
             if (double.IsNaN(modeledTargetSec) || double.IsInfinity(modeledTargetSec) || modeledTargetSec < 0.0)
                 modeledTargetSec = 0.0;
 
-            double repairRemainingSec = CalculatePitBoxRepairRemainingSeconds();
+            string repairInfluence;
+            double repairRemainingSec = CalculatePitBoxRepairRemainingSeconds(out repairInfluence);
             if (double.IsNaN(repairRemainingSec) || double.IsInfinity(repairRemainingSec) || repairRemainingSec < 0.0)
                 repairRemainingSec = 0.0;
 
             double effectiveTargetSec = Math.Max(modeledTargetSec, repairRemainingSec);
+            string effectiveRepairInfluence = repairRemainingSec > 0.0 && repairRemainingSec >= modeledTargetSec ? repairInfluence : string.Empty;
 
             if (!_pitBoxTargetLatched)
             {
                 _pitBoxLatchedTargetSec = effectiveTargetSec;
+                _pitBoxLatchedRepairInfluence = effectiveRepairInfluence;
                 if (elapsedSec >= PitBoxTargetLatchSettleSeconds)
                 {
                     _pitBoxTargetLatched = true;

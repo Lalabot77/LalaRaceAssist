@@ -354,7 +354,7 @@ Alerts overlay contract:
 
 - Visible when `LalaLaunch.Pit.Debrief.Valid == true` and `LalaLaunch.Pit.Debrief.AgeSec < 15`.
 - Title: `PIT STOP DEBRIEF — STOP ` + `LalaLaunch.Pit.Debrief.StopIndex`.
-- Body: `LalaLaunch.Pit.Debrief.SummaryText` (progressive while collecting, final-latched after `Valid`; format `ENTRY ... (Δ ...) | BOX ... (Δ .../PENDING) | SVC ... | STRAT Δ ...`, with no exit verdict text). The entry headline is performance-oriented from line time loss, while limiter/safety quality remains in debug fields and can be `POOR` when the line-speed compliance verdict was bad. Box delta comes from the existing `Pit.Box.LastDeltaSec` seam inverted to Pit Debrief sign (`actual elapsed - predicted target`; positive slower, negative faster) and is shown only when the plugin source is plausible, otherwise `Δ PENDING`.
+- Body: `LalaLaunch.Pit.Debrief.SummaryText` (progressive while collecting, final-latched after `Valid`; format `ENTRY ... (Δ ...) | BOX ... (Δ .../PENDING) | SVC ... | STRAT Δ ...`, with no exit verdict text). The entry headline is performance-oriented from line time loss, while limiter/safety quality remains in debug fields and can be `POOR` when the line-speed compliance verdict was bad. Box delta comes from the existing `Pit.Box.LastDeltaSec` seam inverted to Pit Debrief sign (`actual elapsed - predicted target`; positive slower, negative faster) and any finite valid value is shown regardless of magnitude; `Δ PENDING` means the source is unavailable/invalid, not too large. Repair-influenced targets can label the box section as `BOX MAND REPAIR`, `BOX OPT REPAIR`, or `BOX REPAIRS`, and optional repair abandonment can produce a large negative box delta.
 
 Debug page fields:
 

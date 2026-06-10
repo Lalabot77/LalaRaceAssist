@@ -40,7 +40,7 @@ namespace LaunchPlugin
         private bool _boxSeen;
         private bool _missedBoxObserved;
         private PitPhase _missedBoxPhase = PitPhase.None;
-        private const double MaxPlausibleBoxDeltaSec = 10.0;
+        private string _boxRepairInfluenceText = string.Empty;
 
         public bool Valid { get; private set; }
         public int StopIndex { get; private set; }
@@ -234,6 +234,28 @@ namespace LaunchPlugin
             RefreshProgressiveSummary();
         }
 
+        public void RefreshBoxRepairInfluence(string repairInfluenceText)
+        {
+            if (!_collecting || Valid)
+            {
+                return;
+            }
+
+            string normalized = NormalizeBoxRepairInfluence(repairInfluenceText);
+            if (string.IsNullOrWhiteSpace(normalized) || string.Equals(normalized, _boxRepairInfluenceText, StringComparison.Ordinal))
+            {
+                return;
+            }
+
+            _boxRepairInfluenceText = normalized;
+            if (_boxOutcomeResolved && !_missedBoxObserved)
+            {
+                BoxQualityText = normalized;
+            }
+
+            RefreshProgressiveSummary();
+        }
+
         public void LatchPitLaneExit(int actualPositionInClass)
         {
             if (!_collecting || Valid)
@@ -363,6 +385,7 @@ namespace LaunchPlugin
             _boxSeen = false;
             _missedBoxObserved = false;
             _missedBoxPhase = PitPhase.None;
+            _boxRepairInfluenceText = string.Empty;
             _finalLogPending = false;
             _finalLogLine = string.Empty;
             _finalizedUtc = DateTime.MinValue;
@@ -493,15 +516,6 @@ namespace LaunchPlugin
             RawBoxDeltaSec = actualMinusPredictedSec;
             _hasRawBoxDelta = true;
 
-            if (Math.Abs(actualMinusPredictedSec) > MaxPlausibleBoxDeltaSec)
-            {
-                BoxDeltaSec = 0.0;
-                _hasBoxDelta = false;
-                BoxDeltaSuppressed = true;
-                _boxDeltaSuppressed = true;
-                return;
-            }
-
             BoxDeltaSec = actualMinusPredictedSec;
             _hasBoxDelta = true;
             BoxDeltaSuppressed = false;
@@ -553,7 +567,7 @@ namespace LaunchPlugin
 
             if (_boxSeen)
             {
-                BoxQualityText = "GOOD";
+                BoxQualityText = !string.IsNullOrWhiteSpace(_boxRepairInfluenceText) ? _boxRepairInfluenceText : "GOOD";
                 BoxMissedReason = "none";
                 _boxOutcomeResolved = true;
             }
@@ -724,6 +738,15 @@ namespace LaunchPlugin
                 || phase == PitPhase.MissedBoxShort
                 || phase == PitPhase.MissedBoxLeft
                 || phase == PitPhase.MissedBoxRight;
+        }
+
+        private static string NormalizeBoxRepairInfluence(string repairInfluenceText)
+        {
+            string normalized = (repairInfluenceText ?? string.Empty).Trim().ToUpperInvariant();
+            if (normalized == "MANDATORY" || normalized == "MAND" || normalized == "MAND REPAIR") return "MAND REPAIR";
+            if (normalized == "OPTIONAL" || normalized == "OPT" || normalized == "OPT REPAIR") return "OPT REPAIR";
+            if (normalized == "REPAIR" || normalized == "REPAIRS" || normalized == "GENERIC" || normalized == "UNKNOWN" || normalized == "BOX REPAIRS") return "REPAIRS";
+            return string.Empty;
         }
 
         private static string NormalizeLossSource(string source)

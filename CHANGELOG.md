@@ -7,6 +7,7 @@ For internal between-release development history, see `Docs/Internal/Development
 ## v1.1 (Unreleased)
 
 ### Added
+- Pit Stop Debrief now shows any finite valid completed box delta regardless of magnitude, treats `BOX ... (Δ PENDING)` as missing/invalid source only, and labels repair-influenced box targets as `BOX MAND REPAIR`, `BOX OPT REPAIR`, or `BOX REPAIRS` while preserving `Pit.Box.LastDeltaSec` as `target - actual` and the debrief summary as `actual - target`.
 - **Pit Stop Debrief v1** exports latched post-stop verdict fields for alerts/debug dashboards (`LalaLaunch.Pit.Debrief.*`) and emits one structured final log line per completed debrief.
 - Strategy Dash Advanced/Simple mode toggle binding with dashboard-readable status exports (`LalaLaunch.StrategyDash.AdvancedMode`, `LalaLaunch.StrategyDash.ModeText`).
 - Pit Fuel Control DATA selector (`LIVE`/`PLAN`) with data actions/exports for dash and hardware bindings.
