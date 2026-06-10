@@ -398,11 +398,13 @@ namespace LaunchPlugin
             }
 
             _pitFuelControlEngine.SetData(data, actionName);
+            PublishFuelRefuelDataModeSelection();
         }
 
         private void ResetPitFuelControlSessionDefaults()
         {
             _pitFuelControlEngine?.ResetToOffStby();
+            PublishFuelRefuelDataModeSelection();
             if (Settings == null)
             {
                 return;
@@ -418,6 +420,19 @@ namespace LaunchPlugin
                 _applyingPitFuelControlDataAction = false;
             }
         }
+        public void MonitorSystemToggle()
+        {
+            if (Settings == null)
+            {
+                return;
+            }
+
+            Settings.MonitorSystemEnabled = !Settings.MonitorSystemEnabled;
+            _monitorSystem?.SetEnabled(Settings.MonitorSystemEnabled);
+            SaveSettings();
+            SimHub.Logging.Current.Info($"[LalaPlugin:MonitorSystem] MonitorSystemToggle -> Enabled={Settings.MonitorSystemEnabled}");
+        }
+
         public void PitTyreControlModeCycle() => _pitTyreControlEngine.ModeCycle();
         public void PitTyreControlSetOff() => _pitTyreControlEngine.SetOff();
         public void PitTyreControlSetDry() => _pitTyreControlEngine.SetDry();
@@ -7045,6 +7060,7 @@ namespace LaunchPlugin
         private const double MonitorRejoinActiveTooLongSeconds = 60.0;
         private const double MonitorFuelProjectionStaleSeconds = 30.0;
         private const double MonitorFuelModelStaleSeconds = 5.0;
+        private const double MonitorFuelDataRecoveredHoldSeconds = 10.0;
         private const int MonitorFuelLearningMinimumCompletedLap = 5;
         private const int MonitorFuelLearningStaleCompletedLapThreshold = 3;
         private bool _monitorPitFrameworkPrimed = false;
@@ -7076,6 +7092,7 @@ namespace LaunchPlugin
         private int _monitorFuelLearningLastSampleCount = -1;
         private int _monitorFuelLearningLastCompletedLap = -1;
         private int _monitorFuelLearningNoProgressStartLap = -1;
+        private DateTime _monitorFuelDataRecoveredSinceUtc = DateTime.MinValue;
         private bool _monitorEventCsvFailed;
         private bool _monitorEventCsvPathLogged;
 
@@ -7480,6 +7497,66 @@ namespace LaunchPlugin
         private bool IsDebugOnForLogic => SoftDebugEnabled;
         private bool IsVerboseDebugLoggingOn => SoftDebugEnabled && (Settings?.EnableDebugLogging == true);
 
+        private string ResolvePluginVersionNumberText()
+        {
+            Version version = typeof(LalaLaunch).Assembly.GetName().Version;
+            if (version == null)
+            {
+                return "Unknown";
+            }
+
+            if (version.Build == 0 && version.Revision == 0)
+            {
+                return string.Format(CultureInfo.InvariantCulture, "{0}.{1}", version.Major, version.Minor);
+            }
+
+            if (version.Revision == 0)
+            {
+                return string.Format(CultureInfo.InvariantCulture, "{0}.{1}.{2}", version.Major, version.Minor, version.Build);
+            }
+
+            return version.ToString();
+        }
+
+        private string ResolvePluginStatusText()
+        {
+            // UPDATE AVAILABLE is reserved for an existing plugin-owned release-check state.
+            // The current release check is UI-local in OverviewTabView and is not a reliable plugin-owned state.
+            if (SoftDebugEnabled)
+            {
+                return "DEBUG ACTIVE";
+            }
+
+            int profileCount = ProfilesViewModel?.CarProfiles?.Count ?? 0;
+            if (profileCount <= 0)
+            {
+                return "NO PROFILES";
+            }
+
+            return "READY";
+        }
+
+        private string ResolvePluginStatusLineText()
+        {
+            return string.Format(
+                CultureInfo.InvariantCulture,
+                "LALA RACE ASSIST v{0}    {1}",
+                ResolvePluginVersionNumberText(),
+                ResolvePluginStatusText());
+        }
+
+        private string ResolveFuelRefuelDataModeText()
+        {
+            return (_pitFuelControlEngine?.Data ?? PitFuelControlData.Live) == PitFuelControlData.Plan
+                ? "SAVED"
+                : "LIVE";
+        }
+
+        private void PublishFuelRefuelDataModeSelection()
+        {
+            Fuel_Refuel_DataMode = ResolveFuelRefuelDataModeText();
+        }
+
         internal bool IsVerboseDebugLoggingEnabledForExternal => IsVerboseDebugLoggingOn;
 
         public void Init(PluginManager pluginManager)
@@ -7687,6 +7764,7 @@ namespace LaunchPlugin
             this.AddAction("Pit.TyreControl.SetWet", (a, b) => PitTyreControlSetWet());
             this.AddAction("Pit.TyreControl.SetAuto", (a, b) => PitTyreControlSetAuto());
             this.AddAction("LeagueClass.ToggleEnabled", (a, b) => ToggleLeagueClassEnabled());
+            this.AddAction("MonitorSystemToggle", (a, b) => MonitorSystemToggle());
             this.AddAction("CustomMessage01", (a, b) => TriggerCustomMessageSlot(1));
             this.AddAction("CustomMessage02", (a, b) => TriggerCustomMessageSlot(2));
             this.AddAction("CustomMessage03", (a, b) => TriggerCustomMessageSlot(3));
@@ -7824,6 +7902,9 @@ namespace LaunchPlugin
             this.AddAction("ShiftAssist_ToggleLock_G8", (a, b) => ExecuteShiftAssistLockAction(8, current => !current, "ShiftAssist_ToggleLock_G8"));
             
             AttachCore("Friends.Count", () => _friendsCount);
+            AttachCore("Plugin.VersionNumberText", () => ResolvePluginVersionNumberText());
+            AttachCore("Plugin.StatusText", () => ResolvePluginStatusText());
+            AttachCore("Plugin.StatusLineText", () => ResolvePluginStatusLineText());
 
             AttachCore("MonitorSystem.State", () => _monitorSystem.StateText);
             AttachCore("MonitorSystem.Text", () => _monitorSystem.DisplayText);
@@ -10739,7 +10820,7 @@ namespace LaunchPlugin
             Fuel_Refuel_NextText = "CHECK FUEL";
             Fuel_Refuel_BurnSource = "DEFAULT";
             Fuel_Refuel_LapSource = "DEFAULT";
-            Fuel_Refuel_DataMode = (_pitFuelControlEngine?.Data ?? PitFuelControlData.Live) == PitFuelControlData.Plan ? "SAVED" : "LIVE";
+            Fuel_Refuel_DataMode = ResolveFuelRefuelDataModeText();
             Fuel_Refuel_BurnMode = GetRefuelBurnModeText(_pitFuelControlEngine?.Source ?? PitFuelControlSource.Stby);
             Fuel_Refuel_SelectedBurnPerLap = 0.0;
             _runtimeRefuelSelectedProjectionLapSeconds = 0.0;
@@ -10759,7 +10840,7 @@ namespace LaunchPlugin
             double multiStopDisplayAddCapLitres,
             ResolvedContingency contingency)
         {
-            Fuel_Refuel_DataMode = (_pitFuelControlEngine?.Data ?? PitFuelControlData.Live) == PitFuelControlData.Plan ? "SAVED" : "LIVE";
+            Fuel_Refuel_DataMode = ResolveFuelRefuelDataModeText();
             var sourceMode = _pitFuelControlEngine?.Source ?? PitFuelControlSource.Stby;
             Fuel_Refuel_BurnMode = GetRefuelBurnModeText(sourceMode);
 
@@ -12233,6 +12314,7 @@ namespace LaunchPlugin
 
             EvaluateFuelRuntimeHealth(pluginManager);
             UpdateMonitorStaleHealth(data, pluginManager);
+            UpdateMonitorFuelDataRecoveredAutoClear();
 
             // --- Decel capture instrumentation (toggle = pit screen active) ---
             {
@@ -15606,6 +15688,7 @@ namespace LaunchPlugin
 
             if (propertyName.StartsWith("Fuel.", StringComparison.Ordinal)
                 || propertyName.StartsWith("MonitorSystem.", StringComparison.Ordinal)
+                || propertyName.StartsWith("Plugin.", StringComparison.Ordinal)
                 || propertyName.StartsWith("Strategy", StringComparison.Ordinal)
                 || propertyName.StartsWith("PreRace.", StringComparison.Ordinal)
                 || propertyName.StartsWith("Pace.", StringComparison.Ordinal)
@@ -16262,13 +16345,54 @@ namespace LaunchPlugin
                 return;
             }
 
+            bool fuelDataRecovered = severity == MonitorSeverity.Recovered &&
+                string.Equals(string.IsNullOrWhiteSpace(text) ? string.Empty : text.Trim(), "FUEL DATA RECOVERED", StringComparison.Ordinal);
+
             bool changed = _monitorSystem.Publish(severity, text);
+            if (fuelDataRecovered && _monitorSystem.IsEnabled && string.Equals(_monitorSystem.DisplayText, "FUEL DATA RECOVERED", StringComparison.Ordinal))
+            {
+                _monitorFuelDataRecoveredSinceUtc = DateTime.UtcNow;
+            }
+            else if (changed && _monitorFuelDataRecoveredSinceUtc != DateTime.MinValue &&
+                !string.Equals(_monitorSystem.DisplayText, "FUEL DATA RECOVERED", StringComparison.Ordinal))
+            {
+                _monitorFuelDataRecoveredSinceUtc = DateTime.MinValue;
+            }
+
             if (!changed)
             {
                 return;
             }
 
             MaybeWriteMonitorEventCsv(severity, text, category, reason, extraDetail);
+        }
+
+        private void UpdateMonitorFuelDataRecoveredAutoClear()
+        {
+            if (_monitorFuelDataRecoveredSinceUtc == DateTime.MinValue)
+            {
+                return;
+            }
+
+            if (_monitorSystem == null || !_monitorSystem.IsEnabled || Settings?.MonitorSystemEnabled != true)
+            {
+                _monitorFuelDataRecoveredSinceUtc = DateTime.MinValue;
+                return;
+            }
+
+            if (!string.Equals(_monitorSystem.DisplayText, "FUEL DATA RECOVERED", StringComparison.Ordinal))
+            {
+                _monitorFuelDataRecoveredSinceUtc = DateTime.MinValue;
+                return;
+            }
+
+            if ((DateTime.UtcNow - _monitorFuelDataRecoveredSinceUtc).TotalSeconds < MonitorFuelDataRecoveredHoldSeconds)
+            {
+                return;
+            }
+
+            _monitorFuelDataRecoveredSinceUtc = DateTime.MinValue;
+            PublishMonitorSystemEvent(MonitorSeverity.Ok, "MONITOR READY", "FuelHealth", "fuel data recovered hold expired", string.Empty);
         }
 
         private void MaybeWriteMonitorEventCsv(MonitorSeverity severity, string text, string category, string reason, string extraDetail)
@@ -17715,6 +17839,11 @@ namespace LaunchPlugin
             }
 
             _subscribedPitFuelControlSettings = settings;
+            PitFuelControlData initialData = (_subscribedPitFuelControlSettings.PitFuelControlDataMode == 1)
+                ? PitFuelControlData.Plan
+                : PitFuelControlData.Live;
+            _pitFuelControlEngine.SetData(initialData, "Pit.FuelControl.DataSetting", publishFeedback: false);
+            PublishFuelRefuelDataModeSelection();
             _subscribedPitFuelControlSettings.PropertyChanged += OnPitFuelControlSettingsPropertyChanged;
         }
 
@@ -17735,6 +17864,7 @@ namespace LaunchPlugin
                 ? PitFuelControlData.Plan
                 : PitFuelControlData.Live;
             _pitFuelControlEngine.SetData(data, "Pit.FuelControl.DataSetting", publishFeedback: false);
+            PublishFuelRefuelDataModeSelection();
             SaveSettings();
         }
 
@@ -22841,7 +22971,7 @@ namespace LaunchPlugin
             Fuel_Refuel_Valid = false;
             Fuel_Refuel_BurnSource = "DEFAULT";
             Fuel_Refuel_LapSource = "DEFAULT";
-            Fuel_Refuel_DataMode = "LIVE";
+            Fuel_Refuel_DataMode = ResolveFuelRefuelDataModeText();
             Fuel_Refuel_BurnMode = "STBY";
             Fuel_Refuel_SelectedBurnPerLap = 0;
             _runtimeRefuelSelectedProjectionLapSeconds = 0.0;
