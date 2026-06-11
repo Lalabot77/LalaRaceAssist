@@ -21,6 +21,7 @@ For internal between-release development history, see `Docs/Internal/Development
 - Strategy Dash idle/control-centre status exports (`LalaLaunch.Plugin.VersionNumberText`, `LalaLaunch.Plugin.StatusText`, `LalaLaunch.Plugin.StatusLineText`) and dashboard action `LalaLaunch.MonitorSystemToggle`.
 
 ### Changed
+- Profile CAR tab Pit Stop / Pit Assist layout now keeps Base Tank constrained, aligns the Refuel Rate / NEC factor / Tyre Change Time numeric editors, shows Refuel Rate to two decimals, and places Pit Entry Decel/Buffer as full-width bottom sliders while preserving existing ownership and save/load behavior.
 - Runtime boxed-stop prediction and Strategy Planner stop modelling now share one regulation-aware pit service-time authority, keeping PitExit/total stop loss and planner stop timing aligned while preserving existing export names.
 - Pit Stop Debrief summary wording now becomes progressively useful during the stop, reports entry/box signed deltas, service from actual fuel added plus tyres, and `STRAT Δ` for the final strategy comparison while keeping exit prediction in debug/log fields instead of the driver-facing summary.
 - Documentation sweep: added canonical technical subsystem doc `Docs/Subsystems/League_Class_System.md` and aligned cross-references in H2H/Dash/internal docs for League Class behavior.

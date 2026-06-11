@@ -4,7 +4,7 @@ Validated against commit: HEAD
 Last updated: 2026-06-11
 Branch: work
 Current note: Monitor lifecycle restart evidence is current; the optional Monitor Event CSV can now write one-shot internal-only `Lifecycle` rows for Opponents, CarSA, H2H, and LapRef first-healthy-after-reset observation without changing MonitorSystem text, exports, dashboard JSON, or subsystem reset/recovery/calculation behavior.
-Current note: Pit service regulations are now selectable in Strategy/Race Presets and route runtime boxed-stop plus Strategy Planner service timing through one shared regulation-aware seam; Default is sequential, IMSA simultaneous, NEC simultaneous with a car-profile refuel-rate factor.
+Current note: Pit service regulations are now selectable in Strategy/Race Presets and route runtime boxed-stop plus Strategy Planner service timing through one shared regulation-aware seam; Default is sequential, IMSA simultaneous, NEC simultaneous with a car-profile refuel-rate factor. The Profiles CAR Pit Stop / Pit Assist group is layout-polished only: constrained/aligned numeric editors and full-width Pit Entry sliders without ownership or calculation changes.
 
 ## What this repo is
 Lala Race Assist Plugin is a SimHub plugin for iRacing that provides strategy planning, fuel learning, dashboards, launch instrumentation, pit assistance, rejoin support, Shift Assist cueing, profile-backed persistence, and H2H race context.
