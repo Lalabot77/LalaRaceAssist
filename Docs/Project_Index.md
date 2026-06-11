@@ -3,7 +3,7 @@
 Validated against commit: HEAD
 Last updated: 2026-06-11
 Branch: work
-Current note: Selected smooth pit-window exports are current; they use their own selected-burn/fuel/projection/tank basis without stable-fuel confidence gating, fail closed for invalid or inverted intervals, and leave existing integer pit-window state-machine exports unchanged.
+Current note: Monitor lifecycle restart evidence is current; the optional Monitor Event CSV can now write one-shot internal-only `Lifecycle` rows for Opponents, CarSA, H2H, and LapRef first-healthy-after-reset observation without changing MonitorSystem text, exports, dashboard JSON, or subsystem reset/recovery/calculation behavior.
 
 ## What this repo is
 Lala Race Assist Plugin is a SimHub plugin for iRacing that provides strategy planning, fuel learning, dashboards, launch instrumentation, pit assistance, rejoin support, Shift Assist cueing, profile-backed persistence, and H2H race context.

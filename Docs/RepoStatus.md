@@ -1,3 +1,8 @@
+- 2026-06-11 Monitor lifecycle evidence CSV restart observations landed:
+  - added internal-only, one-shot `Lifecycle` evidence rows to the existing optional `MonitorSystem_Events.csv` writer for first healthy after reset: `OPPONENTS RESTARTED`, `CARSA RESTARTED`, `H2H RESTARTED`, and optional `LAPREF RESTARTED`;
+  - rows are armed by the existing full `ManualRecoveryReset(...)` fanout and are written without publishing MonitorSystem text, changing severity priority, adding exports, changing dashboard JSON, or altering reset/recovery/calculation logic;
+  - Monitor Event CSV schema is unchanged and Property Snapshot list reviewed: yes; no export/property add, remove, rename, or regroup required.
+
 ## 2026-06-11 current PR follow-up status
 - Addressed PR #820 selected pit-window fallback-confidence review comment: `Fuel.PitWindow.SelectedOpeningLap` and `Fuel.PitWindow.SelectedClosingLap` no longer require `LiveFuelPerLap_StableConfidence >= fuelReadyConfidence`, allowing selected-burn fallback refuel recommendations to publish smooth window endpoints when their own race/session/fuel/projection/tank basis is valid. Existing integer pit-window exports, PitWindowState/IsPitWindowOpen, selected-burn authority, invalid/inverted interval fail-closed behavior, dashboard JSON, and XAML remain unchanged. Property Snapshot list reviewed: yes; no export additions/removals/renames or grouping change.
 
