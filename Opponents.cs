@@ -1738,7 +1738,7 @@ namespace LaunchPlugin
                         _rivalPitRoadStateByIdentity[row.IdentityKey] = row.IsInPit;
                     }
                 }
-                else if (_activePitCycle && Math.Abs(pitLoss - _activePitCycleTotalLossSec) > 0.001)
+                else if (_activePitCycle && pitLoss > _activePitCycleTotalLossSec)
                 {
                     _activePitCycleTotalLossSec = pitLoss;
                 }
