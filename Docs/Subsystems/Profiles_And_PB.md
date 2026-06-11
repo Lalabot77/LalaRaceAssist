@@ -1,7 +1,7 @@
 # Profiles and Personal Bests
 
 Validated against commit: HEAD
-Last updated: 2026-04-23
+Last updated: 2026-06-11
 Branch: work
 
 ## Purpose
@@ -12,6 +12,7 @@ Profiles and PBs provide **persistent baselines** for:
 - PB fixed-sector data (dry/wet, optional S1..S6 ms fields)
 - Condition lock flags and condition multipliers
 - Optional per-car base tank capacity
+- Per-car NEC refuel-rate percentage factor (`NecRefuelRatePercent`, default 100%, clamped to 20–120%) used only when Strategy selects NEC pit service regulations
 
 They seed live models but never override confirmed live data when locks are enabled.
 
@@ -33,7 +34,7 @@ They seed live models but never override confirmed live data when locks are enab
 ---
 
 ## Internal State
-- Per-car profile settings (launch, fuel, dash, pit entry defaults).
+- Per-car profile settings (launch, fuel, dash, pit entry defaults, pit service baselines such as refuel rate / tyre time / base tank / NEC refuel-rate factor).
 - Per-track stats (dry/wet fuel windows, avg lap times, PBs, pit loss, lock flags).
 - Per-track PB sectors: `BestLapSector1..6DryMs` and `BestLapSector1..6WetMs` are optional and only populated when real fixed-sector data exists.
 - Condition-specific “last updated” metadata for PB, avg lap time, and fuel burn.
@@ -101,6 +102,7 @@ Profiles UI exposes buttons to reset and relearn track data:
 - Track condition locks + pit-loss lock
 - Per-condition “last updated” display strings used in the Profiles UI
 - Base tank capacity (`BaseTankLitres`) used to clamp max-fuel overrides in Profile planning mode.
+- NEC refuel-rate factor (`NecRefuelRatePercent`) used by the shared pit service-time model only when the Strategy-selected regulation is NEC; normal `RefuelRate` remains the baseline.
 
 ---
 

@@ -563,6 +563,25 @@
                                    Opacity="0.8"
                                    Visibility="{Binding IsLiveDetectRace, Converter={StaticResource BooleanToVisibilityConverter}}"/>
 
+                        <StackPanel Margin="0,0,0,10">
+                            <StackPanel Orientation="Horizontal">
+                                <TextBlock Text="Pit Service Regulations:" VerticalAlignment="Center" Margin="0,0,10,0" FontWeight="Bold"
+                                           ToolTip="Manual sporting-regulation selection for pit service timing. No automatic series, track, car, session, or preset-name detection is used."/>
+                                <ComboBox Width="170"
+                                          SelectedValuePath="Tag"
+                                          SelectedValue="{Binding SelectedPitServiceRegulation, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
+                                          ToolTip="Choose whether fuel and tyres are sequential or simultaneous for strategy stop timing.">
+                                    <ComboBoxItem Content="Default" Tag="{x:Static local:PitServiceRegulation.DefaultSequential}"/>
+                                    <ComboBoxItem Content="IMSA" Tag="{x:Static local:PitServiceRegulation.ImsaSimultaneous}"/>
+                                    <ComboBoxItem Content="NEC" Tag="{x:Static local:PitServiceRegulation.NecSimultaneous}"/>
+                                </ComboBox>
+                            </StackPanel>
+                            <TextBlock Text="{Binding PitServiceRegulationHelperText}"
+                                       Margin="0,3,0,0"
+                                       FontSize="12"
+                                       Opacity="0.8"/>
+                        </StackPanel>
+
                         <ui:TitledSlider Title="Race Laps:" Minimum="1" Maximum="500" Value="{Binding RaceLaps, Mode=TwoWay}" Visibility="{Binding ShowEffectiveLapLimitedRace, Converter={StaticResource BooleanToVisibilityConverter}, Mode=OneWay}" IsEnabled="{Binding IsRaceLengthEditable}"
                                          ToolTip="Total race distance in laps."/>
                         <ui:TitledSlider Title="Race Minutes:" Minimum="10" Maximum="1440" Value="{Binding RaceMinutes, Mode=TwoWay}" Visibility="{Binding ShowEffectiveTimeLimitedRace, Converter={StaticResource BooleanToVisibilityConverter}, Mode=OneWay}" IsEnabled="{Binding IsRaceLengthEditable}"

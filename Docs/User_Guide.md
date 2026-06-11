@@ -215,3 +215,8 @@ For most drivers, this order works well:
 - Export contract owner: `Docs/Internal/SimHubParameterInventory.md`.
 - Log contract owner: `Docs/Internal/SimHubLogMessages.md`.
 - Property Snapshot workflow owner: `Docs/Internal/Property_Snapshot_Debug_Workflow.md`.
+
+
+## Pit Service Regulations
+
+In Strategy, choose the pit service model manually: **Default** for sequential fuel then tyres, **IMSA** for simultaneous fuel and tyres, or **NEC** for simultaneous fuel and tyres with the car-profile NEC refuel-rate factor applied. Race Presets save this choice; old presets default to Default. The app does not auto-detect the regulation from series, track, car, session, or preset name.

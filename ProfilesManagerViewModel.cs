@@ -255,6 +255,7 @@ namespace LaunchPlugin
                     car.TireChangeTime = defaultProfile.TireChangeTime;
                     car.TireChangeTimeLocked = defaultProfile.TireChangeTimeLocked;
                     car.RefuelRate = defaultProfile.RefuelRate;
+                    car.NecRefuelRatePercent = defaultProfile.NecRefuelRatePercent;
                     car.RefuelRateLocked = defaultProfile.RefuelRateLocked;
                     car.BaseTankLitres = defaultProfile.BaseTankLitres;
                     car.DryConditionMultipliers = defaultProfile.DryConditionMultipliers?.Clone() ?? ConditionMultipliers.CreateDefaultDry();
@@ -1407,6 +1408,7 @@ namespace LaunchPlugin
                 newProfile.AntiStallThreshold = defaultProfile.AntiStallThreshold;
                 newProfile.PreRaceMode = defaultProfile.PreRaceMode;
                 newProfile.RefuelRate = defaultProfile.RefuelRate;
+                newProfile.NecRefuelRatePercent = defaultProfile.NecRefuelRatePercent;
                 newProfile.TireChangeTime = defaultProfile.TireChangeTime;
                 newProfile.TireChangeTimeLocked = defaultProfile.TireChangeTimeLocked;
                 newProfile.RefuelRateLocked = defaultProfile.RefuelRateLocked;
@@ -1533,6 +1535,7 @@ namespace LaunchPlugin
             destination.SpinYawRateThreshold = source.SpinYawRateThreshold;
             destination.TrafficApproachWarnSeconds = source.TrafficApproachWarnSeconds;
             destination.RefuelRate = source.RefuelRate;
+            destination.NecRefuelRatePercent = source.NecRefuelRatePercent;
             destination.TireChangeTime = source.TireChangeTime;
             destination.TireChangeTimeLocked = source.TireChangeTimeLocked;
             destination.RefuelRateLocked = source.RefuelRateLocked;
@@ -1990,6 +1993,8 @@ namespace LaunchPlugin
                                     profile.BaseTankLitres = null;
                                 }
                             }
+
+                            profile.NecRefuelRatePercent = PitServiceTimeModel.NormalizeNecRefuelRatePercent(profile.NecRefuelRatePercent);
                         }
                         // Clear the existing collection and add the loaded items
                         // This ensures the SortedCarProfiles view is updated correctly.
@@ -2033,6 +2038,7 @@ namespace LaunchPlugin
                     TireChangeTime = 22,
                     TireChangeTimeLocked = false,
                     RefuelRate = 3.7,
+                    NecRefuelRatePercent = PitServiceTimeModel.DefaultNecRefuelRatePercent,
                     RefuelRateLocked = false,
                     BaseTankLitres = null,
                     PitEntryDecelMps2 = 13.5,

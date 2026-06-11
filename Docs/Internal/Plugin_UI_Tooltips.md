@@ -1,7 +1,7 @@
 # Plugin UI Tooltips
 
 Validated against commit: HEAD
-Last updated: 2026-06-08
+Last updated: 2026-06-11
 Branch: work
 
 ## CopyProfileDialog.xaml
@@ -269,3 +269,8 @@ Branch: work
 - Strategy tab: `TYRES EXPECTED` toggle tooltip explains planner intent gate (ON includes tyre service, OFF uses 0s).
 - Strategy tab: `TYRE TIME (s)` slider tooltip explains profile-seeded/manual what-if timing ownership.
 - Preset Manager: `Tyres Expected` tooltip explains preset intent-only ownership and that tyre seconds are no longer preset-owned.
+
+## Pit service regulations UI
+- FuelCalculatorView.xaml: Pit Service Regulations combo chooses the manual service model for Strategy stop timing: Default = fuel then tyres; IMSA = fuel and tyres together; NEC = fuel and tyres together with the car-profile NEC refuel-rate factor. No automatic series/track/session/preset-name detection is performed.
+- PresetsManagerView.xaml: Pit Service Regulations persists the same strategy assumption into RacePreset JSON; missing/legacy values default to Default sequential.
+- ProfilesManagerView.xaml: Pit Stop / Pit Assist group contains Base Tank, Refuel Rate, NEC Refuel Rate Factor (%), Tyre Change Time, Pit Entry Decel, and Pit Entry Buffer. Refuel Rate remains the normal baseline; NEC factor is clamped to 20–120% and only applies to NEC regulation calculations. Pit Entry controls remain Pit Entry Assist-owned even though they are visually grouped near pit service fields.

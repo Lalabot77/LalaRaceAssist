@@ -126,6 +126,21 @@ namespace LaunchPlugin
         // --- NEW Per-Car Property ---
         private double _refuelRate = 2.7;
         public double RefuelRate { get => _refuelRate; set { if (_refuelRate != value) { _refuelRate = value; OnPropertyChanged(); } } }
+        private double _necRefuelRatePercent = PitServiceTimeModel.DefaultNecRefuelRatePercent;
+        [JsonProperty]
+        public double NecRefuelRatePercent
+        {
+            get => _necRefuelRatePercent;
+            set
+            {
+                double normalized = PitServiceTimeModel.NormalizeNecRefuelRatePercent(value);
+                if (Math.Abs(_necRefuelRatePercent - normalized) > 0.0001)
+                {
+                    _necRefuelRatePercent = normalized;
+                    OnPropertyChanged();
+                }
+            }
+        }
         private bool _refuelRateLocked;
         [JsonProperty]
         public bool RefuelRateLocked
