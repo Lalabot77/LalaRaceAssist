@@ -1,3 +1,8 @@
+## 2026-06-11 — Profile CAR pit group layout polish
+- Classification: **both** (Profile CAR tab UI layout/formatting polish plus internal docs; no calculation, persistence schema, profile ownership, pit service regulation logic, Pit Entry Assist logic, exports, dashboard JSON, or Property Snapshot grouping changes).
+- Reworked the Profiles → CAR `Pit Stop / Pit Assist` group so Base Tank uses a constrained numeric textbox with `Learn from Live` beside it, Refuel Rate and NEC factor share one row with narrow numeric textboxes, Tyre Change Time aligns underneath Refuel Rate, and Pit Entry Decel/Buffer sliders move to full-width bottom rows matching the Rejoin Assist slider pattern.
+- Refuel Rate now displays rounded to two decimals in the textbox while preserving the existing `RefuelRate` binding, lock checkbox, and lost-focus edit path; Refuel Rate, NEC factor, Tyre Change Time, Base Tank, Pit Entry Decel, and Pit Entry Buffer remain owned by their existing profile/Pit Entry Assist seams. Property Snapshot list reviewed: yes; no SimHub export/property additions, removals, renames, or regrouping required.
+
 ## 2026-06-11 — Monitor lifecycle evidence CSV restart observations
 - Classification: **internal-only** (debug/testing CSV evidence only; no MonitorSystem text, severity priority, SimHub exports, dashboard JSON, warnings, MSGV1, reset/recovery behavior, or Opponents/CarSA/H2H/LapRef calculation changes).
 - Added one-shot `Lifecycle` category rows to the existing optional `MonitorSystem_Events.csv` writer for first healthy evidence after a lifecycle reset: `OPPONENTS RESTARTED`, `CARSA RESTARTED`, `H2H RESTARTED`, and optional `LAPREF RESTARTED`.
