@@ -1,3 +1,6 @@
+## 2026-06-11 current PR follow-up status
+- Addressed PR #820 selected pit-window fallback-confidence review comment: `Fuel.PitWindow.SelectedOpeningLap` and `Fuel.PitWindow.SelectedClosingLap` no longer require `LiveFuelPerLap_StableConfidence >= fuelReadyConfidence`, allowing selected-burn fallback refuel recommendations to publish smooth window endpoints when their own race/session/fuel/projection/tank basis is valid. Existing integer pit-window exports, PitWindowState/IsPitWindowOpen, selected-burn authority, invalid/inverted interval fail-closed behavior, dashboard JSON, and XAML remain unchanged. Property Snapshot list reviewed: yes; no export additions/removals/renames or grouping change.
+
 - 2026-06-10 Pit Entry Assist line-speed tolerance review landed:
   - `Pit.EntryLineDebrief` keeps the existing `safe`/`normal`/`bad` token contract; line overspeed within +1.0 kph now maps to `normal` and says it is within the 1.0 kph margin, while overspeed above +1.0 kph remains `bad`.
   - `Pit.EntryLineDebriefText`/PitEntryAssist line logs no longer claim `braked 0.0m too late` when rounded late distance is effectively zero. Pit Debrief entry headline remains performance-based from raw `Pit.EntryLineTimeLoss_s`, limiter/compliance detail remains separate in `Pit.Debrief.Entry.LimiterQualityText`, and final `entryLossSec` logging remains two decimals.

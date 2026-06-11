@@ -1,9 +1,9 @@
 # Project Index
 
 Validated against commit: HEAD
-Last updated: 2026-06-10
+Last updated: 2026-06-11
 Branch: work
-Current note: Pit Debrief repair-aware box-delta docs are current; BoxQualityText remains a quality enum, repair labels are SummaryText-only presentation, stale completed repair fallback is cleared for new stops, and finite completed deltas are displayed regardless of magnitude.
+Current note: Selected smooth pit-window exports are current; they use their own selected-burn/fuel/projection/tank basis without stable-fuel confidence gating, fail closed for invalid or inverted intervals, and leave existing integer pit-window state-machine exports unchanged.
 
 ## What this repo is
 Lala Race Assist Plugin is a SimHub plugin for iRacing that provides strategy planning, fuel learning, dashboards, launch instrumentation, pit assistance, rejoin support, Shift Assist cueing, profile-backed persistence, and H2H race context.
