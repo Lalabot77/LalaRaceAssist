@@ -1,3 +1,7 @@
+- 2026-06-11 Monitor lifecycle evidence CSV restart observations landed:
+  - added internal-only, one-shot `Lifecycle` evidence rows to the existing optional `MonitorSystem_Events.csv` writer for first healthy after reset: `OPPONENTS RESTARTED`, `CARSA RESTARTED`, `H2H RESTARTED`, and optional `LAPREF RESTARTED`;
+  - rows are armed by the existing full `ManualRecoveryReset(...)` fanout and are written without publishing MonitorSystem text, changing severity priority, adding exports, changing dashboard JSON, or altering reset/recovery/calculation logic;
+  - Monitor Event CSV schema is unchanged and Property Snapshot list reviewed: yes; no export/property add, remove, rename, or regroup required.
 ## 2026-06-11 current PR status
 - Implemented selectable Pit Service Regulations with one shared `PitServiceTimeModel` service-time authority for runtime boxed-stop prediction and Strategy Planner stop modelling. Default is sequential fuel then tyres; IMSA is simultaneous; NEC is simultaneous with the active car profile `NecRefuelRatePercent` applied to normal refuel rate.
 - RacePreset persistence now carries the selected regulation with legacy/missing/unknown values defaulting to Default sequential. CarProfile persistence now carries `NecRefuelRatePercent` (default 100%, clamped 20–120%) without replacing normal `RefuelRate`.

@@ -7157,6 +7157,11 @@ namespace LaunchPlugin
         private DateTime _monitorFuelDataRecoveredSinceUtc = DateTime.MinValue;
         private bool _monitorEventCsvFailed;
         private bool _monitorEventCsvPathLogged;
+        private bool _awaitingOpponentsFirstHealthyAfterLifecycle;
+        private bool _awaitingCarSaFirstHealthyAfterLifecycle;
+        private bool _awaitingH2HFirstHealthyAfterLifecycle;
+        private bool _awaitingLapRefFirstHealthyAfterLifecycle;
+        private string _monitorLifecycleRestartReason = string.Empty;
 
 
         private sealed class MonitorCarOppH2HCheckState
@@ -10332,6 +10337,7 @@ namespace LaunchPlugin
             _carSaEngine?.Reset();
             _h2hEngine?.Reset();
             _lapReferenceEngine?.Reset();
+            ArmMonitorLifecycleRestartObservation(reasonLabel);
             _radioFrequencyNameCache.Reset();
             ResetTransmitState();
             ResetCarSaIdentityState();
@@ -11732,6 +11738,7 @@ namespace LaunchPlugin
             }
 
             UpdateMonitorCarOppH2HHealth(sessionTypeName, sessionTimeSec, playerCarIdx, isOpponentsEligibleSessionNow);
+            UpdateMonitorLifecycleRestartEvidence(sessionTypeName, playerCarIdx, carIdxLapDistPct, carIdxLap);
 
             if (pitEntryEdge)
             {
@@ -16495,12 +16502,22 @@ namespace LaunchPlugin
 
         private void MaybeWriteMonitorEventCsv(MonitorSeverity severity, string text, string category, string reason, string extraDetail)
         {
-            if (_monitorEventCsvFailed || Settings?.MonitorSystemEnabled != true || Settings?.EnableMonitorEventCsv != true)
+            if (!IsMonitorEventCsvRecordable(severity, text))
             {
                 return;
             }
 
-            if (!IsMonitorEventCsvRecordable(severity, text))
+            WriteMonitorEventCsvLine(severity, text, category, reason, extraDetail);
+        }
+
+        private void WriteMonitorLifecycleEvidenceCsv(string text, string reason, string extraDetail)
+        {
+            WriteMonitorEventCsvLine(MonitorSeverity.Recovered, text, "Lifecycle", reason, extraDetail);
+        }
+
+        private void WriteMonitorEventCsvLine(MonitorSeverity severity, string text, string category, string reason, string extraDetail)
+        {
+            if (_monitorEventCsvFailed || Settings?.MonitorSystemEnabled != true || Settings?.EnableMonitorEventCsv != true)
             {
                 return;
             }
@@ -16972,6 +16989,230 @@ namespace LaunchPlugin
             {
                 SimHub.Logging.Current.Info(line);
             }
+        }
+
+        private void ArmMonitorLifecycleRestartObservation(string reason)
+        {
+            _awaitingOpponentsFirstHealthyAfterLifecycle = true;
+            _awaitingCarSaFirstHealthyAfterLifecycle = true;
+            _awaitingH2HFirstHealthyAfterLifecycle = true;
+            _awaitingLapRefFirstHealthyAfterLifecycle = true;
+            _monitorLifecycleRestartReason = string.IsNullOrWhiteSpace(reason) ? "lifecycle reset" : reason.Trim();
+        }
+
+        private void UpdateMonitorLifecycleRestartEvidence(string sessionTypeName, int playerCarIdx, float[] carIdxLapDistPct, int[] carIdxLap)
+        {
+            if (!_awaitingOpponentsFirstHealthyAfterLifecycle &&
+                !_awaitingCarSaFirstHealthyAfterLifecycle &&
+                !_awaitingH2HFirstHealthyAfterLifecycle &&
+                !_awaitingLapRefFirstHealthyAfterLifecycle)
+            {
+                return;
+            }
+
+            string reason = string.IsNullOrWhiteSpace(_monitorLifecycleRestartReason)
+                ? "lifecycle reset"
+                : _monitorLifecycleRestartReason;
+            string sessionType = string.IsNullOrWhiteSpace(sessionTypeName) ? "unknown" : sessionTypeName.Trim();
+            string sessionToken = string.IsNullOrWhiteSpace(_currentSessionToken) ? "na" : _currentSessionToken;
+            int carArrayCount = carIdxLapDistPct != null ? carIdxLapDistPct.Length : (carIdxLap != null ? carIdxLap.Length : 0);
+
+            if (_awaitingOpponentsFirstHealthyAfterLifecycle && TryBuildOpponentsRestartEvidence(sessionToken, sessionType, carArrayCount, out string opponentsDetail))
+            {
+                WriteMonitorLifecycleEvidenceCsv("OPPONENTS RESTARTED", reason, opponentsDetail);
+                _awaitingOpponentsFirstHealthyAfterLifecycle = false;
+            }
+
+            if (_awaitingCarSaFirstHealthyAfterLifecycle && TryBuildCarSaRestartEvidence(sessionToken, sessionType, playerCarIdx, carArrayCount, out string carSaDetail))
+            {
+                WriteMonitorLifecycleEvidenceCsv("CARSA RESTARTED", reason, carSaDetail);
+                _awaitingCarSaFirstHealthyAfterLifecycle = false;
+            }
+
+            if (_awaitingH2HFirstHealthyAfterLifecycle && TryBuildH2HRestartEvidence(sessionToken, sessionType, out string h2hDetail))
+            {
+                WriteMonitorLifecycleEvidenceCsv("H2H RESTARTED", reason, h2hDetail);
+                _awaitingH2HFirstHealthyAfterLifecycle = false;
+            }
+
+            if (_awaitingLapRefFirstHealthyAfterLifecycle && TryBuildLapRefRestartEvidence(sessionToken, sessionType, out string lapRefDetail))
+            {
+                WriteMonitorLifecycleEvidenceCsv("LAPREF RESTARTED", reason, lapRefDetail);
+                _awaitingLapRefFirstHealthyAfterLifecycle = false;
+            }
+        }
+
+        private bool TryBuildOpponentsRestartEvidence(string sessionToken, string sessionType, int carArrayCount, out string detail)
+        {
+            detail = string.Empty;
+            if (_opponentsEngine == null)
+            {
+                return false;
+            }
+
+            int posClass;
+            int posOverall;
+            double gapToLeaderSec;
+            if (!_opponentsEngine.TryGetPlayerRaceState(out posClass, out posOverall, out gapToLeaderSec))
+            {
+                return false;
+            }
+
+            int populatedTargets = CountValidOpponentTargets(_opponentsEngine.Outputs);
+            detail = string.Format(
+                CultureInfo.InvariantCulture,
+                "sessionToken={0} sessionType={1} nativeSnapshotValid=1 playerRaceState=1 posClass={2} posOverall={3} gapToLeaderSec={4} carArrayCount={5} populatedTargets={6}",
+                sessionToken,
+                sessionType,
+                posClass,
+                posOverall,
+                FormatLifecycleDetailDouble(gapToLeaderSec),
+                carArrayCount,
+                populatedTargets);
+            return true;
+        }
+
+        private bool TryBuildCarSaRestartEvidence(string sessionToken, string sessionType, int playerCarIdx, int carArrayCount, out string detail)
+        {
+            detail = string.Empty;
+            CarSAOutputs outputs = _carSaEngine?.Outputs;
+            if (outputs == null || !outputs.Valid || !IsMonitorCarIdxValid(playerCarIdx))
+            {
+                return false;
+            }
+
+            int populatedSlots = CountValidCarSaSlots(outputs.AheadSlots) + CountValidCarSaSlots(outputs.BehindSlots);
+            bool playerSlotValid = outputs.PlayerSlot != null && outputs.PlayerSlot.IsValid;
+            if (!playerSlotValid && populatedSlots <= 0)
+            {
+                return false;
+            }
+
+            detail = string.Format(
+                CultureInfo.InvariantCulture,
+                "sessionToken={0} sessionType={1} playerCarIdx={2} carArrayCount={3} outputsValid=1 playerSlotValid={4} populatedSlots={5}",
+                sessionToken,
+                sessionType,
+                playerCarIdx,
+                carArrayCount,
+                playerSlotValid ? 1 : 0,
+                populatedSlots);
+            return true;
+        }
+
+        private bool TryBuildH2HRestartEvidence(string sessionToken, string sessionType, out string detail)
+        {
+            detail = string.Empty;
+            H2HOutputs outputs = _h2hEngine?.Outputs;
+            if (outputs == null)
+            {
+                return false;
+            }
+
+            H2HParticipantOutput raceTarget = SelectFirstValidH2HTarget(outputs.Race);
+            H2HParticipantOutput trackTarget = SelectFirstValidH2HTarget(outputs.Track);
+            bool raceTargetValid = raceTarget != null;
+            bool trackTargetValid = trackTarget != null;
+            if (!raceTargetValid && !trackTargetValid)
+            {
+                return false;
+            }
+
+            H2HParticipantOutput targetForIdentity = raceTarget ?? trackTarget;
+            detail = string.Format(
+                CultureInfo.InvariantCulture,
+                "sessionToken={0} sessionType={1} raceTargetValid={2} trackTargetValid={3} targetCarIdx={4} targetIdentity={5}",
+                sessionToken,
+                sessionType,
+                raceTargetValid ? 1 : 0,
+                trackTargetValid ? 1 : 0,
+                targetForIdentity != null ? targetForIdentity.CarIdx : -1,
+                targetForIdentity != null ? (targetForIdentity.IdentityKey ?? string.Empty) : string.Empty);
+            return true;
+        }
+
+        private bool TryBuildLapRefRestartEvidence(string sessionToken, string sessionType, out string detail)
+        {
+            detail = string.Empty;
+            var outputs = _lapReferenceEngine?.Outputs;
+            if (outputs == null || !outputs.Valid)
+            {
+                return false;
+            }
+
+            detail = string.Format(
+                CultureInfo.InvariantCulture,
+                "sessionToken={0} sessionType={1} car={2} track={3} mode={4} outputsValid=1 playerCarIdx={5}",
+                sessionToken,
+                sessionType,
+                CurrentCarModel ?? string.Empty,
+                !string.IsNullOrWhiteSpace(CurrentTrackKey) ? CurrentTrackKey : (CurrentTrackName ?? string.Empty),
+                outputs.Mode ?? string.Empty,
+                outputs.PlayerCarIdx);
+            return true;
+        }
+
+        private static int CountValidOpponentTargets(OpponentOutputs outputs)
+        {
+            if (outputs == null)
+            {
+                return 0;
+            }
+
+            int count = 0;
+            for (int i = 0; i < 5; i++)
+            {
+                var ahead = outputs.GetAheadSlot(i);
+                var behind = outputs.GetBehindSlot(i);
+                if (ahead != null && ahead.IsValid) count++;
+                if (behind != null && behind.IsValid) count++;
+            }
+            return count;
+        }
+
+        private static int CountValidCarSaSlots(CarSASlot[] slots)
+        {
+            if (slots == null)
+            {
+                return 0;
+            }
+
+            int count = 0;
+            for (int i = 0; i < slots.Length; i++)
+            {
+                if (slots[i] != null && slots[i].IsValid)
+                {
+                    count++;
+                }
+            }
+            return count;
+        }
+
+        private static H2HParticipantOutput SelectFirstValidH2HTarget(H2HEngine.H2HFamilyOutput family)
+        {
+            if (family == null)
+            {
+                return null;
+            }
+
+            if (family.Ahead != null && family.Ahead.Valid)
+            {
+                return family.Ahead;
+            }
+
+            if (family.Behind != null && family.Behind.Valid)
+            {
+                return family.Behind;
+            }
+
+            return null;
+        }
+
+        private static string FormatLifecycleDetailDouble(double value)
+        {
+            return (!double.IsNaN(value) && !double.IsInfinity(value))
+                ? value.ToString("F3", CultureInfo.InvariantCulture)
+                : "na";
         }
 
         private void ResetMonitorCarOppH2HHealthStates()
