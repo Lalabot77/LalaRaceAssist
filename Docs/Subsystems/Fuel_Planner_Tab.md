@@ -199,11 +199,12 @@ Exports are prefixed or grouped to distinguish planner vs live-derived values.
 
 ### 3) Pit loss integration
 Planner pit math incorporates:
-- Fuel add time (liters × refuel rate).
+- Fuel add time (liters × effective refuel rate).
 - Optional tyre change time.
+- Pit service regulations selected manually in Strategy and persisted in Race Presets: Default sequential (`fuel + tyres`), IMSA simultaneous (`max(fuel, tyres)`), and NEC simultaneous with the selected car profile's `NecRefuelRatePercent` applied to the normal refuel rate.
 - Pit lane travel loss (direct or DTL-based).
 
-Loss values are sourced from the live pit timing subsystem but applied deterministically in the planner.
+Fuel/tyre service-time rules are routed through the shared `PitServiceTimeModel` seam used by runtime boxed-stop prediction; the planner does not own a duplicate `max(...)` or sequential formula. Loss values are sourced from the live pit timing subsystem but applied deterministically in the planner. No series, track, car, session, or preset-name auto-detection is performed.
 
 ---
 
@@ -343,6 +344,7 @@ Reset semantics are shared with the Fuel Model and documented centrally in:
 - Strategy race-basis ownership now uses explicit owner modes (Preset/Lap/Time/Live Detect) with last-selected owner winning race type/length authority.
 - Refresh Calcs is recompute-only: it recalculates strategy outputs and stint breakdown from current effective inputs, and does not reload profile/live data, reapply presets, or reset owner/source state.
 - Preset modified badge now ignores PreRace-mode-only differences to avoid implying core strategy-output change.
+- Pit Service Regulations are preset-owned strategy assumptions. Missing/legacy RacePreset JSON defaults to `Default` sequential service; unknown values normalize to `Default`.
 
 - Preset row now includes a compact reapply button (`↻`) that reapplies the currently selected preset explicitly; same-item ComboBox reselection is no longer required.
 - When Race Basis owner is `Preset` and no preset is selected/applied, planner outputs stay invalid with explicit validation (`Select a race preset`) rather than silently using stale race length.

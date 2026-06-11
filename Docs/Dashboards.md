@@ -63,7 +63,7 @@ Dashboard status is plugin-owned:
 - `LalaLaunch.StrategyDash.AdvancedMode` = `true` for Advanced, `false` for Simple.
 - `LalaLaunch.StrategyDash.ModeText` = `ADVANCED` or `SIMPLE`.
 
-Dashboards should use those exports only for presentation/visibility. Strategy math, fuel advice, and PreRace logic remain owned by the plugin.
+Dashboards should use those exports only for presentation/visibility. Strategy math, fuel advice, pit service regulation timing, and PreRace logic remain owned by the plugin.
 
 
 ### Strategy Dash idle Control Centre status

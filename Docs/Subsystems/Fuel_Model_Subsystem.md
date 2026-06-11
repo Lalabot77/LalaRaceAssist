@@ -1,7 +1,7 @@
 # Fuel Model
 
 Validated against commit: HEAD
-Last updated: 2026-06-10
+Last updated: 2026-06-11
 Branch: work
 
 ## Purpose
@@ -80,7 +80,7 @@ The check fails silently when current fuel is invalid or zero/non-positive, or w
 - Track/car dry and wet fuel averages.
 - Track/car lap-time baselines used to keep acceptance and projection behavior defensible.
 - Condition lock state that prevents telemetry-driven overwrites when a condition has been intentionally frozen.
-- Car-level refuel rate (`CarProfile.RefuelRate`) plus a persisted lock (`CarProfile.RefuelRateLocked`) that can block auto-learned refuel-rate overwrites while still allowing runtime learning/validation to run.
+- Car-level refuel rate (`CarProfile.RefuelRate`) plus a persisted lock (`CarProfile.RefuelRateLocked`) that can block auto-learned refuel-rate overwrites while still allowing runtime learning/validation to run. `CarProfile.NecRefuelRatePercent` is a separate Strategy-selected NEC pit-service timing factor and does not replace or alter normal refuel-rate learning.
 
 ### Pace / projection dependency
 - Projection lap-time selection from the Pace & Projection subsystem.
@@ -366,7 +366,7 @@ This section documents current **as-implemented** temporal semantics without cha
 | `Fuel.StintBurnTarget*`, `Fuel.FuelBurnPredictor*` | live/raw + helper-text/source labels | Fuel Model | 500 ms poll; reset on session/runtime reset | secondary guidance; useful on strategy pages | medium |
 | `Fuel.Pit.*` | mixed: live/raw + smoothed-display + latched (`Fuel.Pit.Box.*`) | Fuel Model + Pit Timing | 500 ms poll; box variants per-tick; box latches reset on deselect/box exit | runtime pit widgets should use these directly | do not touch |
 | `Pit.Box.*` | live/raw + frozen-for-stop target (`TargetSec`) | Pit Timing | per-tick in box; reset on box exit/session reset | preferred in-box lifecycle seam | do not touch |
-| `Fuel.Live.TireChangeCount`, `Fuel.Live.TireChangeTime_S`, `Fuel.Live.TotalStopLoss`, `Fuel.Live.PitLaneLoss_S`, `Pit.LastPaceDeltaNetLoss` | mixed: live/raw and smoothed-display | Pit Timing + Fuel Model consumer seams | per pit lifecycle / 500 ms poll; reset/session transitions | preferred pit prediction/perf seams | high |
+| `Fuel.Live.TireChangeCount`, `Fuel.Live.TireChangeTime_S`, `Fuel.Live.TotalStopLoss`, `Fuel.Live.PitLaneLoss_S`, `Pit.LastPaceDeltaNetLoss` | mixed: live/raw and smoothed-display | Pit Timing + Fuel Model consumer seams | per pit lifecycle / 500 ms poll; reset/session transitions | preferred pit prediction/perf seams; `TotalStopLoss` is regulation-aware via shared pit service-time authority | high |
 | `Fuel.Live.RemainingStints`, `Fuel.MaxTank` | live/raw | Fuel Model | 500 ms poll; cap seam invalidation/reset | preferred runtime capacity context | high |
 | `LalaLaunch.PreRace.*`, `StrategyDash.*`, `Fuel.Setup.*` | planner-deterministic + helper-text + session-static fallback (`Fuel.Setup.*`) | Strategy Planner + PreRace adapter | per-tick/500 ms; session phase transitions; live/setup availability | preferred pre-green seams only | do not use for race-running refuel widgets |
 | `Fuel.ProjectionLapTime_Stable`, `Fuel.ProjectionLapTime_StableSource` | stable-held + provenance/source-label | Pace & Projection | 500 ms poll; deadband hold; reset on runtime/session reset | preferred projection seam | do not touch |

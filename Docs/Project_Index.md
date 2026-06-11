@@ -3,7 +3,7 @@
 Validated against commit: HEAD
 Last updated: 2026-06-11
 Branch: work
-Current note: Selected smooth pit-window exports are current; they use their own selected-burn/fuel/projection/tank basis without stable-fuel confidence gating, fail closed for invalid or inverted intervals, and leave existing integer pit-window state-machine exports unchanged.
+Current note: Pit service regulations are now selectable in Strategy/Race Presets and route runtime boxed-stop plus Strategy Planner service timing through one shared regulation-aware seam; Default is sequential, IMSA simultaneous, NEC simultaneous with a car-profile refuel-rate factor.
 
 ## What this repo is
 Lala Race Assist Plugin is a SimHub plugin for iRacing that provides strategy planning, fuel learning, dashboards, launch instrumentation, pit assistance, rejoin support, Shift Assist cueing, profile-backed persistence, and H2H race context.

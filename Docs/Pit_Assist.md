@@ -156,6 +156,17 @@ If direct transport cannot find/use the iRacing window, LalaLaunch publishes `PI
 For custom messages, raw commands, and stateless built-in pit actions, a successful direct send is transport-attempt only (queued/unverified), not authoritative proof that iRacing applied the command.
 Stateful toggle actions (`ToggleFuel`, tyre/fix toggles, etc.) remain the only pit actions with authoritative before/after telemetry confirmation.
 
+
+## Pit service regulations
+
+Pit-box countdown and total stop-loss prediction follow the Strategy-selected pit service regulation:
+
+- **Default:** fuel then tyres, sequential service.
+- **IMSA:** fuel and tyres together.
+- **NEC:** fuel and tyres together, using the car-profile NEC refuel-rate factor when calculating fuel time.
+
+The selector is manual and is persisted by Race Presets. Car Profiles hold the physical timing values (normal refuel rate, tyre change time, base tank, and NEC factor). The plugin does not auto-detect service rules from series, track, car, session name, or preset name.
+
 ## 3. Pit Entry Assist
 
 Pit Entry Assist helps you arrive at the pit entry line at the right speed. It uses saved marker context plus braking guidance to tell you whether you are:

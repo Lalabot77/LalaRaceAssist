@@ -228,6 +228,7 @@ namespace LaunchPlugin
             RaceMinutes = p.RaceMinutes,
             RaceLaps = p.RaceLaps,
             PreRaceMode = p.PreRaceMode,
+            PitServiceRegulation = PitServiceTimeModel.NormalizeRegulation(p.PitServiceRegulation),
             TyreStopExpected = p.ResolvedTyreStopExpected,
             TireChangeTimeSec = p.TireChangeTimeSec,
             MaxFuelPercent = p.MaxFuelPercent,

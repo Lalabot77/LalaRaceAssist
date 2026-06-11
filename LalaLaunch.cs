@@ -22143,14 +22143,25 @@ namespace LaunchPlugin
 
         private double CalculatePitBoxModeledTargetSeconds()
         {
+            PitServiceTimeResult serviceTime = CalculatePitBoxServiceTime();
+            return serviceTime.ServiceSecondsWithOverhead;
+        }
+
+        private PitServiceTimeResult CalculatePitBoxServiceTime()
+        {
             double willAdd = Pit_WillAdd;
             double refuelRate = FuelCalculator?.EffectiveRefuelRateLps ?? 0.0;
-            double fuelTime = (willAdd > 0.0 && refuelRate > 0.0) ? (willAdd / refuelRate) : 0.0;
-            if (fuelTime < 0.0 || double.IsNaN(fuelTime) || double.IsInfinity(fuelTime)) fuelTime = 0.0;
-
             double tireTime = GetEffectiveTireChangeTimeSeconds();
-            double modeledServiceSec = Math.Max(fuelTime, tireTime);
-            return modeledServiceSec + PitBoxModeledServiceOverheadSeconds;
+            double necPercent = ActiveProfile?.NecRefuelRatePercent ?? PitServiceTimeModel.DefaultNecRefuelRatePercent;
+            PitServiceRegulation regulation = FuelCalculator?.SelectedPitServiceRegulation ?? PitServiceRegulation.DefaultSequential;
+
+            return PitServiceTimeModel.Calculate(
+                regulation,
+                willAdd,
+                refuelRate,
+                tireTime,
+                PitBoxModeledServiceOverheadSeconds,
+                necPercent);
         }
 
         private void ResetTyreLearnTimingSamples()

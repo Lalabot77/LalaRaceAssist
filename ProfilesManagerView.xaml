@@ -53,131 +53,141 @@
                     <ScrollViewer VerticalScrollBarVisibility="Auto">
                         <StackPanel Margin="10" DataContext="{Binding SelectedProfile}">
 
-                            <Grid Margin="0,0,0,15">
-                                <Grid.ColumnDefinitions>
-                                    <ColumnDefinition Width="*" />
-                                    <ColumnDefinition Width="20" />
-                                    <ColumnDefinition Width="*" />
-                                </Grid.ColumnDefinitions>
+                            <GroupBox Header="Pit Stop / Pit Assist" Margin="0,0,0,15" Padding="10"
+                                      ToolTip="Car-profile pit service baselines plus Pit Entry Assist tuning. Pit Entry Assist calculations remain owned by Pit Entry Assist.">
+                                <Grid>
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition Width="*" />
+                                        <ColumnDefinition Width="20" />
+                                        <ColumnDefinition Width="*" />
+                                    </Grid.ColumnDefinitions>
 
-                                <StackPanel Grid.Column="0">
-                                    <TextBlock Text="Refuel Rate (L/s):" ToolTip="Average refuel rate (L/s). Updates after a live refuel event if available."/>
-                                    <Grid Margin="0,4,0,0">
-                                        <Grid.ColumnDefinitions>
-                                            <ColumnDefinition Width="*" />
-                                            <ColumnDefinition Width="Auto" />
-                                            <ColumnDefinition Width="Auto" />
-                                        </Grid.ColumnDefinitions>
-                                        <Slider Grid.Column="0" VerticalAlignment="Center" Value="{Binding RefuelRate, Mode=TwoWay}" Minimum="1" Maximum="10" SmallChange="0.05" TickFrequency="0.05" IsSnapToTickEnabled="True"
-                                                ToolTip="Set the refuel rate (L/s). Live refuel events can update this value while unlocked."/>
-                                        <TextBlock Grid.Column="1" Text="{Binding RefuelRate, StringFormat=N2}" VerticalAlignment="Center" Margin="10,0,0,0" MinWidth="35" TextAlignment="Right"/>
-                                        <CheckBox Grid.Column="2"
-                                                  Margin="12,0,0,0"
-                                                  VerticalAlignment="Center"
-                                                  Content="Locked"
-                                                  IsChecked="{Binding RefuelRateLocked, Mode=TwoWay}"
-                                                  ToolTip="Lock to prevent live refuel learning from overwriting this value."/>
-                                    </Grid>
+                                    <StackPanel Grid.Column="0">
+                                        <TextBlock Text="Base Tank (L):" ToolTip="Base tank capacity for this car. Use Learn from Live to pull from live max fuel."/>
+                                        <Grid Margin="0,4,0,0">
+                                            <Grid.ColumnDefinitions>
+                                                <ColumnDefinition Width="*" />
+                                                <ColumnDefinition Width="Auto" />
+                                            </Grid.ColumnDefinitions>
+                                            <TextBox Grid.Column="0"
+                                                     Margin="0,0,0,0"
+                                                     TextAlignment="Right"
+                                                     Text="{Binding BaseTankLitres, Mode=TwoWay, UpdateSourceTrigger=LostFocus, TargetNullValue=''}"
+                                                     ToolTip="Base tank size (L). Leave blank to use the default."/>
+                                            <styles:SHButtonSecondary Grid.Column="1"
+                                                                      Content="Learn from Live"
+                                                                      Margin="8,0,0,0"
+                                                                      Command="{Binding DataContext.LearnBaseTankCommand, RelativeSource={RelativeSource AncestorType=UserControl}}"
+                                                                      ToolTip="Capture the current live max fuel as the base tank size."/>
+                                        </Grid>
 
-                                    <TextBlock Margin="0,10,0,0" Text="Tyre Change Time (s):" ToolTip="Estimated 4-tyre service time. Live learning can update this value while unlocked."/>
-                                    <Grid Margin="0,4,0,0">
-                                        <Grid.ColumnDefinitions>
-                                            <ColumnDefinition Width="*" />
-                                            <ColumnDefinition Width="Auto" />
-                                            <ColumnDefinition Width="Auto" />
-                                        </Grid.ColumnDefinitions>
-                                        <Slider Grid.Column="0" VerticalAlignment="Center" Value="{Binding TireChangeTime, Mode=TwoWay}" Minimum="5" Maximum="60" SmallChange="0.5" TickFrequency="0.5" IsSnapToTickEnabled="True"
-                                                ToolTip="Set tyre change time (seconds). Live all-four tyre service learning can update this value while unlocked."/>
-                                        <TextBlock Grid.Column="1" Text="{Binding TireChangeTime, StringFormat=N1}" VerticalAlignment="Center" Margin="10,0,0,0" MinWidth="35" TextAlignment="Right"/>
-                                        <CheckBox Grid.Column="2"
-                                                  Margin="12,0,0,0"
-                                                  VerticalAlignment="Center"
-                                                  Content="Locked"
-                                                  IsChecked="{Binding TireChangeTimeLocked, Mode=TwoWay}"
-                                                  ToolTip="Lock to prevent live tyre-time learning from overwriting this value."/>
-                                    </Grid>
+                                        <TextBlock Margin="0,10,0,0" Text="Refuel Rate (L/s):" ToolTip="Average baseline refuel rate (L/s). Updates after a live refuel event if available and unlocked."/>
+                                        <Grid Margin="0,4,0,0">
+                                            <Grid.ColumnDefinitions>
+                                                <ColumnDefinition Width="120" />
+                                                <ColumnDefinition Width="Auto" />
+                                            </Grid.ColumnDefinitions>
+                                            <TextBox Grid.Column="0" TextAlignment="Right"
+                                                     Text="{Binding RefuelRate, Mode=TwoWay, UpdateSourceTrigger=LostFocus}"
+                                                     ToolTip="Set the normal baseline refuel rate (L/s). NEC regulations apply the NEC factor to this baseline only when selected."/>
+                                            <CheckBox Grid.Column="1"
+                                                      Margin="12,0,0,0"
+                                                      VerticalAlignment="Center"
+                                                      Content="Locked"
+                                                      IsChecked="{Binding RefuelRateLocked, Mode=TwoWay}"
+                                                      ToolTip="Lock to prevent live refuel learning from overwriting this value."/>
+                                        </Grid>
+
+                                        <TextBlock Margin="0,10,0,0" Text="NEC Refuel Rate Factor (%):" ToolTip="Applied only when Strategy Pit Service Regulations is set to NEC. 100% means no restriction; 75% refuels at 75% of normal baseline."/>
+                                        <TextBox Width="120" HorizontalAlignment="Left" TextAlignment="Right"
+                                                 Text="{Binding NecRefuelRatePercent, Mode=TwoWay, UpdateSourceTrigger=LostFocus}"
+                                                 ToolTip="NEC-only refuel-rate percentage factor. Valid range is 20–120%; invalid saved values clamp safely."/>
+
+                                        <TextBlock Margin="0,10,0,0" Text="Tyre Change Time (s):" ToolTip="Estimated 4-tyre service time. Live learning can update this value while unlocked."/>
+                                        <Grid Margin="0,4,0,0">
+                                            <Grid.ColumnDefinitions>
+                                                <ColumnDefinition Width="120" />
+                                                <ColumnDefinition Width="Auto" />
+                                            </Grid.ColumnDefinitions>
+                                            <TextBox Grid.Column="0" TextAlignment="Right"
+                                                     Text="{Binding TireChangeTime, Mode=TwoWay, UpdateSourceTrigger=LostFocus}"
+                                                     ToolTip="Set tyre change time (seconds). Live all-four tyre service learning can update this value while unlocked."/>
+                                            <CheckBox Grid.Column="1"
+                                                      Margin="12,0,0,0"
+                                                      VerticalAlignment="Center"
+                                                      Content="Locked"
+                                                      IsChecked="{Binding TireChangeTimeLocked, Mode=TwoWay}"
+                                                      ToolTip="Lock to prevent live tyre-time learning from overwriting this value."/>
+                                        </Grid>
+                                    </StackPanel>
+
+                                    <StackPanel Grid.Column="2">
+                                        <ui:TitledSlider Title="Pit Entry Decel (m/s²)"
+                                         Minimum="8" Maximum="22"
+                                         Value="{Binding PitEntryDecelMps2, Mode=TwoWay}">
+                                            <ui:TitledSlider.ToolTip>
+                                                <ToolTip>
+                                                    <TextBlock Text="Target deceleration for pit entry braking assist (m/s²). Logic remains Pit Entry Assist-owned." TextWrapping="Wrap" Width="240"/>
+                                                </ToolTip>
+                                            </ui:TitledSlider.ToolTip>
+                                        </ui:TitledSlider>
+
+                                        <ui:TitledSlider Title="Pit Entry Buffer (m)"
+                                         Minimum="0" Maximum="40"
+                                         Value="{Binding PitEntryBufferM, Mode=TwoWay}">
+                                            <ui:TitledSlider.ToolTip>
+                                                <ToolTip>
+                                                    <TextBlock Text="Distance before the pit entry trigger point to start the braking assist. Logic remains Pit Entry Assist-owned." TextWrapping="Wrap" Width="240"/>
+                                                </ToolTip>
+                                            </ui:TitledSlider.ToolTip>
+                                        </ui:TitledSlider>
+                                    </StackPanel>
+                                </Grid>
+                            </GroupBox>
+
+                            <GroupBox Header="Rejoin Assist" Margin="0,0,0,15" Padding="10">
+                                <StackPanel>
+                                    <ui:TitledSlider Title="Rejoin Assist Linger Time (sec)"
+                                     Minimum="1" Maximum="30"
+                                     Value="{Binding RejoinWarningLingerTime, Mode=TwoWay}">
+                                        <ui:TitledSlider.ToolTip>
+                                            <ToolTip>
+                                                <TextBlock Text="How long the rejoin warning remains visible after returning to the track (in seconds)." TextWrapping="Wrap" Width="240"/>
+                                            </ToolTip>
+                                        </ui:TitledSlider.ToolTip>
+                                    </ui:TitledSlider>
+
+                                    <ui:TitledSlider Title="Rejoin Assist Clear Speed (kph)"
+                                     Minimum="10" Maximum="250"
+                                     Value="{Binding RejoinWarningMinSpeed, Mode=TwoWay}">
+                                        <ui:TitledSlider.ToolTip>
+                                            <ToolTip>
+                                                <TextBlock Text="The minimum speed (in km/h) above which the rejoin warning automatically clears." TextWrapping="Wrap" Width="240"/>
+                                            </ToolTip>
+                                        </ui:TitledSlider.ToolTip>
+                                    </ui:TitledSlider>
+
+                                    <ui:TitledSlider Title="Spin Yaw Rate Threshold"
+                                     Minimum="10" Maximum="100"
+                                     Value="{Binding SpinYawRateThreshold, Mode=TwoWay}">
+                                        <ui:TitledSlider.ToolTip>
+                                            <ToolTip>
+                                                <TextBlock Text="Yaw rate (degrees per second) above which a spin event is detected and triggers rejoin assist." TextWrapping="Wrap" Width="240"/>
+                                            </ToolTip>
+                                        </ui:TitledSlider.ToolTip>
+                                    </ui:TitledSlider>
+
+                                    <ui:TitledSlider Title="Overtake Alert Time (sec)"
+                                     Minimum="1" Maximum="20"
+                                     Value="{Binding TrafficApproachWarnSeconds, Mode=TwoWay}">
+                                        <ui:TitledSlider.ToolTip>
+                                            <ToolTip>
+                                                <TextBlock Text="How many seconds behind an approaching car must be projected to trigger the overtake alert." TextWrapping="Wrap" Width="240"/>
+                                            </ToolTip>
+                                        </ui:TitledSlider.ToolTip>
+                                    </ui:TitledSlider>
                                 </StackPanel>
-
-                                <StackPanel Grid.Column="2">
-                                    <TextBlock Text="Base Tank (L):" ToolTip="Base tank capacity for this car. Use Learn from Live to pull from live max fuel."/>
-                                    <Grid Margin="0,4,0,0">
-                                        <Grid.ColumnDefinitions>
-                                            <ColumnDefinition Width="*" />
-                                            <ColumnDefinition Width="Auto" />
-                                        </Grid.ColumnDefinitions>
-                                        <TextBox Grid.Column="0"
-                                                 Margin="0,0,0,0"
-                                                 TextAlignment="Right"
-                                                 Text="{Binding BaseTankLitres, Mode=TwoWay, UpdateSourceTrigger=LostFocus, TargetNullValue=''}"
-                                                 ToolTip="Base tank size (L). Leave blank to use the default."/>
-                                        <styles:SHButtonSecondary Grid.Column="1"
-                                                                  Content="Learn from Live"
-                                                                  Margin="8,0,0,0"
-                                                                  Command="{Binding DataContext.LearnBaseTankCommand, RelativeSource={RelativeSource AncestorType=UserControl}}"
-                                                                  ToolTip="Capture the current live max fuel as the base tank size."/>
-                                    </Grid>
-                                </StackPanel>
-                            </Grid>
-
-                        <ui:TitledSlider Title="Rejoin Assist Linger Time (sec)"
-                         Minimum="1" Maximum="30"
-                         Value="{Binding RejoinWarningLingerTime, Mode=TwoWay}">
-                            <ui:TitledSlider.ToolTip>
-                                <ToolTip>
-                                    <TextBlock Text="How long the rejoin warning remains visible after returning to the track (in seconds)." TextWrapping="Wrap" Width="240"/>
-                                </ToolTip>
-                            </ui:TitledSlider.ToolTip>
-                        </ui:TitledSlider>
-
-                        <ui:TitledSlider Title="Rejoin Assist Clear Speed (kph)"
-                         Minimum="10" Maximum="250"
-                         Value="{Binding RejoinWarningMinSpeed, Mode=TwoWay}">
-                            <ui:TitledSlider.ToolTip>
-                                <ToolTip>
-                                    <TextBlock Text="The minimum speed (in km/h) above which the rejoin warning automatically clears." TextWrapping="Wrap" Width="240"/>
-                                </ToolTip>
-                            </ui:TitledSlider.ToolTip>
-                        </ui:TitledSlider>
-
-                        <ui:TitledSlider Title="Spin Yaw Rate Threshold"
-                         Minimum="10" Maximum="100"
-                         Value="{Binding SpinYawRateThreshold, Mode=TwoWay}">
-                            <ui:TitledSlider.ToolTip>
-                                <ToolTip>
-                                    <TextBlock Text="Yaw rate (degrees per second) above which a spin event is detected and triggers rejoin assist." TextWrapping="Wrap" Width="240"/>
-                                </ToolTip>
-                            </ui:TitledSlider.ToolTip>
-                        </ui:TitledSlider>
-
-                        <ui:TitledSlider Title="Overtake Alert Time (sec)"
-                         Minimum="1" Maximum="20"
-                         Value="{Binding TrafficApproachWarnSeconds, Mode=TwoWay}">
-                            <ui:TitledSlider.ToolTip>
-                                <ToolTip>
-                                    <TextBlock Text="How many seconds behind an approaching car must be projected to trigger the overtake alert." TextWrapping="Wrap" Width="240"/>
-                                </ToolTip>
-                            </ui:TitledSlider.ToolTip>
-                        </ui:TitledSlider>
-
-                        <ui:TitledSlider Title="Pit Entry Decel (m/s²)"
-                         Minimum="8" Maximum="22"
-                         Value="{Binding PitEntryDecelMps2, Mode=TwoWay}">
-                            <ui:TitledSlider.ToolTip>
-                                <ToolTip>
-                                    <TextBlock Text="Target deceleration for pit entry braking assist (m/s²)." TextWrapping="Wrap" Width="240"/>
-                                </ToolTip>
-                            </ui:TitledSlider.ToolTip>
-                        </ui:TitledSlider>
-
-                        <ui:TitledSlider Title="Pit Entry Buffer (m)"
-                         Minimum="0" Maximum="40"
-                         Value="{Binding PitEntryBufferM, Mode=TwoWay}">
-                            <ui:TitledSlider.ToolTip>
-                                <ToolTip>
-                                    <TextBlock Text="Distance before the pit entry trigger point to start the braking assist." TextWrapping="Wrap" Width="240"/>
-                                </ToolTip>
-                            </ui:TitledSlider.ToolTip>
-                        </ui:TitledSlider>
+                            </GroupBox>
 
                         </StackPanel>
                     </ScrollViewer>
@@ -839,7 +849,7 @@
                                                 </Grid.ColumnDefinitions>
                                                 <Slider Grid.Column="0" VerticalAlignment="Center" Value="{Binding RacePaceDeltaSeconds, Mode=TwoWay}" Minimum="0" Maximum="5" SmallChange="0.1" TickFrequency="0.1" IsSnapToTickEnabled="True"
                                                         ToolTip="Track-scoped pace delta used for planning (sec)."/>
-                                                <TextBlock Grid.Column="1" Text="{Binding RacePaceDeltaSeconds, StringFormat=N1}" VerticalAlignment="Center" Margin="10,0,0,0" MinWidth="35" TextAlignment="Right"/>
+                                                <TextBlock Grid.Column="1" Text="{Binding RacePaceDeltaSeconds}" VerticalAlignment="Center" Margin="10,0,0,0" MinWidth="35" TextAlignment="Right"/>
                                             </Grid>
                                         </Grid>
                                     </StackPanel>

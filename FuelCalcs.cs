@@ -161,6 +161,7 @@ namespace LaunchPlugin
     private double _maxFuelOverride;
     private double _tireChangeTime;
     private double _pitLaneTimeLoss;
+    private PitServiceRegulation _selectedPitServiceRegulation = PitServiceRegulation.DefaultSequential;
     private double _fuelSaveTarget;
     private string _timeLossPerLapOfFuelSave;
     private double _formationLapFuelLiters = 1.5;
@@ -913,6 +914,7 @@ namespace LaunchPlugin
         }
 
         SelectedPreRaceMode = NormalizePitStrategyValue(p.PreRaceMode);
+        SelectedPitServiceRegulation = p.PitServiceRegulation;
 
         // Preset tyre intent only: no preset ownership of tyre timing seconds.
         StrategyTyresExpected = p.ResolvedTyreStopExpected;
@@ -990,6 +992,7 @@ namespace LaunchPlugin
             : (_appliedPreset.RaceLaps ?? 0.0);
         bool durDiff = !hasEffectiveBasis || Math.Abs(appliedLength - effectiveLength) > 0.05;
 
+        bool regulationDiff = PitServiceTimeModel.NormalizeRegulation(_appliedPreset.PitServiceRegulation) != SelectedPitServiceRegulation;
         bool tyreIntentDiff = _appliedPreset.ResolvedTyreStopExpected != StrategyTyresExpected;
 
         var appliedMaxFuel = SelectedPlanningSourceMode == PlanningSourceMode.Profile
@@ -1003,7 +1006,7 @@ namespace LaunchPlugin
             (_appliedPreset.ContingencyInLaps != IsContingencyInLaps) ||
             Math.Abs(_appliedPreset.ContingencyValue - ContingencyValue) > 0.05;
 
-        return typeDiff || durDiff || tyreIntentDiff || fuelDiff || contDiff;
+        return typeDiff || durDiff || regulationDiff || tyreIntentDiff || fuelDiff || contDiff;
     }
 
     private void RaisePresetStateChanged()
@@ -1149,6 +1152,11 @@ namespace LaunchPlugin
             OnPropertyChanged(nameof(MaxFuelOverrideMaximum));
             ClampMaxFuelOverrideToProfileBaseTank();
             OnPropertyChanged(nameof(MaxFuelOverridePercentDisplay));
+        }
+
+        if (e.PropertyName == nameof(CarProfile.NecRefuelRatePercent))
+        {
+            RequestStrategyRecalc();
         }
     }
 
@@ -2286,6 +2294,41 @@ namespace LaunchPlugin
         }
     }
 
+    public PitServiceRegulation SelectedPitServiceRegulation
+    {
+        get => PitServiceTimeModel.NormalizeRegulation(_selectedPitServiceRegulation);
+        set
+        {
+            var normalized = PitServiceTimeModel.NormalizeRegulation(value);
+            if (_selectedPitServiceRegulation != normalized)
+            {
+                _selectedPitServiceRegulation = normalized;
+                OnPropertyChanged();
+                OnPropertyChanged(nameof(PitServiceRegulationHelperText));
+                RequestStrategyRecalc();
+                RaisePresetStateChanged();
+                MarkPlannerDirty();
+            }
+        }
+    }
+
+    public string PitServiceRegulationHelperText
+    {
+        get
+        {
+            switch (SelectedPitServiceRegulation)
+            {
+                case PitServiceRegulation.ImsaSimultaneous:
+                    return "IMSA: Fuel and tyres together";
+                case PitServiceRegulation.NecSimultaneous:
+                    return "NEC: Fuel and tyres together, restricted refuelling if configured";
+                case PitServiceRegulation.DefaultSequential:
+                default:
+                    return "Default: Fuel then tyres";
+            }
+        }
+    }
+
     public double EffectiveStrategyTyreTimeSeconds => StrategyTyresExpected ? TireChangeTime : 0.0;
 
     public double TireChangeTime
@@ -2401,6 +2444,11 @@ namespace LaunchPlugin
 
         public double EffectiveRefuelRateLps => GetEffectiveRefuelRateLps();
 
+        private double GetSelectedCarNecRefuelRatePercent()
+        {
+            return PitServiceTimeModel.NormalizeNecRefuelRatePercent(SelectedCarProfile?.NecRefuelRatePercent ?? PitServiceTimeModel.DefaultNecRefuelRatePercent);
+        }
+
         public FuelTimingSnapshot TimingParameters => new FuelTimingSnapshot(EffectiveRefuelRateLps, TireChangeTime, PitLaneTimeLoss);
 
         public double? TryGetProfileAvgLapTimeSec(string trackKey, string trackName, bool isWet)
@@ -2447,25 +2495,36 @@ namespace LaunchPlugin
 
     private double ComputeRefuelSeconds(double fuelToAdd)
     {
+        return ComputeRefuelSeconds(fuelToAdd, 1.0);
+    }
+
+    private double ComputeRefuelSeconds(double fuelToAdd, double refuelRateFactor)
+    {
         if (fuelToAdd <= 0.0) return 0.0;
+
+        double safeFactor = refuelRateFactor;
+        if (double.IsNaN(safeFactor) || double.IsInfinity(safeFactor) || safeFactor <= 0.0)
+        {
+            safeFactor = 1.0;
+        }
 
         double baseSeconds = _conditionRefuelBaseSeconds;
 
         double pourSeconds;
         if (_conditionRefuelSecondsPerLiter > 0.0)
         {
-            pourSeconds = _conditionRefuelSecondsPerLiter * fuelToAdd;
+            pourSeconds = (_conditionRefuelSecondsPerLiter * fuelToAdd) / safeFactor;
         }
         else
         {
-            double rate = GetEffectiveRefuelRateLps();
+            double rate = GetEffectiveRefuelRateLps() * safeFactor;
             pourSeconds = (rate > 0.0) ? (fuelToAdd / rate) : 0.0;
         }
 
         double curveSeconds = 0.0;
         if (_conditionRefuelSecondsPerSquare > 0.0)
         {
-            curveSeconds = _conditionRefuelSecondsPerSquare * fuelToAdd * fuelToAdd;
+            curveSeconds = (_conditionRefuelSecondsPerSquare * fuelToAdd * fuelToAdd) / safeFactor;
         }
 
         double total = baseSeconds + pourSeconds + curveSeconds;
@@ -2995,6 +3054,7 @@ namespace LaunchPlugin
         target.RaceMinutes = source.RaceMinutes;
         target.RaceLaps = source.RaceLaps;
         target.PreRaceMode = NormalizePitStrategyValue(source.PreRaceMode);
+        target.PitServiceRegulation = PitServiceTimeModel.NormalizeRegulation(source.PitServiceRegulation);
         target.TyreStopExpected = source.ResolvedTyreStopExpected;
         target.TireChangeTimeSec = source.TireChangeTimeSec;
         target.MaxFuelPercent = source.MaxFuelPercent;
@@ -3014,6 +3074,7 @@ namespace LaunchPlugin
             RaceMinutes = source.RaceMinutes,
             RaceLaps = source.RaceLaps,
             PreRaceMode = NormalizePitStrategyValue(source.PreRaceMode),
+            PitServiceRegulation = PitServiceTimeModel.NormalizeRegulation(source.PitServiceRegulation),
             TyreStopExpected = source.ResolvedTyreStopExpected,
             TireChangeTimeSec = source.TireChangeTimeSec,
             MaxFuelPercent = source.MaxFuelPercent,
@@ -3143,6 +3204,7 @@ namespace LaunchPlugin
             RaceLaps = isTimeLimitedEffective ? null : (int?)roundedLength,
 
             PreRaceMode = NormalizePitStrategyValue(SelectedPreRaceMode),
+            PitServiceRegulation = SelectedPitServiceRegulation,
             TyreStopExpected = StrategyTyresExpected,
             MaxFuelPercent = ConvertMaxFuelOverrideToPercent(MaxFuelOverride),
             LegacyMaxFuelLitres = null,
@@ -3161,6 +3223,7 @@ namespace LaunchPlugin
             RaceLaps = null,
             RaceMinutes = 40,
             PreRaceMode = (int)PreRaceMode.SingleStop,
+            PitServiceRegulation = PitServiceRegulation.DefaultSequential,
             TyreStopExpected = true,
             MaxFuelPercent = 100,
             LegacyMaxFuelLitres = null,
@@ -4397,6 +4460,7 @@ namespace LaunchPlugin
         _maxFuelOverride = 120.0;
         _tireChangeTime = 30.0;
         _pitLaneTimeLoss = 22.5;
+        _selectedPitServiceRegulation = PitServiceRegulation.DefaultSequential;
         _fuelSaveTarget = 0.1;
         _timeLossPerLapOfFuelSave = "0:00.250";
         _contingencyValue = 1.5;
@@ -5609,10 +5673,21 @@ namespace LaunchPlugin
                 result.FirstPlannedAddLitres = Math.Max(0.0, fuelToAdd);
             }
 
-            // Calculate pit stop time for this specific stop
-            double refuelTime = ComputeRefuelSeconds(fuelToAdd);
-            double stationaryTime = Math.Max(this.EffectiveStrategyTyreTimeSeconds, refuelTime);
-            double totalStopTime = pitLaneTimeLoss + Math.Max(this.EffectiveStrategyTyreTimeSeconds, refuelTime);
+            // Calculate pit stop time for this specific stop. Service-rule math is shared with runtime pit-box prediction.
+            double necFactorPercent = GetSelectedCarNecRefuelRatePercent();
+            double refuelRateFactor = SelectedPitServiceRegulation == PitServiceRegulation.NecSimultaneous
+                ? necFactorPercent / 100.0
+                : 1.0;
+            double effectiveRefuelRate = GetEffectiveRefuelRateLps() * refuelRateFactor;
+            double refuelTime = ComputeRefuelSeconds(fuelToAdd, refuelRateFactor);
+            PitServiceTimeResult serviceTime = PitServiceTimeModel.CalculateFromFuelSeconds(
+                SelectedPitServiceRegulation,
+                refuelTime,
+                effectiveRefuelRate,
+                this.EffectiveStrategyTyreTimeSeconds,
+                serviceOverheadSeconds: 0.0,
+                necRefuelRatePercent: necFactorPercent);
+            double totalStopTime = pitLaneTimeLoss + serviceTime.CoreServiceSeconds;
             // ... STOP line (now using BuildStopSuffix(this.EffectiveStrategyTyreTimeSeconds, refuelTime)) ...
             if (i == 1) { result.FirstStopTimeLoss = totalStopTime; }
             totalPitTime += totalStopTime;
