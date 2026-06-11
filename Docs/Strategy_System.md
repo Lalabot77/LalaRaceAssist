@@ -109,6 +109,17 @@ That helps prevent carrying the wrong assumptions between venues. Examples inclu
 - pace delta to leader,
 - fuel contingency settings.
 
+
+## Pit Service Regulations
+
+Strategy includes a manual **Pit Service Regulations** selector. It is a strategy/preset assumption, not an automatic series detector.
+
+- **Default:** fuel then tyres, sequential service.
+- **IMSA:** fuel and tyres together, simultaneous service.
+- **NEC:** fuel and tyres together, simultaneous service, with the selected car profile's **NEC Refuel Rate Factor (%)** applied to the normal refuel rate. A factor of `100%` means no restriction; `75%` means refuelling is modelled at 75% of the normal profile rate.
+
+Race Presets persist this selection. Existing/legacy presets without the field load as **Default**. The plugin does not infer IMSA/NEC from series name, preset name, track, car, or session metadata. Runtime boxed-stop prediction and Strategy stop modelling use the same shared service-time authority so `Fuel.Live.TotalStopLoss`, PitExit prediction, and planner stop timing stay aligned.
+
 ## 8. PreRace
 
 PreRace belongs under the Strategy story because it helps the driver understand the planned situation before the start.
@@ -193,10 +204,10 @@ If Strategy looks repeatedly wrong, the usual causes are:
 
 
 ## 12. Tyre-stop intent ownership (May 2026)
-- Presets now own only **Tyres Expected** intent (whether planned stops include tyre service).
+- Presets now own **Pit Service Regulations** and **Tyres Expected** intent (whether planned stops include tyre service).
 - Tyre timing seconds are not preset-owned; they come from profile-seeded Strategy tyre slider and can be manually overridden for what-if planning.
-- Strategy stop math gates tyre time with Tyres Expected (OFF = 0s, ON = slider value).
-- Live pit prediction/export seams remain unchanged in this Strategy task.
+- Strategy stop math gates tyre time with Tyres Expected (OFF = 0s, ON = slider value), then routes fuel/tyre service timing through the shared regulation-aware pit service model.
+- Live pit prediction/export names remain unchanged, but the target/stop-loss values now use the same regulation-aware service-time authority as Strategy.
 
 
 - Live Detect startup default: when a live session context is active, Strategy now prefers Live Detect as the initial race-basis owner only before the driver has explicitly chosen Preset, Lap-Limited, or Time-Limited or edited Race Minutes/Laps.

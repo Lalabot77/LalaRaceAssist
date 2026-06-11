@@ -3,7 +3,7 @@
 **Subsystem doc**
 
 Validated against commit: HEAD
-Last updated: 2026-06-10
+Last updated: 2026-06-11
 Last reviewed: 2026-01-14
 Branch: work
 
@@ -131,9 +131,10 @@ These values update **once per pit entry** and remain until the next assist acti
 
 ## Configuration & Profiles
 
-- **Per-car profiles (Dash tab):**
+- **Per-car profiles (CAR tab, visually grouped under Pit Stop / Pit Assist):**
   - **Pit Entry Decel (m/s²):** `Pit.EntryDecelProfile_mps2` used in required-distance calc.
   - **Pit Entry Buffer (m):** `Pit.EntryBuffer_m` used in cue thresholds.
+  - These controls may appear near pit service fields, but Pit Entry Assist retains calculation ownership.
 - **Why per-car:** braking capability and tyre/booster effects differ by car; per-class is too coarse for consistent pit entry cues.
 - **Recommended starting points:**
   - **GT3:** decel ≈ **14 m/s²**, buffer **≈15 m**.

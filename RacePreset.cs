@@ -29,6 +29,13 @@ namespace LaunchPlugin
         // Strategy bits: 0=No Stop, 1=Single Stop, 2=Multi Stop, 3=Auto
         public int PreRaceMode { get; set; } = 2;
 
+        private PitServiceRegulation _pitServiceRegulation = PitServiceRegulation.DefaultSequential;
+        public PitServiceRegulation PitServiceRegulation
+        {
+            get { return PitServiceTimeModel.NormalizeRegulation(_pitServiceRegulation); }
+            set { _pitServiceRegulation = PitServiceTimeModel.NormalizeRegulation(value); }
+        }
+
         // Backward compatibility for older preset JSON key.
         [JsonProperty("PitStrategyMode", NullValueHandling = NullValueHandling.Ignore)]
         public int LegacyPitStrategyMode
