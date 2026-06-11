@@ -1,3 +1,9 @@
+## 2026-06-11 — Pit service regulation runtime propagation follow-up
+- Classification: **both** (dashboard-facing export addition and internal propagation audit; no export renames, no dashboard-side math, no automatic series detection, and no PitCycleLite/Pit Debrief sign-convention changes).
+- Added `Fuel.Live.PitServiceRefuelRate_Lps` and `Fuel.Live.PitServiceRefuelTime_S` as regulation-aware runtime service exports sourced from `CalculatePitBoxServiceTime()` / `PitServiceTimeModel`, allowing dashboards to show NEC-adjusted refuel rate/seconds without changing the compatibility meaning of `Fuel.Live.RefuelRate_Lps`.
+- Audited runtime consumers: `Fuel.Live.TotalStopLoss`, `Pit.Box.TargetSec`, `Pit.Box.RemainingSec`, `PitExit.RemainingCountdownSec`, `PitExit.PredictedPositionInClass`, and PitExit ahead/behind gaps continue to consume the shared regulation-aware boxed-service/total-stop seam rather than duplicating Default/IMSA/NEC formulas.
+- Property Snapshot list reviewed: yes; the new `Fuel.*` exports resolve to Fuel/Strategy via prefix ownership and were also added to explicit pit-prediction snapshot rows next to tyre time/count, total stop loss, and Pit.Box countdown values.
+
 ## 2026-06-11 — Monitor lifecycle evidence CSV restart observations
 - Classification: **internal-only** (debug/testing CSV evidence only; no MonitorSystem text, severity priority, SimHub exports, dashboard JSON, warnings, MSGV1, reset/recovery behavior, or Opponents/CarSA/H2H/LapRef calculation changes).
 - Added one-shot `Lifecycle` category rows to the existing optional `MonitorSystem_Events.csv` writer for first healthy evidence after a lifecycle reset: `OPPONENTS RESTARTED`, `CARSA RESTARTED`, `H2H RESTARTED`, and optional `LAPREF RESTARTED`.

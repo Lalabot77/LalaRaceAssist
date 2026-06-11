@@ -205,7 +205,8 @@ This keeps stored pit-lane loss semantically clean and avoids mixing box-transit
 Typical outputs include:
 - `Fuel.Live.PitLaneLoss_S`
 - `Fuel.Live.TotalStopLoss`
-- `Fuel.Live.RefuelRate_Lps`
+- `Fuel.Live.RefuelRate_Lps` (normal physical/profile refuel rate; not regulation-adjusted)
+- `Fuel.Live.PitServiceRefuelRate_Lps` / `Fuel.Live.PitServiceRefuelTime_S` (regulation-aware runtime fuel-service rate/time from `PitServiceTimeModel`, for dashboard refuel-service displays)
 - `Fuel.Live.TireChangeTime_S`
 - `PitExit.DistanceM` / `PitExit.TimeS` (pit-exit waypoint distance/time using stored exit marker + live speed). These remain zero outside the pit lane and refresh on the 250 ms poll cadence, matching pit-lane state to avoid noisy updates when circulating on track.
 - `PitExit.TimeToExitSec` (plugin-owned blended pit-exit time-to-exit for dash timing): early/low-speed phase follows `PitExit.RemainingCountdownSec`, then blends toward `PitExit.TimeS` as player speed approaches pit-limiter speed. Blend uses limiter authority chain `DataCorePlugin.GameData.PitLimiterSpeed` then parsed `DataCorePlugin.GameRawData.SessionData.WeekendInfo.TrackPitSpeedLimit`; publishes `0` outside pit lane and guards invalid values.

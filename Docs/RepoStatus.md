@@ -1,3 +1,8 @@
+## 2026-06-11 current PR runtime propagation follow-up
+- Added regulation-aware runtime fuel-service exports for dash refuel displays: `Fuel.Live.PitServiceRefuelRate_Lps` and `Fuel.Live.PitServiceRefuelTime_S` now come from the same `PitServiceTimeModel` result used by `Fuel.Live.TotalStopLoss` and `Pit.Box.*`.
+- Kept `Fuel.Live.RefuelRate_Lps` as the documented normal physical/profile refuel rate so existing fuel-learning and compatibility consumers do not silently change meaning.
+- Reviewed PitExit propagation: `UpdateOpponentsAndPitExit` already feeds `CalculateTotalStopLossSeconds()` into the predictor, so `PitExit.RemainingCountdownSec`, `PredictedPositionInClass`, and ahead/behind gaps consume regulation-aware total stop loss through the existing seam. Property Snapshot list reviewed: yes; new `Fuel.Live.PitServiceRefuelRate_Lps` / `Fuel.Live.PitServiceRefuelTime_S` are Fuel/Strategy exports and were added to the explicit pit-prediction snapshot rows.
+
 - 2026-06-11 Monitor lifecycle evidence CSV restart observations landed:
   - added internal-only, one-shot `Lifecycle` evidence rows to the existing optional `MonitorSystem_Events.csv` writer for first healthy after reset: `OPPONENTS RESTARTED`, `CARSA RESTARTED`, `H2H RESTARTED`, and optional `LAPREF RESTARTED`;
   - rows are armed by the existing full `ManualRecoveryReset(...)` fanout and are written without publishing MonitorSystem text, changing severity priority, adding exports, changing dashboard JSON, or altering reset/recovery/calculation logic;

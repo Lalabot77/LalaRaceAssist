@@ -8082,6 +8082,8 @@ namespace LaunchPlugin
             AttachCore("Fuel.PitStopsRequiredByPlan", () => PitStopsRequiredByPlan);
             AttachCore("Fuel.Pit.StopsRequiredToEnd", () => Pit_StopsRequiredToEnd);
             AttachCore("Fuel.Live.RefuelRate_Lps", () => FuelCalculator?.EffectiveRefuelRateLps ?? 0.0);
+            AttachCore("Fuel.Live.PitServiceRefuelRate_Lps", () => CalculatePitBoxServiceTime().EffectiveRefuelRateLps);
+            AttachCore("Fuel.Live.PitServiceRefuelTime_S", () => CalculatePitBoxServiceTime().FuelSeconds);
             AttachCore("Fuel.Live.TireChangeCount", () => _liveTireChangeCount);
             AttachCore("Fuel.Live.TireChangeTime_S", () => GetEffectiveTireChangeTimeSeconds());
             AttachCore("Fuel.Live.PitLaneLoss_S", () =>
@@ -15505,6 +15507,8 @@ namespace LaunchPlugin
                 AddPropertySnapshotExternalRow(rows, currentValues, "DataCorePlugin.Computed.Fuel_RemainingLaps", "FuelStrategy");
                 AddPropertySnapshotExternalRow(rows, currentValues, "LalaLaunch.Fuel.Live.TireChangeCount", "FuelStrategy");
                 AddPropertySnapshotExternalRow(rows, currentValues, "LalaLaunch.Fuel.Live.TireChangeTime_S", "FuelStrategy");
+                AddPropertySnapshotExternalRow(rows, currentValues, "LalaLaunch.Fuel.Live.PitServiceRefuelRate_Lps", "FuelStrategy");
+                AddPropertySnapshotExternalRow(rows, currentValues, "LalaLaunch.Fuel.Live.PitServiceRefuelTime_S", "FuelStrategy");
                 AddPropertySnapshotExternalRow(rows, currentValues, "LalaLaunch.Fuel.Live.TotalStopLoss", "FuelStrategy");
                 AddPropertySnapshotExternalRow(rows, currentValues, "LalaLaunch.Pit.Box.TargetSec", "FuelStrategy");
                 AddPropertySnapshotExternalRow(rows, currentValues, "LalaLaunch.Pit.Box.RemainingSec", "FuelStrategy");

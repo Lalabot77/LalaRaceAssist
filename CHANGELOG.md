@@ -9,6 +9,7 @@ For internal between-release development history, see `Docs/Internal/Development
 ### Added
 - Pit Service Regulations selector for Strategy and Race Presets: Default models sequential fuel then tyres, IMSA models simultaneous service, and NEC models simultaneous service with a car-profile NEC refuel-rate factor.
 - Profile CAR tab NEC Refuel Rate Factor (%) setting, defaulting to 100% and used only when NEC pit service regulations are selected.
+- Regulation-aware dashboard refuel-service exports (`Fuel.Live.PitServiceRefuelRate_Lps`, `Fuel.Live.PitServiceRefuelTime_S`) so dashboards can show NEC-adjusted “Refuel: xx sec” values while `Fuel.Live.RefuelRate_Lps` remains the normal physical/profile rate.
 - Pit Stop Debrief now shows any finite valid completed box delta regardless of magnitude, treats `BOX ... (Δ PENDING)` as missing/invalid/not-completed source only, and labels repair-influenced SummaryText box targets as `BOX MAND REPAIR`, `BOX OPT REPAIR`, or `BOX REPAIRS` while preserving `Pit.Box.LastDeltaSec` as `target - actual` and the debrief summary as `actual - target`.
 - Pit Stop Debrief now keeps first box-entry target/elapsed evidence pending until completed box-delta evidence is available, and preserves repair labels even when repair-left telemetry appears after the target latch.
 - **Pit Stop Debrief v1** exports latched post-stop verdict fields for alerts/debug dashboards (`LalaLaunch.Pit.Debrief.*`) and emits one structured final log line per completed debrief.
@@ -21,7 +22,7 @@ For internal between-release development history, see `Docs/Internal/Development
 - Strategy Dash idle/control-centre status exports (`LalaLaunch.Plugin.VersionNumberText`, `LalaLaunch.Plugin.StatusText`, `LalaLaunch.Plugin.StatusLineText`) and dashboard action `LalaLaunch.MonitorSystemToggle`.
 
 ### Changed
-- Runtime boxed-stop prediction and Strategy Planner stop modelling now share one regulation-aware pit service-time authority, keeping PitExit/total stop loss and planner stop timing aligned while preserving existing export names.
+- Runtime boxed-stop prediction and Strategy Planner stop modelling now share one regulation-aware pit service-time authority, keeping PitExit/total stop loss and planner stop timing aligned while preserving existing export names; dashboards should consume the new regulation-aware refuel-service exports instead of doing Default/IMSA/NEC math.
 - Pit Stop Debrief summary wording now becomes progressively useful during the stop, reports entry/box signed deltas, service from actual fuel added plus tyres, and `STRAT Δ` for the final strategy comparison while keeping exit prediction in debug/log fields instead of the driver-facing summary.
 - Documentation sweep: added canonical technical subsystem doc `Docs/Subsystems/League_Class_System.md` and aligned cross-references in H2H/Dash/internal docs for League Class behavior.
 - League Class presentation alignment now extends to CarSA-facing class identity fields and H2HTrack class colors: `Car.Player.ClassName/ClassColor/ClassColorHex`, `Car.Ahead01..05.*` and `Car.Behind01..05.*` class-facing fields, plus `H2HTrack.Ahead/Behind.ClassColor/ClassColorHex` now publish effective League Class presentation when enabled/resolved, with native fallback unchanged.
