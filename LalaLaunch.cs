@@ -5764,7 +5764,6 @@ namespace LaunchPlugin
             bool hasSelectedPitWindowBasis =
                 isRaceSession &&
                 sessionRunning &&
-                LiveFuelPerLap_StableConfidence >= fuelReadyConfidence &&
                 Fuel_Refuel_SelectedBurnPerLap > 0.0 &&
                 !double.IsNaN(Fuel_Refuel_SelectedBurnPerLap) &&
                 !double.IsInfinity(Fuel_Refuel_SelectedBurnPerLap) &&

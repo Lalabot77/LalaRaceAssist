@@ -1,3 +1,6 @@
+## 2026-06-11 — Selected-burn pit-window fallback-confidence follow-up
+- Classification: **both** (dashboard-facing selected smooth pit-window behavior correction plus internal docs; no existing integer pit-window export, PitWindowState/IsPitWindowOpen, Strategy planner, `Fuel.Refuel.*`, pit/refuel command, learning, dashboard JSON, XAML, or Property Snapshot grouping change).
+- Removed the remaining stable-fuel confidence readiness gate from `Fuel.PitWindow.SelectedOpeningLap` / `Fuel.PitWindow.SelectedClosingLap`, so valid selected-burn fallback recommendations can publish smooth pit-window endpoints whenever their own race/session/fuel/projection/tank basis is valid. The exports still fail closed to `0.0` / `0.0` for invalid basis or impossible inverted intervals. Property Snapshot list reviewed: yes; existing `Fuel.PitWindow.*` exports remain in the Fuel/Strategy group.
 
 ## 2026-06-10 — Selected-burn pit-window review follow-up
 - Classification: **both** (dashboard-facing selected export behavior correction plus internal docs; no existing integer pit-window export, PitWindowState/IsPitWindowOpen, Strategy planner, `Fuel.Refuel.*`, `Fuel.Burn.Target*`, pit/refuel command, learning, dashboard JSON, or XAML change).

@@ -227,7 +227,7 @@ Typical states include:
 
 Selected-burn dashboard range markers are parallel outputs only:
 - `Fuel.PitWindow.SelectedOpeningLap` and `Fuel.PitWindow.SelectedClosingLap` do not replace the state machine markers above.
-- They use the same runtime selected burn authority as `Fuel.Refuel.SelectedBurnPerLap` so PUSH/NORM/SAVE selection changes can move the smooth visual range bar.
+- They use the same runtime selected burn authority as `Fuel.Refuel.SelectedBurnPerLap` so PUSH/NORM/SAVE selection changes can move the smooth visual range bar, including selected fallback recommendations before the stable fuel source reaches the normal readiness threshold.
 - They publish decimal completed-lap points rounded to 2 decimals: closing is current fuel endurance under selected burn; opening is the point where selected-burn fuel-to-finish plus active contingency can fit available tank capacity.
 - They are independent of the existing stable/NORM state-machine "window needed" gate so selected PUSH/SAVE context can still publish a smooth range when its own basis is valid.
 - Invalid/no-race/no-projection/no-tank contexts, and impossible intervals where selected opening would be after selected closing, publish `0.0` / `0.0`.
