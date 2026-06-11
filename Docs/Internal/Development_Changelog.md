@@ -4,6 +4,10 @@
 - Updated Pit Debrief service-rate latching to consume the same active effective service rate for display/review while preserving the completed-flow duration learner and box-delta/loss sign contracts.
 - Fixed PitExit active-cycle propagation by refreshing the active total-loss seed whenever the shared `Fuel.Live.TotalStopLoss` estimate changes, not only when it increases; `PitExit.RemainingCountdownSec`, predicted position, and ahead/behind gaps now recalculate from regulation-aware loss changes during the active cycle. A position can remain unchanged when the revised projected-exit point does not cross another class car.
 - Confirmed PR #827-style `Fuel.Live.PitServiceRefuelRate_Lps` / `Fuel.Live.PitServiceRefuelTime_S` exports are absent and no replacement exports were added. Property Snapshot list reviewed: yes; existing `Fuel.Live.RefuelRate_Lps` stays in Fuel/Strategy and `PitExit.*` stays in Pit/PitExit with no grouping change.
+## 2026-06-11 — Monitor Event CSV shared-read append
+- Classification: **internal-only** (debug-only Monitor Event CSV file-open behavior; no user-facing exports, settings, dashboard JSON, MonitorSystem text/warnings, event filtering, lifecycle evidence semantics, or CSV schema changes).
+- Replaced only the `MonitorSystem_Events.csv` append path from `File.AppendAllText` to a FileStream/StreamWriter helper opened with `FileShare.ReadWrite`, used for both header and row writes so live CSV viewers that share read/write access no longer disable the writer.
+- Preserved the existing catch path: a true exclusive lock or other write failure still logs the one existing MonitorSystem CSV disabled warning once and disables further CSV writes. Property Snapshot list reviewed: yes; no SimHub export/property additions, removals, renames, behavior-contract changes, or regrouping.
 
 ## 2026-06-11 — Profile CAR pit group layout polish
 - Classification: **both** (Profile CAR tab UI layout/formatting polish plus internal docs; no calculation, persistence schema, profile ownership, pit service regulation logic, Pit Entry Assist logic, exports, dashboard JSON, or Property Snapshot grouping changes).

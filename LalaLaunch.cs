@@ -16536,15 +16536,24 @@ namespace LaunchPlugin
 
                 if (writeHeader)
                 {
-                    File.AppendAllText(filePath, GetMonitorEventCsvHeader() + Environment.NewLine);
+                    AppendMonitorEventCsvLineShared(filePath, GetMonitorEventCsvHeader());
                 }
 
-                File.AppendAllText(filePath, BuildMonitorEventCsvLine(severity, text, category, reason, extraDetail) + Environment.NewLine);
+                AppendMonitorEventCsvLineShared(filePath, BuildMonitorEventCsvLine(severity, text, category, reason, extraDetail));
             }
             catch (Exception ex)
             {
                 _monitorEventCsvFailed = true;
                 SimHub.Logging.Current.Warn($"[LalaPlugin:MonitorSystem] event CSV disabled after write failure: {ex.Message}");
+            }
+        }
+
+        private static void AppendMonitorEventCsvLineShared(string filePath, string line)
+        {
+            using (var stream = new FileStream(filePath, FileMode.Append, FileAccess.Write, FileShare.ReadWrite))
+            using (var writer = new StreamWriter(stream))
+            {
+                writer.WriteLine(line);
             }
         }
 
