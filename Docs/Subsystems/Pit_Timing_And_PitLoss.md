@@ -216,7 +216,7 @@ Typical outputs include:
 These values feed directly into:
 - Fuel Model pit projections.
 - Fuel Planner pit loss math.
-- PitExit prediction (`PitExit.RemainingCountdownSec`, `PredictedPositionInClass`, and ahead/behind gaps) through the shared total-stop-loss seam. During an active pit cycle, the Opponents/PitExit predictor refreshes its total-loss seed when the shared estimate changes, so regulation/NEC factor changes affect the remaining countdown and gap math. Position can remain unchanged when no class car crosses the revised projected-exit point.
+- PitExit prediction (`PitExit.RemainingCountdownSec`, `PredictedPositionInClass`, and ahead/behind gaps) through the shared total-stop-loss seam. During an active pit cycle, the Opponents/PitExit predictor preserves the latched total-loss seed unless the shared estimate increases; lower live estimates are not re-latched because elapsed pit-cycle time is already subtracted from the seed. Longer regulation/NEC/service estimates can still extend the remaining countdown and gap math, while decreasing repair/service telemetry ages out through the elapsed-time subtraction. Position can remain unchanged when no class car crosses the revised projected-exit point.
 
 ---
 

@@ -1,3 +1,8 @@
+## 2026-06-11 — PitExit active-cycle countdown preservation follow-up
+- Classification: **both** (driver-facing PitExit countdown/predicted rejoin correctness plus internal docs; no new exports, dashboard JSON, UI controls, learning storage, profile persistence, fuel math, PitEngine timing, or Property Snapshot grouping changes).
+- Restored max-only active pit-cycle total-loss refresh in Opponents/PitExit: once a pit cycle is active, lower shared stop-loss estimates are not re-latched because `PitExit.RemainingCountdownSec` already subtracts elapsed pit-cycle time from the latched seed. Higher estimates still extend the active countdown/predicted position when service/repair/regulation authority grows.
+- This prevents `PitExit.RemainingCountdownSec`, predicted class position, and ahead/behind gaps from jumping too far ahead while the player is still in pit lane/box as live repair/service estimates count down. Property Snapshot list reviewed: yes; no SimHub export/property additions, removals, renames, behavior-contract changes, or regrouping required.
+
 ## 2026-06-11 — Pit service regulation runtime propagation follow-up
 - Classification: **both** (driver-facing existing export semantics and PitExit prediction correctness; no new exports, dashboard JSON, UI controls, learning storage, or profile persistence contract changes).
 - Changed `Fuel.Live.RefuelRate_Lps` to publish the active effective pit-service refuel rate via the shared `PitServiceTimeModel` seam: Default/IMSA keep the normal active profile/FuelCalculator baseline, while NEC applies the active car-profile `NecRefuelRatePercent / 100` at runtime only. Stored `CarProfile.RefuelRate`, refuel-rate learning/lock, save/load, and normal profile storage remain baseline-only.
