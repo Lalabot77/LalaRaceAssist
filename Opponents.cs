@@ -51,7 +51,7 @@ namespace LaunchPlugin
             _pitExitPredictor.Reset();
         }
 
-        public void Update(GameData data, PluginManager pluginManager, bool isEligibleSession, bool isRaceSession, int completedLaps, double myPaceSec, double pitLossSec, bool pitTripActive, bool onPitRoad, double trackPct, double sessionTimeSec, double sessionTimeRemainingSec, bool debugEnabled, TryGetCheckpointGapSec tryGetCheckpointGapSec = null, IsRaceContextClassMatch isRaceContextClassMatch = null)
+        public void Update(GameData data, PluginManager pluginManager, bool isEligibleSession, bool isRaceSession, int completedLaps, double myPaceSec, double pitLossSec, string pitServiceModelKey, bool pitTripActive, bool onPitRoad, double trackPct, double sessionTimeSec, double sessionTimeRemainingSec, bool debugEnabled, TryGetCheckpointGapSec tryGetCheckpointGapSec = null, IsRaceContextClassMatch isRaceContextClassMatch = null)
         {
             var _ = data;
             _tryGetCheckpointGapSec = tryGetCheckpointGapSec;
@@ -101,7 +101,7 @@ namespace LaunchPlugin
 
             if (isRaceSession)
             {
-                _pitExitPredictor.Update(_raceModel, _playerIdentityKey, pitLossSec, pitTripActive, onPitRoad, trackPct, completedLaps, sessionTimeSec, sessionTimeRemainingSec, debugEnabled);
+                _pitExitPredictor.Update(_raceModel, _playerIdentityKey, pitLossSec, pitServiceModelKey, pitTripActive, onPitRoad, trackPct, completedLaps, sessionTimeSec, sessionTimeRemainingSec, debugEnabled);
                 _pitExitWasRaceActive = true;
             }
             else if (_pitExitWasRaceActive)
@@ -1589,6 +1589,7 @@ namespace LaunchPlugin
             private double _activePitCycleStartSessionTimeSec = double.NaN;
             private double _activePitCycleStartProgressLaps = double.NaN;
             private double _activePitCycleTotalLossSec;
+            private string _activePitCycleServiceModelKey = string.Empty;
             private readonly Dictionary<string, bool> _rivalPitRoadStateByIdentity = new Dictionary<string, bool>(StringComparer.Ordinal);
             private readonly HashSet<string> _rivalsEnteredPitAfterOurStart = new HashSet<string>(StringComparer.Ordinal);
             private bool _pendingSettledPitOut;
@@ -1619,6 +1620,7 @@ namespace LaunchPlugin
                 _activePitCycleStartSessionTimeSec = double.NaN;
                 _activePitCycleStartProgressLaps = double.NaN;
                 _activePitCycleTotalLossSec = 0.0;
+                _activePitCycleServiceModelKey = string.Empty;
                 _rivalPitRoadStateByIdentity.Clear();
                 _rivalsEnteredPitAfterOurStart.Clear();
                 _pendingSettledPitOut = false;
@@ -1628,7 +1630,7 @@ namespace LaunchPlugin
                 _output.Reset();
             }
 
-            public void Update(NativeRaceModel raceModel, string playerIdentityKey, double pitLossSec, bool pitTripActive, bool onPitRoad, double trackPct, int completedLaps, double sessionTimeSec, double sessionTimeRemainingSec, bool debugEnabled)
+            public void Update(NativeRaceModel raceModel, string playerIdentityKey, double pitLossSec, string pitServiceModelKey, bool pitTripActive, bool onPitRoad, double trackPct, int completedLaps, double sessionTimeSec, double sessionTimeRemainingSec, bool debugEnabled)
             {
                 bool allowLogs = true;
                 bool inFinalSuppressionWindow = !double.IsNaN(sessionTimeRemainingSec)
@@ -1695,6 +1697,7 @@ namespace LaunchPlugin
 
                 double playerProgress = player.Lap + player.LapDistPct;
                 double pitLoss = (pitLossSec > 0.0 && !double.IsNaN(pitLossSec) && !double.IsInfinity(pitLossSec)) ? pitLossSec : 0.0;
+                string serviceModelKey = string.IsNullOrWhiteSpace(pitServiceModelKey) ? string.Empty : pitServiceModelKey;
                 double paceRef = raceModel.GetPaceReferenceSec();
                 bool activePitPhase = onPitRoad || pitTripActive;
                 bool activePitPhaseStarted = activePitPhase && !_activePitCycle;
@@ -1722,6 +1725,7 @@ namespace LaunchPlugin
                     _activePitCycleStartSessionTimeSec = (!double.IsNaN(sessionTimeSec) && !double.IsInfinity(sessionTimeSec)) ? sessionTimeSec : double.NaN;
                     _activePitCycleStartProgressLaps = playerProgress;
                     _activePitCycleTotalLossSec = pitLoss;
+                    _activePitCycleServiceModelKey = serviceModelKey;
                     _rivalPitRoadStateByIdentity.Clear();
                     _rivalsEnteredPitAfterOurStart.Clear();
 
@@ -1740,7 +1744,17 @@ namespace LaunchPlugin
                 }
                 else if (_activePitCycle && Math.Abs(pitLoss - _activePitCycleTotalLossSec) > 0.001)
                 {
-                    _activePitCycleTotalLossSec = pitLoss;
+                    // Lower active-cycle totals are safe only when deliberate service-model inputs changed.
+                    // Unchanged-key decreases are usually repair/countdown ageing, and elapsed time is
+                    // already subtracted below. Higher totals still extend the countdown immediately.
+                    bool serviceModelChanged = !string.IsNullOrWhiteSpace(serviceModelKey)
+                        && !string.IsNullOrWhiteSpace(_activePitCycleServiceModelKey)
+                        && !string.Equals(serviceModelKey, _activePitCycleServiceModelKey, StringComparison.Ordinal);
+                    if ((serviceModelChanged && pitLoss > 0.001) || pitLoss > _activePitCycleTotalLossSec + 0.001)
+                    {
+                        _activePitCycleTotalLossSec = pitLoss;
+                        _activePitCycleServiceModelKey = serviceModelKey;
+                    }
                 }
 
                 if (activePitPhaseEnded)
@@ -1749,6 +1763,7 @@ namespace LaunchPlugin
                     _activePitCycleStartSessionTimeSec = double.NaN;
                     _activePitCycleStartProgressLaps = double.NaN;
                     _activePitCycleTotalLossSec = 0.0;
+                    _activePitCycleServiceModelKey = string.Empty;
                     _rivalsEnteredPitAfterOurStart.Clear();
                 }
 
