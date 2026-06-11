@@ -1742,7 +1742,7 @@ namespace LaunchPlugin
                         _rivalPitRoadStateByIdentity[row.IdentityKey] = row.IsInPit;
                     }
                 }
-                else if (_activePitCycle)
+                else if (_activePitCycle && Math.Abs(pitLoss - _activePitCycleTotalLossSec) > 0.001)
                 {
                     // Lower active-cycle totals are safe only when deliberate service-model inputs changed.
                     // Unchanged-key decreases are usually repair/countdown ageing, and elapsed time is
