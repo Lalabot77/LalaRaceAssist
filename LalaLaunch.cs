@@ -8081,7 +8081,7 @@ namespace LaunchPlugin
             AttachCore("Fuel.MaxTank", () => Math.Round(Math.Max(0.0, Fuel_MaxTank), 1));
             AttachCore("Fuel.PitStopsRequiredByPlan", () => PitStopsRequiredByPlan);
             AttachCore("Fuel.Pit.StopsRequiredToEnd", () => Pit_StopsRequiredToEnd);
-            AttachCore("Fuel.Live.RefuelRate_Lps", () => FuelCalculator?.EffectiveRefuelRateLps ?? 0.0);
+            AttachCore("Fuel.Live.RefuelRate_Lps", () => GetActivePitServiceRefuelRateLps());
             AttachCore("Fuel.Live.TireChangeCount", () => _liveTireChangeCount);
             AttachCore("Fuel.Live.TireChangeTime_S", () => GetEffectiveTireChangeTimeSeconds());
             AttachCore("Fuel.Live.PitLaneLoss_S", () =>
@@ -11444,7 +11444,7 @@ namespace LaunchPlugin
                 _pitDebrief.RefreshServiceEvidence(
                     debriefFuelAdded,
                     debriefFuelTarget,
-                    FuelCalculator?.EffectiveRefuelRateLps ?? 0.0,
+                    GetActivePitServiceRefuelRateLps(),
                     clearFuelTarget);
                 LogPitDebriefFuelDiagOnce("active-service-refresh", currentFuelNow, clearFuelTarget, debriefFuelTarget);
             }
@@ -22388,20 +22388,38 @@ namespace LaunchPlugin
             return serviceTime.ServiceSecondsWithOverhead;
         }
 
+        private double GetActivePitServiceRefuelRateLps()
+        {
+            PitServiceTimeResult serviceTime = CalculatePitServiceTime(
+                0.0,
+                0.0,
+                0.0);
+            return serviceTime.EffectiveRefuelRateLps;
+        }
+
         private PitServiceTimeResult CalculatePitBoxServiceTime()
         {
-            double willAdd = Pit_WillAdd;
-            double refuelRate = FuelCalculator?.EffectiveRefuelRateLps ?? 0.0;
-            double tireTime = GetEffectiveTireChangeTimeSeconds();
+            return CalculatePitServiceTime(
+                Pit_WillAdd,
+                GetEffectiveTireChangeTimeSeconds(),
+                PitBoxModeledServiceOverheadSeconds);
+        }
+
+        private PitServiceTimeResult CalculatePitServiceTime(
+            double fuelLitres,
+            double tireTimeSeconds,
+            double serviceOverheadSeconds)
+        {
+            double baseRefuelRate = FuelCalculator?.EffectiveRefuelRateLps ?? 0.0;
             double necPercent = ActiveProfile?.NecRefuelRatePercent ?? PitServiceTimeModel.DefaultNecRefuelRatePercent;
             PitServiceRegulation regulation = FuelCalculator?.SelectedPitServiceRegulation ?? PitServiceRegulation.DefaultSequential;
 
             return PitServiceTimeModel.Calculate(
                 regulation,
-                willAdd,
-                refuelRate,
-                tireTime,
-                PitBoxModeledServiceOverheadSeconds,
+                fuelLitres,
+                baseRefuelRate,
+                tireTimeSeconds,
+                serviceOverheadSeconds,
                 necPercent);
         }
 
@@ -22867,7 +22885,7 @@ namespace LaunchPlugin
                 _pitDebrief.RefreshServiceEvidence(
                     debriefFuelAdded,
                     target,
-                    FuelCalculator?.EffectiveRefuelRateLps ?? 0.0,
+                    GetActivePitServiceRefuelRateLps(),
                     clearFuelTarget);
                 _pitDebrief.RefreshBoxRepairInfluence(GetPitBoxDebriefRepairInfluence());
                 LogPitDebriefFuelDiagOnce("active-service-refresh", currentFuel, clearFuelTarget, target);
@@ -22881,7 +22899,7 @@ namespace LaunchPlugin
                 _pitDebrief.LatchBoxExit(
                     _pit.PitStopDuration.TotalSeconds,
                     Pit_AddedSoFar,
-                    FuelCalculator?.EffectiveRefuelRateLps ?? 0.0,
+                    GetActivePitServiceRefuelRateLps(),
                     double.NaN,
                     debriefBoxDeltaSec,
                     phase);
