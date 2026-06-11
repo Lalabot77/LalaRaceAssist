@@ -1,3 +1,7 @@
+- 2026-06-11 Monitor Event CSV shared-read append landed:
+  - replaced only the `MonitorSystem_Events.csv` `File.AppendAllText` path with a FileStream/StreamWriter append helper using `FileShare.ReadWrite`, so the optional event CSV is easier to watch live while SimHub writes it;
+  - the same helper writes both the header and event/lifecycle rows, preserving the CSV schema, MonitorSystem text/warnings, lifecycle evidence semantics, exports, dashboard behavior, event filtering, and the existing one-shot failure disable warning for true exclusive-lock/write failures;
+  - Property Snapshot list reviewed: yes; no SimHub export/property add, remove, rename, behavior change, or regroup required.
 - 2026-06-11 Monitor lifecycle evidence CSV restart observations landed:
   - added internal-only, one-shot `Lifecycle` evidence rows to the existing optional `MonitorSystem_Events.csv` writer for first healthy after reset: `OPPONENTS RESTARTED`, `CARSA RESTARTED`, `H2H RESTARTED`, and optional `LAPREF RESTARTED`;
   - rows are armed by the existing full `ManualRecoveryReset(...)` fanout and are written without publishing MonitorSystem text, changing severity priority, adding exports, changing dashboard JSON, or altering reset/recovery/calculation logic;
