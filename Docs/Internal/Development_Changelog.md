@@ -1,3 +1,8 @@
+## 2026-06-11 — Monitor Event CSV shared-read append
+- Classification: **internal-only** (debug-only Monitor Event CSV file-open behavior; no user-facing exports, settings, dashboard JSON, MonitorSystem text/warnings, event filtering, lifecycle evidence semantics, or CSV schema changes).
+- Replaced only the `MonitorSystem_Events.csv` append path from `File.AppendAllText` to a FileStream/StreamWriter helper opened with `FileShare.ReadWrite`, used for both header and row writes so live CSV viewers that share read/write access no longer disable the writer.
+- Preserved the existing catch path: a true exclusive lock or other write failure still logs the one existing MonitorSystem CSV disabled warning once and disables further CSV writes. Property Snapshot list reviewed: yes; no SimHub export/property additions, removals, renames, behavior-contract changes, or regrouping.
+
 ## 2026-06-11 — Profile CAR pit group layout polish
 - Classification: **both** (Profile CAR tab UI layout/formatting polish plus internal docs; no calculation, persistence schema, profile ownership, pit service regulation logic, Pit Entry Assist logic, exports, dashboard JSON, or Property Snapshot grouping changes).
 - Reworked the Profiles → CAR `Pit Stop / Pit Assist` group so Base Tank uses a constrained numeric textbox with `Learn from Live` beside it, Refuel Rate and NEC factor share one row with narrow numeric textboxes, Tyre Change Time aligns underneath Refuel Rate, and Pit Entry Decel/Buffer sliders move to full-width bottom rows matching the Rejoin Assist slider pattern.
