@@ -11532,7 +11532,7 @@ namespace LaunchPlugin
                 _carSaEngine.RefreshDirectCheckpointEligibility(carIdxTrackSurface, carIdxOnPitRoad);
                 checkpointGapReader = _carSaEngine.TryGetCheckpointGapSec;
             }
-            _opponentsEngine?.Update(data, pluginManager, isOpponentsEligibleSessionNow, isRaceSessionNow, completedLaps, myPaceSec, pitLossSec, pitTripActive, inLane, trackPct, sessionTimeSec, sessionTimeRemainingSec, verboseLogs, checkpointGapReader, BuildRaceContextLeagueClassMatchDelegate());
+            _opponentsEngine?.Update(data, pluginManager, isOpponentsEligibleSessionNow, isRaceSessionNow, completedLaps, myPaceSec, pitLossSec, BuildPitServiceModelKey(), pitTripActive, inLane, trackPct, sessionTimeSec, sessionTimeRemainingSec, verboseLogs, checkpointGapReader, BuildRaceContextLeagueClassMatchDelegate());
             UpdatePitDebriefLifecycle(pitEntryEdge, pitExitEdge, pitLossSec, playerCarIdx);
             UpdatePitExitTimeToExitSec(pluginManager, inLane, speedKph);
             UpdatePlayerLapInvalidState(pluginManager, sessionTimeSec, playerCarIdx, carIdxLap);
@@ -22421,6 +22421,35 @@ namespace LaunchPlugin
                 tireTimeSeconds,
                 serviceOverheadSeconds,
                 necPercent);
+        }
+
+        private string BuildPitServiceModelKey()
+        {
+            PitServiceRegulation regulation = FuelCalculator?.SelectedPitServiceRegulation ?? PitServiceRegulation.DefaultSequential;
+            double baseRefuelRate = FuelCalculator?.EffectiveRefuelRateLps ?? 0.0;
+            double necPercent = ActiveProfile?.NecRefuelRatePercent ?? PitServiceTimeModel.DefaultNecRefuelRatePercent;
+            double tireTimeSeconds = GetEffectiveTireChangeTimeSeconds();
+            int tireCount = GetSelectedTireChangeCountForPrediction();
+
+            return ((int)PitServiceTimeModel.NormalizeRegulation(regulation)).ToString(CultureInfo.InvariantCulture)
+                + "|" + QuantizePitServiceModelValue(Pit_WillAdd, 10.0).ToString(CultureInfo.InvariantCulture)
+                + "|" + QuantizePitServiceModelValue(baseRefuelRate, 100.0).ToString(CultureInfo.InvariantCulture)
+                + "|" + QuantizePitServiceModelValue(necPercent, 10.0).ToString(CultureInfo.InvariantCulture)
+                + "|" + QuantizePitServiceModelValue(tireTimeSeconds, 10.0).ToString(CultureInfo.InvariantCulture)
+                + "|" + tireCount.ToString(CultureInfo.InvariantCulture)
+                + "|" + QuantizePitServiceModelValue(PitBoxModeledServiceOverheadSeconds, 10.0).ToString(CultureInfo.InvariantCulture);
+        }
+
+        private static long QuantizePitServiceModelValue(double value, double scale)
+        {
+            if (double.IsNaN(value) || double.IsInfinity(value))
+            {
+                return 0L;
+            }
+
+            double safeScale = scale > 0.0 ? scale : 1.0;
+            double sanitized = value < 0.0 ? 0.0 : value;
+            return (long)Math.Round(sanitized * safeScale, MidpointRounding.AwayFromZero);
         }
 
         private void ResetTyreLearnTimingSamples()
