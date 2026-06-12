@@ -22806,6 +22806,11 @@ namespace LaunchPlugin
 
         private void LogPitDebriefBoxDiag(string edge, string reason, double finalElapsedUsedSec, double debriefBoxDeltaSec)
         {
+            if (!IsVerboseDebugLoggingOn)
+            {
+                return;
+            }
+
             bool targetTireEvidence;
             int targetTireCount = ResolvePitBoxServiceTireChangeCount(out targetTireEvidence);
 
@@ -22826,6 +22831,11 @@ namespace LaunchPlugin
 
         private void LogPitDebriefFuelDiagOnce(string edge, double currentFuel, bool clearFuelTarget, double fuelTargetLitres)
         {
+            if (!IsVerboseDebugLoggingOn)
+            {
+                return;
+            }
+
             if (edge == "active-service-refresh")
             {
                 bool positiveTarget = fuelTargetLitres > 0.0 || Pit_Box_WillAddLatched > 0.0 || Pit_WillAdd > 0.0;
@@ -22865,6 +22875,11 @@ namespace LaunchPlugin
 
         private void LogPitDebriefFuelDiag(string edge, double currentFuel, bool clearFuelTarget, double fuelTargetLitres)
         {
+            if (!IsVerboseDebugLoggingOn)
+            {
+                return;
+            }
+
             SimHub.Logging.Current.Info("[LalaPlugin:PitDebriefFuelDiag] edge=" + edge
                 + BuildPitDebriefCommonDiagFields()
                 + " pitWillAdd=" + FormatPitDebriefDiagDouble(Pit_WillAdd, "0.000")
@@ -22893,8 +22908,15 @@ namespace LaunchPlugin
             }
 
             PitPhase phase = _pit.CurrentPitPhase;
-            bool inBoxPhase = IsPitDebriefBoxPhase(phase) || isInPitStall;
+            bool credibleBoxServiceState = IsCrediblePitDebriefBoxServiceState(inPitLane, isInPitStall, phase);
+            bool inBoxPhase = credibleBoxServiceState || _pitBoxCountdownActive;
             _pitDebrief.ObservePitPhase(phase);
+
+            if (ShouldSkipPitDebriefBoxServiceDiagnostics(inPitLane, isInPitStall, phase, currentFuel))
+            {
+                _pitDebriefWasInBox = false;
+                return;
+            }
 
             if (inBoxPhase && !_pitDebriefWasInBox)
             {
@@ -22904,7 +22926,7 @@ namespace LaunchPlugin
                 }
 
                 double target = Pit_Box_WillAddLatched > 0.0 ? Pit_Box_WillAddLatched : Pit_WillAdd;
-                LogPitDebriefBoxDiag("box-entry", "first in-box edge before LatchBoxEntry", double.NaN, double.NaN);
+                LogPitDebriefBoxDiag("box-entry", "first confirmed boxed-service edge before LatchBoxEntry", double.NaN, double.NaN);
                 LogPitDebriefFuelDiag("box-entry", currentFuel, false, target);
                 int serviceTireChangeCount = ResolvePitBoxServiceTireChangeCount(out _);
                 _pitDebrief.LatchBoxEntry(
@@ -22954,7 +22976,38 @@ namespace LaunchPlugin
                 }
             }
 
-            _pitDebriefWasInBox = inPitLane && inBoxPhase;
+            _pitDebriefWasInBox = inBoxPhase;
+        }
+
+        private bool IsCrediblePitDebriefBoxServiceState(bool inPitLane, bool isInPitStall, PitPhase phase)
+        {
+            return inPitLane && isInPitStall && phase == PitPhase.InBox;
+        }
+
+        private bool ShouldSkipPitDebriefBoxServiceDiagnostics(bool inPitLane, bool isInPitStall, PitPhase phase, double currentFuel)
+        {
+            if (_pitDebriefWasInBox || _pitBoxCountdownActive || _pitBoxLastDeltaValid)
+            {
+                return false;
+            }
+
+            bool hasValidPitLaneOrStallState = inPitLane && isInPitStall && phase == PitPhase.InBox;
+            if (hasValidPitLaneOrStallState)
+            {
+                return false;
+            }
+
+            bool hasFuelMovement = GetPitDebriefFuelAddedEvidenceLitres(currentFuel) > FuelNoiseEps;
+            bool hasRefuelSelected = _isRefuelSelected || Pit_WillAdd > FuelNoiseEps || Pit_Box_WillAddLatched > FuelNoiseEps;
+            bool hasTireService = (_pitStopTireChangeCountHasEvidence && _pitStopSelectedTireChangeCount > 0)
+                || (_liveTireChangeCountHasEvidence && _liveTireChangeCount > 0);
+            bool hasRepairService = ReadPitRepairSeconds("DataCorePlugin.GameRawData.Telemetry.PitRepairLeft", "DataCorePlugin.GameData.PitRepairLeft") > 0.0
+                || ReadPitRepairSeconds("DataCorePlugin.GameRawData.Telemetry.PitOptRepairLeft", "DataCorePlugin.GameData.PitOptRepairLeft") > 0.0;
+
+            return !hasFuelMovement
+                && !hasRefuelSelected
+                && !hasTireService
+                && !hasRepairService;
         }
 
         private void UpdatePitDebriefLifecycle(
