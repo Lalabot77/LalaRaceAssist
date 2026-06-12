@@ -1,3 +1,7 @@
+- 2026-06-12 Fuel projection pit-service direction fix landed:
+  - Strategy after-zero projection now uses a driving-only strategy duration while preserving total pit/service time for Strategy stop timing, first-stop loss, and time-loss comparison.
+  - Slower pit-service regulations (for example NEC restricted refuel rate) still increase `Fuel.Live.TotalStopLoss` and PitExit/strategy loss timing, but stationary service time no longer increases `Fuel.After0.PlannerSeconds`, `Fuel.Live.DriveTimeAfterZero`, projected laps-to-end, `Fuel.Pit.*`, `Fuel.Refuel.*`, `Fuel.Delta.*`, or `StrategyDash.NextRefuel*` fuel targets by itself.
+  - Property Snapshot list reviewed: yes; no SimHub export/property add, remove, rename, or regroup required.
 - 2026-06-12 Pit Debrief diagnostic spam guard landed:
   - `LatchBoxEntry`, box-entry diagnostics, active service refresh, and box-exit latching now require a confirmed boxed-service state (`PitPhase.InBox` with player on pit road and in pit stall) or the existing active `Pit.Box` countdown authority; `PitPhase.ExitingPits` plus stale/raw pit-stall signals is no longer treated as a first boxed-stop edge.
   - `[LalaPlugin:PitDebriefBoxDiag]` and `[LalaPlugin:PitDebriefFuelDiag]` are verbose temporary source-trace diagnostics emitted only under master debug plus `Enable Debug Logging`; the final `[LalaPlugin:PitDebrief]` summary log remains always-on.

@@ -118,7 +118,7 @@ Strategy includes a manual **Pit Service Regulations** selector. It is a strateg
 - **IMSA:** fuel and tyres together, simultaneous service.
 - **NEC:** fuel and tyres together, simultaneous service, with the selected car profile's **NEC Refuel Rate Factor (%)** applied to the normal refuel rate. A factor of `100%` means no restriction; `75%` means refuelling is modelled at 75% of the normal profile rate.
 
-Race Presets persist this selection. Existing/legacy presets without the field load as **Default**. The plugin does not infer IMSA/NEC from series name, preset name, track, car, or session metadata. Runtime boxed-stop prediction and Strategy stop modelling use the same shared service-time authority so `Fuel.Live.TotalStopLoss`, PitExit prediction, and planner stop timing stay aligned.
+Race Presets persist this selection. Existing/legacy presets without the field load as **Default**. The plugin does not infer IMSA/NEC from series name, preset name, track, car, or session metadata. Runtime boxed-stop prediction and Strategy stop modelling use the same shared service-time authority so `Fuel.Live.TotalStopLoss`, PitExit prediction, and planner stop timing stay aligned. Stationary service time is not treated as additional race-driving time for fuel-to-end projections, so choosing a slower refuel regulation can increase stop-loss/PitExit timing without inflating `Fuel.Refuel.*` targets by itself.
 
 ## 8. PreRace
 

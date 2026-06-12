@@ -204,7 +204,7 @@ Planner pit math incorporates:
 - Pit service regulations selected manually in Strategy and persisted in Race Presets: Default sequential (`fuel + tyres`), IMSA simultaneous (`max(fuel, tyres)`), and NEC simultaneous with the selected car profile's `NecRefuelRatePercent` applied to the normal refuel rate.
 - Pit lane travel loss (direct or DTL-based).
 
-Fuel/tyre service-time rules are routed through the shared `PitServiceTimeModel` seam used by runtime boxed-stop prediction; the planner does not own a duplicate `max(...)` or sequential formula. Loss values are sourced from the live pit timing subsystem but applied deterministically in the planner. No series, track, car, session, or preset-name auto-detection is performed.
+Fuel/tyre service-time rules are routed through the shared `PitServiceTimeModel` seam used by runtime boxed-stop prediction; the planner does not own a duplicate `max(...)` or sequential formula. Loss values are sourced from the live pit timing subsystem but applied deterministically in the planner. No series, track, car, session, or preset-name auto-detection is performed. Pit/service loss remains a stationary time-loss input for strategy stop timing and comparisons only; after-zero and runtime fuel-to-end drive-time projection consume the planner's driving-only duration so slower service cannot add fuel-burn time.
 
 ---
 
