@@ -1,3 +1,10 @@
+## 2026-06-12 — Fuel projection pit-service direction fix
+- Classification: **both** (runtime fuel/refuel projection correctness + driver-facing Strategy regulation semantics).
+- Root cause: Strategy after-zero allowance consumed `StrategyResult.TotalTime`, which includes pit-lane/box stationary loss. NEC/slower service therefore increased `Fuel.After0.PlannerSeconds`, `Fuel.Live.DriveTimeAfterZero`, projected laps remaining, `Fuel.Pit.TotalNeededToEnd`, `Fuel.Pit.NeedToAdd`, `Fuel.Refuel.NextLitres/NextText`, delta outputs, and StrategyDash next-refuel values.
+- Fix: added a driving-only `StrategyResult.TotalDriveTime` and routed after-zero calculation through it, leaving `TotalTime`, `FirstStopTimeLoss`, stop breakdown text, and time-loss comparison regulation-aware.
+- Preserved boundaries: no PitExit prediction changes, no dashboard JSON changes, no export additions/removals/renames, no pit-service regulation UI changes, and no pit command/fuel-control transport changes.
+- Property Snapshot list reviewed: yes; no SimHub export/property add, remove, rename, behavior-contract change, or regroup required.
+
 ## 2026-06-12 — Pit Debrief diagnostic spam guard
 - Classification: **internal-only** (Pit Debrief lifecycle correctness and verbose diagnostic logging gate; no export names, dashboard JSON/layout, PitCycleLite, fuel model, PitExit prediction, `Pit.Box.LastDeltaSec` sign, or `Pit.Debrief.SummaryText` contract changes).
 - Fixed the false first-box-edge path where raw/stale pit-stall evidence could make Pit Debrief evaluate box-entry work while `_pitDebriefWasInBox` stayed false because the player was not actually on pit road/in a valid boxed-service phase. `LatchBoxEntry`, box-entry source traces, active service refresh, and box-exit latching now require confirmed boxed-service state or the existing active `Pit.Box` countdown authority.

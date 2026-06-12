@@ -374,6 +374,8 @@ This section documents current **as-implemented** temporal semantics without cha
 | `Race.EndPhase*`, `Race.LastLapLikely` | debounced-state | RaceFinish lifecycle | per-tick with confidence/debounce; session/lifecycle reset | preferred finish-phase seam | do not touch |
 | `RaceFinish.*` | frozen-post-event + staged latch (class snapshot then player snapshot) | RaceFinish lifecycle | latch on finish triggers; reset when leaving finish lifecycle/session reset | preferred post-finish widgets | do not touch |
 
+Projection invariant: `Fuel.After0.PlannerSeconds`, `Fuel.Live.DriveTimeAfterZero`, `Fuel.Live.ProjectedDriveSecondsRemaining`, `Fuel.LiveLapsRemainingInRace(_Stable)`, `Fuel.Pit.TotalNeededToEnd`, `Fuel.Pit.NeedToAdd`, `Fuel.Refuel.*`, `Fuel.Delta.*`, and `StrategyDash.NextRefuel*` are fuel/drive-time seams. They may consume pit-service regulation for stop-loss displays or strategy time-loss comparison, but stationary pit/service time must not be added to projected race-driving seconds or laps-to-end.
+
 ### Direct answers for Phase 3B questions
 1. Stable exports genuinely needed: `Fuel.LiveFuelPerLap_Stable`, `Fuel.LiveFuelPerLap_StableSource`, `Fuel.LiveFuelPerLap_StableConfidence`, `Fuel.LiveLapsRemainingInRace_Stable`, `Fuel.ProjectionLapTime_Stable`, `Fuel.ProjectionLapTime_StableSource`.
 2. `Fuel.LiveLapsRemainingInRace` is effectively already stable in current runtime flow, but should be treated as a compatibility mirror seam rather than the explicit contract anchor.

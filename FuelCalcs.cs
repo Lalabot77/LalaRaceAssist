@@ -135,6 +135,8 @@ namespace LaunchPlugin
         public double TotalFuel;
         public string Breakdown;
         public double TotalTime;
+        // Driving-only duration used by after-zero/fuel projection; TotalTime intentionally keeps pit loss for strategy time comparisons.
+        public double TotalDriveTime;
         public double PlayerLaps;
         public double FirstStintFuel;
         public double FirstPlannedAddLitres;
@@ -5384,7 +5386,7 @@ namespace LaunchPlugin
                         num2,
                         num3,
                         provisional.PlayerLaps,
-                        provisional.TotalTime);
+                        provisional.TotalDriveTime);
 
                     projectedDriverAfterZero = afterZero.driverExtraSeconds;
                 }
@@ -5439,7 +5441,7 @@ namespace LaunchPlugin
                     leaderPaceSeconds,
                     playerPaceSeconds,
                     strategyResult.PlayerLaps,
-                    strategyResult.TotalTime);
+                    strategyResult.TotalDriveTime);
 
                 StrategyLeaderExtraSecondsAfterZero = leaderExtraSeconds;
                 StrategyDriverExtraSecondsAfterZero = driverExtraSeconds;
@@ -5556,7 +5558,8 @@ namespace LaunchPlugin
             var headerNoStop = "Summary:  " + string.Join(" | ", summaryPartsNoStop);
             result.Breakdown = headerNoStop + Environment.NewLine + Environment.NewLine + bodyNoStop.ToString();
 
-            result.TotalTime = totalLaps * playerPaceSeconds;
+            result.TotalDriveTime = totalLaps * playerPaceSeconds;
+            result.TotalTime = result.TotalDriveTime;
             LastLapsLappedExpected = lappedEventsNoStop.Count;
             return result;
         }
@@ -5777,7 +5780,10 @@ namespace LaunchPlugin
         var summary = "Summary:  " + string.Join(" | ", summaryParts);
         result.Breakdown = summary + Environment.NewLine + Environment.NewLine + body.ToString();
 
-        result.TotalTime = totalLaps * playerPaceSeconds + totalPitTime;
+        // Keep stationary pit/service time out of drive-time projections; slower service is
+        // still reflected in TotalTime/FirstStopTimeLoss for strategy loss comparison.
+        result.TotalDriveTime = totalLaps * playerPaceSeconds;
+        result.TotalTime = result.TotalDriveTime + totalPitTime;
         LastLapsLappedExpected = lappedEvents.Count;
         return result;
     }
