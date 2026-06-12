@@ -1,3 +1,7 @@
+- 2026-06-12 Pit Debrief diagnostic spam guard landed:
+  - `LatchBoxEntry`, box-entry diagnostics, active service refresh, and box-exit latching now require a confirmed boxed-service state (`PitPhase.InBox` with player on pit road and in pit stall) or the existing active `Pit.Box` countdown authority; `PitPhase.ExitingPits` plus stale/raw pit-stall signals is no longer treated as a first boxed-stop edge.
+  - `[LalaPlugin:PitDebriefBoxDiag]` and `[LalaPlugin:PitDebriefFuelDiag]` are verbose temporary source-trace diagnostics emitted only under master debug plus `Enable Debug Logging`; the final `[LalaPlugin:PitDebrief]` summary log remains always-on.
+  - Property Snapshot list reviewed: yes; no SimHub export/property add, remove, rename, behavior-contract change, or regroup required.
 - 2026-06-11 Monitor Event CSV shared-read append landed:
   - replaced only the `MonitorSystem_Events.csv` `File.AppendAllText` path with a FileStream/StreamWriter append helper using `FileShare.ReadWrite`, so the optional event CSV is easier to watch live while SimHub writes it;
   - the same helper writes both the header and event/lifecycle rows, preserving the CSV schema, MonitorSystem text/warnings, lifecycle evidence semantics, exports, dashboard behavior, event filtering, and the existing one-shot failure disable warning for true exclusive-lock/write failures;
