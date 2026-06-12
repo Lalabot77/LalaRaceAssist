@@ -20421,6 +20421,7 @@ namespace LaunchPlugin
                 completedLaps,
                 myPaceSec,
                 pitLossSec,
+                BuildPitServiceModelKey(),
                 pitTripActive,
                 onPitRoad,
                 trackPct,
