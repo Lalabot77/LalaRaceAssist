@@ -3,16 +3,14 @@
   "InGameScreensIndexs": [
     0
   ],
-  "IdleScreensIndexs": [
-    0
-  ],
+  "IdleScreensIndexs": [],
   "MainPreviewIndex": 0,
   "IsOverlay": false,
   "OverlaySizeWarning": true,
   "MetadataVersion": 2.0,
   "EnableOnDashboardMessaging": false,
   "PitScreensIndexs": [],
-  "SimHubVersion": "9.11.12",
+  "SimHubVersion": "9.11.17",
   "Category": null,
   "Title": "Lala Head 2 Head",
   "Description": "Mini Sectors Head to Head on teack and standings",
