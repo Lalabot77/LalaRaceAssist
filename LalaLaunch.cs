@@ -23034,13 +23034,15 @@ namespace LaunchPlugin
                     predictedTotalLossSec,
                     predictedPosition,
                     _pit.PitEntryLineDebrief,
-                    _pit.PitEntryLineTimeLoss_s);
+                    _pit.PitEntryLineTimeLoss_s,
+                    _pit.PitEntrySpeedDelta_kph,
+                    _pit.PitEntryLineLateBy_m);
                 _pitDebriefWasInBox = false;
                 LogPitDebriefBoxDiag("pit-entry", "debrief start; cleared completed box delta validity", double.NaN, double.NaN);
                 LogPitDebriefFuelDiag("pit-entry", double.NaN, false, Pit_Box_WillAddLatched > 0.0 ? Pit_Box_WillAddLatched : Pit_WillAdd);
             }
 
-            _pitDebrief.RefreshEntryAssist(_pit.PitEntryLineDebrief, _pit.PitEntryLineTimeLoss_s);
+            _pitDebrief.RefreshEntryAssist(_pit.PitEntryLineDebrief, _pit.PitEntryLineTimeLoss_s, _pit.PitEntrySpeedDelta_kph, _pit.PitEntryLineLateBy_m);
             _pitDebrief.ObservePitPhase(phase);
 
             if (pitExitEdge)

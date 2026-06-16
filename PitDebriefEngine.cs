@@ -41,6 +41,11 @@ namespace LaunchPlugin
         private bool _missedBoxObserved;
         private PitPhase _missedBoxPhase = PitPhase.None;
         private string _boxRepairInfluenceText = string.Empty;
+        private string _entryDebriefToken = string.Empty;
+        private double _entrySpeedDeltaKph;
+        private double _entryLateByM;
+        private bool _hasEntrySpeedDelta;
+        private bool _hasEntryLateBy;
 
         public bool Valid { get; private set; }
         public int StopIndex { get; private set; }
@@ -96,7 +101,7 @@ namespace LaunchPlugin
             ClearDebriefValues();
         }
 
-        public void StartPitEntry(double predictedTotalLossSec, int predictedPositionInClass, string entryDebriefToken, double entryLineTimeLossSec)
+        public void StartPitEntry(double predictedTotalLossSec, int predictedPositionInClass, string entryDebriefToken, double entryLineTimeLossSec, double entrySpeedDeltaKph, double entryLateByM)
         {
             ClearDebriefValues();
             StopIndex++;
@@ -115,18 +120,18 @@ namespace LaunchPlugin
                 _hasPredictedPosition = true;
             }
 
-            LatchEntry(entryDebriefToken, entryLineTimeLossSec);
+            LatchEntry(entryDebriefToken, entryLineTimeLossSec, entrySpeedDeltaKph, entryLateByM);
             RefreshProgressiveSummary();
         }
 
-        public void RefreshEntryAssist(string entryDebriefToken, double entryLineTimeLossSec)
+        public void RefreshEntryAssist(string entryDebriefToken, double entryLineTimeLossSec, double entrySpeedDeltaKph, double entryLateByM)
         {
             if (!_collecting || Valid)
             {
                 return;
             }
 
-            LatchEntry(entryDebriefToken, entryLineTimeLossSec);
+            LatchEntry(entryDebriefToken, entryLineTimeLossSec, entrySpeedDeltaKph, entryLateByM);
             RefreshProgressiveSummary();
         }
 
@@ -356,6 +361,9 @@ namespace LaunchPlugin
             ExitActualPositionInClass = 0;
             ExitPositionDelta = 0;
             ExitAccuracyText = Unknown;
+            _entryDebriefToken = string.Empty;
+            _entrySpeedDeltaKph = 0.0;
+            _entryLateByM = 0.0;
 
             _hasEntryLoss = false;
             _hasPredictedTotalLoss = false;
@@ -378,6 +386,8 @@ namespace LaunchPlugin
             _hasPositionDelta = false;
             _boxSeen = false;
             _missedBoxObserved = false;
+            _hasEntrySpeedDelta = false;
+            _hasEntryLateBy = false;
             _missedBoxPhase = PitPhase.None;
             _boxRepairInfluenceText = string.Empty;
             _finalLogPending = false;
@@ -385,9 +395,21 @@ namespace LaunchPlugin
             _finalizedUtc = DateTime.MinValue;
         }
 
-        private void LatchEntry(string entryDebriefToken, double entryLineTimeLossSec)
+        private void LatchEntry(string entryDebriefToken, double entryLineTimeLossSec, double entrySpeedDeltaKph, double entryLateByM)
         {
             string token = (entryDebriefToken ?? string.Empty).Trim().ToLowerInvariant();
+            _entryDebriefToken = token;
+            if (!double.IsNaN(entrySpeedDeltaKph) && !double.IsInfinity(entrySpeedDeltaKph))
+            {
+                _entrySpeedDeltaKph = entrySpeedDeltaKph;
+                _hasEntrySpeedDelta = true;
+            }
+
+            if (IsFiniteNonNegative(entryLateByM))
+            {
+                _entryLateByM = entryLateByM;
+                _hasEntryLateBy = true;
+            }
             if (token == "safe")
             {
                 EntryLimiterQualityText = "SAFE";
@@ -575,6 +597,19 @@ namespace LaunchPlugin
 
         private string FormatEntrySection()
         {
+            if (string.Equals(_entryDebriefToken, "bad", StringComparison.Ordinal))
+            {
+                string detail = _hasEntrySpeedDelta
+                    ? _entrySpeedDeltaKph.ToString("+0.0;-0.0;0.0", CultureInfo.InvariantCulture) + "kph"
+                    : "BAD";
+                if (_hasEntryLateBy && _entryLateByM >= 0.05)
+                {
+                    detail += " / " + _entryLateByM.ToString("0.0", CultureInfo.InvariantCulture) + "m late";
+                }
+
+                return "ENTRY BAD (" + detail + ")";
+            }
+
             string quality;
             if (string.Equals(EntryQualityText, "POOR", StringComparison.Ordinal)) quality = "POOR";
             else if (string.Equals(EntryQualityText, "NORMAL", StringComparison.Ordinal)) quality = "NORMAL";

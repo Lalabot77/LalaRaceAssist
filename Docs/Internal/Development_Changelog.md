@@ -1,3 +1,8 @@
+## 2026-06-16 — Pit Debrief bad-entry summary compliance override
+- Classification: **both** (driver-facing Pit Debrief entry summary correctness plus internal debrief evidence plumbing; no export names, dashboard JSON/layout, PitCycleLite, fuel model, PitExit prediction, or `Pit.Box.LastDeltaSec` sign change).
+- `Pit.Debrief.SummaryText` now treats `Pit.EntryLineDebrief=bad` as authoritative for the compact entry section, showing `ENTRY BAD (+x.xkph[/ y.ym late])` from plugin-owned structured speed-delta/late-distance evidence instead of allowing `EntryLineTimeLoss_s=0.0` to produce `ENTRY GOOD (Δ +0.0s)`.
+- Safe/normal and within-margin (+1.0 kph tolerance) entries keep the existing timing-loss performance headline (`ENTRY GOOD/NORMAL (Δ +x.xs)`), and the Pit Entry Assist cue/braking math, box/service/strategy delta behavior, exports, logs, and dashboard layouts are unchanged. Property Snapshot list reviewed: yes; no SimHub exports/properties were added, removed, renamed, behavior-recontracted, or regrouped.
+
 ## 2026-06-12 — Fuel projection pit-service direction fix
 - Classification: **both** (runtime fuel/refuel projection correctness + driver-facing Strategy regulation semantics).
 - Root cause: Strategy after-zero allowance consumed `StrategyResult.TotalTime`, which includes pit-lane/box stationary loss. NEC/slower service therefore increased `Fuel.After0.PlannerSeconds`, `Fuel.Live.DriveTimeAfterZero`, projected laps remaining, `Fuel.Pit.TotalNeededToEnd`, `Fuel.Pit.NeedToAdd`, `Fuel.Refuel.NextLitres/NextText`, delta outputs, and StrategyDash next-refuel values.
