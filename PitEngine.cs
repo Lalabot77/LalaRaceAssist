@@ -63,6 +63,8 @@ namespace LaunchPlugin
         public string PitEntryLineDebrief { get; private set; } = "normal";
         public string PitEntryLineDebriefText { get; private set; } = string.Empty;
         public double PitEntryLineTimeLoss_s { get; private set; } = 0.0;
+        public double PitEntryLineLateBy_m { get; private set; } = 0.0;
+        public int PitEntryLineDebriefSerial { get; private set; } = 0;
         public double PlayerTrackPercentNormalized { get; private set; } = double.NaN;
         public double PlayerPitBoxTrackPct { get; private set; } = double.NaN;
         private bool _pitEntryAssistWasActive;
@@ -130,6 +132,8 @@ namespace LaunchPlugin
             PitEntryLineDebrief = "normal";
             PitEntryLineDebriefText = string.Empty;
             PitEntryLineTimeLoss_s = 0.0;
+            PitEntryLineLateBy_m = 0.0;
+            PitEntryLineDebriefSerial = 0;
             PlayerTrackPercentNormalized = double.NaN;
             PlayerPitBoxTrackPct = double.NaN;
         }
@@ -438,6 +442,7 @@ namespace LaunchPlugin
                 _pitEntryFirstCompliantDToLine_m = double.NaN;
                 _pitEntryFirstCompliantRawDToLine_m = double.NaN;
                 PitEntryLineTimeLoss_s = 0.0;
+                PitEntryLineLateBy_m = 0.0;
 
                 SimHub.Logging.Current.Info(
                     $"[LalaPlugin:PitEntryAssist] ACTIVATE " +
@@ -463,6 +468,7 @@ namespace LaunchPlugin
             // LINE log (exactly once on pit-lane entry)
             if (crossedPitLineThisTick)
             {
+                PitEntryLineDebriefSerial++;
                 bool entrySafe = PitEntrySpeedDelta_kph <= 0.0;
                 bool hitLimiter = _pitEntryFirstCompliantCaptured && !double.IsNaN(_pitEntryFirstCompliantRawDToLine_m);
                 string firstOkText = hitLimiter
@@ -481,6 +487,7 @@ namespace LaunchPlugin
                 }
 
                 PitEntryLineTimeLoss_s = timeLossSec;
+                PitEntryLineLateBy_m = 0.0;
 
                 if (entrySafe)
                 {
@@ -515,6 +522,7 @@ namespace LaunchPlugin
                 {
                     PitEntryLineDebrief = "bad";
                     double lateByM = Math.Max(0.0, -PitEntryMargin_m);
+                    PitEntryLineLateBy_m = lateByM;
                     string lateText = lateByM >= 0.05
                         ? $", braked {lateByM:F1}m too late"
                         : string.Empty;
@@ -588,6 +596,7 @@ namespace LaunchPlugin
             PitEntryMargin_m = 0.0;
             PitEntryCue = 0;
             PitEntrySpeedDelta_kph = 0.0;
+            PitEntryLineLateBy_m = 0.0;
             // keep PitEntryDecelProfile_mps2 / PitEntryBuffer_m as last-used (useful for debugging)
         }
 
