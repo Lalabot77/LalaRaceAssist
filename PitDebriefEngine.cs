@@ -398,17 +398,27 @@ namespace LaunchPlugin
         private void LatchEntry(string entryDebriefToken, double entryLineTimeLossSec, double entrySpeedDeltaKph, double entryLateByM)
         {
             string token = (entryDebriefToken ?? string.Empty).Trim().ToLowerInvariant();
+            bool preservingBadEntryEvidence = string.Equals(_entryDebriefToken, "bad", StringComparison.Ordinal)
+                && string.Equals(token, "bad", StringComparison.Ordinal);
             _entryDebriefToken = token;
             if (!double.IsNaN(entrySpeedDeltaKph) && !double.IsInfinity(entrySpeedDeltaKph))
             {
-                _entrySpeedDeltaKph = entrySpeedDeltaKph;
-                _hasEntrySpeedDelta = true;
+                bool hasPreservedBadSpeed = preservingBadEntryEvidence && _hasEntrySpeedDelta && Math.Abs(_entrySpeedDeltaKph) >= 0.05;
+                if (!hasPreservedBadSpeed)
+                {
+                    _entrySpeedDeltaKph = entrySpeedDeltaKph;
+                    _hasEntrySpeedDelta = true;
+                }
             }
 
             if (IsFiniteNonNegative(entryLateByM))
             {
-                _entryLateByM = entryLateByM;
-                _hasEntryLateBy = true;
+                bool hasPreservedBadLateDistance = preservingBadEntryEvidence && _hasEntryLateBy && _entryLateByM >= 0.05;
+                if (!hasPreservedBadLateDistance)
+                {
+                    _entryLateByM = entryLateByM;
+                    _hasEntryLateBy = true;
+                }
             }
             if (token == "safe")
             {

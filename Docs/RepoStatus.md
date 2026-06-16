@@ -1,6 +1,6 @@
 - 2026-06-16 Pit Debrief bad-entry summary compliance override landed:
   - `Pit.Debrief.SummaryText` now uses the authoritative `Pit.EntryLineDebrief=bad` token to render `ENTRY BAD` with structured speed-delta and late-distance detail, so a true bad line result with `Pit.EntryLineTimeLoss_s=0.0` no longer appears as `ENTRY GOOD (Δ +0.0s)`.
-  - `safe`/`normal` entry tokens, including marginal overspeed within the existing +1.0 kph tolerance, keep the timing-loss performance headline. No dashboard JSON/layout edits, export additions/removals/renames, PitCycleLite, Fuel Model, PitExit prediction, `Pit.Box.LastDeltaSec` sign, or box/service/strategy delta behavior changes.
+  - `safe`/`normal` entry tokens, including marginal overspeed within the existing +1.0 kph tolerance, keep the timing-loss performance headline. Once bad-entry speed/late evidence is captured, later pit-entry-assist reset/default refresh values do not overwrite it during collection/finalization. No dashboard JSON/layout edits, export additions/removals/renames, PitCycleLite, Fuel Model, PitExit prediction, `Pit.Box.LastDeltaSec` sign, or box/service/strategy delta behavior changes.
   - Property Snapshot list reviewed: yes; no SimHub export/property add, remove, rename, behavior-contract change, or regroup required.
 - 2026-06-12 Fuel projection pit-service direction fix landed:
   - Strategy after-zero projection now uses a driving-only strategy duration while preserving total pit/service time for Strategy stop timing, first-stop loss, and time-loss comparison.
