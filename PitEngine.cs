@@ -64,6 +64,7 @@ namespace LaunchPlugin
         public string PitEntryLineDebriefText { get; private set; } = string.Empty;
         public double PitEntryLineTimeLoss_s { get; private set; } = 0.0;
         public double PitEntryLineLateBy_m { get; private set; } = 0.0;
+        public int PitEntryLineDebriefSerial { get; private set; } = 0;
         public double PlayerTrackPercentNormalized { get; private set; } = double.NaN;
         public double PlayerPitBoxTrackPct { get; private set; } = double.NaN;
         private bool _pitEntryAssistWasActive;
@@ -132,6 +133,7 @@ namespace LaunchPlugin
             PitEntryLineDebriefText = string.Empty;
             PitEntryLineTimeLoss_s = 0.0;
             PitEntryLineLateBy_m = 0.0;
+            PitEntryLineDebriefSerial = 0;
             PlayerTrackPercentNormalized = double.NaN;
             PlayerPitBoxTrackPct = double.NaN;
         }
@@ -466,6 +468,7 @@ namespace LaunchPlugin
             // LINE log (exactly once on pit-lane entry)
             if (crossedPitLineThisTick)
             {
+                PitEntryLineDebriefSerial++;
                 bool entrySafe = PitEntrySpeedDelta_kph <= 0.0;
                 bool hitLimiter = _pitEntryFirstCompliantCaptured && !double.IsNaN(_pitEntryFirstCompliantRawDToLine_m);
                 string firstOkText = hitLimiter

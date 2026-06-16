@@ -12,6 +12,7 @@ namespace LaunchPlugin
         private const string LaneExitState = "LANE_EXIT";
         private const string AwaitingOutLapState = "AWAITING_OUT_LAP";
         private const string FinalState = "FINAL";
+        private const double BadEntrySpeedToleranceKph = 1.0;
 
         private bool _collecting;
         private bool _finalLogPending;
@@ -46,6 +47,9 @@ namespace LaunchPlugin
         private double _entryLateByM;
         private bool _hasEntrySpeedDelta;
         private bool _hasEntryLateBy;
+        private bool _entryLineEvidenceCurrentStop;
+        private int _entryLineDebriefSerial;
+        private int _lastConsumedEntryLineDebriefSerial;
 
         public bool Valid { get; private set; }
         public int StopIndex { get; private set; }
@@ -99,9 +103,10 @@ namespace LaunchPlugin
             _finalLogLine = string.Empty;
             StopIndex = 0;
             ClearDebriefValues();
+            _lastConsumedEntryLineDebriefSerial = 0;
         }
 
-        public void StartPitEntry(double predictedTotalLossSec, int predictedPositionInClass, string entryDebriefToken, double entryLineTimeLossSec, double entrySpeedDeltaKph, double entryLateByM)
+        public void StartPitEntry(double predictedTotalLossSec, int predictedPositionInClass, string entryDebriefToken, double entryLineTimeLossSec, double entrySpeedDeltaKph, double entryLateByM, int entryLineDebriefSerial)
         {
             ClearDebriefValues();
             StopIndex++;
@@ -120,18 +125,18 @@ namespace LaunchPlugin
                 _hasPredictedPosition = true;
             }
 
-            LatchEntry(entryDebriefToken, entryLineTimeLossSec, entrySpeedDeltaKph, entryLateByM);
+            LatchEntry(entryDebriefToken, entryLineTimeLossSec, entrySpeedDeltaKph, entryLateByM, entryLineDebriefSerial);
             RefreshProgressiveSummary();
         }
 
-        public void RefreshEntryAssist(string entryDebriefToken, double entryLineTimeLossSec, double entrySpeedDeltaKph, double entryLateByM)
+        public void RefreshEntryAssist(string entryDebriefToken, double entryLineTimeLossSec, double entrySpeedDeltaKph, double entryLateByM, int entryLineDebriefSerial)
         {
             if (!_collecting || Valid)
             {
                 return;
             }
 
-            LatchEntry(entryDebriefToken, entryLineTimeLossSec, entrySpeedDeltaKph, entryLateByM);
+            LatchEntry(entryDebriefToken, entryLineTimeLossSec, entrySpeedDeltaKph, entryLateByM, entryLineDebriefSerial);
             RefreshProgressiveSummary();
         }
 
@@ -364,6 +369,8 @@ namespace LaunchPlugin
             _entryDebriefToken = string.Empty;
             _entrySpeedDeltaKph = 0.0;
             _entryLateByM = 0.0;
+            _entryLineEvidenceCurrentStop = false;
+            _entryLineDebriefSerial = 0;
 
             _hasEntryLoss = false;
             _hasPredictedTotalLoss = false;
@@ -395,12 +402,23 @@ namespace LaunchPlugin
             _finalizedUtc = DateTime.MinValue;
         }
 
-        private void LatchEntry(string entryDebriefToken, double entryLineTimeLossSec, double entrySpeedDeltaKph, double entryLateByM)
+        private void LatchEntry(string entryDebriefToken, double entryLineTimeLossSec, double entrySpeedDeltaKph, double entryLateByM, int entryLineDebriefSerial)
         {
             string token = (entryDebriefToken ?? string.Empty).Trim().ToLowerInvariant();
-            bool preservingBadEntryEvidence = string.Equals(_entryDebriefToken, "bad", StringComparison.Ordinal)
+            if (entryLineDebriefSerial > 0 && entryLineDebriefSerial == _entryLineDebriefSerial)
+            {
+                _entryLineEvidenceCurrentStop = true;
+            }
+            else if (entryLineDebriefSerial > _lastConsumedEntryLineDebriefSerial)
+            {
+                _entryLineDebriefSerial = entryLineDebriefSerial;
+                _lastConsumedEntryLineDebriefSerial = entryLineDebriefSerial;
+                _entryLineEvidenceCurrentStop = true;
+            }
+
+            string previousToken = _entryDebriefToken;
+            bool preservingBadEntryEvidence = string.Equals(previousToken, "bad", StringComparison.Ordinal)
                 && string.Equals(token, "bad", StringComparison.Ordinal);
-            _entryDebriefToken = token;
             if (!double.IsNaN(entrySpeedDeltaKph) && !double.IsInfinity(entrySpeedDeltaKph))
             {
                 bool hasPreservedBadSpeed = preservingBadEntryEvidence && _hasEntrySpeedDelta && Math.Abs(_entrySpeedDeltaKph) >= 0.05;
@@ -420,6 +438,17 @@ namespace LaunchPlugin
                     _hasEntryLateBy = true;
                 }
             }
+
+            bool hasCurrentStopBadEvidence = _entryLineEvidenceCurrentStop
+                && string.Equals(token, "bad", StringComparison.Ordinal)
+                && ((_hasEntrySpeedDelta && _entrySpeedDeltaKph > BadEntrySpeedToleranceKph)
+                    || (_hasEntryLateBy && _entryLateByM >= 0.05));
+            if (string.Equals(token, "bad", StringComparison.Ordinal) && !hasCurrentStopBadEvidence)
+            {
+                token = string.Empty;
+            }
+
+            _entryDebriefToken = token;
             if (token == "safe")
             {
                 EntryLimiterQualityText = "SAFE";
@@ -605,9 +634,21 @@ namespace LaunchPlugin
             }
         }
 
+        private bool HasCurrentStopBadEntryEvidence()
+        {
+            if (!_entryLineEvidenceCurrentStop || !string.Equals(_entryDebriefToken, "bad", StringComparison.Ordinal))
+            {
+                return false;
+            }
+
+            bool validBadSpeed = _hasEntrySpeedDelta && _entrySpeedDeltaKph > BadEntrySpeedToleranceKph;
+            bool validLateDistance = _hasEntryLateBy && _entryLateByM >= 0.05;
+            return validBadSpeed || validLateDistance;
+        }
+
         private string FormatEntrySection()
         {
-            if (string.Equals(_entryDebriefToken, "bad", StringComparison.Ordinal))
+            if (HasCurrentStopBadEntryEvidence())
             {
                 string detail = _hasEntrySpeedDelta
                     ? _entrySpeedDeltaKph.ToString("+0.0;-0.0;0.0", CultureInfo.InvariantCulture) + "kph"
