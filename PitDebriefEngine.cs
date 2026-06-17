@@ -55,6 +55,7 @@ namespace LaunchPlugin
         public int StopIndex { get; private set; }
         public string StateText { get; private set; } = EmptyState;
         public string SummaryText { get; private set; } = string.Empty;
+        public string EntrySummaryText { get; private set; } = string.Empty;
 
         public string EntryQualityText { get; private set; } = Unknown;
         public double EntryLineTimeLossSec { get; private set; }
@@ -314,7 +315,7 @@ namespace LaunchPlugin
             ResolveBoxOutcome();
             ResolveExitAccuracy();
             _serviceKnown = true;
-            SummaryText = BuildSummaryText();
+            RefreshSummaryTexts();
             _summaryFinalized = true;
             Valid = true;
             _collecting = false;
@@ -343,6 +344,7 @@ namespace LaunchPlugin
             Valid = false;
             StateText = EmptyState;
             SummaryText = string.Empty;
+            EntrySummaryText = string.Empty;
             EntryQualityText = Unknown;
             EntryLineTimeLossSec = 0.0;
             EntryDecelQualityText = Unknown;
@@ -467,7 +469,17 @@ namespace LaunchPlugin
             }
 
             EntryDecelQualityText = Unknown;
-            if (IsFiniteNonNegative(entryLineTimeLossSec))
+            if (hasCurrentStopBadEvidence)
+            {
+                if (IsFiniteNonNegative(entryLineTimeLossSec))
+                {
+                    EntryLineTimeLossSec = entryLineTimeLossSec;
+                    _hasEntryLoss = true;
+                }
+
+                EntryQualityText = "BAD";
+            }
+            else if (IsFiniteNonNegative(entryLineTimeLossSec))
             {
                 EntryLineTimeLossSec = entryLineTimeLossSec;
                 _hasEntryLoss = true;
@@ -491,7 +503,7 @@ namespace LaunchPlugin
         {
             if (token == "safe") return "GOOD";
             if (token == "normal") return "NORMAL";
-            if (token == "bad") return "POOR";
+            if (token == "bad") return "BAD";
             return Unknown;
         }
 
@@ -630,8 +642,17 @@ namespace LaunchPlugin
         {
             if (_collecting && !_summaryFinalized)
             {
-                SummaryText = BuildSummaryText();
+                RefreshSummaryTexts();
             }
+        }
+
+        private void RefreshSummaryTexts()
+        {
+            EntrySummaryText = FormatEntrySection();
+            SummaryText = EntrySummaryText + " | "
+                + FormatBoxSection() + " | "
+                + FormatServiceSection() + " | "
+                + FormatStrategySection();
         }
 
         private bool HasCurrentStopBadEntryEvidence()
@@ -754,14 +775,6 @@ namespace LaunchPlugin
             {
                 ExitAccuracyText = "MISS";
             }
-        }
-
-        private string BuildSummaryText()
-        {
-            return FormatEntrySection() + " | "
-                + FormatBoxSection() + " | "
-                + FormatServiceSection() + " | "
-                + FormatStrategySection();
         }
 
         private string BuildFinalLogLine()
