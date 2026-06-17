@@ -8223,6 +8223,8 @@ namespace LaunchPlugin
             AttachCore("Pit.EntryMargin_m", () => _pit.PitEntryMargin_m);
             AttachCore("Pit.EntryCue", () => _pit.PitEntryCue);
             AttachCore("Pit.EntryCueText", () => _pit.PitEntryCueText);
+            AttachCore("Pit.EntryBrakeCueText", () => _pit.PitEntryBrakeCueText);
+            AttachCore("Pit.EntryBrakeCueState", () => _pit.PitEntryBrakeCueState);
             AttachCore("Pit.EntrySpeedDelta_kph", () => _pit.PitEntrySpeedDelta_kph);
             AttachCore("Pit.EntryDecelProfile_mps2", () => _pit.PitEntryDecelProfile_mps2);
             AttachCore("Pit.EntryBuffer_m", () => _pit.PitEntryBuffer_m);
@@ -11429,6 +11431,7 @@ namespace LaunchPlugin
                 UpdatePitExitDisplayValues(data, false);
                 UpdatePitBoxDisplayValues(data, pluginManager, false);
             }
+            _pit?.ApplyPitEntryPostLineHold(inLane, _pitBoxDistanceM);
             double currentFuelNow = data.NewData?.Fuel ?? 0.0;
             UpdatePitBoxCountdownValues(inLane, isInPitStall);
 

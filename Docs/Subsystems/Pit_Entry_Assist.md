@@ -24,15 +24,18 @@ Canonical logs: `Docs/Internal/SimHubLogMessages.md`
   - Pit limiter **ON** **and** overspeed > **+2 kph** (`Pit.EntrySpeedDelta_kph`), **OR**
   - Pit screen is active (auto or manual) **and** you are **on track** within **≤500 m** of the line (manual arming path).
 - **Deactivates when:**
-  - Driver enters pit lane (`IsInPitLane`), or
-  - Arming conditions drop (limiter off / no overspeed / no entry phase), or
-  - Inputs become invalid (missing pit speed, distance >500 m, etc.).
+  - pre-line arming conditions drop (limiter off / no overspeed / no entry phase / manual pit screen inactive), or
+  - pre-line inputs become invalid (missing pit speed, distance >500 m, missing/invalid markers), or
+  - after crossing the pit-entry line, the post-line hold hands over once the player is in pit lane and the existing Pit Box distance seam reports `Pit.Box.DistanceM < 200m`.
 
 ### Flow (high level)
 1. Assist arms (conditions above).
 2. Braking guidance recomputes every tick (distance, required distance, margin, cue).
 3. Driver crosses pit entry line → `ENTRY LINE` log fires once with debrief/time-loss fields.
-4. Assist ends (pit entry or disarm).
+4. Post-line speed-settling text remains available while on pit lane until handover to the Pit Box widget (`Pit.Box.DistanceM < 200m`).
+5. During post-line hold, live braking geometry (`Pit.EntryDistanceToLine_m`, `Pit.EntryRequiredDistance_m`, `Pit.EntryMargin_m`, `Pit.EntryCue`) is neutralized while speed-settling text remains active.
+6. Handover turns off active cue outputs but preserves the latched entry-line evidence (`Pit.EntryLineDebrief*`, `Pit.EntrySpeedDelta_kph`, and late-distance evidence) long enough for Pit Debrief consumption.
+7. Assist ends after handover or disarm.
 
 ---
 
@@ -79,8 +82,30 @@ Cue level is derived from **margin vs. buffer** (buffer = profile slider):
 | 4 | LATE | Cannot make pit speed at target decel (margin < −buffer) |
 
 - **Logic:** `margin < -buffer → LATE; margin ≤ 0 → BRAKE NOW; margin ≤ buffer → BRAKE SOON; else OK`.
-- **Dash string:** `Pit.EntryCueText` mirrors the cue value with dash-friendly text tokens.
+- **Dash state string:** `Pit.EntryCueText` mirrors the cue value with stable state tokens only (`OFF`, `OK`, `BRAKE SOON`, `BRAKE NOW`, `LATE`). It intentionally does not special-case below-limit speed.
+- **Driver-facing brake string:** `Pit.EntryBrakeCueText` is the preferred direct text label for dashboards that want plugin-owned wording. It uses only `OFF`, `FAULT`, `READY`, `BRAKE IN Xm`, `BRAKE NOW`, `BRAKE HARD`, `SLOW DOWN`, `SPEED OKAY`, `BELOW LIMIT`, and `TOO SLOW`; it intentionally does not emit legacy `BRAKE SOON` or `LATE`.
+- **Driver-facing brake state:** `Pit.EntryBrakeCueState` is the numeric companion for dash colours/animation: `0=OFF`, `1=FAULT`, `2=READY`, `3=BRAKE IN`, `4=BRAKE NOW`, `5=BRAKE HARD`, `6=SLOW DOWN`, `7=SPEED OKAY`, `8=BELOW LIMIT`, `9=TOO SLOW`.
 - **Dash visuals are independent:** cue selection does not dictate how the dash renders the marker/indicator.
+
+
+### Driver-facing BrakeCue contract
+
+`Pit.EntryBrakeCueText` / `Pit.EntryBrakeCueState` are phase-specific and do not change braking-distance maths or legacy cue tokens. Before the real pit-entry line, distance wording treats the configured buffer point as the fake brake line and never switches to speed-settling just because the fake/buffer line has been passed. After the real pit-entry line, only speed-settling states are published and live braking geometry is neutralized. The countdown distance is `brakeInM = max(0, Pit.EntryMargin_m - Pit.EntryBuffer_m)`, so a 315m margin with a 15m buffer shows `BRAKE IN 300m`, and a 15m margin with a 15m buffer shows `BRAKE NOW`.
+
+| State | Text | Meaning |
+| --- | --- | --- |
+| 0 | OFF | Assist inactive / disarmed |
+| 1 | FAULT | Pit-entry marker, pit speed, track position, track length, or distance solution is invalid/unavailable |
+| 2 | READY | Valid and armed, above pit speed, outside the 300m countdown window before the fake brake line |
+| 3 | BRAKE IN Xm | Above pit speed, inside the countdown window, before the fake brake line |
+| 4 | BRAKE NOW | Reached the configured buffer/fake brake line (`margin <= buffer && margin >= 0`) |
+| 5 | BRAKE HARD | Negative margin; inside required braking distance |
+| 6 | SLOW DOWN | Post-line only; speed delta is above the pit limit by more than about +2kph, with hysteresis |
+| 7 | SPEED OKAY | Post-line only; speed delta is in the settled band (about `-10kph..+2kph`, with hysteresis) |
+| 8 | BELOW LIMIT | Post-line only; speed delta is below the limit but not too slow (about `< -10kph` and `>= -20kph`, with hysteresis) |
+| 9 | TOO SLOW | Post-line only; speed delta is far below the limit (about `< -20kph`, with hysteresis) |
+
+Post-line speed-status hysteresis keeps the previous speed band when speed delta is within about 1kph of the `+2`, `-10`, or `-20` kph boundary, and resets on assist/session reset. The immediate post-line pit-box handover reset is intentionally cue-only: it disables the active Pit Entry surface without clearing latched entry-line evidence before Pit Debrief can consume the current-stop speed delta, late distance, debrief token/text, time loss, and serial.
 
 ---
 
@@ -94,7 +119,9 @@ Cue level is derived from **margin vs. buffer** (buffer = profile slider):
 - Dash Studio tips:
   - Expressions are simple → avoid heavy clamping/branching that causes stepped motion.
   - Force floating-point math with decimal literals (e.g., `150.0`).
-  - Keep cue text (`Pit.EntryCueText`) available as a secondary label if desired.
+  - Use `Pit.EntryBrakeCueText` for a direct driver-facing text label when wanted.
+  - Use `Pit.EntryBrakeCueState` for colours/animations instead of parsing text.
+  - Use `Pit.EntryCueText` only when the widget wants the stable legacy cue-state token and will compose its own wording.
 
 ---
 
