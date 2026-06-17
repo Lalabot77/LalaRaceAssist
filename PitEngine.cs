@@ -202,7 +202,7 @@ namespace LaunchPlugin
             if (!isInPitLane || pitBoxDistanceM < 200)
             {
                 _pitEntryPostLineHoldActive = false;
-                ResetPitEntryAssistOutputs();
+                ResetPitEntryAssistCueOutputsPreserveLineEvidence();
                 return;
             }
 
@@ -702,6 +702,13 @@ namespace LaunchPlugin
 
         private void ResetPitEntryAssistOutputs()
         {
+            ResetPitEntryAssistCueOutputsPreserveLineEvidence();
+            PitEntrySpeedDelta_kph = 0.0;
+            PitEntryLineLateBy_m = 0.0;
+        }
+
+        private void ResetPitEntryAssistCueOutputsPreserveLineEvidence()
+        {
             // Log END once per activation
             if (_pitEntryAssistWasActive)
             {
@@ -718,10 +725,9 @@ namespace LaunchPlugin
             PitEntryMargin_m = 0.0;
             PitEntryCue = 0;
             PitEntryBrakeCueState = PitEntryBrakeCueOff;
-            PitEntrySpeedDelta_kph = 0.0;
-            PitEntryLineLateBy_m = 0.0;
             _pitEntrySpeedStatusState = 0;
             // keep PitEntryDecelProfile_mps2 / PitEntryBuffer_m as last-used (useful for debugging)
+            // keep PitEntrySpeedDelta_kph / PitEntryLine* evidence for Pit Debrief handoff
         }
 
 

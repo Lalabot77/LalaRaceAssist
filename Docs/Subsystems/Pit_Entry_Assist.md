@@ -33,7 +33,8 @@ Canonical logs: `Docs/Internal/SimHubLogMessages.md`
 2. Braking guidance recomputes every tick (distance, required distance, margin, cue).
 3. Driver crosses pit entry line → `ENTRY LINE` log fires once with debrief/time-loss fields.
 4. Post-line speed-settling text remains available while on pit lane until handover to the Pit Box widget (`Pit.Box.DistanceM < 200m`).
-5. Assist ends after handover or disarm.
+5. Handover turns off active cue outputs but preserves the latched entry-line evidence (`Pit.EntryLineDebrief*`, `Pit.EntrySpeedDelta_kph`, and late-distance evidence) long enough for Pit Debrief consumption.
+6. Assist ends after handover or disarm.
 
 ---
 
@@ -102,7 +103,7 @@ Cue level is derived from **margin vs. buffer** (buffer = profile slider):
 | 7 | BELOW LIMIT | Speed delta is below the limit but not too slow (about `< -10kph` and `>= -20kph`, with hysteresis) |
 | 8 | TOO SLOW | Speed delta is far below the limit (about `< -20kph`, with hysteresis) |
 
-Speed-status hysteresis keeps the previous speed band when speed delta is within about 1kph of the `+2`, `-10`, or `-20` kph boundary, and resets on assist/session reset.
+Speed-status hysteresis keeps the previous speed band when speed delta is within about 1kph of the `+2`, `-10`, or `-20` kph boundary, and resets on assist/session reset. The immediate post-line pit-box handover reset is intentionally cue-only: it disables the active Pit Entry surface without clearing latched entry-line evidence before Pit Debrief can consume the current-stop speed delta, late distance, debrief token/text, time loss, and serial.
 
 ---
 
