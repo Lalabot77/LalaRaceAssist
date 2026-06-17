@@ -177,7 +177,7 @@ Pit Entry Assist helps you arrive at the pit entry line at the right speed. It u
 - already late,
 - or already below the pit speed limit.
 
-Dashboards can show the plugin-owned brake label directly (`Pit.EntryBrakeCueText`) when they want simple wording such as `READY`, `BRAKE IN 120m`, `BRAKE NOW`, `BRAKE HARD`, `SPEED OKAY`, `BELOW LIMIT`, or `TOO SLOW`; `Pit.EntryBrakeCueState` provides the matching numeric colour/animation state. The older `Pit.EntryCueText` remains the stable legacy state token for widgets that build their own message.
+Dashboards can show the plugin-owned brake label directly (`Pit.EntryBrakeCueText`) when they want simple wording such as `READY`, `BRAKE IN 120m`, `BRAKE NOW`, `BRAKE HARD`, `SLOW DOWN`, `SPEED OKAY`, `BELOW LIMIT`, or `TOO SLOW`; `Pit.EntryBrakeCueState` provides the matching numeric colour/animation state. The older `Pit.EntryCueText` remains the stable legacy state token for widgets that build their own message.
 
 Pit Entry Assist debriefs use a small 1.0 kph line-speed margin for review wording: an entry that is only slightly over the limit (for example `+0.3kph`) is reported as normal/within margin instead of a bad entry. Larger overspeed remains bad.
 

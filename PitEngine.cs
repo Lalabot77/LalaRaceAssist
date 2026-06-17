@@ -56,7 +56,7 @@ namespace LaunchPlugin
         public double PitEntryRequiredDistance_m { get; private set; } = 0.0;
         public double PitEntryMargin_m { get; private set; } = 0.0;
         public int PitEntryCue { get; private set; } = 0; // 0 Off, 1 OK, 2 BrakeSoon, 3 BrakeNow, 4 Late
-        public int PitEntryBrakeCueState { get; private set; } = 0; // 0 Off, 1 Fault, 2 Ready, 3 BrakeIn, 4 BrakeNow, 5 BrakeHard, 6 SpeedOkay, 7 BelowLimit, 8 TooSlow
+        public int PitEntryBrakeCueState { get; private set; } = 0; // 0 Off, 1 Fault, 2 Ready, 3 BrakeIn, 4 BrakeNow, 5 BrakeHard, 6 SlowDown, 7 SpeedOkay, 8 BelowLimit, 9 TooSlow
 
         public double PitEntrySpeedDelta_kph { get; private set; } = 0.0;
         public double PitEntryDecelProfile_mps2 { get; private set; } = 0.0;
@@ -84,9 +84,10 @@ namespace LaunchPlugin
         private const int PitEntryBrakeCueBrakeIn = 3;
         private const int PitEntryBrakeCueBrakeNow = 4;
         private const int PitEntryBrakeCueBrakeHard = 5;
-        private const int PitEntryBrakeCueSpeedOkay = 6;
-        private const int PitEntryBrakeCueBelowLimit = 7;
-        private const int PitEntryBrakeCueTooSlow = 8;
+        private const int PitEntryBrakeCueSlowDown = 6;
+        private const int PitEntryBrakeCueSpeedOkay = 7;
+        private const int PitEntryBrakeCueBelowLimit = 8;
+        private const int PitEntryBrakeCueTooSlow = 9;
         private const double PitEntryBrakeInWindowM = 300.0;
         private const double PitEntrySpeedHysteresisKph = 1.0;
 
@@ -187,6 +188,7 @@ namespace LaunchPlugin
                     }
                     case PitEntryBrakeCueBrakeNow: return "BRAKE NOW";
                     case PitEntryBrakeCueBrakeHard: return "BRAKE HARD";
+                    case PitEntryBrakeCueSlowDown: return "SLOW DOWN";
                     case PitEntryBrakeCueSpeedOkay: return "SPEED OKAY";
                     case PitEntryBrakeCueBelowLimit: return "BELOW LIMIT";
                     case PitEntryBrakeCueTooSlow: return "TOO SLOW";
@@ -207,7 +209,8 @@ namespace LaunchPlugin
             }
 
             PitEntryAssistActive = true;
-            PitEntryBrakeCueState = ResolvePitEntryBrakeCueState();
+            NeutralizePitEntryLiveGeometryForPostLineHold();
+            PitEntryBrakeCueState = ResolvePitEntryPostLineSpeedCueState();
             _pitEntryAssistWasActive = true;
         }
 
@@ -219,12 +222,16 @@ namespace LaunchPlugin
 
         private int ResolvePitEntrySpeedStatusState(double speedDeltaKph)
         {
-            if (double.IsNaN(speedDeltaKph) || double.IsInfinity(speedDeltaKph)) return 0;
+            if (double.IsNaN(speedDeltaKph) || double.IsInfinity(speedDeltaKph)) return PitEntryBrakeCueSlowDown;
 
             switch (_pitEntrySpeedStatusState)
             {
+                case PitEntryBrakeCueSlowDown:
+                    if (speedDeltaKph <= 2.0 - PitEntrySpeedHysteresisKph) return PitEntryBrakeCueSpeedOkay;
+                    return PitEntryBrakeCueSlowDown;
+
                 case PitEntryBrakeCueSpeedOkay:
-                    if (speedDeltaKph > 2.0 + PitEntrySpeedHysteresisKph) return 0;
+                    if (speedDeltaKph > 2.0 + PitEntrySpeedHysteresisKph) return PitEntryBrakeCueSlowDown;
                     if (speedDeltaKph < -10.0 - PitEntrySpeedHysteresisKph)
                         return speedDeltaKph < -20.0 - PitEntrySpeedHysteresisKph ? PitEntryBrakeCueTooSlow : PitEntryBrakeCueBelowLimit;
                     return PitEntryBrakeCueSpeedOkay;
@@ -240,17 +247,32 @@ namespace LaunchPlugin
                     return PitEntryBrakeCueTooSlow;
             }
 
-            if (speedDeltaKph >= -10.0 && speedDeltaKph <= 2.0) return PitEntryBrakeCueSpeedOkay;
-            if (speedDeltaKph < -10.0 && speedDeltaKph >= -20.0) return PitEntryBrakeCueBelowLimit;
-            if (speedDeltaKph < -20.0) return PitEntryBrakeCueTooSlow;
-            return 0;
+            if (speedDeltaKph > 2.0) return PitEntryBrakeCueSlowDown;
+            if (speedDeltaKph >= -10.0) return PitEntryBrakeCueSpeedOkay;
+            if (speedDeltaKph >= -20.0) return PitEntryBrakeCueBelowLimit;
+            return PitEntryBrakeCueTooSlow;
         }
 
         private int ResolvePitEntryBrakeCueState()
         {
+            if (_pitEntryPostLineHoldActive)
+            {
+                return ResolvePitEntryPostLineSpeedCueState();
+            }
+
+            return ResolvePitEntryPreLineBrakeCueState();
+        }
+
+        private int ResolvePitEntryPostLineSpeedCueState()
+        {
             int speedStatusState = ResolvePitEntrySpeedStatusState(PitEntrySpeedDelta_kph);
             _pitEntrySpeedStatusState = speedStatusState;
-            if (speedStatusState != 0) return speedStatusState;
+            return speedStatusState;
+        }
+
+        private int ResolvePitEntryPreLineBrakeCueState()
+        {
+            _pitEntrySpeedStatusState = 0;
 
             if (!PitEntryAssistActive) return PitEntryBrakeCueOff;
 
@@ -265,6 +287,14 @@ namespace LaunchPlugin
             if (PitEntryMargin_m <= PitEntryBuffer_m) return PitEntryBrakeCueBrakeNow;
             if (brakeInM <= PitEntryBrakeInWindowM) return PitEntryBrakeCueBrakeIn;
             return PitEntryBrakeCueReady;
+        }
+
+        private void NeutralizePitEntryLiveGeometryForPostLineHold()
+        {
+            PitEntryDistanceToLine_m = 0.0;
+            PitEntryRequiredDistance_m = 0.0;
+            PitEntryMargin_m = 0.0;
+            PitEntryCue = 0;
         }
 
         public void Update(GameData data, PluginManager pluginManager, bool pitScreenActive)

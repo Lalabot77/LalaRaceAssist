@@ -215,7 +215,7 @@ If runtime data appears stalled after a session boundary, the plugin now exposes
 - Treat cue value and `Pit.EntryCueText` as secondary state, not the main visualization input.
 - Use `Pit.EntryBrakeCueText` when a dashboard wants direct plugin-owned driver wording; build custom wording from `Pit.EntryBrakeCueState`, `Pit.EntrySpeedDelta_kph`, and `Pit.EntryMargin_m` only when the widget deliberately wants a different presentation.
 - Use `Pit.EntryBrakeCueState` for cue colours/animations; do not parse `Pit.EntryBrakeCueText` for visual state.
-- Expect `Pit.EntryAssistActive` to remain true briefly after pit-entry crossing for speed-settling text until the existing Pit Box distance seam reports handover range (`Pit.Box.DistanceM < 200m`).
+- Expect `Pit.EntryAssistActive` to remain true briefly after pit-entry crossing for speed-settling text until the existing Pit Box distance seam reports handover range (`Pit.Box.DistanceM < 200m`); during that post-line hold, `Pit.EntryDistanceToLine_m`, `Pit.EntryRequiredDistance_m`, `Pit.EntryMargin_m`, and `Pit.EntryCue` are neutralized so stale brake-marker geometry is not rendered.
 - A fixed-scale marker is preferred over re-scaling around the current cue.
 
 ### Recommended visualization
