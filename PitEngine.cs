@@ -56,6 +56,7 @@ namespace LaunchPlugin
         public double PitEntryRequiredDistance_m { get; private set; } = 0.0;
         public double PitEntryMargin_m { get; private set; } = 0.0;
         public int PitEntryCue { get; private set; } = 0; // 0 Off, 1 OK, 2 BrakeSoon, 3 BrakeNow, 4 Late
+        public int PitEntryBrakeCueState { get; private set; } = 0; // 0 Off, 1 Fault, 2 Ready, 3 BrakeIn, 4 BrakeNow, 5 BrakeHard, 6 SpeedOkay, 7 BelowLimit, 8 TooSlow
 
         public double PitEntrySpeedDelta_kph { get; private set; } = 0.0;
         public double PitEntryDecelProfile_mps2 { get; private set; } = 0.0;
@@ -74,6 +75,20 @@ namespace LaunchPlugin
         private double _pitEntryLastDistanceRaw_m = double.NaN;
         private bool _pitEntryMissingMarkerWarned = false;
         private bool _pitEntryMissingPitLimitWarned = false;
+        private bool _pitEntryPostLineHoldActive = false;
+        private int _pitEntrySpeedStatusState = 0;
+
+        private const int PitEntryBrakeCueOff = 0;
+        private const int PitEntryBrakeCueFault = 1;
+        private const int PitEntryBrakeCueReady = 2;
+        private const int PitEntryBrakeCueBrakeIn = 3;
+        private const int PitEntryBrakeCueBrakeNow = 4;
+        private const int PitEntryBrakeCueBrakeHard = 5;
+        private const int PitEntryBrakeCueSpeedOkay = 6;
+        private const int PitEntryBrakeCueBelowLimit = 7;
+        private const int PitEntryBrakeCueTooSlow = 8;
+        private const double PitEntryBrakeInWindowM = 300.0;
+        private const double PitEntrySpeedHysteresisKph = 1.0;
 
 
         // --- State management for the Pace Delta calculation ---
@@ -129,6 +144,9 @@ namespace LaunchPlugin
             _pitEntryLastDistanceRaw_m = double.NaN;
             _pitEntryMissingMarkerWarned = false;
             _pitEntryMissingPitLimitWarned = false;
+            _pitEntryPostLineHoldActive = false;
+            _pitEntrySpeedStatusState = 0;
+            PitEntryBrakeCueState = PitEntryBrakeCueOff;
             PitEntryLineDebrief = "normal";
             PitEntryLineDebriefText = string.Empty;
             PitEntryLineTimeLoss_s = 0.0;
@@ -151,6 +169,102 @@ namespace LaunchPlugin
                     default: return "OFF";
                 }
             }
+        }
+
+        public string PitEntryBrakeCueText
+        {
+            get
+            {
+                switch (PitEntryBrakeCueState)
+                {
+                    case PitEntryBrakeCueFault: return "FAULT";
+                    case PitEntryBrakeCueReady: return "READY";
+                    case PitEntryBrakeCueBrakeIn:
+                    {
+                        double brakeInM = Math.Max(0.0, PitEntryMargin_m - PitEntryBuffer_m);
+                        if (double.IsNaN(brakeInM) || double.IsInfinity(brakeInM)) brakeInM = 0.0;
+                        return $"BRAKE IN {brakeInM:F0}m";
+                    }
+                    case PitEntryBrakeCueBrakeNow: return "BRAKE NOW";
+                    case PitEntryBrakeCueBrakeHard: return "BRAKE HARD";
+                    case PitEntryBrakeCueSpeedOkay: return "SPEED OKAY";
+                    case PitEntryBrakeCueBelowLimit: return "BELOW LIMIT";
+                    case PitEntryBrakeCueTooSlow: return "TOO SLOW";
+                    default: return "OFF";
+                }
+            }
+        }
+
+        public void ApplyPitEntryPostLineHold(bool isInPitLane, int pitBoxDistanceM)
+        {
+            if (!_pitEntryPostLineHoldActive) return;
+
+            if (!isInPitLane || pitBoxDistanceM < 200)
+            {
+                _pitEntryPostLineHoldActive = false;
+                ResetPitEntryAssistOutputs();
+                return;
+            }
+
+            PitEntryAssistActive = true;
+            PitEntryBrakeCueState = ResolvePitEntryBrakeCueState();
+            _pitEntryAssistWasActive = true;
+        }
+
+        private void SetPitEntryAssistFault()
+        {
+            ResetPitEntryAssistOutputs();
+            PitEntryBrakeCueState = PitEntryBrakeCueFault;
+        }
+
+        private int ResolvePitEntrySpeedStatusState(double speedDeltaKph)
+        {
+            if (double.IsNaN(speedDeltaKph) || double.IsInfinity(speedDeltaKph)) return 0;
+
+            switch (_pitEntrySpeedStatusState)
+            {
+                case PitEntryBrakeCueSpeedOkay:
+                    if (speedDeltaKph > 2.0 + PitEntrySpeedHysteresisKph) return 0;
+                    if (speedDeltaKph < -10.0 - PitEntrySpeedHysteresisKph)
+                        return speedDeltaKph < -20.0 - PitEntrySpeedHysteresisKph ? PitEntryBrakeCueTooSlow : PitEntryBrakeCueBelowLimit;
+                    return PitEntryBrakeCueSpeedOkay;
+
+                case PitEntryBrakeCueBelowLimit:
+                    if (speedDeltaKph >= -10.0 + PitEntrySpeedHysteresisKph) return PitEntryBrakeCueSpeedOkay;
+                    if (speedDeltaKph < -20.0 - PitEntrySpeedHysteresisKph) return PitEntryBrakeCueTooSlow;
+                    return PitEntryBrakeCueBelowLimit;
+
+                case PitEntryBrakeCueTooSlow:
+                    if (speedDeltaKph >= -20.0 + PitEntrySpeedHysteresisKph)
+                        return speedDeltaKph >= -10.0 + PitEntrySpeedHysteresisKph ? PitEntryBrakeCueSpeedOkay : PitEntryBrakeCueBelowLimit;
+                    return PitEntryBrakeCueTooSlow;
+            }
+
+            if (speedDeltaKph >= -10.0 && speedDeltaKph <= 2.0) return PitEntryBrakeCueSpeedOkay;
+            if (speedDeltaKph < -10.0 && speedDeltaKph >= -20.0) return PitEntryBrakeCueBelowLimit;
+            if (speedDeltaKph < -20.0) return PitEntryBrakeCueTooSlow;
+            return 0;
+        }
+
+        private int ResolvePitEntryBrakeCueState()
+        {
+            int speedStatusState = ResolvePitEntrySpeedStatusState(PitEntrySpeedDelta_kph);
+            _pitEntrySpeedStatusState = speedStatusState;
+            if (speedStatusState != 0) return speedStatusState;
+
+            if (!PitEntryAssistActive) return PitEntryBrakeCueOff;
+
+            double brakeInM = PitEntryMargin_m - PitEntryBuffer_m;
+            if (double.IsNaN(PitEntryMargin_m) || double.IsInfinity(PitEntryMargin_m) ||
+                double.IsNaN(brakeInM) || double.IsInfinity(brakeInM))
+            {
+                return PitEntryBrakeCueFault;
+            }
+
+            if (PitEntryMargin_m < 0.0) return PitEntryBrakeCueBrakeHard;
+            if (PitEntryMargin_m <= PitEntryBuffer_m) return PitEntryBrakeCueBrakeNow;
+            if (brakeInM <= PitEntryBrakeInWindowM) return PitEntryBrakeCueBrakeIn;
+            return PitEntryBrakeCueReady;
         }
 
         public void Update(GameData data, PluginManager pluginManager, bool pitScreenActive)
@@ -317,12 +431,17 @@ namespace LaunchPlugin
                         "[LalaPlugin:PitEntryAssist] Session pit-speed authority unavailable. " +
                         "Legacy IRacingExtraProperties pit-speed fallback is removed; Pit Entry Assist outputs remain reset/off until session pit limit is valid.");
                 }
-                ResetPitEntryAssistOutputs();
+                SetPitEntryAssistFault();
                 return;
             }
             _pitEntryMissingPitLimitWarned = false;
 
             PitEntrySpeedDelta_kph = speedKph - pitLimitKph;
+
+            if (isInPitLane && !crossedPitLineThisTick && _pitEntryPostLineHoldActive)
+            {
+                return;
+            }
 
             // Arming (EnteringPits OR limiter ON and overspeed > +2kph)
             bool limiterOn = (data?.NewData?.PitLimiterOn ?? 0) != 0;
@@ -363,14 +482,14 @@ namespace LaunchPlugin
                         $"[LalaPlugin:PitEntryAssist] Stored pit-entry marker unavailable for track='{_trackMarkersLastKey}'. " +
                         "Legacy iRacingExtraProperties pit-entry fallbacks are disabled (DistanceToPitEntry, PitEntryTrkPct).");
                 }
-                ResetPitEntryAssistOutputs();
+                SetPitEntryAssistFault();
                 return;
             }
 
             double dToEntryRaw_m = dToEntry_m;
-            if (double.IsNaN(dToEntryRaw_m))
+            if (double.IsNaN(dToEntryRaw_m) || double.IsInfinity(dToEntryRaw_m))
             {
-                ResetPitEntryAssistOutputs();
+                SetPitEntryAssistFault();
                 return;
             }
 
@@ -407,7 +526,7 @@ namespace LaunchPlugin
 
             if (isInPitLane && !crossedPitLineThisTick)
             {
-                ResetPitEntryAssistOutputs();
+                if (!_pitEntryPostLineHoldActive) ResetPitEntryAssistOutputs();
                 _pitEntryLastDistanceRaw_m = dToEntryRaw_m;
                 return;
             }
@@ -433,6 +552,8 @@ namespace LaunchPlugin
             else if (margin <= 0) PitEntryCue = 3;          // BrakeNow
             else if (margin <= buffer) PitEntryCue = 2;     // BrakeSoon
             else PitEntryCue = 1;                           // OK
+
+            PitEntryBrakeCueState = ResolvePitEntryBrakeCueState();
 
             // --- Edge-triggered logging (no spam) ---
             if (PitEntryAssistActive && !_pitEntryAssistWasActive)
@@ -468,6 +589,7 @@ namespace LaunchPlugin
             // LINE log (exactly once on pit-lane entry)
             if (crossedPitLineThisTick)
             {
+                _pitEntryPostLineHoldActive = true;
                 PitEntryLineDebriefSerial++;
                 bool entrySafe = PitEntrySpeedDelta_kph <= 0.0;
                 bool hitLimiter = _pitEntryFirstCompliantCaptured && !double.IsNaN(_pitEntryFirstCompliantRawDToLine_m);
@@ -595,8 +717,10 @@ namespace LaunchPlugin
             PitEntryRequiredDistance_m = 0.0;
             PitEntryMargin_m = 0.0;
             PitEntryCue = 0;
+            PitEntryBrakeCueState = PitEntryBrakeCueOff;
             PitEntrySpeedDelta_kph = 0.0;
             PitEntryLineLateBy_m = 0.0;
+            _pitEntrySpeedStatusState = 0;
             // keep PitEntryDecelProfile_mps2 / PitEntryBuffer_m as last-used (useful for debugging)
         }
 

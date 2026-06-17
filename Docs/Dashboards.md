@@ -84,6 +84,10 @@ Optional reset actions are `LalaLaunch.BurnAnalysisResetAverages`, `LalaLaunch.B
 
 When manually editing dashboard formulas, use the single plugin-qualified property prefix only (for example `LalaLaunch.PreRace.StatusText`, not `LalaLaunch.LalaLaunch.PreRace.StatusText`).
 
+### Pit Entry text labels
+
+For Pit Entry Assist widgets, use `LalaLaunch.Pit.EntryMargin_m` as the continuous marker source and `LalaLaunch.Pit.EntryAssistActive` as the visibility gate. If a widget needs direct driver-facing text, prefer the plugin-owned `LalaLaunch.Pit.EntryBrakeCueText`; it handles `OFF`, `FAULT`, `READY`, `BRAKE IN Xm`, `BRAKE NOW`, `BRAKE HARD`, `SPEED OKAY`, `BELOW LIMIT`, and `TOO SLOW` without requiring dashboard formulas to rebuild the common message from cue, speed delta, and margin. Use `LalaLaunch.Pit.EntryBrakeCueState` for colours/animations instead of parsing text. Use `LalaLaunch.Pit.EntryCueText` only when the widget wants the stable legacy cue-state token (`OFF`/`OK`/`BRAKE SOON`/`BRAKE NOW`/`LATE`) and owns custom wording.
+
 ### Strategy Dash pit-window range bars
 
 For smooth pit-window range bars, use the plugin-owned selected-burn endpoints `LalaLaunch.Fuel.PitWindow.SelectedOpeningLap` and `LalaLaunch.Fuel.PitWindow.SelectedClosingLap`. They are decimal lap values rounded by the plugin and follow the currently selected runtime PUSH/NORM/SAVE burn basis. Keep using `LalaLaunch.Fuel.PitWindowOpeningLap` and `LalaLaunch.Fuel.PitWindowClosingLap` only for the existing state-machine integer markers; dashboards should not rebuild pit-window fuel math in formulas.
