@@ -8579,6 +8579,7 @@ namespace LaunchPlugin
             AttachCore("Pit.Debrief.SummaryText", () => _pitDebrief?.SummaryText ?? string.Empty);
             AttachCore("Pit.Debrief.StateText", () => _pitDebrief?.StateText ?? "EMPTY");
             AttachCore("Pit.Debrief.Entry.QualityText", () => _pitDebrief?.EntryQualityText ?? "UNKNOWN");
+            AttachCore("Pit.Debrief.Entry.SummaryText", () => _pitDebrief?.EntrySummaryText ?? string.Empty);
             AttachCore("Pit.Debrief.Entry.LineTimeLossSec", () => _pitDebrief?.EntryLineTimeLossSec ?? 0.0);
             AttachCore("Pit.Debrief.Entry.DecelQualityText", () => _pitDebrief?.EntryDecelQualityText ?? "UNKNOWN");
             AttachCore("Pit.Debrief.Entry.LimiterQualityText", () => _pitDebrief?.EntryLimiterQualityText ?? "UNKNOWN");
