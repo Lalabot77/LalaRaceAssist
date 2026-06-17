@@ -1,0 +1,279 @@
+{
+  "SchemaVersion": 2,
+  "EnableSoftDebug": true,
+  "DebugHide1": false,
+  "DebugHide2": false,
+  "DebugHide3": false,
+  "OfflineDataModule": false,
+  "EnableDebugLogging": false,
+  "EnableCarSADebugExport": false,
+  "EnableCarTrackingProbeCsv": false,
+  "CarTrackingProbeACarIdx": 1,
+  "CarTrackingProbeBCarIdx": 40,
+  "CarTrackingProbeCsvFrequencyHz": 1.0,
+  "EnablePropertySnapshot": false,
+  "PropertySnapshotSelectAllGroups": false,
+  "PropertySnapshotGroupFuelStrategy": true,
+  "PropertySnapshotGroupCarOppH2H": false,
+  "PropertySnapshotGroupPitPitExit": true,
+  "PropertySnapshotGroupShiftAssist": false,
+  "PropertySnapshotGroupMessageSystem": false,
+  "PropertySnapshotGroupLeagueClass": false,
+  "PropertySnapshotGroupRawDebug": true,
+  "PropertySnapshotIncludeChangedValues": true,
+  "PropertySnapshotRollingCombinedCsv": true,
+  "PropertySnapshotRollingMode": 1,
+  "PropertySnapshotRollingActive": false,
+  "PropertySnapshotRollingFrequencyHz": 2.0,
+  "CarSADebugExportCadence": 0,
+  "CarSADebugExportTickMaxHz": 60,
+  "CarSADebugExportWriteEventsCsv": false,
+  "CarSARawTelemetryMode": 1,
+  "PitExitVerboseLogging": true,
+  "PitBoxIncludeOptionalRepairs": true,
+  "PitCommandsAutoFocusPreview": false,
+  "PitCommandTransportMode": 0,
+  "ResultsDisplayTime": 5.0,
+  "FuelReadyConfidence": 14.935534266807609,
+  "StintFuelMarginPct": 10,
+  "PitFuelControlDataMode": 0,
+  "PitFuelPushSaveProfileGuardPct": 10.0,
+  "EnableAutoDashSwitch": true,
+  "MonitorSystemEnabled": true,
+  "EnableMonitorEventCsv": false,
+  "StrategyDashAdvancedMode": false,
+  "LeagueClassEnabled": false,
+  "LeagueClassMode": 1,
+  "LeagueClassCsvPath": "C:\\Users\\andy_\\Downloads\\SRiClubS12.csv",
+  "LeagueClassPlayerOverrideMode": 0,
+  "LeagueClassPlayerOverrideClassName": "",
+  "LeagueClassPlayerOverrideShortName": "",
+  "LeagueClassPlayerOverrideRank": 0,
+  "LeagueClassPlayerOverrideColourHex": "",
+  "LeagueClassFallbackRules": [
+    {
+      "Enabled": false,
+      "MatchSuffix": "",
+      "ClassName": "",
+      "ShortName": "",
+      "Rank": 0,
+      "ColourHex": ""
+    },
+    {
+      "Enabled": false,
+      "MatchSuffix": "",
+      "ClassName": "",
+      "ShortName": "",
+      "Rank": 0,
+      "ColourHex": ""
+    },
+    {
+      "Enabled": false,
+      "MatchSuffix": "",
+      "ClassName": "",
+      "ShortName": "",
+      "Rank": 0,
+      "ColourHex": ""
+    }
+  ],
+  "LeagueClassDefinitions": [
+    {
+      "CsvClassName": "Pro",
+      "Enabled": true,
+      "ShortName": "Pro",
+      "Rank": 3,
+      "ColourHex": "#C9282D"
+    },
+    {
+      "CsvClassName": "Inter",
+      "Enabled": true,
+      "ShortName": "Inter",
+      "Rank": 2,
+      "ColourHex": "#1DA35C"
+    },
+    {
+      "CsvClassName": "Club",
+      "Enabled": true,
+      "ShortName": "Club",
+      "Rank": 1,
+      "ColourHex": "#4682B4"
+    }
+  ],
+  "DarkModeMode": 2,
+  "DarkModeBrightnessPct": 95,
+  "UseLovelyTrueDark": false,
+  "EnableCsvLogging": true,
+  "CsvLogPath": "",
+  "TraceLogPath": "",
+  "EnableTelemetryTracing": true,
+  "ShiftAssistEnabled": true,
+  "ShiftAssistLearningModeEnabled": false,
+  "ShiftAssistBeepDurationMs": 300,
+  "ShiftAssistLightEnabled": false,
+  "ShiftAssistLeadTimeMs": 0,
+  "ShiftAssistBeepSoundEnabled": true,
+  "ShiftAssistBeepVolumePct": 5,
+  "ShiftAssistUrgentEnabled": true,
+  "ShiftAssistUrgentMinGapMs": 1000,
+  "ShiftAssistUrgentVolumePct": 50,
+  "ShiftAssistUseCustomWav": false,
+  "ShiftAssistCustomWavPath": "",
+  "EnableShiftAssistDebugCsv": false,
+  "ShiftAssistDebugCsvMaxHz": 60,
+  "ShiftAssistMuteInReplay": true,
+  "NotRelevantGapSec": 10.0,
+  "CarSAStatusEBackgroundColors": {
+    "0": "#000000",
+    "100": "#696969",
+    "110": "#C0C0C0",
+    "120": "#FFA500",
+    "121": "#FFFF00",
+    "122": "#FFA500",
+    "130": "#FF0000",
+    "131": "#FFFF00",
+    "132": "#FFFF00",
+    "140": "#FF0000",
+    "141": "#FFFF00",
+    "200": "#000000",
+    "210": "#000000",
+    "220": "#008000",
+    "230": "#0000FF",
+    "240": "#ADD8E6"
+  },
+  "CarSABorderColors": {
+    "TEAM": "#FF69B4",
+    "BAD": "#FF0000",
+    "LEAD": "#FF00FF",
+    "OCLS": "#0000FF",
+    "DEF": "#F5F5F5"
+  },
+  "Friends": [
+    {
+      "Name": "John Treen",
+      "UserId": 1153081,
+      "Tag": "Teammate"
+    },
+    {
+      "Name": "David Hutcheson",
+      "UserId": 967666,
+      "Tag": "Friend"
+    },
+    {
+      "Name": "Pavid Dilcher",
+      "UserId": 925334,
+      "Tag": "Bad"
+    },
+    {
+      "Name": "Simon N Clifton",
+      "UserId": 1006386,
+      "Tag": "Teammate"
+    },
+    {
+      "Name": "AT Test CarIDX 3",
+      "UserId": 9702,
+      "Tag": "Bad"
+    },
+    {
+      "Name": "Andrei Muntean",
+      "UserId": 1114286,
+      "Tag": "Teammate"
+    },
+    {
+      "Name": "Ashley Brooks",
+      "UserId": 738159,
+      "Tag": "Friend"
+    },
+    {
+      "Name": "Mathew Croft",
+      "UserId": 1145049,
+      "Tag": "Friend"
+    },
+    {
+      "Name": "CraigHewlett",
+      "UserId": 931202,
+      "Tag": "Friend"
+    }
+  ],
+  "CustomMessages": [
+    {
+      "SlotNumber": 1,
+      "Name": "Custom Msg 1",
+      "MessageText": "Sorry!"
+    },
+    {
+      "SlotNumber": 2,
+      "Name": "Custom Msg 2",
+      "MessageText": ""
+    },
+    {
+      "SlotNumber": 3,
+      "Name": "Custom Msg 3",
+      "MessageText": ""
+    },
+    {
+      "SlotNumber": 4,
+      "Name": "Custom Msg 4",
+      "MessageText": ""
+    },
+    {
+      "SlotNumber": 5,
+      "Name": "Custom Msg 5",
+      "MessageText": ""
+    },
+    {
+      "SlotNumber": 6,
+      "Name": "Custom Msg 6",
+      "MessageText": ""
+    },
+    {
+      "SlotNumber": 7,
+      "Name": "Custom Msg 7",
+      "MessageText": ""
+    },
+    {
+      "SlotNumber": 8,
+      "Name": "Custom Msg 8",
+      "MessageText": ""
+    },
+    {
+      "SlotNumber": 9,
+      "Name": "Custom Msg 9",
+      "MessageText": ""
+    },
+    {
+      "SlotNumber": 10,
+      "Name": "Custom Msg 10",
+      "MessageText": ""
+    }
+  ],
+  "LalaDashShowLaunchScreen": false,
+  "LalaDashShowPitEntryAssist": false,
+  "LalaDashShowPitBoxAssist": false,
+  "LalaDashShowPitLimiter": false,
+  "LalaDashShowPitScreen": true,
+  "LalaDashShowRejoinAssist": false,
+  "LalaDashShowVerboseMessaging": true,
+  "LalaDashShowRaceFlags": false,
+  "LalaDashShowRadioMessages": false,
+  "LalaDashShowTraffic": false,
+  "MsgDashShowLaunchScreen": false,
+  "MsgDashShowPitEntryAssist": false,
+  "MsgDashShowPitBoxAssist": false,
+  "MsgDashShowPitLimiter": false,
+  "MsgDashShowPitScreen": false,
+  "MsgDashShowRejoinAssist": false,
+  "MsgDashShowVerboseMessaging": true,
+  "MsgDashShowRaceFlags": true,
+  "MsgDashShowRadioMessages": true,
+  "MsgDashShowTraffic": false,
+  "OverlayDashShowLaunchScreen": true,
+  "OverlayDashShowPitEntryAssist": true,
+  "OverlayDashShowPitBoxAssist": true,
+  "OverlayDashShowPitLimiter": true,
+  "OverlayDashShowPitScreen": false,
+  "OverlayDashShowRejoinAssist": true,
+  "OverlayDashShowVerboseMessaging": false,
+  "OverlayDashShowRaceFlags": false,
+  "OverlayDashShowRadioMessages": true,
+  "OverlayDashShowTraffic": true
+}

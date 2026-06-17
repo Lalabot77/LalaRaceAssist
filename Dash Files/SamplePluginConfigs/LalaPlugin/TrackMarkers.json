@@ -1,0 +1,194 @@
+{
+  "daytona 2011 road-Road Course": {
+    "PitEntryTrkPct": 0.9584953784942627,
+    "PitExitTrkPct": 0.098543539643287659,
+    "LastUpdatedUtc": "2026-01-14T00:04:41.3335024Z",
+    "Locked": true
+  },
+  "watkinsglen 2021 fullcourse-Boot": {
+    "PitEntryTrkPct": "NaN",
+    "PitExitTrkPct": "NaN",
+    "LastUpdatedUtc": "0001-01-01T00:00:00",
+    "Locked": true
+  },
+  "algarve gp-Grand Prix": {
+    "PitEntryTrkPct": 0.98518949747085571,
+    "PitExitTrkPct": 0.088106609880924225,
+    "LastUpdatedUtc": "2026-01-20T19:52:37.8166586Z",
+    "Locked": true
+  },
+  "roadatlanta full-Full Course": {
+    "PitEntryTrkPct": 0.98527282476425171,
+    "PitExitTrkPct": 0.088435620069503784,
+    "LastUpdatedUtc": "2026-01-21T00:48:42.6644141Z",
+    "Locked": true
+  },
+  "mugello gp-Grand Prix": {
+    "PitEntryTrkPct": 0.94455474615097046,
+    "PitExitTrkPct": 0.019067654386162758,
+    "LastUpdatedUtc": "2026-01-21T01:32:25.8272175Z",
+    "Locked": true
+  },
+  "miami gp-Grand Prix": {
+    "PitEntryTrkPct": 0.98842775821685791,
+    "PitExitTrkPct": 0.04780568927526474,
+    "LastUpdatedUtc": "2026-01-22T23:04:00.7833623Z",
+    "Locked": true
+  },
+  "zolder gp-Grand Prix": {
+    "PitEntryTrkPct": "NaN",
+    "PitExitTrkPct": 0.0702497810125351,
+    "LastUpdatedUtc": "2026-01-24T12:30:30.0425061Z",
+    "Locked": true
+  },
+  "monza full": {
+    "PitEntryTrkPct": 0.98251372575759888,
+    "PitExitTrkPct": 0.057635549455881119,
+    "LastUpdatedUtc": "2026-02-02T21:07:23.8858139Z",
+    "Locked": true
+  },
+  "monza combinedchicanes": {
+    "PitEntryTrkPct": 0.99005568027496338,
+    "PitExitTrkPct": 0.033067822456359863,
+    "LastUpdatedUtc": "2026-02-02T23:31:27.7140271Z",
+    "Locked": true
+  },
+  "virginia 2022 full-Full Course": {
+    "PitEntryTrkPct": 0.93029779195785522,
+    "PitExitTrkPct": 0.965314,
+    "LastUpdatedUtc": "2026-02-10T20:02:44.9859779Z",
+    "Locked": true
+  },
+  "silverstone 2019 gp-Arena Grand Prix": {
+    "PitEntryTrkPct": "NaN",
+    "PitExitTrkPct": 0.065386511385440826,
+    "LastUpdatedUtc": "2026-02-09T01:07:58.8466434Z",
+    "Locked": true
+  },
+  "spielberg gp-Grand Prix": {
+    "PitEntryTrkPct": 0.98230880498886108,
+    "PitExitTrkPct": 0.065987676382064819,
+    "LastUpdatedUtc": "2026-02-13T21:04:01.5303566Z",
+    "Locked": true
+  },
+  "imola gp": {
+    "PitEntryTrkPct": 0.93257772922515869,
+    "PitExitTrkPct": 0.046099409461021423,
+    "LastUpdatedUtc": "2026-04-13T19:23:38.7937377Z",
+    "Locked": true
+  },
+  "barcelona gp-Full Course": {
+    "PitEntryTrkPct": "NaN",
+    "PitExitTrkPct": 0.069955155253410339,
+    "LastUpdatedUtc": "2026-02-10T11:33:53.2968079Z",
+    "Locked": true
+  },
+  "sebring international-International": {
+    "PitEntryTrkPct": 0.97277152538299561,
+    "PitExitTrkPct": 0.04813799262046814,
+    "LastUpdatedUtc": "2026-06-09T23:17:15.8803339Z",
+    "Locked": true
+  },
+  "roadamerica full-Full Course": {
+    "PitEntryTrkPct": "NaN",
+    "PitExitTrkPct": 0.051425229758024216,
+    "LastUpdatedUtc": "2026-02-10T14:00:43.413372Z",
+    "Locked": true
+  },
+  "bathurst": {
+    "PitEntryTrkPct": "NaN",
+    "PitExitTrkPct": 0.050378292798995972,
+    "LastUpdatedUtc": "2026-02-12T22:33:09.2019052Z",
+    "Locked": true
+  },
+  "indianapolis ovalindypit-IndyCar Oval": {
+    "PitEntryTrkPct": "NaN",
+    "PitExitTrkPct": 0.075192734599113464,
+    "LastUpdatedUtc": "2026-02-16T20:15:48.7803511Z",
+    "Locked": true
+  },
+  "nurburgring gp": {
+    "PitEntryTrkPct": 0.9878191351890564,
+    "PitExitTrkPct": 0.062147799879312515,
+    "LastUpdatedUtc": "2026-02-24T20:37:51.7901529Z",
+    "Locked": true
+  },
+  "misano gp-Grand Prix": {
+    "PitEntryTrkPct": 0.9494248628616333,
+    "PitExitTrkPct": 0.073664933443069458,
+    "LastUpdatedUtc": "2026-03-03T19:36:36.386349Z",
+    "Locked": true
+  },
+  "skidpad": {
+    "PitEntryTrkPct": 0.96880269050598145,
+    "PitExitTrkPct": "NaN",
+    "LastUpdatedUtc": "2026-02-28T11:58:56.9443305Z",
+    "Locked": true
+  },
+  "lemans full": {
+    "PitEntryTrkPct": "NaN",
+    "PitExitTrkPct": 0.027237778529524803,
+    "LastUpdatedUtc": "2026-02-28T12:03:37.8048429Z",
+    "Locked": true
+  },
+  "monza gpsecondchicane": {
+    "PitEntryTrkPct": "NaN",
+    "PitExitTrkPct": 0.057845450937747955,
+    "LastUpdatedUtc": "2026-02-28T12:08:03.6715782Z",
+    "Locked": true
+  },
+  "indianapolis 2022 oval-Oval": {
+    "PitEntryTrkPct": "NaN",
+    "PitExitTrkPct": 0.075262278318405151,
+    "LastUpdatedUtc": "2026-03-06T09:37:32.0266807Z",
+    "Locked": true
+  },
+  "brandshatch grandprix-Grand Prix": {
+    "PitEntryTrkPct": 0.93494695425033569,
+    "PitExitTrkPct": 0.006129042711108923,
+    "LastUpdatedUtc": "2026-04-24T00:51:29.810042Z",
+    "Locked": true
+  },
+  "hockenheim gp-Grand Prix": {
+    "PitEntryTrkPct": 0.98753821849823,
+    "PitExitTrkPct": 0.056868705898523331,
+    "LastUpdatedUtc": "2026-03-17T23:46:11.5231502Z",
+    "Locked": true
+  },
+  "spa 2024 up-Grand Prix": {
+    "PitEntryTrkPct": 0.9877781867980957,
+    "PitExitTrkPct": 0.040701031684875488,
+    "LastUpdatedUtc": "2026-04-02T21:44:54.8720354Z",
+    "Locked": true
+  },
+  "fuji gp-Grand Prix": {
+    "PitEntryTrkPct": 0.99192142486572266,
+    "PitExitTrkPct": 0.10023100674152374,
+    "LastUpdatedUtc": "2026-04-16T22:41:00.4380175Z",
+    "Locked": true
+  },
+  "suzuka grandprix-Grand Prix": {
+    "PitEntryTrkPct": 0.99426060914993286,
+    "PitExitTrkPct": 0.063230916857719421,
+    "LastUpdatedUtc": "2026-05-02T17:44:56.0217839Z",
+    "Locked": true
+  },
+  "magnycours gp-Grand Prix": {
+    "PitEntryTrkPct": 0.98994660377502441,
+    "PitExitTrkPct": 0.04822627454996109,
+    "LastUpdatedUtc": "2026-05-14T23:47:26.2553614Z",
+    "Locked": true
+  },
+  "donington gp-Grand Prix": {
+    "PitEntryTrkPct": 0.9781949520111084,
+    "PitExitTrkPct": 0.043146707117557526,
+    "LastUpdatedUtc": "2026-05-28T22:06:12.3061457Z",
+    "Locked": true
+  },
+  "watkinsglen 2021 cupcircuit-Cup": {
+    "PitEntryTrkPct": 0.93513697385787964,
+    "PitExitTrkPct": 0.056486796587705612,
+    "LastUpdatedUtc": "2026-06-11T22:45:56.4914074Z",
+    "Locked": true
+  }
+}
