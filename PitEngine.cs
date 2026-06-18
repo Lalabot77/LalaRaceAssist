@@ -184,7 +184,7 @@ namespace LaunchPlugin
                     {
                         double brakeInM = Math.Max(0.0, PitEntryMargin_m - PitEntryBuffer_m);
                         if (double.IsNaN(brakeInM) || double.IsInfinity(brakeInM)) brakeInM = 0.0;
-                        return $"BRAKE IN {brakeInM:F0}m";
+                        return $"BRAKE {brakeInM:F0}m";
                     }
                     case PitEntryBrakeCueBrakeNow: return "BRAKE NOW";
                     case PitEntryBrakeCueBrakeHard: return "BRAKE HARD";
