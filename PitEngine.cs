@@ -285,7 +285,7 @@ namespace LaunchPlugin
                 return PitEntryBrakeCueFault;
             }
 
-            if (_pitEntryLimiterOn && PitEntrySpeedDelta_kph <= 0.0)
+            if (_pitEntryLimiterOn && PitEntrySpeedDelta_kph <= PitEntryLineSpeedToleranceKph)
             {
                 return ResolvePitEntryPostLineSpeedCueState();
             }

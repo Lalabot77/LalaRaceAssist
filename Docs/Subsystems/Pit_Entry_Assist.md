@@ -58,9 +58,11 @@ If the pit screen is dismissed or resets to auto, manual arming immediately fall
   - If stored markers are unavailable/invalid for the active track/session, assist stays off and emits a warning log (one-time until markers become valid again).
   - Clamped to **0–500 m** working window; assist resets if ≥500 m or invalid.
 
-- **Speed delta (`Pit.EntrySpeedDelta_kph`):** Current speed − pit speed limit (native session pit speed only).
+- **Pit speed authority:** Pit Entry Assist uses the native session `DataCorePlugin.GameRawData.SessionData.WeekendInfo.TrackPitSpeedLimit` value, interpreted as kph. It does not use dashboard/display-unit formatting and does not hardcode an 80 kph limit; if the native session pit limit is unavailable/invalid, the assist faults/resets for that tick. The separate `DataCorePlugin.GameData.PitLimiterSpeed` → `WeekendInfo.TrackPitSpeedLimit` resolver is used by PitExit/PitBox display seams, not by Pit Entry braking math.
 
-- **Required braking distance (`Pit.EntryRequiredDistance_m`):** Constant-decel model: `(v² − vTarget²) / (2 × decel)` when above pit speed. Uses per-profile decel (clamped 5–25 m/s²).
+- **Speed delta (`Pit.EntrySpeedDelta_kph`):** `data.NewData.SpeedKmh` − native session pit speed limit, both treated as kph.
+
+- **Required braking distance (`Pit.EntryRequiredDistance_m`):** Constant-decel model: `(v² − vTarget²) / (2 × decel)` when above pit speed. Both current speed and target pit speed are converted from kph to m/s (`/ 3.6`) before the calculation. Uses per-profile decel (clamped 5–25 m/s²).
 
 - **Margin (`Pit.EntryMargin_m`):** `distanceToLine − requiredDistance`. Positive = early/room, negative = late.
 
@@ -90,7 +92,7 @@ Cue level is derived from **margin vs. buffer** (buffer = profile slider):
 
 ### Driver-facing BrakeCue contract
 
-`Pit.EntryBrakeCueText` / `Pit.EntryBrakeCueState` are phase-specific and do not change braking-distance maths or legacy cue tokens. Before the real pit-entry line, distance wording treats the configured buffer point as the fake brake line and never switches to speed-settling just because the fake/buffer line has been passed, except that limiter ON plus at/below-limit speed is already compliant and therefore reuses the existing speed-settling states instead of continuing to request `BRAKE NOW` or `BRAKE HARD`. After the real pit-entry line, only speed-settling states are published and live braking geometry is neutralized. The countdown distance is `brakeInM = max(0, Pit.EntryMargin_m - Pit.EntryBuffer_m)`, so a 315m margin with a 15m buffer shows `BRAKE IN 300m`, and a 15m margin with a 15m buffer shows `BRAKE NOW`.
+`Pit.EntryBrakeCueText` / `Pit.EntryBrakeCueState` are phase-specific and do not change braking-distance maths or legacy cue tokens. Before the real pit-entry line, distance wording treats the configured buffer point as the fake brake line and never switches to speed-settling just because the fake/buffer line has been passed, except that limiter ON plus speed within the existing +1.0 kph Pit Entry compliance tolerance is already compliant enough for cue priority and therefore reuses the existing speed-settling states instead of continuing to request `BRAKE NOW` or `BRAKE HARD`. After the real pit-entry line, only speed-settling states are published and live braking geometry is neutralized. The countdown distance is `brakeInM = max(0, Pit.EntryMargin_m - Pit.EntryBuffer_m)`, so a 315m margin with a 15m buffer shows `BRAKE IN 300m`, and a 15m margin with a 15m buffer shows `BRAKE NOW`.
 
 | State | Text | Meaning |
 | --- | --- | --- |
@@ -101,9 +103,9 @@ Cue level is derived from **margin vs. buffer** (buffer = profile slider):
 | 4 | BRAKE NOW | Reached the configured buffer/fake brake line (`margin <= buffer && margin >= 0`) |
 | 5 | BRAKE HARD | Negative margin; inside required braking distance |
 | 6 | SLOW DOWN | Post-line only; speed delta is above the pit limit by more than about +2kph, with hysteresis |
-| 7 | SPEED OKAY | Speed delta is in the settled band (about `-10kph..+2kph`, with hysteresis) after the line, or before the line once limiter ON plus at/below-limit speed proves compliance |
-| 8 | BELOW LIMIT | Speed delta is below the limit but not too slow (about `< -10kph` and `>= -20kph`, with hysteresis) after the line, or before the line once limiter ON plus at/below-limit speed proves compliance |
-| 9 | TOO SLOW | Speed delta is far below the limit (about `< -20kph`, with hysteresis) after the line, or before the line once limiter ON plus at/below-limit speed proves compliance |
+| 7 | SPEED OKAY | Speed delta is in the settled band (about `-10kph..+2kph`, with hysteresis) after the line, or before the line once limiter ON plus speed within the +1.0 kph compliance tolerance proves compliance |
+| 8 | BELOW LIMIT | Speed delta is below the limit but not too slow (about `< -10kph` and `>= -20kph`, with hysteresis) after the line, or before the line once limiter ON plus speed within the +1.0 kph compliance tolerance proves compliance |
+| 9 | TOO SLOW | Speed delta is far below the limit (about `< -20kph`, with hysteresis) after the line, or before the line once limiter ON plus speed within the +1.0 kph compliance tolerance proves compliance |
 
 Post-line speed-status hysteresis keeps the previous speed band when speed delta is within about 1kph of the `+2`, `-10`, or `-20` kph boundary, and resets on assist/session reset. The immediate post-line pit-box handover reset is intentionally cue-only: it disables the active Pit Entry surface without clearing latched entry-line evidence before Pit Debrief can consume the current-stop speed delta, late distance, debrief token/text, time loss, and serial.
 
