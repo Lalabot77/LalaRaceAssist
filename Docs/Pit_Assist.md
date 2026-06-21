@@ -167,6 +167,10 @@ Pit-box countdown and total stop-loss prediction follow the Strategy-selected pi
 
 The selector is manual and is persisted by Race Presets. Car Profiles hold the physical timing values (normal refuel rate, tyre change time, base tank, and NEC factor). The plugin does not auto-detect service rules from series, track, car, session name, or preset name.
 
+## Pit Box Assist STOP cue
+
+Pit Box Assist still uses the plugin-owned pit-box distance/time authority for box approach displays. The `Pit.Box.BrakeNow` STOP / BRAKE NOW helper now adds a small comfort buffer derived from the car-profile Pit Entry Buffer: `clamp(Pit Entry Buffer × 20%, 1m, 5m)`. For example, a 15m Pit Entry Buffer makes the box STOP cue appear about 3m earlier. This changes cue feel only; it does not move the pit box, alter `Pit.Box.DistanceM` / `Pit.Box.TimeS`, change service countdowns, or change Pit Stop Debrief deltas.
+
 ## 3. Pit Entry Assist
 
 Pit Entry Assist helps you arrive at the pit entry line at the right speed. It uses saved marker context plus braking guidance to tell you whether you are:
