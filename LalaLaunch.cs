@@ -21220,7 +21220,16 @@ namespace LaunchPlugin
                 return;
             }
 
-            double triggerDistanceM = 25.0 * (pitLimitKph / 80.0);
+            double pitEntryBufferM = _pit != null ? _pit.ConfigPitEntryBufferM : 0.0;
+            if (double.IsNaN(pitEntryBufferM) || double.IsInfinity(pitEntryBufferM))
+            {
+                pitEntryBufferM = 0.0;
+            }
+
+            pitEntryBufferM = Math.Max(0.0, Math.Min(50.0, pitEntryBufferM));
+            double boxStopCueBufferM = Math.Max(1.0, Math.Min(5.0, pitEntryBufferM * 0.20));
+
+            double triggerDistanceM = (25.0 * (pitLimitKph / 80.0)) + boxStopCueBufferM;
             if (double.IsNaN(triggerDistanceM) || double.IsInfinity(triggerDistanceM) || triggerDistanceM <= 0.0)
             {
                 return;
