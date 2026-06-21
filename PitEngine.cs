@@ -76,6 +76,7 @@ namespace LaunchPlugin
         private bool _pitEntryMissingMarkerWarned = false;
         private bool _pitEntryMissingPitLimitWarned = false;
         private bool _pitEntryPostLineHoldActive = false;
+        private bool _pitEntryLimiterOn = false;
         private int _pitEntrySpeedStatusState = 0;
 
         private const int PitEntryBrakeCueOff = 0;
@@ -146,6 +147,7 @@ namespace LaunchPlugin
             _pitEntryMissingMarkerWarned = false;
             _pitEntryMissingPitLimitWarned = false;
             _pitEntryPostLineHoldActive = false;
+            _pitEntryLimiterOn = false;
             _pitEntrySpeedStatusState = 0;
             PitEntryBrakeCueState = PitEntryBrakeCueOff;
             PitEntryLineDebrief = "normal";
@@ -281,6 +283,11 @@ namespace LaunchPlugin
                 double.IsNaN(brakeInM) || double.IsInfinity(brakeInM))
             {
                 return PitEntryBrakeCueFault;
+            }
+
+            if (_pitEntryLimiterOn && PitEntrySpeedDelta_kph <= PitEntryLineSpeedToleranceKph)
+            {
+                return ResolvePitEntryPostLineSpeedCueState();
             }
 
             if (PitEntryMargin_m < 0.0) return PitEntryBrakeCueBrakeHard;
@@ -475,6 +482,7 @@ namespace LaunchPlugin
 
             // Arming (EnteringPits OR limiter ON and overspeed > +2kph)
             bool limiterOn = (data?.NewData?.PitLimiterOn ?? 0) != 0;
+            _pitEntryLimiterOn = limiterOn;
             bool autoArmed = (CurrentPitPhase == PitPhase.EnteringPits) || (limiterOn && PitEntrySpeedDelta_kph > 2.0);
 
             // Distance to pit entry (authoritative source: stored markers only)
