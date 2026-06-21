@@ -40,6 +40,7 @@ For internal between-release development history, see `Docs/Internal/Development
 - **Monitor System late-race fuel guidance** now suppresses end-of-race `REFUEL OFF`, `MFD FUEL LOW`, and predictive `BASELINE SHORT` noise once finish authority says the race is effectively ending, while preserving `EXIT FUEL SHORT` and system-health/reliability warnings.
 
 ### Fixed
+- Fixed Pit Entry brake cues so once the pit limiter is active and the car is already at or below pit speed, the driver sees an existing compliant speed cue instead of continued `BRAKE NOW` / `BRAKE HARD` guidance.
 - Fixed `FUEL DATA RECOVERED` so it auto-clears to `MONITOR READY` after a short confirmation hold when no newer MonitorSystem message has replaced it.
 - Fixed the Fuel Data selector display while idle/no live session/no profile so `LalaLaunch.Fuel.Refuel.DataMode` visibly follows the selected DATA mode without sending pit commands or changing refuel math.
 - Fixed Pit Stop Debrief box delta and fuel-target latching so valid completed-box deltas use the existing `Pit.Box.LastDeltaSec` authority without changing its dashboard sign contract, exact `0.0s` box deltas no longer stay pending, and non-zero requested fuel targets survive box-exit reset ticks while in-box refuel cancels clear the target.
