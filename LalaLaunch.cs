@@ -11262,7 +11262,11 @@ namespace LaunchPlugin
             _currentTickGameData = data;
 
             // --- MASTER GUARD CLAUSES ---
-            if (Settings == null || pluginManager == null) return;
+            if (Settings == null || pluginManager == null)
+            {
+                ClearPitLimiterAndRunwayExports();
+                return;
+            }
             if (!_propertySnapshotRollingPersistedStateCleared)
             {
                 if (Settings.PropertySnapshotRollingActive)
@@ -11281,7 +11285,11 @@ namespace LaunchPlugin
                 _opponentsEngine?.Reset();
                 _leagueClassOpponentsRefreshPending = false;
             }
-            if (!data.GameRunning || data.NewData == null) return;
+            if (!data.GameRunning || data.NewData == null)
+            {
+                ClearPitLimiterAndRunwayExports();
+                return;
+            }
 
             _isRefuelSelected = IsRefuelSelected(pluginManager);
             _liveTireChangeCount = ResolveLiveSelectedTireChangeCount(pluginManager, out _liveTireChangeCountHasEvidence);
@@ -21087,10 +21095,16 @@ namespace LaunchPlugin
             _pitExitTimeToExitSec = blended;
         }
 
+        private void ClearPitLimiterAndRunwayExports()
+        {
+            _pitLimiterSpeedKph = 0.0;
+            ClearPitBoxRunwayScaling();
+        }
+
         private void UpdatePitLimiterSpeedExport(PluginManager pluginManager)
         {
             double pitLimiterKph;
-            _pitLimiterSpeedKph = TryResolvePitLimiterSpeedKph(pluginManager, out pitLimiterKph)
+            _pitLimiterSpeedKph = TryResolveNativeSessionPitSpeedLimitKph(pluginManager, out pitLimiterKph)
                 ? Math.Max(0.0, pitLimiterKph)
                 : 0.0;
         }
@@ -21111,7 +21125,7 @@ namespace LaunchPlugin
                 return;
             }
 
-            double rangeM = 40.0 * (pitLimiterKph / 80.0);
+            double rangeM = Math.Max(40.0, Math.Min(80.0, pitLimiterKph * 0.75));
             if (double.IsNaN(rangeM) || double.IsInfinity(rangeM) || rangeM <= 0.0)
             {
                 return;
@@ -21119,6 +21133,37 @@ namespace LaunchPlugin
 
             _pitBoxRunwayRangeM = rangeM;
             _pitBoxRunwayScale01 = Clamp01(distanceM / rangeM);
+        }
+
+        private static bool TryResolveNativeSessionPitSpeedLimitKph(PluginManager pluginManager, out double pitLimiterKph)
+        {
+            pitLimiterKph = double.NaN;
+
+            string pitLimitText = GetString(pluginManager, "DataCorePlugin.GameRawData.SessionData.WeekendInfo.TrackPitSpeedLimit");
+            if (string.IsNullOrWhiteSpace(pitLimitText))
+            {
+                return false;
+            }
+
+            var match = System.Text.RegularExpressions.Regex.Match(pitLimitText, @"[-+]?\d+(?:\.\d+)?");
+            if (!match.Success)
+            {
+                return false;
+            }
+
+            double parsedLimiterKph;
+            if (!double.TryParse(match.Value, NumberStyles.Float, CultureInfo.InvariantCulture, out parsedLimiterKph))
+            {
+                return false;
+            }
+
+            if (double.IsNaN(parsedLimiterKph) || double.IsInfinity(parsedLimiterKph) || parsedLimiterKph <= 0.0)
+            {
+                return false;
+            }
+
+            pitLimiterKph = parsedLimiterKph;
+            return true;
         }
 
         private static bool TryResolvePitLimiterSpeedKph(PluginManager pluginManager, out double pitLimiterKph)
@@ -21256,16 +21301,23 @@ namespace LaunchPlugin
 
             _pitBoxBrakeNow = false;
 
-            double pitLimitKph;
-            if (!TryResolvePitLimiterSpeedKph(pluginManager, out pitLimitKph) || pitLimitKph <= 0.0)
+            double nativePitLimitKph;
+            if (TryResolveNativeSessionPitSpeedLimitKph(pluginManager, out nativePitLimitKph) && nativePitLimitKph > 0.0)
+            {
+                UpdatePitBoxRunwayScaling(distanceM, nativePitLimitKph);
+            }
+            else
             {
                 ClearPitBoxRunwayScaling();
+            }
+
+            if (distanceM <= 0.0 || speedKph <= 2.0)
+            {
                 return;
             }
 
-            UpdatePitBoxRunwayScaling(distanceM, pitLimitKph);
-
-            if (distanceM <= 0.0 || speedKph <= 2.0)
+            double pitLimitKph;
+            if (!TryResolvePitLimiterSpeedKph(pluginManager, out pitLimitKph) || pitLimitKph <= 0.0)
             {
                 return;
             }

@@ -89,12 +89,12 @@ When manually editing dashboard formulas, use the single plugin-qualified proper
 Box Entry dashboards should prefer the plugin-owned limiter/runway exports:
 
 - `LalaLaunch.Pit.LimiterSpeedKph` — normalized kph pit-limit authority.
-- `LalaLaunch.Pit.Box.RunwayRangeM` — limiter-scaled approach range in metres.
-- `LalaLaunch.Pit.Box.RunwayScale01` — clamped `distance / range` visual position.
+- `LalaLaunch.Pit.Box.RunwayRangeM` — limiter-scaled approach range in metres: `clamp(Pit.LimiterSpeedKph * 0.75, 40.0, 80.0)`.
+- `LalaLaunch.Pit.Box.RunwayScale01` — clamped `Pit.Box.DistanceM / Pit.Box.RunwayRangeM` visual position (`0..1`, fail-closed to `0`).
 
 Use these with `LalaLaunch.Pit.Box.DistanceM`, `TimeS`, and `BrakeNow` instead of reading SimHub pit-speed display values, parsing raw session strings, or duplicating runway-range formulas in Dash Studio.
 
-## Pit Entry text labels
+### Pit Entry text labels
 
 For Pit Entry Assist widgets, use `LalaLaunch.Pit.EntryMargin_m` as the continuous marker source and `LalaLaunch.Pit.EntryAssistActive` as the visibility gate. If a widget needs direct driver-facing text, prefer the plugin-owned `LalaLaunch.Pit.EntryBrakeCueText`; it handles `OFF`, `FAULT`, `READY`, `BRAKE IN Xm`, `BRAKE NOW`, `BRAKE HARD`, `SLOW DOWN`, `SPEED OKAY`, `BELOW LIMIT`, and `TOO SLOW` without requiring dashboard formulas to rebuild the common message from cue, speed delta, and margin; limiter ON plus speed within the Pit Entry compliance tolerance (up to +1.0 kph) is treated as compliant for cue priority and will not continue showing `BRAKE NOW` or `BRAKE HARD`. Use `LalaLaunch.Pit.EntryBrakeCueState` for colours/animations instead of parsing text. Use `LalaLaunch.Pit.EntryCueText` only when the widget wants the stable legacy cue-state token (`OFF`/`OK`/`BRAKE SOON`/`BRAKE NOW`/`LATE`) and owns custom wording.
 

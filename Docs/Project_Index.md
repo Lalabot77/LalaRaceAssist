@@ -3,7 +3,6 @@
 Validated against commit: HEAD
 Last updated: 2026-06-11
 Branch: work
-Current note: Box Entry now publishes plugin-owned `Pit.LimiterSpeedKph`, `Pit.Box.RunwayRangeM`, and `Pit.Box.RunwayScale01` exports so dashboard runway visuals can use normalized kph authority and shared limiter-scaled positioning instead of SimHub display-unit-sensitive pit speed values, raw session string parsing, or duplicated range formulas.
 Current note: Monitor lifecycle restart evidence is current; the optional Monitor Event CSV can now write one-shot internal-only `Lifecycle` rows for Opponents, CarSA, H2H, and LapRef first-healthy-after-reset observation without changing MonitorSystem text, exports, dashboard JSON, or subsystem reset/recovery/calculation behavior.
 Current note: Pit service regulations are now selectable in Strategy/Race Presets and route runtime boxed-stop plus Strategy Planner service timing through one shared regulation-aware seam; active PitExit total-loss refresh accepts lower estimates only when the deliberate pit-service model key changes, while unchanged-key repair/countdown ageing preserves the latched seed. The Profiles CAR Pit Stop / Pit Assist group is layout-polished only: constrained/aligned numeric editors and full-width Pit Entry sliders without ownership or calculation changes.
 
