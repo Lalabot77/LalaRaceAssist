@@ -169,7 +169,7 @@ The selector is manual and is persisted by Race Presets. Car Profiles hold the p
 
 ## Pit Box Assist STOP cue
 
-Pit Box Assist still uses the plugin-owned pit-box distance/time authority for box approach displays. The `Pit.Box.BrakeNow` STOP / BRAKE NOW helper now adds a small comfort buffer derived from the car-profile Pit Entry Buffer: `clamp(Pit Entry Buffer × 20%, 1m, 5m)`. For example, a 15m Pit Entry Buffer makes the box STOP cue appear about 3m earlier. This changes cue feel only; it does not move the pit box, alter `Pit.Box.DistanceM` / `Pit.Box.TimeS`, change service countdowns, or change Pit Stop Debrief deltas.
+Pit Box Assist still uses the plugin-owned pit-box distance/time authority for box approach displays. Dashboards can also use `Pit.LimiterSpeedKph`, `Pit.Box.RunwayRangeM`, and `Pit.Box.RunwayScale01` for Box Entry runway visuals instead of parsing SimHub raw pit-speed strings or duplicating limiter-scaled range formulas. The `Pit.Box.BrakeNow` STOP / BRAKE NOW helper now adds a small comfort buffer derived from the car-profile Pit Entry Buffer: `clamp(Pit Entry Buffer × 20%, 1m, 5m)`. For example, a 15m Pit Entry Buffer makes the box STOP cue appear about 3m earlier. This changes cue feel only; it does not move the pit box, alter `Pit.Box.DistanceM` / `Pit.Box.TimeS`, change service countdowns, or change Pit Stop Debrief deltas.
 
 ## 3. Pit Entry Assist
 

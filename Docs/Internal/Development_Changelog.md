@@ -1,3 +1,6 @@
+- 2026-06-22 Box Entry KPH authority and runway scaling exports landed:
+  - Added plugin-owned `Pit.LimiterSpeedKph`, `Pit.Box.RunwayRangeM`, and `Pit.Box.RunwayScale01` exports so dashboards can consume normalized kph authority and limiter-scaled runway positioning without SimHub display-unit dependencies, raw `WeekendInfo.TrackPitSpeedLimit` string parsing, or duplicated runway formulas.
+  - `Pit.Box.BrakeNow` keeps its existing trigger behavior and now shares the same resolved limiter authority seam with the new exports; invalid/missing pit-limit or pit-box authority fails closed to `0`/`false`. No settings, service timing, Pit Entry braking math, pit-box distance/time authority, PitExit prediction, Pit Debrief, or dashboard JSON/layout behavior changed. Property Snapshot list reviewed: yes; new `Pit.*` exports resolve to the existing Pit/PitExit group.
 ## 2026-06-21 — Box Entry STOP cue comfort buffer
 - Classification: **both** (driver-facing Box Entry STOP / BRAKE NOW cue feel change plus internal pit-box cue contract update).
 - `Pit.Box.BrakeNow` now adds a local/private Box STOP cue buffer derived from the existing Pit Entry Buffer: `clamp(PitEntryBuffer_m * 0.20, 1.0, 5.0)`, after the same 0–50 m Pit Entry Buffer sanitization. Example: 15 m Pit Entry Buffer -> 3 m Box STOP cue buffer.
