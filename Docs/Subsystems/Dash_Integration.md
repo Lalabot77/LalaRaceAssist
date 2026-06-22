@@ -216,7 +216,8 @@ If runtime data appears stalled after a session boundary, the plugin now exposes
 - Use `Pit.EntryBrakeCueText` when a dashboard wants direct plugin-owned driver wording; build custom wording from `Pit.EntryBrakeCueState`, `Pit.EntrySpeedDelta_kph`, and `Pit.EntryMargin_m` only when the widget deliberately wants a different presentation.
 - Use `Pit.EntryBrakeCueState` for cue colours/animations; do not parse `Pit.EntryBrakeCueText` for visual state.
 - Expect `Pit.EntryAssistActive` to remain true briefly after pit-entry crossing for speed-settling text until the existing Pit Box distance seam reports handover range (`Pit.Box.DistanceM < 200m`); during that post-line hold, `Pit.EntryDistanceToLine_m`, `Pit.EntryRequiredDistance_m`, `Pit.EntryMargin_m`, and `Pit.EntryCue` are neutralized so stale brake-marker geometry is not rendered.
-- A fixed-scale marker is preferred over re-scaling around the current cue.
+- For Box Entry approach widgets, use plugin-owned `Pit.LimiterSpeedKph`, `Pit.Box.RunwayRangeM`, and `Pit.Box.RunwayScale01` instead of reading `DataCorePlugin.GameData.PitLimiterSpeed`, parsing `WeekendInfo.TrackPitSpeedLimit`, or duplicating runway scaling formulas in Dash Studio. `Pit.Box.RunwayRangeM` is `clamp(Pit.LimiterSpeedKph * 0.75, 40.0, 80.0)` and `Pit.Box.RunwayScale01` is the clamped `distance / range` visual position; both fail closed to `0` when unavailable.
+- A fixed-scale marker is preferred over re-scaling around the current cue for Pit Entry braking widgets.
 
 ### Recommended visualization
 - Fixed ±150 m vertical or horizontal marker range.

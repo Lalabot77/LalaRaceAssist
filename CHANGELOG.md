@@ -7,6 +7,7 @@ For internal between-release development history, see `Docs/Internal/Development
 ## v1.1 (Unreleased)
 
 ### Added
+- Added plugin-owned Box Entry pit-limit/runway exports (`Pit.LimiterSpeedKph`, `Pit.Box.RunwayRangeM`, `Pit.Box.RunwayScale01`) so dashboards can use normalized kph authority and shared limiter-scaled runway positioning (`clamp(kph * 0.75, 40m, 80m)`) from native session kph authority instead of local-unit SimHub pit-speed values, raw strings, or duplicated formulas.
 - Pit Service Regulations selector for Strategy and Race Presets: Default models sequential fuel then tyres, IMSA models simultaneous service, and NEC models simultaneous service with a car-profile NEC refuel-rate factor.
 - Profile CAR tab NEC Refuel Rate Factor (%) setting, defaulting to 100% and used only when NEC pit service regulations are selected.
 - Pit Stop Debrief now shows any finite valid completed box delta regardless of magnitude, treats `BOX ... (Δ PENDING)` as missing/invalid/not-completed source only, and labels repair-influenced SummaryText box targets as `BOX MAND REPAIR`, `BOX OPT REPAIR`, or `BOX REPAIRS` while preserving `Pit.Box.LastDeltaSec` as `target - actual` and the debrief summary as `actual - target`.

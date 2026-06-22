@@ -7075,9 +7075,12 @@ namespace LaunchPlugin
         private int _pitExitTimeS = 0;
         private double _pitExitTimeToExitSec = 0.0;
         private double _carPlayerTrackPct = 0.0;
+        private double _pitLimiterSpeedKph = 0.0;
         private int _pitBoxDistanceM = 0;
         private int _pitBoxTimeS = 0;
         private bool _pitBoxBrakeNow = false;
+        private double _pitBoxRunwayRangeM = 0.0;
+        private double _pitBoxRunwayScale01 = 0.0;
         private bool _pitBoxCountdownActive = false;
         private double _pitBoxElapsedSec = 0.0;
         private double _pitBoxRemainingSec = 0.0;
@@ -8567,9 +8570,12 @@ namespace LaunchPlugin
             AttachCore("PitExit.DistanceM", () => _pitExitDistanceM);
             AttachCore("PitExit.TimeS", () => _pitExitTimeS);
             AttachCore("PitExit.TimeToExitSec", () => _pitExitTimeToExitSec);
+            AttachCore("Pit.LimiterSpeedKph", () => _pitLimiterSpeedKph);
             AttachCore("Pit.Box.DistanceM", () => _pitBoxDistanceM);
             AttachCore("Pit.Box.TimeS", () => _pitBoxTimeS);
             AttachCore("Pit.Box.BrakeNow", () => _pitBoxBrakeNow);
+            AttachCore("Pit.Box.RunwayRangeM", () => _pitBoxRunwayRangeM);
+            AttachCore("Pit.Box.RunwayScale01", () => _pitBoxRunwayScale01);
             AttachCore("Pit.Box.Active", () => _pitBoxCountdownActive);
             AttachCore("Pit.Box.ElapsedSec", () => _pitBoxElapsedSec);
             AttachCore("Pit.Box.RemainingSec", () => _pitBoxRemainingSec);
@@ -11256,7 +11262,11 @@ namespace LaunchPlugin
             _currentTickGameData = data;
 
             // --- MASTER GUARD CLAUSES ---
-            if (Settings == null || pluginManager == null) return;
+            if (Settings == null || pluginManager == null)
+            {
+                ClearPitLimiterAndRunwayExports();
+                return;
+            }
             if (!_propertySnapshotRollingPersistedStateCleared)
             {
                 if (Settings.PropertySnapshotRollingActive)
@@ -11275,7 +11285,11 @@ namespace LaunchPlugin
                 _opponentsEngine?.Reset();
                 _leagueClassOpponentsRefreshPending = false;
             }
-            if (!data.GameRunning || data.NewData == null) return;
+            if (!data.GameRunning || data.NewData == null)
+            {
+                ClearPitLimiterAndRunwayExports();
+                return;
+            }
 
             _isRefuelSelected = IsRefuelSelected(pluginManager);
             _liveTireChangeCount = ResolveLiveSelectedTireChangeCount(pluginManager, out _liveTireChangeCountHasEvidence);
@@ -11418,6 +11432,7 @@ namespace LaunchPlugin
             }
 
             TrackCurrentPitStopTireSelectionEvidence(inLane);
+            UpdatePitLimiterSpeedExport(pluginManager);
 
             // Per-tick pit-exit display values (only while in pit lane)
             if (inLane)
@@ -21080,6 +21095,77 @@ namespace LaunchPlugin
             _pitExitTimeToExitSec = blended;
         }
 
+        private void ClearPitLimiterAndRunwayExports()
+        {
+            _pitLimiterSpeedKph = 0.0;
+            ClearPitBoxRunwayScaling();
+        }
+
+        private void UpdatePitLimiterSpeedExport(PluginManager pluginManager)
+        {
+            double pitLimiterKph;
+            _pitLimiterSpeedKph = TryResolveNativeSessionPitSpeedLimitKph(pluginManager, out pitLimiterKph)
+                ? Math.Max(0.0, pitLimiterKph)
+                : 0.0;
+        }
+
+        private void ClearPitBoxRunwayScaling()
+        {
+            _pitBoxRunwayRangeM = 0.0;
+            _pitBoxRunwayScale01 = 0.0;
+        }
+
+        private void UpdatePitBoxRunwayScaling(double distanceM, double pitLimiterKph)
+        {
+            ClearPitBoxRunwayScaling();
+
+            if (double.IsNaN(distanceM) || double.IsInfinity(distanceM) || distanceM < 0.0
+                || double.IsNaN(pitLimiterKph) || double.IsInfinity(pitLimiterKph) || pitLimiterKph <= 0.0)
+            {
+                return;
+            }
+
+            double rangeM = Math.Max(40.0, Math.Min(80.0, pitLimiterKph * 0.75));
+            if (double.IsNaN(rangeM) || double.IsInfinity(rangeM) || rangeM <= 0.0)
+            {
+                return;
+            }
+
+            _pitBoxRunwayRangeM = rangeM;
+            _pitBoxRunwayScale01 = Clamp01(distanceM / rangeM);
+        }
+
+        private static bool TryResolveNativeSessionPitSpeedLimitKph(PluginManager pluginManager, out double pitLimiterKph)
+        {
+            pitLimiterKph = double.NaN;
+
+            string pitLimitText = GetString(pluginManager, "DataCorePlugin.GameRawData.SessionData.WeekendInfo.TrackPitSpeedLimit");
+            if (string.IsNullOrWhiteSpace(pitLimitText))
+            {
+                return false;
+            }
+
+            var match = System.Text.RegularExpressions.Regex.Match(pitLimitText, @"[-+]?\d+(?:\.\d+)?");
+            if (!match.Success)
+            {
+                return false;
+            }
+
+            double parsedLimiterKph;
+            if (!double.TryParse(match.Value, NumberStyles.Float, CultureInfo.InvariantCulture, out parsedLimiterKph))
+            {
+                return false;
+            }
+
+            if (double.IsNaN(parsedLimiterKph) || double.IsInfinity(parsedLimiterKph) || parsedLimiterKph <= 0.0)
+            {
+                return false;
+            }
+
+            pitLimiterKph = parsedLimiterKph;
+            return true;
+        }
+
         private static bool TryResolvePitLimiterSpeedKph(PluginManager pluginManager, out double pitLimiterKph)
         {
             pitLimiterKph = double.NaN;
@@ -21147,6 +21233,7 @@ namespace LaunchPlugin
                 _pitBoxDistanceM = 0;
                 _pitBoxTimeS = 0;
                 _pitBoxBrakeNow = false;
+                ClearPitBoxRunwayScaling();
                 return;
             }
 
@@ -21155,6 +21242,7 @@ namespace LaunchPlugin
                 _pitBoxDistanceM = 0;
                 _pitBoxTimeS = 0;
                 _pitBoxBrakeNow = false;
+                ClearPitBoxRunwayScaling();
                 return;
             }
 
@@ -21164,6 +21252,7 @@ namespace LaunchPlugin
                 _pitBoxDistanceM = 0;
                 _pitBoxTimeS = 0;
                 _pitBoxBrakeNow = false;
+                ClearPitBoxRunwayScaling();
                 return;
             }
 
@@ -21174,6 +21263,7 @@ namespace LaunchPlugin
                 _pitBoxDistanceM = 0;
                 _pitBoxTimeS = 0;
                 _pitBoxBrakeNow = false;
+                ClearPitBoxRunwayScaling();
                 return;
             }
 
@@ -21186,6 +21276,7 @@ namespace LaunchPlugin
                 _pitBoxDistanceM = 0;
                 _pitBoxTimeS = 0;
                 _pitBoxBrakeNow = false;
+                ClearPitBoxRunwayScaling();
                 return;
             }
 
@@ -21209,6 +21300,17 @@ namespace LaunchPlugin
             _pitBoxTimeS = Math.Max(0, (int)Math.Round(timeS, MidpointRounding.AwayFromZero));
 
             _pitBoxBrakeNow = false;
+
+            double nativePitLimitKph;
+            if (TryResolveNativeSessionPitSpeedLimitKph(pluginManager, out nativePitLimitKph) && nativePitLimitKph > 0.0)
+            {
+                UpdatePitBoxRunwayScaling(distanceM, nativePitLimitKph);
+            }
+            else
+            {
+                ClearPitBoxRunwayScaling();
+            }
+
             if (distanceM <= 0.0 || speedKph <= 2.0)
             {
                 return;
