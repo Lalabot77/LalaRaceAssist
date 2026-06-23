@@ -1,3 +1,6 @@
+- 2026-06-23 Overview Status Centre polish landed:
+  - Overview STATUS now shows Monitor System text with existing MonitorSystem colours, adds League Class OFF/ACTIVE/WARNING status/details from existing League Class resolver state, keeps Updates on the right, and danger-styles the Restart Plugin button;
+  - plugin UI League Class enable now reuses the same enable-time reload/self-test seam as the SimHub action when enabled with zero loaded rows, without adding exports or changing cohort/ranking semantics. Property Snapshot list reviewed: yes; no SimHub exports/properties were added, removed, renamed, behavior-recontracted, or regrouped.
 - 2026-06-23 Pit Debrief diagnostic verbose-gate validation landed:
   - issue #823 source-trace families `[LalaPlugin:PitDebriefBoxDiag]` and `[LalaPlugin:PitDebriefFuelDiag]` are documented and verified as verbose-debug-only diagnostics behind `SoftDebugEnabled && Settings.EnableDebugLogging`; normal users should see only the final concise `[LalaPlugin:PitDebrief]` summary for finalized stops.
   - No Pit Debrief exports, timing, service calculations, `Pit.Box.LastDeltaSec` sign contract, PitEngine/PitCycleLite behavior, fuel model behavior, dashboard JSON/layout, driver-facing `SummaryText`, or final debrief log emission changed. Property Snapshot list reviewed: yes; no group mapping change required.

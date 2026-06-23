@@ -1,3 +1,9 @@
+## 2026-06-23 — Overview Status Centre polish
+- Classification: **both** (driver-facing plugin Overview status/readability plus internal League Class enable-path consistency; no dashboard JSON/export changes).
+- Overview STATUS now shows Monitor System text with existing MonitorSystem colour exports, League Class OFF/ACTIVE/WARNING status with loaded/valid/invalid/duplicate row detail and player waiting/resolved/unresolved wording, while keeping Updates on the right and making Restart Plugin red/danger-styled.
+- League Class plugin UI enable now reuses the same reload/self-test seam as the `LeagueClass.ToggleEnabled` SimHub action when enabling with zero loaded rows in CSV-capable modes; the shared seam still calls `ReloadLeagueClassConfig()` and preserves existing reload logging.
+- Preserved invariants: no League Class cohort/ranking changes, no H2H/Opponents/CarSA/PitExit/ClassLeader/ClassBest logic changes, no dashboard work, no export/property add/remove/rename, and no MonitorSystem priority/runtime logic changes. Property Snapshot list reviewed: yes; no SimHub exports/properties changed.
+
 ## 2026-06-23 — Pit Debrief diagnostic verbose gate validation
 - Classification: **internal-only** (SimHub Info diagnostic visibility/noise reduction validation only; no Pit Debrief exports, timing, service calculations, `Pit.Box.LastDeltaSec` sign contract, PitEngine/PitCycleLite behavior, fuel model behavior, dashboard JSON/layout, or driver-facing `SummaryText` behavior changed).
 - Confirmed issue #823 scope: `[LalaPlugin:PitDebriefBoxDiag]` and `[LalaPlugin:PitDebriefFuelDiag]` source-trace diagnostics use the existing effective verbose helper (`SoftDebugEnabled && Settings.EnableDebugLogging`) at their emission helpers, while the final concise `[LalaPlugin:PitDebrief]` summary log remains always-on through the finalized debrief log path.

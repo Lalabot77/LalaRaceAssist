@@ -36,6 +36,14 @@ namespace LaunchPlugin
         private string _currentCarText = "Not detected";
         private string _currentTrackText = "Not detected";
 
+        private string _monitorSystemText = "Unknown";
+        private string _monitorSystemBackground = "#404040";
+        private string _monitorSystemForeground = "#FFFFFF";
+        private string _leagueClassStatusText = "OFF";
+        private string _leagueClassDetailText = "League Class disabled";
+        private string _leagueClassBackground = "#404040";
+        private string _leagueClassForeground = "#FFFFFF";
+
         public event PropertyChangedEventHandler PropertyChanged;
 
         public string InstalledVersionText { get => _installedVersionText; private set { _installedVersionText = value; OnPropertyChanged(nameof(InstalledVersionText)); } }
@@ -48,6 +56,14 @@ namespace LaunchPlugin
         public string TrackMarkersStatusText { get => _trackMarkersStatusText; private set { _trackMarkersStatusText = value; OnPropertyChanged(nameof(TrackMarkersStatusText)); } }
         public string CurrentCarText { get => _currentCarText; private set { _currentCarText = value; OnPropertyChanged(nameof(CurrentCarText)); } }
         public string CurrentTrackText { get => _currentTrackText; private set { _currentTrackText = value; OnPropertyChanged(nameof(CurrentTrackText)); } }
+
+        public string MonitorSystemText { get => _monitorSystemText; private set { _monitorSystemText = value; OnPropertyChanged(nameof(MonitorSystemText)); } }
+        public string MonitorSystemBackground { get => _monitorSystemBackground; private set { _monitorSystemBackground = value; OnPropertyChanged(nameof(MonitorSystemBackground)); } }
+        public string MonitorSystemForeground { get => _monitorSystemForeground; private set { _monitorSystemForeground = value; OnPropertyChanged(nameof(MonitorSystemForeground)); } }
+        public string LeagueClassStatusText { get => _leagueClassStatusText; private set { _leagueClassStatusText = value; OnPropertyChanged(nameof(LeagueClassStatusText)); } }
+        public string LeagueClassDetailText { get => _leagueClassDetailText; private set { _leagueClassDetailText = value; OnPropertyChanged(nameof(LeagueClassDetailText)); } }
+        public string LeagueClassBackground { get => _leagueClassBackground; private set { _leagueClassBackground = value; OnPropertyChanged(nameof(LeagueClassBackground)); } }
+        public string LeagueClassForeground { get => _leagueClassForeground; private set { _leagueClassForeground = value; OnPropertyChanged(nameof(LeagueClassForeground)); } }
 
         public OverviewTabView(LalaLaunch plugin)
         {
@@ -109,6 +125,9 @@ namespace LaunchPlugin
                 CurrentCarText = "Unavailable";
                 CurrentTrackText = "Unavailable";
                 CurrentGameText = "Unavailable";
+                MonitorSystemText = "Unavailable";
+                LeagueClassStatusText = "Unavailable";
+                LeagueClassDetailText = "Plugin not loaded";
                 return;
             }
 
@@ -133,6 +152,59 @@ namespace LaunchPlugin
 
             var currentGame = _plugin.PluginManager?.GetPropertyValue("DataCorePlugin.CurrentGame");
             CurrentGameText = currentGame == null ? "Not detected" : currentGame.ToString();
+
+            RefreshMonitorSystemSnapshot();
+            RefreshLeagueClassSnapshot();
+        }
+
+        private void RefreshMonitorSystemSnapshot()
+        {
+            MonitorSystemText = ReadPluginProperty("MonitorSystem.Text", "MONITOR READY");
+            MonitorSystemBackground = ReadPluginProperty("MonitorSystem.BackgroundColour", "#0B5D1E");
+            MonitorSystemForeground = ReadPluginProperty("MonitorSystem.TextColour", "#FFFFFF");
+        }
+
+        private void RefreshLeagueClassSnapshot()
+        {
+            if (_plugin?.Settings?.LeagueClassEnabled != true)
+            {
+                LeagueClassStatusText = "OFF";
+                LeagueClassDetailText = "League Class disabled";
+                LeagueClassBackground = "#404040";
+                LeagueClassForeground = "#FFFFFF";
+                return;
+            }
+
+            var status = _plugin.LeagueClassStatus;
+            int loaded = status?.LoadedCount ?? 0;
+            int valid = status?.ValidDriverCount ?? 0;
+            int invalid = status?.InvalidRowCount ?? 0;
+            int duplicates = status?.DuplicateRowCount ?? 0;
+            string config = status?.ConfigStatusText ?? "Status unavailable";
+            string player = _plugin.LeagueClassPlayerPreviewText ?? string.Empty;
+            bool playerWaiting = player.IndexOf("not available yet", StringComparison.OrdinalIgnoreCase) >= 0;
+            bool playerResolved = player.IndexOf("Source: NONE", StringComparison.OrdinalIgnoreCase) < 0 &&
+                player.IndexOf("unresolved", StringComparison.OrdinalIgnoreCase) < 0;
+            bool configBad = config.IndexOf("fail", StringComparison.OrdinalIgnoreCase) >= 0 ||
+                config.IndexOf("missing", StringComparison.OrdinalIgnoreCase) >= 0 ||
+                config.IndexOf("invalid", StringComparison.OrdinalIgnoreCase) >= 0 ||
+                config.IndexOf("error", StringComparison.OrdinalIgnoreCase) >= 0;
+            bool warning = loaded <= 0 || valid <= 0 || configBad || invalid > 0 || duplicates > 0 || (!playerResolved && !playerWaiting);
+
+            LeagueClassStatusText = warning ? "WARNING" : "ACTIVE";
+            LeagueClassBackground = warning ? "#D97A00" : "#0B5D1E";
+            LeagueClassForeground = "#FFFFFF";
+
+            string playerDetail = playerWaiting ? "Player: waiting for session" : (playerResolved ? "Player resolved" : "Player unresolved");
+            LeagueClassDetailText = string.Format("{0} | Loaded {1}, valid {2}, invalid {3}, duplicates {4} | {5}",
+                config, loaded, valid, invalid, duplicates, playerDetail);
+        }
+
+        private string ReadPluginProperty(string propertyName, string fallback)
+        {
+            var value = _plugin?.PluginManager?.GetPropertyValue("LalaLaunch." + propertyName) ??
+                _plugin?.PluginManager?.GetPropertyValue(propertyName);
+            return value == null ? fallback : (value.ToString() ?? fallback);
         }
 
         private async Task CheckLatestReleaseAsync(bool force)
