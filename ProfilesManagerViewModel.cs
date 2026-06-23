@@ -309,12 +309,7 @@ namespace LaunchPlugin
             ts.AvgLapTimeDryText = ts.MillisecondsToLapTimeString(ts.AvgLapTimeDry);
             ts.AvgLapTimeWetText = ts.MillisecondsToLapTimeString(ts.AvgLapTimeWet);
             ts.PitLaneLossSecondsText = ts.PitLaneLossSeconds?.ToString(System.Globalization.CultureInfo.InvariantCulture);
-            ts.AvgFuelPerLapDryText = ts.AvgFuelPerLapDry?.ToString("0.00", System.Globalization.CultureInfo.InvariantCulture);
-            ts.MinFuelPerLapDryText = ts.MinFuelPerLapDry?.ToString("0.00", System.Globalization.CultureInfo.InvariantCulture);
-            ts.MaxFuelPerLapDryText = ts.MaxFuelPerLapDry?.ToString("0.00", System.Globalization.CultureInfo.InvariantCulture);
-            ts.AvgFuelPerLapWetText = ts.AvgFuelPerLapWet?.ToString("0.00", System.Globalization.CultureInfo.InvariantCulture);
-            ts.MinFuelPerLapWetText = ts.MinFuelPerLapWet?.ToString("0.00", System.Globalization.CultureInfo.InvariantCulture);
-            ts.MaxFuelPerLapWetText = ts.MaxFuelPerLapWet?.ToString("0.00", System.Globalization.CultureInfo.InvariantCulture);
+            ts.RefreshFuelPerLapDisplayTextFromStorage();
             ts.AvgDryTrackTempText = ts.AvgDryTrackTemp?.ToString(System.Globalization.CultureInfo.InvariantCulture);
             ts.AvgWetTrackTempText = ts.AvgWetTrackTemp?.ToString(System.Globalization.CultureInfo.InvariantCulture);
 

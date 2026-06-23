@@ -1,5 +1,5 @@
 - 2026-06-23 Profiles track fuel-burn display precision landed:
-  - Profiles track-tab dry/wet fuel-burn ECO, AVG, and MAX display text now initializes at fixed 2 decimal places (for example `2.837496` displays as `2.84`) while preserving full-precision TrackStats numeric storage and existing manual-edit parsing.
+  - Profiles track-tab dry/wet fuel-burn ECO, AVG, and MAX display refresh now uses a display-only TrackStats helper, so `2.837496` displays as `2.84` without flowing through reverse-sync text setters or changing full-precision numeric storage; manual edits still intentionally parse and store the entered value.
   - No fuel learning, profile persistence schema/precision, Strategy/Fuel Model calculations, dashboard JSON/exports, SimHub properties, logs, or Property Snapshot grouping changed. Property Snapshot list reviewed: yes; no export/property change required.
 - 2026-06-23 Pit Debrief diagnostic verbose-gate validation landed:
   - issue #823 source-trace families `[LalaPlugin:PitDebriefBoxDiag]` and `[LalaPlugin:PitDebriefFuelDiag]` are documented and verified as verbose-debug-only diagnostics behind `SoftDebugEnabled && Settings.EnableDebugLogging`; normal users should see only the final concise `[LalaPlugin:PitDebrief]` summary for finalized stops.
