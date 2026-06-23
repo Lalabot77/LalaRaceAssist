@@ -1,7 +1,12 @@
+## 2026-06-23 — PR #844 finish lifecycle review follow-up
+- Classification: **both** (driver/dash-visible RaceFinish correctness plus internal finish lifecycle fallback clarification; no export names, settings, dashboard JSON, fuel, pit, opponent, H2H, League Class, CarSA, or Strategy behavior changes).
+- Replaced the too-narrow missing-SessionState finish-flag fallback with shared `CanTrustPerCarFinishFlags(...)`: when `SessionState` is available, per-car finish-like flags remain trusted only at `SessionState>=5`; when `SessionState` is unavailable, timed races can still use timer-zero proof and lap-limited races can still use completed-lap progress proof.
+- Applied the same stale-flag gate to `RaceFinish.PlayerSnapshotActive` player per-car flag capture, so stale player `CarIdxSessionFlags` at genuine race start (`SessionState==4`) cannot freeze player finish data. Checkered seams and `SessionState==6` safety fallback remain preserved. Property Snapshot list reviewed: yes; no SimHub export/property names or snapshot groups changed.
+
 ## 2026-06-23 — Race finish green-flag stale flag guard
 - Classification: **both** (driver/dash-visible race-finish correctness plus internal finish lifecycle contract clarification; no export names, settings, dashboard JSON, fuel, pit, opponent, H2H, or League Class behavior changes).
 - `Race.OverallLeaderHasFinished`, `Race.ClassLeaderHasFinished`, derived `Race.LeaderHasFinished`, and `Race.LastLapLikely` now remain false at a genuine race start/green flag (`SessionState==4`) even if stale per-car finish-like flags are still present from qualifying/warmup or a prior session.
-- Per-car leader finish flags are trusted only inside a valid finish lifecycle (`SessionState>=5`, or timer-zero fallback when SessionState is unavailable). SessionState-first late-race behavior, timed-race after-zero behavior, single-class mirroring after true overall finish, and multiclass class-targeted finish proof are preserved. Property Snapshot list reviewed: yes; no SimHub export/property names or snapshot groups changed.
+- Per-car leader finish flags are trusted only inside a valid finish lifecycle (`SessionState>=5`, with a guarded missing-SessionState fallback). SessionState-first late-race behavior, timed-race after-zero behavior, single-class mirroring after true overall finish, and multiclass class-targeted finish proof are preserved. Property Snapshot list reviewed: yes; no SimHub export/property names or snapshot groups changed.
 
 ## 2026-06-22 — Box Entry KPH authority and runway scaling export review fixes
 - Classification: **both** (dashboard-facing Box Entry export contract correction plus internal authority/fail-closed documentation).

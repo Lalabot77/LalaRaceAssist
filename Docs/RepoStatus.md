@@ -1,6 +1,10 @@
+- 2026-06-23 PR #844 finish lifecycle review follow-up landed:
+  - shared per-car finish-flag trust now keeps the `SessionState==4` stale-flag block while preserving missing-SessionState fallback for timed races after timer-zero and lap-limited races after completed-lap progress;
+  - RaceFinish player snapshot capture now uses the same stale-flag gate for player `CarIdxSessionFlags`, preventing green-flag `RaceFinish.PlayerSnapshotActive` freezes from stale player flags while preserving checkered seams and `SessionState==6` fallback;
+  - Property Snapshot list reviewed: yes; no export/property names or snapshot groups changed.
 - 2026-06-23 Race finish green-flag stale flag guard landed:
   - leader-finished latches now ignore stale per-car finish-like flags while a race is genuinely running (`SessionState==4`), so `Race.OverallLeaderHasFinished`, `Race.ClassLeaderHasFinished`, derived `Race.LeaderHasFinished`, and `Race.LastLapLikely` stay false at green flag/race start;
-  - per-car finish flags are trusted only in a valid finish lifecycle (`SessionState>=5`, or timer-zero fallback when SessionState is unavailable), preserving SessionState-first leader-finish behavior, timed-race after-zero behavior, single-class mirror, and multiclass class-targeted proof;
+  - per-car finish flags are trusted only in a valid finish lifecycle (`SessionState>=5`, with a guarded missing-SessionState fallback), preserving SessionState-first leader-finish behavior, timed-race after-zero behavior, single-class mirror, and multiclass class-targeted proof;
   - Property Snapshot list reviewed: yes; no export/property names or snapshot groups changed.
 - 2026-06-22 Box Entry KPH authority and runway scaling exports landed:
   - Corrected plugin-owned `Pit.LimiterSpeedKph`, `Pit.Box.RunwayRangeM`, and `Pit.Box.RunwayScale01` exports so dashboards consume native-session true-kph authority, corrected runway range `clamp(Pit.LimiterSpeedKph * 0.75, 40.0, 80.0)`, and clamped runway scale without SimHub display-unit dependencies, raw `WeekendInfo.TrackPitSpeedLimit` string parsing, or duplicated runway formulas.
