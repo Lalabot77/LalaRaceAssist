@@ -1,3 +1,8 @@
+## 2026-06-23 — Pit Debrief diagnostic verbose gate validation
+- Classification: **internal-only** (SimHub Info diagnostic visibility/noise reduction validation only; no Pit Debrief exports, timing, service calculations, `Pit.Box.LastDeltaSec` sign contract, PitEngine/PitCycleLite behavior, fuel model behavior, dashboard JSON/layout, or driver-facing `SummaryText` behavior changed).
+- Confirmed issue #823 scope: `[LalaPlugin:PitDebriefBoxDiag]` and `[LalaPlugin:PitDebriefFuelDiag]` source-trace diagnostics use the existing effective verbose helper (`SoftDebugEnabled && Settings.EnableDebugLogging`) at their emission helpers, while the final concise `[LalaPlugin:PitDebrief]` summary log remains always-on through the finalized debrief log path.
+- Property Snapshot list reviewed: yes; no SimHub exports/properties were added, removed, renamed, behavior-recontracted, or regrouped.
+
 ## 2026-06-22 — Box Entry KPH authority and runway scaling export review fixes
 - Classification: **both** (dashboard-facing Box Entry export contract correction plus internal authority/fail-closed documentation).
 - Corrected plugin-owned `Pit.LimiterSpeedKph`, `Pit.Box.RunwayRangeM`, and `Pit.Box.RunwayScale01` exports so dashboards consume native-session true-kph authority, corrected runway range `clamp(Pit.LimiterSpeedKph * 0.75, 40.0, 80.0)`, and clamped runway scale without SimHub display-unit dependencies, raw `WeekendInfo.TrackPitSpeedLimit` string parsing, or duplicated runway formulas.
