@@ -1,6 +1,11 @@
+## 2026-06-23 — PR #844 timed missing-SessionState fallback tightening
+- Classification: **both** (driver/dash-visible finish correctness plus internal finish fallback clarification; no export names, settings, dashboard JSON, fuel, pit, opponent, H2H, League Class, CarSA, or Strategy behavior changes).
+- Tightened `CanTrustPerCarFinishFlags(...)` so missing-SessionState timed races with valid `SessionTimeRemain` still require timer-zero proof; completed-lap progress fallback is now reserved for missing-SessionState/no-valid-remaining-time-authority paths such as lap-limited fallback.
+- Applied the corrected helper unchanged to both leader latches and RaceFinish player per-car flag capture. Property Snapshot list reviewed: yes; no SimHub export/property names or snapshot groups changed.
+
 ## 2026-06-23 — PR #844 finish lifecycle review follow-up
 - Classification: **both** (driver/dash-visible RaceFinish correctness plus internal finish lifecycle fallback clarification; no export names, settings, dashboard JSON, fuel, pit, opponent, H2H, League Class, CarSA, or Strategy behavior changes).
-- Replaced the too-narrow missing-SessionState finish-flag fallback with shared `CanTrustPerCarFinishFlags(...)`: when `SessionState` is available, per-car finish-like flags remain trusted only at `SessionState>=5`; when `SessionState` is unavailable, timed races can still use timer-zero proof and lap-limited races can still use completed-lap progress proof.
+- Replaced the too-narrow missing-SessionState finish-flag fallback with shared `CanTrustPerCarFinishFlags(...)`: when `SessionState` is available, per-car finish-like flags remain trusted only at `SessionState>=5`; when `SessionState` is unavailable, timed races with valid remaining-time authority can still use timer-zero proof and no-valid-remaining-time/lap-limited fallback can still use completed-lap progress proof.
 - Applied the same stale-flag gate to `RaceFinish.PlayerSnapshotActive` player per-car flag capture, so stale player `CarIdxSessionFlags` at genuine race start (`SessionState==4`) cannot freeze player finish data. Checkered seams and `SessionState==6` safety fallback remain preserved. Property Snapshot list reviewed: yes; no SimHub export/property names or snapshot groups changed.
 
 ## 2026-06-23 — Race finish green-flag stale flag guard

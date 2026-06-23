@@ -11640,9 +11640,13 @@ namespace LaunchPlugin
                 {
                     ResetRaceFinishSnapshot("session_state_left_post_finish");
                 }
+                bool hasValidSessionTimeRemainForFinishFlags =
+                    !double.IsNaN(sessionTimeRemainingSec) &&
+                    !double.IsInfinity(sessionTimeRemainingSec);
                 bool canTrustPlayerFinishFlags = CanTrustPerCarFinishFlags(
                     sessionState > 0,
                     sessionState,
+                    hasValidSessionTimeRemainForFinishFlags,
                     _timerZeroSeen,
                     completedLaps);
                 bool playerFinishedByFlags =
@@ -22161,14 +22165,16 @@ namespace LaunchPlugin
             return HasSessionFlagBit(flags, Checkered) || HasSessionFlagBit(flags, Crossed);
         }
 
-        private static bool CanTrustPerCarFinishFlags(bool hasSessionState, int sessionStateNumeric, bool timerZeroSeen, int completedLaps)
+        private static bool CanTrustPerCarFinishFlags(bool hasSessionState, int sessionStateNumeric, bool hasValidSessionTimeRemain, bool timerZeroSeen, int completedLaps)
         {
             if (hasSessionState)
             {
                 return sessionStateNumeric >= 5;
             }
 
-            return timerZeroSeen || completedLaps > 0;
+            return hasValidSessionTimeRemain
+                ? timerZeroSeen
+                : completedLaps > 0;
         }
 
         private int FindTrueOverallLeaderCarIdx(int[] overallPositions, int[] classPositions, int[] trackSurfaces)
@@ -24596,9 +24602,12 @@ namespace LaunchPlugin
                 _finishLifecycleReferencePct = lapDistPct[overallLeaderIdx];
             }
 
+            bool hasValidSessionTimeRemainForFinishFlags =
+                hasRemain && !double.IsInfinity(sessionTimeRemain);
             bool canTrustPerCarFinishFlags = CanTrustPerCarFinishFlags(
                 hasSessionState,
                 sessionStateNumeric,
+                hasValidSessionTimeRemainForFinishFlags,
                 _timerZeroSeen,
                 completedLaps);
 

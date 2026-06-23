@@ -1,5 +1,9 @@
+- 2026-06-23 PR #844 timed missing-SessionState fallback tightening landed:
+  - missing-SessionState timed races with valid `SessionTimeRemain` now require timer-zero proof before per-car finish flags are trusted, even after completed laps are greater than zero;
+  - completed-lap fallback remains available only when remaining-time authority is not valid, preserving lap-limited/no-time-authority finish detection while keeping the same helper applied to leader latches and RaceFinish player per-car flag capture;
+  - Property Snapshot list reviewed: yes; no export/property names or snapshot groups changed.
 - 2026-06-23 PR #844 finish lifecycle review follow-up landed:
-  - shared per-car finish-flag trust now keeps the `SessionState==4` stale-flag block while preserving missing-SessionState fallback for timed races after timer-zero and lap-limited races after completed-lap progress;
+  - shared per-car finish-flag trust now keeps the `SessionState==4` stale-flag block while preserving missing-SessionState fallback for timed races after timer-zero and lap-limited/no-valid-remaining-time races after completed-lap progress;
   - RaceFinish player snapshot capture now uses the same stale-flag gate for player `CarIdxSessionFlags`, preventing green-flag `RaceFinish.PlayerSnapshotActive` freezes from stale player flags while preserving checkered seams and `SessionState==6` fallback;
   - Property Snapshot list reviewed: yes; no export/property names or snapshot groups changed.
 - 2026-06-23 Race finish green-flag stale flag guard landed:
