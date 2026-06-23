@@ -4,7 +4,7 @@
 
 Validated against: HEAD
 Last reviewed: 2026-04-24
-Last updated: 2026-06-12
+Last updated: 2026-06-23
 Branch: work
 
 Scope: Info/Warn logs emitted via `SimHub.Logging.Current.Info(...)` and `SimHub.Logging.Current.Warn(...)`. Use the tag prefixes to filter in SimHub’s log view. Placeholder logs are noted; Debug Cleanup Phase A removed obsolete/debug-only messages and stale documentation as noted in Development_Changelog. Legacy/alternate copies of this list do not exist.
@@ -15,7 +15,7 @@ Scope: Info/Warn logs emitted via `SimHub.Logging.Current.Info(...)` and `SimHub
 - `[LalaPlugin:PitDebriefFuelDiag]` — verbose Pit Debrief fuel-target source trace emitted only when master debug (`SoftDebugEnabled`) and Settings `Enable Debug Logging` are both enabled. When enabled, it is edge-only for pit entry, confirmed box entry, first active service refresh, first positive target observation, refuel deselect, confirmed box exit, and final debrief. Fields include `Fuel.Pit.WillAdd`, `Fuel.Pit.Box.WillAddLatched`, `Fuel.Pit.AddedSoFar`, `Fuel.Pit.Box.EntryFuel`, current fuel when available, current-fuel-inclusive added evidence, `_isRefuelSelected`, `_isRefuelling`, whether a refuel-cancel clear was sent to Pit Debrief, whether an explicit in-box cancel was latched versus normal completion/reset, natural-completion decision, completion tolerance used, the `fuelTargetLitres` value passed, and the current debrief `ServiceFuelTargetLitres`. These are temporary source-trace diagnostics, not normal-operation logs or per-tick telemetry spam.
 
 
-- `[LalaPlugin:PitDebrief]` — final concise Pit Debrief summary log. This remains always-on in normal operation and is not gated by verbose debug logging.
+- `[LalaPlugin:PitDebrief]` — final concise Pit Debrief summary log. This remains always-on in normal operation and is not gated by verbose debug logging; normal users should see this final summary without the source-trace `PitDebriefBoxDiag` / `PitDebriefFuelDiag` diagnostics.
 
 ## How to read logs for debugging
 Workflow routing note: `Docs/Internal/Property_Snapshot_Debug_Workflow.md` owns debugging workflow/triage guidance; this page remains the canonical log-message/tag contract.

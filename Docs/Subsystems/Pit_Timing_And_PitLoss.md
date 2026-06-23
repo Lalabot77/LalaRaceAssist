@@ -1,7 +1,7 @@
 # Pit Timing and Pit Loss
 
 Validated against commit: HEAD
-Last updated: 2026-06-21
+Last updated: 2026-06-23
 Branch: work
 
 ## Purpose
@@ -224,6 +224,7 @@ These values feed directly into:
 
 ### Logs
 The subsystem emits structured INFO logs for:
+- The final concise `[LalaPlugin:PitDebrief]` stop summary, which remains always-on when a Pit Debrief finalizes. Temporary source-trace `[LalaPlugin:PitDebriefBoxDiag]` and `[LalaPlugin:PitDebriefFuelDiag]` diagnostics are verbose-debug-only (`SoftDebugEnabled && Settings.EnableDebugLogging`) and should not appear for normal users.
 - Pit entry arming.
 - Exit detection and latched times.
 - In-lap / out-lap capture.
