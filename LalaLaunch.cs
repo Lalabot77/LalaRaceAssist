@@ -24580,7 +24580,12 @@ namespace LaunchPlugin
                 _finishLifecycleReferencePct = lapDistPct[overallLeaderIdx];
             }
 
-            bool classLeaderFinishByFlags = classLeaderIdx >= 0
+            bool canTrustPerCarFinishFlags = hasSessionState
+                ? sessionStateNumeric >= 5
+                : _timerZeroSeen;
+
+            bool classLeaderFinishByFlags = canTrustPerCarFinishFlags
+                && classLeaderIdx >= 0
                 && carIdxSessionFlags != null
                 && classLeaderIdx < carIdxSessionFlags.Length
                 && IsFinishLikeSessionFlag(carIdxSessionFlags[classLeaderIdx]);
@@ -24592,7 +24597,8 @@ namespace LaunchPlugin
                     $"[LalaPlugin:Finish] class_finish trigger=caridx_flags carIdx={classLeaderIdx} flags={carIdxSessionFlags[classLeaderIdx]}");
             }
 
-            bool overallLeaderFinishByFlags = overallLeaderIdx >= 0
+            bool overallLeaderFinishByFlags = canTrustPerCarFinishFlags
+                && overallLeaderIdx >= 0
                 && carIdxSessionFlags != null
                 && overallLeaderIdx < carIdxSessionFlags.Length
                 && IsFinishLikeSessionFlag(carIdxSessionFlags[overallLeaderIdx]);

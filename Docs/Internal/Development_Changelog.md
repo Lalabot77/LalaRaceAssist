@@ -1,3 +1,8 @@
+## 2026-06-23 — Race finish green-flag stale flag guard
+- Classification: **both** (driver/dash-visible race-finish correctness plus internal finish lifecycle contract clarification; no export names, settings, dashboard JSON, fuel, pit, opponent, H2H, or League Class behavior changes).
+- `Race.OverallLeaderHasFinished`, `Race.ClassLeaderHasFinished`, derived `Race.LeaderHasFinished`, and `Race.LastLapLikely` now remain false at a genuine race start/green flag (`SessionState==4`) even if stale per-car finish-like flags are still present from qualifying/warmup or a prior session.
+- Per-car leader finish flags are trusted only inside a valid finish lifecycle (`SessionState>=5`, or timer-zero fallback when SessionState is unavailable). SessionState-first late-race behavior, timed-race after-zero behavior, single-class mirroring after true overall finish, and multiclass class-targeted finish proof are preserved. Property Snapshot list reviewed: yes; no SimHub export/property names or snapshot groups changed.
+
 ## 2026-06-22 — Box Entry KPH authority and runway scaling export review fixes
 - Classification: **both** (dashboard-facing Box Entry export contract correction plus internal authority/fail-closed documentation).
 - Corrected plugin-owned `Pit.LimiterSpeedKph`, `Pit.Box.RunwayRangeM`, and `Pit.Box.RunwayScale01` exports so dashboards consume native-session true-kph authority, corrected runway range `clamp(Pit.LimiterSpeedKph * 0.75, 40.0, 80.0)`, and clamped runway scale without SimHub display-unit dependencies, raw `WeekendInfo.TrackPitSpeedLimit` string parsing, or duplicated runway formulas.
