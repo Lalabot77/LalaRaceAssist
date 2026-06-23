@@ -1,3 +1,8 @@
+# 2026-06-23 — Profiles track fuel-burn display precision
+- Classification: **both** (minor driver-facing Profiles UI display polish plus internal docs alignment; no fuel learning, stored profile precision, TrackStats schema, persistence, Strategy/Fuel Model calculations, dashboard JSON/exports, SimHub properties, or log messages changed).
+- Profiles track-tab dry and wet fuel-burn display refresh now uses a display-only TrackStats helper for ECO/AVG/MAX values. It writes formatted UI backing text directly and raises property notifications without flowing through reverse-sync text setters, so a stored value such as `2.837496` displays as `2.84` while the backing numeric value remains full precision until the user intentionally edits it.
+- Property Snapshot list reviewed: yes; no SimHub export/property additions, removals, renames, behavior-contract changes, or group changes.
+
 ## 2026-06-23 — Pit Debrief diagnostic verbose gate validation
 - Classification: **internal-only** (SimHub Info diagnostic visibility/noise reduction validation only; no Pit Debrief exports, timing, service calculations, `Pit.Box.LastDeltaSec` sign contract, PitEngine/PitCycleLite behavior, fuel model behavior, dashboard JSON/layout, or driver-facing `SummaryText` behavior changed).
 - Confirmed issue #823 scope: `[LalaPlugin:PitDebriefBoxDiag]` and `[LalaPlugin:PitDebriefFuelDiag]` source-trace diagnostics use the existing effective verbose helper (`SoftDebugEnabled && Settings.EnableDebugLogging`) at their emission helpers, while the final concise `[LalaPlugin:PitDebrief]` summary log remains always-on through the finalized debrief log path.
