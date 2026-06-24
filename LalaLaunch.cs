@@ -6973,6 +6973,7 @@ namespace LaunchPlugin
             OnPropertyChanged(nameof(LeagueClassPlayerColourHexEditorText));
             OnPropertyChanged(nameof(LeagueClassHelperHasWarning));
             OnPropertyChanged(nameof(LeagueClassHelperForeground));
+            OnPropertyChanged(nameof(LeagueRaceSettingsHeaderText));
             OnPropertyChanged(nameof(LeagueClassShowCsvSection));
             OnPropertyChanged(nameof(LeagueClassShowFallbackSection));
         }
