@@ -135,7 +135,7 @@ In Bindings → **Pit Commands**, tyre control shows a single built-in binding r
 
 ### Custom message buttons (Bindings → Custom Messages)
 
-Bindings now also includes a **Custom Messages** expander with 10 custom slots.
+Bindings now also include a **Custom Messages** expander with 10 custom slots.
 
 Each slot has:
 - a friendly label,

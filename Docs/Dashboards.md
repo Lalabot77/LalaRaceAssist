@@ -131,7 +131,7 @@ Overlays are **temporary surfaces**, not part of the normal left/right page loop
 - Some dashboard behavior depends on optional SimHub-side configuration or optional exports; if those are not configured, related indicators may be missing.
 - Wheelspin / traction-loss indications depend on optional ShakeIt Motors export setup (`TractionLoss` property).
 - Primary Dash navigation behavior is still being refined and may evolve over upcoming releases.
-- Bindings tab include **Strategy Dash Mode** for toggling the Strategy Dash between Advanced and Simple presentation. The dashboard-readable status is `LalaLaunch.StrategyDash.AdvancedMode` (`true` = Advanced, `false` = Simple), with `LalaLaunch.StrategyDash.ModeText` available for labels.
+- Bindings tab includes **Strategy Dash Mode** for toggling the Strategy Dash between Advanced and Simple presentation. The dashboard-readable status is `LalaLaunch.StrategyDash.AdvancedMode` (`true` = Advanced, `false` = Simple), with `LalaLaunch.StrategyDash.ModeText` available for labels.
 
 ## 5. Primary Driver Dash
 

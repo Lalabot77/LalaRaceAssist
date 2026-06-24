@@ -234,7 +234,7 @@ Branch: work
 - `ProfilesManagerView.xaml` L522: `Learning mode` tooltip explains shift-point data mining and learning-overlay visibility.
 - `ProfilesManagerView.xaml` L751-L768: custom WAV controls include the existing path/browse affordance while some adjacent labels remain tooltip-free.
 - `GlobalSettingsView.xaml` is now the top-level `SETTINGS` tab, with visible main-tab order `OVERVIEW`, `STRATEGY`, `PROFILES`, `LAUNCH SYSTEM`, `BINDINGS`, `SETTINGS`.
-- `GlobalSettingsView.xaml now surfaces settings-only expanders in order: Plugin Monitor, Dashboards, League Classes, Fuel Strategy, Friends List, then Debug.
+- `GlobalSettingsView.xaml` now surfaces settings-only expanders in order: Plugin Monitor, Dashboards, League Classes, Fuel Strategy, Friends List, then Debug.
 - `GlobalSettingsView.xaml` no longer contains the duplicated per-profile `USER VARIABLES` block; the Settings tab now begins with the Friends List tools/import flow.
 - `GlobalSettingsView.xaml` DEBUG section hosts the master debug toggle and sectioned Debug Options (`General logging`, `Property Snapshot`, `CarSA diagnostics`, `Car Tracking Probe CSV`, `Shift Assist diagnostics`, `Debug Actions`); Launch Settings sits above this block inside its own collapsed expander.
 - `GlobalSettingsView.xaml` shows the warning text `Debug mode is for troubleshooting only. Leave this off unless asked to enable it.` directly below `Enable debugging mode`.
