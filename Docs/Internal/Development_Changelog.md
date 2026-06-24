@@ -1,6 +1,11 @@
+## 2026-06-24 — PR #844 remaining-time sentinel/reconnect fallback fix
+- Classification: **both** (driver/dash-visible finish correctness plus internal finish fallback clarification; no export names, settings, dashboard JSON, fuel, pit, opponent, H2H, League Class, CarSA, or Strategy behavior changes).
+- Corrected missing-SessionState finish-flag authority so `SessionTimeRemain == -1` (and NaN/Infinity/negative sentinels) is treated as no timed-race authority, allowing the lap-limited/no-time-authority completed-lap fallback instead of blocking it as timed authority.
+- Missing-SessionState timed-race fallback now trusts per-car finish flags when either `_timerZeroSeen` is latched or the current valid `SessionTimeRemain <= 0`, so after-zero reconnect/startup can capture real finish flags without having observed the zero crossing. Property Snapshot list reviewed: yes; no SimHub export/property names or snapshot groups changed.
+
 ## 2026-06-23 — PR #844 timed missing-SessionState fallback tightening
 - Classification: **both** (driver/dash-visible finish correctness plus internal finish fallback clarification; no export names, settings, dashboard JSON, fuel, pit, opponent, H2H, League Class, CarSA, or Strategy behavior changes).
-- Tightened `CanTrustPerCarFinishFlags(...)` so missing-SessionState timed races with valid `SessionTimeRemain` still require timer-zero proof; completed-lap progress fallback is now reserved for missing-SessionState/no-valid-remaining-time-authority paths such as lap-limited fallback.
+- Tightened `CanTrustPerCarFinishFlags(...)` so missing-SessionState timed races with valid non-negative `SessionTimeRemain` require after-zero proof (`_timerZeroSeen` or current `SessionTimeRemain <= 0`); completed-lap progress fallback is reserved for missing-SessionState/no-valid-remaining-time-authority paths such as lap-limited fallback.
 - Applied the corrected helper unchanged to both leader latches and RaceFinish player per-car flag capture. Property Snapshot list reviewed: yes; no SimHub export/property names or snapshot groups changed.
 
 ## 2026-06-23 — PR #844 finish lifecycle review follow-up

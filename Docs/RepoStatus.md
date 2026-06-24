@@ -1,5 +1,9 @@
+- 2026-06-24 PR #844 remaining-time sentinel/reconnect fallback fix landed:
+  - `SessionTimeRemain == -1` plus NaN/Infinity/other negative sentinels now counts as no timed-race authority for missing-SessionState finish-flag trust, so completed-lap fallback remains available for lap-limited/no-time-authority paths;
+  - missing-SessionState timed authority is valid only for finite non-negative remaining time, and after-zero proof can come from either `_timerZeroSeen` or current `SessionTimeRemain <= 0`, preserving reconnect/startup after-zero finish capture;
+  - Property Snapshot list reviewed: yes; no export/property names or snapshot groups changed.
 - 2026-06-23 PR #844 timed missing-SessionState fallback tightening landed:
-  - missing-SessionState timed races with valid `SessionTimeRemain` now require timer-zero proof before per-car finish flags are trusted, even after completed laps are greater than zero;
+  - missing-SessionState timed races with valid non-negative `SessionTimeRemain` now require after-zero proof (`_timerZeroSeen` or current `SessionTimeRemain <= 0`) before per-car finish flags are trusted, even after completed laps are greater than zero;
   - completed-lap fallback remains available only when remaining-time authority is not valid, preserving lap-limited/no-time-authority finish detection while keeping the same helper applied to leader latches and RaceFinish player per-car flag capture;
   - Property Snapshot list reviewed: yes; no export/property names or snapshot groups changed.
 - 2026-06-23 PR #844 finish lifecycle review follow-up landed:

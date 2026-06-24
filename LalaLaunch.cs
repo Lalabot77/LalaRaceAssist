@@ -11642,11 +11642,16 @@ namespace LaunchPlugin
                 }
                 bool hasValidSessionTimeRemainForFinishFlags =
                     !double.IsNaN(sessionTimeRemainingSec) &&
-                    !double.IsInfinity(sessionTimeRemainingSec);
+                    !double.IsInfinity(sessionTimeRemainingSec) &&
+                    sessionTimeRemainingSec >= 0.0;
+                bool isAfterZeroBySessionTimeRemainForFinishFlags =
+                    hasValidSessionTimeRemainForFinishFlags &&
+                    sessionTimeRemainingSec <= 0.0;
                 bool canTrustPlayerFinishFlags = CanTrustPerCarFinishFlags(
                     sessionState > 0,
                     sessionState,
                     hasValidSessionTimeRemainForFinishFlags,
+                    isAfterZeroBySessionTimeRemainForFinishFlags,
                     _timerZeroSeen,
                     completedLaps);
                 bool playerFinishedByFlags =
@@ -22165,7 +22170,7 @@ namespace LaunchPlugin
             return HasSessionFlagBit(flags, Checkered) || HasSessionFlagBit(flags, Crossed);
         }
 
-        private static bool CanTrustPerCarFinishFlags(bool hasSessionState, int sessionStateNumeric, bool hasValidSessionTimeRemain, bool timerZeroSeen, int completedLaps)
+        private static bool CanTrustPerCarFinishFlags(bool hasSessionState, int sessionStateNumeric, bool hasValidSessionTimeRemain, bool isAfterZeroBySessionTimeRemain, bool timerZeroSeen, int completedLaps)
         {
             if (hasSessionState)
             {
@@ -22173,7 +22178,7 @@ namespace LaunchPlugin
             }
 
             return hasValidSessionTimeRemain
-                ? timerZeroSeen
+                ? (timerZeroSeen || isAfterZeroBySessionTimeRemain)
                 : completedLaps > 0;
         }
 
@@ -24603,11 +24608,17 @@ namespace LaunchPlugin
             }
 
             bool hasValidSessionTimeRemainForFinishFlags =
-                hasRemain && !double.IsInfinity(sessionTimeRemain);
+                hasRemain &&
+                !double.IsInfinity(sessionTimeRemain) &&
+                sessionTimeRemain >= 0.0;
+            bool isAfterZeroBySessionTimeRemainForFinishFlags =
+                hasValidSessionTimeRemainForFinishFlags &&
+                sessionTimeRemain <= 0.0;
             bool canTrustPerCarFinishFlags = CanTrustPerCarFinishFlags(
                 hasSessionState,
                 sessionStateNumeric,
                 hasValidSessionTimeRemainForFinishFlags,
+                isAfterZeroBySessionTimeRemainForFinishFlags,
                 _timerZeroSeen,
                 completedLaps);
 
