@@ -7,7 +7,7 @@ Branch: work
 ## Purpose
 This subsystem owns plugin-driven pit-lane command dispatch and command-state surfaces used by dashboards and hardware bindings.
 
-UI/control surface note: Dash Control -> Global Dash Functions -> Fuel exposes `Fuel Data Plan Mode` (OFF=`LIVE`, ON=`PLAN`) for Pit Fuel Control DATA, and Settings -> Pit Commands exposes `Fuel Data Cycle` (`LalaLaunch.Pit.FuelControl.CycleData`). The DATA selector is usable while idle/no live game/no profile: it persists the selected engine DATA mode and `LalaLaunch.Fuel.Refuel.DataMode` mirrors `LIVE`/`SAVED` without sending pit commands or changing refuel math.
+UI/control surface note: Settings -> Fuel Strategy exposes `Fuel Data Plan Mode` (OFF=`LIVE`, ON=`PLAN`) for Pit Fuel Control DATA, and Bindings -> Pit Commands exposes `Fuel Data Cycle` (`LalaLaunch.Pit.FuelControl.CycleData`). The DATA selector is usable while idle/no live game/no profile: it persists the selected engine DATA mode and `LalaLaunch.Fuel.Refuel.DataMode` mirrors `LIVE`/`SAVED` without sending pit commands or changing refuel math.
 
 It combines:
 - built-in pit command actions (`LalaLaunch.Pit.*`),

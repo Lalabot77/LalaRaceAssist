@@ -10,12 +10,12 @@ Launch Mode owns the live race-start assistance path. It coordinates:
 - the manual launch action,
 - launch blocking/abort conditions,
 - launch result capture,
-- the handoff to Launch Analysis for saved trace review.
+- the handoff to the Launch System review surface for saved trace review.
 
 For GitHub readers, keep this boundary clear:
-- **Settings → Launch Settings** owns launch configuration.
+- **Launch System → Launch Settings** owns launch configuration.
 - **Launch Mode** owns the live start-state machine.
-- **Launch Analysis** is the separate post-run review surface.
+- **Launch System** is the combined launch settings and post-run review surface.
 
 ## Scope and boundaries
 This subsystem covers the live launch state and recording workflow.
@@ -35,7 +35,7 @@ It does **not** own:
 
 ### User / settings inputs
 - `LaunchMode` action for manual prime / re-enable / abort behavior.
-- Launch configuration from **Settings → Launch Settings**.
+- Launch configuration from **Launch System → Launch Settings**.
 - Results-display time and launch summary/trace file locations.
 
 ### Cross-subsystem blockers
@@ -86,14 +86,14 @@ Manual-prime mode has a **30-second timeout**. If the launch does not actually s
 When a launch completes successfully enough to be recorded, the subsystem writes:
 - a one-line summary CSV entry when enabled,
 - a detailed launch trace file,
-- launch-summary data that the **Launch Analysis** tab can later read and review.
+- launch-summary data that the **Launch System** tab can later read and review.
 
 ## Outputs (exports + logs)
 ### Core exports
 Representative launch-facing exports include:
 - `LaunchModeActive`
 - launch-state / launch-result visibility outputs used by dashes and the results view
-- saved summary / trace data consumed by Launch Analysis
+- saved summary / trace data consumed by Launch System review
 
 The export inventory remains canonical in `Docs/Internal/SimHubParameterInventory.md`.
 
@@ -134,14 +134,14 @@ MonitorSystem Phase 4A observes the internal active Launch state (`ManualPrimed`
 - **Manual-prime timeout:** launch returns to idle and behaves as user-disabled until re-enabled.
 - **File IO issues:** traces/summaries may fail to save, but the live launch state machine still completes independently.
 - **Replay or unusual timing:** validate with logs rather than assuming live-session timing behavior is identical.
-- **Empty/header-only launch traces:** launch-trace housekeeping may remove files that contain no telemetry rows and no usable launch summary so they do not pollute Launch Analysis file lists.
+- **Empty/header-only launch traces:** launch-trace housekeeping may remove files that contain no telemetry rows and no usable launch summary so they do not pollute Launch System file lists.
 
 ## Test checklist
 - Trigger `LaunchMode` from idle and confirm manual-prime behavior.
 - Let manual prime expire and confirm timeout + re-enable behavior.
 - Trigger a blocked state (pit lane or serious rejoin) and confirm launch cannot proceed.
-- Complete a clean launch and confirm summary/trace capture appears for Launch Analysis.
+- Complete a clean launch and confirm summary/trace capture appears for Launch System review.
 - Confirm post-launch results hide after the configured results-display time.
 
 ## v1 documentation note
-User-facing docs should explain launch as **Launch Settings + Launch Analysis + live launch behavior**. This subsystem doc owns the technical contract for the live launch path and recording handoff.
+User-facing docs should explain launch as **Launch System launch settings + saved-run review + live launch behavior**. This subsystem doc owns the technical contract for the live launch path and recording handoff.

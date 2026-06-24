@@ -20,7 +20,7 @@ These systems are there to reduce avoidable mistakes under pressure. They do not
 
 ## 2. Pit popups and pit screens
 
-Pit popups are the driver-facing pit-context prompts shown on supported dashboards. Settings → Dash Control → Dash Visibility now exposes pit presentation as separate per-dash-family controls for **Pit Entry Assist**, **Pit Box Assist**, **Pit Limiter**, and **Show Automatic Pit Screen**. They are useful for things like:
+Pit popups are the driver-facing pit-context prompts shown on supported dashboards. Settings → Dashboards → Dash Visibility now exposes pit presentation as separate per-dash-family controls for **Pit Entry Assist**, **Pit Box Assist**, **Pit Limiter**, and **Show Automatic Pit Screen**. They are useful for things like:
 
 - pit screen context,
 - focused pit-entry, pit-box, or pit-limiter visibility,
@@ -131,11 +131,11 @@ Tyre Control behavior notes for these bindings:
 - Tyre control mode resets to `OFF` on `Telemetry.IsOnTrackCar` edge transitions (`false->true` or `true->false`) via the existing pit-control reset seam.
 - Tyre command confirmation is single-send/single-window: each manual action or AUTO target change attempts one send, waits a short confirmation window, and on unconfirmed result publishes specific pit command failure feedback then remaps mode to actual MFD truth (no retry resend loop).
 
-In Settings → **Pit Commands**, tyre control shows a single built-in binding row (`Tyre Mode Cycle`) for normal use (no raw chat command editing). Direct tyre mode actions (`SetOff` / `SetDry` / `SetWet` / `SetAuto`) remain registered for SimHub Controls & Events / Dash Studio binding.
+In Bindings → **Pit Commands**, tyre control shows a single built-in binding row (`Tyre Mode Cycle`) for normal use (no raw chat command editing). Direct tyre mode actions (`SetOff` / `SetDry` / `SetWet` / `SetAuto`) remain registered for SimHub Controls & Events / Dash Studio binding.
 
-### Custom message buttons (Settings → Custom Messages)
+### Custom message buttons (Bindings → Custom Messages)
 
-Settings now also includes a **Custom Messages** expander with 10 custom slots.
+Bindings now also include a **Custom Messages** expander with 10 custom slots.
 
 Each slot has:
 - a friendly label,
@@ -150,7 +150,7 @@ Use these for common race-chat messages you want on hardware buttons, keyboard k
 
 LalaLaunch injects iRacing pit/custom chat messages directly (no dedicated user macro-hotkey setup required).
 
-Transport is plugin-owned and fixed to direct iRacing window-message delivery. **Settings → Pit Commands** no longer exposes Auto/Legacy/Direct transport choices, and the legacy foreground `SendInput` path is no longer part of the normal workflow.
+Transport is plugin-owned and fixed to direct iRacing window-message delivery. **Bindings → Pit Commands** no longer exposes Auto/Legacy/Direct transport choices, and the legacy foreground `SendInput` path is no longer part of the normal workflow.
 
 If direct transport cannot find/use the iRacing window, LalaLaunch publishes `PIT CMD WINDOW FAIL` and logs a pit-command warning so the failure is visible.
 For custom messages, raw commands, and stateless built-in pit actions, a successful direct send is transport-attempt only (queued/unverified), not authoritative proof that iRacing applied the command.

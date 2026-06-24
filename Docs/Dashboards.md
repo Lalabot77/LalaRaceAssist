@@ -18,7 +18,7 @@ That means dashboards are not the source of truth for strategy math, fuel learni
 
 ## Monitor System
 
-The dashboard-facing Monitor System is enabled by default. Use **Dash Control -> Global Dash Functions -> General -> Enable Monitor System** to control it:
+The dashboard-facing Monitor System is enabled by default. Use **Settings -> Plugin Monitor -> Enable Monitor System** to control it:
 
 - enabled: `LalaLaunch.MonitorSystem.State` is `ON` and the default message is `MONITOR READY`;
 - disabled: state is `OFF` and the message is `MONITOR OFF`;
@@ -35,7 +35,7 @@ At a high level, dashboard setup is:
 1. Import the Lala dashboard files into SimHub.
 2. Assign the imported dashboards to the screen or device you want to use.
 3. Bind **Next Dash** and **Previous Dash** if you want reliable non-touch navigation.
-4. Use **Dash Control** and your screen assignments to decide which surfaces you actually use while driving.
+4. Use **Bindings**, **Settings**, and your screen assignments to decide which surfaces you actually use while driving.
 
 Dashboards can be assigned per device, and SimHub lets you combine touch navigation with button bindings. For the wider plugin setup flow, see [Quick Start](Quick_Start.md).
 
@@ -56,7 +56,7 @@ You can use touch only, but physical bindings are strongly recommended for race 
 
 ### Strategy Dash mode binding
 
-The plugin exposes a **Strategy Dash Mode** binding in **Dash Control → Bindings**. Bind it to dashboard touch, a wheel button, or hardware control when you want the Strategy Dash to switch presentation between Advanced and Simple mode.
+The plugin exposes a **Strategy Dash Mode** binding in **Bindings**. Bind it to dashboard touch, a wheel button, or hardware control when you want the Strategy Dash to switch presentation between Advanced and Simple mode.
 
 Dashboard status is plugin-owned:
 
@@ -131,7 +131,7 @@ Overlays are **temporary surfaces**, not part of the normal left/right page loop
 - Some dashboard behavior depends on optional SimHub-side configuration or optional exports; if those are not configured, related indicators may be missing.
 - Wheelspin / traction-loss indications depend on optional ShakeIt Motors export setup (`TractionLoss` property).
 - Primary Dash navigation behavior is still being refined and may evolve over upcoming releases.
-- Dash Control bindings include **Strategy Dash Mode** for toggling the Strategy Dash between Advanced and Simple presentation. The dashboard-readable status is `LalaLaunch.StrategyDash.AdvancedMode` (`true` = Advanced, `false` = Simple), with `LalaLaunch.StrategyDash.ModeText` available for labels.
+- Bindings tab includes **Strategy Dash Mode** for toggling the Strategy Dash between Advanced and Simple presentation. The dashboard-readable status is `LalaLaunch.StrategyDash.AdvancedMode` (`true` = Advanced, `false` = Simple), with `LalaLaunch.StrategyDash.ModeText` available for labels.
 
 ## 5. Primary Driver Dash
 
@@ -325,7 +325,7 @@ See [Rejoin Assist](Rejoin_Assist.md) for the full driver-facing system guide.
 
 ### LaunchAssist
 
-LaunchAssist surfaces launch-related driver information on supported dashboards. It does not replace **Settings → Launch Settings** or **Launch Analysis**, and it does not become the owner of launch logic.
+LaunchAssist surfaces launch-related driver information on supported dashboards. It does not replace **Launch System → Launch Settings** or **Launch System**, and it does not become the owner of launch logic.
 
 ### StallWidget
 

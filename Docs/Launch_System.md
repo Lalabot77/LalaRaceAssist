@@ -9,7 +9,7 @@ For a full post-install SimHub walkthrough of the Launch system plugin tabs and 
 Think of it as two related parts:
 
 - **live launch behavior** that supports the start itself,
-- **Launch Analysis** for reviewing saved launch results afterwards.
+- **Launch System** for reviewing saved launch results afterwards.
 
 The plugin remains the source of truth for launch calculations, state, and saved data. Dashboards can show launch information, but they do not own the launch logic.
 
@@ -28,13 +28,13 @@ Use the Launch system when you want to:
 
 Launch controls live in:
 
-**Settings → Launch Settings**
+**Launch System → Launch Settings**
 
 That is where you should review and adjust launch setup, including targets, tolerances, and capture behavior.
 
-## What Launch Analysis is for
+## What Launch System review is for
 
-**Launch Analysis** is the separate review tab for saved launch traces and summaries.
+**Launch System** is the separate review tab for saved launch traces and summaries.
 
 Use it after a run to answer questions like:
 
@@ -48,9 +48,9 @@ Use it after a run to answer questions like:
 A useful way to think about the system is:
 
 - **Launch Settings** controls the live setup.
-- **Launch Analysis** helps you review what actually happened.
+- **Launch System** helps you review what actually happened.
 
-During the start, the system is concerned with live launch behavior. After the start, Launch Analysis helps you inspect saved summaries and traces so you can decide whether any tuning change is justified.
+During the start, the system is concerned with live launch behavior. After the start, Launch System helps you inspect saved summaries and traces so you can decide whether any tuning change is justified.
 
 ## Summary and trace capture
 
@@ -65,9 +65,9 @@ You do not need to treat every trace like engineering data. The practical goal i
 
 A stable workflow usually looks like this:
 
-1. **Set a baseline** in **Settings → Launch Settings**.
+1. **Set a baseline** in **Launch System → Launch Settings**.
 2. **Record launches** instead of changing values after every run.
-3. **Review traces and summaries** in **Launch Analysis**.
+3. **Review traces and summaries** in **Launch System**.
 4. **Refine carefully** when you see the same problem repeated across several launches.
 
 ## Avoid over-tuning

@@ -24,15 +24,15 @@ Version **1.0** documentation is now organized so GitHub readers can move from a
 
 *Pit entry guidance is presented on the dash, while the plugin continues to own the underlying timing and marker logic.*
 
-![Launch Analysis tab](Docs/Images/LaunchAnalysis.png)
+![Launch System tab](Docs/Images/LaunchAnalysis.png)
 
-*Launch Analysis remains the active post-run review surface for saved starts and launch traces.*
+*Launch System remains the active post-run review surface for saved starts and launch traces.*
 
 ## Core Systems
 
 - **Strategy** - stable planning workflow for race fuel, stint, and context decisions
 - **Shift Assist** - RPM-based shift cueing with profile-backed trust and locking workflows
-- **Launch System** - launch setup plus saved-run review through Launch Analysis
+- **Launch System** - launch setup plus saved-run review
 - **Rejoin Assist** - recovery and rejoin awareness support after incidents or off-tracks
 - **Pit Assist** - pit-entry and pit-lane support surfaced through the plugin and dashboards
 - **H2H** - same-class race and local-track comparison context
@@ -60,17 +60,17 @@ The dashboard docs now include a dedicated Primary Driver Dash guide covering th
 2. `RSC.iRacingExtraProperties.dll` is **no longer required** for current plugin runtime paths.
 3. Restart SimHub.
 4. Import the dashboards you want to use.
-5. Open the plugin and begin with **Strategy**, then review **Profiles**, **Dash Control**, and **Settings**.
+5. Open the plugin and use the top-level tabs in order: **Overview**, **Strategy**, **Profiles**, **Launch System**, **Bindings**, and **Settings**.
 6. For more detailed instructions and help refer to the main user guide or quick start guide in links below.
 
 ## Pit commands, custom messages, and pit fuel control (current state)
 
 - Pit command actions are now **plugin-owned** (`LalaLaunch.Pit.*`) and should be bound through normal SimHub Controls & Events/plugin binding flows.
-- Custom race-chat buttons are also plugin-owned (`LalaLaunch.CustomMessage01..10`) and configured in **Settings → Custom Messages**.
-- Built-in pit command rows are configured in **Settings → Pit Commands**.
+- Custom race-chat buttons are also plugin-owned (`LalaLaunch.CustomMessage01..10`) and configured in **Bindings → Custom Messages**.
+- Built-in pit command rows are configured in **Bindings → Pit Commands**.
 - Pit Fuel Control is plugin-owned (`LalaLaunch.Pit.FuelControl.*`) for source/mode/target workflows used by supported pit widgets.
 - Pit/custom send transport no longer depends on `iRacingExtraProperties` action ids.
-- Pit/custom commands use plugin-owned direct iRacing window-message transport; Settings no longer exposes Auto/Legacy/Direct transport selection and legacy foreground `SendInput` is not part of the normal workflow.
+- Pit/custom command bindings live under **Bindings → Pit Commands**; transport behavior remains plugin-owned and unchanged.
 - Auto-focus is still not implemented (preview setting only).
 - Confirmation truth model: stateful built-in pit toggles are effect-confirmed by before/after telemetry; custom messages, raw commands, and stateless built-ins are transport-attempt only (`delivery=unverified`).
 
@@ -79,7 +79,7 @@ The dashboard docs now include a dedicated Primary Driver Dash guide covering th
 - Some dashboard behaviors depend on optional SimHub-side setup and optional dashboard exports. If those are not configured, affected indicators or overlays may be missing while core plugin systems still work.
 - Wheelspin / traction-loss indicators depend on optional **ShakeIt Motors** export setup (`TractionLoss` property). Without that optional export, those indicators are unavailable.
 - Primary Dash navigation behavior is still evolving as the dashboard package is refined for early testers.
-- Dash Control bindings include **Strategy Dash Mode** for toggling the Strategy Dash between Advanced and Simple presentation; dashboards can read `LalaLaunch.StrategyDash.AdvancedMode` (`true` = Advanced, `false` = Simple).
+- Bindings tab includes **Strategy Dash Mode** for toggling the Strategy Dash between Advanced and Simple presentation; dashboards can read `LalaLaunch.StrategyDash.AdvancedMode` (`true` = Advanced, `false` = Simple).
 - Legacy `RSC.iRacingExtraProperties.dll` fallback paths are removed from active runtime code.
 
 ## Support and Feedback
@@ -154,11 +154,12 @@ Using Issues and Discussions helps keep the documentation, plugin behaviour, and
 
 The current top-level plugin navigation is:
 
-1. **Strategy**
-2. **Profiles**
-3. **Dash Control**
-4. **Launch Analysis**
-5. **Settings**
+1. **Overview**
+2. **Strategy**
+3. **Profiles**
+4. **Launch System**
+5. **Bindings**
+6. **Settings**
 
 Presets are managed from **Strategy** through the **`Presets...`** modal flow. There is no separate top-level Presets tab.
 
@@ -166,7 +167,7 @@ Presets are managed from **Strategy** through the **`Presets...`** modal flow. T
 
 - **PreRace** is display-only. It does not replace Strategy calculations and does not change live runtime fuel ownership (`Fuel.*`, `Fuel.Refuel.*`, `Fuel.Delta.*`).
 - **Live Snapshot** can auto-drive relevant planning values. When it is active, the corresponding manual controls are disabled.
-- Launch controls live under **Settings -> Launch Settings**. **Launch Analysis** remains the saved-run review tab.
+- Launch controls live under **Launch System -> Launch Settings**. **Launch System** remains the saved-run review tab.
 - The future/global message system is not documented here as an active user feature.
 
 ## License
