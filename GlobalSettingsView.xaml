@@ -190,7 +190,7 @@
 
             
             
-            <Expander Header="League Race"
+            <Expander Header="{Binding LeagueRaceSettingsHeaderText}"
                       Margin="0,0,0,10"
                       IsExpanded="False">
                 <StackPanel Margin="0,10,0,0">

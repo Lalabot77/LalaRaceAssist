@@ -62,6 +62,7 @@ Contract notes:
 - CSV load path + reload flow.
 - Compact CSV status line (`Status | Rows | Valid | Invalid | Duplicates`).
 - Warning-state helper text for CSV/mapping issues.
+- Collapsed Settings header text mirrors the Overview practical state as `LEAGUE RACE - OFF`, `LEAGUE RACE - ACTIVE`, or `LEAGUE RACE - WARNING` without changing the expander/header colour or style.
 - Auto-detect preview for player effective class.
 - Manual override editing for player class only.
 - `LeagueClass.ToggleEnabled` toggle behavior with enable guard.

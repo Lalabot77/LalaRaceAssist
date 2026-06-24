@@ -58,7 +58,7 @@ The current top-level plugin order is:
 
 Important workflow rules:
 
-- **Overview** is the landing tab for quick orientation, links, update status, current Monitor System health text, and League Class OFF/ACTIVE/WARNING status. The Restart Plugin action is danger-styled because it manually re-arms runtime systems.
+- **Overview** is the landing tab for quick orientation, links, update status, current Monitor System health text, and League Class OFF/ACTIVE/WARNING status. The collapsed **Settings → League Race** header also shows `LEAGUE RACE - OFF`, `LEAGUE RACE - ACTIVE`, or `LEAGUE RACE - WARNING` so the state is visible without expanding the section. The Restart Plugin action is danger-styled because it manually re-arms runtime systems.
 - The main planning tab is **Strategy**, not Fuel.
 - There is **no separate Presets tab**.
 - Presets are managed from **Strategy** using the **`Presets...`** modal flow.
