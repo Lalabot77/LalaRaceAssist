@@ -120,7 +120,7 @@
                     <Grid Margin="0,6,0,0">
                         <Grid.ColumnDefinitions>
                             <ColumnDefinition Width="120" />
-                            <ColumnDefinition Width="*" />
+                            <ColumnDefinition Width="280" />
                             <ColumnDefinition Width="Auto" />
                         </Grid.ColumnDefinitions>
 
@@ -134,99 +134,66 @@
                             <RowDefinition Height="Auto" />
                         </Grid.RowDefinitions>
 
-                        <TextBlock Grid.Row="0" Grid.Column="0"
-                                   Text="Game"
-                                   Foreground="LightGray"
-                                   Margin="0,0,8,6" />
-                        <TextBlock Grid.Row="0" Grid.Column="1"
-                                   Text="{Binding CurrentGameText}"
-                                   Margin="0,0,0,6" />
+                        <TextBlock Grid.Row="0" Grid.Column="0" Text="Game" Foreground="LightGray" Margin="0,0,8,6" />
+                        <TextBlock Grid.Row="0" Grid.Column="1" Text="{Binding CurrentGameText}" Margin="0,0,0,6" />
 
-                        <TextBlock Grid.Row="1" Grid.Column="0"
-                                   Text="Plugin"
-                                   Foreground="LightGray"
-                                   Margin="0,0,8,6" />
-                        <TextBlock Grid.Row="1" Grid.Column="1"
-                                   Text="{Binding PluginLoadedText}"
-                                   Margin="0,0,8,6" />
+                        <TextBlock Grid.Row="1" Grid.Column="0" Text="Plugin" Foreground="LightGray" Margin="0,0,8,6" />
+                        <TextBlock Grid.Row="1" Grid.Column="1" Text="{Binding PluginLoadedText}" Margin="0,0,8,6" />
+
                         <Button Grid.Row="0" Grid.Column="2"
-                                    Content="Restart Plugin"
-                                    Margin="0,0,0,6"
-                                    Padding="10,3"
-                                    Height="26"
-                                    MinWidth="95"
-                                    VerticalAlignment="Center"
-                                    Visibility="Visible"
-                                    Background="#B00020"
-                                    Foreground="White"
-                                    BorderBrush="#FF4D4D"
-                                    Click="ResetPlugin_Click" />
+                Content="Restart Plugin"
+                Margin="0,0,0,6"
+                Padding="10,3"
+                Height="26"
+                MinWidth="95"
+                VerticalAlignment="Center"
+                Visibility="Visible"
+                Background="#B00020"
+                Foreground="White"
+                BorderBrush="#FF4D4D"
+                Click="ResetPlugin_Click" />
 
-                        <TextBlock Grid.Row="2" Grid.Column="0"
-                                   Text="Profiles"
-                                   Foreground="LightGray"
-                                   Margin="0,0,8,6" />
-                        <TextBlock Grid.Row="2" Grid.Column="1"
-                                   Grid.ColumnSpan="2"
-                                   Text="{Binding ProfilesStatusText}"
-                                   Margin="0,0,0,6" />
+                        <TextBlock Grid.Row="2" Grid.Column="0" Text="Profiles" Foreground="LightGray" Margin="0,0,8,6" />
+                        <TextBlock Grid.Row="2" Grid.Column="1" Text="{Binding ProfilesStatusText}" Margin="0,0,0,6" />
 
-                        <TextBlock Grid.Row="3" Grid.Column="0"
-                                   Text="Current car"
-                                   Foreground="LightGray"
-                                   Margin="0,0,8,6" />
-                        <TextBlock Grid.Row="3" Grid.Column="1"
-                                   Grid.ColumnSpan="2"
-                                   Text="{Binding CurrentCarText}"
-                                   Margin="0,0,0,6" />
+                        <TextBlock Grid.Row="3" Grid.Column="0" Text="Current car" Foreground="LightGray" Margin="0,0,8,6" />
+                        <TextBlock Grid.Row="3" Grid.Column="1" Text="{Binding CurrentCarText}" Margin="0,0,0,6" />
 
-                        <TextBlock Grid.Row="4" Grid.Column="0"
-                                   Text="Current track"
-                                   Foreground="LightGray"
-                                   Margin="0,0,8,6" />
-                        <TextBlock Grid.Row="4" Grid.Column="1"
-                                   Grid.ColumnSpan="2"
-                                   Text="{Binding CurrentTrackText}"
-                                   Margin="0,0,0,6" />
+                        <TextBlock Grid.Row="4" Grid.Column="0" Text="Current track" Foreground="LightGray" Margin="0,0,8,6" />
+                        <TextBlock Grid.Row="4" Grid.Column="1" Text="{Binding CurrentTrackText}" Margin="0,0,0,6" />
 
-                        <TextBlock Grid.Row="5" Grid.Column="0"
-                                   Text="Monitor System"
-                                   Foreground="LightGray"
-                                   Margin="0,0,8,6" />
+                        <TextBlock Grid.Row="5" Grid.Column="0" Text="Monitor System" Foreground="LightGray" Margin="0,0,8,6" />
                         <Border Grid.Row="5" Grid.Column="1"
-                                Grid.ColumnSpan="2"
-                                Width="260"
-                                HorizontalAlignment="Left"
-                                Background="{Binding MonitorSystemBackground}"
-                                CornerRadius="4"
-                                Padding="8,3"
-                                Margin="0,0,0,6">
+                Width="170"
+                HorizontalAlignment="Left"
+                Background="{Binding MonitorSystemBackground}"
+                CornerRadius="4"
+                Padding="8,3"
+                Margin="0,0,0,6">
                             <TextBlock Text="{Binding MonitorSystemText}"
-                                       Foreground="{Binding MonitorSystemForeground}"
-                                       FontWeight="SemiBold" />
+                       Foreground="{Binding MonitorSystemForeground}"
+                       FontWeight="SemiBold"
+                       TextTrimming="CharacterEllipsis" />
                         </Border>
 
-                        <TextBlock Grid.Row="6" Grid.Column="0"
-                                   Text="League Class"
-                                   Foreground="LightGray"
-                                   Margin="0,0,8,0" />
-                        <StackPanel Grid.Row="6" Grid.Column="1" Grid.ColumnSpan="2">
+                        <TextBlock Grid.Row="6" Grid.Column="0" Text="League Class" Foreground="LightGray" Margin="0,0,8,0" />
+                        <StackPanel Grid.Row="6" Grid.Column="1" HorizontalAlignment="Left">
                             <Border Background="{Binding LeagueClassBackground}"
-                                Width="260"
-                                HorizontalAlignment="Left"
-                                CornerRadius="4"
-                                Padding="8,3"
-                                Margin="0,0,0,4">
+                    Width="170"
+                    HorizontalAlignment="Left"
+                    CornerRadius="4"
+                    Padding="8,3"
+                    Margin="0,0,0,4">
                                 <TextBlock Text="{Binding LeagueClassStatusText}"
-                                   Foreground="{Binding LeagueClassForeground}"
-                                   FontWeight="SemiBold" />
+                           Foreground="{Binding LeagueClassForeground}"
+                           FontWeight="SemiBold" />
                             </Border>
 
                             <TextBlock Text="{Binding LeagueClassDetailText}"
-                               Width="450"
-                               HorizontalAlignment="Left"
-                               Foreground="LightGray"
-                               TextWrapping="Wrap" />
+                       Width="270"
+                       HorizontalAlignment="Left"
+                       Foreground="LightGray"
+                       TextWrapping="Wrap" />
                         </StackPanel>
                     </Grid>
                 </styles:SHSection>
