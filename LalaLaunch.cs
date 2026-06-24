@@ -6722,6 +6722,7 @@ namespace LaunchPlugin
             OnPropertyChanged(nameof(LeagueClassPlayerColourHexEditorText));
             OnPropertyChanged(nameof(LeagueClassHelperHasWarning));
             OnPropertyChanged(nameof(LeagueClassHelperForeground));
+            OnPropertyChanged(nameof(LeagueRaceSettingsHeaderText));
             OnPropertyChanged(nameof(LeagueClassShowCsvSection));
             OnPropertyChanged(nameof(LeagueClassShowFallbackSection));
         }
@@ -6749,6 +6750,7 @@ namespace LaunchPlugin
             OnPropertyChanged(nameof(Settings));
             OnPropertyChanged(nameof(LeagueClassHelperHasWarning));
             OnPropertyChanged(nameof(LeagueClassHelperForeground));
+            OnPropertyChanged(nameof(LeagueRaceSettingsHeaderText));
         }
 
         private void ReloadLeagueClassConfigForEnableIfNeeded()
@@ -6817,10 +6819,10 @@ namespace LaunchPlugin
         }
 
         public bool LeagueClassPlayerOverrideIsAutoDetect => Settings == null || Settings.LeagueClassPlayerOverrideMode != 1;
-        public string LeagueClassPlayerClassNameEditorText { get => LeagueClassPlayerOverrideIsAutoDetect ? LeagueClassPlayerPreviewClassName : (Settings?.LeagueClassPlayerOverrideClassName ?? string.Empty); set { if (!LeagueClassPlayerOverrideIsAutoDetect && Settings != null) Settings.LeagueClassPlayerOverrideClassName = value; } }
-        public string LeagueClassPlayerShortNameEditorText { get => LeagueClassPlayerOverrideIsAutoDetect ? LeagueClassPlayerPreviewShortName : (Settings?.LeagueClassPlayerOverrideShortName ?? string.Empty); set { if (!LeagueClassPlayerOverrideIsAutoDetect && Settings != null) Settings.LeagueClassPlayerOverrideShortName = value; } }
-        public string LeagueClassPlayerRankEditorText { get => LeagueClassPlayerOverrideIsAutoDetect ? LeagueClassPlayerPreviewRank.ToString(CultureInfo.InvariantCulture) : (Settings?.LeagueClassPlayerOverrideRank.ToString(CultureInfo.InvariantCulture) ?? "0"); set { if (!LeagueClassPlayerOverrideIsAutoDetect && Settings != null && int.TryParse(value, NumberStyles.Integer, CultureInfo.InvariantCulture, out int parsed)) Settings.LeagueClassPlayerOverrideRank = parsed; } }
-        public string LeagueClassPlayerColourHexEditorText { get => LeagueClassPlayerOverrideIsAutoDetect ? LeagueClassPlayerPreviewColourHex : (Settings?.LeagueClassPlayerOverrideColourHex ?? string.Empty); set { if (!LeagueClassPlayerOverrideIsAutoDetect && Settings != null) Settings.LeagueClassPlayerOverrideColourHex = value; } }
+        public string LeagueClassPlayerClassNameEditorText { get => LeagueClassPlayerOverrideIsAutoDetect ? LeagueClassPlayerPreviewClassName : (Settings?.LeagueClassPlayerOverrideClassName ?? string.Empty); set { if (!LeagueClassPlayerOverrideIsAutoDetect && Settings != null) { Settings.LeagueClassPlayerOverrideClassName = value; NotifyLeagueClassUiStatusChanged(); } } }
+        public string LeagueClassPlayerShortNameEditorText { get => LeagueClassPlayerOverrideIsAutoDetect ? LeagueClassPlayerPreviewShortName : (Settings?.LeagueClassPlayerOverrideShortName ?? string.Empty); set { if (!LeagueClassPlayerOverrideIsAutoDetect && Settings != null) { Settings.LeagueClassPlayerOverrideShortName = value; NotifyLeagueClassUiStatusChanged(); } } }
+        public string LeagueClassPlayerRankEditorText { get => LeagueClassPlayerOverrideIsAutoDetect ? LeagueClassPlayerPreviewRank.ToString(CultureInfo.InvariantCulture) : (Settings?.LeagueClassPlayerOverrideRank.ToString(CultureInfo.InvariantCulture) ?? "0"); set { if (!LeagueClassPlayerOverrideIsAutoDetect && Settings != null && int.TryParse(value, NumberStyles.Integer, CultureInfo.InvariantCulture, out int parsed)) { Settings.LeagueClassPlayerOverrideRank = parsed; NotifyLeagueClassUiStatusChanged(); } } }
+        public string LeagueClassPlayerColourHexEditorText { get => LeagueClassPlayerOverrideIsAutoDetect ? LeagueClassPlayerPreviewColourHex : (Settings?.LeagueClassPlayerOverrideColourHex ?? string.Empty); set { if (!LeagueClassPlayerOverrideIsAutoDetect && Settings != null) { Settings.LeagueClassPlayerOverrideColourHex = value; NotifyLeagueClassUiStatusChanged(); } } }
         public string LeagueClassPlayerPreviewClassName => GetLeagueClassPlayerPreviewResolution().Info.Name ?? string.Empty;
         public string LeagueClassPlayerPreviewShortName => GetLeagueClassPlayerPreviewResolution().Info.ShortName ?? string.Empty;
         public int LeagueClassPlayerPreviewRank => GetLeagueClassPlayerPreviewResolution().Info.Rank;
@@ -6844,6 +6846,46 @@ namespace LaunchPlugin
             }
         }
         public Brush LeagueClassHelperForeground => LeagueClassHelperHasWarning ? Brushes.Yellow : Brushes.LightGray;
+
+        public string LeagueRaceSettingsHeaderText => "LEAGUE RACE - " + GetLeagueClassUiStatusText();
+
+        private string GetLeagueClassUiStatusText()
+        {
+            if (Settings == null || !Settings.LeagueClassEnabled)
+            {
+                return "OFF";
+            }
+
+            var status = LeagueClassStatus;
+            int loaded = status?.LoadedCount ?? 0;
+            int valid = status?.ValidDriverCount ?? 0;
+            int invalid = status?.InvalidRowCount ?? 0;
+            int duplicates = status?.DuplicateRowCount ?? 0;
+            string config = status?.ConfigStatusText ?? string.Empty;
+            string player = LeagueClassPlayerPreviewText ?? string.Empty;
+            bool csvBackedMode = LeagueClassShowCsvSection;
+            bool playerWaiting = player.IndexOf("not available yet", StringComparison.OrdinalIgnoreCase) >= 0;
+            bool invalidManualOverride = player.IndexOf("manual override invalid", StringComparison.OrdinalIgnoreCase) >= 0;
+            bool playerResolved = !invalidManualOverride &&
+                player.IndexOf("Source: NONE", StringComparison.OrdinalIgnoreCase) < 0 &&
+                player.IndexOf("unresolved", StringComparison.OrdinalIgnoreCase) < 0;
+            bool configBad = config.IndexOf("fail", StringComparison.OrdinalIgnoreCase) >= 0 ||
+                config.IndexOf("missing", StringComparison.OrdinalIgnoreCase) >= 0 ||
+                config.IndexOf("invalid", StringComparison.OrdinalIgnoreCase) >= 0 ||
+                config.IndexOf("error", StringComparison.OrdinalIgnoreCase) >= 0;
+            bool rowCountWarning = csvBackedMode && (loaded <= 0 || valid <= 0);
+            bool warning = rowCountWarning || configBad || invalid > 0 || duplicates > 0 || invalidManualOverride || (!playerResolved && !playerWaiting);
+
+            return warning ? "WARNING" : "ACTIVE";
+        }
+
+        private void NotifyLeagueClassUiStatusChanged()
+        {
+            OnPropertyChanged(nameof(LeagueClassPlayerPreviewText));
+            OnPropertyChanged(nameof(LeagueClassHelperHasWarning));
+            OnPropertyChanged(nameof(LeagueClassHelperForeground));
+            OnPropertyChanged(nameof(LeagueRaceSettingsHeaderText));
+        }
 
         private sealed class LeagueClassPlayerPreviewResolution
         {
@@ -18299,12 +18341,18 @@ namespace LaunchPlugin
                 HookLeagueClassDefinitions(_subscribedLeagueClassSettings?.LeagueClassDefinitions);
                 OnPropertyChanged(nameof(LeagueClassStatus));
                 OnPropertyChanged(nameof(LeagueClassPlayerPreviewText));
+                OnPropertyChanged(nameof(LeagueRaceSettingsHeaderText));
                 _leagueClassOpponentsRefreshPending = true;
                 return;
             }
 
             if (!string.Equals(propertyName, nameof(LaunchPluginSettings.LeagueClassEnabled), StringComparison.Ordinal) &&
-                !string.Equals(propertyName, nameof(LaunchPluginSettings.LeagueClassMode), StringComparison.Ordinal))
+                !string.Equals(propertyName, nameof(LaunchPluginSettings.LeagueClassMode), StringComparison.Ordinal) &&
+                !string.Equals(propertyName, nameof(LaunchPluginSettings.LeagueClassPlayerOverrideMode), StringComparison.Ordinal) &&
+                !string.Equals(propertyName, nameof(LaunchPluginSettings.LeagueClassPlayerOverrideClassName), StringComparison.Ordinal) &&
+                !string.Equals(propertyName, nameof(LaunchPluginSettings.LeagueClassPlayerOverrideShortName), StringComparison.Ordinal) &&
+                !string.Equals(propertyName, nameof(LaunchPluginSettings.LeagueClassPlayerOverrideRank), StringComparison.Ordinal) &&
+                !string.Equals(propertyName, nameof(LaunchPluginSettings.LeagueClassPlayerOverrideColourHex), StringComparison.Ordinal))
             {
                 return;
             }
@@ -18316,6 +18364,14 @@ namespace LaunchPlugin
             }
             OnPropertyChanged(nameof(LeagueClassStatus));
             OnPropertyChanged(nameof(LeagueClassPlayerPreviewText));
+            OnPropertyChanged(nameof(LeagueClassPlayerOverrideIsAutoDetect));
+            OnPropertyChanged(nameof(LeagueClassPlayerClassNameEditorText));
+            OnPropertyChanged(nameof(LeagueClassPlayerShortNameEditorText));
+            OnPropertyChanged(nameof(LeagueClassPlayerRankEditorText));
+            OnPropertyChanged(nameof(LeagueClassPlayerColourHexEditorText));
+            OnPropertyChanged(nameof(LeagueClassHelperHasWarning));
+            OnPropertyChanged(nameof(LeagueClassHelperForeground));
+            OnPropertyChanged(nameof(LeagueRaceSettingsHeaderText));
             OnPropertyChanged(nameof(LeagueClassShowCsvSection));
             OnPropertyChanged(nameof(LeagueClassShowFallbackSection));
             _leagueClassOpponentsRefreshPending = true;
@@ -26660,7 +26716,17 @@ namespace LaunchPlugin
                 OnPropertyChanged(nameof(LeagueClassEnabled));
             }
         }
-        public int LeagueClassMode { get; set; } = 0;
+        private int _leagueClassMode = 0;
+        public int LeagueClassMode
+        {
+            get { return _leagueClassMode; }
+            set
+            {
+                if (_leagueClassMode == value) return;
+                _leagueClassMode = value;
+                OnPropertyChanged(nameof(LeagueClassMode));
+            }
+        }
         private string _leagueClassCsvPath = string.Empty;
         public string LeagueClassCsvPath
         {
@@ -26673,11 +26739,64 @@ namespace LaunchPlugin
                 OnPropertyChanged(nameof(LeagueClassCsvPath));
             }
         }
-        public int LeagueClassPlayerOverrideMode { get; set; } = 0; // 0=Auto,1=Manual
-        public string LeagueClassPlayerOverrideClassName { get; set; } = string.Empty;
-        public string LeagueClassPlayerOverrideShortName { get; set; } = string.Empty;
-        public int LeagueClassPlayerOverrideRank { get; set; } = 0;
-        public string LeagueClassPlayerOverrideColourHex { get; set; } = string.Empty;
+        private int _leagueClassPlayerOverrideMode = 0;
+        public int LeagueClassPlayerOverrideMode
+        {
+            get { return _leagueClassPlayerOverrideMode; }
+            set
+            {
+                if (_leagueClassPlayerOverrideMode == value) return;
+                _leagueClassPlayerOverrideMode = value;
+                OnPropertyChanged(nameof(LeagueClassPlayerOverrideMode));
+            }
+        } // 0=Auto,1=Manual
+        private string _leagueClassPlayerOverrideClassName = string.Empty;
+        public string LeagueClassPlayerOverrideClassName
+        {
+            get { return _leagueClassPlayerOverrideClassName; }
+            set
+            {
+                string normalized = value ?? string.Empty;
+                if (string.Equals(_leagueClassPlayerOverrideClassName, normalized, StringComparison.Ordinal)) return;
+                _leagueClassPlayerOverrideClassName = normalized;
+                OnPropertyChanged(nameof(LeagueClassPlayerOverrideClassName));
+            }
+        }
+        private string _leagueClassPlayerOverrideShortName = string.Empty;
+        public string LeagueClassPlayerOverrideShortName
+        {
+            get { return _leagueClassPlayerOverrideShortName; }
+            set
+            {
+                string normalized = value ?? string.Empty;
+                if (string.Equals(_leagueClassPlayerOverrideShortName, normalized, StringComparison.Ordinal)) return;
+                _leagueClassPlayerOverrideShortName = normalized;
+                OnPropertyChanged(nameof(LeagueClassPlayerOverrideShortName));
+            }
+        }
+        private int _leagueClassPlayerOverrideRank = 0;
+        public int LeagueClassPlayerOverrideRank
+        {
+            get { return _leagueClassPlayerOverrideRank; }
+            set
+            {
+                if (_leagueClassPlayerOverrideRank == value) return;
+                _leagueClassPlayerOverrideRank = value;
+                OnPropertyChanged(nameof(LeagueClassPlayerOverrideRank));
+            }
+        }
+        private string _leagueClassPlayerOverrideColourHex = string.Empty;
+        public string LeagueClassPlayerOverrideColourHex
+        {
+            get { return _leagueClassPlayerOverrideColourHex; }
+            set
+            {
+                string normalized = value ?? string.Empty;
+                if (string.Equals(_leagueClassPlayerOverrideColourHex, normalized, StringComparison.Ordinal)) return;
+                _leagueClassPlayerOverrideColourHex = normalized;
+                OnPropertyChanged(nameof(LeagueClassPlayerOverrideColourHex));
+            }
+        }
         public List<LeagueClassFallbackRule> LeagueClassFallbackRules { get; set; } = new List<LeagueClassFallbackRule>
         {
             new LeagueClassFallbackRule(),

@@ -1,3 +1,7 @@
+- 2026-06-24 Settings League Race header state landed:
+  - collapsed Settings League Race expander text now exposes `LEAGUE RACE - OFF`, `LEAGUE RACE - ACTIVE`, or `LEAGUE RACE - WARNING` using the same practical state model as Overview;
+  - zero loaded/valid row warnings remain limited to CSV-backed modes, invalid manual override stays WARNING, and no-live-session waiting remains non-fault;
+  - header colour/style, League Class resolver semantics, SimHub exports, dashboard JSON, Overview logic, and cohort/ranking behavior are unchanged. Property Snapshot list reviewed: yes; no export/property changes.
 - 2026-06-24 PR #844 remaining-time sentinel/reconnect fallback fix landed:
   - `SessionTimeRemain == -1` plus NaN/Infinity/other negative sentinels now counts as no timed-race authority for missing-SessionState finish-flag trust, so completed-lap fallback remains available for lap-limited/no-time-authority paths;
   - missing-SessionState timed authority is valid only for finite non-negative remaining time, and after-zero proof can come from either `_timerZeroSeen` or current `SessionTimeRemain <= 0`, preserving reconnect/startup after-zero finish capture;

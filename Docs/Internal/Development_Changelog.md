@@ -1,3 +1,8 @@
+## 2026-06-24 — Settings League Race header state
+- Classification: **both** (driver-facing Settings UI readability plus internal docs alignment; no dashboard JSON/export changes).
+- Settings now binds the collapsed League Race expander header to a UI-only `LEAGUE RACE - OFF/ACTIVE/WARNING` status that mirrors the Overview practical state model: disabled is OFF; enabled and usable is ACTIVE; CSV/config/manual-override/player-resolution problems are WARNING, with zero-row warnings limited to CSV-backed modes and no-live-session waiting treated as non-fault.
+- Header colour/style remains unchanged; no League Class resolver semantics, SimHub exports, dashboard JSON, Overview logic, or cohort/ranking behavior changed. Property Snapshot list reviewed: yes; no SimHub exports/properties changed.
+
 ## 2026-06-24 — PR #844 remaining-time sentinel/reconnect fallback fix
 - Classification: **both** (driver/dash-visible finish correctness plus internal finish fallback clarification; no export names, settings, dashboard JSON, fuel, pit, opponent, H2H, League Class, CarSA, or Strategy behavior changes).
 - Corrected missing-SessionState finish-flag authority so `SessionTimeRemain == -1` (and NaN/Infinity/negative sentinels) is treated as no timed-race authority, allowing the lap-limited/no-time-authority completed-lap fallback instead of blocking it as timed authority.
