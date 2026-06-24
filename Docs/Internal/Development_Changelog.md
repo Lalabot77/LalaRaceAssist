@@ -1,3 +1,8 @@
+## 2026-06-24 — Overview League warning review follow-up
+- Classification: **both** (driver-facing Overview League status correctness plus internal review follow-up; no dashboard JSON/export changes).
+- Overview League Class WARNING logic now applies zero loaded/valid row checks only in CSV-backed modes, allowing suffix-only/name-only resolved-player operation to remain ACTIVE with zero CSV rows.
+- Invalid/blank manual player override preview text now forces WARNING; valid manual override and no-live-session waiting states remain non-fault when no other warning source exists. Property Snapshot list reviewed: yes; no SimHub exports/properties changed.
+
 ## 2026-06-23 — Overview Status Centre polish
 - Classification: **both** (driver-facing plugin Overview status/readability plus internal League Class enable-path consistency; no dashboard JSON/export changes).
 - Overview STATUS now shows Monitor System text with existing MonitorSystem colour exports, League Class OFF/ACTIVE/WARNING status with loaded/valid/invalid/duplicate row detail and player waiting/resolved/unresolved wording, while keeping Updates on the right and making Restart Plugin red/danger-styled.

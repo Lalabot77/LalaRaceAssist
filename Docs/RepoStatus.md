@@ -1,3 +1,6 @@
+- 2026-06-24 Overview League warning review follow-up landed:
+  - Overview League Class WARNING logic now gates zero loaded/valid row warnings to CSV-backed modes, so suffix-only/player-resolved operation can remain ACTIVE with zero CSV rows;
+  - invalid/blank manual player override preview now forces WARNING, while valid manual override and no-live-session waiting states remain non-fault when no other warning source exists. Property Snapshot list reviewed: yes; no SimHub exports/properties were added, removed, renamed, behavior-recontracted, or regrouped.
 - 2026-06-23 Overview Status Centre polish landed:
   - Overview STATUS now shows Monitor System text with existing MonitorSystem colours, adds League Class OFF/ACTIVE/WARNING status/details from existing League Class resolver state, keeps Updates on the right, and danger-styles the Restart Plugin button;
   - plugin UI League Class enable now reuses the same enable-time reload/self-test seam as the SimHub action when enabled with zero loaded rows, without adding exports or changing cohort/ranking semantics. Property Snapshot list reviewed: yes; no SimHub exports/properties were added, removed, renamed, behavior-recontracted, or regrouped.

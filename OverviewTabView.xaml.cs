@@ -182,20 +182,25 @@ namespace LaunchPlugin
             int duplicates = status?.DuplicateRowCount ?? 0;
             string config = status?.ConfigStatusText ?? "Status unavailable";
             string player = _plugin.LeagueClassPlayerPreviewText ?? string.Empty;
+            bool csvBackedMode = _plugin.LeagueClassShowCsvSection;
             bool playerWaiting = player.IndexOf("not available yet", StringComparison.OrdinalIgnoreCase) >= 0;
-            bool playerResolved = player.IndexOf("Source: NONE", StringComparison.OrdinalIgnoreCase) < 0 &&
+            bool invalidManualOverride = player.IndexOf("manual override invalid", StringComparison.OrdinalIgnoreCase) >= 0;
+            bool playerResolved = !invalidManualOverride &&
+                player.IndexOf("Source: NONE", StringComparison.OrdinalIgnoreCase) < 0 &&
                 player.IndexOf("unresolved", StringComparison.OrdinalIgnoreCase) < 0;
             bool configBad = config.IndexOf("fail", StringComparison.OrdinalIgnoreCase) >= 0 ||
                 config.IndexOf("missing", StringComparison.OrdinalIgnoreCase) >= 0 ||
                 config.IndexOf("invalid", StringComparison.OrdinalIgnoreCase) >= 0 ||
                 config.IndexOf("error", StringComparison.OrdinalIgnoreCase) >= 0;
-            bool warning = loaded <= 0 || valid <= 0 || configBad || invalid > 0 || duplicates > 0 || (!playerResolved && !playerWaiting);
+            bool rowCountWarning = csvBackedMode && (loaded <= 0 || valid <= 0);
+            bool warning = rowCountWarning || configBad || invalid > 0 || duplicates > 0 || invalidManualOverride || (!playerResolved && !playerWaiting);
 
             LeagueClassStatusText = warning ? "WARNING" : "ACTIVE";
             LeagueClassBackground = warning ? "#D97A00" : "#0B5D1E";
             LeagueClassForeground = "#FFFFFF";
 
-            string playerDetail = playerWaiting ? "Player: waiting for session" : (playerResolved ? "Player resolved" : "Player unresolved");
+            string playerDetail = playerWaiting ? "Player: waiting for session" :
+                (invalidManualOverride ? "Player manual override invalid" : (playerResolved ? "Player resolved" : "Player unresolved"));
             LeagueClassDetailText = string.Format("{0} | Loaded {1}, valid {2}, invalid {3}, duplicates {4} | {5}",
                 config, loaded, valid, invalid, duplicates, playerDetail);
         }
