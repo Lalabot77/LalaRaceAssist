@@ -134,11 +134,21 @@
                             <RowDefinition Height="Auto" />
                         </Grid.RowDefinitions>
 
-                        <TextBlock Grid.Row="0" Grid.Column="0" Text="Game" Foreground="LightGray" Margin="0,0,8,6" />
-                        <TextBlock Grid.Row="0" Grid.Column="1" Text="{Binding CurrentGameText}" Margin="0,0,0,6" />
+                        <TextBlock Grid.Row="0" Grid.Column="0"
+                   Text="Game"
+                   Foreground="LightGray"
+                   Margin="0,0,8,6" />
+                        <TextBlock Grid.Row="0" Grid.Column="1"
+                   Text="{Binding CurrentGameText}"
+                   Margin="0,0,0,6" />
 
-                        <TextBlock Grid.Row="1" Grid.Column="0" Text="Plugin" Foreground="LightGray" Margin="0,0,8,6" />
-                        <TextBlock Grid.Row="1" Grid.Column="1" Text="{Binding PluginLoadedText}" Margin="0,0,8,6" />
+                        <TextBlock Grid.Row="1" Grid.Column="0"
+                   Text="Plugin"
+                   Foreground="LightGray"
+                   Margin="0,0,8,6" />
+                        <TextBlock Grid.Row="1" Grid.Column="1"
+                   Text="{Binding PluginLoadedText}"
+                   Margin="0,0,8,6" />
 
                         <Button Grid.Row="0" Grid.Column="2"
                 Content="Restart Plugin"
@@ -153,18 +163,36 @@
                 BorderBrush="#FF4D4D"
                 Click="ResetPlugin_Click" />
 
-                        <TextBlock Grid.Row="2" Grid.Column="0" Text="Profiles" Foreground="LightGray" Margin="0,0,8,6" />
-                        <TextBlock Grid.Row="2" Grid.Column="1" Text="{Binding ProfilesStatusText}" Margin="0,0,0,6" />
+                        <TextBlock Grid.Row="2" Grid.Column="0"
+                   Text="Profiles"
+                   Foreground="LightGray"
+                   Margin="0,0,8,6" />
+                        <TextBlock Grid.Row="2" Grid.Column="1"
+                   Text="{Binding ProfilesStatusText}"
+                   Margin="0,0,0,6" />
 
-                        <TextBlock Grid.Row="3" Grid.Column="0" Text="Current car" Foreground="LightGray" Margin="0,0,8,6" />
-                        <TextBlock Grid.Row="3" Grid.Column="1" Text="{Binding CurrentCarText}" Margin="0,0,0,6" />
+                        <TextBlock Grid.Row="3" Grid.Column="0"
+                   Text="Current car"
+                   Foreground="LightGray"
+                   Margin="0,0,8,6" />
+                        <TextBlock Grid.Row="3" Grid.Column="1"
+                   Text="{Binding CurrentCarText}"
+                   Margin="0,0,0,6" />
 
-                        <TextBlock Grid.Row="4" Grid.Column="0" Text="Current track" Foreground="LightGray" Margin="0,0,8,6" />
-                        <TextBlock Grid.Row="4" Grid.Column="1" Text="{Binding CurrentTrackText}" Margin="0,0,0,6" />
+                        <TextBlock Grid.Row="4" Grid.Column="0"
+                   Text="Current track"
+                   Foreground="LightGray"
+                   Margin="0,0,8,6" />
+                        <TextBlock Grid.Row="4" Grid.Column="1"
+                   Text="{Binding CurrentTrackText}"
+                   Margin="0,0,0,6" />
 
-                        <TextBlock Grid.Row="5" Grid.Column="0" Text="Monitor System" Foreground="LightGray" Margin="0,0,8,6" />
+                        <TextBlock Grid.Row="5" Grid.Column="0"
+                   Text="Monitor System"
+                   Foreground="LightGray"
+                   Margin="0,0,8,6" />
                         <Border Grid.Row="5" Grid.Column="1"
-                Width="170"
+                Width="150"
                 HorizontalAlignment="Left"
                 Background="{Binding MonitorSystemBackground}"
                 CornerRadius="4"
@@ -176,25 +204,39 @@
                        TextTrimming="CharacterEllipsis" />
                         </Border>
 
-                        <TextBlock Grid.Row="6" Grid.Column="0" Text="League Class" Foreground="LightGray" Margin="0,0,8,0" />
-                        <StackPanel Grid.Row="6" Grid.Column="1" HorizontalAlignment="Left">
-                            <Border Background="{Binding LeagueClassBackground}"
-                    Width="170"
+                        <TextBlock Grid.Row="6" Grid.Column="0"
+                   Text="League Class"
+                   Foreground="LightGray"
+                   Margin="0,0,8,0" />
+
+                        <Grid Grid.Row="6" Grid.Column="1"
+              Width="250"
+              HorizontalAlignment="Left">
+                            <Grid.RowDefinitions>
+                                <RowDefinition Height="Auto" />
+                                <RowDefinition Height="Auto" />
+                            </Grid.RowDefinitions>
+
+                            <Border Grid.Row="0"
+                    Width="150"
                     HorizontalAlignment="Left"
+                    Background="{Binding LeagueClassBackground}"
                     CornerRadius="4"
                     Padding="8,3"
                     Margin="0,0,0,4">
                                 <TextBlock Text="{Binding LeagueClassStatusText}"
                            Foreground="{Binding LeagueClassForeground}"
-                           FontWeight="SemiBold" />
+                           FontWeight="SemiBold"
+                           TextTrimming="CharacterEllipsis" />
                             </Border>
 
-                            <TextBlock Text="{Binding LeagueClassDetailText}"
-                       Width="270"
+                            <TextBlock Grid.Row="1"
+                       Width="250"
                        HorizontalAlignment="Left"
+                       Text="{Binding LeagueClassDetailText}"
                        Foreground="LightGray"
                        TextWrapping="Wrap" />
-                        </StackPanel>
+                        </Grid>
                     </Grid>
                 </styles:SHSection>
 
