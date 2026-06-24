@@ -17,6 +17,25 @@
 - Classification: **both** (driver/dash-visible race-finish correctness plus internal finish lifecycle contract clarification; no export names, settings, dashboard JSON, fuel, pit, opponent, H2H, or League Class behavior changes).
 - `Race.OverallLeaderHasFinished`, `Race.ClassLeaderHasFinished`, derived `Race.LeaderHasFinished`, and `Race.LastLapLikely` now remain false at a genuine race start/green flag (`SessionState==4`) even if stale per-car finish-like flags are still present from qualifying/warmup or a prior session.
 - Per-car leader finish flags are trusted only inside a valid finish lifecycle (`SessionState>=5`, with a guarded missing-SessionState fallback). SessionState-first late-race behavior, timed-race after-zero behavior, single-class mirroring after true overall finish, and multiclass class-targeted finish proof are preserved. Property Snapshot list reviewed: yes; no SimHub export/property names or snapshot groups changed.
+## 2026-06-24 — Overview League warning review follow-up
+- Classification: **both** (driver-facing Overview League status correctness plus internal review follow-up; no dashboard JSON/export changes).
+- Overview League Class WARNING logic now applies zero loaded/valid row checks only in CSV-backed modes, allowing suffix-only/name-only resolved-player operation to remain ACTIVE with zero CSV rows.
+- Invalid/blank manual player override preview text now forces WARNING; valid manual override and no-live-session waiting states remain non-fault when no other warning source exists. Property Snapshot list reviewed: yes; no SimHub exports/properties changed.
+
+## 2026-06-23 — Overview Status Centre polish
+- Classification: **both** (driver-facing plugin Overview status/readability plus internal League Class enable-path consistency; no dashboard JSON/export changes).
+- Overview STATUS now shows Monitor System text with existing MonitorSystem colour exports, League Class OFF/ACTIVE/WARNING status with loaded/valid/invalid/duplicate row detail and player waiting/resolved/unresolved wording, while keeping Updates on the right and making Restart Plugin red/danger-styled.
+- League Class plugin UI enable now reuses the same reload/self-test seam as the `LeagueClass.ToggleEnabled` SimHub action when enabling with zero loaded rows in CSV-capable modes; the shared seam still calls `ReloadLeagueClassConfig()` and preserves existing reload logging.
+- Preserved invariants: no League Class cohort/ranking changes, no H2H/Opponents/CarSA/PitExit/ClassLeader/ClassBest logic changes, no dashboard work, no export/property add/remove/rename, and no MonitorSystem priority/runtime logic changes. Property Snapshot list reviewed: yes; no SimHub exports/properties changed.
+# 2026-06-23 — Profiles track fuel-burn display precision
+- Classification: **both** (minor driver-facing Profiles UI display polish plus internal docs alignment; no fuel learning, stored profile precision, TrackStats schema, persistence, Strategy/Fuel Model calculations, dashboard JSON/exports, SimHub properties, or log messages changed).
+- Profiles track-tab dry and wet fuel-burn display refresh now uses a display-only TrackStats helper for ECO/AVG/MAX values. It writes formatted UI backing text directly and raises property notifications without flowing through reverse-sync text setters, so a stored value such as `2.837496` displays as `2.84` while the backing numeric value remains full precision until the user intentionally edits it.
+- Property Snapshot list reviewed: yes; no SimHub export/property additions, removals, renames, behavior-contract changes, or group changes.
+
+## 2026-06-23 — Pit Debrief diagnostic verbose gate validation
+- Classification: **internal-only** (SimHub Info diagnostic visibility/noise reduction validation only; no Pit Debrief exports, timing, service calculations, `Pit.Box.LastDeltaSec` sign contract, PitEngine/PitCycleLite behavior, fuel model behavior, dashboard JSON/layout, or driver-facing `SummaryText` behavior changed).
+- Confirmed issue #823 scope: `[LalaPlugin:PitDebriefBoxDiag]` and `[LalaPlugin:PitDebriefFuelDiag]` source-trace diagnostics use the existing effective verbose helper (`SoftDebugEnabled && Settings.EnableDebugLogging`) at their emission helpers, while the final concise `[LalaPlugin:PitDebrief]` summary log remains always-on through the finalized debrief log path.
+- Property Snapshot list reviewed: yes; no SimHub exports/properties were added, removed, renamed, behavior-recontracted, or regrouped.
 
 ## 2026-06-22 — Box Entry KPH authority and runway scaling export review fixes
 - Classification: **both** (dashboard-facing Box Entry export contract correction plus internal authority/fail-closed documentation).

@@ -6231,6 +6231,7 @@ namespace LaunchPlugin
         private string _leagueClassPreviewIdentitySnapshot = string.Empty;
         private string _leagueClassPreviewSettingsSnapshot = string.Empty;
         private bool _leagueClassLastEnabledState = false;
+        private bool _leagueClassApplyingToggleAction = false;
         public LeagueClassStatus LeagueClassStatus => _leagueClassResolver.Status;
 
         private EffectiveRaceClassInfo ResolveLeagueClassPlayerInfo(int? customerId, string driverName)
@@ -6732,29 +6733,48 @@ namespace LaunchPlugin
                 return;
             }
 
-            Settings.LeagueClassEnabled = !Settings.LeagueClassEnabled;
+            _leagueClassApplyingToggleAction = true;
+            try
+            {
+                Settings.LeagueClassEnabled = !Settings.LeagueClassEnabled;
+            }
+            finally
+            {
+                _leagueClassApplyingToggleAction = false;
+            }
+
             ApplyLeagueClassEnableModeGuard();
-            bool reloadedDuringEnableSelfCheck = false;
-            if (Settings.LeagueClassEnabled && LeagueClassShowCsvSection)
-            {
-                bool hasCsvPath = !string.IsNullOrWhiteSpace(Settings.LeagueClassCsvPath);
-                bool csvExists = hasCsvPath && File.Exists(Settings.LeagueClassCsvPath);
-                bool hasValidRows = (LeagueClassStatus?.ValidDriverCount ?? 0) > 0;
-                if (csvExists && !hasValidRows)
-                {
-                    // quiet self-check reload path (same seam as Reload button)
-                    ReloadLeagueClassConfig();
-                    reloadedDuringEnableSelfCheck = true;
-                }
-            }
-            if (!reloadedDuringEnableSelfCheck)
-            {
-                ReloadLeagueClassConfig();
-            }
+            ReloadLeagueClassConfigForEnableIfNeeded();
             SaveSettings();
             OnPropertyChanged(nameof(Settings));
             OnPropertyChanged(nameof(LeagueClassHelperHasWarning));
             OnPropertyChanged(nameof(LeagueClassHelperForeground));
+        }
+
+        private void ReloadLeagueClassConfigForEnableIfNeeded()
+        {
+            if (Settings == null)
+            {
+                return;
+            }
+
+            bool shouldRunEnableSelfCheck = Settings.LeagueClassEnabled &&
+                LeagueClassShowCsvSection &&
+                (LeagueClassStatus?.LoadedCount ?? 0) <= 0;
+
+            if (shouldRunEnableSelfCheck)
+            {
+                bool hasCsvPath = !string.IsNullOrWhiteSpace(Settings.LeagueClassCsvPath);
+                bool csvExists = hasCsvPath && File.Exists(Settings.LeagueClassCsvPath);
+                if (csvExists)
+                {
+                    // Quiet self-check reload path (same seam as Reload button and SimHub action).
+                    ReloadLeagueClassConfig();
+                    return;
+                }
+            }
+
+            ReloadLeagueClassConfig();
         }
 
         public string LeagueClassPlayerPreviewText
@@ -18290,6 +18310,10 @@ namespace LaunchPlugin
             }
 
             ApplyLeagueClassEnableModeGuard();
+            if (!_leagueClassApplyingToggleAction && string.Equals(propertyName, nameof(LaunchPluginSettings.LeagueClassEnabled), StringComparison.Ordinal))
+            {
+                ReloadLeagueClassConfigForEnableIfNeeded();
+            }
             OnPropertyChanged(nameof(LeagueClassStatus));
             OnPropertyChanged(nameof(LeagueClassPlayerPreviewText));
             OnPropertyChanged(nameof(LeagueClassShowCsvSection));

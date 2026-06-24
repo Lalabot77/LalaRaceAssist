@@ -65,8 +65,8 @@ Contract notes:
 - Auto-detect preview for player effective class.
 - Manual override editing for player class only.
 - `LeagueClass.ToggleEnabled` toggle behavior with enable guard.
-- Quiet enable self-check reload in CSV-capable modes when file exists but valid rows are not yet loaded.
-- Healthy state: enabled + resolved effective class (or clean native fallback when disabled).
+- Quiet enable self-check reload in CSV-capable modes when file exists but loaded rows are zero; the plugin UI enable path and `LeagueClass.ToggleEnabled` SimHub action share this reload/self-test seam.
+- Overview status surfaces `OFF` when disabled, `ACTIVE` when enabled with usable League data/player resolution, and `WARNING` for zero loaded/valid rows in CSV-backed modes, config problems, meaningful invalid/duplicate rows, invalid manual override, or unresolved player state once a session identity should be available. Outside a live session it may report the player as waiting for session rather than a hard fault.
 - Unhealthy state: missing/invalid CSV rows, unresolved effective class while enabled, invalid class definition wiring.
 
 ## 8) Dash integration guidance
