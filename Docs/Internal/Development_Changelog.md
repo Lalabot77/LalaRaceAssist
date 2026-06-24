@@ -1,4 +1,11 @@
+## 2026-06-24 — Plugin UI tab and settings reorganisation
+- Classification: **both** (user-facing plugin navigation polish plus internal UI documentation alignment; no runtime calculations, telemetry logic, SimHub action method names, exports, settings property names, persistence schemas, pit command transport, monitor behavior, or launch analysis behavior changed).
+- Reordered the plugin top-level tabs to `Overview`, `Strategy`, `Profiles`, `Launch System`, `Bindings`, and `Settings`; renamed the former top-level `Launch Analysis` navigation to `Launch System` and moved existing Launch Settings content into that tab.
+- Added a dedicated `Bindings` tab with expander groups for General / Dash Controls, Launch, Pit Commands, and Custom Messages, including the visible `Toggle Launch Mode` label while preserving the existing `LalaLaunch.LaunchMode` action.
+- Reorganized the Settings tab into settings-only expanders for Plugin Monitor, Dashboards, League Classes, Fuel Strategy, Friends List, and Debug, preserving existing binding paths and settings semantics. Property Snapshot list reviewed: yes; no SimHub exports/properties were added, removed, renamed, behavior-changed, or regrouped.
+
 ## 2026-06-24 — Settings League Race header state
+
 - Classification: **both** (driver-facing Settings UI readability plus internal docs alignment; no dashboard JSON/export changes).
 - Settings now binds the collapsed League Race expander header to a UI-only `LEAGUE RACE - OFF/ACTIVE/WARNING` status that mirrors the Overview practical state model: disabled is OFF; enabled and usable is ACTIVE; CSV/config/manual-override/player-resolution problems are WARNING, with zero-row warnings limited to CSV-backed modes and no-live-session waiting treated as non-fault.
 - Header colour/style remains unchanged; no League Class resolver semantics, SimHub exports, dashboard JSON, Overview logic, or cohort/ranking behavior changed. Property Snapshot list reviewed: yes; no SimHub exports/properties changed.

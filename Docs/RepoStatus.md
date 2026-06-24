@@ -1,3 +1,7 @@
+- 2026-06-24 Plugin UI tab/settings reorganisation landed:
+  - top-level plugin tabs are now `Overview`, `Strategy`, `Profiles`, `Launch System`, `Bindings`, and `Settings`;
+  - binding/action configuration now lives in `Bindings` expanders for General / Dash Controls, Launch, Pit Commands, and Custom Messages, while Settings is settings-only with Plugin Monitor, Dashboards, League Classes, Fuel Strategy, Friends List, and Debug;
+  - this is UI placement/wording only; SimHub action names, exports, settings schemas, pit transport, monitor behavior, launch runtime/analysis behavior, fuel/strategy/pit calculations, and dashboard contracts are unchanged. Property Snapshot list reviewed: yes; no export/property changes.
 - 2026-06-24 Settings League Race header state landed:
   - collapsed Settings League Race expander text now exposes `LEAGUE RACE - OFF`, `LEAGUE RACE - ACTIVE`, or `LEAGUE RACE - WARNING` using the same practical state model as Overview;
   - zero loaded/valid row warnings remain limited to CSV-backed modes, invalid manual override stays WARNING, and no-live-session waiting remains non-fault;
@@ -385,7 +389,7 @@
 - 2026-06-07 MonitorSystem Phase 2A pit-stop trigger framework landed:
   - added private edge-only pit-stop monitor triggers for Fuel Control mode changes, DATA changes, predictive two-laps-fuel remaining, pit-road entry, pit-box entry, and pit-road exit;
   - pit-road entry freezes an internal evidence snapshot for later Phase 2B checks, but no race-risk warning maths, baseline checks, new monitor text, CSV writer, pit commands, automatic recovery, fuel/refuel math, Pit Fuel Control, or Pit Command behavior changed;
-  - moved `Enable Monitor System` from Launch UI / Bindings to `Dash Control -> Global Dash Functions -> General`; persisted setting semantics and ON/OFF outputs remain unchanged;
+  - moved `Enable Monitor System` from Launch UI / Bindings to `Settings -> Plugin Monitor`; persisted setting semantics and ON/OFF outputs remain unchanged;
   - Property Snapshot list reviewed: yes; no group change because no SimHub exports/properties were added or changed. Message catalogue reviewed: unchanged.
 
 - 2026-06-07 MonitorSystem pre-Phase 2 cleanup landed:
@@ -449,7 +453,7 @@
   - Property Snapshot list reviewed: yes, no group update required because no SimHub export/property was added, removed, renamed, or regrouped.
 
 - 2026-06-04 Pit command direct transport fixed path cleanup landed:
-  - Settings -> Pit Commands no longer exposes the transport-mode ComboBox/options;
+  - Bindings -> Pit Commands no longer exposes the transport-mode ComboBox/options;
   - pit/custom commands now dispatch through the plugin-owned direct iRacing window-message path only, with persisted `PitCommandTransportMode` retained as ignored legacy load-safe data;
   - legacy foreground `SendInput` fallback code was removed from live dispatch, while command names, raw payloads, custom-message slots, Pit.Command feedback/severity exports, Pit Fuel Control DATA/SOURCE/MODE semantics, Tyre Control behavior, fuel/refuel math, and dashboard JSON files remain unchanged;
   - issue #698 legacy Fuel Data/PushSave cleanup was reviewed: `Pit.FuelControl.PushSaveMode`, `Pit.FuelControl.PushSaveModeText`, and legacy `PushSaveModeCycle` actions/exports were already absent; docs/log inventory now state that explicitly;
@@ -955,7 +959,7 @@ Branch: work
   - aligned subsystem/internal cross-references (`Project_Index`, `H2H`, `Dash_Integration`, `SimHubParameterInventory`, `Plugin_UI_Tooltips`) to point to the canonical League Class doc and reduce duplication/stale drift.
 
 - 2026-05-07 League Class final polish landed:
-  - added Dash Control `Bindings` row `League Class Toggle` wired to existing plugin action `LalaLaunch.LeagueClass.ToggleEnabled` (no duplicate action added);
+  - added Bindings tab row `League Class Toggle` wired to existing plugin action `LalaLaunch.LeagueClass.ToggleEnabled` (no duplicate action added);
   - League-aware dash class-name presentation now uses effective League `ShortName` when available and falls back to effective League `Name` only when `ShortName` is blank;
   - disabled/unresolved League behavior remains native fallback; no changes to class color, effective position, CarSA/Opponents/H2H selection-ordering logic, or manual-override scope.
 
@@ -1205,7 +1209,7 @@ Branch: work
   - re-enable preserves persisted CSV/fallback/manual settings, with existing enable-time mode guard (`Disabled` -> `CsvThenName`) unchanged.
 
 - 2026-04-30 Pit Fuel Control Push/Save mode UI/control-surface pass landed:
-  - added `Push/Save Profile Mode` toggle in Dash Control -> Global Dash Functions -> Fuel (OFF=`LIVE`, ON=`PROFILE`) bound to `Settings.PitFuelControlPushSaveMode`;
+  - added `Push/Save Profile Mode` toggle in Settings -> Fuel Strategy (OFF=`LIVE`, ON=`PROFILE`) bound to `Settings.PitFuelControlPushSaveMode`;
   - selector shares the existing setting with `Pit.FuelControl.PushSaveModeCycle` action path (no UI-local independent state);
   - notification hardening ensures `Pit.FuelControl.PushSaveModeCycle` programmatic changes immediately notify both int/bool settings bindings used by the open plugin toggle UI;
   - added Pit Commands settings binding row `Push/Save Mode Cycle` under Pit Fuel Control for `LalaLaunch.Pit.FuelControl.PushSaveModeCycle`;
@@ -1576,7 +1580,7 @@ Branch: work
   - `PitTyreControlEngine` service-state truth now reuses the same all-four tyre-selection seam used by `Pit.ToggleTyresAll` confirmation (`PitCommandEngine.ReadTyresAllState`), replacing prior any-tyre truth for control enforcement;
   - tyre-control enforcement contract is now explicit: service ON only when all four tyre-change flags are selected; partial selections are treated as OFF;
   - compound send attempts now always consume retry/cooldown budget even on local raw-send failure, keeping retries bounded and non-spammy on failure paths;
-  - Settings → Pit Commands removed preview auto-focus toggle and now shows only `Tyre Mode Cycle` for tyre control binding UI;
+  - Bindings → Pit Commands removed preview auto-focus toggle and now shows only `Tyre Mode Cycle` for tyre control binding UI;
   - direct `Pit.TyreControl.SetOff/SetDry/SetWet/SetAuto` actions remain registered for SimHub Controls & Events / Dash Studio use.
 - Plugin-owned tyre control v1 landed with focused helper ownership (`PitTyreControlEngine`) and existing pit transport seam reuse:
   - added persistent tyre mode contract (`OFF` / `DRY` / `WET` / `AUTO`) with mode-cycle order `OFF -> DRY -> WET -> AUTO -> OFF`;
@@ -1635,7 +1639,7 @@ Branch: work
   - transport/fallback seam behavior is otherwise unchanged (direct window-message first in `Auto`, bounded foreground `SendInput` fallback).
 - Pit/custom command transport upgrade (bounded seam in `PitCommandEngine`):
   - new default transport mode is `Auto`: direct iRacing window-message send first (`postmessage`) with explicit fallback to legacy foreground `sendinput`;
-  - added settings-level transport selector (`Auto`, `Legacy foreground SendInput only`, `Direct message only`) in `Settings -> Pit Commands`;
+  - added settings-level transport selector (`Auto`, `Legacy foreground SendInput only`, `Direct message only`) in `Bindings -> Pit Commands`;
   - built-in pit actions, custom-message actions, raw pit-command seam, feedback exports, and stateful toggle confirmation ownership remain unchanged;
   - transport logs now explicitly report `transport=...`, fallback (`fallback_from=postmessage`), and bounded failure reasons (`no-iracing-process`, `no-iracing-window`, `not-foreground`, etc.).
 - PreRace system refresh + shared planner/live validity seam:
@@ -1672,8 +1676,8 @@ Branch: work
   - LapRef session-best authority sync remains trusted-seam based but now only applies when near-equal to the captured current-context baseline, preventing dry global-best seam values from repopulating wet SessionBest after wet reset.
 - Final documentation sweep aligned user-facing + dash-facing + internal docs with the implemented combined pit command stack:
   - plugin-owned pit command actions and plugin-owned custom-message actions are now the documented default workflow;
-  - built-in pit command configuration location is documented as `Settings -> Pit Commands`;
-  - custom-message configuration location is documented as `Settings -> Custom Messages`;
+  - built-in pit command configuration location is documented as `Bindings -> Pit Commands`;
+  - custom-message configuration location is documented as `Bindings -> Custom Messages`;
   - pit fuel control usage notes are aligned to the implemented plugin-owned source/mode/action/export behavior;
   - focus caveat remains explicit and truthful (`iRacing` foreground required for reliable pit/custom sends; auto-focus not implemented).
 - Profile-track PB clear polish follow-up (bounded to profile-track editor clear path + UI text styling):
@@ -1707,11 +1711,11 @@ Branch: work
   - simplified effective same-class matching to one shared rule: explicit single-class sessions always match (blank/mismatch tolerated), multiclass sessions require usable matching class identity;
   - aligned finish-path class-leader selection to the same helper used by class-best/class-leader consumers, eliminating stricter ad hoc class-string checks in one path;
   - retained source-ordered class metadata population (`Drivers##` preferred, `CompetingDrivers[*]` bounded missing-entry backfill) and multiclass fail-safe behavior.
-- PR #584 follow-up debounced `Settings -> Custom Messages` text-edit persistence to avoid full settings writes on each keystroke:
+- PR #584 follow-up debounced `Bindings -> Custom Messages` text-edit persistence to avoid full settings writes on each keystroke:
   - custom slot `Name` / `MessageText` edits now use a 500 ms settle window before save;
   - pending debounced saves are flushed during normal plugin tick and plugin shutdown to keep latest settled text persisted across SimHub restarts;
   - custom-message action names/binding surfaces and pit/custom command runtime behavior were intentionally unchanged.
-- Fixed Settings -> Custom Messages persistence regression: custom slot label/message edits now save on change via settings-layer collection/item hooks, so values persist across SimHub restarts without altering action binding names or pit/custom command execution seams.
+- Fixed Bindings -> Custom Messages persistence regression: custom slot label/message edits now save on change via settings-layer collection/item hooks, so values persist across SimHub restarts without altering action binding names or pit/custom command execution seams.
 - PR #582 follow-up addressed final multiclass authority ordering review feedback:
   - `_isMultiClassSession` now applies native authority in strict order: explicit native single-class (`NumCarClasses == 1`) wins outright, explicit native multiclass stays next (`NumCarClasses > 1`, or unknown + `HasMultipleClassOpponents`), and cache diversity is only used when class-count authority is unresolved/unknown;
   - this prevents cache divergence (`CarClassShortName` vs `CarClassName`) from overriding an explicit native single-class session signal.

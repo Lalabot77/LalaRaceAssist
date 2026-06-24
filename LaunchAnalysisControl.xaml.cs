@@ -186,7 +186,7 @@ namespace LaunchPlugin
         {
             InitializeComponent();
 
-            // DESIGNER GUARD — must be right here
+            // DESIGNER GUARD â€” must be right here
             if (DesignerProperties.GetIsInDesignMode(this))
                 return;
             // --- Set the DataContext to this class instance so bindings work ---
@@ -218,6 +218,11 @@ namespace LaunchPlugin
         public LaunchAnalysisControl(TelemetryTraceLogger telemetryTraceLogger) : this()
         {
             _telemetryTraceLogger = telemetryTraceLogger;
+        }
+
+        public LaunchAnalysisControl(LalaLaunch plugin, TelemetryTraceLogger telemetryTraceLogger) : this(telemetryTraceLogger)
+        {
+            LaunchSettingsHost.Content = new LaunchPluginSettingsUI(plugin, telemetryTraceLogger);
         }
 
         // --- NEW METHOD: To refresh the list of available trace files ---

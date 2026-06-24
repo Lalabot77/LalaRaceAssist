@@ -31,19 +31,19 @@ namespace LaunchPlugin
             };
             MainTabControl.Items.Add(profilesTab);
 
-            var dashesTab = new SHTabItem
+            var launchSystemTab = new SHTabItem
             {
-                Header = "DASH CONTROL",
+                Header = "LAUNCH SYSTEM",
+                Content = new LaunchAnalysisControl(mainPluginInstance, telemetryTraceLoggerService)
+            };
+            MainTabControl.Items.Add(launchSystemTab);
+
+            var bindingsTab = new SHTabItem
+            {
+                Header = "BINDINGS",
                 Content = new DashesTabView(mainPluginInstance)
             };
-            MainTabControl.Items.Add(dashesTab);
-
-            var launchAnalysisTab = new SHTabItem
-            {
-                Header = "LAUNCH ANALYSIS",
-                Content = new LaunchAnalysisControl(telemetryTraceLoggerService)
-            };
-            MainTabControl.Items.Add(launchAnalysisTab);
+            MainTabControl.Items.Add(bindingsTab);
 
             var settingsTab = new SHTabItem
             {

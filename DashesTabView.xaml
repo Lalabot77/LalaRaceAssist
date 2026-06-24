@@ -8,306 +8,79 @@
              xmlns:ui="clr-namespace:SimHub.Plugins.UI;assembly=SimHub.Plugins"
              mc:Ignorable="d" d:DesignWidth="900" d:DesignHeight="1200" x:Name="DashSettingsPage">
 
-    <ScrollViewer
-        VerticalScrollBarVisibility="Auto"
-        HorizontalScrollBarVisibility="Disabled">
-        <Grid Margin="10" Width="820" HorizontalAlignment="Left">
-            <Grid.RowDefinitions>
-                <RowDefinition Height="Auto" />
-                <RowDefinition Height="Auto" />
-                <RowDefinition Height="Auto" />
-            </Grid.RowDefinitions>
-
-            <Expander Grid.Row="0" Header="Bindings" Margin="0,0,0,12" IsExpanded="True">
+    <ScrollViewer VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled">
+        <StackPanel Margin="10" Width="820" HorizontalAlignment="Left">
+            <Expander Header="General / Dash Controls" Margin="0,0,0,12" IsExpanded="True">
                 <StackPanel Margin="12,10,12,12">
-                    <ui:ControlsEditor ActionName="LalaLaunch.MsgCx"
-                                       FriendlyName="Cancel Msg Button"
-                                       ToolTip="Assign a button to cancel the current popup message." />
-                    <ui:ControlsEditor ActionName="LalaLaunch.TogglePitScreen"
-                                       FriendlyName="Toggle Pit Screen Popup"
-                                       Margin="0,8,0,0"
-                                       ToolTip="Assign a button to show or hide the pit screen popup." />
-                    <ui:ControlsEditor ActionName="LalaLaunch.PrimaryDashMode"
-                                       FriendlyName="Plugin Quick Reset"
-                                       Margin="0,8,0,0"
-                                       ToolTip="Bind to allow rapid plugin reset if any plugin or dash data issues." />
-                    <ui:ControlsEditor ActionName="LalaLaunch.StrategyDash.ModeToggle"
-                                       FriendlyName="Toggle Strategy Dash Mode"
-                                       Margin="0,8,0,0"
-                                       ToolTip="Assign a button to toggle the Strategy Dash between Advanced and Simple mode. The current state is exported as LalaLaunch.StrategyDash.AdvancedMode (true = Advanced, false = Simple)." />
-                    <ui:ControlsEditor ActionName="LalaLaunch.DeclutterMode"
-                                       FriendlyName="Cycle Declutter Mode"
-                                       Margin="0,8,0,0"
-                                       ToolTip="Assign a button to cycle declutter mode (0/1/2) for dash visibility bindings." />
-                    <ui:ControlsEditor ActionName="LalaLaunch.ToggleDarkMode"
-                                       FriendlyName="Toggle Dark Mode"
-                                       Margin="0,8,0,0"
-                                       ToolTip="Assign a button to cycle LalaLaunch Dark Mode mode (Off → Manual → Auto). Warning: don’t bind this to the same button as Lovely’s True Dark toggle. If ‘Use Lovely True Dark’ is enabled and Lovely is available, LalaLaunch toggle is ignored." />
-                    <ui:ControlsEditor ActionName="LalaLaunch.LeagueClass.ToggleEnabled"
-                                       FriendlyName="League Class Toggle"
-                                       Margin="0,8,0,0"
-                                       ToolTip="Assign a button to toggle League Class mode ON/OFF using the existing League Class enable guard and resolver reload behavior." />
+                    <ui:ControlsEditor ActionName="LalaLaunch.MsgCx" FriendlyName="Cancel Msg Button" ToolTip="Assign a button to cancel the current popup message." />
+                    <ui:ControlsEditor ActionName="LalaLaunch.TogglePitScreen" FriendlyName="Toggle Pit Screen Popup" Margin="0,8,0,0" ToolTip="Assign a button to show or hide the pit screen popup." />
+                    <ui:ControlsEditor ActionName="LalaLaunch.PrimaryDashMode" FriendlyName="Plugin Quick Reset" Margin="0,8,0,0" ToolTip="Bind to allow rapid plugin reset if any plugin or dash data issues." />
+                    <ui:ControlsEditor ActionName="LalaLaunch.StrategyDash.ModeToggle" FriendlyName="Toggle Strategy Dash Mode" Margin="0,8,0,0" ToolTip="Assign a button to toggle the Strategy Dash between Advanced and Simple mode. The current state is exported as LalaLaunch.StrategyDash.AdvancedMode (true = Advanced, false = Simple)." />
+                    <ui:ControlsEditor ActionName="LalaLaunch.DeclutterMode" FriendlyName="Cycle Declutter Mode" Margin="0,8,0,0" ToolTip="Assign a button to cycle declutter mode (0/1/2) for dash visibility bindings." />
+                    <ui:ControlsEditor ActionName="LalaLaunch.ToggleDarkMode" FriendlyName="Toggle Dark Mode" Margin="0,8,0,0" ToolTip="Assign a button to cycle LalaLaunch Dark Mode mode (Off → Manual → Auto). Warning: don’t bind this to the same button as Lovely’s True Dark toggle. If ‘Use Lovely True Dark’ is enabled and Lovely is available, LalaLaunch toggle is ignored." />
+                    <ui:ControlsEditor ActionName="LalaLaunch.LeagueClass.ToggleEnabled" FriendlyName="League Class Toggle" Margin="0,8,0,0" ToolTip="Assign a button to toggle League Class mode ON/OFF using the existing League Class enable guard and resolver reload behavior." />
                 </StackPanel>
             </Expander>
 
-            <Expander Grid.Row="1" Header="Global Dash Functions" Margin="0,0,0,12" IsExpanded="True">
+            <Expander Header="Launch" Margin="0,0,0,12" IsExpanded="False">
                 <StackPanel Margin="12,10,12,12">
-                    <TextBlock Text="General" FontWeight="Bold" Margin="0,0,0,6"/>
-                    <styles:SHToggleCheckbox Content="Auto screen selection at session start"
-                                             IsChecked="{Binding Settings.EnableAutoDashSwitch, Mode=TwoWay}"
-                                             ToolTip="Automatically switch dash screens when a session starts based on context." />
-                    <styles:SHToggleCheckbox Content="Enable Monitor System"
-                                             Margin="0,8,0,0"
-                                             IsChecked="{Binding Settings.MonitorSystemEnabled, Mode=TwoWay}"
-                                             ToolTip="Enable the dashboard-facing MonitorSystem status and fuel-health messages." />
+                    <ui:ControlsEditor ActionName="LalaLaunch.LaunchMode" FriendlyName="Toggle Launch Mode" ToolTip="Manual prime/abort launch mode (useful for testing and non-standing-start sessions)." />
+                </StackPanel>
+            </Expander>
 
-                    <Separator Margin="0,12,0,12" />
-
-                    <TextBlock Text="Dark Mode" FontWeight="Bold" Margin="0,0,0,6"/>
-                    <StackPanel>
-                        <Grid VerticalAlignment="Center">
-                            <Grid.ColumnDefinitions>
-                                <ColumnDefinition Width="100" />
-                                <ColumnDefinition Width="90" />
-                                <ColumnDefinition Width="Auto" />
-                            </Grid.ColumnDefinitions>
-                            <TextBlock Grid.Column="0"
-                                       Text="Dark Mode:"
-                                       VerticalAlignment="Center"
-                                       ToolTip="Select Dark Mode behavior: Off, Manual, or Auto."/>
-                            <ComboBox Grid.Column="1"
-                                      Width="85"
-                                      Margin="0,0,8,0"
-                                      HorizontalAlignment="Left"
-                                      SelectedValue="{Binding Settings.DarkModeMode, Mode=TwoWay}"
-                                      SelectedValuePath="Tag"
-                                      ToolTip="0=Off (forced off), 1=Manual, 2=Auto solar dimming.">
-                                <ComboBoxItem Content="Off" Tag="0" />
-                                <ComboBoxItem Content="Manual" Tag="1" />
-                                <ComboBoxItem Content="Auto" Tag="2" />
-                            </ComboBox>
-                            <styles:SHToggleCheckbox Grid.Column="2"
-                                                     Content="Use Lovely True Dark"
-                                                     VerticalAlignment="Center"
-                                                     IsChecked="{Binding Settings.UseLovelyTrueDark, Mode=TwoWay}"
-                                                     IsEnabled="{Binding IsLovelyAvailableForDarkMode}"
-                                                     ToolTip="When Lovely is available, Dark Mode active state can follow Lovely True Dark." />
-                        </Grid>
-                        <TextBlock Text="If using Lovely True Dark, bind only one toggle (Lovely OR LalaLaunch)."
-                                   Margin="100,4,0,0"
-                                   Opacity="0.85"
-                                   TextWrapping="Wrap" />
+            <Expander Header="Pit Commands" Margin="0,0,0,12" IsExpanded="False">
+                <StackPanel Margin="12,10,12,12">
+                    <TextBlock Foreground="LightGray" TextWrapping="Wrap" Text="Built-in pit command actions let you bind your pit service controls directly in SimHub Controls &amp; Events and trigger them from hardware, keyboard, or dashboard buttons." />
+                    <StackPanel Margin="0,10,0,0">
+                        <ui:ControlsEditor ActionName="LalaLaunch.Pit.ClearAll" FriendlyName="Pit Clear All"/>
+                        <ui:ControlsEditor ActionName="LalaLaunch.Pit.ClearTires" FriendlyName="Clear Tyres"/>
+                        <ui:ControlsEditor ActionName="LalaLaunch.Pit.ToggleFuel" FriendlyName="Toggle Fuel"/>
+                        <ui:ControlsEditor ActionName="LalaLaunch.Pit.FuelAdd1" FriendlyName="Fuel +1"/>
+                        <ui:ControlsEditor ActionName="LalaLaunch.Pit.FuelRemove1" FriendlyName="Fuel -1"/>
+                        <ui:ControlsEditor ActionName="LalaLaunch.Pit.FuelAdd10" FriendlyName="Fuel +10"/>
+                        <ui:ControlsEditor ActionName="LalaLaunch.Pit.FuelRemove10" FriendlyName="Fuel -10"/>
+                        <ui:ControlsEditor ActionName="LalaLaunch.Pit.FuelSetMax" FriendlyName="Fuel MAX"/>
+                        <ui:ControlsEditor ActionName="LalaLaunch.Pit.ToggleTiresAll" FriendlyName="Toggle Tyres"/>
+                        <ui:ControlsEditor ActionName="LalaLaunch.Pit.ToggleFastRepair" FriendlyName="Toggle Fast Repair"/>
+                        <ui:ControlsEditor ActionName="LalaLaunch.Pit.ToggleAutoFuel" FriendlyName="Toggle Auto Fuel"/>
+                        <ui:ControlsEditor ActionName="LalaLaunch.Pit.Windshield" FriendlyName="Toggle Tear-off"/>
+                        <TextBlock Margin="0,12,0,4" FontWeight="SemiBold" Text="Tyre Control"/>
+                        <TextBlock Foreground="LightGray" TextWrapping="Wrap" Text="Plugin-owned tyre mode control (OFF / DRY / WET / AUTO)."/>
+                        <ui:ControlsEditor ActionName="LalaLaunch.Pit.TyreControl.ModeCycle" FriendlyName="Tyre Mode Cycle"/>
+                        <TextBlock Margin="0,12,0,4" FontWeight="SemiBold" Text="Pit Fuel Control"/>
+                        <TextBlock Foreground="LightGray" TextWrapping="Wrap" Text="Plugin-owned pit fuel control surface (data/source/mode logic remains plugin-owned)."/>
+                        <ui:ControlsEditor ActionName="LalaLaunch.Pit.FuelControl.CycleData" FriendlyName="Fuel Data Cycle"/>
                     </StackPanel>
-                    <ui:TitledSlider Title="Brightness (%): "
-                                     Margin="0,8,0,0"
-                                     Minimum="0"
-                                     Maximum="100"
-                                     TickFrequency="1"
-                                     IsSnapToTickEnabled="True"
-                                     Value="{Binding Settings.DarkModeBrightnessPct, Mode=TwoWay}"
-                                     ToolTip="Base Dark Mode brightness percent (0-100). 100 is brightest." />
-                    
-                    <Separator Margin="0,12,0,12" />
-
-                    <TextBlock Text="Fuel" FontWeight="Bold" Margin="0,0,0,6"/>
-                    <ui:TitledSlider Title="Fuel Ready Confidence: "
-                                     Minimum="0"
-                                     Maximum="100"
-                                     Value="{Binding Settings.FuelReadyConfidence, Mode=TwoWay}"
-                                     ToolTip="Minimum confidence (%) before pit strategy uses live fuel. Below this, profile estimates may be used." />
-                    <TextBlock Text="Below 20%, profile fuel may be used for early estimates. Above 20%, pit strategy waits for live fuel data."
-                               FontSize="11"
-                               Opacity="0.7"
-                               TextWrapping="Wrap"
-                               Margin="0,2,0,0"/>
-                    <ui:TitledSlider Title="Pit-in Fuel Reserve (% lap): "
-                                     Margin="0,8,0,0"
-                                     Minimum="0"
-                                     Maximum="30"
-                                     Value="{Binding Settings.StintFuelMarginPct, Mode=TwoWay}"
-                                     ToolTip="Reserve fuel as a percentage of one lap (based on stable fuel burn) when calculating stint burn targets." />
-                    <styles:SHToggleCheckbox Content="Fuel Data Plan Mode"
-                                             Margin="0,8,0,0"
-                                             IsChecked="{Binding Settings.PitFuelControlDataPlanModeEnabled, Mode=TwoWay}"
-                                             ToolTip="Toggle Pit Fuel Control DATA. OFF = LIVE runtime burn assumptions, ON = PLAN memory/profile assumptions for PUSH/SAVE. Changing DATA parks SOURCE at STBY." />
-                    <TextBlock Text="OFF = LIVE, ON = PLAN"
-                               FontSize="11"
-                               Opacity="0.7"
-                               TextWrapping="Wrap"
-                               Margin="0,2,0,0"/>
-                    <ui:TitledSlider Title="DATA PLAN Push/Save Guard (%): "
-                                     Margin="0,8,0,0"
-                                     Minimum="0"
-                                     Maximum="30"
-                                     TickFrequency="1"
-                                     IsSnapToTickEnabled="True"
-                                     Value="{Binding Settings.PitFuelPushSaveProfileGuardPct, Mode=TwoWay}"
-                                     ToolTip="When DATA is PLAN, caps memory/profile push/save burn around live stable NORM burn by this guard percentage." />
-                    
-                    <styles:SHToggleCheckbox Content="Pit.Box: include optional repairs in service countdown"
-                         Margin="0,0,0,10"
-                         IsChecked="{Binding Settings.PitBoxIncludeOptionalRepairs, Mode=TwoWay}"
-                         ToolTip="When enabled, optional repair time is included in Pit.Box target/remaining countdown and shared total-stop-loss prediction. Mandatory repair time is always included when native authority is valid while boxed."/>
-
                 </StackPanel>
             </Expander>
 
-            <Expander Grid.Row="2" Header="Dash Visibility" IsExpanded="True">
+            <Expander Header="Custom Messages" Margin="0,0,0,12" IsExpanded="False">
                 <StackPanel Margin="12,10,12,12">
-                    <TextBlock Text="Choose which dash families can show each feature."
-                               Margin="0,0,0,10"
-                               Opacity="0.8"
-                               TextWrapping="Wrap" />
-                    <Grid HorizontalAlignment="Left">
-                        <Grid.ColumnDefinitions>
-                            <ColumnDefinition Width="220" />
-                            <ColumnDefinition Width="110" />
-                            <ColumnDefinition Width="130" />
-                            <ColumnDefinition Width="90" />
-                        </Grid.ColumnDefinitions>
-                        <Grid.RowDefinitions>
-                            <RowDefinition Height="Auto" />
-                            <RowDefinition Height="Auto" />
-                            <RowDefinition Height="Auto" />
-                            <RowDefinition Height="Auto" />
-                            <RowDefinition Height="Auto" />
-                            <RowDefinition Height="Auto" />
-                            <RowDefinition Height="Auto" />
-                            <RowDefinition Height="Auto" />
-                            <RowDefinition Height="Auto" />
-                            <RowDefinition Height="Auto" />
-                            <RowDefinition Height="Auto" />
-                        </Grid.RowDefinitions>
-
-                        <TextBlock Grid.Row="0" Grid.Column="1" Text="DRIVER" FontWeight="Bold" Margin="0,0,0,6" HorizontalAlignment="Center"
-                                   ToolTip="DRIVER = Lala Race Dash." />
-                        <TextBlock Grid.Row="0" Grid.Column="2" Text="STRATEGY" FontWeight="Bold" Margin="0,0,0,6" HorizontalAlignment="Center"
-                                   ToolTip="STRATEGY = Lala Strategy Dash." />
-                        <TextBlock Grid.Row="0" Grid.Column="3" Text="OVERLAY" FontWeight="Bold" Margin="0,0,0,6" HorizontalAlignment="Center"
-                                   ToolTip="OVERLAY = overlay surfaces." />
-
-                        <TextBlock Text="Launch Assist" Grid.Row="1" Grid.Column="0" Margin="0,5,12,0" VerticalAlignment="Center"
-                                   ToolTip="Enable the Launch screen for this dash type." />
-                        <styles:SHToggleCheckbox Grid.Row="1" Grid.Column="1" Content="" Margin="0,5,0,0" HorizontalAlignment="Center"
-                                                 IsChecked="{Binding Settings.LalaDashShowLaunchScreen, Mode=TwoWay}"
-                                                 ToolTip="Show the Launch screen on the DRIVER dash (Lala Race Dash)." />
-                        <styles:SHToggleCheckbox Grid.Row="1" Grid.Column="2" Content="" Margin="0,5,0,0" HorizontalAlignment="Center"
-                                                 IsChecked="{Binding Settings.MsgDashShowLaunchScreen, Mode=TwoWay}"
-                                                 ToolTip="Show the Launch screen on the STRATEGY dash (Lala Strategy Dash)." />
-                        <styles:SHToggleCheckbox Grid.Row="1" Grid.Column="3" Content="" Margin="0,5,0,0" HorizontalAlignment="Center"
-                                                 IsChecked="{Binding Settings.OverlayDashShowLaunchScreen, Mode=TwoWay}"
-                                                 ToolTip="Show the Launch screen on OVERLAY surfaces." />
-
-                        <TextBlock Text="Pit Entry Assist" Grid.Row="2" Grid.Column="0" Margin="0,5,12,0" VerticalAlignment="Center"
-                                   ToolTip="Enable pit-entry approach assist visibility for this dash type." />
-                        <styles:SHToggleCheckbox Grid.Row="2" Grid.Column="1" Content="" Margin="0,5,0,0" HorizontalAlignment="Center"
-                                                 IsChecked="{Binding Settings.LalaDashShowPitEntryAssist, Mode=TwoWay}"
-                                                 ToolTip="Show Pit Entry Assist on the DRIVER dash (Lala Race Dash)." />
-                        <styles:SHToggleCheckbox Grid.Row="2" Grid.Column="2" Content="" Margin="0,5,0,0" HorizontalAlignment="Center"
-                                                 IsChecked="{Binding Settings.MsgDashShowPitEntryAssist, Mode=TwoWay}"
-                                                 ToolTip="Show Pit Entry Assist on the STRATEGY dash (Lala Strategy Dash)." />
-                        <styles:SHToggleCheckbox Grid.Row="2" Grid.Column="3" Content="" Margin="0,5,0,0" HorizontalAlignment="Center"
-                                                 IsChecked="{Binding Settings.OverlayDashShowPitEntryAssist, Mode=TwoWay}"
-                                                 ToolTip="Show Pit Entry Assist on OVERLAY surfaces." />
-
-                        <TextBlock Text="Pit Box Assist" Grid.Row="3" Grid.Column="0" Margin="0,5,12,0" VerticalAlignment="Center"
-                                   ToolTip="Enable pit-box stopping assist visibility for this dash type." />
-                        <styles:SHToggleCheckbox Grid.Row="3" Grid.Column="1" Content="" Margin="0,5,0,0" HorizontalAlignment="Center"
-                                                 IsChecked="{Binding Settings.LalaDashShowPitBoxAssist, Mode=TwoWay}"
-                                                 ToolTip="Show Pit Box Assist on the DRIVER dash (Lala Race Dash)." />
-                        <styles:SHToggleCheckbox Grid.Row="3" Grid.Column="2" Content="" Margin="0,5,0,0" HorizontalAlignment="Center"
-                                                 IsChecked="{Binding Settings.MsgDashShowPitBoxAssist, Mode=TwoWay}"
-                                                 ToolTip="Show Pit Box Assist on the STRATEGY dash (Lala Strategy Dash)." />
-                        <styles:SHToggleCheckbox Grid.Row="3" Grid.Column="3" Content="" Margin="0,5,0,0" HorizontalAlignment="Center"
-                                                 IsChecked="{Binding Settings.OverlayDashShowPitBoxAssist, Mode=TwoWay}"
-                                                 ToolTip="Show Pit Box Assist on OVERLAY surfaces." />
-
-                        <TextBlock Text="Pit Limiter" Grid.Row="4" Grid.Column="0" Margin="0,5,12,0" VerticalAlignment="Center"
-                                   ToolTip="Enable pit-limiter assist visibility for this dash type." />
-                        <styles:SHToggleCheckbox Grid.Row="4" Grid.Column="1" Content="" Margin="0,5,0,0" HorizontalAlignment="Center"
-                                                 IsChecked="{Binding Settings.LalaDashShowPitLimiter, Mode=TwoWay}"
-                                                 ToolTip="Show Pit Limiter on the DRIVER dash (Lala Race Dash)." />
-                        <styles:SHToggleCheckbox Grid.Row="4" Grid.Column="2" Content="" Margin="0,5,0,0" HorizontalAlignment="Center"
-                                                 IsChecked="{Binding Settings.MsgDashShowPitLimiter, Mode=TwoWay}"
-                                                 ToolTip="Show Pit Limiter on the STRATEGY dash (Lala Strategy Dash)." />
-                        <styles:SHToggleCheckbox Grid.Row="4" Grid.Column="3" Content="" Margin="0,5,0,0" HorizontalAlignment="Center"
-                                                 IsChecked="{Binding Settings.OverlayDashShowPitLimiter, Mode=TwoWay}"
-                                                 ToolTip="Show Pit Limiter on OVERLAY surfaces." />
-
-                        <TextBlock Text="Show Automatic Pit Screen" Grid.Row="5" Grid.Column="0" Margin="0,5,12,0" VerticalAlignment="Center"
-                                   ToolTip="Enable the automatic pit screen for this dash type." />
-                        <styles:SHToggleCheckbox Grid.Row="5" Grid.Column="1" Content="" Margin="0,5,0,0" HorizontalAlignment="Center"
-                                                 IsChecked="{Binding Settings.LalaDashShowPitScreen, Mode=TwoWay}"
-                                                 ToolTip="Show the automatic pit screen on the DRIVER dash (Lala Race Dash)." />
-                        <styles:SHToggleCheckbox Grid.Row="5" Grid.Column="2" Content="" Margin="0,5,0,0" HorizontalAlignment="Center"
-                                                 IsChecked="{Binding Settings.MsgDashShowPitScreen, Mode=TwoWay}"
-                                                 ToolTip="Show the automatic pit screen on the STRATEGY dash (Lala Strategy Dash)." />
-                        <styles:SHToggleCheckbox Grid.Row="5" Grid.Column="3" Content="" Margin="0,5,0,0" HorizontalAlignment="Center"
-                                                 IsChecked="{Binding Settings.OverlayDashShowPitScreen, Mode=TwoWay}"
-                                                 ToolTip="Show the automatic pit screen on OVERLAY surfaces." />
-
-                        <TextBlock Text="Rejoin Assist" Grid.Row="6" Grid.Column="0" Margin="0,5,12,0" VerticalAlignment="Center"
-                                   ToolTip="Enable track rejoin assist for this dash type." />
-                        <styles:SHToggleCheckbox Grid.Row="6" Grid.Column="1" Content="" Margin="0,5,0,0" HorizontalAlignment="Center"
-                                                 IsChecked="{Binding Settings.LalaDashShowRejoinAssist, Mode=TwoWay}"
-                                                 ToolTip="Show track rejoin assist on the DRIVER dash (Lala Race Dash)." />
-                        <styles:SHToggleCheckbox Grid.Row="6" Grid.Column="2" Content="" Margin="0,5,0,0" HorizontalAlignment="Center"
-                                                 IsChecked="{Binding Settings.MsgDashShowRejoinAssist, Mode=TwoWay}"
-                                                 ToolTip="Show track rejoin assist on the STRATEGY dash (Lala Strategy Dash)." />
-                        <styles:SHToggleCheckbox Grid.Row="6" Grid.Column="3" Content="" Margin="0,5,0,0" HorizontalAlignment="Center"
-                                                 IsChecked="{Binding Settings.OverlayDashShowRejoinAssist, Mode=TwoWay}"
-                                                 ToolTip="Show track rejoin assist on OVERLAY surfaces." />
-
-                        <TextBlock Text="Verbose Race Messages" Grid.Row="7" Grid.Column="0" Margin="0,5,12,0" VerticalAlignment="Center"
-                                   ToolTip="Enable detailed race messages for this dash type." />
-                        <styles:SHToggleCheckbox Grid.Row="7" Grid.Column="1" Content="" Margin="0,5,0,0" HorizontalAlignment="Center"
-                                                 IsChecked="{Binding Settings.LalaDashShowVerboseMessaging, Mode=TwoWay}"
-                                                 ToolTip="Show verbose race messages on the DRIVER dash (Lala Race Dash)." />
-                        <styles:SHToggleCheckbox Grid.Row="7" Grid.Column="2" Content="" Margin="0,5,0,0" HorizontalAlignment="Center"
-                                                 IsChecked="{Binding Settings.MsgDashShowVerboseMessaging, Mode=TwoWay}"
-                                                 ToolTip="Show verbose race messages on the STRATEGY dash (Lala Strategy Dash)." />
-                        <styles:SHToggleCheckbox Grid.Row="7" Grid.Column="3" Content="" Margin="0,5,0,0" HorizontalAlignment="Center"
-                                                 IsChecked="{Binding Settings.OverlayDashShowVerboseMessaging, Mode=TwoWay}"
-                                                 ToolTip="Show verbose race messages on OVERLAY surfaces." />
-
-                        <TextBlock Text="Race Flags" Grid.Row="8" Grid.Column="0" Margin="0,5,12,0" VerticalAlignment="Center"
-                                   ToolTip="Enable race flag notifications for this dash type." />
-                        <styles:SHToggleCheckbox Grid.Row="8" Grid.Column="1" Content="" Margin="0,5,0,0" HorizontalAlignment="Center"
-                                                 IsChecked="{Binding Settings.LalaDashShowRaceFlags, Mode=TwoWay}"
-                                                 ToolTip="Show race flags on the DRIVER dash (Lala Race Dash)." />
-                        <styles:SHToggleCheckbox Grid.Row="8" Grid.Column="2" Content="" Margin="0,5,0,0" HorizontalAlignment="Center"
-                                                 IsChecked="{Binding Settings.MsgDashShowRaceFlags, Mode=TwoWay}"
-                                                 ToolTip="Show race flags on the STRATEGY dash (Lala Strategy Dash)." />
-                        <styles:SHToggleCheckbox Grid.Row="8" Grid.Column="3" Content="" Margin="0,5,0,0" HorizontalAlignment="Center"
-                                                 IsChecked="{Binding Settings.OverlayDashShowRaceFlags, Mode=TwoWay}"
-                                                 ToolTip="Show race flags on OVERLAY surfaces." />
-
-                        <TextBlock Text="Radio Messages" Grid.Row="9" Grid.Column="0" Margin="0,5,12,0" VerticalAlignment="Center"
-                                   ToolTip="Enable radio message popups for this dash type." />
-                        <styles:SHToggleCheckbox Grid.Row="9" Grid.Column="1" Content="" Margin="0,5,0,0" HorizontalAlignment="Center"
-                                                 IsChecked="{Binding Settings.LalaDashShowRadioMessages, Mode=TwoWay}"
-                                                 ToolTip="Show radio messages on the DRIVER dash (Lala Race Dash)." />
-                        <styles:SHToggleCheckbox Grid.Row="9" Grid.Column="2" Content="" Margin="0,5,0,0" HorizontalAlignment="Center"
-                                                 IsChecked="{Binding Settings.MsgDashShowRadioMessages, Mode=TwoWay}"
-                                                 ToolTip="Show radio messages on the STRATEGY dash (Lala Strategy Dash)." />
-                        <styles:SHToggleCheckbox Grid.Row="9" Grid.Column="3" Content="" Margin="0,5,0,0" HorizontalAlignment="Center"
-                                                 IsChecked="{Binding Settings.OverlayDashShowRadioMessages, Mode=TwoWay}"
-                                                 ToolTip="Show radio messages on OVERLAY surfaces." />
-
-                        <TextBlock Text="Show Traffic Alerts" Grid.Row="10" Grid.Column="0" Margin="0,5,12,0" VerticalAlignment="Center"
-                                   ToolTip="Enable traffic alert warnings for this dash type." />
-                        <styles:SHToggleCheckbox Grid.Row="10" Grid.Column="1" Content="" Margin="0,5,0,0" HorizontalAlignment="Center"
-                                                 IsChecked="{Binding Settings.LalaDashShowTraffic, Mode=TwoWay}"
-                                                 ToolTip="Show traffic alerts on the DRIVER dash (Lala Race Dash)." />
-                        <styles:SHToggleCheckbox Grid.Row="10" Grid.Column="2" Content="" Margin="0,5,0,0" HorizontalAlignment="Center"
-                                                 IsChecked="{Binding Settings.MsgDashShowTraffic, Mode=TwoWay}"
-                                                 ToolTip="Show traffic alerts on the STRATEGY dash (Lala Strategy Dash)." />
-                        <styles:SHToggleCheckbox Grid.Row="10" Grid.Column="3" Content="" Margin="0,5,0,0" HorizontalAlignment="Center"
-                                                 IsChecked="{Binding Settings.OverlayDashShowTraffic, Mode=TwoWay}"
-                                                 ToolTip="Show traffic alerts on OVERLAY surfaces." />
-                    </Grid>
+                    <TextBlock Foreground="LightGray" TextWrapping="Wrap" Text="Configure up to 10 custom message buttons. Give each slot a friendly name, enter your message text, then bind it like any other plugin action." />
+                    <ItemsControl ItemsSource="{Binding Settings.CustomMessages}">
+                        <ItemsControl.ItemTemplate>
+                            <DataTemplate>
+                                <Border Margin="0,8,0,0" Padding="8" BorderBrush="#2C2C2C" BorderThickness="1" CornerRadius="4">
+                                    <StackPanel>
+                                        <TextBlock FontWeight="SemiBold" Margin="0,0,0,6" Text="{Binding FriendlyActionName}" />
+                                        <Grid Margin="0,0,0,6">
+                                            <Grid.ColumnDefinitions><ColumnDefinition Width="Auto"/><ColumnDefinition Width="*"/></Grid.ColumnDefinitions>
+                                            <TextBlock Grid.Column="0" VerticalAlignment="Center" Margin="0,0,8,0" Text="Label"/>
+                                            <TextBox Grid.Column="1" Text="{Binding Name, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" ToolTip="Friendly name shown in this settings list and used for feedback text when the message is sent."/>
+                                        </Grid>
+                                        <Grid Margin="0,0,0,6">
+                                            <Grid.ColumnDefinitions><ColumnDefinition Width="Auto"/><ColumnDefinition Width="*"/></Grid.ColumnDefinitions>
+                                            <TextBlock Grid.Column="0" VerticalAlignment="Center" Margin="0,0,8,0" Text="Message"/>
+                                            <TextBox Grid.Column="1" Text="{Binding MessageText, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" ToolTip="Chat message content to send when this custom message action is triggered."/>
+                                        </Grid>
+                                        <ui:ControlsEditor ActionName="{Binding ActionName}" FriendlyName="{Binding FriendlyActionName}"/>
+                                    </StackPanel>
+                                </Border>
+                            </DataTemplate>
+                        </ItemsControl.ItemTemplate>
+                    </ItemsControl>
                 </StackPanel>
             </Expander>
-        </Grid>
+        </StackPanel>
     </ScrollViewer>
 </UserControl>

@@ -64,7 +64,7 @@ That exposes `[ShakeITMotorsV3Plugin.Export.TractionLoss.All]` for dashboards or
 - Some dashboard indicators and behaviors depend on optional SimHub exports or optional setup steps.
 - Wheelspin / traction-loss visuals require the optional `TractionLoss` ShakeIt export above.
 - Primary Dash navigation behavior may continue to evolve during early public releases.
-- In Dash Control → Bindings, **Strategy Dash Mode** toggles the Strategy Dash presentation between Advanced and Simple; dashboards can read `LalaLaunch.StrategyDash.AdvancedMode` for the current status.
+- In Bindings, **Strategy Dash Mode** toggles the Strategy Dash presentation between Advanced and Simple; dashboards can read `LalaLaunch.StrategyDash.AdvancedMode` for the current status.
 - Legacy `RSC.iRacingExtraProperties.dll` fallback paths are removed from active runtime code.
 
 ## 4. First plugin check
@@ -74,8 +74,8 @@ Open the plugin in SimHub and confirm the main navigation order:
 1. **Overview**
 2. **Strategy**
 3. **Profiles**
-4. **Dash Control**
-5. **Launch Analysis**
+4. **Launch System**
+5. **Bindings**
 6. **Settings**
 
 ![Strategy tab after install](Images/StrategyTab.png)
@@ -86,7 +86,7 @@ Important current rules:
 - **Overview** is the landing/front-door tab (links, status, and update check).
 - **Strategy** is the main planner.
 - Presets are managed from **Strategy** through **`Presets...`**.
-- Launch setup lives in **Settings → Launch Settings**.
+- Launch setup lives in **Launch System → Launch Settings**.
 
 ## 5. Best first session
 
@@ -106,8 +106,8 @@ For a new car/track combination:
 
 ### Pit command setup (quick)
 
-- Built-in pit command bindings are managed in **Settings → Pit Commands**.
-- Custom chat button slots are managed in **Settings → Custom Messages** and bound as `LalaLaunch.CustomMessage01..10`.
+- Built-in pit command bindings are managed in **Bindings → Pit Commands**.
+- Custom chat button slots are managed in **Bindings → Custom Messages** and bound as `LalaLaunch.CustomMessage01..10`.
 - For supported pit widgets/buttons, bind plugin-owned actions (`LalaLaunch.Pit.*`, `LalaLaunch.Pit.FuelControl.*`) rather than old `IRacingExtraProperties` pit action ids.
 - Transport is plugin-owned and fixed to direct iRacing window-message delivery; there is no Settings transport-mode selector.
 - Auto-focus is not implemented yet (preview setting only).

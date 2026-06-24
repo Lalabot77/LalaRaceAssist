@@ -15,24 +15,24 @@ Branch: work
 - L40: Close without copying.
 
 ## DashesTabView.xaml
-- Dash Control now uses three expander-based main sections: `Bindings`, `Global Dash Functions`, and `Dash Visibility`; all default to expanded so the existing content remains immediately visible while matching the Settings-tab tidy-up pattern.
+- The plugin top-level tabs now run `OVERVIEW`, `STRATEGY`, `PROFILES`, `LAUNCH SYSTEM`, `BINDINGS`, `SETTINGS`. The Bindings tab uses expander groups for General / Dash Controls, Launch, Pit Commands, and Custom Messages.
 - `Bindings` contains only the true dash bindings for `Cancel Msg Button`, `Toggle Pit Screen Popup`, `Plugin Quick Reset` (`LalaLaunch.PrimaryDashMode`), `Toggle Strategy Dash Mode` (`LalaLaunch.StrategyDash.ModeToggle`), `Cycle Declutter Mode`, `Toggle Dark Mode`, plus `League Class Toggle` (existing plugin action `LalaLaunch.LeagueClass.ToggleEnabled`).
 - `Toggle Strategy Dash Mode` tooltip says the binding toggles the Strategy Dash between Advanced and Simple and that current state is exported as `LalaLaunch.StrategyDash.AdvancedMode` (`true` = Advanced, `false` = Simple).
 - League Class resolver precedence, fallback behavior, and cohort semantics are documented canonically in `Docs/Subsystems/League_Class_System.md` (tooltips should stay workflow-focused).
 - `Plugin Quick Reset` / `PrimaryDashMode` binding is a manual plugin recovery trigger (runtime re-arm/reset seam) while preserving the existing action name for compatibility.
-- `Global Dash Functions` -> General: `Auto screen selection at session start` automatically switches dash screens when a session starts based on context; `Enable Monitor System` controls the persisted dashboard-facing MonitorSystem status and fuel-health messages.
-- `Global Dash Functions` -> Dark Mode: `Dark Mode` selector uses Off / Manual / Auto, `Dark Mode Brightness` sets base brightness, `Use Lovely True Dark` follows Lovely when available, and `Toggle Dark Mode` remains here as the dark-mode-specific binding row.
-- `Global Dash Functions` -> Fuel: `Fuel Ready Confidence` sets the live-fuel readiness threshold, `Pit-in Fuel Reserve` sets the stint reserve margin, `Fuel Data Plan Mode` is a two-state toggle for Pit Fuel Control DATA (OFF=`LIVE`, ON=`PLAN` for PUSH/SAVE memory/profile assumptions), and `DATA PLAN Push/Save Guard (%)` clamps DATA PLAN PUSH/SAVE burn around live stable NORM burn.
+- `Settings -> Plugin Monitor` contains `Enable Monitor System`. `Settings -> Dashboards` contains auto screen selection, dark-mode controls, brightness, and Dash Visibility.
+- `Bindings -> General / Dash Controls` contains the dark-mode action binding row; `Settings -> Dashboards` contains the Dark Mode selector, `Use Lovely True Dark`, and brightness setting.
+- `Settings -> Fuel Strategy`: `Fuel Ready Confidence` sets the live-fuel readiness threshold, `Pit-in Fuel Reserve` sets the stint reserve margin, `Fuel Data Plan Mode` is a two-state toggle for Pit Fuel Control DATA (OFF=`LIVE`, ON=`PLAN` for PUSH/SAVE memory/profile assumptions), and `DATA PLAN Push/Save Guard (%)` clamps DATA PLAN PUSH/SAVE burn around live stable NORM burn.
 - `Dash Visibility` keeps the visibility matrix but replaces the former broad `Pit Assists` row with independent `Pit Entry Assist`, `Pit Box Assist`, and `Pit Limiter` rows. `Show Automatic Pit Screen` remains a separate row, and the release-facing column headers remain `DRIVER`, `STRATEGY`, and `OVERLAY`.
 - `Dash Visibility` header tooltips make the short labels explicit: `DRIVER = Lala Race Dash`, `STRATEGY = Lala Strategy Dash`, and `OVERLAY = overlay surfaces`.
-- `Launch Mode`, `Event Marker`, and `Post-Launch Results Display Time` no longer appear in Dash Control after this tidy-up.
+- `Launch Mode`, `Event Marker`, and `Post-Launch Results Display Time` are split between Launch System settings and the Bindings tab after this reorganisation.
 
 ## GlobalSettingsView.xaml
 - Debug Options: `Enable Monitor Event CSV` writes changed non-normal MonitorSystem publications to `Logs/LalaPluginData/MonitorSystem_Events.csv` for troubleshooting only. It is off by default and depends on `Enable Monitor System`.
 - Debug Options: Car Tracking Probe CSV shows a `PROBE CSV:` status pill (`OFF`, `READY`, `RECORDING`, `FAILED`) under the START/STOP/RESET row; START is enabled only in `READY`, STOP only in `RECORDING`, and RESET in `READY`/`RECORDING`/`FAILED`.
 
 ## LaunchPluginSettingsUI.xaml
-- `Enable Monitor System` no longer appears in the Launch UI / Bindings section; the persisted setting is owned by Dash Control global functions.
+- `Enable Monitor System` no longer appears in the Launch UI / Bindings section; the persisted setting is shown under Settings -> Plugin Monitor.
 
 ## FuelCalculatorView.xaml
 - Main planner navigation: top-level `FUEL` tab is now `STRATEGY`, and preset management is opened from the `Presets...` button beside the `Race Preset` selector instead of a separate top-level `PRESETS` tab.
@@ -98,7 +98,7 @@ Branch: work
 ## LaunchAnalysisControl.xaml
 - L27: Select a launch trace file to review in this tab.
 - L33: Pick a trace file captured from a launch session.
-- L37: Reloads the list of files from the path specified in Settings → Launch Settings.
+- L37: Reloads the list of files from the path specified in Launch System → Launch Settings.
 - L41: Temporarily browse a different folder for launch trace files.
 - L46: WARNING: Permanently deletes the selected trace file from your disk.
 - L55: Auto-generated summary for the selected trace file.
@@ -133,14 +133,14 @@ Branch: work
 - L43: If the engine RPM drops below this percentage of the initial Launch RPM, the run will be flagged as 'Bogged'.
 - L44: Sets the sensitivity for detecting game-assisted anti-stall. % is delta between paddle and in game clutch.
 - Launch Settings content is no longer a standalone main tab; it now appears inside Settings under a collapsed `Launch Settings` expander placed after Friends List and before Debug.
-- LAUNCH UI / BINDINGS section: still hosts only the moved `Launch Mode` binding and `Post-Launch Results Display Time` slider from Dash Control; moving the block into Settings did not change their behavior or bindings.
+- LAUNCH UI section hosts `Post-Launch Results Display Time`; the existing `LalaLaunch.LaunchMode` action is shown in Bindings -> Launch as `Toggle Launch Mode`.
 - L26-L27 of the moved block: `Launch Mode` manually primes/aborts launch mode for testing and non-standing-start sessions.
 - L32-L37 of the moved block: `Post-Launch Results Display Time` controls how long the results screen stays visible after a launch.
 - L51: Location for the one-line launch summary CSV. Leave blank to use the default path shown.
 - L66: Enable or disable writing the one-line summary of each launch.
 - L70: Custom path for the summary CSV. Leave blank to use the default path.
 - L73: Browse for a summary CSV location.
-- L76: Location for detailed launch trace files used by the Launch Analysis tab in the top-level navigation. Leave blank to use the default path shown.
+- L76: Location for detailed launch trace files used by the Launch System tab in the top-level navigation. Leave blank to use the default path shown.
 - L91: Enable or disable creating detailed trace files for the 'LAUNCH ANALYSIS' tab in the top-level navigation.
 - L95: Custom path for launch trace files. Leave blank to use the default path.
 - L98: Browse for a launch trace folder.
@@ -233,8 +233,8 @@ Branch: work
 - `ProfilesManagerView.xaml` L411-L417: `Urgent sound` tooltip says it plays a delayed secondary shift beep at 50% of the main beep volume.
 - `ProfilesManagerView.xaml` L522: `Learning mode` tooltip explains shift-point data mining and learning-overlay visibility.
 - `ProfilesManagerView.xaml` L751-L768: custom WAV controls include the existing path/browse affordance while some adjacent labels remain tooltip-free.
-- `GlobalSettingsView.xaml` is now the top-level `SETTINGS` tab, with visible main-tab order `STRATEGY`, `PROFILES`, `DASH CONTROL`, `LAUNCH ANALYSIS`, `SETTINGS`.
-- `GlobalSettingsView.xaml` now surfaces the Friends List tools/import flow inside a collapsed `Friends List` expander first, then a collapsed `Launch Settings` expander, then the existing Debug block.
+- `GlobalSettingsView.xaml` is now the top-level `SETTINGS` tab, with visible main-tab order `OVERVIEW`, `STRATEGY`, `PROFILES`, `LAUNCH SYSTEM`, `BINDINGS`, `SETTINGS`.
+- `GlobalSettingsView.xaml now surfaces settings-only expanders in order: Plugin Monitor, Dashboards, League Classes, Fuel Strategy, Friends List, then Debug.
 - `GlobalSettingsView.xaml` no longer contains the duplicated per-profile `USER VARIABLES` block; the Settings tab now begins with the Friends List tools/import flow.
 - `GlobalSettingsView.xaml` DEBUG section hosts the master debug toggle and sectioned Debug Options (`General logging`, `Property Snapshot`, `CarSA diagnostics`, `Car Tracking Probe CSV`, `Shift Assist diagnostics`, `Debug Actions`); Launch Settings sits above this block inside its own collapsed expander.
 - `GlobalSettingsView.xaml` shows the warning text `Debug mode is for troubleshooting only. Leave this off unless asked to enable it.` directly below `Enable debugging mode`.
@@ -242,11 +242,11 @@ Branch: work
 - `GlobalSettingsView.xaml` Property Snapshot rolling frequency tooltip documents the runtime 1–2 Hz cap and normalizes higher entries; all Property Snapshot children are hidden unless `Enable Property Snapshot` is enabled, rolling controls are hidden unless `Write rolling combined CSV` is enabled, and frequency is hidden unless `FREQUENCY` mode is selected. Debug Options includes parent-hidden `Enable Car Tracking Probe`, Probe A/B `CarIdx` inputs, `Frequency Hz`, `START`, `STOP`, `RESET CSV`, and a `PROBE CSV:` status pill (`OFF`, `READY`, `RECORDING`, `FAILED`) for a diagnostics-only CSV writer. The removed OffTrack Debug CSV controls are no longer documented. The Car Tracking Probe frequency tooltip documents the 1–20 Hz range.
 - `GlobalSettingsView.xaml` no longer exposes `PitExit Verbose Logging`; PitExit math-audit/detail logs are controlled by master debugging mode plus `Enable Debug Logging`.
 - `GlobalSettingsView.xaml` `Pit.Box: include optional repairs in service countdown` toggle tooltip says optional repair time is included in Pit.Box target/remaining and shared total-stop-loss prediction when enabled; mandatory repairs remain included by default when valid while boxed.
-- `GlobalSettingsView.xaml` now includes a collapsed `Pit Commands` expander in Settings with:
+- `DashesTabView.xaml` now includes a collapsed `Pit Commands` expander in the Bindings tab with:
   - built-in pit-action binding rows (`Pit Clear All`, `Clear Tyres`, `Toggle Fuel`, `Fuel +/-1`, `Fuel +/-10`, `Fuel MAX`, `Toggle Tyres`, `Toggle Fast Repair`, `Toggle Auto Fuel`, `Toggle Tear-off`),
-  - a direct-transport note (`Pit/custom commands use the plugin-owned direct iRacing window-message transport; no foreground transport-mode selection is required.`),
+  - the obsolete direct-transport note has been removed from the Pit Commands binding UI,
   - no `Pit command transport` combo/tooltip is exposed; pit/custom commands use fixed plugin-owned direct window-message transport.
-- `GlobalSettingsView.xaml` now includes a collapsed `Custom Messages` expander with 10 rows; each row has a `Label` textbox tooltip (friendly feedback name), `Message` textbox tooltip (message text to send), and a binding row for `LalaLaunch.CustomMessage01..10`.
+- `DashesTabView.xaml` now includes a collapsed `Custom Messages` expander in the Bindings tab with 10 rows; each row has a `Label` textbox tooltip (friendly feedback name), `Message` textbox tooltip (message text to send), and a binding row for `LalaLaunch.CustomMessage01..10`.
 - `GlobalSettingsView.xaml` `Mute Shift Assist sound in replay` tooltip says replay sessions suppress only Shift Assist audio while lights, learning, and other Shift Assist logic continue normally.
 - `GlobalSettingsView.xaml` `Shift Assist Debug CSV` tooltip explains per-tick diagnostic CSV logging.
 - `GlobalSettingsView.xaml` `Shift Assist Debug Max Hz` textbox tooltip documents valid range (1..60 Hz).

@@ -52,18 +52,18 @@ The current top-level plugin order is:
 1. **Overview**
 2. **Strategy**
 3. **Profiles**
-4. **Dash Control**
-5. **Launch Analysis**
+4. **Launch System**
+5. **Bindings**
 6. **Settings**
 
 Important workflow rules:
 
-- **Overview** is the landing tab for quick orientation, links, update status, current Monitor System health text, and League Class OFF/ACTIVE/WARNING status. The collapsed **Settings → League Race** header also shows `LEAGUE RACE - OFF`, `LEAGUE RACE - ACTIVE`, or `LEAGUE RACE - WARNING` so the state is visible without expanding the section. The Restart Plugin action is danger-styled because it manually re-arms runtime systems.
+- **Overview** is the landing tab for quick orientation, links, update status, current Monitor System health text, and League Class OFF/ACTIVE/WARNING status. The collapsed **Settings → League Classes** header also shows `LEAGUE RACE - OFF`, `LEAGUE RACE - ACTIVE`, or `LEAGUE RACE - WARNING` so the state is visible without expanding the section. The Restart Plugin action is danger-styled because it manually re-arms runtime systems.
 - The main planning tab is **Strategy**, not Fuel.
 - There is **no separate Presets tab**.
 - Presets are managed from **Strategy** using the **`Presets...`** modal flow.
-- Launch controls belong under **Settings → Launch Settings**.
-- **Launch Analysis** remains the separate post-run review tab.
+- Launch controls belong under **Launch System → Launch Settings**.
+- **Launch System** combines launch settings with the saved-run review surface.
 
 ## 4. Current constraints (v1.x)
 
@@ -110,7 +110,7 @@ Those tags are mainly for **awareness and presentation** on supported nearby-car
 
 The dashboard package is designed around SimHub's **Next Dash** and **Previous Dash** navigation model, with matching left/right touch areas on the Primary Driver Dash. Those bindings can be set up per dash, per device, or globally in SimHub, depending on your hardware and workflow.
 
-Dash Control → Bindings also includes **Strategy Dash Mode**. Bind it when you want a two-way Strategy Dash presentation toggle: `LalaLaunch.StrategyDash.AdvancedMode` is `true` for Advanced mode and `false` for Simple mode, while `LalaLaunch.StrategyDash.ModeText` provides a readable label.
+Bindings also includes **Strategy Dash Mode**. Bind it when you want a two-way Strategy Dash presentation toggle: `LalaLaunch.StrategyDash.AdvancedMode` is `true` for Advanced mode and `false` for Simple mode, while `LalaLaunch.StrategyDash.ModeText` provides a readable label.
 
 Practical expectations for the current Primary Dash package:
 
@@ -140,10 +140,10 @@ Shift Assist gives RPM-based driver cues and becomes more trustworthy once its l
 
 ### Launch
 
-Launch setup is handled in Settings, while Launch Analysis is used afterwards to review saved starts. See [Launch System](Launch_System.md).
+Launch setup is handled in **Launch System → Launch Settings**, while Launch System review is used afterwards to review saved starts. See [Launch System](Launch_System.md).
 
-![Launch Analysis review tab](Images/LaunchAnalysis.png)
-*Launch Analysis is the active review surface for saved launches after the run, not a future or placeholder feature.*
+![Launch System review area](Images/LaunchAnalysis.png)
+*Launch System review is the active review surface for saved launches after the run, not a future or placeholder feature.*
 
 ### Rejoin and pit aids
 
@@ -154,12 +154,12 @@ Lala Race Assist Plugin includes separate driver-facing pages for recovery/rejoi
 
 #### Pit command + custom message workflow (current)
 
-- Built-in pit commands are plugin-owned and configured in **Settings → Pit Commands**.
-- Custom message slots are configured in **Settings → Custom Messages** and bound through `LalaLaunch.CustomMessage01..10`.
+- Built-in pit commands are plugin-owned and configured in **Bindings → Pit Commands**.
+- Custom message slots are configured in **Bindings → Custom Messages** and bound through `LalaLaunch.CustomMessage01..10`.
 - Dash buttons should call plugin-owned actions (`LalaLaunch.Pit.*`, `LalaLaunch.Pit.FuelControl.*`, `LalaLaunch.CustomMessage01..10`) through normal SimHub binding flow, not raw chat command syntax.
 - Pit Fuel Control is part of the same plugin-owned pit surface and can be driven from action bindings plus `Pit.FuelControl.*` exports.
 - `RSC.iRacingExtraProperties.dll` is not required for this pit/custom command path.
-- Pit/custom commands use plugin-owned direct iRacing window-message transport; **Settings → Pit Commands** no longer exposes Auto/Legacy/Direct transport choices, and legacy foreground `SendInput` is no longer part of the normal workflow.
+- Pit/custom command bindings live under **Bindings → Pit Commands**; transport behavior remains plugin-owned and unchanged.
 - Auto-focus is not implemented yet (preview setting only).
 - Confirmation semantics: stateful built-in pit toggles are effect-confirmed via before/after telemetry; custom messages, raw commands, and stateless built-ins are transport-attempt only (delivery unverified).
 - For the full driver workflow, use [Pit Assist](Pit_Assist.md). For canonical technical ownership/exports, use [Subsystems/Pit_Commands_And_Fuel_Control.md](Subsystems/Pit_Commands_And_Fuel_Control.md).
@@ -193,7 +193,7 @@ If a system is wrong once, keep driving. If it is wrong repeatedly, review the s
 - Use **Strategy** as the single planning entry point.
 - Keep the difference between **live observation** and **stable planning** clear in your workflow.
 - Lock only values that have settled and make sense.
-- Use **Dash Control** for visibility and presentation, not to fix calculation logic.
+- Use **Bindings** and **Settings** for visibility and presentation, not to fix calculation logic.
 - Treat touch navigation as a backup or convenience layer; for race use, bind **Next Dash** and **Previous Dash** to physical controls.
 - Review profile-backed data when a driver aid is repeatedly wrong.
 

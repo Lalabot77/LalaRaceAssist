@@ -12,6 +12,10 @@
     <ScrollViewer VerticalScrollBarVisibility="Auto">
         <StackPanel Margin="10" Orientation="Vertical">
 
+            <Expander Header="Launch Settings" Margin="0,0,0,12" IsExpanded="False">
+                <ContentControl x:Name="LaunchSettingsHost" Margin="0,10,0,0"/>
+            </Expander>
+
             <!-- Trace File Selection -->
             <StackPanel Orientation="Vertical">
                 <Grid VerticalAlignment="Center">

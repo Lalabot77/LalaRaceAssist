@@ -22,175 +22,93 @@
     </UserControl.Resources>
     <ScrollViewer VerticalScrollBarVisibility="Auto">
         <StackPanel Margin="10">
-            <Expander Header="Friends List"
+
+            <Expander Header="Plugin Monitor"
                       Margin="0,0,0,10"
-                      IsExpanded="False">
+                      IsExpanded="True">
                 <StackPanel Margin="0,10,0,0">
-                    <TextBlock Margin="0,0,0,5" Foreground="LightGray"
-                               Text="Add iRacing Customer IDs and assign a driver tag in CarSA." />
-                    <StackPanel Margin="0,0,0,8">
-                        <Grid>
-                            <Grid.ColumnDefinitions>
-                                <ColumnDefinition Width="Auto"/>
-                                <ColumnDefinition Width="*"/>
-                                <ColumnDefinition Width="Auto"/>
-                                <ColumnDefinition Width="Auto"/>
-                                <ColumnDefinition Width="Auto"/>
-                            </Grid.ColumnDefinitions>
-                            <TextBlock Grid.Column="0"
-                                       Text="Import iOverlay"
-                                       VerticalAlignment="Center"
-                                       Margin="0,0,8,0"/>
-                            <ComboBox x:Name="IOverlayCategoryComboBox"
-                                      Grid.Column="1"
-                                      MinWidth="220"
-                                      Margin="0,0,8,0" />
-                            <ComboBox x:Name="IOverlayTagComboBox"
-                                      Grid.Column="2"
-                                      MinWidth="130"
-                                      Margin="0,0,8,0"
-                                      ItemsSource="{StaticResource DriverTagOptions}"
-                                      SelectedIndex="0" />
-                            <styles:SHButtonPrimary Grid.Column="3"
-                                                    Content="Import"
-                                                    Padding="8,2"
-                                                    MinWidth="70"
-                                                    Click="ImportIOverlay_Click" />
-                            <styles:SHButtonPrimary Grid.Column="4"
-                                                    Content="Reload"
-                                                    Padding="8,2"
-                                                    MinWidth="70"
-                                                    Click="ReloadIOverlay_Click" />
-                        </Grid>
-                        <TextBlock x:Name="IOverlayStatusText"
-                                   Margin="0,4,0,0"
-                                   Foreground="LightGray" />
-                    </StackPanel>
-                    <DataGrid ItemsSource="{Binding Settings.Friends}"
-                              AutoGenerateColumns="False"
-                              CanUserAddRows="False"
-                              CanUserDeleteRows="False"
-                              HeadersVisibility="Column"
-                              RowEditEnding="FriendsGrid_RowEditEnding"
-                              Margin="0,0,0,8">
-                        <DataGrid.Columns>
-                            <DataGridTextColumn Header="NAME"
-                                                Binding="{Binding Name, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
-                                                Width="*" />
-                            <DataGridTextColumn Header="UserId"
-                                                Binding="{Binding UserId, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
-                                                Width="120" />
-                            <DataGridComboBoxColumn Header="TAG"
-                                                    SelectedItemBinding="{Binding Tag, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
-                                                    ItemsSource="{StaticResource DriverTagOptions}"
-                                                    Width="120" />
-                            <DataGridTemplateColumn Header="REMOVE" Width="90">
-                                <DataGridTemplateColumn.CellTemplate>
-                                    <DataTemplate>
-                                        <styles:SHButtonPrimary Content="Remove"
-                                                                Padding="8,2"
-                                                                Margin="0"
-                                                                MinWidth="70"
-                                                                Background="#C62828"
-                                                                Foreground="White"
-                                                                Click="RemoveFriend_Click" />
-                                    </DataTemplate>
-                                </DataGridTemplateColumn.CellTemplate>
-                            </DataGridTemplateColumn>
-                        </DataGrid.Columns>
-                    </DataGrid>
-                    <styles:SHButtonPrimary Content="Add Driver"
-                                            Width="120"
-                                            HorizontalAlignment="Left"
-                                            Click="AddFriend_Click" />
+                    <styles:SHToggleCheckbox Content="Enable Monitor System"
+                                             IsChecked="{Binding Settings.MonitorSystemEnabled, Mode=TwoWay}"
+                                             ToolTip="Enable the dashboard-facing MonitorSystem status and fuel-health messages." />
                 </StackPanel>
             </Expander>
 
-            <Expander Header="Launch Settings"
+            <Expander Header="Dashboards"
                       Margin="0,0,0,10"
-                      IsExpanded="False">
-                <ContentControl x:Name="LaunchSettingsHost" Margin="0,10,0,0"/>
-            </Expander>
-
-            <Expander Header="Pit Commands"
-                      Margin="0,0,0,10"
-                      IsExpanded="False">
+                      IsExpanded="True">
                 <StackPanel Margin="0,10,0,0">
-                    <TextBlock Foreground="LightGray"
-                               TextWrapping="Wrap"
-                               Text="Built-in pit command actions let you bind your pit service controls directly in SimHub Controls &amp; Events and trigger them from hardware, keyboard, or dashboard buttons." />
-                    <TextBlock Margin="0,6,0,0"
-                               Foreground="#FFC107"
-                               TextWrapping="Wrap"
-                               Text="Pit/custom commands use the plugin-owned direct iRacing window-message transport; no foreground transport-mode selection is required." />
-                    <StackPanel Margin="0,10,0,0">
-                        <ui:ControlsEditor ActionName="LalaLaunch.Pit.ClearAll" FriendlyName="Pit Clear All"/>
-                        <ui:ControlsEditor ActionName="LalaLaunch.Pit.ClearTires" FriendlyName="Clear Tyres"/>
-                        <ui:ControlsEditor ActionName="LalaLaunch.Pit.ToggleFuel" FriendlyName="Toggle Fuel"/>
-                        <ui:ControlsEditor ActionName="LalaLaunch.Pit.FuelAdd1" FriendlyName="Fuel +1"/>
-                        <ui:ControlsEditor ActionName="LalaLaunch.Pit.FuelRemove1" FriendlyName="Fuel -1"/>
-                        <ui:ControlsEditor ActionName="LalaLaunch.Pit.FuelAdd10" FriendlyName="Fuel +10"/>
-                        <ui:ControlsEditor ActionName="LalaLaunch.Pit.FuelRemove10" FriendlyName="Fuel -10"/>
-                        <ui:ControlsEditor ActionName="LalaLaunch.Pit.FuelSetMax" FriendlyName="Fuel MAX"/>
-                        <ui:ControlsEditor ActionName="LalaLaunch.Pit.ToggleTiresAll" FriendlyName="Toggle Tyres"/>
-                        <ui:ControlsEditor ActionName="LalaLaunch.Pit.ToggleFastRepair" FriendlyName="Toggle Fast Repair"/>
-                        <ui:ControlsEditor ActionName="LalaLaunch.Pit.ToggleAutoFuel" FriendlyName="Toggle Auto Fuel"/>
-                        <ui:ControlsEditor ActionName="LalaLaunch.Pit.Windshield" FriendlyName="Toggle Tear-off"/>
-                        <TextBlock Margin="0,12,0,4" FontWeight="SemiBold" Text="Tyre Control"/>
-                        <TextBlock Foreground="LightGray" TextWrapping="Wrap" Text="Plugin-owned tyre mode control (OFF / DRY / WET / AUTO)."/>
-                        <ui:ControlsEditor ActionName="LalaLaunch.Pit.TyreControl.ModeCycle" FriendlyName="Tyre Mode Cycle"/>
-                        <TextBlock Margin="0,12,0,4" FontWeight="SemiBold" Text="Pit Fuel Control"/>
-                        <TextBlock Foreground="LightGray" TextWrapping="Wrap" Text="Plugin-owned pit fuel control surface (data/source/mode logic remains plugin-owned)."/>
-                        <ui:ControlsEditor ActionName="LalaLaunch.Pit.FuelControl.CycleData" FriendlyName="Fuel Data Cycle"/>
-                    </StackPanel>
+                    <styles:SHToggleCheckbox Content="Auto screen selection at session start"
+                                             IsChecked="{Binding Settings.EnableAutoDashSwitch, Mode=TwoWay}"
+                                             ToolTip="Automatically switch dash screens when a session starts based on context." />
+                    <Grid VerticalAlignment="Center" Margin="0,8,0,0">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="100" />
+                            <ColumnDefinition Width="90" />
+                            <ColumnDefinition Width="Auto" />
+                        </Grid.ColumnDefinitions>
+                        <TextBlock Grid.Column="0" Text="Dark Mode:" VerticalAlignment="Center" ToolTip="Select Dark Mode behavior: Off, Manual, or Auto."/>
+                        <ComboBox Grid.Column="1" Width="85" Margin="0,0,8,0" HorizontalAlignment="Left" SelectedValue="{Binding Settings.DarkModeMode, Mode=TwoWay}" SelectedValuePath="Tag" ToolTip="0=Off (forced off), 1=Manual, 2=Auto solar dimming.">
+                            <ComboBoxItem Content="Off" Tag="0" />
+                            <ComboBoxItem Content="Manual" Tag="1" />
+                            <ComboBoxItem Content="Auto" Tag="2" />
+                        </ComboBox>
+                        <styles:SHToggleCheckbox Grid.Column="2" Content="Use Lovely True Dark" VerticalAlignment="Center" IsChecked="{Binding Settings.UseLovelyTrueDark, Mode=TwoWay}" IsEnabled="{Binding IsLovelyAvailableForDarkMode}" ToolTip="When Lovely is available, Dark Mode active state can follow Lovely True Dark." />
+                    </Grid>
+                    <TextBlock Text="If using Lovely True Dark, bind only one toggle (Lovely OR LalaLaunch)." Margin="100,4,0,0" Opacity="0.85" TextWrapping="Wrap" />
+                    <ui:TitledSlider Title="Brightness (%): " Margin="0,8,0,0" Minimum="0" Maximum="100" TickFrequency="1" IsSnapToTickEnabled="True" Value="{Binding Settings.DarkModeBrightnessPct, Mode=TwoWay}" ToolTip="Base Dark Mode brightness percent (0-100). 100 is brightest." />
+                    <TextBlock Text="Dash Visibility" FontWeight="SemiBold" Margin="0,14,0,6"/>
+                    <TextBlock Text="Choose which dash families can show each feature." Margin="0,0,0,10" Opacity="0.8" TextWrapping="Wrap" />
+                    <Grid HorizontalAlignment="Left">
+                        <Grid.ColumnDefinitions><ColumnDefinition Width="220" /><ColumnDefinition Width="110" /><ColumnDefinition Width="130" /><ColumnDefinition Width="90" /></Grid.ColumnDefinitions>
+                        <Grid.RowDefinitions><RowDefinition Height="Auto"/><RowDefinition Height="Auto"/><RowDefinition Height="Auto"/><RowDefinition Height="Auto"/><RowDefinition Height="Auto"/><RowDefinition Height="Auto"/><RowDefinition Height="Auto"/><RowDefinition Height="Auto"/><RowDefinition Height="Auto"/><RowDefinition Height="Auto"/><RowDefinition Height="Auto"/></Grid.RowDefinitions>
+                        <TextBlock Grid.Row="0" Grid.Column="1" Text="DRIVER" FontWeight="Bold" Margin="0,0,0,6" HorizontalAlignment="Center" ToolTip="DRIVER = Lala Race Dash." />
+                        <TextBlock Grid.Row="0" Grid.Column="2" Text="STRATEGY" FontWeight="Bold" Margin="0,0,0,6" HorizontalAlignment="Center" ToolTip="STRATEGY = Lala Strategy Dash." />
+                        <TextBlock Grid.Row="0" Grid.Column="3" Text="OVERLAY" FontWeight="Bold" Margin="0,0,0,6" HorizontalAlignment="Center" ToolTip="OVERLAY = overlay surfaces." />
+                        <TextBlock Text="Launch Assist" Grid.Row="1" Grid.Column="0" Margin="0,5,12,0" VerticalAlignment="Center" />
+                        <styles:SHToggleCheckbox Grid.Row="1" Grid.Column="1" Content="" Margin="0,5,0,0" HorizontalAlignment="Center" IsChecked="{Binding Settings.LalaDashShowLaunchScreen, Mode=TwoWay}" />
+                        <styles:SHToggleCheckbox Grid.Row="1" Grid.Column="2" Content="" Margin="0,5,0,0" HorizontalAlignment="Center" IsChecked="{Binding Settings.MsgDashShowLaunchScreen, Mode=TwoWay}" />
+                        <styles:SHToggleCheckbox Grid.Row="1" Grid.Column="3" Content="" Margin="0,5,0,0" HorizontalAlignment="Center" IsChecked="{Binding Settings.OverlayDashShowLaunchScreen, Mode=TwoWay}" />
+                        <TextBlock Text="Pit Entry Assist" Grid.Row="2" Grid.Column="0" Margin="0,5,12,0" VerticalAlignment="Center" />
+                        <styles:SHToggleCheckbox Grid.Row="2" Grid.Column="1" Content="" Margin="0,5,0,0" HorizontalAlignment="Center" IsChecked="{Binding Settings.LalaDashShowPitEntryAssist, Mode=TwoWay}" />
+                        <styles:SHToggleCheckbox Grid.Row="2" Grid.Column="2" Content="" Margin="0,5,0,0" HorizontalAlignment="Center" IsChecked="{Binding Settings.MsgDashShowPitEntryAssist, Mode=TwoWay}" />
+                        <styles:SHToggleCheckbox Grid.Row="2" Grid.Column="3" Content="" Margin="0,5,0,0" HorizontalAlignment="Center" IsChecked="{Binding Settings.OverlayDashShowPitEntryAssist, Mode=TwoWay}" />
+                        <TextBlock Text="Pit Box Assist" Grid.Row="3" Grid.Column="0" Margin="0,5,12,0" VerticalAlignment="Center" />
+                        <styles:SHToggleCheckbox Grid.Row="3" Grid.Column="1" Content="" Margin="0,5,0,0" HorizontalAlignment="Center" IsChecked="{Binding Settings.LalaDashShowPitBoxAssist, Mode=TwoWay}" />
+                        <styles:SHToggleCheckbox Grid.Row="3" Grid.Column="2" Content="" Margin="0,5,0,0" HorizontalAlignment="Center" IsChecked="{Binding Settings.MsgDashShowPitBoxAssist, Mode=TwoWay}" />
+                        <styles:SHToggleCheckbox Grid.Row="3" Grid.Column="3" Content="" Margin="0,5,0,0" HorizontalAlignment="Center" IsChecked="{Binding Settings.OverlayDashShowPitBoxAssist, Mode=TwoWay}" />
+                        <TextBlock Text="Pit Limiter" Grid.Row="4" Grid.Column="0" Margin="0,5,12,0" VerticalAlignment="Center" />
+                        <styles:SHToggleCheckbox Grid.Row="4" Grid.Column="1" Content="" Margin="0,5,0,0" HorizontalAlignment="Center" IsChecked="{Binding Settings.LalaDashShowPitLimiter, Mode=TwoWay}" />
+                        <styles:SHToggleCheckbox Grid.Row="4" Grid.Column="2" Content="" Margin="0,5,0,0" HorizontalAlignment="Center" IsChecked="{Binding Settings.MsgDashShowPitLimiter, Mode=TwoWay}" />
+                        <styles:SHToggleCheckbox Grid.Row="4" Grid.Column="3" Content="" Margin="0,5,0,0" HorizontalAlignment="Center" IsChecked="{Binding Settings.OverlayDashShowPitLimiter, Mode=TwoWay}" />
+                        <TextBlock Text="Show Automatic Pit Screen" Grid.Row="5" Grid.Column="0" Margin="0,5,12,0" VerticalAlignment="Center" />
+                        <styles:SHToggleCheckbox Grid.Row="5" Grid.Column="1" Content="" Margin="0,5,0,0" HorizontalAlignment="Center" IsChecked="{Binding Settings.LalaDashShowPitScreen, Mode=TwoWay}" />
+                        <styles:SHToggleCheckbox Grid.Row="5" Grid.Column="2" Content="" Margin="0,5,0,0" HorizontalAlignment="Center" IsChecked="{Binding Settings.MsgDashShowPitScreen, Mode=TwoWay}" />
+                        <styles:SHToggleCheckbox Grid.Row="5" Grid.Column="3" Content="" Margin="0,5,0,0" HorizontalAlignment="Center" IsChecked="{Binding Settings.OverlayDashShowPitScreen, Mode=TwoWay}" />
+                        <TextBlock Text="Rejoin Assist" Grid.Row="6" Grid.Column="0" Margin="0,5,12,0" VerticalAlignment="Center" />
+                        <styles:SHToggleCheckbox Grid.Row="6" Grid.Column="1" Content="" Margin="0,5,0,0" HorizontalAlignment="Center" IsChecked="{Binding Settings.LalaDashShowRejoinAssist, Mode=TwoWay}" />
+                        <styles:SHToggleCheckbox Grid.Row="6" Grid.Column="2" Content="" Margin="0,5,0,0" HorizontalAlignment="Center" IsChecked="{Binding Settings.MsgDashShowRejoinAssist, Mode=TwoWay}" />
+                        <styles:SHToggleCheckbox Grid.Row="6" Grid.Column="3" Content="" Margin="0,5,0,0" HorizontalAlignment="Center" IsChecked="{Binding Settings.OverlayDashShowRejoinAssist, Mode=TwoWay}" />
+                        <TextBlock Text="Verbose Race Messages" Grid.Row="7" Grid.Column="0" Margin="0,5,12,0" VerticalAlignment="Center" />
+                        <styles:SHToggleCheckbox Grid.Row="7" Grid.Column="1" Content="" Margin="0,5,0,0" HorizontalAlignment="Center" IsChecked="{Binding Settings.LalaDashShowVerboseMessaging, Mode=TwoWay}" />
+                        <styles:SHToggleCheckbox Grid.Row="7" Grid.Column="2" Content="" Margin="0,5,0,0" HorizontalAlignment="Center" IsChecked="{Binding Settings.MsgDashShowVerboseMessaging, Mode=TwoWay}" />
+                        <styles:SHToggleCheckbox Grid.Row="7" Grid.Column="3" Content="" Margin="0,5,0,0" HorizontalAlignment="Center" IsChecked="{Binding Settings.OverlayDashShowVerboseMessaging, Mode=TwoWay}" />
+                        <TextBlock Text="Race Flags" Grid.Row="8" Grid.Column="0" Margin="0,5,12,0" VerticalAlignment="Center" />
+                        <styles:SHToggleCheckbox Grid.Row="8" Grid.Column="1" Content="" Margin="0,5,0,0" HorizontalAlignment="Center" IsChecked="{Binding Settings.LalaDashShowRaceFlags, Mode=TwoWay}" />
+                        <styles:SHToggleCheckbox Grid.Row="8" Grid.Column="2" Content="" Margin="0,5,0,0" HorizontalAlignment="Center" IsChecked="{Binding Settings.MsgDashShowRaceFlags, Mode=TwoWay}" />
+                        <styles:SHToggleCheckbox Grid.Row="8" Grid.Column="3" Content="" Margin="0,5,0,0" HorizontalAlignment="Center" IsChecked="{Binding Settings.OverlayDashShowRaceFlags, Mode=TwoWay}" />
+                        <TextBlock Text="Radio Messages" Grid.Row="9" Grid.Column="0" Margin="0,5,12,0" VerticalAlignment="Center" />
+                        <styles:SHToggleCheckbox Grid.Row="9" Grid.Column="1" Content="" Margin="0,5,0,0" HorizontalAlignment="Center" IsChecked="{Binding Settings.LalaDashShowRadioMessages, Mode=TwoWay}" />
+                        <styles:SHToggleCheckbox Grid.Row="9" Grid.Column="2" Content="" Margin="0,5,0,0" HorizontalAlignment="Center" IsChecked="{Binding Settings.MsgDashShowRadioMessages, Mode=TwoWay}" />
+                        <styles:SHToggleCheckbox Grid.Row="9" Grid.Column="3" Content="" Margin="0,5,0,0" HorizontalAlignment="Center" IsChecked="{Binding Settings.OverlayDashShowRadioMessages, Mode=TwoWay}" />
+                        <TextBlock Text="Show Traffic Alerts" Grid.Row="10" Grid.Column="0" Margin="0,5,12,0" VerticalAlignment="Center" />
+                        <styles:SHToggleCheckbox Grid.Row="10" Grid.Column="1" Content="" Margin="0,5,0,0" HorizontalAlignment="Center" IsChecked="{Binding Settings.LalaDashShowTraffic, Mode=TwoWay}" />
+                        <styles:SHToggleCheckbox Grid.Row="10" Grid.Column="2" Content="" Margin="0,5,0,0" HorizontalAlignment="Center" IsChecked="{Binding Settings.MsgDashShowTraffic, Mode=TwoWay}" />
+                        <styles:SHToggleCheckbox Grid.Row="10" Grid.Column="3" Content="" Margin="0,5,0,0" HorizontalAlignment="Center" IsChecked="{Binding Settings.OverlayDashShowTraffic, Mode=TwoWay}" />
+                    </Grid>
                 </StackPanel>
             </Expander>
 
-            <Expander Header="Custom Messages"
-                      Margin="0,0,0,10"
-                      IsExpanded="False">
-                <StackPanel Margin="0,10,0,0">
-                    <TextBlock Foreground="LightGray"
-                               TextWrapping="Wrap"
-                               Text="Configure up to 10 custom message buttons. Give each slot a friendly name, enter your message text, then bind it like any other plugin action." />
-                    <ItemsControl ItemsSource="{Binding Settings.CustomMessages}">
-                        <ItemsControl.ItemTemplate>
-                            <DataTemplate>
-                                <Border Margin="0,8,0,0" Padding="8" BorderBrush="#2C2C2C" BorderThickness="1" CornerRadius="4">
-                                    <StackPanel>
-                                        <TextBlock FontWeight="SemiBold" Margin="0,0,0,6" Text="{Binding FriendlyActionName}" />
-                                        <Grid Margin="0,0,0,6">
-                                            <Grid.ColumnDefinitions>
-                                                <ColumnDefinition Width="Auto"/>
-                                                <ColumnDefinition Width="*"/>
-                                            </Grid.ColumnDefinitions>
-                                            <TextBlock Grid.Column="0" VerticalAlignment="Center" Margin="0,0,8,0" Text="Label"/>
-                                            <TextBox Grid.Column="1"
-                                                     Text="{Binding Name, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
-                                                     ToolTip="Friendly name shown in this settings list and used for feedback text when the message is sent."/>
-                                        </Grid>
-                                        <Grid Margin="0,0,0,6">
-                                            <Grid.ColumnDefinitions>
-                                                <ColumnDefinition Width="Auto"/>
-                                                <ColumnDefinition Width="*"/>
-                                            </Grid.ColumnDefinitions>
-                                            <TextBlock Grid.Column="0" VerticalAlignment="Center" Margin="0,0,8,0" Text="Message"/>
-                                            <TextBox Grid.Column="1"
-                                                     Text="{Binding MessageText, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
-                                                     ToolTip="Chat message content to send when this custom message action is triggered."/>
-                                        </Grid>
-                                        <ui:ControlsEditor ActionName="{Binding ActionName}" FriendlyName="{Binding FriendlyActionName}"/>
-                                    </StackPanel>
-                                </Border>
-                            </DataTemplate>
-                        </ItemsControl.ItemTemplate>
-                    </ItemsControl>
-                </StackPanel>
-            </Expander>
-
-            
-            
-            <Expander Header="{Binding LeagueRaceSettingsHeaderText}"
+            <Expander Header="League Classes"
                       Margin="0,0,0,10"
                       IsExpanded="False">
                 <StackPanel Margin="0,10,0,0">
@@ -380,8 +298,112 @@
                     </StackPanel>
                 </StackPanel>
             </Expander>
-            <StackPanel Visibility="{Binding HardDebugEnabledForUi, Converter={StaticResource BooleanToVisibilityConverter}}">
-                <TextBlock Text="DEBUG" FontSize="16" FontWeight="Bold" Margin="0,5,10,0"/>
+
+            <Expander Header="Fuel Strategy"
+                      Margin="0,0,0,10"
+                      IsExpanded="False">
+                <StackPanel Margin="0,10,0,0">
+                    <ui:TitledSlider Title="Fuel Ready Confidence: " Minimum="0" Maximum="100" Value="{Binding Settings.FuelReadyConfidence, Mode=TwoWay}" ToolTip="Minimum confidence (%) before pit strategy uses live fuel. Below this, profile estimates may be used." />
+                    <TextBlock Text="Below 20%, profile fuel may be used for early estimates. Above 20%, pit strategy waits for live fuel data." FontSize="11" Opacity="0.7" TextWrapping="Wrap" Margin="0,2,0,0"/>
+                    <ui:TitledSlider Title="Pit-in Fuel Reserve (% lap): " Margin="0,8,0,0" Minimum="0" Maximum="30" Value="{Binding Settings.StintFuelMarginPct, Mode=TwoWay}" ToolTip="Reserve fuel as a percentage of one lap (based on stable fuel burn) when calculating stint burn targets." />
+                    <styles:SHToggleCheckbox Content="Fuel Data Plan Mode" Margin="0,8,0,0" IsChecked="{Binding Settings.PitFuelControlDataPlanModeEnabled, Mode=TwoWay}" ToolTip="Toggle Pit Fuel Control DATA. OFF = LIVE runtime burn assumptions, ON = PLAN memory/profile assumptions for PUSH/SAVE. Changing DATA parks SOURCE at STBY." />
+                    <TextBlock Text="OFF = LIVE, ON = PLAN" FontSize="11" Opacity="0.7" TextWrapping="Wrap" Margin="0,2,0,0"/>
+                    <ui:TitledSlider Title="DATA PLAN Push/Save Guard (%): " Margin="0,8,0,0" Minimum="0" Maximum="30" TickFrequency="1" IsSnapToTickEnabled="True" Value="{Binding Settings.PitFuelPushSaveProfileGuardPct, Mode=TwoWay}" ToolTip="When DATA is PLAN, caps memory/profile push/save burn around live stable NORM burn by this guard percentage." />
+                    <styles:SHToggleCheckbox Content="Pit.Box: include optional repairs in service countdown" Margin="0,8,0,10" IsChecked="{Binding Settings.PitBoxIncludeOptionalRepairs, Mode=TwoWay}" ToolTip="When enabled, optional repair time is included in Pit.Box target/remaining countdown and shared total-stop-loss prediction. Mandatory repair time is always included when native authority is valid while boxed."/>
+                </StackPanel>
+            </Expander>
+            <Expander Header="Friends List"
+                      Margin="0,0,0,10"
+                      IsExpanded="False">
+                <StackPanel Margin="0,10,0,0">
+                    <TextBlock Margin="0,0,0,5" Foreground="LightGray"
+                               Text="Add iRacing Customer IDs and assign a driver tag in CarSA." />
+                    <StackPanel Margin="0,0,0,8">
+                        <Grid>
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="Auto"/>
+                                <ColumnDefinition Width="*"/>
+                                <ColumnDefinition Width="Auto"/>
+                                <ColumnDefinition Width="Auto"/>
+                                <ColumnDefinition Width="Auto"/>
+                            </Grid.ColumnDefinitions>
+                            <TextBlock Grid.Column="0"
+                                       Text="Import iOverlay"
+                                       VerticalAlignment="Center"
+                                       Margin="0,0,8,0"/>
+                            <ComboBox x:Name="IOverlayCategoryComboBox"
+                                      Grid.Column="1"
+                                      MinWidth="220"
+                                      Margin="0,0,8,0" />
+                            <ComboBox x:Name="IOverlayTagComboBox"
+                                      Grid.Column="2"
+                                      MinWidth="130"
+                                      Margin="0,0,8,0"
+                                      ItemsSource="{StaticResource DriverTagOptions}"
+                                      SelectedIndex="0" />
+                            <styles:SHButtonPrimary Grid.Column="3"
+                                                    Content="Import"
+                                                    Padding="8,2"
+                                                    MinWidth="70"
+                                                    Click="ImportIOverlay_Click" />
+                            <styles:SHButtonPrimary Grid.Column="4"
+                                                    Content="Reload"
+                                                    Padding="8,2"
+                                                    MinWidth="70"
+                                                    Click="ReloadIOverlay_Click" />
+                        </Grid>
+                        <TextBlock x:Name="IOverlayStatusText"
+                                   Margin="0,4,0,0"
+                                   Foreground="LightGray" />
+                    </StackPanel>
+                    <DataGrid ItemsSource="{Binding Settings.Friends}"
+                              AutoGenerateColumns="False"
+                              CanUserAddRows="False"
+                              CanUserDeleteRows="False"
+                              HeadersVisibility="Column"
+                              RowEditEnding="FriendsGrid_RowEditEnding"
+                              Margin="0,0,0,8">
+                        <DataGrid.Columns>
+                            <DataGridTextColumn Header="NAME"
+                                                Binding="{Binding Name, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
+                                                Width="*" />
+                            <DataGridTextColumn Header="UserId"
+                                                Binding="{Binding UserId, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
+                                                Width="120" />
+                            <DataGridComboBoxColumn Header="TAG"
+                                                    SelectedItemBinding="{Binding Tag, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
+                                                    ItemsSource="{StaticResource DriverTagOptions}"
+                                                    Width="120" />
+                            <DataGridTemplateColumn Header="REMOVE" Width="90">
+                                <DataGridTemplateColumn.CellTemplate>
+                                    <DataTemplate>
+                                        <styles:SHButtonPrimary Content="Remove"
+                                                                Padding="8,2"
+                                                                Margin="0"
+                                                                MinWidth="70"
+                                                                Background="#C62828"
+                                                                Foreground="White"
+                                                                Click="RemoveFriend_Click" />
+                                    </DataTemplate>
+                                </DataGridTemplateColumn.CellTemplate>
+                            </DataGridTemplateColumn>
+                        </DataGrid.Columns>
+                    </DataGrid>
+                    <styles:SHButtonPrimary Content="Add Driver"
+                                            Width="120"
+                                            HorizontalAlignment="Left"
+                                            Click="AddFriend_Click" />
+                </StackPanel>
+            </Expander>
+
+
+
+
+            <Expander Header="Debug"
+                      Margin="0,0,0,10"
+                      IsExpanded="False"
+                      Visibility="{Binding HardDebugEnabledForUi, Converter={StaticResource BooleanToVisibilityConverter}}">
+                <StackPanel Margin="0,10,0,0">
                 <styles:SHToggleCheckbox x:Name="DebugMasterToggle"
                                          Content="Enable debugging mode"
                                          Margin="0,10,0,0"
@@ -539,7 +561,8 @@
                         <ui:ControlsEditor ActionName="LalaLaunch.EventMarker" FriendlyName="Event Marker" ToolTip="Assign a button to fire a short event marker pulse for dashboards and CSV exports."/>
                     </StackPanel>
                 </Expander>
-            </StackPanel>
+                </StackPanel>
+            </Expander>
         </StackPanel>
     </ScrollViewer>
 </UserControl>

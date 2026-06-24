@@ -24,7 +24,6 @@ namespace LaunchPlugin
             Plugin = plugin;
             TelemetryService = telemetry;
             DataContext = plugin;
-            LaunchSettingsHost.Content = new LaunchPluginSettingsUI(plugin, telemetry);
             if (Plugin != null)
             {
                 Plugin.DebugUiRefreshRequested += Plugin_DebugUiRefreshRequested;
