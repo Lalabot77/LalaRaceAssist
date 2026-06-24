@@ -1,3 +1,22 @@
+## 2026-06-24 — PR #844 remaining-time sentinel/reconnect fallback fix
+- Classification: **both** (driver/dash-visible finish correctness plus internal finish fallback clarification; no export names, settings, dashboard JSON, fuel, pit, opponent, H2H, League Class, CarSA, or Strategy behavior changes).
+- Corrected missing-SessionState finish-flag authority so `SessionTimeRemain == -1` (and NaN/Infinity/negative sentinels) is treated as no timed-race authority, allowing the lap-limited/no-time-authority completed-lap fallback instead of blocking it as timed authority.
+- Missing-SessionState timed-race fallback now trusts per-car finish flags when either `_timerZeroSeen` is latched or the current valid `SessionTimeRemain <= 0`, so after-zero reconnect/startup can capture real finish flags without having observed the zero crossing. Property Snapshot list reviewed: yes; no SimHub export/property names or snapshot groups changed.
+
+## 2026-06-23 — PR #844 timed missing-SessionState fallback tightening
+- Classification: **both** (driver/dash-visible finish correctness plus internal finish fallback clarification; no export names, settings, dashboard JSON, fuel, pit, opponent, H2H, League Class, CarSA, or Strategy behavior changes).
+- Tightened `CanTrustPerCarFinishFlags(...)` so missing-SessionState timed races with valid non-negative `SessionTimeRemain` require after-zero proof (`_timerZeroSeen` or current `SessionTimeRemain <= 0`); completed-lap progress fallback is reserved for missing-SessionState/no-valid-remaining-time-authority paths such as lap-limited fallback.
+- Applied the corrected helper unchanged to both leader latches and RaceFinish player per-car flag capture. Property Snapshot list reviewed: yes; no SimHub export/property names or snapshot groups changed.
+
+## 2026-06-23 — PR #844 finish lifecycle review follow-up
+- Classification: **both** (driver/dash-visible RaceFinish correctness plus internal finish lifecycle fallback clarification; no export names, settings, dashboard JSON, fuel, pit, opponent, H2H, League Class, CarSA, or Strategy behavior changes).
+- Replaced the too-narrow missing-SessionState finish-flag fallback with shared `CanTrustPerCarFinishFlags(...)`: when `SessionState` is available, per-car finish-like flags remain trusted only at `SessionState>=5`; when `SessionState` is unavailable, timed races with valid remaining-time authority can still use timer-zero proof and no-valid-remaining-time/lap-limited fallback can still use completed-lap progress proof.
+- Applied the same stale-flag gate to `RaceFinish.PlayerSnapshotActive` player per-car flag capture, so stale player `CarIdxSessionFlags` at genuine race start (`SessionState==4`) cannot freeze player finish data. Checkered seams and `SessionState==6` safety fallback remain preserved. Property Snapshot list reviewed: yes; no SimHub export/property names or snapshot groups changed.
+
+## 2026-06-23 — Race finish green-flag stale flag guard
+- Classification: **both** (driver/dash-visible race-finish correctness plus internal finish lifecycle contract clarification; no export names, settings, dashboard JSON, fuel, pit, opponent, H2H, or League Class behavior changes).
+- `Race.OverallLeaderHasFinished`, `Race.ClassLeaderHasFinished`, derived `Race.LeaderHasFinished`, and `Race.LastLapLikely` now remain false at a genuine race start/green flag (`SessionState==4`) even if stale per-car finish-like flags are still present from qualifying/warmup or a prior session.
+- Per-car leader finish flags are trusted only inside a valid finish lifecycle (`SessionState>=5`, with a guarded missing-SessionState fallback). SessionState-first late-race behavior, timed-race after-zero behavior, single-class mirroring after true overall finish, and multiclass class-targeted finish proof are preserved. Property Snapshot list reviewed: yes; no SimHub export/property names or snapshot groups changed.
 ## 2026-06-24 — Overview League warning review follow-up
 - Classification: **both** (driver-facing Overview League status correctness plus internal review follow-up; no dashboard JSON/export changes).
 - Overview League Class WARNING logic now applies zero loaded/valid row checks only in CSV-backed modes, allowing suffix-only/name-only resolved-player operation to remain ACTIVE with zero CSV rows.

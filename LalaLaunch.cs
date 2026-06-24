@@ -11660,7 +11660,22 @@ namespace LaunchPlugin
                 {
                     ResetRaceFinishSnapshot("session_state_left_post_finish");
                 }
+                bool hasValidSessionTimeRemainForFinishFlags =
+                    !double.IsNaN(sessionTimeRemainingSec) &&
+                    !double.IsInfinity(sessionTimeRemainingSec) &&
+                    sessionTimeRemainingSec >= 0.0;
+                bool isAfterZeroBySessionTimeRemainForFinishFlags =
+                    hasValidSessionTimeRemainForFinishFlags &&
+                    sessionTimeRemainingSec <= 0.0;
+                bool canTrustPlayerFinishFlags = CanTrustPerCarFinishFlags(
+                    sessionState > 0,
+                    sessionState,
+                    hasValidSessionTimeRemainForFinishFlags,
+                    isAfterZeroBySessionTimeRemainForFinishFlags,
+                    _timerZeroSeen,
+                    completedLaps);
                 bool playerFinishedByFlags =
+                    canTrustPlayerFinishFlags &&
                     carIdxSessionFlags != null &&
                     playerCarIdx >= 0 &&
                     playerCarIdx < carIdxSessionFlags.Length &&
@@ -22179,6 +22194,18 @@ namespace LaunchPlugin
             return HasSessionFlagBit(flags, Checkered) || HasSessionFlagBit(flags, Crossed);
         }
 
+        private static bool CanTrustPerCarFinishFlags(bool hasSessionState, int sessionStateNumeric, bool hasValidSessionTimeRemain, bool isAfterZeroBySessionTimeRemain, bool timerZeroSeen, int completedLaps)
+        {
+            if (hasSessionState)
+            {
+                return sessionStateNumeric >= 5;
+            }
+
+            return hasValidSessionTimeRemain
+                ? (timerZeroSeen || isAfterZeroBySessionTimeRemain)
+                : completedLaps > 0;
+        }
+
         private int FindTrueOverallLeaderCarIdx(int[] overallPositions, int[] classPositions, int[] trackSurfaces)
         {
             if (overallPositions == null || classPositions == null)
@@ -24604,7 +24631,23 @@ namespace LaunchPlugin
                 _finishLifecycleReferencePct = lapDistPct[overallLeaderIdx];
             }
 
-            bool classLeaderFinishByFlags = classLeaderIdx >= 0
+            bool hasValidSessionTimeRemainForFinishFlags =
+                hasRemain &&
+                !double.IsInfinity(sessionTimeRemain) &&
+                sessionTimeRemain >= 0.0;
+            bool isAfterZeroBySessionTimeRemainForFinishFlags =
+                hasValidSessionTimeRemainForFinishFlags &&
+                sessionTimeRemain <= 0.0;
+            bool canTrustPerCarFinishFlags = CanTrustPerCarFinishFlags(
+                hasSessionState,
+                sessionStateNumeric,
+                hasValidSessionTimeRemainForFinishFlags,
+                isAfterZeroBySessionTimeRemainForFinishFlags,
+                _timerZeroSeen,
+                completedLaps);
+
+            bool classLeaderFinishByFlags = canTrustPerCarFinishFlags
+                && classLeaderIdx >= 0
                 && carIdxSessionFlags != null
                 && classLeaderIdx < carIdxSessionFlags.Length
                 && IsFinishLikeSessionFlag(carIdxSessionFlags[classLeaderIdx]);
@@ -24616,7 +24659,8 @@ namespace LaunchPlugin
                     $"[LalaPlugin:Finish] class_finish trigger=caridx_flags carIdx={classLeaderIdx} flags={carIdxSessionFlags[classLeaderIdx]}");
             }
 
-            bool overallLeaderFinishByFlags = overallLeaderIdx >= 0
+            bool overallLeaderFinishByFlags = canTrustPerCarFinishFlags
+                && overallLeaderIdx >= 0
                 && carIdxSessionFlags != null
                 && overallLeaderIdx < carIdxSessionFlags.Length
                 && IsFinishLikeSessionFlag(carIdxSessionFlags[overallLeaderIdx]);
