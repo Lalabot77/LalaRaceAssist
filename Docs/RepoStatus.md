@@ -1,3 +1,9 @@
+- 2026-06-24 Overview League warning review follow-up landed:
+  - Overview League Class WARNING logic now gates zero loaded/valid row warnings to CSV-backed modes, so suffix-only/player-resolved operation can remain ACTIVE with zero CSV rows;
+  - invalid/blank manual player override preview now forces WARNING, while valid manual override and no-live-session waiting states remain non-fault when no other warning source exists. Property Snapshot list reviewed: yes; no SimHub exports/properties were added, removed, renamed, behavior-recontracted, or regrouped.
+- 2026-06-23 Overview Status Centre polish landed:
+  - Overview STATUS now shows Monitor System text with existing MonitorSystem colours, adds League Class OFF/ACTIVE/WARNING status/details from existing League Class resolver state, keeps Updates on the right, and danger-styles the Restart Plugin button;
+  - plugin UI League Class enable now reuses the same enable-time reload/self-test seam as the SimHub action when enabled with zero loaded rows, without adding exports or changing cohort/ranking semantics. Property Snapshot list reviewed: yes; no SimHub exports/properties were added, removed, renamed, behavior-recontracted, or regrouped.
 - 2026-06-23 Profiles track fuel-burn display precision landed:
   - Profiles track-tab dry/wet fuel-burn ECO, AVG, and MAX display refresh now uses a display-only TrackStats helper, so `2.837496` displays as `2.84` without flowing through reverse-sync text setters or changing full-precision numeric storage; manual edits still intentionally parse and store the entered value.
   - No fuel learning, profile persistence schema/precision, Strategy/Fuel Model calculations, dashboard JSON/exports, SimHub properties, logs, or Property Snapshot grouping changed. Property Snapshot list reviewed: yes; no export/property change required.

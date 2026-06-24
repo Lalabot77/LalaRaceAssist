@@ -130,6 +130,8 @@
                             <RowDefinition Height="Auto" />
                             <RowDefinition Height="Auto" />
                             <RowDefinition Height="Auto" />
+                            <RowDefinition Height="Auto" />
+                            <RowDefinition Height="Auto" />
                         </Grid.RowDefinitions>
 
                         <TextBlock Grid.Row="0" Grid.Column="0"
@@ -155,6 +157,9 @@
                                     MinWidth="95"
                                     VerticalAlignment="Center"
                                     Visibility="Visible"
+                                    Background="#B00020"
+                                    Foreground="White"
+                                    BorderBrush="#FF4D4D"
                                     Click="ResetPlugin_Click" />
 
                         <TextBlock Grid.Row="2" Grid.Column="0"
@@ -178,10 +183,44 @@
                         <TextBlock Grid.Row="4" Grid.Column="0"
                                    Text="Current track"
                                    Foreground="LightGray"
-                                   Margin="0,0,8,0" />
+                                   Margin="0,0,8,6" />
                         <TextBlock Grid.Row="4" Grid.Column="1"
                                    Grid.ColumnSpan="2"
-                                   Text="{Binding CurrentTrackText}" />
+                                   Text="{Binding CurrentTrackText}"
+                                   Margin="0,0,0,6" />
+
+                        <TextBlock Grid.Row="5" Grid.Column="0"
+                                   Text="Monitor System"
+                                   Foreground="LightGray"
+                                   Margin="0,0,8,6" />
+                        <Border Grid.Row="5" Grid.Column="1"
+                                Grid.ColumnSpan="2"
+                                Background="{Binding MonitorSystemBackground}"
+                                CornerRadius="4"
+                                Padding="8,3"
+                                Margin="0,0,0,6">
+                            <TextBlock Text="{Binding MonitorSystemText}"
+                                       Foreground="{Binding MonitorSystemForeground}"
+                                       FontWeight="SemiBold" />
+                        </Border>
+
+                        <TextBlock Grid.Row="6" Grid.Column="0"
+                                   Text="League Class"
+                                   Foreground="LightGray"
+                                   Margin="0,0,8,0" />
+                        <StackPanel Grid.Row="6" Grid.Column="1" Grid.ColumnSpan="2">
+                            <Border Background="{Binding LeagueClassBackground}"
+                                    CornerRadius="4"
+                                    Padding="8,3"
+                                    Margin="0,0,0,4">
+                                <TextBlock Text="{Binding LeagueClassStatusText}"
+                                           Foreground="{Binding LeagueClassForeground}"
+                                           FontWeight="SemiBold" />
+                            </Border>
+                            <TextBlock Text="{Binding LeagueClassDetailText}"
+                                       Foreground="LightGray"
+                                       TextWrapping="Wrap" />
+                        </StackPanel>
                     </Grid>
                 </styles:SHSection>
 
