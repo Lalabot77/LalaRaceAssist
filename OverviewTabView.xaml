@@ -195,6 +195,8 @@
                                    Margin="0,0,8,6" />
                         <Border Grid.Row="5" Grid.Column="1"
                                 Grid.ColumnSpan="2"
+                                Width="260"
+                                HorizontalAlignment="Left"
                                 Background="{Binding MonitorSystemBackground}"
                                 CornerRadius="4"
                                 Padding="8,3"
@@ -210,16 +212,21 @@
                                    Margin="0,0,8,0" />
                         <StackPanel Grid.Row="6" Grid.Column="1" Grid.ColumnSpan="2">
                             <Border Background="{Binding LeagueClassBackground}"
-                                    CornerRadius="4"
-                                    Padding="8,3"
-                                    Margin="0,0,0,4">
+                                Width="260"
+                                HorizontalAlignment="Left"
+                                CornerRadius="4"
+                                Padding="8,3"
+                                Margin="0,0,0,4">
                                 <TextBlock Text="{Binding LeagueClassStatusText}"
-                                           Foreground="{Binding LeagueClassForeground}"
-                                           FontWeight="SemiBold" />
+                                   Foreground="{Binding LeagueClassForeground}"
+                                   FontWeight="SemiBold" />
                             </Border>
+
                             <TextBlock Text="{Binding LeagueClassDetailText}"
-                                       Foreground="LightGray"
-                                       TextWrapping="Wrap" />
+                               Width="450"
+                               HorizontalAlignment="Left"
+                               Foreground="LightGray"
+                               TextWrapping="Wrap" />
                         </StackPanel>
                     </Grid>
                 </styles:SHSection>
