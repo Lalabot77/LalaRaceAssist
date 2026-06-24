@@ -108,10 +108,13 @@
                 </StackPanel>
             </Expander>
 
-            <Expander Header="League Classes"
+            <Expander Header="{Binding LeagueRaceSettingsHeaderText}"
                       Margin="0,0,0,10"
                       IsExpanded="False">
                 <StackPanel Margin="0,10,0,0">
+                    <TextBlock Text="League Classes"
+                               FontWeight="SemiBold"
+                               Margin="0,0,0,8"/>
                     <styles:SHToggleCheckbox Content="Enable League Class System"
                                              IsChecked="{Binding Settings.LeagueClassEnabled, Mode=TwoWay}"/>
                     <TextBlock Margin="0,4,0,0" Foreground="LightGray" Text="League Class system disabled">
