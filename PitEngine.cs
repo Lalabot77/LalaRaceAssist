@@ -376,6 +376,12 @@ namespace LaunchPlugin
                 var lapsCompleted = data?.NewData?.CompletedLaps ?? 0;
                 if (lapsCompleted < 1)
                 {
+                    // Keep live pit phase and Pit Entry Assist handover state current even on
+                    // pre-race/out-lap pit-road passes where pit-loss learning is intentionally
+                    // suppressed. Without this, an EnteringPits pre-line phase can remain latched
+                    // through pit lane and block Box Entry visibility/assist handover.
+                    UpdatePitPhase(data, pluginManager);
+                    UpdatePitEntryAssist(data, pluginManager, ConfigPitEntryDecelMps2, ConfigPitEntryBufferM, pitScreenActive);
                     UpdateTrackMarkers(trackKey, carPct, trackLenM, isInPitLane, justExitedPits, isInPitStall, speedKph);
                     _paceDeltaState = PaceDeltaState.Idle;
                     IsOnPitRoad = isInPitLane;
