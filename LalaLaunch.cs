@@ -280,6 +280,7 @@ namespace LaunchPlugin
 
             Settings.ShiftAssistEnabled = !Settings.ShiftAssistEnabled;
             SaveSettings();
+            ProfilesViewModel?.NotifyShiftAssistEnabledChanged();
             SimHub.Logging.Current.Info($"[LalaPlugin:ShiftAssist] ShiftAssistToggle action fired -> Enabled={Settings.ShiftAssistEnabled}");
         }
 
@@ -290,16 +291,16 @@ namespace LaunchPlugin
                 return;
             }
 
-            if (!FuelCalculator.IsContingencyLitres)
+            bool switchedToLitres = !FuelCalculator.IsContingencyLitres;
+            if (switchedToLitres)
             {
-                SimHub.Logging.Current.Info($"[LalaPlugin:Strategy] {actionName} action ignored -> contingency mode=laps.");
-                return;
+                FuelCalculator.IsContingencyLitres = true;
             }
 
             double previousValue = FuelCalculator.ContingencyValue;
             double nextValue = Math.Max(0.0, Math.Min(20.0, previousValue + deltaLitres));
             FuelCalculator.ContingencyValue = nextValue;
-            SimHub.Logging.Current.Info($"[LalaPlugin:Strategy] {actionName} action fired -> value={nextValue:F1}L (previous={previousValue:F1}L).");
+            SimHub.Logging.Current.Info($"[LalaPlugin:Strategy] {actionName} action fired -> value={nextValue:F1}L (previous={previousValue:F1}, switchedToLitres={switchedToLitres}).");
         }
 
         public void StrategyContingencyAdd1L()
