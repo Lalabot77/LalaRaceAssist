@@ -4,7 +4,7 @@ Lala Race Assist Plugin is a SimHub plugin for **iRacing** focused on race engin
 
 It is built to help with the practical race workflow: plan stints, trust learned fuel and pace data, manage launch and pit situations, and keep key race context visible while driving.
 
-Version **1.0** documentation is now organized so GitHub readers can move from a quick user overview into the canonical subsystem docs without guessing which page owns which truth.
+Version **1.1** documentation is organized so GitHub readers can move from the current product overview into the canonical subsystem docs without guessing which page owns which truth.
 
 ## At a glance
 
@@ -56,8 +56,8 @@ The dashboard docs now include a dedicated Primary Driver Dash guide covering th
 
 ## Install Summary
 
-1. Copy the 2 plugin *.dll files into your SimHub root installation.
-2. `RSC.iRacingExtraProperties.dll` is **no longer required** for current plugin runtime paths.
+1. Copy `LaunchPlugin.dll` into your SimHub root installation.
+2. `RSC.iRacingExtraProperties.dll` is **no longer required** for current plugin runtime paths or plugin-owned pit/custom command transport.
 3. Restart SimHub.
 4. Import the dashboards you want to use.
 5. Open the plugin and use the top-level tabs in order: **Overview**, **Strategy**, **Profiles**, **Launch System**, **Bindings**, and **Settings**.
