@@ -169,6 +169,8 @@ Use the exported visibility families as hard gates:
 - `MsgDashShow*` = `STRATEGY` column in Settings -> Dashboards = Lala Strategy Dash visibility
 - `OverlayDashShow*` = `OVERLAY` column in Settings -> Dashboards = overlay visibility
 
+First-run v1.1 defaults are intentionally asymmetric and apply only when a settings file or a specific persisted field is missing: Driver and Overlay enable launch, pit-entry, pit-box, pit-limiter, automatic pit screen, and rejoin surfaces while leaving verbose race messages, race flags, radio messages, and traffic alerts off; Strategy disables launch/pit/rejoin surfaces while leaving verbose race messages, race flags, radio messages, and traffic alerts on. Existing persisted user visibility choices are preserved on load.
+
 Pit visibility is intentionally split into four independent rows per dash family:
 - `Pit Entry Assist` gates pit-entry approach/braking widgets. New dashboards should prefer `DashVisibility.<Driver|Strategy|Overlay>.PitEntryAssist`; legacy-family aliases are `LalaDashShowPitEntryAssist`, `MsgDashShowPitEntryAssist`, and `OverlayDashShowPitEntryAssist`.
 - `Pit Box Assist` gates pit-box stopping/box-entry widgets. New dashboards should prefer `DashVisibility.<Driver|Strategy|Overlay>.PitBoxAssist`; legacy-family aliases are `LalaDashShowPitBoxAssist`, `MsgDashShowPitBoxAssist`, and `OverlayDashShowPitBoxAssist`.
@@ -252,6 +254,7 @@ The subsystem docs own message-system behavior; dashboards should remain consume
 ### Binding and consumption rules
 - Bind **Strategy Dash Mode** through the plugin action `LalaLaunch.StrategyDash.ModeToggle`.
 - `AdvancedMode=true` means Advanced presentation; `false` means Simple presentation.
+- The first-run/default state is Simple (`AdvancedMode=false`); persisted user changes remain authoritative on load.
 - `ModeText` is label-only (`ADVANCED` / `SIMPLE`).
 - This mode is a presentation seam only. Strategy, fuel, PreRace, and pit/refuel calculations remain owned by the plugin/subsystems and must not be reimplemented in dashboard expressions.
 

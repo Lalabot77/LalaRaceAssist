@@ -2247,7 +2247,7 @@ namespace LaunchPlugin
         private double _preRaceFormationBaselineFuelLitres = double.NaN;
         private bool _preRaceFormationBaselineValid = false;
         private const double SmoothedAlpha = 0.35; // ~1–2s response at 500ms tick
-        internal const double FuelReadyConfidenceDefault = 60.0;
+        internal const double FuelReadyConfidenceDefault = 30.0;
         internal const int StintFuelMarginPctDefault = 10;
         internal const double CarSANotRelevantGapSecDefault = 10.0;
         private const int DarkModeManual = 1;
@@ -2257,11 +2257,11 @@ namespace LaunchPlugin
         private const double DarkModeAutoOffAltitudeDeg = 4.0;
         private bool _darkModeAutoActiveLatched = false;
         private bool _darkModeActive = false;
-        private int _darkModeBrightnessPct = 100;
+        private int _darkModeBrightnessPct = 90;
         private bool _darkModeLovelyAvailable = false;
         private int _darkModeOpacityPct = 0;
-        private string _darkModeModeText = "Manual";
-        private int _darkModeMode = DarkModeManual;
+        private string _darkModeModeText = "Auto";
+        private int _darkModeMode = DarkModeAuto;
         private bool? _darkModeLastLovelyAvailable = null;
 
         private static readonly Dictionary<int, string> DefaultCarSAStatusEBackgroundColors = new Dictionary<int, string>
@@ -26639,7 +26639,7 @@ namespace LaunchPlugin
         public bool CarSADebugExportWriteEventsCsv { get; set; } = true;
         public int CarSARawTelemetryMode { get; set; } = 1;
         public bool PitExitVerboseLogging { get; set; } = false;
-        public bool PitBoxIncludeOptionalRepairs { get; set; } = false;
+        public bool PitBoxIncludeOptionalRepairs { get; set; } = true;
         public bool PitCommandsAutoFocusPreview { get; set; } = false;
         public int PitCommandTransportMode { get; set; } = (int)LaunchPlugin.PitCommandTransportMode.Auto;
         public double ResultsDisplayTime { get; set; } = 5.0; // Corrected to 5 seconds
@@ -26695,7 +26695,7 @@ namespace LaunchPlugin
                 OnPropertyChanged(nameof(EnableMonitorEventCsv));
             }
         }
-        private bool _strategyDashAdvancedMode = true;
+        private bool _strategyDashAdvancedMode = false;
         public bool StrategyDashAdvancedMode
         {
             get { return _strategyDashAdvancedMode; }
@@ -26816,7 +26816,7 @@ namespace LaunchPlugin
                 OnPropertyChanged(nameof(LeagueClassDefinitions));
             }
         }
-        private int _darkModeMode = 1;
+        private int _darkModeMode = 2;
         public int DarkModeMode
         {
             get { return _darkModeMode; }
@@ -26828,7 +26828,7 @@ namespace LaunchPlugin
             }
         }
 
-        private int _darkModeBrightnessPct = 100;
+        private int _darkModeBrightnessPct = 90;
         public int DarkModeBrightnessPct
         {
             get { return _darkModeBrightnessPct; }
@@ -26890,41 +26890,41 @@ namespace LaunchPlugin
         public ObservableCollection<LaunchPluginFriendEntry> Friends { get; set; } = new ObservableCollection<LaunchPluginFriendEntry>();
         public ObservableCollection<CustomMessageSlot> CustomMessages { get; set; }
 
-        // --- LalaDash Toggles (Default ON) ---
+        // --- LalaDash Toggles (v1.1 first-run driver defaults) ---
         public bool LalaDashShowLaunchScreen { get; set; } = true;
         public bool LalaDashShowPitEntryAssist { get; set; } = true;
         public bool LalaDashShowPitBoxAssist { get; set; } = true;
         public bool LalaDashShowPitLimiter { get; set; } = true;
         public bool LalaDashShowPitScreen { get; set; } = true;
         public bool LalaDashShowRejoinAssist { get; set; } = true;
-        public bool LalaDashShowVerboseMessaging { get; set; } = true;
-        public bool LalaDashShowRaceFlags { get; set; } = true;
-        public bool LalaDashShowRadioMessages { get; set; } = true;
-        public bool LalaDashShowTraffic { get; set; } = true;
+        public bool LalaDashShowVerboseMessaging { get; set; } = false;
+        public bool LalaDashShowRaceFlags { get; set; } = false;
+        public bool LalaDashShowRadioMessages { get; set; } = false;
+        public bool LalaDashShowTraffic { get; set; } = false;
 
-        // --- Message System Toggles (Default ON) ---
-        public bool MsgDashShowLaunchScreen { get; set; } = true;
-        public bool MsgDashShowPitEntryAssist { get; set; } = true;
-        public bool MsgDashShowPitBoxAssist { get; set; } = true;
-        public bool MsgDashShowPitLimiter { get; set; } = true;
-        public bool MsgDashShowPitScreen { get; set; } = true;
-        public bool MsgDashShowRejoinAssist { get; set; } = true;
+        // --- Strategy Dash Toggles (v1.1 first-run strategy defaults) ---
+        public bool MsgDashShowLaunchScreen { get; set; } = false;
+        public bool MsgDashShowPitEntryAssist { get; set; } = false;
+        public bool MsgDashShowPitBoxAssist { get; set; } = false;
+        public bool MsgDashShowPitLimiter { get; set; } = false;
+        public bool MsgDashShowPitScreen { get; set; } = false;
+        public bool MsgDashShowRejoinAssist { get; set; } = false;
         public bool MsgDashShowVerboseMessaging { get; set; } = true;
         public bool MsgDashShowRaceFlags { get; set; } = true;
         public bool MsgDashShowRadioMessages { get; set; } = true;
         public bool MsgDashShowTraffic { get; set; } = true;
 
-        // --- Overlay Toggles (Default ON) ---
+        // --- Overlay Toggles (v1.1 first-run overlay defaults) ---
         public bool OverlayDashShowLaunchScreen { get; set; } = true;
         public bool OverlayDashShowPitEntryAssist { get; set; } = true;
         public bool OverlayDashShowPitBoxAssist { get; set; } = true;
         public bool OverlayDashShowPitLimiter { get; set; } = true;
         public bool OverlayDashShowPitScreen { get; set; } = true;
         public bool OverlayDashShowRejoinAssist { get; set; } = true;
-        public bool OverlayDashShowVerboseMessaging { get; set; } = true;
-        public bool OverlayDashShowRaceFlags { get; set; } = true;
-        public bool OverlayDashShowRadioMessages { get; set; } = true;
-        public bool OverlayDashShowTraffic { get; set; } = true;
+        public bool OverlayDashShowVerboseMessaging { get; set; } = false;
+        public bool OverlayDashShowRaceFlags { get; set; } = false;
+        public bool OverlayDashShowRadioMessages { get; set; } = false;
+        public bool OverlayDashShowTraffic { get; set; } = false;
 
     }
     /// <summary>
