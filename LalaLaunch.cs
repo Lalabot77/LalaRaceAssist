@@ -2257,11 +2257,11 @@ namespace LaunchPlugin
         private const double DarkModeAutoOffAltitudeDeg = 4.0;
         private bool _darkModeAutoActiveLatched = false;
         private bool _darkModeActive = false;
-        private int _darkModeBrightnessPct = 100;
+        private int _darkModeBrightnessPct = 90;
         private bool _darkModeLovelyAvailable = false;
         private int _darkModeOpacityPct = 0;
-        private string _darkModeModeText = "Manual";
-        private int _darkModeMode = DarkModeManual;
+        private string _darkModeModeText = "Auto";
+        private int _darkModeMode = DarkModeAuto;
         private bool? _darkModeLastLovelyAvailable = null;
 
         private static readonly Dictionary<int, string> DefaultCarSAStatusEBackgroundColors = new Dictionary<int, string>
