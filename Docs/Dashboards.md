@@ -58,7 +58,7 @@ You can use touch only, but physical bindings are strongly recommended for race 
 
 The plugin exposes a **Strategy Dash Mode** binding in **Bindings**. Bind it to dashboard touch, a wheel button, or hardware control when you want the Strategy Dash to switch presentation between Advanced and Simple mode.
 
-Dashboard status is plugin-owned:
+Dashboard status is plugin-owned, with new installs starting in Simple mode unless a persisted setting says otherwise:
 
 - `LalaLaunch.StrategyDash.AdvancedMode` = `true` for Advanced, `false` for Simple.
 - `LalaLaunch.StrategyDash.ModeText` = `ADVANCED` or `SIMPLE`.

@@ -64,7 +64,7 @@ That exposes `[ShakeITMotorsV3Plugin.Export.TractionLoss.All]` for dashboards or
 - Some dashboard indicators and behaviors depend on optional SimHub exports or optional setup steps.
 - Wheelspin / traction-loss visuals require the optional `TractionLoss` ShakeIt export above.
 - Primary Dash navigation behavior may continue to evolve during early public releases.
-- In Bindings, **Strategy Dash Mode** toggles the Strategy Dash presentation between Advanced and Simple; dashboards can read `LalaLaunch.StrategyDash.AdvancedMode` for the current status.
+- In Bindings, **Strategy Dash Mode** toggles the Strategy Dash presentation between Advanced and Simple (new installs start in Simple); dashboards can read `LalaLaunch.StrategyDash.AdvancedMode` for the current status.
 - Legacy `RSC.iRacingExtraProperties.dll` fallback paths are removed from active runtime code.
 
 ## 4. First plugin check

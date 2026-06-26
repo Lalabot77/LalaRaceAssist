@@ -1,3 +1,6 @@
+- 2026-06-26 v1.1 first-run settings-default alignment landed:
+  - updated first-run/default settings only for Monitor System, dashboard auto selection/dark mode/brightness, Dash Visibility driver/strategy/overlay matrix, League Class off, Fuel Strategy confidence/reserve/DATA guard/DATA LIVE, optional repair countdown on, debug off, and Strategy Dash Simple (`AdvancedMode=false`).
+  - preserved existing-user persistence semantics: JSON-deserialized fields still override initializers, normalization only clamps invalid ranges/legacy collections, and no reset/migration framework was added. No dashboard files, action names, SimHub export names, or runtime calculations changed. Property Snapshot list reviewed: no; settings defaults only with no export/property surface change.
 - 2026-06-26 v1.1 binding/docs release polish landed:
   - renamed the user-facing `MsgCx` binding row to `Acknowledge` with prompt/alert dismissal wording while preserving the internal `MsgCx` action name, handler, exports, and message/runtime behavior; updated the stale source comment to state that no separate legacy MsgCx action variants are currently registered.
   - added the existing `LalaLaunch.Pit.FuelSetZero` action to the common Bindings -> Pit Commands UI as `Fuel 0`; no action names, handlers, command payloads, settings defaults, exports, or dashboard files changed.
