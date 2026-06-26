@@ -380,6 +380,7 @@ namespace LaunchPlugin
                     // pre-race/out-lap pit-road passes where pit-loss learning is intentionally
                     // suppressed. Without this, an EnteringPits pre-line phase can remain latched
                     // through pit lane and block Box Entry visibility/assist handover.
+                    UpdatePitStallTimingTransition(isInPitStall, pluginManager);
                     UpdatePitPhase(data, pluginManager);
                     UpdatePitEntryAssist(data, pluginManager, ConfigPitEntryDecelMps2, ConfigPitEntryBufferM, pitScreenActive);
                     UpdateTrackMarkers(trackKey, carPct, trackLenM, isInPitLane, justExitedPits, isInPitStall, speedKph);
@@ -395,24 +396,7 @@ namespace LaunchPlugin
                 if (_pitRoadTimer.IsRunning) _pitRoadTimer.Reset();
             }
 
-            if (isInPitStall && !_wasInPitStall)
-            {
-                _pitStopTimer.Restart();
-            }
-            else if (!isInPitStall && _wasInPitStall)
-            {
-                _pitStopTimer.Stop();
-                _lastPitStopDuration = _pitStopTimer.Elapsed;
-
-                // --- NEW: Add validation check for our internal tStop timer ---
-                object stopTimeProp = pluginManager.GetPropertyValue("DataCorePlugin.GameData.LastPitStopDuration");
-                TimeSpan simhubStopTime = (stopTimeProp is TimeSpan span)
-                    ? span
-                    : TimeSpan.FromSeconds(Convert.ToDouble(stopTimeProp ?? 0.0));
-                SimHub.Logging.Current.Debug($"[LalaPlugin:Pit Cycle] Stop Time Validation -> Internal: {_lastPitStopDuration.TotalSeconds:F2}s, SimHub: {simhubStopTime.TotalSeconds:F2}s");
-
-                _pitStopTimer.Reset();
-            }
+            UpdatePitStallTimingTransition(isInPitStall, pluginManager);
 
             // --- Store the previous phase before updating to the new one ---
             //var previousPhase = CurrentPitPhase;
@@ -443,6 +427,28 @@ namespace LaunchPlugin
             IsOnPitRoad = isInPitLane;
             _wasInPitLane = isInPitLane;
             _wasInPitStall = isInPitStall;
+        }
+
+        private void UpdatePitStallTimingTransition(bool isInPitStall, PluginManager pluginManager)
+        {
+            if (isInPitStall && !_wasInPitStall)
+            {
+                _pitStopTimer.Restart();
+            }
+            else if (!isInPitStall && _wasInPitStall)
+            {
+                _pitStopTimer.Stop();
+                _lastPitStopDuration = _pitStopTimer.Elapsed;
+
+                // --- NEW: Add validation check for our internal tStop timer ---
+                object stopTimeProp = pluginManager.GetPropertyValue("DataCorePlugin.GameData.LastPitStopDuration");
+                TimeSpan simhubStopTime = (stopTimeProp is TimeSpan span)
+                    ? span
+                    : TimeSpan.FromSeconds(Convert.ToDouble(stopTimeProp ?? 0.0));
+                SimHub.Logging.Current.Debug($"[LalaPlugin:Pit Cycle] Stop Time Validation -> Internal: {_lastPitStopDuration.TotalSeconds:F2}s, SimHub: {simhubStopTime.TotalSeconds:F2}s");
+
+                _pitStopTimer.Reset();
+            }
         }
 
         private void UpdatePitEntryAssist(GameData data, PluginManager pluginManager, double profileDecel_mps2, double profileBuffer_m, bool pitScreenActive)

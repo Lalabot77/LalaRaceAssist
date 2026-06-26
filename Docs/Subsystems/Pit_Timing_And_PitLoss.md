@@ -105,7 +105,7 @@ On entry:
 
 Logs are emitted to confirm arming.
 
-Live pit phase publication remains active even during first-lap/pre-race pit-road passes where pit-loss learning is intentionally suppressed. That learning guard may keep the pit-loss candidate state idle, but it must not freeze `CurrentPitPhase` / `RejoinCurrentPitPhase` at `EnteringPits`; pit-road passes still progress through `ApproachingBox`, `InBox` when stalled, `LeavingBox`, and `ExitingPits` from pit-lane, pit-stall, and wrapped pit-box distance evidence.
+Live pit phase publication remains active even during first-lap/pre-race pit-road passes where pit-loss learning is intentionally suppressed. That learning guard may keep the pit-loss candidate state idle, but it must not freeze `CurrentPitPhase` / `RejoinCurrentPitPhase` at `EnteringPits`; pit-road passes still progress through `ApproachingBox`, `InBox` when stalled, `LeavingBox`, and `ExitingPits` from pit-lane, pit-stall, and wrapped pit-box distance evidence. The same pit-stall timer edge handling also remains live in this guarded path so `PitStopElapsedSec` is coherent whenever `InBox` is published, without creating pit-loss candidates before one completed lap.
 
 ---
 
