@@ -107,3 +107,7 @@ Branch: work
 - Run beep→upshift cycles and confirm `DelayAvg_G*` / `DelayN_G*` update per source gear.
 - Test custom WAV valid/invalid paths and verify fallback logs.
 - If master debug and Shift Assist Debug CSV are enabled, verify file creation under `Logs/LalapluginData` and confirm rows are rate-limited by max Hz.
+
+
+## Dash Control action
+`LalaLaunch.ShiftAssistToggle` is a SimHub/dashboard binding action for the Shift Assist system enable state. It toggles the same persisted `Settings.ShiftAssistEnabled` value used by the Profiles -> Shift Assist `Enable Shift Assist` control, saves settings, and notifies the Profiles ViewModel checkbox state when fired while the Profiles tab is open. It does not open or close learning/review dashboard popups, reset samples, change learned shift points, or modify lock state. The legacy `LalaLaunch.ShiftAssist_ToggleShiftAssist` action remains registered as a compatibility alias for the same enable/disable seam.

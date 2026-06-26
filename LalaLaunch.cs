@@ -247,6 +247,72 @@ namespace LaunchPlugin
             SimHub.Logging.Current.Info($"[LalaPlugin:DarkMode] ToggleDarkMode action fired -> Mode={previousMode}({GetDarkModeText(previousMode)})->{Settings.DarkModeMode}({GetDarkModeText(Settings.DarkModeMode)}).");
         }
 
+        private void AdjustDarkModeBrightness(int deltaPct, string actionName)
+        {
+            if (Settings == null)
+            {
+                return;
+            }
+
+            int previousValue = Settings.DarkModeBrightnessPct;
+            int nextValue = Math.Max(0, Math.Min(100, previousValue + deltaPct));
+            Settings.DarkModeBrightnessPct = nextValue;
+            SaveSettings();
+            SimHub.Logging.Current.Info($"[LalaPlugin:Dash] {actionName} action fired -> value={nextValue} (previous={previousValue}).");
+        }
+
+        public void DarkModeBrightnessDecrease()
+        {
+            AdjustDarkModeBrightness(-5, nameof(DarkModeBrightnessDecrease));
+        }
+
+        public void DarkModeBrightnessIncrease()
+        {
+            AdjustDarkModeBrightness(5, nameof(DarkModeBrightnessIncrease));
+        }
+
+        public void ShiftAssistToggle()
+        {
+            if (Settings == null)
+            {
+                return;
+            }
+
+            Settings.ShiftAssistEnabled = !Settings.ShiftAssistEnabled;
+            SaveSettings();
+            ProfilesViewModel?.NotifyShiftAssistEnabledChanged();
+            SimHub.Logging.Current.Info($"[LalaPlugin:ShiftAssist] ShiftAssistToggle action fired -> Enabled={Settings.ShiftAssistEnabled}");
+        }
+
+        private void AdjustStrategyContingencyLitres(double deltaLitres, string actionName)
+        {
+            if (FuelCalculator == null)
+            {
+                return;
+            }
+
+            bool switchedToLitres = !FuelCalculator.IsContingencyLitres;
+            if (switchedToLitres)
+            {
+                FuelCalculator.IsContingencyLitres = true;
+            }
+
+            double previousValue = FuelCalculator.ContingencyValue;
+            double nextValue = Math.Max(0.0, Math.Min(20.0, previousValue + deltaLitres));
+            FuelCalculator.ContingencyValue = nextValue;
+            SimHub.Logging.Current.Info($"[LalaPlugin:Strategy] {actionName} action fired -> value={nextValue:F1}L (previous={previousValue:F1}, switchedToLitres={switchedToLitres}).");
+        }
+
+        public void StrategyContingencyAdd1L()
+        {
+            AdjustStrategyContingencyLitres(1.0, nameof(StrategyContingencyAdd1L));
+        }
+
+        public void StrategyContingencyRemove1L()
+        {
+            AdjustStrategyContingencyLitres(-1.0, nameof(StrategyContingencyRemove1L));
+        }
+
         // --- Launch button helper ---
         // Manual prime/cancel for testing and for non-standing-start sessions.
         public void LaunchMode()
@@ -7925,6 +7991,11 @@ namespace LaunchPlugin
             this.AddAction("BurnAnalysisResetMinObserved", (a, b) => BurnAnalysisResetMinObserved());
             this.AddAction("DeclutterMode", (a, b) => DeclutterMode0());
             this.AddAction("ToggleDarkMode", (a, b) => ToggleDarkMode());
+            this.AddAction("DarkModeBrightnessDecrease", (a, b) => DarkModeBrightnessDecrease());
+            this.AddAction("DarkModeBrightnessIncrease", (a, b) => DarkModeBrightnessIncrease());
+            this.AddAction("ShiftAssistToggle", (a, b) => ShiftAssistToggle());
+            this.AddAction("StrategyContingencyAdd1L", (a, b) => StrategyContingencyAdd1L());
+            this.AddAction("StrategyContingencyRemove1L", (a, b) => StrategyContingencyRemove1L());
             this.AddAction("EventMarker", (a, b) => EventMarker());
             this.AddAction("PropertySnapshotRolling.Start", (a, b) => StartPropertySnapshotRolling());
             this.AddAction("PropertySnapshotRolling.Stop", (a, b) => StopPropertySnapshotRolling());
@@ -7980,17 +8051,7 @@ namespace LaunchPlugin
                 SimHub.Logging.Current.Info($"[LalaPlugin:Debug] OfflineDataModule_Toggle -> Enabled={Settings.OfflineDataModule}");
             });
             this.AddAction("ShiftAssist_ResetDelayStats", (a, b) => ExecuteShiftAssistResetDelayStatsAction());
-            this.AddAction("ShiftAssist_ToggleShiftAssist", (a, b) =>
-            {
-                if (Settings == null)
-                {
-                    return;
-                }
-
-                Settings.ShiftAssistEnabled = !Settings.ShiftAssistEnabled;
-                SaveSettings();
-                SimHub.Logging.Current.Info($"[LalaPlugin:ShiftAssist] Toggle action -> Enabled={Settings.ShiftAssistEnabled}");
-            });
+            this.AddAction("ShiftAssist_ToggleShiftAssist", (a, b) => ShiftAssistToggle());
             this.AddAction("ShiftAssist_ToggleDebugCsv", (a, b) =>
             {
                 if (Settings == null)
@@ -26894,7 +26955,17 @@ namespace LaunchPlugin
         public string CsvLogPath { get; set; } = "";
         public string TraceLogPath { get; set; } = "";
         public bool EnableTelemetryTracing { get; set; } = true;
-        public bool ShiftAssistEnabled { get; set; } = false;
+        private bool _shiftAssistEnabled = false;
+        public bool ShiftAssistEnabled
+        {
+            get { return _shiftAssistEnabled; }
+            set
+            {
+                if (_shiftAssistEnabled == value) return;
+                _shiftAssistEnabled = value;
+                OnPropertyChanged(nameof(ShiftAssistEnabled));
+            }
+        }
         public bool ShiftAssistLearningModeEnabled { get; set; } = false;
         public int ShiftAssistBeepDurationMs { get; set; } = LalaLaunch.ShiftAssistBeepDurationMsDefault;
         public bool ShiftAssistLightEnabled { get; set; } = true;
