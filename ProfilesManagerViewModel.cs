@@ -1821,6 +1821,11 @@ namespace LaunchPlugin
             OnPropertyChanged(nameof(ShiftStackIds));
         }
 
+        public void NotifyShiftAssistEnabledChanged()
+        {
+            OnPropertyChanged(nameof(ShiftAssistEnabled));
+        }
+
         private void BrowseShiftCustomWav()
         {
             var dialog = new OpenFileDialog
