@@ -7149,6 +7149,10 @@ namespace LaunchPlugin
         private double _pitBoxRemainingSec = 0.0;
         private double _pitBoxTargetSec = 0.0;
         private double _pitBoxLatchedTargetSec = 0.0;
+        private double _pitBoxDebriefLatchedTargetSec = 0.0;
+        private double _pitBoxDebriefMaxRepairRemainingSec = 0.0;
+        private double _pitBoxDebriefLastRepairRemainingSec = 0.0;
+        private bool _pitBoxDebriefTargetLatched = false;
         private bool _pitBoxTargetLatched = false;
         private int _pitBoxLatchedTireChangeCount = 4;
         private bool _pitBoxTireCountLatched = false;
@@ -10401,6 +10405,10 @@ namespace LaunchPlugin
             _pitDebriefWasInBox = false;
             _pitBoxLastDeltaSec = 0.0;
             _pitBoxLastDeltaValid = false;
+            _pitBoxDebriefLatchedTargetSec = 0.0;
+            _pitBoxDebriefMaxRepairRemainingSec = 0.0;
+            _pitBoxDebriefLastRepairRemainingSec = 0.0;
+            _pitBoxDebriefTargetLatched = false;
             _pitBoxLastCompletedRepairInfluence = string.Empty;
             ResetPitBoxCountdownState();
             _pit?.ResetPitPhaseState();
@@ -23177,8 +23185,9 @@ namespace LaunchPlugin
 
             if (!inBoxPhase && _pitDebriefWasInBox)
             {
-                double debriefBoxDeltaSec = _pitBoxLastDeltaValid ? -_pitBoxLastDeltaSec : double.NaN;
-                LogPitDebriefBoxDiag("box-exit", _pitBoxLastDeltaValid ? "passing completed Pit.Box.LastDeltaSec inverted for debrief" : "no completed Pit.Box.LastDeltaSec available", _pit.PitStopDuration.TotalSeconds, debriefBoxDeltaSec);
+                double finalElapsedSec = _pit.PitStopDuration.TotalSeconds;
+                double debriefBoxDeltaSec = ResolvePitDebriefBoxDeltaFromFinalElapsed(finalElapsedSec);
+                LogPitDebriefBoxDiag("box-exit", !double.IsNaN(debriefBoxDeltaSec) ? "passing debrief-only repair-adjusted actual minus repair-excluded service target" : "no completed debrief box delta available", finalElapsedSec, debriefBoxDeltaSec);
                 LogPitDebriefFuelDiag("box-exit", currentFuel, false, Pit_Box_WillAddLatched > 0.0 ? Pit_Box_WillAddLatched : Pit_WillAdd);
                 _pitDebrief.LatchBoxExit(
                     _pit.PitStopDuration.TotalSeconds,
@@ -23192,10 +23201,12 @@ namespace LaunchPlugin
 
             if (!_pitBoxCountdownActive && _pitBoxLastDeltaValid)
             {
-                _pitDebrief.RefreshBoxDeltaFromActualMinusPredicted(-_pitBoxLastDeltaSec);
+                double finalElapsedSec = _pit.PitStopDuration.TotalSeconds;
+                double debriefBoxDeltaSec = ResolvePitDebriefBoxDeltaFromFinalElapsed(finalElapsedSec);
+                _pitDebrief.RefreshBoxDeltaFromActualMinusPredicted(debriefBoxDeltaSec);
                 if (!_pitDebriefBoxDeltaRefreshDiagLogged)
                 {
-                    LogPitDebriefBoxDiag("box-delta-refresh", "refreshed debrief from completed Pit.Box.LastDeltaSec; exported sign is target-actual (positive quicker), debrief stores actual-predicted", _pit.PitStopDuration.TotalSeconds, -_pitBoxLastDeltaSec);
+                    LogPitDebriefBoxDiag("box-delta-refresh", !double.IsNaN(debriefBoxDeltaSec) ? "refreshed debrief from repair-adjusted actual minus repair-excluded service target; Pit.Box.LastDeltaSec remains repair-aware target-actual" : "no repair-excluded debrief target available", finalElapsedSec, debriefBoxDeltaSec);
                     _pitDebriefBoxDeltaRefreshDiagLogged = true;
                 }
             }
@@ -23357,6 +23368,33 @@ namespace LaunchPlugin
             }
         }
 
+
+        private double ResolvePitDebriefBoxDeltaFromFinalElapsed(double finalElapsedSec)
+        {
+            if (!_pitBoxLastDeltaValid || !_pitBoxDebriefTargetLatched)
+            {
+                return double.NaN;
+            }
+
+            if (double.IsNaN(finalElapsedSec) || double.IsInfinity(finalElapsedSec) || finalElapsedSec <= 0.0)
+            {
+                finalElapsedSec = Math.Max(0.0, _pitBoxElapsedSec);
+            }
+
+            double targetSec = _pitBoxDebriefLatchedTargetSec;
+            if (double.IsNaN(targetSec) || double.IsInfinity(targetSec) || targetSec < 0.0)
+            {
+                return double.NaN;
+            }
+
+            double servedRepairSec = Math.Max(0.0, _pitBoxDebriefMaxRepairRemainingSec - _pitBoxDebriefLastRepairRemainingSec);
+            double repairOnlyElapsedSec = Math.Max(0.0, servedRepairSec - targetSec);
+            double driverControlledElapsedSec = Math.Max(0.0, finalElapsedSec - repairOnlyElapsedSec);
+
+            double deltaSec = driverControlledElapsedSec - targetSec;
+            return (double.IsNaN(deltaSec) || double.IsInfinity(deltaSec)) ? double.NaN : deltaSec;
+        }
+
         private void UpdatePitBoxCountdownValues(bool inPitLane, bool isInPitStall)
         {
             bool active = inPitLane
@@ -23411,6 +23449,10 @@ namespace LaunchPlugin
                 LogPitDebriefBoxDiag("countdown-start", "Pit.Box countdown became active", elapsedSec, double.NaN);
                 _pitBoxLastDeltaSec = 0.0;
                 _pitBoxLastDeltaValid = false;
+                _pitBoxDebriefLatchedTargetSec = 0.0;
+                _pitBoxDebriefMaxRepairRemainingSec = 0.0;
+                _pitBoxDebriefLastRepairRemainingSec = 0.0;
+                _pitBoxDebriefTargetLatched = false;
                 _pitBoxLastCompletedRepairInfluence = string.Empty;
                 bool hasTireSelectionEvidence;
                 int preServiceSelectedCount = ResolvePitBoxTargetTireChangeCount(out hasTireSelectionEvidence);
@@ -23430,16 +23472,24 @@ namespace LaunchPlugin
             if (double.IsNaN(repairRemainingSec) || double.IsInfinity(repairRemainingSec) || repairRemainingSec < 0.0)
                 repairRemainingSec = 0.0;
 
+            if (repairRemainingSec > _pitBoxDebriefMaxRepairRemainingSec)
+            {
+                _pitBoxDebriefMaxRepairRemainingSec = repairRemainingSec;
+            }
+            _pitBoxDebriefLastRepairRemainingSec = repairRemainingSec;
+
             double effectiveTargetSec = Math.Max(modeledTargetSec, repairRemainingSec);
             string effectiveRepairInfluence = repairRemainingSec > 0.0 && repairRemainingSec >= modeledTargetSec ? repairInfluence : string.Empty;
 
             if (!_pitBoxTargetLatched)
             {
                 _pitBoxLatchedTargetSec = effectiveTargetSec;
+                _pitBoxDebriefLatchedTargetSec = modeledTargetSec;
                 _pitBoxLatchedRepairInfluence = effectiveRepairInfluence;
                 if (elapsedSec >= PitBoxTargetLatchSettleSeconds)
                 {
                     _pitBoxTargetLatched = true;
+                    _pitBoxDebriefTargetLatched = true;
                 }
             }
 
