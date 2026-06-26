@@ -24,7 +24,7 @@ Go to the bottom left of the left menu and click "Add/Remove Features". Find the
 
 ### Plugin Activation
 
-Copy the plugin files into your SimHub installation, then restart SimHub.
+Copy `LaunchPlugin.dll` into your SimHub installation, then restart SimHub.
 
 ## 3. Import dashboards
 
@@ -98,7 +98,7 @@ For a new car/track combination:
 4. Review **Profiles** before locking anything.
 5. Import the dashboards you actually plan to use.
 6. Add only the core controls you need at first:
-   - **Cancel Message**
+   - **Acknowledge**
    - **Toggle Pit Screen**
    - **Next Dash**
    - **Previous Dash**

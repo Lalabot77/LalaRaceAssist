@@ -70,7 +70,7 @@ Important workflow rules:
 - Some dashboard indicators depend on optional SimHub-side setup or optional exports.
 - Wheelspin / traction-loss visuals depend on optional ShakeIt Motors export setup (`TractionLoss` property).
 - Primary Dash navigation behavior may evolve as dashboard workflows are refined.
-- In plugin UI, **Primary Dash Mode** binding is currently a placeholder and does not perform an action.
+- In plugin UI, **Plugin Quick Reset** (`LalaLaunch.PrimaryDashMode`) is a manual runtime recovery reset for stale plugin or dash data. It preserves the existing action name for compatibility.
 - Legacy `RSC.iRacingExtraProperties.dll` fallback paths are removed from active runtime code.
 
 ## 5. The main user-facing systems

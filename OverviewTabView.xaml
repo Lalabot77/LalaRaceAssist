@@ -429,7 +429,7 @@
                     <TextBlock Text="• Next Screen flips main pages; Previous Screen flips internal/sub-pages."
                                TextWrapping="Wrap"
                                Margin="0,0,0,3" />
-                    <TextBlock Text="• Primary Dash Mode is reserved for future use and currently does nothing."
+                    <TextBlock Text="• Plugin Quick Reset is a manual runtime recovery reset for stale plugin or dash data."
                                TextWrapping="Wrap"
                                Margin="0,0,0,3" />
                     <TextBlock Text="• Optional wheelspin indicators require SimHub ShakeIt Motors 'TractionLoss' export."

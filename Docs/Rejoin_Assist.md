@@ -33,7 +33,7 @@ The intended outcome is simple: the plugin helps you avoid rushing back into tra
 
 ## 4. When to cancel or override
 
-Use **Cancel Message** when you need the alert out of the way for the current moment. That is the right choice when:
+Use **Acknowledge** when you need the alert out of the way for the current moment. That is the right choice when:
 
 - the message is distracting,
 - the situation has already changed,

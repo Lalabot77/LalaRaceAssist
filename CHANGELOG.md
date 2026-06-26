@@ -25,7 +25,6 @@ For internal between-release development history, see `Docs/Internal/Development
 - Plugin UI navigation was reorganized for v1.1 polish: top-level tabs are now Overview, Strategy, Profiles, Launch System, Bindings, and Settings; bindings moved to the new Bindings tab, and dashboard/monitor/fuel settings moved into settings-only groups without changing action names, settings, exports, calculations, or pit transport.
 - Box Entry STOP / BRAKE NOW cue timing now includes a small comfort buffer derived from the existing car-profile Pit Entry Buffer, making the cue appear slightly earlier without changing pit-box distance, timing, service, debrief, or dashboard layout contracts.
 - Existing pit-service dashboard outputs now reflect the selected pit-service regulation without requiring new dashboard properties: `Fuel.Live.RefuelRate_Lps` shows the active effective service rate (including NEC percentage when selected), and PitExit countdown/position/gaps use the regulation-aware stop-loss estimate while preserving an active stop's countdown seed unless a longer estimate or distinguishable service-input change needs to refresh it. Stored profile refuel rate remains the normal baseline.
-- Existing pit-service dashboard outputs now reflect the selected pit-service regulation without requiring new dashboard properties: `Fuel.Live.RefuelRate_Lps` shows the active effective service rate (including NEC percentage when selected), and PitExit countdown/position/gaps refresh from the updated regulation-aware stop-loss estimate. Stored profile refuel rate remains the normal baseline.
 - Profile CAR tab Pit Stop / Pit Assist layout now keeps Base Tank constrained, aligns the Refuel Rate / NEC factor / Tyre Change Time numeric editors, shows Refuel Rate to two decimals, and places Pit Entry Decel/Buffer as full-width bottom sliders while preserving existing ownership and save/load behavior.
 - Runtime boxed-stop prediction and Strategy Planner stop modelling now share one regulation-aware pit service-time authority, keeping PitExit/total stop loss and planner stop timing aligned while preserving existing export names.
 - Pit Stop Debrief summary wording now becomes progressively useful during the stop, reports entry/box signed deltas, service from actual fuel added plus tyres, and `STRAT Δ` for the final strategy comparison while keeping exit prediction in debug/log fields instead of the driver-facing summary.
@@ -54,6 +53,12 @@ For internal between-release development history, see `Docs/Internal/Development
 - Hardened pit/custom command observability and confirmation wording so attempted transport is not shown as guaranteed in-sim effect.
 - Fixed Pit Fuel Control OFF->MAN command emission to avoid additive plus-sign payload form and aligned over-max fuel feedback wording contract (`FUEL MAX` / `AUTO FUEL … >MAX`) without changing refuel math or send strategy.
 - Fixed live pit tank-space/WillAdd guidance so stale Strategy max-fuel presets no longer under-cap runtime refuel space when live session tank-cap authority is available.
+
+### Upgrade notes
+- Bind supported pit/custom command buttons to plugin-owned `LalaLaunch.Pit.*`, `LalaLaunch.Pit.FuelControl.*`, `LalaLaunch.Pit.TyreControl.*`, and `LalaLaunch.CustomMessage01..10` actions instead of old `IRacingExtraProperties` pit action ids.
+- `RSC.iRacingExtraProperties.dll` is not required for current active runtime paths or plugin-owned pit/custom command transport.
+- Pit Service Regulations are selected manually in Strategy/Race Presets; the plugin does not auto-detect IMSA/NEC from series, track, car, preset, or session metadata.
+- Dashboard package validation/import work is tracked separately from this release identity/docs alignment; import the dashboard package you intend to use and check for SimHub missing-property or expression warnings before calling a local install release-ready.
 
 ## v1.0 – Initial Public Release
 

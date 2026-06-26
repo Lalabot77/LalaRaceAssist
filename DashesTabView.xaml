@@ -12,7 +12,7 @@
         <StackPanel Margin="10" Width="820" HorizontalAlignment="Left">
             <Expander Header="General / Dash Controls" Margin="0,0,0,12" IsExpanded="True">
                 <StackPanel Margin="12,10,12,12">
-                    <ui:ControlsEditor ActionName="LalaLaunch.MsgCx" FriendlyName="Cancel Msg Button" ToolTip="Assign a button to cancel the current popup message." />
+                    <ui:ControlsEditor ActionName="LalaLaunch.MsgCx" FriendlyName="Acknowledge" ToolTip="Acknowledge or dismiss plugin messages, prompts and alerts. This is the primary user response button used throughout Lala Race Assist." />
                     <ui:ControlsEditor ActionName="LalaLaunch.TogglePitScreen" FriendlyName="Toggle Pit Screen Popup" Margin="0,8,0,0" ToolTip="Assign a button to show or hide the pit screen popup." />
                     <ui:ControlsEditor ActionName="LalaLaunch.PrimaryDashMode" FriendlyName="Plugin Quick Reset" Margin="0,8,0,0" ToolTip="Bind to allow rapid plugin reset if any plugin or dash data issues." />
                     <ui:ControlsEditor ActionName="LalaLaunch.StrategyDash.ModeToggle" FriendlyName="Toggle Strategy Dash Mode" Margin="0,8,0,0" ToolTip="Assign a button to toggle the Strategy Dash between Advanced and Simple mode. The current state is exported as LalaLaunch.StrategyDash.AdvancedMode (true = Advanced, false = Simple)." />
@@ -35,6 +35,7 @@
                         <ui:ControlsEditor ActionName="LalaLaunch.Pit.ClearAll" FriendlyName="Pit Clear All"/>
                         <ui:ControlsEditor ActionName="LalaLaunch.Pit.ClearTires" FriendlyName="Clear Tyres"/>
                         <ui:ControlsEditor ActionName="LalaLaunch.Pit.ToggleFuel" FriendlyName="Toggle Fuel"/>
+                        <ui:ControlsEditor ActionName="LalaLaunch.Pit.FuelSetZero" FriendlyName="Fuel 0"/>
                         <ui:ControlsEditor ActionName="LalaLaunch.Pit.FuelAdd1" FriendlyName="Fuel +1"/>
                         <ui:ControlsEditor ActionName="LalaLaunch.Pit.FuelRemove1" FriendlyName="Fuel -1"/>
                         <ui:ControlsEditor ActionName="LalaLaunch.Pit.FuelAdd10" FriendlyName="Fuel +10"/>

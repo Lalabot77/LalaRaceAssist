@@ -37,7 +37,7 @@ Trust pit popups most when your pit data is good. That usually means:
 ### When to cancel or override
 
 - Use **Toggle Pit Screen** if you want to force the pit screen on or off.
-- Use **Cancel Message** if a popup needs to be dismissed right now.
+- Use **Acknowledge** if a popup, prompt, or alert needs to be dismissed right now.
 
 ### Pit command button mapping (Strategy Dash + PitPopUp)
 

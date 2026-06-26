@@ -151,9 +151,9 @@ namespace LaunchPlugin
         //private int _declutterMode = 0;
 
         // --- button dash helpers ---
-        // NOTE: This region is intended to expose SimHub Actions and keep cancel semantics stable.
-        // MsgCx() is the ONE canonical cancel entry point.
-        // Legacy MsgCx variants remain as compatibility stubs (route to MsgCx) so old mappings don't break.
+        // NOTE: This region is intended to expose SimHub Actions and keep acknowledgement semantics stable.
+        // MsgCx() is the one canonical acknowledge/dismiss action entry point.
+        // No separate legacy MsgCx action variants are currently registered; keep this action name stable.
 
         public void PrimaryDashMode()
         {
