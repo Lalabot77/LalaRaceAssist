@@ -1,5 +1,5 @@
 - 2026-06-26 Pit Debrief Box Delta self-audit follow-up landed:
-  - debrief-only repair influence is now latched separately so optional/mandatory repair-adjusted Box Delta also carries matching `SummaryText` repair context without changing runtime `Pit.Box.*` countdown repair labels;
+  - Pit Debrief repair influence labels now come only from served mandatory/optional repair evidence, so static positive optional repair-left telemetry no longer produces `OPT REPAIR`, while optional/mandatory repair-adjusted Box Delta still carries matching `SummaryText` repair context without changing runtime `Pit.Box.*` countdown repair labels;
   - completed elapsed latches require finite `>0.0` elapsed evidence, while exact `0.0` Box Delta remains valid through separate delta validity;
   - mandatory and optional repair-left streams are tracked independently for served-repair calculation, with duplicated/equal streams treated conservatively as one stream. Runtime exports/properties, PitExit, Fuel.Live.TotalStopLoss, Strategy timing, PitEngine/PitCycleLite, dashboard JSON, and settings remain unchanged. Property Snapshot list reviewed: yes; no export/property add/remove/rename/regroup required.
 - 2026-06-26 Pit Debrief Box Delta repair-adjusted edge follow-up landed:

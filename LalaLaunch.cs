@@ -22995,14 +22995,13 @@ namespace LaunchPlugin
 
         private string GetPitBoxDebriefRepairInfluence()
         {
-            if (!string.IsNullOrWhiteSpace(_pitBoxDebriefLatchedRepairInfluence))
+            string servedRepairInfluence = CalculatePitDebriefServedRepairInfluence();
+            if (!string.IsNullOrWhiteSpace(servedRepairInfluence))
             {
-                return _pitBoxDebriefLatchedRepairInfluence;
+                return servedRepairInfluence;
             }
 
-            return !string.IsNullOrWhiteSpace(_pitBoxLatchedRepairInfluence)
-                ? _pitBoxLatchedRepairInfluence
-                : (_pitBoxLastCompletedRepairInfluence ?? string.Empty);
+            return _pitBoxLastCompletedRepairInfluence ?? string.Empty;
         }
 
         private void ResetPitDebriefDiagnosticLogState()
@@ -23552,19 +23551,52 @@ namespace LaunchPlugin
 
         private double CalculatePitDebriefServedRepairSeconds()
         {
-            double mandatoryServedSec = Math.Max(0.0, _pitBoxDebriefMaxMandatoryRepairRemainingSec - _pitBoxDebriefLastMandatoryRepairRemainingSec);
-            double optionalServedSec = Math.Max(0.0, _pitBoxDebriefMaxOptionalRepairRemainingSec - _pitBoxDebriefLastOptionalRepairRemainingSec);
-
-            bool duplicatedStreams = _pitBoxDebriefMaxMandatoryRepairRemainingSec > 0.0
-                && _pitBoxDebriefMaxOptionalRepairRemainingSec > 0.0
-                && Math.Abs(_pitBoxDebriefMaxMandatoryRepairRemainingSec - _pitBoxDebriefMaxOptionalRepairRemainingSec) <= 0.001
-                && Math.Abs(_pitBoxDebriefLastMandatoryRepairRemainingSec - _pitBoxDebriefLastOptionalRepairRemainingSec) <= 0.001;
+            double mandatoryServedSec;
+            double optionalServedSec;
+            bool duplicatedStreams;
+            CalculatePitDebriefServedRepairStreams(out mandatoryServedSec, out optionalServedSec, out duplicatedStreams);
             if (duplicatedStreams)
             {
                 return Math.Max(mandatoryServedSec, optionalServedSec);
             }
 
             return mandatoryServedSec + optionalServedSec;
+        }
+
+        private string CalculatePitDebriefServedRepairInfluence()
+        {
+            double mandatoryServedSec;
+            double optionalServedSec;
+            CalculatePitDebriefServedRepairStreams(out mandatoryServedSec, out optionalServedSec, out _);
+
+            const double servedRepairEpsilonSec = 0.001;
+            bool mandatoryServed = mandatoryServedSec > servedRepairEpsilonSec;
+            bool optionalServed = optionalServedSec > servedRepairEpsilonSec;
+            if (mandatoryServed && optionalServed)
+            {
+                return "REPAIRS";
+            }
+            if (mandatoryServed)
+            {
+                return "MAND REPAIR";
+            }
+            if (optionalServed)
+            {
+                return "OPT REPAIR";
+            }
+
+            return string.Empty;
+        }
+
+        private void CalculatePitDebriefServedRepairStreams(out double mandatoryServedSec, out double optionalServedSec, out bool duplicatedStreams)
+        {
+            mandatoryServedSec = Math.Max(0.0, _pitBoxDebriefMaxMandatoryRepairRemainingSec - _pitBoxDebriefLastMandatoryRepairRemainingSec);
+            optionalServedSec = Math.Max(0.0, _pitBoxDebriefMaxOptionalRepairRemainingSec - _pitBoxDebriefLastOptionalRepairRemainingSec);
+
+            duplicatedStreams = _pitBoxDebriefMaxMandatoryRepairRemainingSec > 0.0
+                && _pitBoxDebriefMaxOptionalRepairRemainingSec > 0.0
+                && Math.Abs(_pitBoxDebriefMaxMandatoryRepairRemainingSec - _pitBoxDebriefMaxOptionalRepairRemainingSec) <= 0.001
+                && Math.Abs(_pitBoxDebriefLastMandatoryRepairRemainingSec - _pitBoxDebriefLastOptionalRepairRemainingSec) <= 0.001;
         }
 
         private void UpdatePitBoxCountdownValues(bool inPitLane, bool isInPitStall)
@@ -23606,7 +23638,7 @@ namespace LaunchPlugin
                         _pitBoxLastCompletedElapsedValid = false;
                     }
                     _pitBoxLastCompletedTargetSec = lastTargetSec;
-                    _pitBoxLastCompletedRepairInfluence = GetPitBoxDebriefRepairInfluence();
+                    _pitBoxLastCompletedRepairInfluence = CalculatePitDebriefServedRepairInfluence();
                     if (!_pitDebriefBoxCountdownFinalizeDiagLogged)
                     {
                         LogPitDebriefBoxDiag("countdown-finalize", "Pit.Box.LastDeltaSec finalized as target-actual; positive means quicker/better", finalElapsedSec, -_pitBoxLastDeltaSec);
