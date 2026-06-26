@@ -1,3 +1,8 @@
+## 2026-06-26 — Pit Debrief repair-adjusted Box Delta self-audit follow-up
+- Classification: **both** (driver-facing Pit Debrief SummaryText/Box Delta correctness plus internal docs; no export names, settings, dashboard JSON, PitExit, Fuel.Live.TotalStopLoss, Strategy timing, PitEngine/PitCycleLite, or `Pit.Box.LastDeltaSec` sign/contract changes).
+- Latched debrief-only repair influence separately from runtime countdown repair influence so optional/mandatory repair-adjusted debrief Box Delta also labels `SummaryText` as repair-influenced without changing runtime `Pit.Box.*` countdown labels.
+- Tightened completed elapsed evidence so zero elapsed is not marked valid for debrief fallback, while exact `0.0` Box Delta remains valid via separate delta validity. Mandatory and optional repair-left streams are now tracked independently for served-repair calculation, with duplicated/equal streams treated as one stream to avoid double counting. Property Snapshot list reviewed: yes; no SimHub export/property additions, removals, renames, behavior-contract changes, or regrouping required.
+
 ## 2026-06-26 — Pit Debrief repair-adjusted Box Delta edge follow-up
 - Classification: **both** (driver-facing Pit Debrief Box Delta correctness plus internal docs; no export names, settings, dashboard JSON, PitExit, Fuel.Live.TotalStopLoss, Strategy timing, PitEngine/PitCycleLite, or `Pit.Box.LastDeltaSec` sign/contract changes).
 - Latched the completed boxed-stop elapsed used when `Pit.Box.LastDeltaSec` finalizes, and made repair-adjusted Pit Debrief Box Delta prefer explicit valid final elapsed, then the completed elapsed latch, then safe target/delta reconstruction, leaving missing evidence pending/NaN instead of reading cleared countdown elapsed.
