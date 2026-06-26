@@ -7218,6 +7218,9 @@ namespace LaunchPlugin
         private double _pitBoxDebriefLatchedTargetSec = 0.0;
         private double _pitBoxDebriefMaxRepairRemainingSec = 0.0;
         private double _pitBoxDebriefLastRepairRemainingSec = 0.0;
+        private double _pitBoxLastCompletedElapsedSec = 0.0;
+        private bool _pitBoxLastCompletedElapsedValid = false;
+        private double _pitBoxLastCompletedTargetSec = 0.0;
         private bool _pitBoxDebriefTargetLatched = false;
         private bool _pitBoxTargetLatched = false;
         private int _pitBoxLatchedTireChangeCount = 4;
@@ -10469,6 +10472,9 @@ namespace LaunchPlugin
             _pitBoxDebriefLatchedTargetSec = 0.0;
             _pitBoxDebriefMaxRepairRemainingSec = 0.0;
             _pitBoxDebriefLastRepairRemainingSec = 0.0;
+            _pitBoxLastCompletedElapsedSec = 0.0;
+            _pitBoxLastCompletedElapsedValid = false;
+            _pitBoxLastCompletedTargetSec = 0.0;
             _pitBoxDebriefTargetLatched = false;
             _pitBoxLastCompletedRepairInfluence = string.Empty;
             ResetPitBoxCountdownState();
@@ -22821,6 +22827,49 @@ namespace LaunchPlugin
             return repairRemainingSec;
         }
 
+        private double CalculatePitBoxDebriefRepairRemainingSeconds(out string repairInfluence)
+        {
+            repairInfluence = string.Empty;
+            if (!IsInValidPitBoxServiceState())
+            {
+                return 0.0;
+            }
+
+            double mandatoryRepairSec = ReadPitRepairSeconds(
+                "DataCorePlugin.GameRawData.Telemetry.PitRepairLeft",
+                "DataCorePlugin.GameData.PitRepairLeft");
+            double optionalRepairSec = ReadPitRepairSeconds(
+                "DataCorePlugin.GameRawData.Telemetry.PitOptRepairLeft",
+                "DataCorePlugin.GameData.PitOptRepairLeft");
+
+            double repairRemainingSec = Math.Max(mandatoryRepairSec, optionalRepairSec);
+            if (repairRemainingSec <= 0.0)
+            {
+                return 0.0;
+            }
+
+            bool hasMandatory = mandatoryRepairSec > 0.0;
+            bool hasOptional = optionalRepairSec > 0.0;
+            if (hasMandatory && hasOptional && Math.Abs(mandatoryRepairSec - optionalRepairSec) <= 0.001)
+            {
+                repairInfluence = "REPAIRS";
+            }
+            else if (hasOptional && optionalRepairSec >= mandatoryRepairSec)
+            {
+                repairInfluence = "OPT REPAIR";
+            }
+            else if (hasMandatory)
+            {
+                repairInfluence = "MAND REPAIR";
+            }
+            else
+            {
+                repairInfluence = "REPAIRS";
+            }
+
+            return repairRemainingSec;
+        }
+
         private double CalculatePitBoxRemainingSeconds(double elapsedSec, double modeledTargetSec)
         {
             double modeledRemainingSec = Math.Max(0.0, modeledTargetSec - elapsedSec);
@@ -23439,7 +23488,22 @@ namespace LaunchPlugin
 
             if (double.IsNaN(finalElapsedSec) || double.IsInfinity(finalElapsedSec) || finalElapsedSec <= 0.0)
             {
-                finalElapsedSec = Math.Max(0.0, _pitBoxElapsedSec);
+                if (_pitBoxLastCompletedElapsedValid)
+                {
+                    finalElapsedSec = _pitBoxLastCompletedElapsedSec;
+                }
+                else if (_pitBoxLastDeltaValid && _pitBoxLastCompletedTargetSec > 0.0)
+                {
+                    finalElapsedSec = Math.Max(0.0, _pitBoxLastCompletedTargetSec - _pitBoxLastDeltaSec);
+                }
+                else if (_pitBoxElapsedSec > 0.0)
+                {
+                    finalElapsedSec = _pitBoxElapsedSec;
+                }
+                else
+                {
+                    return double.NaN;
+                }
             }
 
             double targetSec = _pitBoxDebriefLatchedTargetSec;
@@ -23484,6 +23548,9 @@ namespace LaunchPlugin
 
                     _pitBoxLastDeltaSec = deltaSec;
                     _pitBoxLastDeltaValid = true;
+                    _pitBoxLastCompletedElapsedSec = finalElapsedSec;
+                    _pitBoxLastCompletedElapsedValid = true;
+                    _pitBoxLastCompletedTargetSec = lastTargetSec;
                     _pitBoxLastCompletedRepairInfluence = _pitBoxLatchedRepairInfluence ?? string.Empty;
                     if (!_pitDebriefBoxCountdownFinalizeDiagLogged)
                     {
@@ -23513,6 +23580,9 @@ namespace LaunchPlugin
                 _pitBoxDebriefLatchedTargetSec = 0.0;
                 _pitBoxDebriefMaxRepairRemainingSec = 0.0;
                 _pitBoxDebriefLastRepairRemainingSec = 0.0;
+                _pitBoxLastCompletedElapsedSec = 0.0;
+                _pitBoxLastCompletedElapsedValid = false;
+                _pitBoxLastCompletedTargetSec = 0.0;
                 _pitBoxDebriefTargetLatched = false;
                 _pitBoxLastCompletedRepairInfluence = string.Empty;
                 bool hasTireSelectionEvidence;
@@ -23533,11 +23603,16 @@ namespace LaunchPlugin
             if (double.IsNaN(repairRemainingSec) || double.IsInfinity(repairRemainingSec) || repairRemainingSec < 0.0)
                 repairRemainingSec = 0.0;
 
-            if (repairRemainingSec > _pitBoxDebriefMaxRepairRemainingSec)
+            string debriefRepairInfluence;
+            double debriefRepairRemainingSec = CalculatePitBoxDebriefRepairRemainingSeconds(out debriefRepairInfluence);
+            if (double.IsNaN(debriefRepairRemainingSec) || double.IsInfinity(debriefRepairRemainingSec) || debriefRepairRemainingSec < 0.0)
+                debriefRepairRemainingSec = 0.0;
+
+            if (debriefRepairRemainingSec > _pitBoxDebriefMaxRepairRemainingSec)
             {
-                _pitBoxDebriefMaxRepairRemainingSec = repairRemainingSec;
+                _pitBoxDebriefMaxRepairRemainingSec = debriefRepairRemainingSec;
             }
-            _pitBoxDebriefLastRepairRemainingSec = repairRemainingSec;
+            _pitBoxDebriefLastRepairRemainingSec = debriefRepairRemainingSec;
 
             double effectiveTargetSec = Math.Max(modeledTargetSec, repairRemainingSec);
             string effectiveRepairInfluence = repairRemainingSec > 0.0 && repairRemainingSec >= modeledTargetSec ? repairInfluence : string.Empty;
