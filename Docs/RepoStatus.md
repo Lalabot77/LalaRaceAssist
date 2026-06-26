@@ -1,3 +1,6 @@
+- 2026-06-26 Dash Control missing action bindings landed:
+  - added SimHub/dashboard actions for Dark Mode brightness +/- (existing `Settings.DarkModeBrightnessPct`, +/-5, `0..100`), Shift Assist system enable toggle (`Settings.ShiftAssistEnabled` only), and Strategy contingency +/-1L (`FuelCalcs.ContingencyValue` only when contingency mode is litres; laps mode logs/no-ops);
+  - exposed the actions in `Bindings -> General / Dash Controls`; no dashboard JSON, fuel formulas, Shift Assist learning/locks/samples, launch logic, or SimHub exports/properties changed. Property Snapshot list reviewed: yes; no export/property changes.
 - 2026-06-26 v1.1 Dark Mode fallback polish landed:
   - aligned the pre-settings runtime Dark Mode fallback cache with v1.1 first-run defaults (`Auto`, 90% brightness) so exported fallback values no longer briefly reflect the old Manual/100% defaults before Settings are available. No persisted settings defaults, actions, export names, dashboard files, or runtime dark-mode calculations changed. Property Snapshot list reviewed: no; fallback value alignment only, with no export/property surface change.
 - 2026-06-26 v1.1 first-run settings-default alignment landed:
