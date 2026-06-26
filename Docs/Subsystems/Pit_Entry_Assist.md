@@ -32,7 +32,7 @@ Canonical logs: `Docs/Internal/SimHubLogMessages.md`
 1. Assist arms (conditions above).
 2. Braking guidance recomputes every tick (distance, required distance, margin, cue).
 3. Driver crosses pit entry line → `ENTRY LINE` log fires once with debrief/time-loss fields.
-4. Post-line speed-settling text remains available while on pit lane until handover to the Pit Box widget (`Pit.Box.DistanceM < 200m`).
+4. Post-line speed-settling text remains available while on pit lane until handover to the Pit Box widget (`Pit.Box.DistanceM < 200m`). This handover remains active on first-lap/pre-race pit-road passes even though pit-loss learning is suppressed, so track-specific pit boxes near/after start-finish still get the same Box Entry handoff once wrapped distance reaches the box window.
 5. During post-line hold, live braking geometry (`Pit.EntryDistanceToLine_m`, `Pit.EntryRequiredDistance_m`, `Pit.EntryMargin_m`, `Pit.EntryCue`) is neutralized while speed-settling text remains active.
 6. Handover turns off active cue outputs but preserves the latched entry-line evidence (`Pit.EntryLineDebrief*`, `Pit.EntrySpeedDelta_kph`, and late-distance evidence) long enough for Pit Debrief consumption.
 7. Assist ends after handover or disarm.
