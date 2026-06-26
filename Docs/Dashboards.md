@@ -112,6 +112,17 @@ Depending on how you organise your SimHub setup, those bindings can be configure
 
 Use whichever approach best matches your hardware. The important point is that the Lala dashboards are designed to work with SimHub's standard next/previous dash navigation model.
 
+### First-run dashboard defaults
+
+For a new v1.1 install, dashboard-related settings start with auto screen selection enabled, Dark Mode set to **Auto**, and the Dark Mode brightness slider at **90%**. Strategy Dash presentation starts in **Simple** mode (`LalaLaunch.StrategyDash.AdvancedMode=false`) and remains controlled by the existing Strategy Dash Mode action/binding.
+
+Dash Visibility first-run defaults are split by surface:
+
+- **Driver dash** and **Overlay**: Launch Assist, Pit Entry Assist, Pit Box Assist, Pit Limiter, Show Automatic Pit Screen, and Rejoin Assist are on; Verbose Race Messages, Race Flags, Radio Messages, and Traffic Alerts are off.
+- **Strategy dash**: Launch Assist, Pit Entry Assist, Pit Box Assist, Pit Limiter, Show Automatic Pit Screen, and Rejoin Assist are off; Verbose Race Messages, Race Flags, Radio Messages, and Traffic Alerts are on.
+
+Saved user preferences are persisted normally; these defaults apply only when a setting is missing or a fresh settings file is created.
+
 ### Auto-dash switching
 
 If you use SimHub auto-dash switching, the active session type can determine which dashboard page becomes your landing page.

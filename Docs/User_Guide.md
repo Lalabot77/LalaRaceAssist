@@ -164,6 +164,10 @@ Lala Race Assist Plugin includes separate driver-facing pages for recovery/rejoi
 - Confirmation semantics: stateful built-in pit toggles are effect-confirmed via before/after telemetry; custom messages, raw commands, and stateless built-ins are transport-attempt only (delivery unverified).
 - For the full driver workflow, use [Pit Assist](Pit_Assist.md). For canonical technical ownership/exports, use [Subsystems/Pit_Commands_And_Fuel_Control.md](Subsystems/Pit_Commands_And_Fuel_Control.md).
 
+### First-run settings defaults
+
+For new v1.1 settings files, the Plugin Monitor starts enabled, League Class starts disabled, debug/runtime diagnostic systems start disabled, and Fuel Strategy defaults to 30% Fuel Ready Confidence, 10% Pit-in Fuel Reserve, LIVE/OFF Fuel Data Plan mode, a 10% DATA PLAN push/save guard, and optional repairs included in the pit-box service countdown. Existing saved settings continue to load their persisted values instead of being reset.
+
 ### H2H
 
 H2H is a read-only race-context aid that helps the driver compare race-order and local-track threats without becoming a separate planning workflow. See [H2H System](H2H_System.md).

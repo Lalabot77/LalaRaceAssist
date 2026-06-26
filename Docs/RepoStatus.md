@@ -1,3 +1,7 @@
+- 2026-06-26 v1.1 first-run default settings alignment landed:
+  - new settings files now default Monitor System ON, auto screen selection ON, Dark Mode Auto at 90%, Strategy Dash Simple (`AdvancedMode=false`), League Class OFF, debug/runtime diagnostics OFF, Fuel Ready Confidence 30%, Pit-in Fuel Reserve 10%, Fuel Data Plan LIVE/OFF, DATA PLAN guard 10%, and optional repairs included in pit-box service countdown;
+  - Dash Visibility first-run defaults now route driver/overlay toward driving aids with message/flag/radio/traffic surfaces off, while Strategy Dash does the inverse;
+  - persistence semantics are unchanged: existing JSON values are preserved when present, missing fields use the new initializer defaults, and no dashboard files, SimHub export names, action names, or runtime calculations changed. Property Snapshot list reviewed: yes; no export/property changes.
 - 2026-06-24 Plugin UI tab/settings reorganisation landed:
   - top-level plugin tabs are now `Overview`, `Strategy`, `Profiles`, `Launch System`, `Bindings`, and `Settings`;
   - binding/action configuration now lives in `Bindings` expanders for General / Dash Controls, Launch, Pit Commands, and Custom Messages, while Settings is settings-only with Plugin Monitor, Dashboards, League Classes, Fuel Strategy, Friends List, and Debug;

@@ -114,6 +114,10 @@ For a new car/track combination:
 - Transport truth: stateful built-in toggles use telemetry before/after confirmation; custom/raw/stateless sends are logged as attempted with unverified delivery (no duplicate-send retry after queued direct-message success).
 - For complete pit/custom command usage guidance, see [Pit Assist](Pit_Assist.md). For technical export/action ownership, see [Subsystems/Pit_Commands_And_Fuel_Control.md](Subsystems/Pit_Commands_And_Fuel_Control.md).
 
+### First-run display defaults
+
+On a fresh v1.1 setup, auto-dash switching is enabled, Dark Mode is Auto at 90% brightness, and Strategy Dash starts in Simple mode. Driver/overlay surfaces prioritize driving aids by default, while Strategy Dash prioritizes race-message/flag/radio/traffic information; existing saved preferences are not reset on upgrade.
+
 ### Dash navigation quick setup
 
 The dashboards can be used by touch, but binding controls is strongly recommended. For a first usable setup:
