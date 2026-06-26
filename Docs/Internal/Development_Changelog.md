@@ -1,3 +1,8 @@
+## 2026-06-26 — Pit Debrief Box Delta repair-exclusion follow-up
+- Classification: **both** (driver-facing Pit Debrief Box Delta semantic correction; no export names, settings, dashboard JSON/layout, PitEngine timing, PitCycleLite, Fuel.Live.TotalStopLoss, PitExit prediction, Strategy math, pit-loss learning, or `Pit.Box.LastDeltaSec` dashboard contract change).
+- Pit Debrief now latches a debrief-only repair-excluded service target alongside the existing repair-aware pit-box countdown target and uses completed boxed elapsed time minus that target for `Pit.Debrief.BoxDeltaSec` / `SummaryText`. The target includes modeled fuel service, tyre service, and the existing boxed-service overhead, but excludes optional and mandatory repair duration.
+- `Pit.Box.TargetSec`, `Pit.Box.RemainingSec`, and `Pit.Box.LastDeltaSec` remain repair-aware for runtime countdown/pit-popup review. Repair influence labels remain `SummaryText` context only, and Strategy Delta remains total-impact oriented through existing prediction/final-loss seams. Property Snapshot list reviewed: yes; no SimHub export/property additions, removals, renames, or regrouping required.
+
 - 2026-06-26 v1.1 Dark Mode fallback polish landed:
   - aligned the pre-settings runtime Dark Mode fallback cache with v1.1 first-run defaults (`Auto`, 90% brightness) so exported fallback values no longer briefly reflect the old Manual/100% defaults before Settings are available. No persisted settings defaults, actions, export names, dashboard files, or runtime dark-mode calculations changed. Property Snapshot list reviewed: no; fallback value alignment only, with no export/property surface change.
 - 2026-06-26 v1.1 first-run settings-default alignment landed:
