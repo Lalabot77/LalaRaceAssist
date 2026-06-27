@@ -8,7 +8,7 @@ Last updated: 2026-06-11
 Branch: work
 
 ## Purpose
-Profiles and PBs provide **persistent baselines** for:
+Profiles provide **persistent baselines** for saved setup data; personal-best/reference values are stored profile data for:
 - Fuel per lap (dry/wet)
 - Lap time (dry/wet)
 - Pit lane loss per track

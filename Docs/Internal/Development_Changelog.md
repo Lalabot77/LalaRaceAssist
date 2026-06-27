@@ -1,3 +1,7 @@
+## 2026-06-27 — v1.1 final documentation consistency pass
+- Classification: **both** (GitHub-facing migration guidance and internal status/link consistency; no runtime behavior, dashboard JSON/package files, SimHub export/action names, settings schema, profile schema, preset schema, file moves, or hierarchy changes).
+- Fixed stale moved-document references, restored concise migration guidance for `LaunchPlugin.dll`, current v1.1 no-active-requirement for `RSC.iRacingExtraProperties.dll`, plugin-owned pit/custom actions, and legacy dashboard/button-box binding review, and aligned Project Index / RepoStatus wording so the visible Standing Start Assist UI label update is not described as docs-only. Property Snapshot list reviewed: no; documentation consistency and migration guidance only, with no SimHub export/property surface change.
+
 ## 2026-06-27 — v1.1 documentation philosophy polish
 - Classification: **both** (GitHub-facing User Guide/System page content plus internal status docs; no runtime behavior, dashboard JSON/package files, SimHub export/action names, settings schema, profile schema, preset schema, file moves, or hierarchy changes).
 - Rewrote the Core System pages in a more natural guidance style and rewrote the User Guide as the introductory philosophy chapter for product surfaces, driving vs race management, core-system flow, learn/validate/lock/trust, ownership boundaries, and documentation navigation. Property Snapshot list reviewed: no; content-only documentation polish with no SimHub export/property surface change.

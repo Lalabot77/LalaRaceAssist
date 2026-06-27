@@ -54,6 +54,11 @@ That means a dashboard should not be treated as the source of strategy math, fue
 
 It also means public wording does not rename contracts. User docs say **Standing Start Assist** and **Driver Tagging**, but technical docs may still mention Launch Mode, launch traces, Friends, action names, exports, settings, or schema fields where those are existing contracts.
 
+
+## Upgrade note
+
+Current v1.1 plugin-owned runtime, pit command, and custom command workflows no longer require `RSC.iRacingExtraProperties.dll`. Older community dashboards, local experiments, or button-box bindings may still reference it, so treat those as migration leftovers to review rather than as a current runtime dependency.
+
 ## How to keep learning
 
 The documentation follows the same outside-in idea as the plugin.

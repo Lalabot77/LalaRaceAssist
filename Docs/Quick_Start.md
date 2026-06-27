@@ -26,6 +26,8 @@ Dashboards present plugin-owned outputs. They do not own strategy math, fuel lea
 
 Bind the controls you expect to use while driving, including dashboard controls, pit commands, Strategy controls, Standing Start Assist controls, Shift Assist controls, and message acknowledgement.
 
+For current installs, use the plugin-owned pit/custom command actions documented in the Bindings UI and Pit System docs. Older `iRacingExtraProperties` pit/custom command actions should not be used for the v1.1 plugin-owned workflow. If you are upgrading existing dashboards, Stream Deck pages, button boxes, or wheel bindings, review them for old action IDs before assuming the new plugin flow is in control.
+
 Public docs may say Standing Start Assist, but existing SimHub action names remain unchanged unless a future task explicitly approves a contract change.
 
 ## 5. Check Monitor System

@@ -29,7 +29,7 @@ This doc covers:
 
 Out of scope:
 - Fuel-to-add logic (see `Fuel_Model.md`).
-- Planner usage of pit loss (see `Fuel_Planner_Tab.md`).
+- Planner usage of pit loss (see `Docs/Subsystems/Strategy/Fuel_Planner_Tab.md`).
 - Dash presentation logic (see `Subsystems/Dash_Integration.md`).
 
 ## Canonical pit-loss definition (drive-through baseline)

@@ -3,11 +3,11 @@
 Validated against commit: HEAD
 Last updated: 2026-06-27
 Branch: work
-Current note: v1.1 documentation architecture now follows the outside-in product model: product surfaces first, core systems second, technical subsystem ownership third, and internal maintainer references last. This was a documentation-only restructure with no runtime, dashboard JSON, SimHub export/action, settings schema, or profile/preset schema change.
+Current note: v1.1 documentation architecture now follows the outside-in product model: product surfaces first, core systems second, technical subsystem ownership third, and internal maintainer references last. The documentation restructure also included visible user-facing UI/product wording updates for Standing Start Assist plus Driver Tagging product terminology while preserving runtime behavior, dashboard JSON, SimHub export/action names, settings schema, profile/preset schema, and dashboard contracts.
 
 ## What this repo is
 
-Lala Race Assist Plugin is a SimHub plugin for iRacing that provides driver dashboards, strategy planning, race-awareness context, pit assistance, rejoin support, Shift Assist cueing, race-start review, profile-backed persistence, and diagnostics.
+Lala Race Assist Plugin is a SimHub plugin for iRacing that provides driver dashboards, strategy planning, race-awareness context, pit assistance, rejoin support, Shift Assist cueing, Standing Start Assist review, profile-backed persistence, and diagnostics.
 
 This page is the canonical documentation map for the v1.1 GitHub documentation set. It should let a reader move cleanly between product surfaces, core systems, feature guidance, technical subsystem truth, and internal maintainer references.
 
