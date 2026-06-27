@@ -2876,7 +2876,7 @@ namespace LaunchPlugin
 
                 value = text.Trim();
                 return value.Length > 0;
-            }
+            } 
             catch
             {
                 return false;
