@@ -369,7 +369,7 @@ Shift Assist runtime/settings notes:
 | ShiftAssist.Delay.PendingAgeMs | int | Elapsed milliseconds since pending delay capture was armed (`-1` when inactive). | Per tick. | `LalaLaunch.cs` pending delay timer helper + `AttachCore`. |
 | ShiftAssist.Delay.PendingRpmAtCue | int | RPM captured at the moment the pending delay window was armed. | Per tick. | `LalaLaunch.cs` pending delay tracker + `AttachCore`. |
 | ShiftAssist.Delay.RpmAtBeep | int | Last latched RPM at beep trigger time (primary beep path). | Per tick. | `LalaLaunch.cs` beep/delay diagnostics latch + `AttachCore`. |
-| ShiftAssist.Delay.CaptureState | int | Encoded capture state for delay diagnostics (`0` none, `1` arm, `2` capture, `3` timeout, `4` cancelled/downshift). | Per tick. | `LalaLaunch.cs` delay diagnostics mapper + `AttachCore`. |
+| ShiftAssist.Delay.CaptureState | int | Encoded capture state for delay diagnostics (`0` none, `1` ARM, `2` CAPTURE, `3` CANCEL_BRAKE, `4` CANCEL_DOWN, `5` CANCEL_TIMEOUT). | Per tick. | `LalaLaunch.cs` delay diagnostics mapper + `AttachCore`. |
 | ShiftAssist UI gear rows | n/a | Profile storage remains 8 slots, but UI only shows up-shiftable gears `1..(maxForwardGears-1)` where max forward gears comes from `DataCorePlugin.GameData.CarSettings_MaxGears`, then `DataCorePlugin.GameRawData.SessionData.DriverInfo.DriverCarGearNumForward`, then defaults to `8`. | On profile/UI refresh. | `ProfilesManagerViewModel.cs` — `ShiftAssistMaxTargetGears` + `ShiftGearRows`. |
 
 ## Session / Identity

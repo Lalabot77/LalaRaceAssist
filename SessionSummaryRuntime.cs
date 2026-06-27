@@ -16,7 +16,6 @@ namespace LaunchPlugin
         private static double? _raceStartSessionTimeSec;
         private static double? _raceCheckeredSessionTimeSec;
         private static double? _fuelAtGreenLiters;
-        private static double? _fuelAtCheckeredLiters;
         private static double _fuelAddedTotalLiters;
         private static int _validPaceLapCountTotal;
         private static double _validPaceLapTimeSumSec;
@@ -65,7 +64,6 @@ namespace LaunchPlugin
                 _raceStartSessionTimeSec = double.IsNaN(sessionTimeSec) ? (double?)null : sessionTimeSec;
                 _raceCheckeredSessionTimeSec = null;
                 _fuelAtGreenLiters = fuelAtGreen;
-                _fuelAtCheckeredLiters = null;
                 _fuelAddedTotalLiters = 0.0;
                 _validPaceLapCountTotal = 0;
                 _validPaceLapTimeSumSec = 0.0;

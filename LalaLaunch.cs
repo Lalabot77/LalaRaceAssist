@@ -1123,7 +1123,6 @@ namespace LaunchPlugin
         private double _prevSessionTimeRemain = double.NaN;
         private double _leaderCheckeredSessionTime = double.NaN;
         private double _driverCheckeredSessionTime = double.NaN;
-        private bool _leaderFinishedSeen;
         private bool _leaderHasFinished;
         private bool _overallLeaderHasFinished;
         private bool _classLeaderHasFinished;
@@ -1168,7 +1167,6 @@ namespace LaunchPlugin
         private double _finishLifecycleReferencePct = double.NaN;
         private string _classBestResolveLastLogReason = string.Empty;
         private int _lastCompletedLapForFinish = -1;
-        private bool _leaderFinishLatchedByFlag;
         private double _afterZeroPlannerSeconds;
         private double _afterZeroLiveEstimateSeconds;
         private double _afterZeroUsedSeconds;
@@ -7508,7 +7506,6 @@ namespace LaunchPlugin
         private string _shiftAssistPendingDelayBeepType = "NONE";
         private int _shiftAssistLastBeepRpmLatched;
         private int _shiftAssistLastCapturedDelayMs;
-        private string _shiftAssistDelayCaptureEvent = "NONE";
         private int _shiftAssistDelayCaptureState;
         private string _shiftAssistDelayBeepType = "NONE";
         private int _shiftAssistDelayDiagLatchedCapturedMs;
@@ -9923,7 +9920,6 @@ namespace LaunchPlugin
             _prevSessionTimeRemain = double.NaN;
             _leaderCheckeredSessionTime = double.NaN;
             _driverCheckeredSessionTime = double.NaN;
-            _leaderFinishedSeen = false;
             _overallLeaderHasFinished = false;
             _classLeaderHasFinished = false;
             _overallLeaderHasFinishedValid = false;
@@ -9938,7 +9934,6 @@ namespace LaunchPlugin
             _finishLifecycleReferencePct = double.NaN;
             _lastCompletedLapForFinish = -1;
             LeaderHasFinished = false;
-            _leaderFinishLatchedByFlag = false;
             RaceEndPhase = 0;
             RaceEndPhaseText = "Unknown";
             RaceEndPhaseConfidence = 0;
@@ -12813,7 +12808,6 @@ namespace LaunchPlugin
             }
             _shiftAssistAudioIssuedPulse = false;
             _shiftAssistLastCapturedDelayMs = 0;
-            _shiftAssistDelayCaptureEvent = "NONE";
 
             int gear;
             if (!TryReadNullableInt(pluginManager, "DataCorePlugin.GameRawData.Telemetry.Gear", out gear))
@@ -12866,7 +12860,6 @@ namespace LaunchPlugin
                 long nowTs = Stopwatch.GetTimestamp();
                 if (brake01 > 0.10)
                 {
-                    _shiftAssistDelayCaptureEvent = "CANCEL_BRAKE";
                     _shiftAssistDelayCaptureState = 3;
                     _shiftAssistDelayBeepType = _shiftAssistPendingDelayBeepType;
                     LatchShiftAssistDelayDiagnostics("CANCEL_BRAKE", _shiftAssistPendingDelayBeepType, 0, nowUtc);
@@ -12878,7 +12871,6 @@ namespace LaunchPlugin
                     if (delayMs > 0)
                     {
                         _shiftAssistLastCapturedDelayMs = delayMs;
-                        _shiftAssistDelayCaptureEvent = "CAPTURE";
                         _shiftAssistDelayCaptureState = 2;
                         _shiftAssistDelayBeepType = _shiftAssistPendingDelayBeepType;
                         LatchShiftAssistDelayDiagnostics("CAPTURE", _shiftAssistPendingDelayBeepType, delayMs, nowUtc);
@@ -12904,7 +12896,6 @@ namespace LaunchPlugin
                         }
                         else if (GetShiftAssistPendingDownshiftAgeMs(nowTs) >= ShiftAssistDelayDownshiftGraceMs)
                         {
-                            _shiftAssistDelayCaptureEvent = "CANCEL_DOWN";
                             _shiftAssistDelayCaptureState = 4;
                             _shiftAssistDelayBeepType = _shiftAssistPendingDelayBeepType;
                             LatchShiftAssistDelayDiagnostics("CANCEL_DOWN", _shiftAssistPendingDelayBeepType, 0, nowUtc);
@@ -12919,7 +12910,6 @@ namespace LaunchPlugin
 
                     if (_shiftAssistPendingDelayActive && GetShiftAssistPendingAgeMs(nowTs) > ShiftAssistDelayPendingTimeoutMs)
                     {
-                        _shiftAssistDelayCaptureEvent = "CANCEL_TIMEOUT";
                         _shiftAssistDelayCaptureState = 5;
                         _shiftAssistDelayBeepType = _shiftAssistPendingDelayBeepType;
                         LatchShiftAssistDelayDiagnostics("CANCEL_TIMEOUT", _shiftAssistPendingDelayBeepType, 0, nowUtc);
@@ -13183,7 +13173,6 @@ namespace LaunchPlugin
                     _shiftAssistPendingDelayBeepType = "PRIMARY";
                     _shiftAssistLastBeepRpmLatched = rpm;
                     _shiftAssistPendingDelayActive = true;
-                    _shiftAssistDelayCaptureEvent = "ARM";
                     _shiftAssistDelayBeepType = "PRIMARY";
                     LatchShiftAssistDelayDiagnostics("ARM", "PRIMARY", 0, nowUtc);
                     RequestShiftAssistRuntimeStatsRefresh();
@@ -25143,7 +25132,6 @@ namespace LaunchPlugin
 
             if (!derivedLeaderBefore && derivedLeaderAfter)
             {
-                _leaderFinishedSeen = true;
                 _leaderCheckeredSessionTime = sessionTime;
                 SimHub.Logging.Current.Info(
                     $"[LalaPlugin:Finish] leader_finish trigger=derived source={(isMultiClassSession ? "class" : "overall")} " +

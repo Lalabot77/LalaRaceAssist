@@ -1,3 +1,8 @@
+## 2026-06-27 — v1.1 warning cleanup
+- Classification: **internal-only** (dead private field cleanup and internal SimHub parameter documentation alignment; no runtime behavior, export/action names, dashboard contracts, settings/profile schema, finish lifecycle logic, `CanTrustPerCarFinishFlags(...)`, or Shift Assist learning/audio/cueing/sample behavior changed).
+- Removed confirmed write-only/private warning fields only: `_leaderFinishedSeen`, `_leaderFinishLatchedByFlag`, `_fuelAtCheckeredLiters`, and `_shiftAssistDelayCaptureEvent` plus their corresponding writes/resets. Existing leader checkered session-time latching, RaceFinish snapshot flow, Session Summary finish fuel assignment, and Shift Assist delay capture state/sample paths remain unchanged.
+- Updated `ShiftAssist.Delay.CaptureState` inventory text to match the existing code map: `1=ARM`, `2=CAPTURE`, `3=CANCEL_BRAKE`, `4=CANCEL_DOWN`, `5=CANCEL_TIMEOUT`. Property Snapshot list reviewed: yes; no SimHub export/property additions, removals, renames, behavior-contract changes, or regrouping required.
+
 ## 2026-06-26 — Pit Debrief repair-adjusted Box Delta self-audit follow-up
 - Classification: **both** (driver-facing Pit Debrief SummaryText/Box Delta correctness plus internal docs; no export names, settings, dashboard JSON, PitExit, Fuel.Live.TotalStopLoss, Strategy timing, PitEngine/PitCycleLite, or `Pit.Box.LastDeltaSec` sign/contract changes).
 - Latched debrief-only repair influence separately from runtime countdown repair influence so optional/mandatory repair-adjusted debrief Box Delta also labels `SummaryText` as repair-influenced without changing runtime `Pit.Box.*` countdown labels.
