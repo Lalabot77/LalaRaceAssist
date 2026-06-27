@@ -1,5 +1,8 @@
 # Head-to-Head (H2H)
 
+> Product name: **Traffic Awareness / Race Awareness**. Technical implementation name: **H2H**. Contract warning: do not rename SimHub exports/actions, persisted settings, dashboard JSON contracts, profile/preset schema fields, or code contracts from documentation wording alone.
+
+
 Validated against commit: HEAD
 Last updated: 2026-06-06
 Branch: work
@@ -91,7 +94,7 @@ Both `H2HRace.*` and `H2HTrack.*` expose the same flat shape:
 - H2H still keeps lightweight participant context for `ActiveSegment`, `LapRef`, `LiveGapSec`, `LiveDeltaToBestSec`, and lap-summary publication; for H2HTrack only, the live-gap value is supplied by the selected CarSA slot directional `Gap.TrackSec` override when finite.
 - H2H no longer owns target-bound sector completion timing, bind-aware row rebuild mechanics, or sector-6 lap-wrap carryover. Those published sector outputs are now entirely driven by the CarSA cache.
 - `ClassColor` / `ClassColorHex` are published as dash-ready `#RRGGBB` on H2H exports.
-- `H2HTrack.*` keeps CarSA-owned physical target selection, while League-aware class presentation and effective-cohort semantics are documented canonically in `Docs/Subsystems/League_Class_System.md`; disabled/unresolved paths remain native fallback.
+- `H2HTrack.*` keeps CarSA-owned physical target selection, while League-aware class presentation and effective-cohort semantics are documented canonically in `Docs/Subsystems/Race_Awareness/League_Class_System.md`; disabled/unresolved paths remain native fallback.
 - `H2HTrack.*` selected-target class presentation now passes through selected-slot `UserID` identity when available, enabling CSV-first League Class color resolution parity with CarSA/H2HRace; suffix fallback remains secondary when CSV is unavailable and mode permits it.
 
 - 2026-04-30 Phase 1 League Race Class infrastructure: no H2HRace/H2HTrack selector behavior changes yet; H2HTrack remains CarSA-native selection.

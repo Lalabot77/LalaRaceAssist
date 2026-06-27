@@ -1,5 +1,8 @@
 # Fuel Model
 
+> Product name: **Strategy / Fuel Guidance**. Technical implementation name: **Fuel Model**. Contract warning: do not rename SimHub exports/actions, persisted settings, dashboard JSON contracts, profile/preset schema fields, or code contracts from documentation wording alone.
+
+
 Validated against commit: HEAD
 Last updated: 2026-06-11
 Branch: work
@@ -14,15 +17,15 @@ The Fuel Model is the runtime fuel-learning and fuel-projection engine. It:
 - feeds pit-need, pit-window, and stint-burn guidance outputs.
 
 For GitHub readers, the practical split is:
-- **`Docs/Fuel_Model.md`** = driver-facing explanation of what to trust.
+- **`Docs/Features/Fuel_Guidance.md`** = driver-facing explanation of what to trust.
 - **`Docs/Subsystems/Fuel_Model.md`** = canonical runtime behavior and ownership.
-- **`Docs/Subsystems/Fuel_Planner_Tab.md`** = the separate Strategy-tab planning workflow that consumes fuel-model outputs but does not replace the runtime engine.
+- **`Docs/Subsystems/Strategy/Fuel_Planner_Tab.md`** = the separate Strategy-tab planning workflow that consumes fuel-model outputs but does not replace the runtime engine.
 
 Canonical companion docs:
 - `Docs/Internal/SimHubParameterInventory.md`
 - `Docs/Internal/SimHubLogMessages.md`
-- `Docs/Subsystems/Pace_And_Projection.md`
-- `Docs/Subsystems/Fuel_Planner_Tab.md`
+- `Docs/Subsystems/Strategy/Pace_And_Projection.md`
+- `Docs/Subsystems/Strategy/Fuel_Planner_Tab.md`
 
 ## Scope and boundaries
 - Pre-green planning adapter (`LalaLaunch.PreRace.*` / `StrategyDash.*`) includes Formation Lap Fuel only for actionable pre-start/grid/formation guidance. `LalaLaunch.PreRace.FormationFuelPlanned` mirrors the planner setting, `LalaLaunch.PreRace.FormationFuelRemaining` is planned before formation (`SessionState 1/2`), burns down from a live-fuel baseline during formation (`SessionState 3`) when valid fuel telemetry exists, and becomes `0` once race-running starts (`SessionState >=4`). Runtime race-running families (`Fuel.Refuel.*`, `Fuel.Delta.*`, `Fuel.RequiredBurnToEnd*`, `Fuel.Pit.*`, `Pit.FuelControl.*`) intentionally do not add formation fuel again because current fuel already reflects that burn after formation.

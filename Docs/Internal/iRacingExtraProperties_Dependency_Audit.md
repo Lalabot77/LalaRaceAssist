@@ -42,10 +42,10 @@ Documentation hits are intentional compatibility/removal statements, not active 
 | `README.md` | `RSC.iRacingExtraProperties.dll` no longer required; transport no longer depends on `iRacingExtraProperties`; fallback paths removed | User-facing installation/release guidance. | Keep. | existing LalaLaunch/plugin-owned runtime | Low |
 | `Docs/Quick_Start.md` | same removal guidance plus pit buttons should not bind old `IRacingExtraProperties` ids | User setup and pit binding guidance. | Keep. | existing LalaLaunch pit actions | Low |
 | `Docs/User_Guide.md` | same removal guidance and pit/custom command independence | User behavior/workflow guidance. | Keep. | existing LalaLaunch pit/custom actions | Low |
-| `Docs/Pit_Assist.md` | old dashboard bindings that called `IRacingExtraProperties` pit actions are replaced | User pit assist action guidance. | Keep. | existing LalaLaunch pit actions | Low |
-| `Docs/Subsystems/Dash_Integration.md` | pit command buttons must bind `LalaLaunch.Pit.*` rather than `IRacingExtraProperties` action ids | Canonical dash contract. | Keep. | existing LalaLaunch pit actions | Low |
-| `Docs/Subsystems/Opponents.md` | no runtime dependency on `IRacingExtraProperties` feeds | Subsystem truth for Opponents. | Keep. | existing Lala Opp exports/native feeds | Low |
-| `Docs/Subsystems/Message_System_V1.md` | legacy traffic/slowdown signal paths removed | MSGV1 truth. | Keep. | native/plugin-owned signal set; new export if semantic authority is needed | Medium |
+| `Docs/Features/Pit_Assist.md` | old dashboard bindings that called `IRacingExtraProperties` pit actions are replaced | User pit assist action guidance. | Keep. | existing LalaLaunch pit actions | Low |
+| `Docs/Subsystems/Dashboard_Management/Dash_Integration.md` | pit command buttons must bind `LalaLaunch.Pit.*` rather than `IRacingExtraProperties` action ids | Canonical dash contract. | Keep. | existing LalaLaunch pit actions | Low |
+| `Docs/Subsystems/Race_Awareness/Opponents.md` | no runtime dependency on `IRacingExtraProperties` feeds | Subsystem truth for Opponents. | Keep. | existing Lala Opp exports/native feeds | Low |
+| `Docs/Subsystems/Dashboard_Management/Message_System_V1.md` | legacy traffic/slowdown signal paths removed | MSGV1 truth. | Keep. | native/plugin-owned signal set; new export if semantic authority is needed | Medium |
 | `Docs/Internal/SimHubLogMessages.md` | warning text references removed fallbacks | Maintainer log inventory. | Keep. | existing warning strings | Low |
 | `Docs/Internal/Development_Changelog.md` | historical entries about removing ExtraProperties reads/fallbacks | Historical changelog. | Keep. | n/a | Low |
 | `.github/ISSUE_TEMPLATE/bug_report.yml` | `Is RSC.iRacingExtraProperties installed?` | Support triage question. | Consider removing or rewording in a future support-template cleanup because it is no longer required for active runtime paths. | docs/process only | Low |

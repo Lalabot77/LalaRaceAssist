@@ -1,5 +1,8 @@
 # Dash Integration
 
+> Product name: **Dashboard Management**. Technical implementation name: **Dash Integration**. Contract warning: do not rename SimHub exports/actions, persisted settings, dashboard JSON contracts, profile/preset schema fields, or code contracts from documentation wording alone.
+
+
 Validated against commit: HEAD
 Last updated: 2026-06-11
 Branch: work
@@ -100,7 +103,7 @@ The debug-only `Enable Monitor Event CSV` setting writes non-normal MonitorSyste
 
 ### Launch
 - Gate live launch widgets on `LaunchModeActive` and related launch-visible state.
-- Keep **Launch System** concepts separate from live launch widgets; dashboards can show results, but trace review belongs to the plugin review surface.
+- Keep **Standing Start Assist** concepts separate from live launch widgets; dashboards can show results, but trace review belongs to the plugin review surface.
 
 ### Rejoin / pit / messages
 - Rejoin widgets should respect the explicit rejoin exports rather than infer active state from message text alone.
@@ -159,7 +162,7 @@ The debug-only `Enable Monitor Event CSV` setting writes non-normal MonitorSyste
 
 ### H2H / traffic
 - `H2HRace.*` and `H2HTrack.*` are already flattened for dashboard binding; dashboards should not try to recreate selector logic. `H2HTrack.Ahead/Behind.LiveGapSec` now follows the selected CarSA slot directional `Gap.TrackSec` magnitude, while `H2HRace.*.LiveGapSec` remains race-context H2H timing.
-- League Class presentation/cohort contract (including `H2HRace.*`, `H2HTrack.*`, CarSA/Opp/H2H class-facing exports, and effective `PositionInClass` semantics) is canonicalized in `Docs/Subsystems/League_Class_System.md`; dashboards should consume plugin exports directly and not recreate resolver logic.
+- League Class presentation/cohort contract (including `H2HRace.*`, `H2HTrack.*`, CarSA/Opp/H2H class-facing exports, and effective `PositionInClass` semantics) is canonicalized in `Docs/Subsystems/Race_Awareness/League_Class_System.md`; dashboards should consume plugin exports directly and not recreate resolver logic.
 - CarSA / Opponents data that is not part of a published dash contract should stay a technical dependency, not a dashboard-owned truth source.
 
 ## Visibility and gating
@@ -325,7 +328,7 @@ Dashboards should **not**:
 - depend on undocumented internal state when a canonical export already exists.
 
 ## v1 documentation note
-The v1 GitHub docs now present dashboards as the presentation layer across all systems. This page is the canonical technical companion to the user-facing `Docs/Dashboards.md` page.
+The v1 GitHub docs now present dashboards as the presentation layer across all systems. This page is the canonical technical companion to the user-facing `Docs/Features/Dashboards.md` page.
 
 - Added additive `StrategyDash.*` V2 seam for pre-green dashboards (planning + grid/formation).
 - StrategyDash phase contract is `0=IDLE`, `1=PRE GRID`, `2=GRIDDING`, `3=START READY`, `5=RACE`.

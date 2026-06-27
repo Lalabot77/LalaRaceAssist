@@ -19,8 +19,8 @@ Canonical companion docs:
 - `Docs/Internal/SimHubParameterInventory.md`
 - `Docs/Internal/SimHubLogMessages.md`
 - `Docs/Subsystems/Fuel_Model.md`
-- `Docs/Subsystems/Fuel_Planner_Tab.md`
-- `Docs/Subsystems/Pit_Timing_And_PitLoss.md`
+- `Docs/Subsystems/Strategy/Fuel_Planner_Tab.md`
+- `Docs/Subsystems/Pit_System/Pit_Timing_And_PitLoss.md`
 
 ## Scope and boundaries
 This subsystem covers:

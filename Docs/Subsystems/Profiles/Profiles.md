@@ -1,11 +1,14 @@
 # Profiles and Personal Bests
 
+> Product name: **Profiles**. Technical implementation name: **Profiles and stored PB/profile data**. Contract warning: do not rename SimHub exports/actions, persisted settings, dashboard JSON contracts, profile/preset schema fields, or code contracts from documentation wording alone.
+
+
 Validated against commit: HEAD
 Last updated: 2026-06-11
 Branch: work
 
 ## Purpose
-Profiles and PBs provide **persistent baselines** for:
+Profiles provide **persistent baselines** for saved setup data; personal-best/reference values are stored profile data for:
 - Fuel per lap (dry/wet)
 - Lap time (dry/wet)
 - Pit lane loss per track

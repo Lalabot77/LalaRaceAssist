@@ -1,5 +1,8 @@
 # Launch Mode
 
+> Product name: **Standing Start Assist**. Technical implementation name: **Launch Mode**. Contract warning: do not rename SimHub exports/actions, persisted settings, dashboard JSON contracts, profile/preset schema fields, or code contracts from documentation wording alone.
+
+
 Validated against commit: HEAD
 Last updated: 2026-04-09
 Branch: work
@@ -10,12 +13,12 @@ Launch Mode owns the live race-start assistance path. It coordinates:
 - the manual launch action,
 - launch blocking/abort conditions,
 - launch result capture,
-- the handoff to the Launch System review surface for saved trace review.
+- the handoff to the Standing Start Review surface for saved trace review.
 
 For GitHub readers, keep this boundary clear:
-- **Launch System → Launch Settings** owns launch configuration.
+- **Standing Start Settings** owns launch configuration.
 - **Launch Mode** owns the live start-state machine.
-- **Launch System** is the combined launch settings and post-run review surface.
+- **Standing Start Assist** is the combined launch settings and post-run review surface.
 
 ## Scope and boundaries
 This subsystem covers the live launch state and recording workflow.
@@ -24,7 +27,7 @@ It does **not** own:
 - generic dash visibility toggles,
 - rejoin logic,
 - saved profile systems outside launch-specific values,
-- the user-facing explanation page in `Docs/Launch_System.md`.
+- the user-facing explanation page in `Docs/Features/Standing_Start_Assist.md`.
 
 ## Inputs (source + cadence)
 ### Runtime telemetry
@@ -35,7 +38,7 @@ It does **not** own:
 
 ### User / settings inputs
 - `LaunchMode` action for manual prime / re-enable / abort behavior.
-- Launch configuration from **Launch System → Launch Settings**.
+- Launch configuration from **Standing Start Settings**.
 - Results-display time and launch summary/trace file locations.
 
 ### Cross-subsystem blockers
@@ -86,14 +89,14 @@ Manual-prime mode has a **30-second timeout**. If the launch does not actually s
 When a launch completes successfully enough to be recorded, the subsystem writes:
 - a one-line summary CSV entry when enabled,
 - a detailed launch trace file,
-- launch-summary data that the **Launch System** tab can later read and review.
+- launch-summary data that the **Standing Start Assist** tab can later read and review.
 
 ## Outputs (exports + logs)
 ### Core exports
 Representative launch-facing exports include:
 - `LaunchModeActive`
 - launch-state / launch-result visibility outputs used by dashes and the results view
-- saved summary / trace data consumed by Launch System review
+- saved summary / trace data consumed by Standing Start Review
 
 The export inventory remains canonical in `Docs/Internal/SimHubParameterInventory.md`.
 
@@ -134,14 +137,14 @@ MonitorSystem Phase 4A observes the internal active Launch state (`ManualPrimed`
 - **Manual-prime timeout:** launch returns to idle and behaves as user-disabled until re-enabled.
 - **File IO issues:** traces/summaries may fail to save, but the live launch state machine still completes independently.
 - **Replay or unusual timing:** validate with logs rather than assuming live-session timing behavior is identical.
-- **Empty/header-only launch traces:** launch-trace housekeeping may remove files that contain no telemetry rows and no usable launch summary so they do not pollute Launch System file lists.
+- **Empty/header-only launch traces:** launch-trace housekeeping may remove files that contain no telemetry rows and no usable launch summary so they do not pollute Standing Start Assist file lists.
 
 ## Test checklist
 - Trigger `LaunchMode` from idle and confirm manual-prime behavior.
 - Let manual prime expire and confirm timeout + re-enable behavior.
 - Trigger a blocked state (pit lane or serious rejoin) and confirm launch cannot proceed.
-- Complete a clean launch and confirm summary/trace capture appears for Launch System review.
+- Complete a clean launch and confirm summary/trace capture appears for Standing Start Review.
 - Confirm post-launch results hide after the configured results-display time.
 
 ## v1 documentation note
-User-facing docs should explain launch as **Launch System launch settings + saved-run review + live launch behavior**. This subsystem doc owns the technical contract for the live launch path and recording handoff.
+User-facing docs should explain launch as **Standing Start Assist launch settings + saved-run review + live launch behavior**. This subsystem doc owns the technical contract for the live launch path and recording handoff.

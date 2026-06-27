@@ -26,7 +26,7 @@ using OpponentOutputs = LaunchPlugin.OpponentsEngine.OpponentOutputs;
 namespace LaunchPlugin
 {
 
-    [PluginDescription("Launch Analysis and Dashes")]
+    [PluginDescription("Standing Start Assist and Dashes")]
     [PluginAuthor("Lalabot")]
     [PluginName("LalaLaunch")]
 

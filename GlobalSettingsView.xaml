@@ -64,7 +64,7 @@
                         <TextBlock Grid.Row="0" Grid.Column="1" Text="DRIVER" FontWeight="Bold" Margin="0,0,0,6" HorizontalAlignment="Center" ToolTip="DRIVER = Lala Race Dash." />
                         <TextBlock Grid.Row="0" Grid.Column="2" Text="STRATEGY" FontWeight="Bold" Margin="0,0,0,6" HorizontalAlignment="Center" ToolTip="STRATEGY = Lala Strategy Dash." />
                         <TextBlock Grid.Row="0" Grid.Column="3" Text="OVERLAY" FontWeight="Bold" Margin="0,0,0,6" HorizontalAlignment="Center" ToolTip="OVERLAY = overlay surfaces." />
-                        <TextBlock Text="Launch Assist" Grid.Row="1" Grid.Column="0" Margin="0,5,12,0" VerticalAlignment="Center" />
+                        <TextBlock Text="Standing Start Assist" Grid.Row="1" Grid.Column="0" Margin="0,5,12,0" VerticalAlignment="Center" />
                         <styles:SHToggleCheckbox Grid.Row="1" Grid.Column="1" Content="" Margin="0,5,0,0" HorizontalAlignment="Center" IsChecked="{Binding Settings.LalaDashShowLaunchScreen, Mode=TwoWay}" />
                         <styles:SHToggleCheckbox Grid.Row="1" Grid.Column="2" Content="" Margin="0,5,0,0" HorizontalAlignment="Center" IsChecked="{Binding Settings.MsgDashShowLaunchScreen, Mode=TwoWay}" />
                         <styles:SHToggleCheckbox Grid.Row="1" Grid.Column="3" Content="" Margin="0,5,0,0" HorizontalAlignment="Center" IsChecked="{Binding Settings.OverlayDashShowLaunchScreen, Mode=TwoWay}" />

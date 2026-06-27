@@ -27,9 +27,9 @@
                 </StackPanel>
             </Expander>
 
-            <Expander Header="Launch" Margin="0,0,0,12" IsExpanded="False">
+            <Expander Header="Standing Start Assist" Margin="0,0,0,12" IsExpanded="False">
                 <StackPanel Margin="12,10,12,12">
-                    <ui:ControlsEditor ActionName="LalaLaunch.LaunchMode" FriendlyName="Toggle Launch Mode" ToolTip="Manual prime/abort launch mode (useful for testing and non-standing-start sessions)." />
+                    <ui:ControlsEditor ActionName="LalaLaunch.LaunchMode" FriendlyName="Toggle Standing Start Assist" ToolTip="Manual prime/abort Standing Start Assist (useful for testing and non-standing-start sessions)." />
                 </StackPanel>
             </Expander>
 

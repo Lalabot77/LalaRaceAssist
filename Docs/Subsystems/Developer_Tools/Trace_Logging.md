@@ -14,7 +14,7 @@ Trace Logging captures **post-race forensic data** for:
 
 It is intentionally low-frequency and human-readable.
 
-This subsystem documents **session summary / per-lap race traces**. Launch trace lifecycle and Launch Analysis file handling are owned by Launch Mode (`Docs/Subsystems/Launch_Mode.md`).
+This subsystem documents **session summary / per-lap race traces**. Launch trace lifecycle and Standing Start Review file handling are owned by Launch Mode (`Docs/Subsystems/Standing_Start_Assist/Launch_Mode.md`).
 
 ---
 

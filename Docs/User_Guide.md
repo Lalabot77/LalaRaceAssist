@@ -1,222 +1,68 @@
 # User Guide
 
-This guide is the central driver-facing overview for Lala Race Assist Plugin. It explains what the plugin owns, what the driver sees, and where to find the detailed user pages for each system.
+Lala Race Assist is best understood as a driving assistant built around two jobs: helping you drive the car in the moment, and helping you manage the race around that driving. The plugin does the learning, calculations, persistence, actions, and exports. The dashboards and overlays make that information usable when you are busy.
 
-## Video walkthrough (post-install)
+## The surfaces you actually use
 
-If you want a full SimHub-side walkthrough of the plugin tabs and setup flow after installation, use this video first: [Lala Race Assist Plugin walkthrough (YouTube, ~30 min)](https://youtu.be/Ug9BRo0WRbE).
+Most users meet the plugin through four surfaces.
 
-This video is intentionally post-install guidance and does not replace [Quick Start](Quick_Start.md) for initial installation/setup.
+The **Driver Dash** is the in-car surface. It is for quick decisions: traffic nearby, pit entry, pit box approach, rejoin support, alerts, Shift Assist cues, and small pieces of strategy context that matter right now.
 
-## 1. How to read the docs
+The **Strategy Dash** is the race-management surface. It is for the bigger picture: stint planning, fuel guidance, pit windows, race context, and decisions that are not always tied to the next braking zone.
 
-Use this page as the overview, then jump to the dedicated pages for the systems you actively use:
+The **Plugin UI** is where you prepare and review. Use it for Profiles, Strategy setup, bindings, settings, Standing Start Assist review, Driver Tagging, and diagnostics.
 
-- [Quick Start](Quick_Start.md)
-- [Dashboards](Dashboards.md)
-- [Strategy System](Strategy_System.md)
-- [Shift Assist](Shift_Assist.md)
-- [Launch System](Launch_System.md)
-- [Rejoin Assist](Rejoin_Assist.md)
-- [Pit Assist](Pit_Assist.md)
-- [H2H System](H2H_System.md)
-- [Profiles System](Profiles_System.md)
-- [Fuel Model](Fuel_Model.md)
+Supporting **overlays** are temporary surfaces. They appear when a message, warning, prompt, or focused comparison needs attention without becoming your main dashboard page.
 
-## 2. Plugin vs dashboard responsibility
+That split is deliberate. Driving and managing a race are different mental tasks, so the plugin gives them different surfaces.
 
-### Plugin
+## Driving versus managing the race
 
-The plugin:
+When you are driving, the useful question is usually “what do I need to know in the next few seconds?” That is Driver Dash territory. It should help you stay aware of nearby traffic, pit cues, rejoin risk, and urgent warnings without asking you to read a manual at 250 kph.
 
-- learns data,
-- stores data,
-- protects data,
-- performs calculations,
-- publishes outputs for dashboards.
+When you are managing the race, the useful question is “what does this mean for the stint or result?” That belongs on Strategy Dash and in the Plugin UI. Fuel guidance, pit timing, race order, presets, and post-run review need more context and less urgency.
 
-### Dashboards
+If a piece of information feels too detailed for the Driver Dash, it probably belongs in Strategy Dash or the Plugin UI. If it needs to interrupt you during the lap, it probably belongs on Driver Dash or an overlay.
 
-Dashboards:
+## How the core systems fit together
 
-- display those outputs,
-- provide situational awareness,
-- provide limited interaction through bindings or touch areas.
+Profiles come first because they are the plugin's memory. They hold car, track, pit, sound, Shift Assist, and related values so the plugin does not start from nothing every session. Let values learn, confirm they make sense, and lock them only when you trust them.
 
-Dashboards do **not** become the source of truth for strategy, fuel math, H2H selection, saved learning, or persistence.
+Strategy builds on that memory. It turns profile data, race format, pit service assumptions, contingency, and live context into a plan. A good Strategy setup is deliberate: choose whether saved/manual inputs or live snapshot data should be in charge, then avoid chasing every noisy lap while confidence is still settling.
 
-## 3. Current plugin navigation
+The Pit System handles the most mistake-prone part of a race: getting in, stopping correctly, commanding service, and understanding the time loss. Validate pit markers and pit loss early. Once those basics are right, pit entry, pit box, command, and debrief guidance become much more useful.
 
-The current top-level plugin order is:
+Traffic Awareness is about the cars around you now. Race Awareness is about the race order and rivals that matter strategically. In multiclass racing those are not always the same thing, so the documentation separates them on purpose.
 
-1. **Overview**
-2. **Strategy**
-3. **Profiles**
-4. **Launch System**
-5. **Bindings**
-6. **Settings**
+Shift Assist helps with repeatable shift cueing where a car benefits from it. Standing Start Assist helps review standing-start execution and setup. Rejoin Assist provides extra caution when returning to the racing surface. Monitor System sits across all of this as the health report: if it says the data is unreliable, treat the affected guidance as suspect until the underlying issue is understood.
 
-Important workflow rules:
+## Learn, validate, lock, trust
 
-- **Overview** is the landing tab for quick orientation, links, update status, current Monitor System health text, and League Class OFF/ACTIVE/WARNING status. The collapsed **Settings → League Classes** header also shows `LEAGUE RACE - OFF`, `LEAGUE RACE - ACTIVE`, or `LEAGUE RACE - WARNING` so the state is visible without expanding the section. The Restart Plugin action is danger-styled because it manually re-arms runtime systems.
-- The main planning tab is **Strategy**, not Fuel.
-- There is **no separate Presets tab**.
-- Presets are managed from **Strategy** using the **`Presets...`** modal flow.
-- Launch controls belong under **Launch System → Launch Settings**.
-- **Launch System** combines launch settings with the saved-run review surface.
+A recurring philosophy in Lala Race Assist is: learn, validate, lock, trust.
 
-## 4. Current constraints (v1.x)
+The plugin can learn useful values from your driving, but learned values are not automatically good values. A messy lap, a compromised pit entry, traffic, damage, or the wrong setup can all produce data that looks precise while still being wrong for future use.
 
-- Some dashboard indicators depend on optional SimHub-side setup or optional exports.
-- Wheelspin / traction-loss visuals depend on optional ShakeIt Motors export setup (`TractionLoss` property).
-- Primary Dash navigation behavior may evolve as dashboard workflows are refined.
-- In plugin UI, **Plugin Quick Reset** (`LalaLaunch.PrimaryDashMode`) is a manual runtime recovery reset for stale plugin or dash data. It preserves the existing action name for compatibility.
-- Legacy `RSC.iRacingExtraProperties.dll` fallback paths are removed from active runtime code.
+Validation is the human step. Look at what the plugin learned and ask whether it matches the car, track, and session. If it does, lock the value so later noise does not degrade it. If it does not, relearn only the affected value instead of throwing away everything that was already good.
 
-## 5. The main user-facing systems
+Trust comes last. The more critical the decision, the more important it is that the supporting value has gone through that path.
 
-### Strategy
+## Ownership matters
 
-Strategy is the main planning workflow. It lets you choose between stable profile/manual planning and live-driven snapshot planning without confusing those two jobs. See [Strategy System](Strategy_System.md).
+The plugin owns calculations. Dashboards own presentation. Profiles own persistence. Monitor System reports health.
 
-![Strategy dashboard main page](Images/StrategyDashMainPageGrid.png)
-*Use Strategy as the main planning surface; the dashboard view mirrors that workflow rather than replacing it.*
+That means a dashboard should not be treated as the source of strategy math, fuel learning, pit timing, traffic selection, or race-order logic. It displays plugin-owned outputs and may trigger plugin-owned actions, but it does not become the authority.
 
-### Profiles
+It also means public wording does not rename contracts. User docs say **Standing Start Assist** and **Driver Tagging**, but technical docs may still mention Launch Mode, launch traces, Friends, action names, exports, settings, or schema fields where those are existing contracts.
 
-Profiles are the plugin’s long-term memory for car, track, and condition-specific data. They are what make the other systems become trustworthy over time. See [Profiles System](Profiles_System.md).
 
-![Profiles car settings](Images/ProfilesCar.png)
-*Profiles are where you review and lock the saved values that should become trustworthy for a combo.*
+## Upgrade note
 
-### Fuel model
+Current v1.1 plugin-owned runtime, pit command, and custom command workflows no longer require `RSC.iRacingExtraProperties.dll`. Older community dashboards, local experiments, or button-box bindings may still reference it, so treat those as migration leftovers to review rather than as a current runtime dependency.
 
-The fuel model learns gradually, builds confidence, and feeds Strategy with a trustworthy burn basis. See [Fuel Model](Fuel_Model.md).
+## How to keep learning
 
-### Dashboards
+The documentation follows the same outside-in idea as the plugin.
 
-Dashboards are the display layer. They show outputs, visibility states, and context, but they do not own the calculations underneath. The expanded dashboard guide now documents the confirmed Primary Driver Dash page order, navigation model, overlays, and shared widget surfaces in one place. See [Dashboards](Dashboards.md).
+Start with [Product surfaces](Product/README.md) when you want to understand where something appears. Read [Core systems](Systems/README.md) when you want to understand what capability is involved. Use [Feature docs](Features/README.md) for practical workflows such as dashboards, Strategy, Pit Assist, Shift Assist, Standing Start Assist, Rejoin Assist, Profiles, Fuel Guidance, and H2H. Use [Subsystems](Subsystems/README.md) when you need technical ownership or contract truth. Internal docs are mainly for maintenance, support, release work, and Codex tasks.
 
-![Driver dashboard race context](Images/PrimaryDash/DriverTrackSA.png)
-*The Primary Driver Dash keeps immediate track-awareness readable while the plugin continues to own the underlying calculations and stable outputs.*
-
-#### Friends list and driver tags
-
-If you use the Friends list, manage it in **Settings → Friends List**. Add iRacing customer IDs there and assign the practical tag you want to use, such as **Friend**, **Teammate**, or **Bad**.
-
-Those tags are mainly for **awareness and presentation** on supported nearby-car / CarSA-style surfaces. They help known drivers stand out more clearly on dashboards, but they do **not** change strategy math, fuel calculations, or the core H2H comparisons.
-
-#### Dashboard navigation and bindings
-
-The dashboard package is designed around SimHub's **Next Dash** and **Previous Dash** navigation model, with matching left/right touch areas on the Primary Driver Dash. Those bindings can be set up per dash, per device, or globally in SimHub, depending on your hardware and workflow.
-
-Bindings also includes **Strategy Dash Mode**. Bind it when you want a two-way Strategy Dash presentation toggle: `LalaLaunch.StrategyDash.AdvancedMode` is `true` for Advanced mode and `false` for Simple mode, while `LalaLaunch.StrategyDash.ModeText` provides a readable label.
-
-Practical expectations for the current Primary Dash package:
-
-- **Track Situational Awareness** and **Racing Standings Awareness** are the main race-facing pages.
-- **Timing** is the qualifying-oriented timing surface.
-- **Practice** can be selected manually in practice sessions.
-- pit and alert surfaces remain separate from the core page loop when they are acting as temporary overlays.
-
-For the detailed page-by-page breakdown, use the main [Dashboards](Dashboards.md) guide rather than treating this overview page as the full dashboard manual.
-
-#### Optional: ShakeIt Motors traction-loss export
-
-Some Lala dashboards and launch/practice visuals can use SimHub's ShakeIt Motors output for wheelspin / traction-loss indications. This is **optional** and is not a core plugin requirement. If you do nothing here, the plugin still works normally.
-
-Set it up only if you want those specific indicators:
-
-1. Open **SimHub** and go to **ShakeIt Motors**.
-2. Open the **Wheel slip** effect and enable it.
-3. In the effect's **Export** section, tick **Export output value as a property**.
-4. Set the property name to exactly `TractionLoss`.
-
-This exposes `[ShakeITMotorsV3Plugin.Export.TractionLoss.All]`. Dashboards or visuals that read that property can then show wheelspin / traction-loss activity. Without this setup, those indicators may be unavailable while the rest of the plugin continues to operate normally.
-
-### Shift Assist
-
-Shift Assist gives RPM-based driver cues and becomes more trustworthy once its learned values are stable and locked. See [Shift Assist](Shift_Assist.md).
-
-### Launch
-
-Launch setup is handled in **Launch System → Launch Settings**, while Launch System review is used afterwards to review saved starts. See [Launch System](Launch_System.md).
-
-![Launch System review area](Images/LaunchAnalysis.png)
-*Launch System review is the active review surface for saved launches after the run, not a future or placeholder feature.*
-
-### Rejoin and pit aids
-
-Lala Race Assist Plugin includes separate driver-facing pages for recovery/rejoin support and pit-lane support:
-
-- [Rejoin Assist](Rejoin_Assist.md)
-- [Pit Assist](Pit_Assist.md)
-
-#### Pit command + custom message workflow (current)
-
-- Built-in pit commands are plugin-owned and configured in **Bindings → Pit Commands**.
-- Custom message slots are configured in **Bindings → Custom Messages** and bound through `LalaLaunch.CustomMessage01..10`.
-- Dash buttons should call plugin-owned actions (`LalaLaunch.Pit.*`, `LalaLaunch.Pit.FuelControl.*`, `LalaLaunch.CustomMessage01..10`) through normal SimHub binding flow, not raw chat command syntax.
-- Pit Fuel Control is part of the same plugin-owned pit surface and can be driven from action bindings plus `Pit.FuelControl.*` exports.
-- `RSC.iRacingExtraProperties.dll` is not required for this pit/custom command path.
-- Pit/custom command bindings live under **Bindings → Pit Commands**; transport behavior remains plugin-owned and unchanged.
-- Auto-focus is not implemented yet (preview setting only).
-- Confirmation semantics: stateful built-in pit toggles are effect-confirmed via before/after telemetry; custom messages, raw commands, and stateless built-ins are transport-attempt only (delivery unverified).
-- For the full driver workflow, use [Pit Assist](Pit_Assist.md). For canonical technical ownership/exports, use [Subsystems/Pit_Commands_And_Fuel_Control.md](Subsystems/Pit_Commands_And_Fuel_Control.md).
-
-### H2H
-
-H2H is a read-only race-context aid that helps the driver compare race-order and local-track threats without becoming a separate planning workflow. See [H2H System](H2H_System.md).
-
-## 6. Trust model
-
-A good mental model for the whole plugin is:
-
-**learn → validate → lock → trust**
-
-Use that pattern for:
-
-- profile values,
-- fuel burn and pace baselines,
-- pit-loss and marker data,
-- Shift Assist targets,
-- launch defaults,
-- assist thresholds that repeatedly affect what you see while driving.
-
-Pit-loss baseline rule: learn pit-lane loss using a clean **drive-through** (limiter speed, no box stop), then lock when validated.
-
-If a system is wrong once, keep driving. If it is wrong repeatedly, review the saved data or thresholds behind it instead of assuming the dashboard art is the problem.
-
-## 7. Practical best practice
-
-- Start each new car/track combination by gathering clean laps.
-- Use **Strategy** as the single planning entry point.
-- Keep the difference between **live observation** and **stable planning** clear in your workflow.
-- Lock only values that have settled and make sense.
-- Use **Bindings** and **Settings** for visibility and presentation, not to fix calculation logic.
-- Treat touch navigation as a backup or convenience layer; for race use, bind **Next Dash** and **Previous Dash** to physical controls.
-- Review profile-backed data when a driver aid is repeatedly wrong.
-
-## 8. Recommended reading order
-
-For most drivers, this order works well:
-
-1. [Quick Start](Quick_Start.md)
-2. [Strategy System](Strategy_System.md)
-3. [Profiles System](Profiles_System.md)
-4. [Fuel Model](Fuel_Model.md)
-5. [Dashboards](Dashboards.md)
-6. Then the feature pages you use most: [Shift Assist](Shift_Assist.md), [Launch System](Launch_System.md), [Rejoin Assist](Rejoin_Assist.md), [Pit Assist](Pit_Assist.md), and [H2H System](H2H_System.md)
-
-
-## Documentation ownership quick reference
-- User workflow: this guide + feature pages in `Docs/`.
-- Technical behavior ownership: `Docs/Subsystems/*.md`.
-- Export contract owner: `Docs/Internal/SimHubParameterInventory.md`.
-- Log contract owner: `Docs/Internal/SimHubLogMessages.md`.
-- Property Snapshot workflow owner: `Docs/Internal/Property_Snapshot_Debug_Workflow.md`.
-
-
-## Pit Service Regulations
-
-In Strategy, choose the pit service model manually: **Default** for sequential fuel then tyres, **IMSA** for simultaneous fuel and tyres, or **NEC** for simultaneous fuel and tyres with the car-profile NEC refuel-rate factor applied. Race Presets save this choice; old presets default to Default. The app does not auto-detect the regulation from series, track, car, session, or preset name.
+If you are new, read [Quick Start](Quick_Start.md), then the system page for the thing you are trying to configure. If something feels wrong, check Monitor System, check the owning system page, and then move down into the feature or subsystem docs only as needed.
