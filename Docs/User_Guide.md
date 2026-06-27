@@ -29,7 +29,7 @@ See [Product overview](Product/README.md).
 - [Traffic Awareness](Systems/Traffic_Awareness.md) — nearby cars and track situational awareness, including CarSA and track H2H where relevant.
 - [Race Awareness](Systems/Race_Awareness.md) — race order/context, rivals, race H2H, League Class, LapRef, and race-position awareness.
 - [Shift Assist](Systems/Shift_Assist.md) — shift cueing, learning, review, and audio support.
-- [Race Starts](Systems/Race_Starts.md) — start setup, live start capture, and Race Starts Analysis.
+- [Standing Start Assist](Systems/Standing_Start_Assist.md) — start setup, live start capture, and Standing Start Review.
 - [Rejoin Assist](Systems/Rejoin_Assist.md) — safe track rejoin support.
 - [Dashboard Management](Systems/Dashboard_Management.md) — dashboard package usage, visibility, dark mode, and presentation contracts.
 - [Monitor System](Systems/Monitor_System.md) — health and reliability status.
@@ -48,13 +48,13 @@ Feature docs remain the practical user pages for specific workflows:
 - [Fuel Guidance](Features/Fuel_Guidance.md)
 - [Profiles System](Features/Profiles_System.md)
 - [Shift Assist](Features/Shift_Assist.md)
-- [Race Starts](Features/Race_Starts.md)
+- [Standing Start Assist](Features/Standing_Start_Assist.md)
 - [Rejoin Assist](Features/Rejoin_Assist.md)
 - [H2H System](Features/H2H_System.md)
 
 ## Naming and contract notes
 
-Public/product docs use **Driver Tagging** instead of Friends and **Race Starts** instead of Launch System where describing the driver-facing product. Technical docs may still say Launch Mode, Friends, or other legacy/internal names when referring to existing implementation contracts.
+Public/product docs use **Driver Tagging** instead of Friends and **Standing Start Assist** instead of Race Starts or Launch System where describing the driver-facing product. Technical docs may still say Launch Mode, Friends, or other legacy/internal names when referring to existing implementation contracts.
 
 Do not infer a contract rename from documentation wording. SimHub export names, SimHub action names, persisted setting names, dashboard JSON contracts, profile schema fields, and preset schema fields remain unchanged unless a future task explicitly changes them.
 

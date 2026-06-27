@@ -67,7 +67,7 @@ Profiles matter because they feed many user-facing systems:
 - **Strategy** uses saved baseline values and track context
 - **Fuel Model** benefits from trusted stored history
 - **Shift Assist** relies on profile-backed learning and locks
-- **Race Starts** can start from stored defaults instead of guessing
+- **Standing Start Assist** can start from stored defaults instead of guessing
 - **Pit Assist** depends on trusted pit-loss, marker, and pit-entry-related data
 - **Rejoin Assist** depends on profile-backed thresholds behaving sensibly
 

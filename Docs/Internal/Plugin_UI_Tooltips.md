@@ -27,7 +27,7 @@ Branch: work
 - `Settings -> Fuel Strategy`: `Fuel Ready Confidence` sets the live-fuel readiness threshold (v1.1 first-run default 30%), `Pit-in Fuel Reserve` sets the stint reserve margin (default 10%), `Fuel Data Plan Mode` is a two-state toggle for Pit Fuel Control DATA (default OFF=`LIVE`, ON=`PLAN` for PUSH/SAVE memory/profile assumptions), and `DATA PLAN Push/Save Guard (%)` clamps DATA PLAN PUSH/SAVE burn around live stable NORM burn (default 10%).
 - `Dash Visibility` keeps the visibility matrix but replaces the former broad `Pit Assists` row with independent `Pit Entry Assist`, `Pit Box Assist`, and `Pit Limiter` rows. `Show Automatic Pit Screen` remains a separate row, and the release-facing column headers remain `DRIVER`, `STRATEGY`, and `OVERLAY`.
 - `Dash Visibility` header tooltips make the short labels explicit: `DRIVER = Lala Race Dash`, `STRATEGY = Lala Strategy Dash`, and `OVERLAY = overlay surfaces`.
-- `Launch Mode`, `Event Marker`, and `Post-Launch Results Display Time` are split between Launch System settings and the Bindings tab after this reorganisation.
+- `Launch Mode`, `Event Marker`, and `Post-Launch Results Display Time` are split between Standing Start Assist settings and the Bindings tab after this reorganisation.
 
 ## GlobalSettingsView.xaml
 - Debug Options: `Enable Monitor Event CSV` writes changed non-normal MonitorSystem publications to `Logs/LalaPluginData/MonitorSystem_Events.csv` for troubleshooting only. It is off by default and depends on `Enable Monitor System`.
@@ -100,7 +100,7 @@ Branch: work
 ## LaunchAnalysisControl.xaml
 - L27: Select a launch trace file to review in this tab.
 - L33: Pick a trace file captured from a launch session.
-- L37: Reloads the list of files from the path specified in Launch System → Launch Settings.
+- L37: Reloads the list of files from the path specified in Standing Start Settings.
 - L41: Temporarily browse a different folder for launch trace files.
 - L46: WARNING: Permanently deletes the selected trace file from your disk.
 - L55: Auto-generated summary for the selected trace file.
@@ -134,7 +134,7 @@ Branch: work
 - L42: Allowed deviation (±%) around the bite point target.
 - L43: If the engine RPM drops below this percentage of the initial Launch RPM, the run will be flagged as 'Bogged'.
 - L44: Sets the sensitivity for detecting game-assisted anti-stall. % is delta between paddle and in game clutch.
-- Launch Settings content is no longer a standalone main tab; it now appears inside Settings under a collapsed `Launch Settings` expander placed after Friends List and before Debug.
+- Standing Start Settings content appears inside the Standing Start Assist tab under a collapsed `Standing Start Settings` expander; action bindings remain in the Bindings tab.
 - LAUNCH UI section hosts `Post-Launch Results Display Time`; the existing `LalaLaunch.LaunchMode` action is shown in Bindings -> Launch as `Toggle Launch Mode`.
 - L26-L27 of the moved block: `Launch Mode` manually primes/aborts launch mode for testing and non-standing-start sessions.
 - L32-L37 of the moved block: `Post-Launch Results Display Time` controls how long the results screen stays visible after a launch.
@@ -142,7 +142,7 @@ Branch: work
 - L66: Enable or disable writing the one-line summary of each launch.
 - L70: Custom path for the summary CSV. Leave blank to use the default path.
 - L73: Browse for a summary CSV location.
-- L76: Location for detailed launch trace files used by the Launch System tab in the top-level navigation. Leave blank to use the default path shown.
+- L76: Location for detailed launch trace files used by the Standing Start Assist tab in the top-level navigation. Leave blank to use the default path shown.
 - L91: Enable or disable creating detailed trace files for the 'LAUNCH ANALYSIS' tab in the top-level navigation.
 - L95: Custom path for launch trace files. Leave blank to use the default path.
 - L98: Browse for a launch trace folder.
@@ -238,7 +238,7 @@ Branch: work
 - `GlobalSettingsView.xaml` is now the top-level `SETTINGS` tab, with visible main-tab order `OVERVIEW`, `STRATEGY`, `PROFILES`, `LAUNCH SYSTEM`, `BINDINGS`, `SETTINGS`.
 - `GlobalSettingsView.xaml` now surfaces settings-only expanders in order: Plugin Monitor, Dashboards, League Classes, Fuel Strategy, Friends List, then Debug.
 - `GlobalSettingsView.xaml` no longer contains the duplicated per-profile `USER VARIABLES` block; the Settings tab now begins with the Friends List tools/import flow.
-- `GlobalSettingsView.xaml` DEBUG section hosts the master debug toggle and sectioned Debug Options (`General logging`, `Property Snapshot`, `CarSA diagnostics`, `Car Tracking Probe CSV`, `Shift Assist diagnostics`, `Debug Actions`); Launch Settings sits above this block inside its own collapsed expander.
+- `GlobalSettingsView.xaml` DEBUG section hosts the master debug toggle and sectioned Debug Options (`General logging`, `Property Snapshot`, `CarSA diagnostics`, `Car Tracking Probe CSV`, `Shift Assist diagnostics`, `Debug Actions`); Standing Start Settings lives in the Standing Start Assist tab; Debug remains settings-only.
 - `GlobalSettingsView.xaml` shows the warning text `Debug mode is for troubleshooting only. Leave this off unless asked to enable it.` directly below `Enable debugging mode`.
 - `GlobalSettingsView.xaml` `Enable Debug Logging` tooltip says it enables extra troubleshooting/detail logs only while master debugging mode is also enabled.
 - `GlobalSettingsView.xaml` Property Snapshot rolling frequency tooltip documents the runtime 1–2 Hz cap and normalizes higher entries; all Property Snapshot children are hidden unless `Enable Property Snapshot` is enabled, rolling controls are hidden unless `Write rolling combined CSV` is enabled, and frequency is hidden unless `FREQUENCY` mode is selected. Debug Options includes parent-hidden `Enable Car Tracking Probe`, Probe A/B `CarIdx` inputs, `Frequency Hz`, `START`, `STOP`, `RESET CSV`, and a `PROBE CSV:` status pill (`OFF`, `READY`, `RECORDING`, `FAILED`) for a diagnostics-only CSV writer. The removed OffTrack Debug CSV controls are no longer documented. The Car Tracking Probe frequency tooltip documents the 1–20 Hz range.

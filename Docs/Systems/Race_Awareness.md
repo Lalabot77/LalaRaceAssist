@@ -1,10 +1,20 @@
 # Race Awareness
 
-Race Awareness describes what is happening in the race/order/context: opponents, race H2H, League Class, LapRef/reference-lap context, and race-position awareness.
+## What it does
 
-## Contract boundary
+Race Awareness explains race order and context: same-class rivals, race H2H, League Class, LapRef, and race-position awareness.
 
-This product-system page does not rename SimHub exports, SimHub actions, persisted settings, dashboard JSON contracts, profile schema fields, or preset schema fields. Technical implementation details remain canonical in subsystem docs.
+## First-use setup
+
+Use it to distinguish a race threat from local traffic. Configure League Class deliberately when class grouping matters and treat LapRef/reference-lap context as comparison support.
+
+## What to trust / review
+
+Trust it when opponent/race data is healthy and the selected class/race context matches the session. If it feels wrong, check League Class configuration, opponent data reliability, and whether you are looking at race order or local traffic.
+
+## What it does not own
+
+Race Awareness does not own CarSA spatial selection, Strategy math, pit commands, or dashboard layout.
 
 ## Related docs
 

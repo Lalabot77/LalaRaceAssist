@@ -103,7 +103,7 @@ The debug-only `Enable Monitor Event CSV` setting writes non-normal MonitorSyste
 
 ### Launch
 - Gate live launch widgets on `LaunchModeActive` and related launch-visible state.
-- Keep **Launch System** concepts separate from live launch widgets; dashboards can show results, but trace review belongs to the plugin review surface.
+- Keep **Standing Start Assist** concepts separate from live launch widgets; dashboards can show results, but trace review belongs to the plugin review surface.
 
 ### Rejoin / pit / messages
 - Rejoin widgets should respect the explicit rejoin exports rather than infer active state from message text alone.

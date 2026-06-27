@@ -17,7 +17,7 @@ Lala Race Assist is a SimHub plugin for iRacing that provides driver dashboards,
 - **Traffic Awareness**
 - **Race Awareness**
 - **Shift Assist**
-- **Race Starts**
+- **Standing Start Assist**
 - **Rejoin Assist**
 - **Dashboard Management**
 - **Monitor System**

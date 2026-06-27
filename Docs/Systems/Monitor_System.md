@@ -1,10 +1,20 @@
 # Monitor System
 
-Monitor System reports plugin health, data reliability, warning states, and recovery/diagnostic status for driver-facing trust decisions.
+## What it does
 
-## Contract boundary
+Monitor System is the health and reliability report for plugin data and driver-facing trust decisions.
 
-This product-system page does not rename SimHub exports, SimHub actions, persisted settings, dashboard JSON contracts, profile schema fields, or preset schema fields. Technical implementation details remain canonical in subsystem docs.
+## First-use setup
+
+It is enabled by default. Use it to see whether fuel, pit, traffic, race-awareness, or other monitored data is ready, unreliable, recovered, or faulted.
+
+## What to trust / review
+
+Trust Monitor System as a report-by-exception signal. If it warns, fix the underlying data/source rather than ignoring it.
+
+## What it does not own
+
+Monitor System reports health; it does not automatically fix data, reset systems, send pit commands, or change calculations.
 
 ## Related docs
 

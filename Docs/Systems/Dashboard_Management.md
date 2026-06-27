@@ -1,10 +1,20 @@
 # Dashboard Management
 
-Dashboard Management covers dashboard packages, visibility, presentation contracts, dark mode, messages, and plugin-vs-dashboard boundaries.
+## What it does
 
-## Contract boundary
+Dashboard Management covers dashboard packages, visibility, dark mode, brightness, presentation contracts, actions exposed to dashboards, and optional dashboard-support setup.
 
-This product-system page does not rename SimHub exports, SimHub actions, persisted settings, dashboard JSON contracts, profile schema fields, or preset schema fields. Technical implementation details remain canonical in subsystem docs.
+## First-use setup
+
+Use matching dashboard/plugin versions. Configure dark mode, brightness, visibility, and bindings deliberately. Optional ShakeIt TractionLoss setup belongs here because dashboards may display it when configured.
+
+## What to trust / review
+
+Trust dashboards as displays of plugin-owned outputs. If a dashboard feels wrong, check package version, bindings, visibility settings, optional SimHub properties, and Monitor System status.
+
+## What it does not own
+
+Dashboard Management does not own Strategy math, pit calculations, Traffic/Race Awareness selection, profile persistence, or subsystem logic.
 
 ## Related docs
 

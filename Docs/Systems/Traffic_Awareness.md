@@ -1,10 +1,20 @@
 # Traffic Awareness
 
-Traffic Awareness describes what is happening around the car now: nearby cars, track situational awareness, CarSA implementation, and track H2H where relevant.
+## What it does
 
-## Contract boundary
+Traffic Awareness describes nearby cars and immediate track situation: what is around the car now.
 
-This product-system page does not rename SimHub exports, SimHub actions, persisted settings, dashboard JSON contracts, profile schema fields, or preset schema fields. Technical implementation details remain canonical in subsystem docs.
+## First-use setup
+
+Use it for local track context. It should fail closed when session data is weak. CarSA is implementation terminology; user docs should talk about nearby cars and track situational awareness.
+
+## What to trust / review
+
+Trust it when the session has healthy car-position data and Monitor System is not warning about traffic reliability. If it feels wrong, check telemetry health and whether the situation is local traffic or race order.
+
+## What it does not own
+
+Traffic Awareness does not own race-order target selection, strategy math, or official standings.
 
 ## Related docs
 

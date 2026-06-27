@@ -1,8 +1,13 @@
+## 2026-06-27 — v1.1 documentation restructure follow-up and Standing Start Assist naming
+- Classification: **both** (GitHub-facing docs, visible plugin UI label wording, and internal docs map; no runtime behavior, dashboard JSON/package files, SimHub export/action names, settings schema, profile schema, or preset schema changed).
+- Replaced user-facing Race Starts/Launch System wording with **Standing Start Assist** across public/product docs and safe visible plugin UI labels, while preserving Launch Mode, LaunchPlugin.dll, launch trace files, existing action/export/setting names, schema fields, and dashboard contracts as technical/internal names.
+- Moved pit fuel/tyre mode CSV behavior tables back under Pit System ownership, expanded Product and Core System landing pages with practical guidance, restored Quick Start ExtraProperties install guidance, and removed obvious historical diagnostic/release-note fragments from the targeted feature docs. Property Snapshot list reviewed: no; docs/link/UI-label wording only, with no SimHub export/property surface change.
+
 ## 2026-06-27 — v1.1 documentation architecture restructure
 - Classification: **both** (GitHub-facing documentation architecture and internal subsystem-documentation map; no runtime behavior, dashboard JSON, SimHub export/action names, settings schema, profile schema, preset schema, or images changed).
 - Reorganized documentation around the outside-in product model: Product surfaces (`Driver Dash`, `Strategy Dash`, `Plugin UI`, `Overlays`), Core systems, Feature docs, grouped technical Subsystems, and Internal maintainer references.
-- Moved public feature docs into `Docs/Features/`, grouped technical subsystem docs under `Docs/Subsystems/<system>/`, renamed public Fuel/Launch documentation to Fuel Guidance/Race Starts, and renamed the technical Profiles document away from `Profiles_And_PB` while clarifying that PB/reference values are stored profile data.
-- Public/product documentation now uses Driver Tagging and Race Starts terminology while preserving existing internal Launch/Friends action/export/setting/code contract names where they remain contracts. Property Snapshot list reviewed: no; documentation structure and links only, with no SimHub export/property surface change.
+- Moved public feature docs into `Docs/Features/`, grouped technical subsystem docs under `Docs/Subsystems/<system>/`, renamed public Fuel/Launch documentation to Fuel Guidance/Standing Start Assist, and renamed the technical Profiles document away from `Profiles_And_PB` while clarifying that PB/reference values are stored profile data.
+- Public/product documentation now uses Driver Tagging and Standing Start Assist terminology while preserving existing internal Launch/Friends action/export/setting/code contract names where they remain contracts. Property Snapshot list reviewed: no; documentation structure and links only, with no SimHub export/property surface change.
 
 ## 2026-06-27 — v1.1 warning cleanup
 - Classification: **internal-only** (dead private field cleanup and internal SimHub parameter documentation alignment; no runtime behavior, export/action names, dashboard contracts, settings/profile schema, finish lifecycle logic, `CanTrustPerCarFinishFlags(...)`, or Shift Assist learning/audio/cueing/sample behavior changed).
@@ -2191,7 +2196,7 @@
   - OFF->MAN selection feedback aligns to table contract (`FUEL MAN STBY`).
 - Expanded raw-command failure observability in `PitCommandEngine.ExecuteRawPitCommand(...)`:
   - empty-after-normalization blocked sends now log both `raw` and `normalized` payload fields.
-- Updated authoritative behavior table `Docs/Subsystems/FuelModesLogicCSV.csv`:
+- Updated authoritative behavior table `Docs/Subsystems/Pit_System/FuelModesLogicCSV.csv`:
   - corrected OFF->MAN chat payload row to `#fuel$`,
   - added explicit MAN/AUTO over-tank-space/max-feedback contract rows (`FUEL MAX`, `AUTO FUEL <requested>L >MAX`) without changing outgoing command payload/clamp behavior.
 - Preserved invariants:

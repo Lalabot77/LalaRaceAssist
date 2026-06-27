@@ -22,7 +22,7 @@ For internal between-release development history, see `Docs/Internal/Development
 - Strategy Dash idle/control-centre status exports (`LalaLaunch.Plugin.VersionNumberText`, `LalaLaunch.Plugin.StatusText`, `LalaLaunch.Plugin.StatusLineText`) and dashboard action `LalaLaunch.MonitorSystemToggle`.
 
 ### Changed
-- Plugin UI navigation was reorganized for v1.1 polish: top-level tabs are now Overview, Strategy, Profiles, Launch System, Bindings, and Settings; bindings moved to the new Bindings tab, and dashboard/monitor/fuel settings moved into settings-only groups without changing action names, settings, exports, calculations, or pit transport.
+- Plugin UI navigation was reorganized for v1.1 polish: top-level tabs are now Overview, Strategy, Profiles, Standing Start Assist, Bindings, and Settings; bindings moved to the new Bindings tab, and dashboard/monitor/fuel settings moved into settings-only groups without changing action names, settings, exports, calculations, or pit transport.
 - Box Entry STOP / BRAKE NOW cue timing now includes a small comfort buffer derived from the existing car-profile Pit Entry Buffer, making the cue appear slightly earlier without changing pit-box distance, timing, service, debrief, or dashboard layout contracts.
 - Existing pit-service dashboard outputs now reflect the selected pit-service regulation without requiring new dashboard properties: `Fuel.Live.RefuelRate_Lps` shows the active effective service rate (including NEC percentage when selected), and PitExit countdown/position/gaps use the regulation-aware stop-loss estimate while preserving an active stop's countdown seed unless a longer estimate or distinguishable service-input change needs to refresh it. Stored profile refuel rate remains the normal baseline.
 - Profile CAR tab Pit Stop / Pit Assist layout now keeps Base Tank constrained, aligns the Refuel Rate / NEC factor / Tyre Change Time numeric editors, shows Refuel Rate to two decimals, and places Pit Entry Decel/Buffer as full-width bottom sliders while preserving existing ownership and save/load behavior.
@@ -73,7 +73,7 @@ For internal between-release development history, see `Docs/Internal/Development
 ### Changed
 - Pit Fuel Control PUSH/SAVE can optionally use profile-backed burn values (guarded around live stable NORM burn); NORM and PLAN behavior remain unchanged.
 - Consolidated planning language around the Strategy tab and Strategy preset workflow.
-- Clarified live snapshot behavior, launch settings location, and dashboard control guidance.
+- Clarified live snapshot behavior, Standing Start Assist settings location, and dashboard control guidance.
 - Synced user-facing and subsystem docs so navigation between user docs and technical ownership docs is coherent.
 
 ### Fixed

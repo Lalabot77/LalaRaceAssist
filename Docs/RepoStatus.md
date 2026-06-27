@@ -1,6 +1,10 @@
+- 2026-06-27 v1.1 documentation restructure follow-up landed:
+  - renamed the user-facing/product start-support wording from Race Starts/Launch System to Standing Start Assist across public/product docs and visible plugin UI labels while preserving Launch Mode, LaunchPlugin.dll, launch trace files, SimHub action/export names, settings/schema fields, profile/preset schema, and dashboard contracts as internal/technical contracts.
+  - moved `FuelModesLogicCSV.csv` and `TyreModesLogicCSV.csv` from Developer Tools to Pit System ownership because they document Pit Fuel/Tyre Control behavior, expanded Product/System landing pages, restored Quick Start ExtraProperties guidance, and lightly removed historical diagnostic/release-note fragments from feature docs.
+  - runtime behavior, dashboard JSON/package files, exports/actions, schemas, and dashboard contracts remain unchanged. Property Snapshot list reviewed: no; docs/link/UI-label wording only, with no SimHub export/property surface change.
 - 2026-06-27 v1.1 documentation architecture restructure landed:
   - reorganized GitHub documentation around the outside-in product model: Product surfaces, Core systems, Feature docs, grouped technical Subsystems, and Internal maintainer references; moved public feature docs into `Docs/Features/` and grouped subsystem docs under `Docs/Subsystems/<system>/`.
-  - public/product docs now use Driver Tagging and Race Starts terminology while preserving existing internal Launch/Friends action/export/setting/code contract names where they remain contracts.
+  - public/product docs now use Driver Tagging and Standing Start Assist terminology while preserving existing internal Launch/Friends action/export/setting/code contract names where they remain contracts.
   - documentation-only change: no runtime code, dashboard JSON, SimHub export/action names, settings schema, profile schema, preset schema, or images changed. Property Snapshot list reviewed: no; documentation structure and links only, with no SimHub export/property surface change.
 - 2026-06-27 v1.1 warning cleanup landed:
   - removed confirmed dead private warning fields only: finish-lifecycle write-only leader latch leftovers, the unused Session Summary checkered-fuel backing field, and the unused Shift Assist delay-capture event string assignments; existing finish lifecycle logic, `CanTrustPerCarFinishFlags(...)`, Shift Assist learning/audio/cueing/sample logic, SimHub export/action names, dashboard contracts, and settings/profile schema remain unchanged.
@@ -1497,7 +1501,7 @@ Branch: work
 - 2026-04-23 Pit Fuel Control testing/polish pass landed (command payload fix + observability + table alignment):
   - `PitFuelControlEngine.ModeCycle()` OFF->MAN sends `#fuel$` (no `#+fuel$` additive form) and uses `FUEL MAN STBY` feedback.
   - `PitCommandEngine.ExecuteRawPitCommand(...)` empty-after-normalization blocked path now logs both raw and normalized payload text for diagnosis.
-  - `Docs/Subsystems/FuelModesLogicCSV.csv` updated to reflect OFF->MAN payload fix and explicit MAN/AUTO over-tank-space max-feedback rows (`FUEL MAX`, `AUTO FUEL <requested>L >MAX`) with no outgoing-payload clamp redesign.
+  - `Docs/Subsystems/Pit_System/FuelModesLogicCSV.csv` updated to reflect OFF->MAN payload fix and explicit MAN/AUTO over-tank-space max-feedback rows (`FUEL MAX`, `AUTO FUEL <requested>L >MAX`) with no outgoing-payload clamp redesign.
 - 2026-04-23 Tyre Control follow-up landed (compound confirmation timeout no longer reverts successful DRY/WET MFD changes):
   - `PitTyreControlEngine.EnsureCompound(...)` pending confirmation now succeeds immediately when requested compound truth exists and matches desired DRY/WET family (`HasRequestedCompound` + family match), without waiting for tyre-service ON confirmation;
   - successful family convergence now clears pending compound confirmation state before timeout evaluation, preventing false timeout failure from undoing already-successful MFD compound changes;
@@ -2212,7 +2216,7 @@ Branch: work
 ### Changed in Pit Fuel Control testing/polish pass (payload/observability/table alignment)
 - `PitFuelControlEngine.cs`
 - `PitCommandEngine.cs`
-- `Docs/Subsystems/FuelModesLogicCSV.csv`
+- `Docs/Subsystems/Pit_System/FuelModesLogicCSV.csv`
 - `Docs/Internal/SimHubLogMessages.md`
 - `Docs/Internal/Development_Changelog.md`
 - `Docs/RepoStatus.md`

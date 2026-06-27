@@ -33,7 +33,7 @@ namespace LaunchPlugin
 
             var launchSystemTab = new SHTabItem
             {
-                Header = "LAUNCH SYSTEM",
+                Header = "STANDING START ASSIST",
                 Content = new LaunchAnalysisControl(mainPluginInstance, telemetryTraceLoggerService)
             };
             MainTabControl.Items.Add(launchSystemTab);

@@ -1,7 +1,23 @@
 # Driver Dash
 
-Driver Dash is the tactical, in-car surface for immediate driving support. It presents plugin-owned outputs for traffic, race context, pit entry/box guidance, rejoin support, Shift Assist, alerts, and selected strategy cues.
+Driver Dash is the tactical in-car surface for decisions that matter while the car is moving. It is the place to look for immediate driving support: nearby traffic, pit-entry and pit-box prompts, rejoin support, Shift Assist cues, key alerts, and concise strategy context.
 
-The Driver Dash does not own calculations or persistence. It consumes contracts owned by core systems such as [Traffic Awareness](../Systems/Traffic_Awareness.md), [Race Awareness](../Systems/Race_Awareness.md), [Pit System](../Systems/Pit_System.md), [Strategy](../Systems/Strategy.md), [Shift Assist](../Systems/Shift_Assist.md), and [Rejoin Assist](../Systems/Rejoin_Assist.md).
+## When you use it
 
-See also [Dashboards](../Features/Dashboards.md) and [Dashboard Management](../Systems/Dashboard_Management.md).
+Use Driver Dash during practice, qualifying, and race driving when you need information without leaving the driving task. It is intentionally optimized for quick reads rather than setup or post-session analysis.
+
+## What it owns
+
+Driver Dash owns presentation: page layout, visual grouping, touch areas, and how plugin-owned values are shown to the driver.
+
+## What it does not own
+
+It does not own calculations, telemetry interpretation, learning, exports, actions, settings, profiles, pit logic, strategy math, or race-awareness selection. Those remain owned by the plugin and technical subsystems.
+
+## Where to go next
+
+- [Dashboards](../Features/Dashboards.md)
+- [Traffic Awareness](../Systems/Traffic_Awareness.md)
+- [Race Awareness](../Systems/Race_Awareness.md)
+- [Pit System](../Systems/Pit_System.md)
+- [Dashboard Management](../Systems/Dashboard_Management.md)

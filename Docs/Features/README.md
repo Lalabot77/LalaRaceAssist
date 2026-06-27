@@ -8,7 +8,7 @@ Feature docs are user-facing workflow pages. They sit below product surfaces and
 - [Fuel Guidance](Fuel_Guidance.md)
 - [Profiles System](Profiles_System.md)
 - [Shift Assist](Shift_Assist.md)
-- [Race Starts](Race_Starts.md)
+- [Standing Start Assist](Standing_Start_Assist.md)
 - [Rejoin Assist](Rejoin_Assist.md)
 - [H2H System](H2H_System.md)
 

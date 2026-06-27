@@ -1,10 +1,20 @@
 # Developer Tools
 
-Developer Tools covers Debug Options, Property Snapshot, trace logging, diagnostic CSVs, log/message inventories, and support workflows.
+## What it does
 
-## Contract boundary
+Developer Tools covers debug options, Property Snapshot, trace logging, diagnostic CSVs, and log/message inventories for support and maintenance.
 
-This product-system page does not rename SimHub exports, SimHub actions, persisted settings, dashboard JSON contracts, profile schema fields, or preset schema fields. Technical implementation details remain canonical in subsystem docs.
+## First-use setup
+
+Use these only when diagnosing a problem or gathering support evidence. Keep debug logging off for normal driving unless asked to collect data.
+
+## What to trust / review
+
+Trust these tools as observations of existing systems. If output is confusing, compare it with the owning subsystem docs and current RepoStatus.
+
+## What it does not own
+
+Developer Tools do not own pit fuel/tyre behavior tables, normal driver workflow, or runtime decisions; diagnostic tools should not change system behavior.
 
 ## Related docs
 

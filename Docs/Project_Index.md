@@ -42,7 +42,7 @@ Core systems describe product capabilities before diving into implementation det
 - [Traffic Awareness](Systems/Traffic_Awareness.md)
 - [Race Awareness](Systems/Race_Awareness.md)
 - [Shift Assist](Systems/Shift_Assist.md)
-- [Race Starts](Systems/Race_Starts.md)
+- [Standing Start Assist](Systems/Standing_Start_Assist.md)
 - [Rejoin Assist](Systems/Rejoin_Assist.md)
 - [Dashboard Management](Systems/Dashboard_Management.md)
 - [Monitor System](Systems/Monitor_System.md)
@@ -62,7 +62,7 @@ These pages are the GitHub-facing driver/user layer. They explain what the drive
 - [Fuel Guidance](Features/Fuel_Guidance.md)
 - [Profiles System](Features/Profiles_System.md)
 - [Shift Assist](Features/Shift_Assist.md)
-- [Race Starts](Features/Race_Starts.md)
+- [Standing Start Assist](Features/Standing_Start_Assist.md)
 - [Rejoin Assist](Features/Rejoin_Assist.md)
 - [H2H System](Features/H2H_System.md)
 
@@ -84,7 +84,7 @@ Subsystem pages are the technical/canonical implementation layer. They explain i
 - [Race Awareness / H2H](Subsystems/Race_Awareness/H2H.md)
 - [Race Awareness / League Class](Subsystems/Race_Awareness/League_Class_System.md)
 - [Race Awareness / LapRef](Subsystems/Race_Awareness/LapRef.md)
-- [Race Starts / Launch Mode](Subsystems/Race_Starts/Launch_Mode.md)
+- [Standing Start Assist / Launch Mode](Subsystems/Standing_Start_Assist/Launch_Mode.md)
 - [Shift Assist](Subsystems/Shift_Assist/Shift_Assist.md)
 - [Rejoin Assist](Subsystems/Rejoin_Assist/Rejoin_Assist.md)
 - [Dashboard Integration](Subsystems/Dashboard_Management/Dash_Integration.md)
@@ -118,7 +118,7 @@ These pages support maintainers, support work, and Codex tasks. They are not par
 | Pit System | `Docs/Systems/Pit_System.md` + `Docs/Subsystems/Pit_System/*` |
 | Traffic Awareness | `Docs/Systems/Traffic_Awareness.md` + `Docs/Subsystems/Traffic_Awareness/CarSA.md` |
 | Race Awareness | `Docs/Systems/Race_Awareness.md` + `Docs/Subsystems/Race_Awareness/*` |
-| Race Starts | `Docs/Systems/Race_Starts.md` + `Docs/Subsystems/Race_Starts/Launch_Mode.md` |
+| Standing Start Assist | `Docs/Systems/Standing_Start_Assist.md` + `Docs/Subsystems/Standing_Start_Assist/Launch_Mode.md` |
 | Dashboard Management | `Docs/Systems/Dashboard_Management.md` + `Docs/Subsystems/Dashboard_Management/Dash_Integration.md` |
 | Monitor System | `Docs/Systems/Monitor_System.md` + `Docs/Internal/MonitorSystem_Messages.csv` |
 | Driver Tagging | `Docs/Systems/Driver_Tagging.md` |
@@ -136,7 +136,7 @@ These pages support maintainers, support work, and Codex tasks. They are not par
 | Pit System | Pit Entry + Pit Timing + Pit Commands/Fuel Control + Track Markers | `Docs/Subsystems/Pit_System/*` |
 | Traffic Awareness | CarSA / track situational awareness | `Docs/Subsystems/Traffic_Awareness/CarSA.md` |
 | Race Awareness | Opponents / race H2H / League Class / LapRef | `Docs/Subsystems/Race_Awareness/*` |
-| Race Starts | Launch Mode / launch trace contracts | `Docs/Subsystems/Race_Starts/Launch_Mode.md` |
+| Standing Start Assist | Launch Mode / launch trace contracts | `Docs/Subsystems/Standing_Start_Assist/Launch_Mode.md` |
 | Driver Tagging | Existing tagged/friend-driver persistence and styling inputs | `Docs/Systems/Driver_Tagging.md` |
 | Dashboard Management | Dash Integration contract + dashboard package usage | `Docs/Subsystems/Dashboard_Management/Dash_Integration.md` |
 | RaceFinish | Finish lifecycle / end-phase contract | `Docs/Internal/SimHubParameterInventory.md` + `Docs/Internal/SimHubLogMessages.md` |
@@ -144,6 +144,6 @@ These pages support maintainers, support work, and Codex tasks. They are not par
 
 ## Contract reminders
 
-- Public/product documentation may use Driver Tagging and Race Starts terminology.
+- Public/product documentation may use Driver Tagging and Standing Start Assist terminology.
 - Internal action names, SimHub export names, persisted setting names, JSON schema fields, profile/preset schema fields, and dashboard contracts remain unchanged unless an explicit future task approves otherwise.
 - If user-facing pages and subsystem docs ever disagree, update both in the same task so GitHub readers do not get split truths.

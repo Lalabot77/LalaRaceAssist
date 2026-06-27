@@ -323,9 +323,9 @@ RejoinAssist is the recovery/rejoin warning surface. It helps you judge whether 
 
 See [Rejoin Assist](../Subsystems/Rejoin_Assist/Rejoin_Assist.md) for the full driver-facing system guide.
 
-### LaunchAssist
+### Standing Start Assist widgets
 
-LaunchAssist surfaces launch-related driver information on supported dashboards. It does not replace **Race Starts settings** or **Race Starts Analysis**, and it does not become the owner of launch logic.
+Standing Start Assist widgets surface start-related driver information on supported dashboards. They do not replace **Standing Start Settings** or **Standing Start Review**, and they do not become the owner of launch/start logic.
 
 ### StallWidget
 
@@ -365,8 +365,3 @@ Debug page fields:
 - Service: `LalaLaunch.Pit.Debrief.Service.FuelAddedLitres`, `FuelTargetLitres`, `RefuelDurationSec`, `RefuelRateLps`, `TyreChangeCount`.
 - Timing: `LalaLaunch.Pit.Debrief.Timing.PredictedTotalLossSec`, `ActualTotalLossSec`, `LossDeltaSec`, `LossSource`.
 - Exit: `LalaLaunch.Pit.Debrief.Exit.PredictedPositionInClass`, `ActualPositionInClass`, `PositionDelta`, `AccuracyText`.
-
-
-### 2026-06-08 Pit Debrief diagnostic note
-
-Pit Debrief box/fuel source-trace diagnostics are SimHub log-only and do not require dashboard JSON/layout updates. Existing `Pit.Debrief.*` exports keep their names; `Pit.Box.LastDeltaSec` keeps its dashboard sign contract (`target - actual`, positive quicker/better), while Pit Debrief keeps its summary sign (`actual - target`, positive slower, negative faster) and displays large finite deltas intentionally. Box targets and Pit Debrief service tyre counts use the frozen/current-stop latched tyre count, so confirmed fuel-only stops do not carry stale/default 4-tyre timing, reset-in-lane cases do not reuse prior-stop tyre evidence, and real tyre stops are not overwritten by in-service flag clear-down; the 4-tyre fallback is retained when tyre evidence is unavailable before service. `Pit.Debrief.Service.FuelTargetLitres` remains debug/readout-only, preserves positive requested-add evidence through normal refuel completion/reset or deselect when positive fuel movement exists and added fuel is within the completion-tolerance window (including a same-tick current fuel sample before the gauge refresh), and still clears explicit in-box refuel-cancel before natural completion or true no-refuel/pre-flow cancel cases.

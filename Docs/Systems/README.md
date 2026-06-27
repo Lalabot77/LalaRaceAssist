@@ -8,7 +8,7 @@ Core systems describe Lala Race Assist capabilities in product terms before the 
 - [Traffic Awareness](Traffic_Awareness.md)
 - [Race Awareness](Race_Awareness.md)
 - [Shift Assist](Shift_Assist.md)
-- [Race Starts](Race_Starts.md)
+- [Standing Start Assist](Standing_Start_Assist.md)
 - [Rejoin Assist](Rejoin_Assist.md)
 - [Dashboard Management](Dashboard_Management.md)
 - [Monitor System](Monitor_System.md)

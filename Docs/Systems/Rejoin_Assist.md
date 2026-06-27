@@ -1,10 +1,20 @@
 # Rejoin Assist
 
-Rejoin Assist supports safer track rejoin decisions and related driver guidance.
+## What it does
 
-## Contract boundary
+Rejoin Assist provides decision support for safer track rejoins.
 
-This product-system page does not rename SimHub exports, SimHub actions, persisted settings, dashboard JSON contracts, profile schema fields, or preset schema fields. Technical implementation details remain canonical in subsystem docs.
+## First-use setup
+
+Use it as an additional awareness aid, not as permission to rejoin blindly. Review thresholds and setup if it repeatedly disagrees with safe driving judgment.
+
+## What to trust / review
+
+Trust it only as supporting context. If it feels wrong, check telemetry health, thresholds, and whether the situation is outside the intended rejoin model.
+
+## What it does not own
+
+Rejoin Assist does not control the car, replace mirrors/spotter judgment, or own Traffic/Race Awareness target selection.
 
 ## Related docs
 
