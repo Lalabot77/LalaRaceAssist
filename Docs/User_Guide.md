@@ -1,63 +1,63 @@
 # User Guide
 
-This guide explains the v1.1 product model for Lala Race Assist without duplicating every feature page. Start with the product surfaces, then use the core-system and feature docs for deeper setup and troubleshooting.
+Lala Race Assist is best understood as a driving assistant built around two jobs: helping you drive the car in the moment, and helping you manage the race around that driving. The plugin does the learning, calculations, persistence, actions, and exports. The dashboards and overlays make that information usable when you are busy.
 
-## Driver mental model
+## The surfaces you actually use
 
-Lala Race Assist is organized outside-in:
+Most users meet the plugin through four surfaces.
 
-1. **Product surfaces** are where you see or operate the system.
-2. **Core systems** explain what capability is being provided.
-3. **Subsystem docs** preserve the technical implementation truth and contracts.
+The **Driver Dash** is the in-car surface. It is for quick decisions: traffic nearby, pit entry, pit box approach, rejoin support, alerts, Shift Assist cues, and small pieces of strategy context that matter right now.
 
-The plugin owns learning, calculations, exports, actions, settings, profiles, presets, and persistence. Dashboards display and control those plugin-owned contracts; they do not own the underlying logic.
+The **Strategy Dash** is the race-management surface. It is for the bigger picture: stint planning, fuel guidance, pit windows, race context, and decisions that are not always tied to the next braking zone.
 
-## Product surfaces
+The **Plugin UI** is where you prepare and review. Use it for Profiles, Strategy setup, bindings, settings, Standing Start Assist review, Driver Tagging, and diagnostics.
 
-- [Driver Dash](Product/Driver_Dash.md) — tactical, in-car, immediate driving support.
-- [Strategy Dash](Product/Strategy_Dash.md) — strategy, race-management, and planning support.
-- [Plugin UI](Product/Plugin_UI.md) — setup, profiles, planning, bindings, settings, review, and debrief workflows.
-- [Overlays](Product/Overlays.md) — temporary support surfaces for alerts, messages, and focused tasks.
+Supporting **overlays** are temporary surfaces. They appear when a message, warning, prompt, or focused comparison needs attention without becoming your main dashboard page.
 
-See [Product overview](Product/README.md).
+That split is deliberate. Driving and managing a race are different mental tasks, so the plugin gives them different surfaces.
 
-## Core systems
+## Driving versus managing the race
 
-- [Strategy](Systems/Strategy.md) — race planning, fuel guidance, pit windows, and live strategy context.
-- [Profiles](Systems/Profiles.md) — persisted driver/car/track/profile data; PB is stored data, not a subsystem title.
-- [Pit System](Systems/Pit_System.md) — pit timing/loss, pit entry, pit box, pit commands, fuel/tyre control, debrief, and track markers.
-- [Traffic Awareness](Systems/Traffic_Awareness.md) — nearby cars and track situational awareness, including CarSA and track H2H where relevant.
-- [Race Awareness](Systems/Race_Awareness.md) — race order/context, rivals, race H2H, League Class, LapRef, and race-position awareness.
-- [Shift Assist](Systems/Shift_Assist.md) — shift cueing, learning, review, and audio support.
-- [Standing Start Assist](Systems/Standing_Start_Assist.md) — start setup, live start capture, and Standing Start Review.
-- [Rejoin Assist](Systems/Rejoin_Assist.md) — safe track rejoin support.
-- [Dashboard Management](Systems/Dashboard_Management.md) — dashboard package usage, visibility, dark mode, and presentation contracts.
-- [Monitor System](Systems/Monitor_System.md) — health and reliability status.
-- [Driver Tagging](Systems/Driver_Tagging.md) — tagged-driver workflow and visual support.
-- [Developer Tools](Systems/Developer_Tools.md) — debug options, snapshots, traces, diagnostic CSVs, and inventories.
+When you are driving, the useful question is usually “what do I need to know in the next few seconds?” That is Driver Dash territory. It should help you stay aware of nearby traffic, pit cues, rejoin risk, and urgent warnings without asking you to read a manual at 250 kph.
 
-See [Systems overview](Systems/README.md).
+When you are managing the race, the useful question is “what does this mean for the stint or result?” That belongs on Strategy Dash and in the Plugin UI. Fuel guidance, pit timing, race order, presets, and post-run review need more context and less urgency.
 
-## Feature docs
+If a piece of information feels too detailed for the Driver Dash, it probably belongs in Strategy Dash or the Plugin UI. If it needs to interrupt you during the lap, it probably belongs on Driver Dash or an overlay.
 
-Feature docs remain the practical user pages for specific workflows:
+## How the core systems fit together
 
-- [Dashboards](Features/Dashboards.md)
-- [Strategy System](Features/Strategy_System.md)
-- [Pit Assist](Features/Pit_Assist.md)
-- [Fuel Guidance](Features/Fuel_Guidance.md)
-- [Profiles System](Features/Profiles_System.md)
-- [Shift Assist](Features/Shift_Assist.md)
-- [Standing Start Assist](Features/Standing_Start_Assist.md)
-- [Rejoin Assist](Features/Rejoin_Assist.md)
-- [H2H System](Features/H2H_System.md)
+Profiles come first because they are the plugin's memory. They hold car, track, pit, sound, Shift Assist, and related values so the plugin does not start from nothing every session. Let values learn, confirm they make sense, and lock them only when you trust them.
 
-## Naming and contract notes
+Strategy builds on that memory. It turns profile data, race format, pit service assumptions, contingency, and live context into a plan. A good Strategy setup is deliberate: choose whether saved/manual inputs or live snapshot data should be in charge, then avoid chasing every noisy lap while confidence is still settling.
 
-Public/product docs use **Driver Tagging** instead of Friends and **Standing Start Assist** instead of Race Starts or Launch System where describing the driver-facing product. Technical docs may still say Launch Mode, Friends, or other legacy/internal names when referring to existing implementation contracts.
+The Pit System handles the most mistake-prone part of a race: getting in, stopping correctly, commanding service, and understanding the time loss. Validate pit markers and pit loss early. Once those basics are right, pit entry, pit box, command, and debrief guidance become much more useful.
 
-Do not infer a contract rename from documentation wording. SimHub export names, SimHub action names, persisted setting names, dashboard JSON contracts, profile schema fields, and preset schema fields remain unchanged unless a future task explicitly changes them.
+Traffic Awareness is about the cars around you now. Race Awareness is about the race order and rivals that matter strategically. In multiclass racing those are not always the same thing, so the documentation separates them on purpose.
 
-## Technical truth
+Shift Assist helps with repeatable shift cueing where a car benefits from it. Standing Start Assist helps review standing-start execution and setup. Rejoin Assist provides extra caution when returning to the racing surface. Monitor System sits across all of this as the health report: if it says the data is unreliable, treat the affected guidance as suspect until the underlying issue is understood.
 
-When product docs and implementation details diverge in wording, use [Subsystems](Subsystems/README.md) for technical ownership and contract truth. When in doubt, prefer subsystem docs and RepoStatus over orientation snapshots.
+## Learn, validate, lock, trust
+
+A recurring philosophy in Lala Race Assist is: learn, validate, lock, trust.
+
+The plugin can learn useful values from your driving, but learned values are not automatically good values. A messy lap, a compromised pit entry, traffic, damage, or the wrong setup can all produce data that looks precise while still being wrong for future use.
+
+Validation is the human step. Look at what the plugin learned and ask whether it matches the car, track, and session. If it does, lock the value so later noise does not degrade it. If it does not, relearn only the affected value instead of throwing away everything that was already good.
+
+Trust comes last. The more critical the decision, the more important it is that the supporting value has gone through that path.
+
+## Ownership matters
+
+The plugin owns calculations. Dashboards own presentation. Profiles own persistence. Monitor System reports health.
+
+That means a dashboard should not be treated as the source of strategy math, fuel learning, pit timing, traffic selection, or race-order logic. It displays plugin-owned outputs and may trigger plugin-owned actions, but it does not become the authority.
+
+It also means public wording does not rename contracts. User docs say **Standing Start Assist** and **Driver Tagging**, but technical docs may still mention Launch Mode, launch traces, Friends, action names, exports, settings, or schema fields where those are existing contracts.
+
+## How to keep learning
+
+The documentation follows the same outside-in idea as the plugin.
+
+Start with [Product surfaces](Product/README.md) when you want to understand where something appears. Read [Core systems](Systems/README.md) when you want to understand what capability is involved. Use [Feature docs](Features/README.md) for practical workflows such as dashboards, Strategy, Pit Assist, Shift Assist, Standing Start Assist, Rejoin Assist, Profiles, Fuel Guidance, and H2H. Use [Subsystems](Subsystems/README.md) when you need technical ownership or contract truth. Internal docs are mainly for maintenance, support, release work, and Codex tasks.
+
+If you are new, read [Quick Start](Quick_Start.md), then the system page for the thing you are trying to configure. If something feels wrong, check Monitor System, check the owning system page, and then move down into the feature or subsystem docs only as needed.

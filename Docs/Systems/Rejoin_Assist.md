@@ -1,22 +1,11 @@
 # Rejoin Assist
 
-## What it does
+Rejoin Assist is decision support for one of the easiest situations to misjudge: getting back onto the racing surface safely. It gives extra context, but it never replaces mirrors, relative awareness, spotter calls, or common sense.
 
-Rejoin Assist provides decision support for safer track rejoins.
+Use it when you are off-line, recovering, or preparing to re-enter the racing line. The right mindset is conservative: if the system and your own judgment disagree, slow down and reassess rather than treating the cue as permission.
 
-## First-use setup
+If Rejoin Assist repeatedly feels wrong, review the thresholds and the session context. Some situations are outside what a simple assist can responsibly decide, especially with unusual angles, traffic density, or cars arriving much faster than expected.
 
-Use it as an additional awareness aid, not as permission to rejoin blindly. Review thresholds and setup if it repeatedly disagrees with safe driving judgment.
+Trust Rejoin Assist as another source of awareness, not as an authority. Question it when telemetry is weak, cars are blinking, the track position is unusual, or you are already in a compromised recovery.
 
-## What to trust / review
-
-Trust it only as supporting context. If it feels wrong, check telemetry health, thresholds, and whether the situation is outside the intended rejoin model.
-
-## What it does not own
-
-Rejoin Assist does not control the car, replace mirrors/spotter judgment, or own Traffic/Race Awareness target selection.
-
-## Related docs
-
-- [Rejoin Assist](../Features/Rejoin_Assist.md)
-- [Rejoin Assist](../Subsystems/Rejoin_Assist/Rejoin_Assist.md)
+For driver workflow, read [Rejoin Assist](../Features/Rejoin_Assist.md). Technical ownership lives in [Rejoin Assist subsystem](../Subsystems/Rejoin_Assist/Rejoin_Assist.md).

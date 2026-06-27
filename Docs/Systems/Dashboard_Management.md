@@ -1,23 +1,11 @@
 # Dashboard Management
 
-## What it does
+Dashboard Management is about getting the right information onto the right surface without pretending the dashboard owns the underlying logic. Dashboards display plugin-owned outputs and expose selected controls; the plugin still owns calculations, learning, actions, exports, settings, and persistence.
 
-Dashboard Management covers dashboard packages, visibility, dark mode, brightness, presentation contracts, actions exposed to dashboards, and optional dashboard-support setup.
+Start by using dashboard packages that match the plugin version. Then configure visibility, dark mode, brightness, and bindings for the way you actually drive. If you use optional SimHub-side inputs such as ShakeIt TractionLoss, treat them as dashboard support setup: useful when configured, absent when not.
 
-## First-use setup
+When a dashboard looks wrong, first ask whether it is a presentation problem or a data problem. A stale package, missing binding, hidden visibility setting, or optional property can make a good plugin state look broken. Monitor System warnings can also explain why a widget is failing closed.
 
-Use matching dashboard/plugin versions. Configure dark mode, brightness, visibility, and bindings deliberately. Optional ShakeIt TractionLoss setup belongs here because dashboards may display it when configured.
+Trust dashboards as readable presentations of plugin-owned values. Question dashboard output when package versions are mismatched, SimHub reports missing properties, visibility settings hide a feature, or a formula/widget is trying to recreate logic the plugin already publishes.
 
-## What to trust / review
-
-Trust dashboards as displays of plugin-owned outputs. If a dashboard feels wrong, check package version, bindings, visibility settings, optional SimHub properties, and Monitor System status.
-
-## What it does not own
-
-Dashboard Management does not own Strategy math, pit calculations, Traffic/Race Awareness selection, profile persistence, or subsystem logic.
-
-## Related docs
-
-- [Dashboards](../Features/Dashboards.md)
-- [Dash Integration](../Subsystems/Dashboard_Management/Dash_Integration.md)
-- [Message System V1](../Subsystems/Dashboard_Management/Message_System_V1.md)
+For user setup, read [Dashboards](../Features/Dashboards.md). Technical presentation contracts live in [Dash Integration](../Subsystems/Dashboard_Management/Dash_Integration.md) and [Message System V1](../Subsystems/Dashboard_Management/Message_System_V1.md).

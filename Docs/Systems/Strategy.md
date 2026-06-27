@@ -1,24 +1,11 @@
 # Strategy
 
-## What it does
+Strategy is where you turn a race format into a plan you can actually drive. It brings together the selected profile, track data, race length, fuel assumptions, pit service rules, and live context so the dashboard can answer practical questions: can you make the stint, when is the window, and how much margin do you have?
 
-Strategy turns race assumptions and live context into a plan you can use before and during a session.
+Use Strategy deliberately rather than constantly chasing the last lap. Before the race, decide whether the plan should come from saved profile/manual values or from a live session snapshot. Profile/manual planning is best when you want a stable repeatable plan; live snapshot is useful when the current session is clearly the best source of truth. Presets are worth using for race formats you run often because they stop you rebuilding the same assumptions every time.
 
-## First-use setup
+Pit service regulations are a manual Strategy assumption. Pick Default, IMSA, or NEC because that is the rule set you intend to model, not because you expect the plugin to guess it from the series name. Once the session starts, let fuel confidence settle before you react to every small movement in the numbers.
 
-Choose profile/manual inputs or a live snapshot deliberately. Select pit service regulations manually, use presets for repeatable race formats, and avoid chasing every lap while live confidence is still settling.
+Trust Strategy when the profile, race length, pit rules, contingency, and live confidence all match the race you are in. Question it when a preset was applied to the wrong format, a profile value was learned from bad data, live confidence is still immature, or the race definition does not match the server.
 
-## What to trust / review
-
-Trust Strategy most when the selected profile, track, preset, and live confidence match the race you are actually running. If it feels wrong, check data source, pit regulation, contingency, race length, and whether live confidence is mature.
-
-## What it does not own
-
-Strategy does not own pit command transport, Traffic Awareness, Race Awareness target selection, dashboard presentation, or profile persistence.
-
-## Related docs
-
-- [Strategy System](../Features/Strategy_System.md)
-- [Fuel Guidance](../Features/Fuel_Guidance.md)
-- [Fuel Planner Tab](../Subsystems/Strategy/Fuel_Planner_Tab.md)
-- [Fuel Model Subsystem](../Subsystems/Strategy/Fuel_Model_Subsystem.md)
+For the practical workflow, continue with [Strategy System](../Features/Strategy_System.md) and [Fuel Guidance](../Features/Fuel_Guidance.md). Technical planning ownership lives in [Fuel Planner Tab](../Subsystems/Strategy/Fuel_Planner_Tab.md) and runtime fuel logic lives in [Fuel Model](../Subsystems/Strategy/Fuel_Model_Subsystem.md).

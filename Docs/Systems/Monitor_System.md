@@ -1,23 +1,11 @@
 # Monitor System
 
-## What it does
+Monitor System is the plugin's health and reliability report. It exists so you know whether the guidance on screen is based on trustworthy data, weak data, recovered data, or a fault condition.
 
-Monitor System is the health and reliability report for plugin data and driver-facing trust decisions.
+Leave it enabled unless you have a specific reason not to. It is most useful as a report-by-exception system: when everything is healthy it should stay quiet, and when something important is unreliable it should tell you what area needs attention.
 
-## First-use setup
+Monitor System does not fix the data for you. If it warns about fuel, traffic, opponents, pit context, or another monitored area, treat that as a reason to review the underlying source rather than a message to dismiss and ignore.
 
-It is enabled by default. Use it to see whether fuel, pit, traffic, race-awareness, or other monitored data is ready, unreliable, recovered, or faulted.
+Trust Monitor System as a reliability indicator. Question the affected feature when Monitor System warns, after reconnects/session transitions, or when a dashboard value looks plausible but the health state says the supporting data is not ready.
 
-## What to trust / review
-
-Trust Monitor System as a report-by-exception signal. If it warns, fix the underlying data/source rather than ignoring it.
-
-## What it does not own
-
-Monitor System reports health; it does not automatically fix data, reset systems, send pit commands, or change calculations.
-
-## Related docs
-
-- [MonitorSystem Messages](../Internal/MonitorSystem_Messages.csv)
-- [SimHubLogMessages](../Internal/SimHubLogMessages.md)
-- [Dash Integration](../Subsystems/Dashboard_Management/Dash_Integration.md)
+For message inventories and dashboard contracts, see [MonitorSystem Messages](../Internal/MonitorSystem_Messages.csv), [SimHub Log Messages](../Internal/SimHubLogMessages.md), and [Dash Integration](../Subsystems/Dashboard_Management/Dash_Integration.md).

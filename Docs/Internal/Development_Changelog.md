@@ -1,3 +1,7 @@
+## 2026-06-27 — v1.1 documentation philosophy polish
+- Classification: **both** (GitHub-facing User Guide/System page content plus internal status docs; no runtime behavior, dashboard JSON/package files, SimHub export/action names, settings schema, profile schema, preset schema, file moves, or hierarchy changes).
+- Rewrote the Core System pages in a more natural guidance style and rewrote the User Guide as the introductory philosophy chapter for product surfaces, driving vs race management, core-system flow, learn/validate/lock/trust, ownership boundaries, and documentation navigation. Property Snapshot list reviewed: no; content-only documentation polish with no SimHub export/property surface change.
+
 ## 2026-06-27 — v1.1 documentation restructure follow-up and Standing Start Assist naming
 - Classification: **both** (GitHub-facing docs, visible plugin UI label wording, and internal docs map; no runtime behavior, dashboard JSON/package files, SimHub export/action names, settings schema, profile schema, or preset schema changed).
 - Replaced user-facing Race Starts/Launch System wording with **Standing Start Assist** across public/product docs and safe visible plugin UI labels, while preserving Launch Mode, LaunchPlugin.dll, launch trace files, existing action/export/setting names, schema fields, and dashboard contracts as technical/internal names.
