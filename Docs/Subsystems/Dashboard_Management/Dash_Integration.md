@@ -32,6 +32,29 @@ The Strategy Dash idle/control-centre top row should use plugin-owned status exp
 
 League Class missing/unloaded state is intentionally not part of `Plugin.StatusText`, because League Class is optional for many users and must not make the plugin appear unhealthy.
 
+
+## Root version manifest and dashboard package versions
+`LalaRaceAssist.VersionManifest.json` at the repository root is the release/version source of truth for v1.1 plugin and dashboard package audits. The manifest records the current plugin release identity, the compatible plugin family, and one entry per distributable dashboard/overlay asset.
+
+Dashboard and overlay package assets are versioned individually through their main/root `.djson` `DashboardVersion` metadata. Shared copied widgets are **not** independently versioned: PitEntry, BoxEntry, PitPopup, RejoinAssist, LaunchAssist, copied H2H/Fuel/traffic/alert widgets, and similar common surfaces inherit the version of the containing dashboard or overlay package.
+
+The manifest `releaseCritical` flag separates packages that must match before a release from auxiliary/non-critical packages. Release-critical mismatches should block release prep until resolved; non-critical mismatches must still be reported and triaged, but they are separated from release-critical failures so the release owner can make an explicit go/no-go decision.
+
+Current manifest-tracked assets are:
+- release-critical: `Lala-Driver Dash`, `Lala-Strategy Dash`, `Lala-Alerts Overlay`, and `Lala-VerticalTrafficBar Overlay`;
+- non-release-critical: `Lala-Head2Head` and `Lala-Fuel Calculator`.
+
+The manifest/audit contract does not add plugin Overview behavior, runtime logic, SimHub exports, dashboard formulas, or dashboard layout behavior. Plugin-side installed-dashboard detection, plugin Overview manifest display, and dash-side RED/AMBER/GREEN warning panels are deferred future work.
+
+## Version manifest audit workflow
+Run the read-only release-prep audit before packaging dashboards or publishing a release:
+
+```bash
+python3 Docs/Internal/VersionManifestAudit.py
+```
+
+The audit reports assembly version attributes, manifest plugin version fields, manifest asset latest versions, the exact JSON path used for each root `.djson` `DashboardVersion`, and any missing, blank, mismatched, or unparsable versions. Release-critical and non-critical mismatches are reported separately. The audit must not edit files; fix mismatches manually in the manifest or root dashboard metadata, then rerun the audit.
+
 ## MonitorSystem contract
 `LalaLaunch.MonitorSystem.*` is the dedicated dash-facing monitoring surface. Dashboards should bind directly to:
 - `State` (`OFF` when disabled, `ON` when enabled; active runtime no longer emits `AUTO`),
