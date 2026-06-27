@@ -1,69 +1,99 @@
 # Project Index
 
 Validated against commit: HEAD
-Last updated: 2026-06-11
+Last updated: 2026-06-27
 Branch: work
-Current note: Monitor lifecycle restart evidence is current; the optional Monitor Event CSV can now write one-shot internal-only `Lifecycle` rows for Opponents, CarSA, H2H, and LapRef first-healthy-after-reset observation without changing MonitorSystem text, exports, dashboard JSON, or subsystem reset/recovery/calculation behavior.
-Current note: Pit service regulations are now selectable in Strategy/Race Presets and route runtime boxed-stop plus Strategy Planner service timing through one shared regulation-aware seam; active PitExit total-loss refresh accepts lower estimates only when the deliberate pit-service model key changes, while unchanged-key repair/countdown ageing preserves the latched seed. The Profiles CAR Pit Stop / Pit Assist group is layout-polished only: constrained/aligned numeric editors and full-width Pit Entry sliders without ownership or calculation changes.
+Current note: v1.1 documentation architecture now follows the outside-in product model: product surfaces first, core systems second, technical subsystem ownership third, and internal maintainer references last. This was a documentation-only restructure with no runtime, dashboard JSON, SimHub export/action, settings schema, or profile/preset schema change.
 
 ## What this repo is
-Lala Race Assist Plugin is a SimHub plugin for iRacing that provides strategy planning, fuel learning, dashboards, launch instrumentation, pit assistance, rejoin support, Shift Assist cueing, profile-backed persistence, and H2H race context.
 
-This page is the canonical documentation map for the **v1 GitHub documentation set**. It should let a reader move cleanly between:
-- public/user guidance,
-- subsystem-level technical truth,
-- internal maintainer references.
+Lala Race Assist Plugin is a SimHub plugin for iRacing that provides driver dashboards, strategy planning, race-awareness context, pit assistance, rejoin support, Shift Assist cueing, race-start review, profile-backed persistence, and diagnostics.
+
+This page is the canonical documentation map for the v1.1 GitHub documentation set. It should let a reader move cleanly between product surfaces, core systems, feature guidance, technical subsystem truth, and internal maintainer references.
 
 ## Codex read/start order
+
 1. If present at repo root, read `../AGENTS.md` as the thin agent entry point, then start with `Project_Index.md`.
 2. Read `Docs/Internal/CODEX_CONTRACT.txt` for mandatory engineering policy.
 3. Use `Docs/Internal/Architecture_Guardrails.md` for subsystem boundaries and ownership guidance.
-4. Read the relevant `Subsystems/*.md` files before editing affected areas.
+4. Read the relevant `Docs/Subsystems/**/*.md` files before editing affected areas.
 5. Check `RepoStatus.md` for the current validated repo/doc state.
 6. Use `Docs/Internal/Code_Snapshot.md` only for orientation when needed; it is not canonical if it conflicts with the docs above.
 7. Follow the analysis-first workflow and reusable task framing in `Docs/Internal/CODEX_TASK_TEMPLATE.txt`.
 
-## User documentation
+## Product surfaces
+
+Product surfaces are the outside-in entry points for what the driver or support crew sees.
+
+- [Product overview](Product/README.md)
+- [Driver Dash](Product/Driver_Dash.md)
+- [Strategy Dash](Product/Strategy_Dash.md)
+- [Plugin UI](Product/Plugin_UI.md)
+- [Overlays](Product/Overlays.md)
+
+## Core systems
+
+Core systems describe product capabilities before diving into implementation details.
+
+- [Systems overview](Systems/README.md)
+- [Strategy](Systems/Strategy.md)
+- [Profiles](Systems/Profiles.md)
+- [Pit System](Systems/Pit_System.md)
+- [Traffic Awareness](Systems/Traffic_Awareness.md)
+- [Race Awareness](Systems/Race_Awareness.md)
+- [Shift Assist](Systems/Shift_Assist.md)
+- [Race Starts](Systems/Race_Starts.md)
+- [Rejoin Assist](Systems/Rejoin_Assist.md)
+- [Dashboard Management](Systems/Dashboard_Management.md)
+- [Monitor System](Systems/Monitor_System.md)
+- [Driver Tagging](Systems/Driver_Tagging.md)
+- [Developer Tools](Systems/Developer_Tools.md)
+
+## User and feature documentation
+
 These pages are the GitHub-facing driver/user layer. They explain what the driver sees, how to use the feature, what to trust, and what to review when it feels wrong.
 
 - [Quick Start](Quick_Start.md)
 - [User Guide](User_Guide.md)
-- [Dashboards](Dashboards.md)
-- [Strategy System](Strategy_System.md)
-- [Shift Assist](Shift_Assist.md)
-- [Launch System](Launch_System.md)
-- [Rejoin Assist](Rejoin_Assist.md)
-- [Pit Assist](Pit_Assist.md)
-- [H2H System](H2H_System.md)
-- [Profiles System](Profiles_System.md)
-- [Fuel Model](Fuel_Model.md)
+- [Feature overview](Features/README.md)
+- [Dashboards](Features/Dashboards.md)
+- [Strategy System](Features/Strategy_System.md)
+- [Pit Assist](Features/Pit_Assist.md)
+- [Fuel Guidance](Features/Fuel_Guidance.md)
+- [Profiles System](Features/Profiles_System.md)
+- [Shift Assist](Features/Shift_Assist.md)
+- [Race Starts](Features/Race_Starts.md)
+- [Rejoin Assist](Features/Rejoin_Assist.md)
+- [H2H System](Features/H2H_System.md)
 
 ## Subsystem documentation
-These pages are the technical/canonical subsystem layer. They explain internal ownership, inputs, outputs, calculations, persistence, caching, architecture boundaries, and the plugin-vs-dash contract where relevant.
 
-- [Subsystems/Fuel_Model_Subsystem.md](Subsystems/Fuel_Model_Subsystem.md)
-- [Subsystems/Fuel_Planner_Tab.md](Subsystems/Fuel_Planner_Tab.md)
-- [Subsystems/Launch_Mode.md](Subsystems/Launch_Mode.md)
-- [Subsystems/Shift_Assist.md](Subsystems/Shift_Assist.md)
-- [Subsystems/Pit_Timing_And_PitLoss.md](Subsystems/Pit_Timing_And_PitLoss.md)
-- [Subsystems/Pit_Commands_And_Fuel_Control.md](Subsystems/Pit_Commands_And_Fuel_Control.md)
-- [Subsystems/Pit_Entry_Assist.md](Subsystems/Pit_Entry_Assist.md)
-- [Subsystems/Rejoin_Assist.md](Subsystems/Rejoin_Assist.md)
-- [Subsystems/Opponents.md](Subsystems/Opponents.md)
-- [Subsystems/CarSA.md](Subsystems/CarSA.md)
-- [Subsystems/H2H.md](Subsystems/H2H.md)
-- [Subsystems/League_Class_System.md](Subsystems/League_Class_System.md)
-- [Subsystems/LapRef.md](Subsystems/LapRef.md)
-- [Subsystems/Profiles_And_PB.md](Subsystems/Profiles_And_PB.md)
-- [Subsystems/Dash_Integration.md](Subsystems/Dash_Integration.md)
-- [Subsystems/Pace_And_Projection.md](Subsystems/Pace_And_Projection.md)
-- [Subsystems/Trace_Logging.md](Subsystems/Trace_Logging.md)
-- [Subsystems/Track_Markers.md](Subsystems/Track_Markers.md)
-- [Subsystems/Message_System_V1.md](Subsystems/Message_System_V1.md)
-- [Subsystems/MessageEngineV1_Notes.md](Subsystems/MessageEngineV1_Notes.md)
-- and other existing technical subsystem docs in `Docs/Subsystems/`.
+Subsystem pages are the technical/canonical implementation layer. They explain internal ownership, inputs, outputs, calculations, persistence, caching, architecture boundaries, and plugin-vs-dash contracts.
+
+- [Subsystem ownership map](Subsystems/README.md)
+- [Strategy / Fuel Model](Subsystems/Strategy/Fuel_Model_Subsystem.md)
+- [Strategy / Fuel Planner Tab](Subsystems/Strategy/Fuel_Planner_Tab.md)
+- [Strategy / Pace and Projection](Subsystems/Strategy/Pace_And_Projection.md)
+- [Profiles](Subsystems/Profiles/Profiles.md)
+- [Pit Timing and Pit Loss](Subsystems/Pit_System/Pit_Timing_And_PitLoss.md)
+- [Pit Entry Assist](Subsystems/Pit_System/Pit_Entry_Assist.md)
+- [Pit Commands and Fuel/Tyre Control](Subsystems/Pit_System/Pit_Commands_And_Fuel_Control.md)
+- [Track Markers](Subsystems/Pit_System/Track_Markers.md)
+- [Traffic Awareness / CarSA](Subsystems/Traffic_Awareness/CarSA.md)
+- [Race Awareness / Opponents](Subsystems/Race_Awareness/Opponents.md)
+- [Race Awareness / H2H](Subsystems/Race_Awareness/H2H.md)
+- [Race Awareness / League Class](Subsystems/Race_Awareness/League_Class_System.md)
+- [Race Awareness / LapRef](Subsystems/Race_Awareness/LapRef.md)
+- [Race Starts / Launch Mode](Subsystems/Race_Starts/Launch_Mode.md)
+- [Shift Assist](Subsystems/Shift_Assist/Shift_Assist.md)
+- [Rejoin Assist](Subsystems/Rejoin_Assist/Rejoin_Assist.md)
+- [Dashboard Integration](Subsystems/Dashboard_Management/Dash_Integration.md)
+- [Message System V1](Subsystems/Dashboard_Management/Message_System_V1.md)
+- [Message Engine V1 Notes](Subsystems/Dashboard_Management/MessageEngineV1_Notes.md)
+- [Trace Logging](Subsystems/Developer_Tools/Trace_Logging.md)
 
 ## Internal / developer documentation
+
 These pages support maintainers, support work, and Codex tasks. They are not part of the normal driver-facing documentation layer.
 
 - [Internal/CODEX_CONTRACT.txt](Internal/CODEX_CONTRACT.txt)
@@ -78,45 +108,42 @@ These pages support maintainers, support work, and Codex tasks. They are not par
 - [Internal/Property_Snapshot_Debug_Workflow.md](Internal/Property_Snapshot_Debug_Workflow.md)
 - [Internal/iRacingExtraProperties_Dependency_Audit.md](Internal/iRacingExtraProperties_Dependency_Audit.md)
 
-
 ## Topic owner matrix
+
 | Topic | Canonical owner doc |
 |---|---|
-| Runtime Fuel System | `Docs/Subsystems/Fuel_Model_Subsystem.md` |
-| Strategy planner behavior | `Docs/Subsystems/Fuel_Planner_Tab.md` |
-| User-facing fuel trust workflow | `Docs/Fuel_Model.md` |
-| Dash integration contract | `Docs/Subsystems/Dash_Integration.md` |
-| Dashboard user workflow | `Docs/Dashboards.md` |
+| Strategy planning | `Docs/Systems/Strategy.md` + `Docs/Subsystems/Strategy/Fuel_Planner_Tab.md` |
+| Fuel guidance / fuel trust workflow | `Docs/Features/Fuel_Guidance.md` + `Docs/Subsystems/Strategy/Fuel_Model_Subsystem.md` |
+| Profiles and persisted data | `Docs/Systems/Profiles.md` + `Docs/Subsystems/Profiles/Profiles.md` |
+| Pit System | `Docs/Systems/Pit_System.md` + `Docs/Subsystems/Pit_System/*` |
+| Traffic Awareness | `Docs/Systems/Traffic_Awareness.md` + `Docs/Subsystems/Traffic_Awareness/CarSA.md` |
+| Race Awareness | `Docs/Systems/Race_Awareness.md` + `Docs/Subsystems/Race_Awareness/*` |
+| Race Starts | `Docs/Systems/Race_Starts.md` + `Docs/Subsystems/Race_Starts/Launch_Mode.md` |
+| Dashboard Management | `Docs/Systems/Dashboard_Management.md` + `Docs/Subsystems/Dashboard_Management/Dash_Integration.md` |
+| Monitor System | `Docs/Systems/Monitor_System.md` + `Docs/Internal/MonitorSystem_Messages.csv` |
+| Driver Tagging | `Docs/Systems/Driver_Tagging.md` |
+| Developer Tools | `Docs/Systems/Developer_Tools.md` + `Docs/Subsystems/Developer_Tools/Trace_Logging.md` |
 | Race end / finish lifecycle contract | `Docs/Internal/SimHubParameterInventory.md` (`RaceFinish.*`, `Race.EndPhase.*`) + `Docs/Internal/SimHubLogMessages.md` |
 | Property Snapshot debug workflow | `Docs/Internal/Property_Snapshot_Debug_Workflow.md` |
-| MonitorSystem health/warning messages | `Docs/Subsystems/Fuel_Model_Subsystem.md` + `Docs/Internal/MonitorSystem_Messages.csv` + `Docs/Internal/SimHubLogMessages.md` |
 
 ## Terminology matrix
-| User term | Technical term | Canonical owner |
+
+| Public/product term | Technical / contract term | Canonical owner |
 |---|---|---|
-| Strategy | Fuel Planner / Strategy Tab | `Docs/Subsystems/Fuel_Planner_Tab.md` |
-| Fuel Model | Runtime Fuel System | `Docs/Subsystems/Fuel_Model_Subsystem.md` |
-| Pit Assist | Pit Entry + Pit Timing + Pit Commands/Fuel Control | `Docs/Subsystems/Pit_Entry_Assist.md`, `Docs/Subsystems/Pit_Timing_And_PitLoss.md`, `Docs/Subsystems/Pit_Commands_And_Fuel_Control.md` |
-| Dashboards | Dash Integration contract + dashboard package usage | `Docs/Subsystems/Dash_Integration.md` + `Docs/Dashboards.md` |
+| Strategy | Fuel Planner / Strategy Tab | `Docs/Subsystems/Strategy/Fuel_Planner_Tab.md` |
+| Fuel Guidance | Fuel Model / runtime fuel logic | `Docs/Subsystems/Strategy/Fuel_Model_Subsystem.md` |
+| Profiles | Profiles and stored PB/profile data | `Docs/Subsystems/Profiles/Profiles.md` |
+| Pit System | Pit Entry + Pit Timing + Pit Commands/Fuel Control + Track Markers | `Docs/Subsystems/Pit_System/*` |
+| Traffic Awareness | CarSA / track situational awareness | `Docs/Subsystems/Traffic_Awareness/CarSA.md` |
+| Race Awareness | Opponents / race H2H / League Class / LapRef | `Docs/Subsystems/Race_Awareness/*` |
+| Race Starts | Launch Mode / launch trace contracts | `Docs/Subsystems/Race_Starts/Launch_Mode.md` |
+| Driver Tagging | Existing tagged/friend-driver persistence and styling inputs | `Docs/Systems/Driver_Tagging.md` |
+| Dashboard Management | Dash Integration contract + dashboard package usage | `Docs/Subsystems/Dashboard_Management/Dash_Integration.md` |
 | RaceFinish | Finish lifecycle / end-phase contract | `Docs/Internal/SimHubParameterInventory.md` + `Docs/Internal/SimHubLogMessages.md` |
-| League Class | Resolver system / effective class publication | `Docs/Subsystems/League_Class_System.md` |
 | Property Snapshot | Internal observability workflow | `Docs/Internal/Property_Snapshot_Debug_Workflow.md` |
 
-## Release-history ownership rubric
-- `README.md` = stable product overview and doc entry links.
-- `CHANGELOG.md` = public release notes.
-- `Docs/RepoStatus.md` = current validated repository truth.
-- `Docs/Internal/Development_Changelog.md` = internal implementation history between releases.
+## Contract reminders
 
-## v1 documentation notes
-- `README.md` is the public landing page.
-- `Docs/*.md` are the reader-facing feature/system pages.
-- `Docs/Subsystems/*.md` are the canonical technical ownership docs.
-- `Docs/RepoStatus.md` records the latest documentation sweep and validation note.
-- Changelog split: root `CHANGELOG.md` is public release-facing, while `Docs/Internal/Development_Changelog.md` is the internal between-release history.
+- Public/product documentation may use Driver Tagging and Race Starts terminology.
+- Internal action names, SimHub export names, persisted setting names, JSON schema fields, profile/preset schema fields, and dashboard contracts remain unchanged unless an explicit future task approves otherwise.
 - If user-facing pages and subsystem docs ever disagree, update both in the same task so GitHub readers do not get split truths.
-
-## Freshness
-- Validated against commit: HEAD
-- Date: 2026-06-09
-- Branch: work

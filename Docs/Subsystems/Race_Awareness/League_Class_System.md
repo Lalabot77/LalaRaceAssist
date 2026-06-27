@@ -1,5 +1,8 @@
 # League Class System
 
+> Product name: **Race Awareness**. Technical implementation name: **League Class System**. Contract warning: do not rename SimHub exports/actions, persisted settings, dashboard JSON contracts, profile/preset schema fields, or code contracts from documentation wording alone.
+
+
 ## 1) Purpose
 League Class is a **presentation and cohorting layer** for league-specific subclass behavior. It does not replace physical-awareness selectors (CarSA slot selection, H2HTrack nearest-target selection, Opponents race-order ownership). It enables league-defined classes that can differ from native iRacing class labels/colors.
 
@@ -95,8 +98,8 @@ Contract notes:
 - **Suffix fallback expectation mismatch:** verify mode is suffix-capable and classifier inputs match expected naming conventions.
 
 ## Integration references
-- `Docs/Subsystems/CarSA.md`
-- `Docs/Subsystems/Opponents.md`
-- `Docs/Subsystems/H2H.md`
-- `Docs/Subsystems/Dash_Integration.md`
+- `Docs/Subsystems/Traffic_Awareness/CarSA.md`
+- `Docs/Subsystems/Race_Awareness/Opponents.md`
+- `Docs/Subsystems/Race_Awareness/H2H.md`
+- `Docs/Subsystems/Dashboard_Management/Dash_Integration.md`
 - `Docs/Internal/SimHubParameterInventory.md`

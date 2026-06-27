@@ -1,5 +1,8 @@
 # Launch Mode
 
+> Product name: **Race Starts**. Technical implementation name: **Launch Mode**. Contract warning: do not rename SimHub exports/actions, persisted settings, dashboard JSON contracts, profile/preset schema fields, or code contracts from documentation wording alone.
+
+
 Validated against commit: HEAD
 Last updated: 2026-04-09
 Branch: work
@@ -24,7 +27,7 @@ It does **not** own:
 - generic dash visibility toggles,
 - rejoin logic,
 - saved profile systems outside launch-specific values,
-- the user-facing explanation page in `Docs/Launch_System.md`.
+- the user-facing explanation page in `Docs/Features/Race_Starts.md`.
 
 ## Inputs (source + cadence)
 ### Runtime telemetry

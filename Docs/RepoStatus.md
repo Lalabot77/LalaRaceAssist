@@ -1,3 +1,7 @@
+- 2026-06-27 v1.1 documentation architecture restructure landed:
+  - reorganized GitHub documentation around the outside-in product model: Product surfaces, Core systems, Feature docs, grouped technical Subsystems, and Internal maintainer references; moved public feature docs into `Docs/Features/` and grouped subsystem docs under `Docs/Subsystems/<system>/`.
+  - public/product docs now use Driver Tagging and Race Starts terminology while preserving existing internal Launch/Friends action/export/setting/code contract names where they remain contracts.
+  - documentation-only change: no runtime code, dashboard JSON, SimHub export/action names, settings schema, profile schema, preset schema, or images changed. Property Snapshot list reviewed: no; documentation structure and links only, with no SimHub export/property surface change.
 - 2026-06-27 v1.1 warning cleanup landed:
   - removed confirmed dead private warning fields only: finish-lifecycle write-only leader latch leftovers, the unused Session Summary checkered-fuel backing field, and the unused Shift Assist delay-capture event string assignments; existing finish lifecycle logic, `CanTrustPerCarFinishFlags(...)`, Shift Assist learning/audio/cueing/sample logic, SimHub export/action names, dashboard contracts, and settings/profile schema remain unchanged.
   - `ShiftAssist.Delay.CaptureState` documentation now matches the existing code map (`1=ARM`, `2=CAPTURE`, `3=CANCEL_BRAKE`, `4=CANCEL_DOWN`, `5=CANCEL_TIMEOUT`) without changing the export behavior. Property Snapshot list reviewed: yes; no SimHub export/property add/remove/rename/regroup required because only dead private fields were removed and an existing export's documentation was aligned.
@@ -210,7 +214,7 @@
   - always-on Leader Lap authority unavailable/hold/recovery transition evidence remains unchanged. No Leader Lap authority behavior, runtime fuel math, lap detection, PitFuelControl, PitDebrief, exports/properties, dashboard JSON, settings UI, or profile behavior changed. Property Snapshot list reviewed: yes; no group mapping change required.
 - 2026-06-08 MonitorSystem documentation consolidation cleanup landed:
   - current MonitorSystem documentation now states the active Phase 4A/4B stale-state checks, the priority order (unresolved fuel-health > pit/baseline > Car/Opp/H2H > stale-state), and aligned MonitorSystem message catalogue categories with Monitor Event CSV categories (`FuelHealth`, `FuelPitStop`, `BaselineFuel`, `CarOppH2H`, `Launch`, `Rejoin`);
-  - duplicate Property Snapshot CSV inventory wording was merged, `MonitorSystem.Text` inventory provenance now includes Phase 4A/4B, and Project Index now points the runtime Fuel System to `Docs/Subsystems/Fuel_Model_Subsystem.md`;
+  - duplicate Property Snapshot CSV inventory wording was merged, `MonitorSystem.Text` inventory provenance now includes Phase 4A/4B, and Project Index now points the runtime Fuel System to `Docs/Subsystems/Strategy/Fuel_Model_Subsystem.md`;
   - superseded Phase 2B telemetry-known / `mfdRefuelKnown` history is explicitly marked as superseded by the later trusted-telemetry simplification, and `CARSA GAP CHECK` remains deferred-only rather than current MonitorSystem behavior. Docs-only cleanup: no code, exports, runtime behavior, CSV schema, dashboard JSON, settings UI, or Property Snapshot grouping changed. Property Snapshot list reviewed: yes; no export/property changes. Root `CHANGELOG.md` reviewed unchanged because this is internal documentation consolidation.
 
 - 2026-06-08 Strategy Live Session zero-rain summary cleanup landed:
@@ -994,7 +998,7 @@ Branch: work
   - `RaceFinish.PlayerFinishGapSec` remains canonical gap timer and `ClassWinnerGapSec` remains compatibility mirror.
 
 - 2026-05-08 docs sweep landed:
-  - added canonical subsystem documentation `Docs/Subsystems/League_Class_System.md` covering resolver precedence, fallback hierarchy, UI workflow, export contract, and ownership boundaries;
+  - added canonical subsystem documentation `Docs/Subsystems/Race_Awareness/League_Class_System.md` covering resolver precedence, fallback hierarchy, UI workflow, export contract, and ownership boundaries;
   - aligned subsystem/internal cross-references (`Project_Index`, `H2H`, `Dash_Integration`, `SimHubParameterInventory`, `Plugin_UI_Tooltips`) to point to the canonical League Class doc and reduce duplication/stale drift.
 
 - 2026-05-07 League Class final polish landed:
@@ -1607,7 +1611,7 @@ Branch: work
 - 2026-04-22 docs sweep for v1.1 release prep completed:
   - refreshed root `CHANGELOG.md` unreleased `v1.1` notes to be concise and user-facing,
   - reviewed and refreshed `Docs/User_Guide.md` and `Docs/Quick_Start.md` pit/custom command guidance links,
-  - added canonical subsystem contract doc `Docs/Subsystems/Pit_Commands_And_Fuel_Control.md` to capture combined pit command + fuel/tyre control ownership,
+  - added canonical subsystem contract doc `Docs/Subsystems/Pit_System/Pit_Commands_And_Fuel_Control.md` to capture combined pit command + fuel/tyre control ownership,
   - updated `Docs/Project_Index.md` subsystem map to include the new pit command subsystem doc.
 - Pit Fuel Control v2 redesign landed (AUTO plugin-owned, OFF/MAN MFD-derived truth):
   - effective `Pit.FuelControl.Mode` now derives from iRacing MFD fuel-enable truth (`dpFuelFill`) whenever plugin AUTO is not active (`OFF` when unchecked, `MAN` when checked);
@@ -1909,8 +1913,8 @@ Branch: work
 - `README.md`
 - `Docs/Quick_Start.md`
 - `Docs/User_Guide.md`
-- `Docs/Pit_Assist.md`
-- `Docs/Subsystems/Dash_Integration.md`
+- `Docs/Features/Pit_Assist.md`
+- `Docs/Subsystems/Dashboard_Management/Dash_Integration.md`
 - `Docs/Internal/SimHubParameterInventory.md`
 - `Docs/Internal/Development_Changelog.md`
 - `Docs/RepoStatus.md`
@@ -1922,8 +1926,8 @@ Branch: work
 - `README.md`
 - `Docs/Quick_Start.md`
 - `Docs/User_Guide.md`
-- `Docs/Pit_Assist.md`
-- `Docs/Subsystems/Dash_Integration.md`
+- `Docs/Features/Pit_Assist.md`
+- `Docs/Subsystems/Dashboard_Management/Dash_Integration.md`
 - `Docs/Internal/SimHubLogMessages.md`
 - `Docs/Internal/SimHubParameterInventory.md`
 - `Docs/Internal/Plugin_UI_Tooltips.md`
@@ -1938,42 +1942,42 @@ Branch: work
 
 ### Changed in LapRef rollover seam transient-zero follow-up
 - `LapReferenceEngine.cs`
-- `Docs/Subsystems/LapRef.md`
+- `Docs/Subsystems/Race_Awareness/LapRef.md`
 - `Docs/Internal/Development_Changelog.md`
 - `Docs/RepoStatus.md`
 
 ### Changed in LapRef timing-source + PB-trigger + rollover parity task
 - `LapReferenceEngine.cs`
 - `LalaLaunch.cs`
-- `Docs/Subsystems/LapRef.md`
+- `Docs/Subsystems/Race_Awareness/LapRef.md`
 - `Docs/Internal/SimHubParameterInventory.md`
 - `Docs/Internal/Development_Changelog.md`
 - `Docs/RepoStatus.md`
 
 ### Changed in PR follow-up: LapRef CarIdx freshness guard
 - `LalaLaunch.cs`
-- `Docs/Subsystems/LapRef.md`
+- `Docs/Subsystems/Race_Awareness/LapRef.md`
 - `Docs/Internal/Development_Changelog.md`
 - `Docs/RepoStatus.md`
 
 ### Changed in LapRef active-segment + cumulative delta task
 - `LapReferenceEngine.cs`
 - `LalaLaunch.cs`
-- `Docs/Subsystems/LapRef.md`
+- `Docs/Subsystems/Race_Awareness/LapRef.md`
 - `Docs/Internal/SimHubParameterInventory.md`
 - `Docs/Internal/Development_Changelog.md`
 - `Docs/RepoStatus.md`
 
 ### Changed in LapRef cumulative-delta rollover truth follow-up
 - `LapReferenceEngine.cs`
-- `Docs/Subsystems/LapRef.md`
+- `Docs/Subsystems/Race_Awareness/LapRef.md`
 - `Docs/Internal/SimHubParameterInventory.md`
 - `Docs/Internal/Development_Changelog.md`
 - `Docs/RepoStatus.md`
 
 ### Changed in LapRef live rollover persistence task
 - `LapReferenceEngine.cs`
-- `Docs/Subsystems/LapRef.md`
+- `Docs/Subsystems/Race_Awareness/LapRef.md`
 ### Changed in pit command polish + Settings expansion task
 - `PitCommandEngine.cs`
 - `LalaLaunch.cs`
@@ -1982,8 +1986,8 @@ Branch: work
 - `Docs/Internal/SimHubLogMessages.md`
 - `Docs/Internal/Plugin_UI_Tooltips.md`
 - `Docs/Internal/Development_Changelog.md`
-- `Docs/Pit_Assist.md`
-- `Docs/Subsystems/Dash_Integration.md`
+- `Docs/Features/Pit_Assist.md`
+- `Docs/Subsystems/Dashboard_Management/Dash_Integration.md`
 - `Docs/RepoStatus.md`
 
 ### Changed in PR 570 cleanup follow-up task
@@ -2001,8 +2005,8 @@ Branch: work
 - `Docs/Internal/SimHubParameterInventory.md`
 - `Docs/Internal/SimHubLogMessages.md`
 - `Docs/Internal/Development_Changelog.md`
-- `Docs/Subsystems/Dash_Integration.md`
-- `Docs/Pit_Assist.md`
+- `Docs/Subsystems/Dashboard_Management/Dash_Integration.md`
+- `Docs/Features/Pit_Assist.md`
 - `Docs/RepoStatus.md`
 
 ### Changed in PR 572 follow-up correctness fixes
@@ -2021,8 +2025,8 @@ Branch: work
 - `Docs/Internal/SimHubParameterInventory.md`
 - `Docs/Internal/SimHubLogMessages.md`
 - `Docs/Internal/Development_Changelog.md`
-- `Docs/Subsystems/Dash_Integration.md`
-- `Docs/Pit_Assist.md`
+- `Docs/Subsystems/Dashboard_Management/Dash_Integration.md`
+- `Docs/Features/Pit_Assist.md`
 - `Docs/RepoStatus.md`
 
 ### Changed in Pit Fuel Control control-model follow-up (real max toggle + STBY mode-guardrails)
@@ -2031,8 +2035,8 @@ Branch: work
 - `Docs/Internal/SimHubParameterInventory.md`
 - `Docs/Internal/SimHubLogMessages.md`
 - `Docs/Internal/Development_Changelog.md`
-- `Docs/Subsystems/Dash_Integration.md`
-- `Docs/Pit_Assist.md`
+- `Docs/Subsystems/Dashboard_Management/Dash_Integration.md`
+- `Docs/Features/Pit_Assist.md`
 - `Docs/RepoStatus.md`
 
 ### Changed in PR #576 follow-up (FuelSetMax ZERO-phase bypass + forced-STBY feedback refinement)
@@ -2041,8 +2045,8 @@ Branch: work
 - `Docs/Internal/SimHubParameterInventory.md`
 - `Docs/Internal/SimHubLogMessages.md`
 - `Docs/Internal/Development_Changelog.md`
-- `Docs/Subsystems/Dash_Integration.md`
-- `Docs/Pit_Assist.md`
+- `Docs/Subsystems/Dashboard_Management/Dash_Integration.md`
+- `Docs/Features/Pit_Assist.md`
 - `Docs/RepoStatus.md`
 
 ### Changed in fuel projection phase seam + Pit Fuel Control authority alignment task
@@ -2050,7 +2054,7 @@ Branch: work
 - `Docs/Internal/SimHubParameterInventory.md`
 - `Docs/Internal/SimHubLogMessages.md`
 - `Docs/Subsystems/Fuel_Model.md`
-- `Docs/Subsystems/Pace_And_Projection.md`
+- `Docs/Subsystems/Strategy/Pace_And_Projection.md`
 - `Docs/Internal/Development_Changelog.md`
 - `Docs/RepoStatus.md`
 
@@ -2063,7 +2067,7 @@ Branch: work
 ### Changed in LapRef live-current comparison correction task
 - `LapReferenceEngine.cs`
 - `LalaLaunch.cs`
-- `Docs/Subsystems/LapRef.md`
+- `Docs/Subsystems/Race_Awareness/LapRef.md`
 - `Docs/Internal/SimHubParameterInventory.md`
 - `Docs/Internal/Development_Changelog.md`
 - `Docs/RepoStatus.md`
@@ -2077,8 +2081,8 @@ Branch: work
 - `PitCommandEngine.cs`
 - `LalaLaunch.cs`
 - `LaunchPlugin.csproj`
-- `Docs/Subsystems/Dash_Integration.md`
-- `Docs/Pit_Assist.md`
+- `Docs/Subsystems/Dashboard_Management/Dash_Integration.md`
+- `Docs/Features/Pit_Assist.md`
 - `Docs/Internal/SimHubParameterInventory.md`
 - `Docs/Internal/SimHubLogMessages.md`
 - `Docs/Internal/Development_Changelog.md`
@@ -2088,7 +2092,7 @@ Branch: work
 - `Docs/Project_Index.md`
 - `Docs/Internal/CODEX_CONTRACT.txt`
 - `Docs/Internal/Architecture_Guardrails.md`
-- `Docs/Subsystems/Pit_Timing_And_PitLoss.md`
+- `Docs/Subsystems/Pit_System/Pit_Timing_And_PitLoss.md`
 - `Docs/Quick_Start.md`
 - `Docs/User_Guide.md`
 - `README.md`
@@ -2116,8 +2120,8 @@ Branch: work
 - `Docs/Internal/SimHubParameterInventory.md`
 - `Docs/Internal/SimHubLogMessages.md`
 - `Docs/Internal/Development_Changelog.md`
-- `Docs/Subsystems/Dash_Integration.md`
-- `Docs/Pit_Assist.md`
+- `Docs/Subsystems/Dashboard_Management/Dash_Integration.md`
+- `Docs/Features/Pit_Assist.md`
 - `Docs/RepoStatus.md`
 
 ### Changed in Pit Fuel Control polish (feedback-only max-fill wording)
@@ -2129,22 +2133,22 @@ Branch: work
 - `PitFuelControlEngine.cs`
 - `LalaLaunch.cs`
 - `PitCommandEngine.cs`
-- `Docs/Pit_Assist.md`
-- `Docs/Subsystems/Dash_Integration.md`
+- `Docs/Features/Pit_Assist.md`
+- `Docs/Subsystems/Dashboard_Management/Dash_Integration.md`
 - `Docs/Internal/SimHubParameterInventory.md`
 - `Docs/Internal/Development_Changelog.md`
 - `Docs/RepoStatus.md`
 
 ### Changed in class-best/class-leader live-session seam restore + single-class fallback task
 - `LalaLaunch.cs`
-- `Docs/Subsystems/H2H.md`
+- `Docs/Subsystems/Race_Awareness/H2H.md`
 - `Docs/Internal/SimHubLogMessages.md`
 - `Docs/Internal/Development_Changelog.md`
 - `Docs/RepoStatus.md`
 
 ### Changed in PR #582 review follow-up (explicit single-class authority requirement)
 - `LalaLaunch.cs`
-- `Docs/Subsystems/H2H.md`
+- `Docs/Subsystems/Race_Awareness/H2H.md`
 - `Docs/Internal/SimHubLogMessages.md`
 - `Docs/Internal/Development_Changelog.md`
 - `Docs/RepoStatus.md`
@@ -2154,7 +2158,7 @@ Branch: work
 - `ProfilesManagerViewModel.cs`
 - `CarProfiles.cs`
 - `LalaLaunch.cs`
-- `Docs/Subsystems/LapRef.md`
+- `Docs/Subsystems/Race_Awareness/LapRef.md`
 - `Docs/Internal/SimHubLogMessages.md`
 - `Docs/Internal/Development_Changelog.md`
 - `Docs/RepoStatus.md`
@@ -2162,7 +2166,7 @@ Branch: work
 ### Changed in LapRef player-side seam reuse refactor
 - `LapReferenceEngine.cs`
 - `LalaLaunch.cs`
-- `Docs/Subsystems/LapRef.md`
+- `Docs/Subsystems/Race_Awareness/LapRef.md`
 - `Docs/Internal/SimHubParameterInventory.md`
 - `Docs/Internal/Development_Changelog.md`
 - `Docs/RepoStatus.md`
@@ -2170,14 +2174,14 @@ Branch: work
 ### Changed in LapRef analysis-first SessionBest authority + rollover parity follow-up
 - `LapReferenceEngine.cs`
 - `LalaLaunch.cs`
-- `Docs/Subsystems/LapRef.md`
+- `Docs/Subsystems/Race_Awareness/LapRef.md`
 - `Docs/Internal/SimHubParameterInventory.md`
 - `Docs/Internal/Development_Changelog.md`
 - `Docs/RepoStatus.md`
 
 ### Changed in PR follow-up: PB readback wet/dry fallback on unvalidated best-lap events
 - `LalaLaunch.cs`
-- `Docs/Subsystems/Profiles_And_PB.md`
+- `Docs/Subsystems/Profiles/Profiles.md`
 - `Docs/Internal/Development_Changelog.md`
 - `Docs/RepoStatus.md`
 
@@ -2198,8 +2202,8 @@ Branch: work
 - `LalaLaunch.cs`
 - `LaunchPlugin.csproj`
 - `GlobalSettingsView.xaml`
-- `Docs/Pit_Assist.md`
-- `Docs/Subsystems/Dash_Integration.md`
+- `Docs/Features/Pit_Assist.md`
+- `Docs/Subsystems/Dashboard_Management/Dash_Integration.md`
 - `Docs/Internal/SimHubParameterInventory.md`
 - `Docs/Internal/SimHubLogMessages.md`
 - `Docs/Internal/Development_Changelog.md`

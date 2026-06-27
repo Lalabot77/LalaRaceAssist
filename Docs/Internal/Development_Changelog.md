@@ -1,3 +1,9 @@
+## 2026-06-27 — v1.1 documentation architecture restructure
+- Classification: **both** (GitHub-facing documentation architecture and internal subsystem-documentation map; no runtime behavior, dashboard JSON, SimHub export/action names, settings schema, profile schema, preset schema, or images changed).
+- Reorganized documentation around the outside-in product model: Product surfaces (`Driver Dash`, `Strategy Dash`, `Plugin UI`, `Overlays`), Core systems, Feature docs, grouped technical Subsystems, and Internal maintainer references.
+- Moved public feature docs into `Docs/Features/`, grouped technical subsystem docs under `Docs/Subsystems/<system>/`, renamed public Fuel/Launch documentation to Fuel Guidance/Race Starts, and renamed the technical Profiles document away from `Profiles_And_PB` while clarifying that PB/reference values are stored profile data.
+- Public/product documentation now uses Driver Tagging and Race Starts terminology while preserving existing internal Launch/Friends action/export/setting/code contract names where they remain contracts. Property Snapshot list reviewed: no; documentation structure and links only, with no SimHub export/property surface change.
+
 ## 2026-06-27 — v1.1 warning cleanup
 - Classification: **internal-only** (dead private field cleanup and internal SimHub parameter documentation alignment; no runtime behavior, export/action names, dashboard contracts, settings/profile schema, finish lifecycle logic, `CanTrustPerCarFinishFlags(...)`, or Shift Assist learning/audio/cueing/sample behavior changed).
 - Removed confirmed write-only/private warning fields only: `_leaderFinishedSeen`, `_leaderFinishLatchedByFlag`, `_fuelAtCheckeredLiters`, and `_shiftAssistDelayCaptureEvent` plus their corresponding writes/resets. Existing leader checkered session-time latching, RaceFinish snapshot flow, Session Summary finish fuel assignment, and Shift Assist delay capture state/sample paths remain unchanged.
@@ -319,7 +325,7 @@
 ## 2026-06-08 — MonitorSystem documentation consolidation cleanup
 - Classification: **internal-only** (documentation/current-state consolidation only; no C# code, exports, MonitorSystem messages, CSV schema, runtime behavior, dashboard JSON, or settings UI changed).
 - Merged duplicate Property Snapshot CSV inventory wording, updated Dash Integration/SimHub inventory to include active Phase 4A/4B stale-state checks, and documented the MonitorSystem priority order as unresolved fuel-health > pit/baseline > Car/Opp/H2H > stale-state.
-- Aligned `Docs/Internal/MonitorSystem_Messages.csv` categories with Monitor Event CSV category values, fixed the Project Index runtime Fuel System owner path to `Docs/Subsystems/Fuel_Model_Subsystem.md`, marked superseded `mfdRefuelKnown` RepoStatus history so removed telemetry-known wording is not mistaken for current state, and left `CARSA GAP CHECK` documented as deferred-only rather than current MonitorSystem behavior.
+- Aligned `Docs/Internal/MonitorSystem_Messages.csv` categories with Monitor Event CSV category values, fixed the Project Index runtime Fuel System owner path to `Docs/Subsystems/Strategy/Fuel_Model_Subsystem.md`, marked superseded `mfdRefuelKnown` RepoStatus history so removed telemetry-known wording is not mistaken for current state, and left `CARSA GAP CHECK` documented as deferred-only rather than current MonitorSystem behavior.
 - Property Snapshot list reviewed: yes; docs-only cleanup with no SimHub export/property additions, removals, renames, behavior-contract changes, or group changes. Root `CHANGELOG.md` reviewed unchanged because this is internal documentation consolidation.
 
 ## 2026-06-08 — Strategy Live Session zero-rain summary cleanup
@@ -1346,7 +1352,7 @@
 
 
 ## 2026-05-08 — League Class canonical subsystem documentation sweep
-- Added canonical subsystem doc `Docs/Subsystems/League_Class_System.md` covering purpose, concepts, resolver precedence/fallback, boundaries, exports, effective PositionInClass semantics, UI workflow, dash guidance, non-goals, and troubleshooting.
+- Added canonical subsystem doc `Docs/Subsystems/Race_Awareness/League_Class_System.md` covering purpose, concepts, resolver precedence/fallback, boundaries, exports, effective PositionInClass semantics, UI workflow, dash guidance, non-goals, and troubleshooting.
 - Updated cross-references in `Project_Index`, `Subsystems/H2H.md`, `Subsystems/Dash_Integration.md`, `Internal/SimHubParameterInventory.md`, `Internal/Plugin_UI_Tooltips.md`, `RepoStatus.md`, and `CHANGELOG.md` to point to canonical League Class documentation and reduce duplicated explanations.
 - Scope explicitly limited to analysis + documentation; runtime code, dashboard JSON, exports/actions, and resolver logic unchanged.
 ## 2026-05-08 — Fuel projection stable-source text companion export
@@ -2408,7 +2414,7 @@
 - Updated `PitTyreControlEngine.OnTelemetryTick()` manual-mode ordering so outside AUTO (`OFF`/`DRY`/`WET`) truth reconciliation runs before manual enforcement, preventing stale manual intent from being re-applied ahead of external MFD truth.
 - Addressed PR review reset regression: `ResetToOff()` OFF safety resets no longer remap back to `DRY/WET` on the next telemetry tick via manual truth-sync.
 - Kept scope tight: AUTO ownership and AUTO unconfirmed feedback behavior remain unchanged.
-- Synced docs for pit behavior and dash/inventory contracts (`Docs/Pit_Assist.md`, `Docs/Subsystems/Dash_Integration.md`, `Docs/Internal/SimHubParameterInventory.md`, `Docs/RepoStatus.md`).
+- Synced docs for pit behavior and dash/inventory contracts (`Docs/Features/Pit_Assist.md`, `Docs/Subsystems/Dashboard_Management/Dash_Integration.md`, `Docs/Internal/SimHubParameterInventory.md`, `Docs/RepoStatus.md`).
 
 ### 2026-04-22 — Tyre Control follow-up: manual 2-way truth sync + AUTO info-only unconfirmed policy
 - Classification: **both** (driver-visible tyre-control behavior contract change + bounded internal reconciliation/feedback logic).
@@ -2430,7 +2436,7 @@
   - `Docs/User_Guide.md` pit/custom command section now points explicitly to the user-facing and subsystem-owning pit command docs.
   - `Docs/Quick_Start.md` pit setup section now includes direct links for full usage + technical ownership references.
 - Added canonical subsystem documentation for the combined pit command stack:
-  - new `Docs/Subsystems/Pit_Commands_And_Fuel_Control.md` covering built-in pit actions, custom messages, transport semantics, Pit Fuel Control ownership, and Tyre Control ownership.
+  - new `Docs/Subsystems/Pit_System/Pit_Commands_And_Fuel_Control.md` covering built-in pit actions, custom messages, transport semantics, Pit Fuel Control ownership, and Tyre Control ownership.
 - Updated index/status alignment:
   - added the new subsystem doc to `Docs/Project_Index.md`,
   - recorded the sweep in `Docs/RepoStatus.md`.
@@ -2685,7 +2691,7 @@
   - dash/button binding guidance points to plugin-owned action surfaces rather than raw chat strings or legacy `IRacingExtraProperties` pit actions,
   - explicit runtime caveat retained: iRacing focus is currently required for reliable send; auto-focus remains preview/not implemented.
 - Updated dash/internal contract docs to keep action/export surfaces and persistence wording aligned with final state:
-  - `Docs/Subsystems/Dash_Integration.md` pit/custom action guidance and settings ownership,
+  - `Docs/Subsystems/Dashboard_Management/Dash_Integration.md` pit/custom action guidance and settings ownership,
   - `Docs/Internal/SimHubParameterInventory.md` pit/custom action-surface note.
 - No runtime behavior redesign was introduced; task was bounded to docs-truth sync.
 
@@ -3283,7 +3289,7 @@
 - Kept H2H/Opponents/CarSA responsibilities unchanged: LapRef reads CarSA fixed-sector cache as a read-only seam and does not modify H2H contracts.
 - Wired LapRef capture to the existing validated-lap acceptance path and existing wet/dry routing path (`_isWetMode`) to avoid duplicate validation or condition-detection logic.
 - Extended `TrackStats` with compatibility-safe optional condition-specific PB sector fields (`BestLapSector1..6Dry/WetMs`) and persisted them only when real sectors exist on a new PB.
-- Synced subsystem/docs contracts (`H2H`, `CarSA`, `Profiles_And_PB`, `SimHubParameterInventory`, `SimHubLogMessages`, `RepoStatus`) and added `Docs/Subsystems/LapRef.md`.
+- Synced subsystem/docs contracts (`H2H`, `CarSA`, `Profiles_And_PB`, `SimHubParameterInventory`, `SimHubLogMessages`, `RepoStatus`) and added `Docs/Subsystems/Race_Awareness/LapRef.md`.
 
 ## 2026-04-20 — PR #582 post-merge class-metadata completion + multiclass cache-proof follow-up
 - Classification: **internal-only** (class-metadata/cache decision correctness for existing H2H/ClassLeader seams; no new exports/UI).
@@ -3586,7 +3592,7 @@
 ## 2026-05-28 — Fuel Revamp Phase 3E Dashboard Migration Design pass (no export removal)
 - Classification: **internal-only** (design/planning documentation only).
 - Reconfirmed strict migration rule: no export removal/rename until both mappings are complete and dashboard usage is migrated + validated.
-- Added Phase 3E dashboard migration design matrix and checklist to `Docs/Subsystems/Dash_Integration.md`.
+- Added Phase 3E dashboard migration design matrix and checklist to `Docs/Subsystems/Dashboard_Management/Dash_Integration.md`.
 - Current workspace note: repository does not currently contain dashboard `.djson` files under `Docs/Dash Files/`; exact widget/formula replacement edits remain deferred to implementation phase with dashboard package files present.
 - Runtime boundaries preserved: no C# changes, no runtime formula changes, no export registration changes, no dashboard JSON edits.
 

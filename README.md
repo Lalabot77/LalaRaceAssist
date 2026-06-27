@@ -1,179 +1,52 @@
 # Lala Race Assist Plugin
 
-Lala Race Assist Plugin is a SimHub plugin for **iRacing** focused on race engineering, driver support, and dashboard-ready outputs. It combines planning, learned data, and live race context so drivers can make cleaner decisions without pushing core logic into dashboards.
+Lala Race Assist is a SimHub plugin for iRacing that provides driver dashboards, strategy planning, race-awareness context, pit assistance, rejoin support, race-start review, Shift Assist cueing, and profile-backed persistence. The plugin owns the learning, calculations, settings, actions, exports, and saved data; dashboards are presentation and control surfaces for those plugin-owned contracts.
 
-It is built to help with the practical race workflow: plan stints, trust learned fuel and pace data, manage launch and pit situations, and keep key race context visible while driving.
+## Product surfaces
 
-Version **1.1** documentation is organized so GitHub readers can move from the current product overview into the canonical subsystem docs without guessing which page owns which truth.
+- **Driver Dash** — tactical in-car support for immediate driving decisions.
+- **Strategy Dash** — race-management and planning support for stints, fuel, pit windows, and race context.
+- **Plugin UI** — setup, profiles, planning, bindings, settings, and review/debrief workflows.
+- **Overlays** — temporary supporting surfaces for alerts, messages, comparisons, and focused tasks.
 
-## At a glance
+## Core systems
 
-![Strategy tab overview](Docs/Images/StrategyTab.png)
+- **Strategy**
+- **Profiles**
+- **Pit System**
+- **Traffic Awareness**
+- **Race Awareness**
+- **Shift Assist**
+- **Race Starts**
+- **Rejoin Assist**
+- **Dashboard Management**
+- **Monitor System**
+- **Driver Tagging**
+- **Developer Tools**
 
-*Strategy is the main plugin home for planning, live snapshot inputs, and preset-driven race setup.*
+## Install summary
 
-![Strategy dashboard overview](Docs/Images/StrategyDashMainPageGrid.png)
+1. Copy `LaunchPlugin.dll` into the SimHub plugin folder.
+2. Start or restart SimHub and confirm the plugin loads.
+3. Import the matching dashboard package.
+4. Open the plugin UI, check Monitor System status, choose or create Profiles, create a Strategy, and bind core controls.
 
-*The strategy dashboard focuses on fuel, stint, and race-context decisions without moving that logic out of the plugin.*
-
-![Driver dashboard awareness view](Docs/Images/DriverDashRacingOpp.png)
-
-*The driver-facing dash keeps nearby race context visible while you stay focused on driving.*
-
-![Pit entry assist dashboard cue](Docs/Images/PitEntryAssist.png)
-
-*Pit entry guidance is presented on the dash, while the plugin continues to own the underlying timing and marker logic.*
-
-![Launch System tab](Docs/Images/LaunchAnalysis.png)
-
-*Launch System remains the active post-run review surface for saved starts and launch traces.*
-
-## Core Systems
-
-- **Strategy** - stable planning workflow for race fuel, stint, and context decisions
-- **Shift Assist** - RPM-based shift cueing with profile-backed trust and locking workflows
-- **Launch System** - launch setup plus saved-run review
-- **Rejoin Assist** - recovery and rejoin awareness support after incidents or off-tracks
-- **Pit Assist** - pit-entry and pit-lane support surfaced through the plugin and dashboards
-- **H2H** - same-class race and local-track comparison context
-- **Profiles** - long-term saved data by car, track, and condition
-- **Fuel Model** - learned fuel burn and confidence that feed the planning workflow
-- **Dashboards** - dashboard integration for display, visibility, and interaction with plugin outputs
-
-## Supported Scope
-
-- **Platform:** SimHub
-- **Sim:** iRacing only
-- **Primary use:** race planning, learned-data workflows, driver aids, and dashboard-supported race context
-
-## Plugin vs Dashboard Responsibility
-
-The plugin owns the **learning, storage, calculations, and exports**. Dashboards are the presentation layer: they show those outputs and provide limited interaction, but they do not own strategy math, saved learning, H2H selection, launch logic, finish lifecycle math, or Property Snapshot grouping contracts.
-
-## Dashboard Package
-
-The dashboard docs now include a dedicated Primary Driver Dash guide covering the confirmed page order, navigation model, pit pop-up, LalaAlerts overlay layer, and shared widget surfaces. If you are importing dashboards or binding page controls, start with [Docs/Dashboards.md](Docs/Dashboards.md).
-
-## Install Summary
-
-1. Copy `LaunchPlugin.dll` into your SimHub root installation.
-2. `RSC.iRacingExtraProperties.dll` is **no longer required** for current plugin runtime paths or plugin-owned pit/custom command transport.
-3. Restart SimHub.
-4. Import the dashboards you want to use.
-5. Open the plugin and use the top-level tabs in order: **Overview**, **Strategy**, **Profiles**, **Launch System**, **Bindings**, and **Settings**.
-6. For more detailed instructions and help refer to the main user guide or quick start guide in links below.
-
-## Pit commands, custom messages, and pit fuel control (current state)
-
-- Pit command actions are now **plugin-owned** (`LalaLaunch.Pit.*`) and should be bound through normal SimHub Controls & Events/plugin binding flows.
-- Custom race-chat buttons are also plugin-owned (`LalaLaunch.CustomMessage01..10`) and configured in **Bindings → Custom Messages**.
-- Built-in pit command rows are configured in **Bindings → Pit Commands**.
-- Pit Fuel Control is plugin-owned (`LalaLaunch.Pit.FuelControl.*`) for source/mode/target workflows used by supported pit widgets.
-- Pit/custom send transport no longer depends on `iRacingExtraProperties` action ids.
-- Pit/custom command bindings live under **Bindings → Pit Commands**; transport behavior remains plugin-owned and unchanged.
-- Auto-focus is still not implemented (preview setting only).
-- Confirmation truth model: stateful built-in pit toggles are effect-confirmed by before/after telemetry; custom messages, raw commands, and stateless built-ins are transport-attempt only (`delivery=unverified`).
-
-## Current Constraints (v1.x)
-
-- Some dashboard behaviors depend on optional SimHub-side setup and optional dashboard exports. If those are not configured, affected indicators or overlays may be missing while core plugin systems still work.
-- Wheelspin / traction-loss indicators depend on optional **ShakeIt Motors** export setup (`TractionLoss` property). Without that optional export, those indicators are unavailable.
-- Primary Dash navigation behavior is still evolving as the dashboard package is refined for early testers.
-- Bindings tab includes **Strategy Dash Mode** for toggling the Strategy Dash between Advanced and Simple presentation; dashboards can read `LalaLaunch.StrategyDash.AdvancedMode` (`true` = Advanced, `false` = Simple).
-- Legacy `RSC.iRacingExtraProperties.dll` fallback paths are removed from active runtime code.
-
-## Support and Feedback
-
-If you run into problems or want to suggest improvements, please use the GitHub support tools so issues can be tracked properly.
-
-### Bug Reports
-
-If something is not working as expected, open a **Bug Report**:
-
-**Issues → New Issue → Bug Report**
-
-Please include:
-
-- plugin version
-- SimHub version
-- screenshots or logs if possible
-
-This helps reproduce and resolve the problem faster.
-
-### Feature Requests
-
-If you have ideas for improving the plugin or workflow:
-
-**Issues → New Issue → Feature Request**
-
-### Questions or Setup Help
-
-For general help, setup questions, or discussion about dashboards or workflows, please use **GitHub Discussions**.
-
-Discussions are the best place for:
-
-- dashboard setup questions
-- usage advice
-- race workflow discussions
-- general feedback
-
-### Dashboard Issues
-
-If you encounter a problem specifically with a dashboard layout or behaviour, open a **Dashboard Issue**.
-
----
-
-Using Issues and Discussions helps keep the documentation, plugin behaviour, and user feedback aligned.
+See [Quick Start](Docs/Quick_Start.md) for the install-first setup path.
 
 ## Documentation
 
-### Getting Started
+- [Project Index](Docs/Project_Index.md) — canonical documentation map.
+- [Quick Start](Docs/Quick_Start.md) — installation and first smoke test.
+- [User Guide](Docs/User_Guide.md) — product surfaces, core systems, and driver mental model.
+- [Product surfaces](Docs/Product/README.md) — Driver Dash, Strategy Dash, Plugin UI, and Overlays.
+- [Core systems](Docs/Systems/README.md) — outside-in product architecture.
+- [Feature docs](Docs/Features/README.md) — user-facing feature pages.
+- [Subsystem docs](Docs/Subsystems/README.md) — technical/canonical implementation ownership.
 
-- [Quick Start](Docs/Quick_Start.md)
-- [User Guide](Docs/User_Guide.md)
+## Support and community
 
-### Driver Systems
+Use the project issue tracker or community/support channel for installation problems, dashboard/package mismatches, reproducible bugs, and documentation gaps. Include plugin version, SimHub version, iRacing session type, dashboard package version, and relevant logs where possible.
 
-- [Strategy System](Docs/Strategy_System.md)
-- [Shift Assist](Docs/Shift_Assist.md)
-- [Launch System](Docs/Launch_System.md)
-- [Rejoin Assist](Docs/Rejoin_Assist.md)
-- [Pit Assist](Docs/Pit_Assist.md)
-- [H2H System](Docs/H2H_System.md)
-- [Profiles System](Docs/Profiles_System.md)
-- [Fuel Model](Docs/Fuel_Model.md)
+## Licence
 
-### Technical / Canonical Subsystems
-
-- [Project Index](Docs/Project_Index.md) - documentation map and ownership guide
-- [Subsystem docs](Docs/Subsystems/) - canonical subsystem behavior, boundaries, and export-level contracts
-- [Dash integration notes](Docs/Subsystems/Dash_Integration.md)
-- [Changelog](CHANGELOG.md)
-
-## Current UI Structure
-
-The current top-level plugin navigation is:
-
-1. **Overview**
-2. **Strategy**
-3. **Profiles**
-4. **Launch System**
-5. **Bindings**
-6. **Settings**
-
-Presets are managed from **Strategy** through the **`Presets...`** modal flow. There is no separate top-level Presets tab.
-
-## Notes / Important Boundaries
-
-- **PreRace** is display-only. It does not replace Strategy calculations and does not change live runtime fuel ownership (`Fuel.*`, `Fuel.Refuel.*`, `Fuel.Delta.*`).
-- **Live Snapshot** can auto-drive relevant planning values. When it is active, the corresponding manual controls are disabled.
-- Launch controls live under **Launch System -> Launch Settings**. **Launch System** remains the saved-run review tab.
-- The future/global message system is not documented here as an active user feature.
-
-## License
-
-Lala Race Assist Plugin  
-Copyright © 2026 Lalabot77
-
-This project is released under the MIT License.  
-See the LICENSE file for details.
+See [LICENSE](LICENSE).

@@ -1,5 +1,8 @@
 # Profiles and Personal Bests
 
+> Product name: **Profiles**. Technical implementation name: **Profiles and stored PB/profile data**. Contract warning: do not rename SimHub exports/actions, persisted settings, dashboard JSON contracts, profile/preset schema fields, or code contracts from documentation wording alone.
+
+
 Validated against commit: HEAD
 Last updated: 2026-06-11
 Branch: work
