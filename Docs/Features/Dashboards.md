@@ -28,6 +28,13 @@ The current monitor reports existing runtime fuel-health status, edge-triggered 
 
 Current driver-facing warning texts include `CHECK FUEL DATA`, `REFUEL OFF`, `MFD FUEL LOW`, `EXIT FUEL SHORT`, `BASELINE SHORT`, `OPPONENT DATA UNRELIABLE`, `TRAFFIC DATA UNRELIABLE`, and `H2H DATA UNRELIABLE`. Normal/clear messages remain `MONITOR READY`, `MONITOR OFF`, `FUEL HEALTH OK`, `FUEL DATA RECOVERED`, and `FUEL DATA FAULT`. Once the race is effectively ending, the monitor suppresses late `REFUEL OFF`, `MFD FUEL LOW`, and predictive `BASELINE SHORT` guidance noise while leaving `EXIT FUEL SHORT` and system-health/reliability warnings eligible.
 
+
+## Dashboard package versions
+
+Lala Race Assist uses the root `LalaRaceAssist.VersionManifest.json` manifest as the release/version source of truth for plugin and dashboard package audits. The main Driver Dash, Strategy Dash, Alerts Overlay, Vertical Traffic Bar Overlay, Head2Head package, and Fuel Calculator package each carry their own package version in the main/root `.djson` `DashboardVersion` metadata.
+
+Shared copied widgets, such as PitEntry, BoxEntry, PitPopup, RejoinAssist, LaunchAssist, copied H2H/Fuel/traffic/alert widgets, and similar common surfaces are not versioned independently; they inherit the version of the dashboard or overlay package that contains them. v1.1 only adds the manifest/audit contract and metadata alignment. Plugin Overview manifest display, automatic installed-dashboard detection, and dash-side RED/AMBER/GREEN warning panels are deferred future work.
+
 ## 2. Installation / import
 
 At a high level, dashboard setup is:

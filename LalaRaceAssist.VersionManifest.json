@@ -1,0 +1,95 @@
+{
+  "schemaVersion": 1,
+  "releaseFamily": "1.1",
+  "plugin": {
+    "latest": "1.1.0",
+    "minimumSupported": "1.1.0",
+    "assemblyVersion": "1.1.0.0",
+    "informationalVersion": "1.1.0",
+    "releaseUrl": "https://github.com/Lalabot77/LalaRaceAssist/releases"
+  },
+  "assets": {
+    "Lala-Driver Dash": {
+      "type": "dashboard",
+      "displayName": "Lala Driver Dash",
+      "folder": "Dash Files/Lala-Driver Dash",
+      "file": "Lala Driver Primary Dash.djson",
+      "latest": "1.1.0",
+      "minimumSupported": "1.1.0",
+      "compatiblePluginFamily": "1.1",
+      "requiresPlugin": ">=1.1.0 <1.2.0",
+      "versionProperty": "DashboardVersion",
+      "sharedWidget": false,
+      "releaseCritical": true
+    },
+    "Lala-Strategy Dash": {
+      "type": "dashboard",
+      "displayName": "Lala Strategy Dash",
+      "folder": "Dash Files/Lala-Strategy Dash",
+      "file": "Lala Strategy Secondary Dash.djson",
+      "latest": "1.1.0",
+      "minimumSupported": "1.1.0",
+      "compatiblePluginFamily": "1.1",
+      "requiresPlugin": ">=1.1.0 <1.2.0",
+      "versionProperty": "DashboardVersion",
+      "sharedWidget": false,
+      "releaseCritical": true
+    },
+    "Lala-Alerts Overlay": {
+      "type": "overlay",
+      "displayName": "Lala Alerts Overlay",
+      "folder": "Dash Files/Lala-Alerts Overlay",
+      "file": "Lala-AlertsOverlay.djson",
+      "latest": "1.1.0",
+      "minimumSupported": "1.1.0",
+      "compatiblePluginFamily": "1.1",
+      "requiresPlugin": ">=1.1.0 <1.2.0",
+      "versionProperty": "DashboardVersion",
+      "sharedWidget": false,
+      "releaseCritical": true
+    },
+    "Lala-VerticalTrafficBar Overlay": {
+      "type": "overlay",
+      "displayName": "Lala Vertical Traffic Bar Overlay",
+      "folder": "Dash Files/Lala-VerticalTrafficBar Overlay",
+      "file": "VerticalTrafficBar.djson",
+      "latest": "1.1.0",
+      "minimumSupported": "1.1.0",
+      "compatiblePluginFamily": "1.1",
+      "requiresPlugin": ">=1.1.0 <1.2.0",
+      "versionProperty": "DashboardVersion",
+      "sharedWidget": false,
+      "releaseCritical": true
+    },
+    "Lala-Head2Head": {
+      "type": "overlay",
+      "displayName": "Lala Head2Head",
+      "folder": "Dash Files/Lala-Head2Head",
+      "file": "Lala-Head2Head.djson",
+      "latest": "1.1.0",
+      "minimumSupported": "1.1.0",
+      "compatiblePluginFamily": "1.1",
+      "requiresPlugin": ">=1.1.0 <1.2.0",
+      "versionProperty": "DashboardVersion",
+      "sharedWidget": false,
+      "releaseCritical": false
+    },
+    "Lala-Fuel Calculator": {
+      "type": "dashboard",
+      "displayName": "Lala Fuel Calculator",
+      "folder": "Dash Files/Lala-Fuel Calculator",
+      "file": "Lala Fuel Calculator.djson",
+      "latest": "1.1.0",
+      "minimumSupported": "1.1.0",
+      "compatiblePluginFamily": "1.1",
+      "requiresPlugin": ">=1.1.0 <1.2.0",
+      "versionProperty": "DashboardVersion",
+      "sharedWidget": false,
+      "releaseCritical": false
+    }
+  },
+  "sharedWidgets": {
+    "versionedIndependently": false,
+    "notes": "Copied common widget surfaces inherit the version of their containing dashboard or overlay package."
+  }
+}

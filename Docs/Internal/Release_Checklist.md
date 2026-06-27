@@ -42,6 +42,9 @@
 
 ## 4) Dashboard package validation
 
+- [ ] Run `python3 Docs/Internal/VersionManifestAudit.py` and resolve any release-critical manifest/dashboard version mismatches before packaging.
+- [ ] Confirm `LalaRaceAssist.VersionManifest.json` is the release/version source of truth for plugin and dashboard package versions.
+- [ ] Confirm shared copied widgets inherit their containing package version and are not independently versioned.
 - [ ] Import each dashboard package into a clean/fresh dashboard context.
 - [ ] Verify no missing-property or broken-expression errors.
 - [ ] Verify shared widgets/components are current (no stale embedded copies).
