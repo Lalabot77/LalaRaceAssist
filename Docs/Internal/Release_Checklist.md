@@ -43,7 +43,9 @@
 ## 4) Dashboard package validation
 
 - [ ] Run `python3 Docs/Internal/VersionManifestAudit.py` and resolve any release-critical manifest/dashboard version mismatches before packaging.
-- [ ] Confirm `LalaRaceAssist.VersionManifest.json` is the release/version source of truth for plugin and dashboard package versions.
+- [ ] Confirm `LalaRaceAssist.VersionManifest.json` is the release/version source of truth for plugin and dashboard package versions and is embedded in `LaunchPlugin.csproj` as the runtime resource.
+- [ ] Confirm the plugin Overview lists expected/latest versions for Driver Dash, Strategy Dash, Alerts Overlay, Vertical Traffic Bar Overlay, Head2Head, and Fuel Calculator without claiming installed-dashboard detection.
+- [ ] Confirm the SimHub exports `LalaLaunch.Dashboards.*.ExpectedVersion`, matching `LatestVersion`, release-critical flags, and manifest status fields match the root manifest and that official-catalogue completeness does not imply users must install every asset.
 - [ ] Confirm shared copied widgets inherit their containing package version and are not independently versioned.
 - [ ] Import each dashboard package into a clean/fresh dashboard context.
 - [ ] Verify no missing-property or broken-expression errors.

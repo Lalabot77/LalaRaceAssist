@@ -1,5 +1,6 @@
 using Newtonsoft.Json.Linq;
 using System;
+using System.Collections.ObjectModel;
 using System.ComponentModel;
 using System.Diagnostics;
 using System.Net.Http;
@@ -35,6 +36,7 @@ namespace LaunchPlugin
         private string _trackMarkersStatusText = "Unknown";
         private string _currentCarText = "Not detected";
         private string _currentTrackText = "Not detected";
+        private string _dashboardManifestStatusText = "Version manifest not loaded";
 
         private string _monitorSystemText = "Unknown";
         private string _monitorSystemBackground = "#404040";
@@ -56,6 +58,8 @@ namespace LaunchPlugin
         public string TrackMarkersStatusText { get => _trackMarkersStatusText; private set { _trackMarkersStatusText = value; OnPropertyChanged(nameof(TrackMarkersStatusText)); } }
         public string CurrentCarText { get => _currentCarText; private set { _currentCarText = value; OnPropertyChanged(nameof(CurrentCarText)); } }
         public string CurrentTrackText { get => _currentTrackText; private set { _currentTrackText = value; OnPropertyChanged(nameof(CurrentTrackText)); } }
+        public string DashboardManifestStatusText { get => _dashboardManifestStatusText; private set { _dashboardManifestStatusText = value; OnPropertyChanged(nameof(DashboardManifestStatusText)); } }
+        public ObservableCollection<DashboardVersionRow> DashboardVersionRows { get; } = new ObservableCollection<DashboardVersionRow>();
 
         public string MonitorSystemText { get => _monitorSystemText; private set { _monitorSystemText = value; OnPropertyChanged(nameof(MonitorSystemText)); } }
         public string MonitorSystemBackground { get => _monitorSystemBackground; private set { _monitorSystemBackground = value; OnPropertyChanged(nameof(MonitorSystemBackground)); } }
@@ -70,6 +74,7 @@ namespace LaunchPlugin
             InitializeComponent();
             _plugin = plugin;
             InstalledVersionText = GetInstalledVersionText();
+            LoadDashboardVersionRows();
 
             DataContext = this;
             RefreshStatusSnapshot();
@@ -125,6 +130,7 @@ namespace LaunchPlugin
                 CurrentCarText = "Unavailable";
                 CurrentTrackText = "Unavailable";
                 CurrentGameText = "Unavailable";
+                DashboardManifestStatusText = "Version manifest unavailable";
                 MonitorSystemText = "Unavailable";
                 LeagueClassStatusText = "Unavailable";
                 LeagueClassDetailText = "Plugin not loaded";
@@ -153,8 +159,39 @@ namespace LaunchPlugin
             var currentGame = _plugin.PluginManager?.GetPropertyValue("DataCorePlugin.CurrentGame");
             CurrentGameText = currentGame == null ? "Not detected" : currentGame.ToString();
 
+            RefreshDashboardManifestSnapshot();
             RefreshMonitorSystemSnapshot();
             RefreshLeagueClassSnapshot();
+        }
+
+
+        private void LoadDashboardVersionRows()
+        {
+            DashboardVersionRows.Clear();
+            var manifest = _plugin?.DashboardVersions;
+            if (manifest == null)
+            {
+                DashboardManifestStatusText = "Version manifest not loaded";
+                return;
+            }
+
+            DashboardManifestStatusText = manifest.StatusText;
+            foreach (var asset in manifest.Assets)
+            {
+                DashboardVersionRows.Add(new DashboardVersionRow
+                {
+                    Name = asset.DisplayName,
+                    ExpectedVersion = asset.Latest,
+                    ReleaseCriticalText = asset.ReleaseCritical ? "Release-critical" : "Auxiliary",
+                    PropertyName = "LalaLaunch.Dashboards." + asset.PropertyKey + ".ExpectedVersion"
+                });
+            }
+        }
+
+        private void RefreshDashboardManifestSnapshot()
+        {
+            var manifest = _plugin?.DashboardVersions;
+            DashboardManifestStatusText = manifest == null ? "Version manifest not loaded" : manifest.StatusText;
         }
 
         private void RefreshMonitorSystemSnapshot()
@@ -332,6 +369,13 @@ namespace LaunchPlugin
         private void OnPropertyChanged(string propertyName)
         {
             PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(propertyName));
+        }
+        public sealed class DashboardVersionRow
+        {
+            public string Name { get; set; }
+            public string ExpectedVersion { get; set; }
+            public string ReleaseCriticalText { get; set; }
+            public string PropertyName { get; set; }
         }
     }
 }
