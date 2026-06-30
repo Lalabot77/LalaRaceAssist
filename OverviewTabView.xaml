@@ -300,7 +300,7 @@
                     <TextBlock Foreground="LightGray"
                                TextWrapping="Wrap"
                                Margin="0,0,0,8"
-                               Text="Expected/latest versions are read from the root version manifest. The plugin does not detect installed dashboard versions; installed version is shown inside each dashboard." />
+                               Text="Official expected versions are packaged from the root version manifest. Installed dashboards may be a subset. The plugin does not detect installed dashboard versions; installed version is shown inside each dashboard." />
                     <TextBlock Foreground="LightGray"
                                TextWrapping="Wrap"
                                Margin="0,0,0,8"
@@ -324,7 +324,7 @@
                                             <TextBlock Text="{Binding PropertyName}" Foreground="#9A9A9A" FontSize="10" TextWrapping="Wrap" />
                                         </StackPanel>
                                         <TextBlock Grid.Column="1"
-                                                   Text="{Binding ExpectedVersion, StringFormat=Expected version: {0}}"
+                                                   Text="{Binding ExpectedVersion, StringFormat=Official expected version: {0}}"
                                                    VerticalAlignment="Center"
                                                    Foreground="White" />
                                         <TextBlock Grid.Column="2"
@@ -358,7 +358,7 @@
                                 <TextBlock Text="Driver dashboard"
                                            FontWeight="SemiBold"
                                            Margin="0,0,0,2" />
-                                <TextBlock Text="Expected version shown above"
+                                <TextBlock Text="Official expected version shown above"
                                            Foreground="#9A9A9A"
                                            FontSize="10"
                                            Margin="0,0,0,6" />
@@ -385,7 +385,7 @@
                                 <TextBlock Text="Strategy dashboard"
                                            FontWeight="SemiBold"
                                            Margin="0,0,0,2" />
-                                <TextBlock Text="Expected version shown above"
+                                <TextBlock Text="Official expected version shown above"
                                            Foreground="#9A9A9A"
                                            FontSize="10"
                                            Margin="0,0,0,6" />
@@ -458,7 +458,7 @@
                                 <TextBlock Text="Head2Head preview"
                                            FontWeight="SemiBold"
                                            Margin="0,0,0,2" />
-                                <TextBlock Text="Expected version shown above"
+                                <TextBlock Text="Official expected version shown above"
                                            Foreground="#9A9A9A"
                                            FontSize="10"
                                            Margin="0,0,0,6" />

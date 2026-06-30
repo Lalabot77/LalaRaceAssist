@@ -1,3 +1,7 @@
+- 2026-06-30 Dashboard manifest embedded-resource follow-up landed:
+  - `LalaRaceAssist.VersionManifest.json` is now embedded into `LaunchPlugin.dll` for runtime Overview/export use, so normal DLL-only installs do not need a loose JSON file beside the plugin;
+  - manifest validation now requires the official six tracked assets to be present and valid before `Dashboards.Manifest.Valid=true`, while documenting that users may install only a subset and no installed-dashboard detection exists;
+  - Overview wording now says official expected versions and explicitly notes installed dashboards may be a subset. Property Snapshot list reviewed: yes; no export names were added, removed, or renamed beyond the existing additive `Dashboards.*` surface.
 - 2026-06-27 Dashboard expected-version exports and Overview display landed:
   - plugin consumes `LalaRaceAssist.VersionManifest.json` at startup for manifest-owned dashboard/overlay expected/latest versions and degrades safely to missing/invalid status text;
   - added `LalaLaunch.Dashboards.Manifest.Valid`, `StatusText`, `CompatiblePluginFamily`, and per-asset `ExpectedVersion`, `LatestVersion`, and `ReleaseCritical` exports for Driver Dash, Strategy Dash, Alerts Overlay, Vertical Traffic Bar, Head2Head, and Fuel Calculator;

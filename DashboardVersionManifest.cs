@@ -19,6 +19,15 @@ namespace LaunchPlugin
     public sealed class DashboardVersionManifest
     {
         private const string ManifestFileName = "LalaRaceAssist.VersionManifest.json";
+        private static readonly string[] RequiredAssetKeys = new[]
+        {
+            "Lala-Driver Dash",
+            "Lala-Strategy Dash",
+            "Lala-Alerts Overlay",
+            "Lala-VerticalTrafficBar Overlay",
+            "Lala-Head2Head",
+            "Lala-Fuel Calculator"
+        };
 
         public bool Valid { get; private set; }
         public string StatusText { get; private set; }
@@ -36,58 +45,20 @@ namespace LaunchPlugin
         public static DashboardVersionManifest Load()
         {
             var result = new DashboardVersionManifest();
-            string path = ResolveManifestPath();
-            if (string.IsNullOrWhiteSpace(path) || !File.Exists(path))
+            string manifestJson = ReadEmbeddedManifestJson();
+            if (string.IsNullOrWhiteSpace(manifestJson))
             {
-                result.StatusText = "Version manifest missing";
+                result.StatusText = "Embedded version manifest missing";
                 return result;
             }
 
             try
             {
-                var root = JObject.Parse(File.ReadAllText(path));
-                result.CompatiblePluginFamily = (root.Value<string>("releaseFamily") ?? string.Empty).Trim();
-                var assetsObject = root["assets"] as JObject;
-                if (assetsObject == null)
-                {
-                    result.StatusText = "Version manifest invalid: assets missing";
-                    return result;
-                }
-
-                var assets = new List<DashboardVersionInfo>();
-                foreach (var property in assetsObject.Properties())
-                {
-                    var asset = property.Value as JObject;
-                    if (asset == null) continue;
-
-                    string displayName = (asset.Value<string>("displayName") ?? property.Name).Trim();
-                    string latest = (asset.Value<string>("latest") ?? string.Empty).Trim();
-                    string family = (asset.Value<string>("compatiblePluginFamily") ?? result.CompatiblePluginFamily).Trim();
-                    if (string.IsNullOrWhiteSpace(displayName) || string.IsNullOrWhiteSpace(latest))
-                    {
-                        result.StatusText = "Version manifest invalid: asset version missing";
-                        return result;
-                    }
-
-                    assets.Add(new DashboardVersionInfo
-                    {
-                        Key = property.Name,
-                        PropertyKey = ToPropertyKey(property.Name),
-                        DisplayName = displayName,
-                        Latest = latest,
-                        CompatiblePluginFamily = family,
-                        ReleaseCritical = asset.Value<bool?>("releaseCritical") ?? false
-                    });
-                }
-
-                result.Assets = assets;
-                result.Valid = true;
-                result.StatusText = "Version manifest loaded";
-                return result;
+                return Parse(manifestJson, "embedded");
             }
-            catch
+            catch (Exception ex)
             {
-                result.StatusText = "Version manifest invalid";
+                result.StatusText = "Embedded version manifest invalid: " + ex.Message;
                 return result;
             }
         }
@@ -101,51 +72,136 @@ namespace LaunchPlugin
             return null;
         }
 
-        private static string ResolveManifestPath()
+        private static DashboardVersionManifest Parse(string json, string sourceLabel)
         {
-            string baseDir = AppDomain.CurrentDomain.BaseDirectory;
-            var candidates = new List<string>();
-            if (!string.IsNullOrWhiteSpace(baseDir))
+            var result = new DashboardVersionManifest();
+            var root = JObject.Parse(json);
+            string rootFamily = (root.Value<string>("releaseFamily") ?? string.Empty).Trim();
+            result.CompatiblePluginFamily = rootFamily;
+            if (string.IsNullOrWhiteSpace(rootFamily))
             {
-                candidates.Add(Path.Combine(baseDir, ManifestFileName));
-                candidates.Add(Path.Combine(baseDir, "..", ManifestFileName));
-                candidates.Add(Path.Combine(baseDir, "..", "..", ManifestFileName));
+                throw new InvalidDataException("releaseFamily missing");
             }
 
-            string assemblyDir = Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location);
-            if (!string.IsNullOrWhiteSpace(assemblyDir))
+            var assetsObject = root["assets"] as JObject;
+            if (assetsObject == null)
             {
-                candidates.Add(Path.Combine(assemblyDir, ManifestFileName));
-                candidates.Add(Path.Combine(assemblyDir, "..", ManifestFileName));
-                candidates.Add(Path.Combine(assemblyDir, "..", "..", ManifestFileName));
+                throw new InvalidDataException("assets missing");
             }
 
-            candidates.Add(Path.Combine(Environment.CurrentDirectory, ManifestFileName));
-
-            foreach (var candidate in candidates)
+            var assets = new List<DashboardVersionInfo>();
+            var seen = new HashSet<string>(StringComparer.Ordinal);
+            foreach (string requiredKey in RequiredAssetKeys)
             {
-                try
+                var asset = assetsObject[requiredKey] as JObject;
+                if (asset == null)
                 {
-                    string full = Path.GetFullPath(candidate);
-                    if (File.Exists(full)) return full;
+                    throw new InvalidDataException("required asset missing: " + requiredKey);
                 }
-                catch { }
+
+                string displayName = (asset.Value<string>("displayName") ?? string.Empty).Trim();
+                string latest = (asset.Value<string>("latest") ?? string.Empty).Trim();
+                string family = (asset.Value<string>("compatiblePluginFamily") ?? rootFamily).Trim();
+                if (string.IsNullOrWhiteSpace(displayName))
+                {
+                    throw new InvalidDataException(requiredKey + " displayName missing");
+                }
+                if (string.IsNullOrWhiteSpace(latest))
+                {
+                    throw new InvalidDataException(requiredKey + " latest version missing");
+                }
+                if (string.IsNullOrWhiteSpace(family))
+                {
+                    throw new InvalidDataException(requiredKey + " compatible plugin family missing");
+                }
+                bool releaseCritical;
+                if (!TryReadBoolean(asset["releaseCritical"], out releaseCritical))
+                {
+                    throw new InvalidDataException(requiredKey + " releaseCritical missing or invalid");
+                }
+
+                assets.Add(new DashboardVersionInfo
+                {
+                    Key = requiredKey,
+                    PropertyKey = ToPropertyKey(requiredKey),
+                    DisplayName = displayName,
+                    Latest = latest,
+                    CompatiblePluginFamily = family,
+                    ReleaseCritical = releaseCritical
+                });
+                seen.Add(requiredKey);
             }
 
-            return null;
+            foreach (var property in assetsObject.Properties())
+            {
+                if (!seen.Contains(property.Name))
+                {
+                    throw new InvalidDataException("unrecognised asset key: " + property.Name);
+                }
+            }
+
+            result.Assets = assets;
+            result.Valid = true;
+            result.StatusText = "Version manifest loaded from " + sourceLabel + " resource";
+            return result;
+        }
+
+        private static string ReadEmbeddedManifestJson()
+        {
+            var assembly = Assembly.GetExecutingAssembly();
+            string resourceName = null;
+            foreach (string name in assembly.GetManifestResourceNames())
+            {
+                if (name.EndsWith(ManifestFileName, StringComparison.Ordinal))
+                {
+                    resourceName = name;
+                    break;
+                }
+            }
+
+            if (string.IsNullOrWhiteSpace(resourceName))
+            {
+                return null;
+            }
+
+            using (var stream = assembly.GetManifestResourceStream(resourceName))
+            {
+                if (stream == null) return null;
+                using (var reader = new StreamReader(stream))
+                {
+                    return reader.ReadToEnd();
+                }
+            }
+        }
+
+        private static bool TryReadBoolean(JToken token, out bool value)
+        {
+            value = false;
+            if (token == null) return false;
+            if (token.Type == JTokenType.Boolean)
+            {
+                value = token.Value<bool>();
+                return true;
+            }
+            if (token.Type == JTokenType.String)
+            {
+                return bool.TryParse(token.Value<string>(), out value);
+            }
+            return false;
         }
 
         private static string ToPropertyKey(string manifestKey)
         {
-            string key = manifestKey ?? string.Empty;
-            key = key.Replace("Lala-", string.Empty).Replace(" ", string.Empty).Replace("-", string.Empty);
-            if (string.Equals(key, "DriverDash", StringComparison.OrdinalIgnoreCase)) return "DriverDash";
-            if (string.Equals(key, "StrategyDash", StringComparison.OrdinalIgnoreCase)) return "StrategyDash";
-            if (string.Equals(key, "AlertsOverlay", StringComparison.OrdinalIgnoreCase)) return "AlertsOverlay";
-            if (string.Equals(key, "VerticalTrafficBarOverlay", StringComparison.OrdinalIgnoreCase)) return "VerticalTrafficBar";
-            if (string.Equals(key, "Head2Head", StringComparison.OrdinalIgnoreCase)) return "Head2Head";
-            if (string.Equals(key, "FuelCalculator", StringComparison.OrdinalIgnoreCase)) return "FuelCalculator";
-            return key;
+            switch (manifestKey)
+            {
+                case "Lala-Driver Dash": return "DriverDash";
+                case "Lala-Strategy Dash": return "StrategyDash";
+                case "Lala-Alerts Overlay": return "AlertsOverlay";
+                case "Lala-VerticalTrafficBar Overlay": return "VerticalTrafficBar";
+                case "Lala-Head2Head": return "Head2Head";
+                case "Lala-Fuel Calculator": return "FuelCalculator";
+                default: return string.Empty;
+            }
         }
     }
 }

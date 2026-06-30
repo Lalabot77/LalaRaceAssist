@@ -9,11 +9,21 @@ from __future__ import print_function
 import json
 import re
 import sys
+import xml.etree.ElementTree as ET
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[2]
 MANIFEST = ROOT / "LalaRaceAssist.VersionManifest.json"
 ASSEMBLY_INFO = ROOT / "Properties" / "AssemblyInfo.cs"
+PROJECT_FILE = ROOT / "LaunchPlugin.csproj"
+REQUIRED_ASSETS = (
+    "Lala-Driver Dash",
+    "Lala-Strategy Dash",
+    "Lala-Alerts Overlay",
+    "Lala-VerticalTrafficBar Overlay",
+    "Lala-Head2Head",
+    "Lala-Fuel Calculator",
+)
 VERSION_RE = re.compile(r"^v?\d+(?:\.\d+){1,3}$")
 
 
@@ -63,6 +73,15 @@ def add_issue(issues, critical, message):
         issues["noncritical"].append(message)
 
 
+def manifest_is_embedded_resource():
+    ns = {"msb": "http://schemas.microsoft.com/developer/msbuild/2003"}
+    tree = ET.parse(str(PROJECT_FILE))
+    for item in tree.findall(".//msb:EmbeddedResource", ns):
+        if item.attrib.get("Include") == "LalaRaceAssist.VersionManifest.json":
+            return True
+    return False
+
+
 def main():
     issues = {"critical": [], "noncritical": []}
 
@@ -87,6 +106,13 @@ def main():
     print("  plugin.informationalVersion: %s" % plugin.get("informationalVersion", ""))
     print("")
 
+    embedded = manifest_is_embedded_resource()
+    print("Project embedded manifest resource:")
+    print("  LalaRaceAssist.VersionManifest.json embedded: %s" % ("yes" if embedded else "no"))
+    print("")
+    if not embedded:
+        add_issue(issues, True, "LalaRaceAssist.VersionManifest.json is not an EmbeddedResource in LaunchPlugin.csproj")
+
     if plugin.get("assemblyVersion") != assembly.get("AssemblyVersion"):
         add_issue(issues, True, "plugin.assemblyVersion does not match AssemblyVersion")
     if plugin.get("informationalVersion") != assembly.get("AssemblyInformationalVersion"):
@@ -97,10 +123,20 @@ def main():
         if not is_parseable_version(plugin.get(field)):
             add_issue(issues, True, "plugin.%s is missing or unparsable: %r" % (field, plugin.get(field)))
 
+    for required_asset in REQUIRED_ASSETS:
+        if required_asset not in assets:
+            add_issue(issues, True, "required manifest asset is missing: %s" % required_asset)
+
+    for asset_name in assets:
+        if asset_name not in REQUIRED_ASSETS:
+            add_issue(issues, True, "unrecognised manifest asset key: %s" % asset_name)
+
     print("Dashboard/overlay assets:")
     for asset_name, asset in assets.items():
         critical = bool(asset.get("releaseCritical"))
         latest = asset.get("latest", "")
+        display_name = str(asset.get("displayName", "")).strip()
+        family = str(asset.get("compatiblePluginFamily") or manifest.get("releaseFamily") or "").strip()
         folder = asset.get("folder", "")
         file_name = asset.get("file", "")
         version_property = asset.get("versionProperty", "DashboardVersion")
@@ -110,6 +146,12 @@ def main():
         print("    manifest latest: %s" % latest)
         print("    file: %s" % dash_path.relative_to(ROOT))
 
+        if not display_name:
+            add_issue(issues, critical, "%s displayName is missing" % asset_name)
+        if not family:
+            add_issue(issues, critical, "%s compatible plugin family is missing" % asset_name)
+        if "releaseCritical" not in asset or not isinstance(asset.get("releaseCritical"), bool):
+            add_issue(issues, critical, "%s releaseCritical is missing or not boolean" % asset_name)
         if not is_parseable_version(latest):
             add_issue(issues, critical, "%s manifest latest is missing or unparsable: %r" % (asset_name, latest))
 

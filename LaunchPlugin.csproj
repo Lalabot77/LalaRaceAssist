@@ -231,9 +231,7 @@
     <EmbeddedResource Include="Resources\ShiftAssist_DefaultBeep.wav" />
   </ItemGroup>
   <ItemGroup>
-    <Content Include="LalaRaceAssist.VersionManifest.json">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Content>
+    <EmbeddedResource Include="LalaRaceAssist.VersionManifest.json" />
     <Resource Include="Assets\Overview\driver-preview.png" />
     <Resource Include="Assets\Overview\head2head-preview.png" />
     <Resource Include="Assets\Overview\pit-popup-preview.png" />
