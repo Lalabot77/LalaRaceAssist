@@ -44,10 +44,10 @@ Current manifest-tracked assets are:
 - release-critical: `Lala-Driver Dash`, `Lala-Strategy Dash`, `Lala-Alerts Overlay`, and `Lala-VerticalTrafficBar Overlay`;
 - non-release-critical: `Lala-Head2Head` and `Lala-Fuel Calculator`.
 
-The manifest/audit contract does not add plugin Overview behavior, runtime logic, SimHub exports, dashboard formulas, or dashboard layout behavior. Plugin-side installed-dashboard detection, plugin Overview manifest display, and dash-side RED/AMBER/GREEN warning panels are deferred future work.
+The plugin now consumes the root manifest at runtime for dashboard/overlay expected-version display and export. The Overview page shows the manifest status plus each tracked asset's expected/latest version and release-critical grouping. The plugin does **not** detect installed dashboard versions or parse installed SimHub dashboard folders; installed package version remains dashboard-local `DashboardVersion` metadata shown inside each dashboard, so users can manually compare the dashboard-local version against the Overview expected version. Dash-side RED/AMBER/GREEN warning panels and automatic dashboard-side comparison UX remain deferred future work.
 
 ## Version manifest audit workflow
-Run the read-only release-prep audit before packaging dashboards or publishing a release:
+Run the read-only release-prep audit before packaging dashboards or publishing a release, and after changing manifest-tracked version exports:
 
 ```bash
 python3 Docs/Internal/VersionManifestAudit.py

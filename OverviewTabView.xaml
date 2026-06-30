@@ -294,6 +294,51 @@
                 </WrapPanel>
             </styles:SHSection>
 
+            <!-- Dashboard / Overlay Versions -->
+            <styles:SHSection Title="DASHBOARD / OVERLAY VERSIONS" ShowSeparator="True">
+                <StackPanel Margin="0,6,0,0">
+                    <TextBlock Foreground="LightGray"
+                               TextWrapping="Wrap"
+                               Margin="0,0,0,8"
+                               Text="Expected/latest versions are read from the root version manifest. The plugin does not detect installed dashboard versions; installed version is shown inside each dashboard." />
+                    <TextBlock Foreground="LightGray"
+                               TextWrapping="Wrap"
+                               Margin="0,0,0,8"
+                               Text="{Binding DashboardManifestStatusText, StringFormat=Manifest status: {0}}" />
+                    <ItemsControl ItemsSource="{Binding DashboardVersionRows}">
+                        <ItemsControl.ItemTemplate>
+                            <DataTemplate>
+                                <Border BorderBrush="#3A3A3A"
+                                        BorderThickness="1"
+                                        CornerRadius="4"
+                                        Padding="8"
+                                        Margin="0,0,0,6">
+                                    <Grid>
+                                        <Grid.ColumnDefinitions>
+                                            <ColumnDefinition Width="2*" />
+                                            <ColumnDefinition Width="*" />
+                                            <ColumnDefinition Width="*" />
+                                        </Grid.ColumnDefinitions>
+                                        <StackPanel Grid.Column="0">
+                                            <TextBlock Text="{Binding Name}" FontWeight="SemiBold" />
+                                            <TextBlock Text="{Binding PropertyName}" Foreground="#9A9A9A" FontSize="10" TextWrapping="Wrap" />
+                                        </StackPanel>
+                                        <TextBlock Grid.Column="1"
+                                                   Text="{Binding ExpectedVersion, StringFormat=Expected version: {0}}"
+                                                   VerticalAlignment="Center"
+                                                   Foreground="White" />
+                                        <TextBlock Grid.Column="2"
+                                                   Text="{Binding ReleaseCriticalText}"
+                                                   VerticalAlignment="Center"
+                                                   Foreground="LightGray" />
+                                    </Grid>
+                                </Border>
+                            </DataTemplate>
+                        </ItemsControl.ItemTemplate>
+                    </ItemsControl>
+                </StackPanel>
+            </styles:SHSection>
+
             <!-- Dashboard previews -->
             <styles:SHSection Title="DASHBOARD PREVIEWS" ShowSeparator="True">
                 <StackPanel Margin="0,6,0,0">
@@ -312,6 +357,10 @@
                             <StackPanel>
                                 <TextBlock Text="Driver dashboard"
                                            FontWeight="SemiBold"
+                                           Margin="0,0,0,2" />
+                                <TextBlock Text="Expected version shown above"
+                                           Foreground="#9A9A9A"
+                                           FontSize="10"
                                            Margin="0,0,0,6" />
                                 <Border BorderBrush="#333333"
                                         BorderThickness="1"
@@ -335,6 +384,10 @@
                             <StackPanel>
                                 <TextBlock Text="Strategy dashboard"
                                            FontWeight="SemiBold"
+                                           Margin="0,0,0,2" />
+                                <TextBlock Text="Expected version shown above"
+                                           Foreground="#9A9A9A"
+                                           FontSize="10"
                                            Margin="0,0,0,6" />
                                 <Border BorderBrush="#333333"
                                         BorderThickness="1"
@@ -404,6 +457,10 @@
                             <StackPanel>
                                 <TextBlock Text="Head2Head preview"
                                            FontWeight="SemiBold"
+                                           Margin="0,0,0,2" />
+                                <TextBlock Text="Expected version shown above"
+                                           Foreground="#9A9A9A"
+                                           FontSize="10"
                                            Margin="0,0,0,6" />
                                 <Border BorderBrush="#333333"
                                         BorderThickness="1"

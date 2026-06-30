@@ -98,6 +98,7 @@
       <DependentUpon>CopyProfileDialog.xaml</DependentUpon>
     </Compile>
     <Compile Include="DecelCapture.cs" />
+    <Compile Include="DashboardVersionManifest.cs" />
     <Compile Include="EnumEqualsConverter.cs" />
     <Compile Include="FuelCalcs.cs" />
     <Compile Include="FuelProjectionMath.cs" />
@@ -230,6 +231,9 @@
     <EmbeddedResource Include="Resources\ShiftAssist_DefaultBeep.wav" />
   </ItemGroup>
   <ItemGroup>
+    <Content Include="LalaRaceAssist.VersionManifest.json">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
     <Resource Include="Assets\Overview\driver-preview.png" />
     <Resource Include="Assets\Overview\head2head-preview.png" />
     <Resource Include="Assets\Overview\pit-popup-preview.png" />

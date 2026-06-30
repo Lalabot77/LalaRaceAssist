@@ -134,6 +134,7 @@ namespace LaunchPlugin
         public LalaLaunch()
         {
             _monitorSystem = new MonitorSystem();
+            DashboardVersions = DashboardVersionManifest.Load();
             _pitFuelControlEngine = new PitFuelControlEngine(
                 BuildPitFuelControlSnapshot,
                 SendPitFuelControlCommand,
@@ -1368,6 +1369,7 @@ namespace LaunchPlugin
         private string _lastLiveMaxHealthLoggedSource = string.Empty;
         private string _lastLiveDetectLogSignature = string.Empty;
         private readonly MonitorSystem _monitorSystem;
+        public DashboardVersionManifest DashboardVersions { get; private set; }
         private DateTime _lastFuelRuntimeRecoveryUtc = DateTime.MinValue;
         private DateTime _lastFuelRuntimeHealthCheckUtc = DateTime.MinValue;
         private int _fuelRuntimeUnhealthyStreak = 0;
@@ -7576,6 +7578,26 @@ namespace LaunchPlugin
             if (SimhubPublish.VERBOSE) this.AttachDelegate(name, getter);
         }
 
+
+        private void AttachDashboardVersionExports(string propertyKey)
+        {
+            AttachCore("Dashboards." + propertyKey + ".ExpectedVersion", () => ResolveDashboardExpectedVersion(propertyKey));
+            AttachCore("Dashboards." + propertyKey + ".LatestVersion", () => ResolveDashboardExpectedVersion(propertyKey));
+            AttachCore("Dashboards." + propertyKey + ".ReleaseCritical", () => ResolveDashboardReleaseCritical(propertyKey));
+        }
+
+        private string ResolveDashboardExpectedVersion(string propertyKey)
+        {
+            var asset = DashboardVersions == null ? null : DashboardVersions.FindByPropertyKey(propertyKey);
+            return asset == null ? "Unknown" : asset.Latest;
+        }
+
+        private bool ResolveDashboardReleaseCritical(string propertyKey)
+        {
+            var asset = DashboardVersions == null ? null : DashboardVersions.FindByPropertyKey(propertyKey);
+            return asset != null && asset.ReleaseCritical;
+        }
+
         private void AttachH2HExports()
         {
             AttachH2HFamilyExports("H2HRace", () => _h2hEngine?.Outputs?.Race, true);
@@ -8108,6 +8130,16 @@ namespace LaunchPlugin
             AttachCore("Plugin.VersionNumberText", () => ResolvePluginVersionNumberText());
             AttachCore("Plugin.StatusText", () => ResolvePluginStatusText());
             AttachCore("Plugin.StatusLineText", () => ResolvePluginStatusLineText());
+
+            AttachCore("Dashboards.Manifest.Valid", () => DashboardVersions != null && DashboardVersions.Valid);
+            AttachCore("Dashboards.Manifest.StatusText", () => DashboardVersions == null ? "Version manifest not loaded" : DashboardVersions.StatusText);
+            AttachCore("Dashboards.Manifest.CompatiblePluginFamily", () => DashboardVersions == null ? string.Empty : DashboardVersions.CompatiblePluginFamily);
+            AttachDashboardVersionExports("DriverDash");
+            AttachDashboardVersionExports("StrategyDash");
+            AttachDashboardVersionExports("AlertsOverlay");
+            AttachDashboardVersionExports("VerticalTrafficBar");
+            AttachDashboardVersionExports("Head2Head");
+            AttachDashboardVersionExports("FuelCalculator");
 
             AttachCore("MonitorSystem.State", () => _monitorSystem.StateText);
             AttachCore("MonitorSystem.Text", () => _monitorSystem.DisplayText);

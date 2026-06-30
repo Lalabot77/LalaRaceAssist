@@ -33,7 +33,7 @@ Current driver-facing warning texts include `CHECK FUEL DATA`, `REFUEL OFF`, `MF
 
 Lala Race Assist uses the root `LalaRaceAssist.VersionManifest.json` manifest as the release/version source of truth for plugin and dashboard package audits. The main Driver Dash, Strategy Dash, Alerts Overlay, Vertical Traffic Bar Overlay, Head2Head package, and Fuel Calculator package each carry their own package version in the main/root `.djson` `DashboardVersion` metadata.
 
-Shared copied widgets, such as PitEntry, BoxEntry, PitPopup, RejoinAssist, LaunchAssist, copied H2H/Fuel/traffic/alert widgets, and similar common surfaces are not versioned independently; they inherit the version of the dashboard or overlay package that contains them. v1.1 only adds the manifest/audit contract and metadata alignment. Plugin Overview manifest display, automatic installed-dashboard detection, and dash-side RED/AMBER/GREEN warning panels are deferred future work.
+Shared copied widgets, such as PitEntry, BoxEntry, PitPopup, RejoinAssist, LaunchAssist, copied H2H/Fuel/traffic/alert widgets, and similar common surfaces are not versioned independently; they inherit the version of the dashboard or overlay package that contains them. The plugin Overview reads the same root manifest and lists expected/latest dashboard and overlay versions with release-critical grouping. It does **not** detect or verify installed dashboard versions. Installed package version remains dashboard-local `DashboardVersion` metadata shown inside each dashboard, so users can manually compare that dashboard-local version with the Overview expected version. Dash-side RED/AMBER/GREEN warning panels and automatic comparison UX are deferred future work.
 
 ## 2. Installation / import
 

@@ -1,3 +1,7 @@
+- 2026-06-27 Dashboard expected-version exports and Overview display landed:
+  - plugin consumes `LalaRaceAssist.VersionManifest.json` at startup for manifest-owned dashboard/overlay expected/latest versions and degrades safely to missing/invalid status text;
+  - added `LalaLaunch.Dashboards.Manifest.Valid`, `StatusText`, `CompatiblePluginFamily`, and per-asset `ExpectedVersion`, `LatestVersion`, and `ReleaseCritical` exports for Driver Dash, Strategy Dash, Alerts Overlay, Vertical Traffic Bar, Head2Head, and Fuel Calculator;
+  - Overview displays manifest status plus expected/latest dashboard versions with release-critical grouping and explicit wording that installed dashboard versions are not detected. Property Snapshot list reviewed: yes; `Dashboards.*` remains Raw Debug by default.
 - 2026-06-27 root version manifest and dashboard audit landed:
   - added `LalaRaceAssist.VersionManifest.json` as the release/version source of truth for plugin and dashboard package audits, tracking Driver Dash, Strategy Dash, Alerts Overlay, Vertical Traffic Bar Overlay, Head2Head, and Fuel Calculator with release-critical separation.
   - aligned only main/root `.djson` `DashboardVersion` metadata to v1.1.0 and added read-only `Docs/Internal/VersionManifestAudit.py`; shared copied widgets inherit containing package versions and are not independently versioned. No plugin Overview behavior, runtime logic, exports/actions, formulas, or dashboard layouts changed. Property Snapshot list reviewed: no; metadata/audit/docs only with no SimHub export/property surface change.
