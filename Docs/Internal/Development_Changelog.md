@@ -1,3 +1,7 @@
+## 2026-07-06 — Dashboard manifest releaseCritical runtime schema alignment
+- Classification: **internal-only with driver-facing safety effect** (aligns embedded runtime manifest validation with release audit schema; no export names, dashboard files/layouts, installed-dashboard detection, warning UX, or runtime fuel/strategy/pit/H2H/CarSA/launch/rejoin/monitor behavior changed).
+- Runtime `releaseCritical` validation now accepts only JSON booleans and rejects missing/null/string/number/object/array values, so `"releaseCritical": "false"` keeps `Dashboards.Manifest.Valid=false` just like the release audit. Property Snapshot list reviewed: yes; no SimHub export/property names or snapshot groups changed.
+
 ## 2026-07-06 — Dashboard manifest schema hardening follow-up
 - Classification: **internal-only with driver-facing safety effect** (hardens existing Overview/export manifest health so malformed versions/schema cannot appear healthy; no export names, dashboard JSON/layout/formula changes, installed-dashboard detection, warning UX, or runtime telemetry/fuel/strategy/pit/H2H/CarSA/launch/rejoin/monitor behavior changed).
 - Runtime embedded-manifest validation now rejects unparsable asset `latest` versions using the same accepted pattern as the release audit (`v?major.minor[.patch[.revision]]`), so values such as `beta`, `1.x`, blank, or null keep `Dashboards.Manifest.Valid=false` with clear status text.

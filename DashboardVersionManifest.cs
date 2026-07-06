@@ -184,17 +184,9 @@ namespace LaunchPlugin
         private static bool TryReadBoolean(JToken token, out bool value)
         {
             value = false;
-            if (token == null) return false;
-            if (token.Type == JTokenType.Boolean)
-            {
-                value = token.Value<bool>();
-                return true;
-            }
-            if (token.Type == JTokenType.String)
-            {
-                return bool.TryParse(token.Value<string>(), out value);
-            }
-            return false;
+            if (token == null || token.Type != JTokenType.Boolean) return false;
+            value = token.Value<bool>();
+            return true;
         }
 
         private static string ToPropertyKey(string manifestKey)

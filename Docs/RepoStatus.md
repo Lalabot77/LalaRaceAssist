@@ -1,3 +1,5 @@
+- 2026-07-06 Dashboard manifest releaseCritical runtime schema alignment landed:
+  - embedded runtime manifest validation now accepts only JSON boolean `releaseCritical` values, matching `VersionManifestAudit.py`; string values such as `"false"` are invalid and keep `Dashboards.Manifest.Valid=false`. Property Snapshot list reviewed: yes; no export names or snapshot groups changed.
 - 2026-07-06 Dashboard manifest schema hardening follow-up landed:
   - embedded runtime manifest validation and `VersionManifestAudit.py` now reject malformed asset `latest` versions (`beta`, `1.x`, blank/null) before the manifest can be treated as healthy;
   - audit schema errors for required manifest asset fields, including missing/non-boolean `releaseCritical`, are now critical regardless of release-critical grouping. Property Snapshot list reviewed: yes; no export names or snapshot groups changed.
