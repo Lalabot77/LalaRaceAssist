@@ -1,3 +1,8 @@
+## 2026-06-30 — User Guide primary manual redesign
+- Classification: **user-facing documentation only** (GitHub-facing User Guide content expansion; no runtime behavior, dashboard JSON/package files, SimHub exports/actions, settings schema, profile/preset schema, documentation hierarchy, or contracts changed).
+- Expanded `Docs/User_Guide.md` into the primary user manual with chaptered prose covering welcome/product philosophy, product surfaces, installation/first run, profiles, strategy, pit workflow, traffic and race awareness, driver assistance, dashboard management, driver tagging, Monitor System, a typical race workflow, troubleshooting, and where to continue in the documentation set.
+- Preserved the outside-in documentation architecture and positioned Feature docs as detailed option/edge-case references, System docs as capability/ownership guidance, Subsystem docs as implementation contract truth, and Internal docs as maintainer material. Property Snapshot list reviewed: no; documentation-only content task with no SimHub export/property surface change.
+
 ## 2026-06-27 — Root version manifest and dashboard audit
 - Classification: **both** (release-prep manifest/audit contract and dashboard package metadata alignment; no plugin Overview behavior, runtime logic, SimHub exports/actions, dashboard formulas, dashboard layouts, settings schema, profile schema, or preset schema changed).
 - Added root `LalaRaceAssist.VersionManifest.json` as the release/version source of truth for plugin and dashboard package audits, with individual asset entries for Driver Dash, Strategy Dash, Alerts Overlay, Vertical Traffic Bar Overlay, Head2Head, and Fuel Calculator. Release-critical assets are separated from non-critical assets.
