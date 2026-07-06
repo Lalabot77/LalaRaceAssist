@@ -3,6 +3,7 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Reflection;
+using System.Text.RegularExpressions;
 
 namespace LaunchPlugin
 {
@@ -19,6 +20,7 @@ namespace LaunchPlugin
     public sealed class DashboardVersionManifest
     {
         private const string ManifestFileName = "LalaRaceAssist.VersionManifest.json";
+        private static readonly Regex VersionPattern = new Regex(@"^v?\d+(?:\.\d+){1,3}$", RegexOptions.Compiled);
         private static readonly string[] RequiredAssetKeys = new[]
         {
             "Lala-Driver Dash",
@@ -106,9 +108,9 @@ namespace LaunchPlugin
                 {
                     throw new InvalidDataException(requiredKey + " displayName missing");
                 }
-                if (string.IsNullOrWhiteSpace(latest))
+                if (!IsParseableVersion(latest))
                 {
-                    throw new InvalidDataException(requiredKey + " latest version missing");
+                    throw new InvalidDataException(requiredKey + " latest version missing or unparsable: " + latest);
                 }
                 if (string.IsNullOrWhiteSpace(family))
                 {
@@ -172,6 +174,11 @@ namespace LaunchPlugin
                     return reader.ReadToEnd();
                 }
             }
+        }
+
+        private static bool IsParseableVersion(string value)
+        {
+            return !string.IsNullOrWhiteSpace(value) && VersionPattern.IsMatch(value.Trim());
         }
 
         private static bool TryReadBoolean(JToken token, out bool value)

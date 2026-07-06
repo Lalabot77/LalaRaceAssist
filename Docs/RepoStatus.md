@@ -1,3 +1,6 @@
+- 2026-07-06 Dashboard manifest schema hardening follow-up landed:
+  - embedded runtime manifest validation and `VersionManifestAudit.py` now reject malformed asset `latest` versions (`beta`, `1.x`, blank/null) before the manifest can be treated as healthy;
+  - audit schema errors for required manifest asset fields, including missing/non-boolean `releaseCritical`, are now critical regardless of release-critical grouping. Property Snapshot list reviewed: yes; no export names or snapshot groups changed.
 - 2026-06-30 Dashboard manifest embedded-resource follow-up landed:
   - `LalaRaceAssist.VersionManifest.json` is now embedded into `LaunchPlugin.dll` for runtime Overview/export use, so normal DLL-only installs do not need a loose JSON file beside the plugin;
   - manifest validation now requires the official six tracked assets to be present and valid before `Dashboards.Manifest.Valid=true`, while documenting that users may install only a subset and no installed-dashboard detection exists;
