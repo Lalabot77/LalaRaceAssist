@@ -53,7 +53,7 @@
       "displayName": "Lala Vertical Traffic Bar Overlay",
       "folder": "Dash Files/Lala-VerticalTrafficBar Overlay",
       "file": "VerticalTrafficBar.djson",
-      "latest": "1.1.2",
+      "latest": "1.1.0",
       "minimumSupported": "1.1.0",
       "compatiblePluginFamily": "1.1",
       "requiresPlugin": ">=1.1.0 <1.2.0",
