@@ -1,3 +1,16 @@
+- 2026-07-06 Dashboard manifest releaseCritical runtime schema alignment landed:
+  - embedded runtime manifest validation now accepts only JSON boolean `releaseCritical` values, matching `VersionManifestAudit.py`; string values such as `"false"` are invalid and keep `Dashboards.Manifest.Valid=false`. Property Snapshot list reviewed: yes; no export names or snapshot groups changed.
+- 2026-07-06 Dashboard manifest schema hardening follow-up landed:
+  - embedded runtime manifest validation and `VersionManifestAudit.py` now reject malformed asset `latest` versions (`beta`, `1.x`, blank/null) before the manifest can be treated as healthy;
+  - audit schema errors for required manifest asset fields, including missing/non-boolean `releaseCritical`, are now critical regardless of release-critical grouping. Property Snapshot list reviewed: yes; no export names or snapshot groups changed.
+- 2026-06-30 Dashboard manifest embedded-resource follow-up landed:
+  - `LalaRaceAssist.VersionManifest.json` is now embedded into `LaunchPlugin.dll` for runtime Overview/export use, so normal DLL-only installs do not need a loose JSON file beside the plugin;
+  - manifest validation now requires the official six tracked assets to be present and valid before `Dashboards.Manifest.Valid=true`, while documenting that users may install only a subset and no installed-dashboard detection exists;
+  - Overview wording now says official expected versions and explicitly notes installed dashboards may be a subset. Property Snapshot list reviewed: yes; no export names were added, removed, or renamed beyond the existing additive `Dashboards.*` surface.
+- 2026-06-27 Dashboard expected-version exports and Overview display landed:
+  - plugin consumes `LalaRaceAssist.VersionManifest.json` at startup for manifest-owned dashboard/overlay expected/latest versions and degrades safely to missing/invalid status text;
+  - added `LalaLaunch.Dashboards.Manifest.Valid`, `StatusText`, `CompatiblePluginFamily`, and per-asset `ExpectedVersion`, `LatestVersion`, and `ReleaseCritical` exports for Driver Dash, Strategy Dash, Alerts Overlay, Vertical Traffic Bar, Head2Head, and Fuel Calculator;
+  - Overview displays manifest status plus expected/latest dashboard versions with release-critical grouping and explicit wording that installed dashboard versions are not detected. Property Snapshot list reviewed: yes; `Dashboards.*` remains Raw Debug by default.
 - 2026-06-30 User Guide primary manual redesign landed:
   - expanded `Docs/User_Guide.md` from a concise orientation page into the primary user manual, with chaptered guidance for product surfaces, installation/first run, profiles, strategy, pit workflow, traffic/race awareness, driver assistance, dashboard management, driver tagging, Monitor System, race-weekend workflow, troubleshooting, and where to continue in the documentation set.
   - documentation architecture, file paths, runtime behavior, dashboard JSON/package files, SimHub exports/actions, settings schema, profile/preset schema, and dashboard contracts remain unchanged. Property Snapshot list reviewed: no; content-only user documentation redesign with no SimHub export/property surface change.

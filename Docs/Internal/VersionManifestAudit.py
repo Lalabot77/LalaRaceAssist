@@ -9,11 +9,21 @@ from __future__ import print_function
 import json
 import re
 import sys
+import xml.etree.ElementTree as ET
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[2]
 MANIFEST = ROOT / "LalaRaceAssist.VersionManifest.json"
 ASSEMBLY_INFO = ROOT / "Properties" / "AssemblyInfo.cs"
+PROJECT_FILE = ROOT / "LaunchPlugin.csproj"
+REQUIRED_ASSETS = (
+    "Lala-Driver Dash",
+    "Lala-Strategy Dash",
+    "Lala-Alerts Overlay",
+    "Lala-VerticalTrafficBar Overlay",
+    "Lala-Head2Head",
+    "Lala-Fuel Calculator",
+)
 VERSION_RE = re.compile(r"^v?\d+(?:\.\d+){1,3}$")
 
 
@@ -63,6 +73,15 @@ def add_issue(issues, critical, message):
         issues["noncritical"].append(message)
 
 
+def manifest_is_embedded_resource():
+    ns = {"msb": "http://schemas.microsoft.com/developer/msbuild/2003"}
+    tree = ET.parse(str(PROJECT_FILE))
+    for item in tree.findall(".//msb:EmbeddedResource", ns):
+        if item.attrib.get("Include") == "LalaRaceAssist.VersionManifest.json":
+            return True
+    return False
+
+
 def main():
     issues = {"critical": [], "noncritical": []}
 
@@ -70,6 +89,10 @@ def main():
     assembly = read_assembly_versions()
     plugin = manifest.get("plugin") or {}
     assets = manifest.get("assets") or {}
+    if not isinstance(plugin, dict):
+        plugin = {}
+    if not isinstance(assets, dict):
+        assets = {}
 
     print("Lala Race Assist version manifest audit")
     print("Manifest: %s" % MANIFEST.relative_to(ROOT))
@@ -87,6 +110,20 @@ def main():
     print("  plugin.informationalVersion: %s" % plugin.get("informationalVersion", ""))
     print("")
 
+    embedded = manifest_is_embedded_resource()
+    print("Project embedded manifest resource:")
+    print("  LalaRaceAssist.VersionManifest.json embedded: %s" % ("yes" if embedded else "no"))
+    print("")
+    if not embedded:
+        add_issue(issues, True, "LalaRaceAssist.VersionManifest.json is not an EmbeddedResource in LaunchPlugin.csproj")
+
+    if not isinstance(manifest.get("plugin"), dict):
+        add_issue(issues, True, "manifest plugin section is missing or not an object")
+    if not isinstance(manifest.get("assets"), dict):
+        add_issue(issues, True, "manifest assets section is missing or not an object")
+    if not str(manifest.get("releaseFamily", "")).strip():
+        add_issue(issues, True, "manifest releaseFamily is missing")
+
     if plugin.get("assemblyVersion") != assembly.get("AssemblyVersion"):
         add_issue(issues, True, "plugin.assemblyVersion does not match AssemblyVersion")
     if plugin.get("informationalVersion") != assembly.get("AssemblyInformationalVersion"):
@@ -97,21 +134,60 @@ def main():
         if not is_parseable_version(plugin.get(field)):
             add_issue(issues, True, "plugin.%s is missing or unparsable: %r" % (field, plugin.get(field)))
 
+    for required_asset in REQUIRED_ASSETS:
+        if required_asset not in assets:
+            add_issue(issues, True, "required manifest asset is missing: %s" % required_asset)
+
+    for asset_name in assets:
+        if asset_name not in REQUIRED_ASSETS:
+            add_issue(issues, True, "unrecognised manifest asset key: %s" % asset_name)
+
     print("Dashboard/overlay assets:")
     for asset_name, asset in assets.items():
-        critical = bool(asset.get("releaseCritical"))
+        if not isinstance(asset, dict):
+            add_issue(issues, True, "%s asset schema is not an object" % asset_name)
+            continue
+
+        release_critical_value = asset.get("releaseCritical")
+        release_critical_valid = isinstance(release_critical_value, bool)
+        critical = release_critical_value if release_critical_valid else True
         latest = asset.get("latest", "")
+        display_name = asset.get("displayName", "")
+        family = asset.get("compatiblePluginFamily") if asset.get("compatiblePluginFamily") is not None else manifest.get("releaseFamily")
         folder = asset.get("folder", "")
         file_name = asset.get("file", "")
-        version_property = asset.get("versionProperty", "DashboardVersion")
-        dash_path = ROOT / folder / file_name
+        version_property = asset.get("versionProperty", "")
         label = "release-critical" if critical else "non-critical"
         print("  %s [%s]" % (asset_name, label))
         print("    manifest latest: %s" % latest)
-        print("    file: %s" % dash_path.relative_to(ROOT))
 
+        display_name_valid = isinstance(display_name, str) and bool(display_name.strip())
+        family_valid = isinstance(family, str) and bool(family.strip())
+        folder_valid = isinstance(folder, str) and bool(folder.strip())
+        file_valid = isinstance(file_name, str) and bool(file_name.strip())
+        version_property_valid = isinstance(version_property, str) and bool(version_property.strip())
+
+        if not display_name_valid:
+            add_issue(issues, True, "%s displayName is missing or not a non-empty string" % asset_name)
+        if not family_valid:
+            add_issue(issues, True, "%s compatible plugin family is missing or not a non-empty string" % asset_name)
+        if not folder_valid:
+            add_issue(issues, True, "%s folder is missing or not a non-empty string" % asset_name)
+        if not file_valid:
+            add_issue(issues, True, "%s file is missing or not a non-empty string" % asset_name)
+        if not version_property_valid:
+            add_issue(issues, True, "%s versionProperty is missing or not a non-empty string" % asset_name)
+        if not release_critical_valid:
+            add_issue(issues, True, "%s releaseCritical is missing or not boolean" % asset_name)
         if not is_parseable_version(latest):
-            add_issue(issues, critical, "%s manifest latest is missing or unparsable: %r" % (asset_name, latest))
+            add_issue(issues, True, "%s manifest latest is missing or unparsable: %r" % (asset_name, latest))
+
+        if not (folder_valid and file_valid and version_property_valid):
+            print("    file: INVALID SCHEMA")
+            continue
+
+        dash_path = ROOT / folder / file_name
+        print("    file: %s" % dash_path.relative_to(ROOT))
 
         if not dash_path.exists():
             add_issue(issues, critical, "%s file is missing: %s" % (asset_name, dash_path.relative_to(ROOT)))
@@ -135,9 +211,9 @@ def main():
             print("    %s path: %s" % (version_property, path))
             print("    %s value: %s" % (version_property, value))
             if str(value or "").strip() == "":
-                add_issue(issues, critical, "%s %s is blank at %s" % (asset_name, version_property, path))
+                add_issue(issues, True, "%s %s is blank at %s" % (asset_name, version_property, path))
             elif not is_parseable_version(value):
-                add_issue(issues, critical, "%s %s is unparsable at %s: %r" % (asset_name, version_property, path, value))
+                add_issue(issues, True, "%s %s is unparsable at %s: %r" % (asset_name, version_property, path, value))
             elif normalize_version(value) != normalize_version(latest):
                 add_issue(issues, critical, "%s %s %r does not match manifest latest %r" % (asset_name, version_property, value, latest))
         print("")
