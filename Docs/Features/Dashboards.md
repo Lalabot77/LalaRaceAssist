@@ -34,7 +34,7 @@ Current driver-facing warning texts include `CHECK FUEL DATA`, `REFUEL OFF`, `MF
 Lala Race Assist separates bundled compatibility information from locally installed dashboard packages:
 
 - **Bundled with plugin** comes from the embedded `LalaRaceAssist.VersionManifest.json` manifest inside `LaunchPlugin.dll`. This is the compatibility contract for the dashboard/overlay package versions shipped and tested with the plugin.
-- **Installed** comes from the dashboard package installed in SimHub. The plugin derives the SimHub root from its own DLL location, checks the `DashTemplates` folder, opens each expected package root `.djson`, and reads `Metadata.DashboardVersion`.
+- **Installed** comes from the dashboard package installed in SimHub. The plugin treats its own DLL directory as the primary SimHub root, checks that directory's `DashTemplates` folder, opens each expected package root `.djson`, and reads `Metadata.DashboardVersion`.
 - **Latest available from GitHub** is future work. The v1.1 Overview does not download a GitHub dashboard manifest and does not show update-available package comparisons yet.
 
 The main Driver Dash, Strategy Dash, Alerts Overlay, Vertical Traffic Bar Overlay, Head2Head package, and Fuel Calculator package each carry their own package version in the main/root `.djson` `DashboardVersion` metadata. Shared copied widgets, such as PitEntry, BoxEntry, PitPopup, RejoinAssist, LaunchAssist, copied H2H/Fuel/traffic/alert widgets, and similar common surfaces are not versioned independently; they inherit the version of the dashboard or overlay package that contains them.

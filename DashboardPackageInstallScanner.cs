@@ -177,27 +177,47 @@ namespace LaunchPlugin
                 return false;
             }
 
+            return TryResolveSimHubRootFromDllDirectory(dllDirectory, out simHubRoot, out dashTemplates, out failureReason);
+        }
+
+        internal static bool TryResolveSimHubRootFromDllDirectory(string dllDirectory, out string simHubRoot, out string dashTemplates, out string failureReason)
+        {
+            simHubRoot = string.Empty;
+            dashTemplates = string.Empty;
+            failureReason = "DashTemplates folder not found beside plugin DLL directory or parent";
+
+            if (string.IsNullOrWhiteSpace(dllDirectory))
+            {
+                failureReason = "Plugin DLL directory unavailable";
+                return false;
+            }
+
             var pluginDirectory = new DirectoryInfo(dllDirectory);
-            var rootDirectory = pluginDirectory.Parent;
-            if (rootDirectory == null)
+            string primaryDashTemplates = Path.Combine(pluginDirectory.FullName, DashTemplatesFolderName);
+            if (Directory.Exists(primaryDashTemplates))
             {
-                failureReason = "SimHub root could not be derived from plugin DLL directory";
-                return false;
+                simHubRoot = pluginDirectory.FullName;
+                dashTemplates = primaryDashTemplates;
+                failureReason = string.Empty;
+                return true;
             }
 
-            string candidateDashTemplates = Path.Combine(rootDirectory.FullName, DashTemplatesFolderName);
-            if (!Directory.Exists(candidateDashTemplates))
+            var parentDirectory = pluginDirectory.Parent;
+            if (parentDirectory != null)
             {
-                failureReason = "DashTemplates folder not found beside plugin DLL root";
-                simHubRoot = rootDirectory.FullName;
-                dashTemplates = candidateDashTemplates;
-                return false;
+                string fallbackDashTemplates = Path.Combine(parentDirectory.FullName, DashTemplatesFolderName);
+                if (Directory.Exists(fallbackDashTemplates))
+                {
+                    simHubRoot = parentDirectory.FullName;
+                    dashTemplates = fallbackDashTemplates;
+                    failureReason = string.Empty;
+                    return true;
+                }
             }
 
-            simHubRoot = rootDirectory.FullName;
-            dashTemplates = candidateDashTemplates;
-            failureReason = string.Empty;
-            return true;
+            simHubRoot = pluginDirectory.FullName;
+            dashTemplates = primaryDashTemplates;
+            return false;
         }
 
         private static bool TryBuildExpectedPath(DashboardVersionInfo asset, string dashTemplatesPath, out string expectedPath, out string failureReason)
