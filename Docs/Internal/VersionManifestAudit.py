@@ -1,8 +1,9 @@
 #!/usr/bin/env python3
 """Release-prep audit for LalaRaceAssist.VersionManifest.json.
 
-Reports plugin assembly version alignment and root dashboard/overlay DashboardVersion
-metadata alignment. This script is read-only and never edits files.
+Reports plugin assembly version alignment and dashboard/overlay DashboardVersion
+metadata alignment from official SimHub .simhubdash export packages. This script
+is read-only and never edits files or extracts packages.
 """
 from __future__ import print_function
 
@@ -10,6 +11,7 @@ import json
 import re
 import sys
 import xml.etree.ElementTree as ET
+import zipfile
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[2]
@@ -43,20 +45,6 @@ def read_json(path):
         return json.load(handle)
 
 
-def find_key_paths(value, key_name, path="$"):
-    found = []
-    if isinstance(value, dict):
-        for key, child in value.items():
-            child_path = path + "." + key
-            if key == key_name:
-                found.append((child_path, child))
-            found.extend(find_key_paths(child, key_name, child_path))
-    elif isinstance(value, list):
-        for index, child in enumerate(value):
-            found.extend(find_key_paths(child, key_name, "%s[%d]" % (path, index)))
-    return found
-
-
 def read_assembly_versions():
     text = ASSEMBLY_INFO.read_text(encoding="utf-8-sig")
     versions = {}
@@ -80,6 +68,37 @@ def manifest_is_embedded_resource():
         if item.attrib.get("Include") == "LalaRaceAssist.VersionManifest.json":
             return True
     return False
+
+
+def normalized_archive_name(value):
+    return str(value or "").replace("\\", "/").strip("/")
+
+
+def archive_basename(value):
+    return normalized_archive_name(value).split("/")[-1]
+
+
+def read_dashboard_json_from_package(package_path, root_file):
+    root_basename = archive_basename(root_file)
+    if not root_basename:
+        raise ValueError("releaseAudit.rootFile is blank")
+
+    with zipfile.ZipFile(str(package_path), "r") as archive:
+        matches = []
+        for name in archive.namelist():
+            normalized = normalized_archive_name(name)
+            if normalized.lower().endswith(".djson") and archive_basename(normalized).lower() == root_basename.lower():
+                matches.append(name)
+
+        if not matches:
+            raise FileNotFoundError("root .djson missing: %s" % root_basename)
+        if len(matches) > 1:
+            raise RuntimeError("root .djson ambiguous for %s: %s" % (root_basename, ", ".join(matches)))
+
+        member_name = matches[0]
+        raw = archive.read(member_name)
+        text = raw.decode("utf-8-sig")
+        return member_name, json.loads(text)
 
 
 def main():
@@ -142,7 +161,7 @@ def main():
         if asset_name not in REQUIRED_ASSETS:
             add_issue(issues, True, "unrecognised manifest asset key: %s" % asset_name)
 
-    print("Dashboard/overlay assets:")
+    print("Dashboard/overlay export packages:")
     for asset_name, asset in assets.items():
         if not isinstance(asset, dict):
             add_issue(issues, True, "%s asset schema is not an object" % asset_name)
@@ -157,6 +176,13 @@ def main():
         folder = asset.get("folder", "")
         file_name = asset.get("file", "")
         version_property = asset.get("versionProperty", "")
+        release_audit = asset.get("releaseAudit")
+        package_name = ""
+        root_file = ""
+        if isinstance(release_audit, dict):
+            package_name = release_audit.get("package", "")
+            root_file = release_audit.get("rootFile", "")
+
         label = "release-critical" if critical else "non-critical"
         print("  %s [%s]" % (asset_name, label))
         print("    manifest latest: %s" % latest)
@@ -166,6 +192,9 @@ def main():
         folder_valid = isinstance(folder, str) and bool(folder.strip())
         file_valid = isinstance(file_name, str) and bool(file_name.strip())
         version_property_valid = isinstance(version_property, str) and bool(version_property.strip())
+        release_audit_valid = isinstance(release_audit, dict)
+        package_valid = isinstance(package_name, str) and bool(package_name.strip())
+        root_file_valid = isinstance(root_file, str) and bool(root_file.strip())
 
         if not display_name_valid:
             add_issue(issues, True, "%s displayName is missing or not a non-empty string" % asset_name)
@@ -181,41 +210,76 @@ def main():
             add_issue(issues, True, "%s releaseCritical is missing or not boolean" % asset_name)
         if not is_parseable_version(latest):
             add_issue(issues, True, "%s manifest latest is missing or unparsable: %r" % (asset_name, latest))
+        if not release_audit_valid:
+            add_issue(issues, True, "%s releaseAudit is missing or not an object" % asset_name)
+        if release_audit_valid and not package_valid:
+            add_issue(issues, True, "%s releaseAudit.package is missing or blank" % asset_name)
+        if release_audit_valid and not root_file_valid:
+            add_issue(issues, True, "%s releaseAudit.rootFile is missing or blank" % asset_name)
 
-        if not (folder_valid and file_valid and version_property_valid):
-            print("    file: INVALID SCHEMA")
+        if not (package_valid and root_file_valid and version_property_valid):
+            print("    package: INVALID SCHEMA")
+            print("")
             continue
 
-        dash_path = ROOT / folder / file_name
-        print("    file: %s" % dash_path.relative_to(ROOT))
+        package_path = ROOT / package_name
+        print("    package: %s" % package_path.relative_to(ROOT))
+        print("    rootFile: %s" % root_file)
 
-        if not dash_path.exists():
-            add_issue(issues, critical, "%s file is missing: %s" % (asset_name, dash_path.relative_to(ROOT)))
+        if not package_path.exists():
+            add_issue(issues, critical, "%s package file is missing: %s" % (asset_name, package_path.relative_to(ROOT)))
+            print("")
+            continue
+        if not zipfile.is_zipfile(str(package_path)):
+            add_issue(issues, critical, "%s package is not zip-compatible: %s" % (asset_name, package_path.relative_to(ROOT)))
+            print("")
             continue
 
         try:
-            dash_json = read_json(dash_path)
+            member_name, dash_json = read_dashboard_json_from_package(package_path, root_file)
+        except FileNotFoundError as exc:
+            add_issue(issues, critical, "%s root .djson missing: %s" % (asset_name, exc))
+            print("")
+            continue
+        except RuntimeError as exc:
+            add_issue(issues, critical, "%s root .djson ambiguous: %s" % (asset_name, exc))
+            print("")
+            continue
+        except json.JSONDecodeError as exc:
+            add_issue(issues, critical, "%s root .djson invalid JSON: %s" % (asset_name, exc))
+            print("")
+            continue
+        except UnicodeDecodeError as exc:
+            add_issue(issues, critical, "%s root .djson is not UTF-8 decodable: %s" % (asset_name, exc))
+            print("")
+            continue
+        except zipfile.BadZipFile as exc:
+            add_issue(issues, critical, "%s package is not zip-compatible: %s" % (asset_name, exc))
+            print("")
+            continue
         except Exception as exc:
-            add_issue(issues, critical, "%s JSON is unparsable: %s" % (asset_name, exc))
+            add_issue(issues, critical, "%s package/root .djson could not be read: %s" % (asset_name, exc))
+            print("")
             continue
 
-        paths = find_key_paths(dash_json, version_property)
-        if not paths:
-            add_issue(issues, critical, "%s has no %s metadata" % (asset_name, version_property))
+        print("    archive member: %s" % member_name)
+
+        metadata = dash_json.get("Metadata") if isinstance(dash_json, dict) else None
+        if not isinstance(metadata, dict):
+            add_issue(issues, critical, "%s Metadata is missing or not an object in %s" % (asset_name, member_name))
             print("    %s path: MISSING" % version_property)
+            print("")
             continue
-        if len(paths) > 1:
-            add_issue(issues, critical, "%s has multiple %s metadata fields" % (asset_name, version_property))
 
-        for path, value in paths:
-            print("    %s path: %s" % (version_property, path))
-            print("    %s value: %s" % (version_property, value))
-            if str(value or "").strip() == "":
-                add_issue(issues, True, "%s %s is blank at %s" % (asset_name, version_property, path))
-            elif not is_parseable_version(value):
-                add_issue(issues, True, "%s %s is unparsable at %s: %r" % (asset_name, version_property, path, value))
-            elif normalize_version(value) != normalize_version(latest):
-                add_issue(issues, critical, "%s %s %r does not match manifest latest %r" % (asset_name, version_property, value, latest))
+        value = metadata.get(version_property)
+        print("    %s path: $.Metadata.%s" % (version_property, version_property))
+        print("    %s value: %s" % (version_property, value))
+        if str(value or "").strip() == "":
+            add_issue(issues, critical, "%s %s is missing or blank at $.Metadata.%s" % (asset_name, version_property, version_property))
+        elif not is_parseable_version(value):
+            add_issue(issues, critical, "%s %s is unparsable at $.Metadata.%s: %r" % (asset_name, version_property, version_property, value))
+        elif normalize_version(value) != normalize_version(latest):
+            add_issue(issues, critical, "%s package %s %r does not match manifest latest %r" % (asset_name, version_property, value, latest))
         print("")
 
     print("Issue summary:")
