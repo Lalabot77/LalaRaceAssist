@@ -1,3 +1,8 @@
+## 2026-07-09 — Runtime dashboard manifest filename alignment
+- Classification: **internal manifest-data correction with driver-facing Overview detection effect** (aligns runtime installed-dashboard filename metadata with current SimHub export root `.djson` names; no scanner logic, Overview UI layout, dashboard packages/JS, SimHub exports/actions, or Fuel/Strategy/Pit/H2H/CarSA/Opponents/Shift/Launch/Rejoin/Monitor runtime logic changed).
+- Updated only the manifest runtime `file` values for Driver Dash, Strategy Dash, Alerts Overlay, Vertical Traffic Bar Overlay, and Fuel Calculator to match the canonical root `.djson` filenames used by the current official `.simhubdash` exports. `folder`, `latest`, `releaseAudit.package`, and `releaseAudit.rootFile` metadata were left unchanged.
+- Expected installed-dashboard detection now resolves those five packages through the existing `DashTemplates/<manifest folder>/<manifest file>` contract once imported, matching the already-correct Head2Head runtime filename. Property Snapshot list reviewed: no; manifest filename metadata only with no SimHub export/property surface change.
+
 ## 2026-07-09 — VersionManifestAudit exported dashboard package support
 - Classification: **internal-only** (release audit tooling and dashboard package release workflow documentation; no runtime installed detection, embedded manifest loading, Overview UI, dashboard files/JS, SimHub exports, or Fuel/Strategy/Pit/H2H/CarSA/Opponents/Shift/Launch/Rejoin/Monitor runtime behavior changed).
 - `LalaRaceAssist.VersionManifest.json` now keeps runtime `folder` / `file` / `versionProperty` fields unchanged and adds per-asset `releaseAudit.package` / `releaseAudit.rootFile` metadata for the official `.simhubdash` export packages.
