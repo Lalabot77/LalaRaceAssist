@@ -33,6 +33,8 @@ Current driver-facing warning texts include `CHECK FUEL DATA`, `REFUEL OFF`, `MF
 
 Lala Race Assist separates bundled compatibility information from locally installed dashboard packages:
 
+For releases, the repository stores official SimHub `.simhubdash` export packages under `Dash Files/`; unpacked dashboard folders are not required in the repository release source. That release-audit source is separate from runtime installed detection, which reads the dashboards a user has imported into SimHub.
+
 - **Bundled with plugin** comes from the embedded `LalaRaceAssist.VersionManifest.json` manifest inside `LaunchPlugin.dll`. This is the compatibility contract for the dashboard/overlay package versions shipped and tested with the plugin.
 - **Installed** comes from the dashboard package installed in SimHub. The plugin treats its own DLL directory as the primary SimHub root, checks that directory's `DashTemplates` folder, opens each expected package root `.djson`, and reads `Metadata.DashboardVersion`.
 - **Latest available from GitHub** is future work. The v1.1 Overview does not download a GitHub dashboard manifest and does not show update-available package comparisons yet.

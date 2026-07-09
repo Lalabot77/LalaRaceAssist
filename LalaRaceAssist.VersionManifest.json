@@ -20,7 +20,11 @@
       "requiresPlugin": ">=1.1.0 <1.2.0",
       "versionProperty": "DashboardVersion",
       "sharedWidget": false,
-      "releaseCritical": true
+      "releaseCritical": true,
+      "releaseAudit": {
+        "package": "Dash Files/Lala-Driver Dash.simhubdash",
+        "rootFile": "Lala-Driver Dash.djson"
+      }
     },
     "Lala-Strategy Dash": {
       "type": "dashboard",
@@ -33,7 +37,11 @@
       "requiresPlugin": ">=1.1.0 <1.2.0",
       "versionProperty": "DashboardVersion",
       "sharedWidget": false,
-      "releaseCritical": true
+      "releaseCritical": true,
+      "releaseAudit": {
+        "package": "Dash Files/Lala-Strategy Dash.simhubdash",
+        "rootFile": "Lala-Strategy Dash.djson"
+      }
     },
     "Lala-Alerts Overlay": {
       "type": "overlay",
@@ -46,7 +54,11 @@
       "requiresPlugin": ">=1.1.0 <1.2.0",
       "versionProperty": "DashboardVersion",
       "sharedWidget": false,
-      "releaseCritical": true
+      "releaseCritical": true,
+      "releaseAudit": {
+        "package": "Dash Files/Lala-Alerts Overlay.simhubdash",
+        "rootFile": "Lala-Alerts Overlay.djson"
+      }
     },
     "Lala-VerticalTrafficBar Overlay": {
       "type": "overlay",
@@ -59,7 +71,11 @@
       "requiresPlugin": ">=1.1.0 <1.2.0",
       "versionProperty": "DashboardVersion",
       "sharedWidget": false,
-      "releaseCritical": true
+      "releaseCritical": true,
+      "releaseAudit": {
+        "package": "Dash Files/Lala-VerticalTrafficBar Overlay.simhubdash",
+        "rootFile": "Lala-VerticalTrafficBar Overlay.djson"
+      }
     },
     "Lala-Head2Head": {
       "type": "overlay",
@@ -72,7 +88,11 @@
       "requiresPlugin": ">=1.1.0 <1.2.0",
       "versionProperty": "DashboardVersion",
       "sharedWidget": false,
-      "releaseCritical": false
+      "releaseCritical": false,
+      "releaseAudit": {
+        "package": "Dash Files/Lala-Head2Head.simhubdash",
+        "rootFile": "Lala-Head2Head.djson"
+      }
     },
     "Lala-Fuel Calculator": {
       "type": "dashboard",
@@ -85,7 +105,11 @@
       "requiresPlugin": ">=1.1.0 <1.2.0",
       "versionProperty": "DashboardVersion",
       "sharedWidget": false,
-      "releaseCritical": false
+      "releaseCritical": false,
+      "releaseAudit": {
+        "package": "Dash Files/Lala-Fuel Calculator.simhubdash",
+        "rootFile": "Lala-Fuel Calculator.djson"
+      }
     }
   },
   "sharedWidgets": {
