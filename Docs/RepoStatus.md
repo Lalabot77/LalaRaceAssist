@@ -1,3 +1,5 @@
+- 2026-07-09 Overview dashboard package card cosmetic polish landed:
+  - package cards now use short user-facing descriptions, aligned Installed/Bundled version rows, and distinct status pills for `INSTALLED`, `NOT INSTALLED`, and `UNKNOWN`; healthy state shows `Dashboard package information loaded successfully.` instead of raw embedded-manifest/scan wording. Detection, manifest loading, version comparison, dashboard files, and runtime logic are unchanged. Property Snapshot list reviewed: yes; no export names or snapshot groups changed.
 - 2026-07-09 Dashboard installed package root-path follow-up landed:
   - installed dashboard scanning now treats the plugin DLL directory itself as the primary SimHub root and checks `<PluginDllDirectory>/DashTemplates` before the parent fallback, matching normal installs where `LaunchPlugin.dll` is beside `DashTemplates`. Property Snapshot list reviewed: yes; no export names or snapshot groups changed.
 - 2026-07-09 Dashboard installed package detection landed:

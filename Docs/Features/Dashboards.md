@@ -39,7 +39,7 @@ Lala Race Assist separates bundled compatibility information from locally instal
 
 The main Driver Dash, Strategy Dash, Alerts Overlay, Vertical Traffic Bar Overlay, Head2Head package, and Fuel Calculator package each carry their own package version in the main/root `.djson` `DashboardVersion` metadata. Shared copied widgets, such as PitEntry, BoxEntry, PitPopup, RejoinAssist, LaunchAssist, copied H2H/Fuel/traffic/alert widgets, and similar common surfaces are not versioned independently; they inherit the version of the dashboard or overlay package that contains them.
 
-The Overview package cards show each package preview, name, installed version, bundled plugin version, whether it is a core package or optional add-on, and one local status:
+The Overview package cards show each package preview, name, short user-facing description, installed version, bundled plugin version, whether it is a core package or optional add-on, and one visually distinct local status:
 
 - `INSTALLED` — the expected root dashboard file was found and its `DashboardVersion` metadata was read successfully.
 - `NOT INSTALLED` — the expected package folder/file was not found in SimHub `DashTemplates`.
