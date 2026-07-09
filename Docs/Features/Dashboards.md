@@ -31,9 +31,21 @@ Current driver-facing warning texts include `CHECK FUEL DATA`, `REFUEL OFF`, `MF
 
 ## Dashboard package versions
 
-Lala Race Assist uses the root `LalaRaceAssist.VersionManifest.json` manifest as the release/version source of truth for plugin and dashboard package audits. That manifest is embedded into the plugin at build time for normal runtime display, so users do not need to copy the JSON file beside `LaunchPlugin.dll`. The main Driver Dash, Strategy Dash, Alerts Overlay, Vertical Traffic Bar Overlay, Head2Head package, and Fuel Calculator package each carry their own package version in the main/root `.djson` `DashboardVersion` metadata.
+Lala Race Assist separates bundled compatibility information from locally installed dashboard packages:
 
-Shared copied widgets, such as PitEntry, BoxEntry, PitPopup, RejoinAssist, LaunchAssist, copied H2H/Fuel/traffic/alert widgets, and similar common surfaces are not versioned independently; they inherit the version of the dashboard or overlay package that contains them. The plugin Overview reads the embedded copy of the same manifest and presents a Dashboard / Overlay Packages card for each manifest-tracked package, including the official expected version and release-critical grouping. This official catalogue can include assets you choose not to install. The plugin does **not** detect or verify installed dashboard versions. Installed package version remains dashboard-local `DashboardVersion` metadata shown inside each dashboard, so users can manually compare that dashboard-local version with the Overview expected version. Dash-side RED/AMBER/GREEN warning panels and automatic comparison UX are deferred future work.
+- **Bundled with plugin** comes from the embedded `LalaRaceAssist.VersionManifest.json` manifest inside `LaunchPlugin.dll`. This is the compatibility contract for the dashboard/overlay package versions shipped and tested with the plugin.
+- **Installed** comes from the dashboard package installed in SimHub. The plugin derives the SimHub root from its own DLL location, checks the `DashTemplates` folder, opens each expected package root `.djson`, and reads `Metadata.DashboardVersion`.
+- **Latest available from GitHub** is future work. The v1.1 Overview does not download a GitHub dashboard manifest and does not show update-available package comparisons yet.
+
+The main Driver Dash, Strategy Dash, Alerts Overlay, Vertical Traffic Bar Overlay, Head2Head package, and Fuel Calculator package each carry their own package version in the main/root `.djson` `DashboardVersion` metadata. Shared copied widgets, such as PitEntry, BoxEntry, PitPopup, RejoinAssist, LaunchAssist, copied H2H/Fuel/traffic/alert widgets, and similar common surfaces are not versioned independently; they inherit the version of the dashboard or overlay package that contains them.
+
+The Overview package cards show each package preview, name, installed version, bundled plugin version, whether it is a core package or optional add-on, and one local status:
+
+- `INSTALLED` — the expected root dashboard file was found and its `DashboardVersion` metadata was read successfully.
+- `NOT INSTALLED` — the expected package folder/file was not found in SimHub `DashTemplates`.
+- `UNKNOWN` — SimHub `DashTemplates` could not be located, the `.djson` file could not be read, or the version metadata was missing or unparsable.
+
+Detection uses only the deterministic manifest-declared package folder and root file. It does not search renamed dashboard folders, scan arbitrary folders, recursively search the user's drive, download packages, or install updates.
 
 ## 2. Installation / import
 

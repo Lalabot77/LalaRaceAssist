@@ -1,3 +1,6 @@
+- 2026-07-09 Dashboard installed package detection landed:
+  - Overview package cards now show installed version, bundled plugin version, core/optional label, and local installed status for the six manifest-tracked dashboard/overlay packages; installed versions come from deterministic local SimHub `DashTemplates` root `.djson` `Metadata.DashboardVersion` reads.
+  - Added cached local installed scan support and additive `Dashboards.*.InstalledVersion` / `InstalledStatusText` exports while preserving existing embedded-manifest `ExpectedVersion`/`LatestVersion` behavior; GitHub/latest package checking remains future work. Property Snapshot list reviewed: yes; additive `Dashboards.*` stays Raw Debug by default.
 - 2026-07-06 Overview dashboard package card polish landed:
   - Overview now has one `DASHBOARD / OVERLAY PACKAGES` section with six manifest-backed package cards instead of separate Included Systems, Dashboard / Overlay Versions, and Dashboard Previews sections; cards use official expected versions/release-critical status from the embedded manifest rows and do not claim installed-dashboard detection. Property Snapshot list reviewed: yes; no export names or snapshot groups changed.
 - 2026-07-06 Dashboard manifest releaseCritical runtime schema alignment landed:

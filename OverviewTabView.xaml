@@ -276,7 +276,7 @@
                     <TextBlock Foreground="LightGray"
                                TextWrapping="Wrap"
                                Margin="0,0,0,6"
-                               Text="Official expected versions are packaged from the embedded version manifest. Installed dashboards may be a subset. The plugin does not detect installed dashboard versions." />
+                               Text="Installed versions are read from local SimHub dashboard metadata. Bundled versions come from the embedded compatibility manifest. GitHub latest package checks are future work." />
                     <TextBlock Foreground="LightGray"
                                TextWrapping="Wrap"
                                Margin="0,0,0,10"
@@ -313,21 +313,25 @@
                                                    Height="94"
                                                    Stretch="Uniform" />
                                         </Border>
-                                        <TextBlock Text="{Binding ExpectedVersion, StringFormat=Official expected version: {0}}"
+                                        <TextBlock Text="{Binding InstalledVersion, StringFormat=Installed: {0}}"
+                                                   Foreground="White"
+                                                   TextWrapping="Wrap"
+                                                   Margin="0,0,0,3" />
+                                        <TextBlock Text="{Binding ExpectedVersion, StringFormat=Bundled with plugin: {0}}"
                                                    Foreground="White"
                                                    TextWrapping="Wrap"
                                                    Margin="0,0,0,3" />
                                         <TextBlock Text="{Binding ReleaseCriticalText}"
                                                    Foreground="LightGray"
                                                    Margin="0,0,0,3" />
-                                        <TextBlock Text="{Binding PropertyName}"
-                                                   Foreground="#9A9A9A"
-                                                   FontSize="10"
-                                                   TextWrapping="Wrap"
-                                                   Margin="0,0,0,6" />
-                                        <TextBlock Text="Installed version shown inside dashboard"
+                                        <TextBlock Text="{Binding InstalledStatusText, StringFormat=Status: {0}}"
                                                    Foreground="#BDBDBD"
                                                    FontSize="11"
+                                                   TextWrapping="Wrap"
+                                                   Margin="0,0,0,3" />
+                                        <TextBlock Text="{Binding InstalledDetailText}"
+                                                   Foreground="#9A9A9A"
+                                                   FontSize="10"
                                                    TextWrapping="Wrap" />
                                     </StackPanel>
                                 </Border>

@@ -12,8 +12,14 @@ namespace LaunchPlugin
         public string Key { get; set; }
         public string PropertyKey { get; set; }
         public string DisplayName { get; set; }
+        public string Type { get; set; }
+        public string Folder { get; set; }
+        public string File { get; set; }
         public string Latest { get; set; }
+        public string MinimumSupported { get; set; }
         public string CompatiblePluginFamily { get; set; }
+        public string RequiresPlugin { get; set; }
+        public string VersionProperty { get; set; }
         public bool ReleaseCritical { get; set; }
     }
 
@@ -102,8 +108,14 @@ namespace LaunchPlugin
                 }
 
                 string displayName = (asset.Value<string>("displayName") ?? string.Empty).Trim();
+                string type = (asset.Value<string>("type") ?? string.Empty).Trim();
+                string folder = (asset.Value<string>("folder") ?? string.Empty).Trim();
+                string file = (asset.Value<string>("file") ?? string.Empty).Trim();
                 string latest = (asset.Value<string>("latest") ?? string.Empty).Trim();
+                string minimumSupported = (asset.Value<string>("minimumSupported") ?? string.Empty).Trim();
                 string family = (asset.Value<string>("compatiblePluginFamily") ?? rootFamily).Trim();
+                string requiresPlugin = (asset.Value<string>("requiresPlugin") ?? string.Empty).Trim();
+                string versionProperty = (asset.Value<string>("versionProperty") ?? string.Empty).Trim();
                 if (string.IsNullOrWhiteSpace(displayName))
                 {
                     throw new InvalidDataException(requiredKey + " displayName missing");
@@ -127,8 +139,14 @@ namespace LaunchPlugin
                     Key = requiredKey,
                     PropertyKey = ToPropertyKey(requiredKey),
                     DisplayName = displayName,
+                    Type = type,
+                    Folder = folder,
+                    File = file,
                     Latest = latest,
+                    MinimumSupported = minimumSupported,
                     CompatiblePluginFamily = family,
+                    RequiresPlugin = requiresPlugin,
+                    VersionProperty = versionProperty,
                     ReleaseCritical = releaseCritical
                 });
                 seen.Add(requiredKey);
@@ -176,7 +194,7 @@ namespace LaunchPlugin
             }
         }
 
-        private static bool IsParseableVersion(string value)
+        public static bool IsParseableVersion(string value)
         {
             return !string.IsNullOrWhiteSpace(value) && VersionPattern.IsMatch(value.Trim());
         }

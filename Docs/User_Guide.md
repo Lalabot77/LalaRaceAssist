@@ -290,6 +290,8 @@ Dashboard Management controls how the product appears in SimHub: which dashboard
 
 The dashboard package contains the Driver Dash, Strategy Dash, overlays, and related dashboard assets. Keep the package aligned with the plugin version whenever possible. A dashboard from an older package may still open, but it may not understand current outputs, wording, or intended workflows.
 
+The Overview package cards separate **Installed** dashboard versions from the version **Bundled with plugin**. Installed versions are read from the local SimHub `DashTemplates` root `.djson` metadata for each package, while the bundled version comes from the plugin's embedded compatibility manifest. A package can show `INSTALLED`, `NOT INSTALLED`, or `UNKNOWN`; GitHub latest package checking and update-available comparisons are future work.
+
 When upgrading, think of the plugin and dashboards as a matched set. If a value looks missing only on a dashboard, confirm that the correct dashboard package is installed before assuming the calculation is broken.
 
 ### Display options
