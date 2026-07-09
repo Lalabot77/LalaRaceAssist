@@ -74,6 +74,7 @@ namespace LaunchPlugin
             InitializeComponent();
             _plugin = plugin;
             InstalledVersionText = GetInstalledVersionText();
+            RefreshInstalledDashboardPackages();
             LoadDashboardVersionRows();
 
             DataContext = this;
@@ -175,18 +176,60 @@ namespace LaunchPlugin
                 return;
             }
 
-            DashboardManifestStatusText = manifest.StatusText;
+            DashboardManifestStatusText = BuildDashboardManifestStatusText(manifest);
             foreach (var asset in manifest.Assets)
             {
                 DashboardVersionRows.Add(new DashboardVersionRow
                 {
                     Name = asset.DisplayName,
                     ExpectedVersion = asset.Latest,
-                    ReleaseCriticalText = asset.ReleaseCritical ? "Release-critical" : "Auxiliary",
-                    PropertyName = "LalaLaunch.Dashboards." + asset.PropertyKey + ".ExpectedVersion",
+                    InstalledVersion = ResolveInstalledDashboardVersion(asset.PropertyKey),
+                    InstalledStatusText = ResolveInstalledDashboardStatusText(asset.PropertyKey),
+                    InstalledDetailText = ResolveInstalledDashboardDetailText(asset.PropertyKey),
+                    ReleaseCriticalText = asset.ReleaseCritical ? "Core package" : "Optional add-on",
                     PreviewImagePath = GetDashboardPreviewImagePath(asset.PropertyKey)
                 });
             }
+        }
+
+        private void RefreshInstalledDashboardPackages()
+        {
+            _plugin?.RefreshDashboardInstalledPackages();
+        }
+
+        private string BuildDashboardManifestStatusText(DashboardVersionManifest manifest)
+        {
+            string manifestText = manifest == null ? "Version manifest not loaded" : manifest.StatusText;
+            var scan = _plugin?.DashboardInstalledPackages;
+            if (scan == null)
+            {
+                return manifestText + " | Installed scan not run";
+            }
+
+            return manifestText + " | " + scan.StatusText;
+        }
+
+        private string ResolveInstalledDashboardVersion(string propertyKey)
+        {
+            var info = _plugin?.DashboardInstalledPackages?.FindByPropertyKey(propertyKey);
+            return info == null ? "Unknown" : info.InstalledVersion;
+        }
+
+        private string ResolveInstalledDashboardStatusText(string propertyKey)
+        {
+            var info = _plugin?.DashboardInstalledPackages?.FindByPropertyKey(propertyKey);
+            return info == null ? "UNKNOWN" : info.StatusText;
+        }
+
+        private string ResolveInstalledDashboardDetailText(string propertyKey)
+        {
+            var info = _plugin?.DashboardInstalledPackages?.FindByPropertyKey(propertyKey);
+            if (info == null || string.IsNullOrWhiteSpace(info.FailureReason))
+            {
+                return string.Empty;
+            }
+
+            return info.FailureReason;
         }
 
         private static string GetDashboardPreviewImagePath(string propertyKey)
@@ -213,7 +256,7 @@ namespace LaunchPlugin
         private void RefreshDashboardManifestSnapshot()
         {
             var manifest = _plugin?.DashboardVersions;
-            DashboardManifestStatusText = manifest == null ? "Version manifest not loaded" : manifest.StatusText;
+            DashboardManifestStatusText = BuildDashboardManifestStatusText(manifest);
         }
 
         private void RefreshMonitorSystemSnapshot()
@@ -355,6 +398,8 @@ namespace LaunchPlugin
 
         private async void CheckNow_Click(object sender, RoutedEventArgs e)
         {
+            RefreshInstalledDashboardPackages();
+            LoadDashboardVersionRows();
             await CheckLatestReleaseAsync(force: true);
         }
 
@@ -396,8 +441,10 @@ namespace LaunchPlugin
         {
             public string Name { get; set; }
             public string ExpectedVersion { get; set; }
+            public string InstalledVersion { get; set; }
+            public string InstalledStatusText { get; set; }
+            public string InstalledDetailText { get; set; }
             public string ReleaseCriticalText { get; set; }
-            public string PropertyName { get; set; }
             public string PreviewImagePath { get; set; }
         }
     }

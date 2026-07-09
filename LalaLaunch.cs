@@ -1370,6 +1370,7 @@ namespace LaunchPlugin
         private string _lastLiveDetectLogSignature = string.Empty;
         private readonly MonitorSystem _monitorSystem;
         public DashboardVersionManifest DashboardVersions { get; private set; }
+        public DashboardPackageInstallScanResult DashboardInstalledPackages { get; private set; }
         private DateTime _lastFuelRuntimeRecoveryUtc = DateTime.MinValue;
         private DateTime _lastFuelRuntimeHealthCheckUtc = DateTime.MinValue;
         private int _fuelRuntimeUnhealthyStreak = 0;
@@ -7579,11 +7580,18 @@ namespace LaunchPlugin
         }
 
 
+        public void RefreshDashboardInstalledPackages()
+        {
+            DashboardInstalledPackages = new DashboardPackageInstallScanner().Scan(DashboardVersions);
+        }
+
         private void AttachDashboardVersionExports(string propertyKey)
         {
             AttachCore("Dashboards." + propertyKey + ".ExpectedVersion", () => ResolveDashboardExpectedVersion(propertyKey));
             AttachCore("Dashboards." + propertyKey + ".LatestVersion", () => ResolveDashboardExpectedVersion(propertyKey));
             AttachCore("Dashboards." + propertyKey + ".ReleaseCritical", () => ResolveDashboardReleaseCritical(propertyKey));
+            AttachCore("Dashboards." + propertyKey + ".InstalledVersion", () => ResolveDashboardInstalledVersion(propertyKey));
+            AttachCore("Dashboards." + propertyKey + ".InstalledStatusText", () => ResolveDashboardInstalledStatusText(propertyKey));
         }
 
         private string ResolveDashboardExpectedVersion(string propertyKey)
@@ -7596,6 +7604,18 @@ namespace LaunchPlugin
         {
             var asset = DashboardVersions == null ? null : DashboardVersions.FindByPropertyKey(propertyKey);
             return asset != null && asset.ReleaseCritical;
+        }
+
+        private string ResolveDashboardInstalledVersion(string propertyKey)
+        {
+            var info = DashboardInstalledPackages == null ? null : DashboardInstalledPackages.FindByPropertyKey(propertyKey);
+            return info == null ? "Unknown" : info.InstalledVersion;
+        }
+
+        private string ResolveDashboardInstalledStatusText(string propertyKey)
+        {
+            var info = DashboardInstalledPackages == null ? null : DashboardInstalledPackages.FindByPropertyKey(propertyKey);
+            return info == null ? "UNKNOWN" : info.StatusText;
         }
 
         private void AttachH2HExports()
