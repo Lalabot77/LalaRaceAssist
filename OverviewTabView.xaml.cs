@@ -183,8 +183,30 @@ namespace LaunchPlugin
                     Name = asset.DisplayName,
                     ExpectedVersion = asset.Latest,
                     ReleaseCriticalText = asset.ReleaseCritical ? "Release-critical" : "Auxiliary",
-                    PropertyName = "LalaLaunch.Dashboards." + asset.PropertyKey + ".ExpectedVersion"
+                    PropertyName = "LalaLaunch.Dashboards." + asset.PropertyKey + ".ExpectedVersion",
+                    PreviewImagePath = GetDashboardPreviewImagePath(asset.PropertyKey)
                 });
+            }
+        }
+
+        private static string GetDashboardPreviewImagePath(string propertyKey)
+        {
+            switch (propertyKey)
+            {
+                case "DriverDash":
+                    return "Assets/Overview/driver-dash-preview.png";
+                case "StrategyDash":
+                    return "Assets/Overview/strategy-dash-preview.png";
+                case "AlertsOverlay":
+                    return "Assets/Overview/alerts-overlay-preview.png";
+                case "VerticalTrafficBar":
+                    return "Assets/Overview/vertical-traffic-preview.png";
+                case "Head2Head":
+                    return "Assets/Overview/head2head-preview.png";
+                case "FuelCalculator":
+                    return "Assets/Overview/fuel-calculator-preview.png";
+                default:
+                    return string.Empty;
             }
         }
 
@@ -376,6 +398,7 @@ namespace LaunchPlugin
             public string ExpectedVersion { get; set; }
             public string ReleaseCriticalText { get; set; }
             public string PropertyName { get; set; }
+            public string PreviewImagePath { get; set; }
         }
     }
 }

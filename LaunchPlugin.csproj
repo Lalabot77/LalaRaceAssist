@@ -232,11 +232,12 @@
   </ItemGroup>
   <ItemGroup>
     <EmbeddedResource Include="LalaRaceAssist.VersionManifest.json" />
-    <Resource Include="Assets\Overview\driver-preview.png" />
-    <Resource Include="Assets\Overview\head2head-preview.png" />
-    <Resource Include="Assets\Overview\pit-popup-preview.png" />
-    <Resource Include="Assets\Overview\rejoin-preview.png" />
-    <Resource Include="Assets\Overview\strategy-preview.png" />
+    <Resource Include="Assets\Overview\driver-dash-preview.png" Condition="Exists('Assets\Overview\driver-dash-preview.png')" />
+    <Resource Include="Assets\Overview\strategy-dash-preview.png" Condition="Exists('Assets\Overview\strategy-dash-preview.png')" />
+    <Resource Include="Assets\Overview\alerts-overlay-preview.png" Condition="Exists('Assets\Overview\alerts-overlay-preview.png')" />
+    <Resource Include="Assets\Overview\vertical-traffic-preview.png" Condition="Exists('Assets\Overview\vertical-traffic-preview.png')" />
+    <Resource Include="Assets\Overview\head2head-preview.png" Condition="Exists('Assets\Overview\head2head-preview.png')" />
+    <Resource Include="Assets\Overview\fuel-calculator-preview.png" Condition="Exists('Assets\Overview\fuel-calculator-preview.png')" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <PropertyGroup>

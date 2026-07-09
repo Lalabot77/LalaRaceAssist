@@ -263,8 +263,7 @@ Branch: work
 - `Status` section shows lightweight runtime state (game, plugin, profiles, track markers, current car/track) without deep subsystem wiring.
 - `Status` section `Restart Plugin` button wiring now triggers the same manual recovery runtime reset seam used by the `PrimaryDashMode` action (button remains a bounded recovery trigger, not a full profile/settings reset).
 - `Updates` section shows installed version, latest release tag, status (`Up to date`/`Update available`/`Unable to check`), and `Check Now`/`Open Releases` actions.
-- `Dashboard / Overlay Versions` section shows official expected versions from the embedded manifest, manifest status, release-critical grouping, and wording that installed dashboards may be a subset and are not detected by the plugin.
-- `Dashboard Previews` section now provides placeholder cards with exact expected file paths (`Assets/Overview/*.png`) so preview images can be dropped in later without layout changes.
+- `Dashboard / Overlay Packages` section replaces the old included-systems/version-list/preview split with six package cards bound to the embedded manifest row data. Each card shows the package name, preview image path, official expected version, release-critical/auxiliary label, expected-version property name, and the note that installed version is shown inside the dashboard. The wording must not imply installed-dashboard detection.
 - `Help / Notes` section contains concise driver reminders for touch vs bindings, Next/Previous screen behavior, Primary Dash Mode manual-recovery usage, and optional `TractionLoss` export setup.
 
 
