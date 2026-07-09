@@ -1,0 +1,21 @@
+{
+  "ScreenCount": 2.0,
+  "InGameScreensIndexs": [
+    0
+  ],
+  "IdleScreensIndexs": [],
+  "MainPreviewIndex": 0,
+  "IsOverlay": false,
+  "OverlaySizeWarning": true,
+  "MetadataVersion": 2.0,
+  "EnableOnDashboardMessaging": true,
+  "PitScreensIndexs": [],
+  "SimHubVersion": "9.11.14",
+  "Category": "",
+  "Title": "Lala Driver Primary Dash",
+  "Description": "Main Driver Tactical Dash in Primary FOV",
+  "Author": "Lalabot",
+  "Width": 960.0,
+  "Height": 540.0,
+  "DashboardVersion": "v1.0"
+}

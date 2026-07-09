@@ -1,0 +1,620 @@
+{
+  "Variables": {
+    "DashboardVariables": []
+  },
+  "DashboardDebugManager": {
+    "WindowPositionSettings": {
+      "IsFullScreen": false,
+      "Position": "221,208,829,515",
+      "TopMost": false,
+      "AllowTransparency": false,
+      "CloseOnMonitorLoss": false,
+      "NoWindowActivate": false
+    }
+  },
+  "Version": 2,
+  "Id": "01c6dc2e-8f2c-43d3-8198-959e4195eaa5",
+  "BaseHeight": 795,
+  "BaseWidth": 1280,
+  "BackgroundColor": "#FF000000",
+  "Screens": [
+    {
+      "RenderingSkip": 0,
+      "Name": "Screen",
+      "InGameScreen": true,
+      "IdleScreen": false,
+      "PitScreen": false,
+      "ScreenId": "d6d1212b-5195-49eb-bc96-c2ab8f0894d9",
+      "AllowOverlays": true,
+      "IsForegroundLayer": false,
+      "IsOverlayLayer": false,
+      "OverlayTriggerExpression": {
+        "Expression": "changed(20000, ([EngineStarted]=0 and [EngineIgnitionOn]=1))"
+      },
+      "ScreenEnabledExpression": {
+        "Expression": ""
+      },
+      "OverlayMaxDuration": 0,
+      "OverlayMinDuration": 0,
+      "IsBackgroundLayer": false,
+      "BackgroundColor": "#FF000000",
+      "Items": [
+        {
+          "$type": "SimHub.Plugins.OutputPlugins.GraphicalDash.Models.RectangleItem, SimHub.Plugins",
+          "IsRectangleItem": true,
+          "BackgroundColor": "#FF000000",
+          "BorderStyle": {
+            "BorderTop": 2,
+            "BorderBottom": 2,
+            "BorderLeft": 2,
+            "BorderRight": 2
+          },
+          "Height": 803.0,
+          "Left": -2.0,
+          "Top": -2.0,
+          "Visible": true,
+          "Width": 1293.0,
+          "IsFreezed": true,
+          "Name": "Background",
+          "RenderingSkip": 0,
+          "MinimumRefreshIntervalMS": 0.0
+        },
+        {
+          "$type": "SimHub.Plugins.OutputPlugins.GraphicalDash.Models.RadarItem, SimHub.Plugins",
+          "PlayerStyle": {
+            "LabelFont": "Segoe UI",
+            "LabelFontSize": 14.0,
+            "LabelColor": "#FFFFFFFF",
+            "DotColor": "#FF008000",
+            "DotBorderThickness": 0.0,
+            "DotBordercolor": "#FFFFFFFF",
+            "DotRadius": 60.0
+          },
+          "OpponentStyle": {
+            "LabelFont": "Segoe UI",
+            "LabelFontSize": 14.0,
+            "LabelColor": "#FFFFFFFF",
+            "DotColor": "#FFFF0000",
+            "DotBorderThickness": 2.0,
+            "DotBordercolor": "#FFFFFFFF",
+            "DotRadius": 50.0
+          },
+          "UseSmoothedPlayerAngle": true,
+          "Scale": 0.8,
+          "BackgroundColor": "#00FFFFFF",
+          "Height": 548.0,
+          "Left": 19.0,
+          "Top": 259.0,
+          "Visible": true,
+          "Width": 300.0,
+          "Name": "RadarItem",
+          "RenderingSkip": 0,
+          "MinimumRefreshIntervalMS": 0.0
+        },
+        {
+          "$type": "SimHub.Plugins.OutputPlugins.GraphicalDash.Models.GeneratedMapItem, SimHub.Plugins",
+          "BaseMapScale": 2.0,
+          "SpeedUnzoomEnabled": true,
+          "SpeedUnzoomStartSpeed": 90.0,
+          "SpeedUnzoomPercent": 40.0,
+          "AlternateTrackSectorColor": "#FF000000",
+          "CursorColor": "#FFFF0000",
+          "DisplayScale": 1.0,
+          "MapShadow": false,
+          "OverrideColorsWithCarClassColors": true,
+          "DisplayPerClassPosition": false,
+          "KeepMapDefinedClassColorsInSingleClass": true,
+          "ForcePlayerDotBorderContrastWhenUsingCarClassColors": true,
+          "MinimumTrackBorderWidth": 0.0,
+          "MinimumTrackWidth": 10.0,
+          "OpponentStyle": {
+            "LabelFont": "Segoe UI",
+            "LabelFontSize": 20.0,
+            "LabelColor": "#FF000000",
+            "DotColor": "#FFFF0000",
+            "DotBorderThickness": 6.0,
+            "DotBordercolor": "#FF808080",
+            "DotRadius": 50.0,
+            "Bindings": {
+              "DotColor": {
+                "Formula": {
+                  "Expression": "if(isnull([LalaLaunch.Opp.Behind1.GapToPlayerSec], 0)>-10, 'red', 'white')"
+                },
+                "Mode": 2
+              }
+            }
+          },
+          "PlayerStyle": {
+            "LabelFont": "Segoe UI",
+            "LabelFontSize": 25.0,
+            "LabelColor": "#FFFFFFFF",
+            "DotColor": "#FF008000",
+            "DotBorderThickness": 7.0,
+            "DotBordercolor": "#FFFFFFFF",
+            "DotRadius": 65.0
+          },
+          "RenderImageHeight": 731.1020284622495,
+          "RenderImageWidth": 1030.1437610343596,
+          "StartLine": {
+            "Color": "#FFFF0000",
+            "Enabled": true,
+            "Height": 80.0,
+            "Width": 10.0
+          },
+          "TrackBorderColor": "#FFFFFFFF",
+          "TrackBorderWidth": 2.0,
+          "TrackColor": "#FF000000",
+          "TrackWidth": 15.0,
+          "BackgroundColor": "#FF353535",
+          "BorderStyle": {
+            "BorderColor": "#FF808080",
+            "BorderTop": 1,
+            "BorderBottom": 1,
+            "BorderLeft": 1,
+            "BorderRight": 1
+          },
+          "Height": 564.0,
+          "Left": 965.0,
+          "Top": 227.0,
+          "Visible": true,
+          "Width": 309.0,
+          "Name": "PitExitMap",
+          "RenderingSkip": 0,
+          "MinimumRefreshIntervalMS": 0.0,
+          "Bindings": {
+            "SpeedUnzoomEnabled": {
+              "Formula": {
+                "Expression": "if(isnull([LalaLaunch.Opp.Behind1.GapToPlayerSec], 0)>-2, false, true)"
+              },
+              "Mode": 2
+            }
+          }
+        },
+        {
+          "$type": "SimHub.Plugins.OutputPlugins.GraphicalDash.Models.BuiltIn.GearText, SimHub.Plugins",
+          "GearBlinkText": false,
+          "GearBlinkDelay": 100,
+          "TextColor": "#FFFFFFFF",
+          "BackgroundColor": "#00FFFFFF",
+          "GearBackgoundColor": "#00FFFFFF",
+          "IgnoreNeutralGear": false,
+          "GearBlinkBackgroundColor": "#FFFF0000",
+          "GearBlinkBackground": false,
+          "GearTextColor": "#FFFFFFFF",
+          "GearBlinkTextColor": "#FFFF0000",
+          "DesignerText": "N",
+          "NoDataText": "N",
+          "IsTextItem": true,
+          "Font": "Roboto",
+          "FontWeight": "Bold",
+          "FontSize": 180.0,
+          "HorizontalAlignment": 1,
+          "VerticalAlignment": 1,
+          "BorderStyle": {
+            "BorderTop": 8,
+            "BorderBottom": 8,
+            "BorderLeft": 8,
+            "BorderRight": 8,
+            "Bindings": {
+              "BorderColor": {
+                "Formula": {
+                  "Expression": "if ((([Gear]= 1) or ([Gear]= 'R')), 'white', 'red')"
+                },
+                "Mode": 2
+              }
+            }
+          },
+          "Height": 233.0,
+          "Left": 525.0,
+          "Top": 300.0,
+          "Visible": true,
+          "BlinkDelay": 400.0,
+          "Width": 232.0,
+          "IsFreezed": true,
+          "Name": "GearText",
+          "RenderingSkip": 0,
+          "MinimumRefreshIntervalMS": 0.0,
+          "Bindings": {
+            "BlinkEnabled": {
+              "Formula": {
+                "Expression": "if ((([Gear]= 1) or ([Gear]= 'R')), false, true)"
+              },
+              "Mode": 2
+            },
+            "GearBackgoundColor": {
+              "Formula": {
+                "Expression": "if ([Gear]=1, 'grey', 'yellow')"
+              },
+              "Mode": 2
+            },
+            "GearBlinkBackgroundColor": {
+              "Formula": {
+                "Expression": "if ([Gear]=1, 'grey', 'yellow')"
+              },
+              "Mode": 2
+            }
+          }
+        },
+        {
+          "$type": "SimHub.Plugins.OutputPlugins.GraphicalDash.Models.BuiltIn.GameNotification, SimHub.Plugins",
+          "ShowTitle": true,
+          "ShowValue": true,
+          "IsTextItem": true,
+          "Font": "Roboto",
+          "FontWeight": "SemiBold",
+          "FontSize": 30.0,
+          "TextColor": "#FFFFFFFF",
+          "HorizontalAlignment": 1,
+          "VerticalAlignment": 1,
+          "BackgroundColor": "#00FFFFFF",
+          "Height": 47.0,
+          "Left": 2.0,
+          "Top": 745.0,
+          "Visible": true,
+          "Width": 1277.0,
+          "IsFreezed": true,
+          "Name": "GameNotification",
+          "RenderingSkip": 0,
+          "MinimumRefreshIntervalMS": 0.0
+        },
+        {
+          "$type": "SimHub.Plugins.OutputPlugins.GraphicalDash.Models.Layer, SimHub.Plugins",
+          "Group": false,
+          "Repetitions": 0,
+          "IsFreezed": true,
+          "Childrens": [
+            {
+              "$type": "SimHub.Plugins.OutputPlugins.GraphicalDash.Models.TextItem, SimHub.Plugins",
+              "IsTextItem": true,
+              "Font": "Roboto",
+              "FontWeight": "Bold",
+              "FontSize": 60.0,
+              "Text": "CAR APPROACHING",
+              "TextColor": "#FFFF0000",
+              "HorizontalAlignment": 1,
+              "VerticalAlignment": 0,
+              "BackgroundColor": "#FFFFFF00",
+              "BorderStyle": {
+                "BorderColor": "#FFFF0000",
+                "BorderTop": 4,
+                "BorderBottom": 4,
+                "BorderLeft": 4,
+                "BorderRight": 4,
+                "Bindings": {
+                  "BorderColor": {
+                    "Formula": {
+                      "Expression": "[LalaLaunch.Opp.Behind1.GapToPlayerSec]"
+                    },
+                    "StartColor": "#FF00FF00",
+                    "EnableMiddleColor": false,
+                    "MiddleColor": "#FF000000",
+                    "MiddleColorValue": 1.0,
+                    "EndColor": "#FFFF0000",
+                    "StartColorValue": -20.0,
+                    "EndColorValue": 0.0,
+                    "Mode": 4
+                  }
+                }
+              },
+              "Height": 181.0,
+              "Left": 350.0,
+              "Top": 549.0,
+              "Visible": true,
+              "BlinkDelay": 333.0,
+              "Width": 580.0,
+              "Name": "Traffic",
+              "RenderingSkip": 0,
+              "MinimumRefreshIntervalMS": 0.0
+            },
+            {
+              "$type": "SimHub.Plugins.OutputPlugins.GraphicalDash.Models.TextItem, SimHub.Plugins",
+              "IsTextItem": true,
+              "Font": "Roboto",
+              "FontWeight": "Bold",
+              "FontSize": 100.0,
+              "Text": "0s",
+              "TextColor": "#FFFF0000",
+              "HorizontalAlignment": 0,
+              "VerticalAlignment": 1,
+              "BackgroundColor": "#00FFFFFF",
+              "Height": 107.0,
+              "Left": 358.0,
+              "Top": 624.0,
+              "Visible": true,
+              "Width": 289.0,
+              "Name": "GapTime",
+              "RenderingSkip": 0,
+              "MinimumRefreshIntervalMS": 0.0,
+              "Bindings": {
+                "Text": {
+                  "FormatString": "0",
+                  "Formula": {
+                    "Expression": "' ' + format(isnull([LalaLaunch.Opp.Behind1.GapToPlayerSec], 0), '0') + 's'"
+                  },
+                  "Mode": 2
+                },
+                "Visible": {
+                  "Formula": {
+                    "Expression": "isnull([LalaLaunch.Opp.Behind1.GapToPlayerSec], 0)>-20"
+                  },
+                  "Mode": 2
+                }
+              }
+            },
+            {
+              "$type": "SimHub.Plugins.OutputPlugins.GraphicalDash.Models.TextItem, SimHub.Plugins",
+              "IsTextItem": true,
+              "Font": "Roboto",
+              "FontWeight": "Bold",
+              "FontSize": 100.0,
+              "Text": "999m",
+              "TextColor": "#FFFF0000",
+              "HorizontalAlignment": 2,
+              "VerticalAlignment": 1,
+              "BackgroundColor": "#00FFFFFF",
+              "Height": 107.0,
+              "Left": 631.0,
+              "Top": 624.0,
+              "Visible": true,
+              "Width": 289.0,
+              "Name": "GapDist",
+              "RenderingSkip": 0,
+              "MinimumRefreshIntervalMS": 0.0,
+              "Bindings": {
+                "Text": {
+                  "FormatString": "0",
+                  "Formula": {
+                    "Expression": "' ' + format(isnull([DataCorePlugin.GameRawData.Telemetry.CarDistBehind], 0), '0') + ' m'"
+                  },
+                  "Mode": 2
+                },
+                "Visible": {
+                  "Formula": {
+                    "Expression": "isnull([DataCorePlugin.GameRawData.Telemetry.CarDistBehind], 0)<200"
+                  },
+                  "Mode": 2
+                }
+              }
+            }
+          ],
+          "Visible": true,
+          "Name": "DriverApp",
+          "RenderingSkip": 10,
+          "MinimumRefreshIntervalMS": 100.0,
+          "Bindings": {
+            "Visible": {
+              "Formula": {
+                "Expression": "([DataCorePlugin.GameData.TotalLaps]>0) \r\nand\r\n([LalaLaunch.Opp.Behind1.GapToPlayerSec] < -0.1) \r\nand \r\n(isnull([LalaLaunch.Opp.Behind1.GapToPlayerSec], 0) > -20)"
+              },
+              "Mode": 2
+            }
+          }
+        },
+        {
+          "$type": "SimHub.Plugins.OutputPlugins.GraphicalDash.Models.Layer, SimHub.Plugins",
+          "Group": false,
+          "Repetitions": 0,
+          "IsFreezed": true,
+          "Childrens": [
+            {
+              "$type": "SimHub.Plugins.OutputPlugins.GraphicalDash.Models.TextItem, SimHub.Plugins",
+              "IsTextItem": true,
+              "Font": "Roboto",
+              "FontSize": 170.0,
+              "Text": "GO GO GO",
+              "TextColor": "#FF00FF00",
+              "HorizontalAlignment": 1,
+              "VerticalAlignment": 1,
+              "BackgroundColor": "#FF1E1E1E",
+              "BorderStyle": {
+                "BorderColor": "#FF008000",
+                "BorderTop": 5,
+                "BorderBottom": 5,
+                "BorderLeft": 5,
+                "BorderRight": 5
+              },
+              "Height": 285.0,
+              "Left": 2.0,
+              "Top": 3.0,
+              "Visible": true,
+              "Width": 1277.0,
+              "Name": "Drive",
+              "RenderingSkip": 0,
+              "MinimumRefreshIntervalMS": 0.0,
+              "Bindings": {
+                "TextColor": {
+                  "Formula": {
+                    "Expression": "if ([GameRawData.Telemetry.Gear] = 1, 'Lime', 'Red')"
+                  },
+                  "Mode": 2
+                },
+                "Text": {
+                  "Formula": {
+                    "Expression": "if ([GameRawData.Telemetry.Gear] = 1 , 'GO GO GO', 'Engage 1st Gear!')"
+                  },
+                  "Mode": 2
+                },
+                "Visible": {
+                  "Formula": {
+                    "Expression": "([DataCorePlugin.GameData.TotalLaps]>0)"
+                  },
+                  "Mode": 2
+                }
+              }
+            },
+            {
+              "$type": "SimHub.Plugins.OutputPlugins.GraphicalDash.Models.TextItem, SimHub.Plugins",
+              "IsTextItem": true,
+              "Font": "Roboto",
+              "FontWeight": "Bold",
+              "FontSize": 150.0,
+              "Text": "START ENGINE",
+              "TextColor": "#FF0000FF",
+              "HorizontalAlignment": 1,
+              "VerticalAlignment": 1,
+              "BackgroundColor": "#FF40E0D0",
+              "BorderStyle": {
+                "BorderColor": "#FFFFFF00",
+                "BorderTop": 5,
+                "BorderBottom": 5,
+                "BorderLeft": 5,
+                "BorderRight": 5
+              },
+              "Height": 285.0,
+              "Left": 2.0,
+              "Top": 3.0,
+              "Visible": true,
+              "Width": 1277.0,
+              "Name": "Start Eng",
+              "RenderingSkip": 0,
+              "MinimumRefreshIntervalMS": 0.0,
+              "Bindings": {
+                "Visible": {
+                  "Formula": {
+                    "Expression": "[EngineStarted]=0 \r\nand \r\n[EngineIgnitionOn]=1\r\nand\r\n[DataCorePlugin.GameData.TotalLaps]<1"
+                  },
+                  "Mode": 2
+                }
+              }
+            },
+            {
+              "$type": "SimHub.Plugins.OutputPlugins.GraphicalDash.Models.TextItem, SimHub.Plugins",
+              "IsTextItem": true,
+              "Font": "Roboto",
+              "FontSize": 150.0,
+              "Text": "ENGINE STALLED",
+              "TextColor": "#FFFFFFFF",
+              "HorizontalAlignment": 1,
+              "VerticalAlignment": 1,
+              "BackgroundColor": "#FFFF0000",
+              "BorderStyle": {
+                "BorderColor": "#FFFFFF00",
+                "BorderTop": 5,
+                "BorderBottom": 5,
+                "BorderLeft": 5,
+                "BorderRight": 5
+              },
+              "Height": 285.0,
+              "Left": 2.0,
+              "Top": 3.0,
+              "Visible": true,
+              "Width": 1277.0,
+              "IsFreezed": true,
+              "Name": "Stall",
+              "RenderingSkip": 0,
+              "MinimumRefreshIntervalMS": 0.0,
+              "Bindings": {
+                "Visible": {
+                  "Formula": {
+                    "Expression": "[EngineStarted]=0 \r\nand \r\n[EngineIgnitionOn]=1\r\nand\r\n[DataCorePlugin.GameData.TotalLaps]>0"
+                  },
+                  "Mode": 2
+                }
+              }
+            },
+            {
+              "$type": "SimHub.Plugins.OutputPlugins.GraphicalDash.Models.TextItem, SimHub.Plugins",
+              "IsTextItem": true,
+              "Font": "Roboto",
+              "FontWeight": "Medium",
+              "FontSize": 150.0,
+              "Text": "IGNITION OFF",
+              "TextColor": "#FF0000FF",
+              "HorizontalAlignment": 1,
+              "VerticalAlignment": 1,
+              "BackgroundColor": "#FFFFA500",
+              "BorderStyle": {
+                "BorderColor": "#FFFFFF00",
+                "BorderTop": 5,
+                "BorderBottom": 5,
+                "BorderLeft": 5,
+                "BorderRight": 5
+              },
+              "Height": 285.0,
+              "Left": 2.0,
+              "Top": 3.0,
+              "Visible": true,
+              "Width": 1277.0,
+              "IsFreezed": true,
+              "Name": "IgnOff",
+              "RenderingSkip": 0,
+              "MinimumRefreshIntervalMS": 0.0,
+              "Bindings": {
+                "Visible": {
+                  "Formula": {
+                    "Expression": "([EngineStarted]=0 and [EngineIgnitionOn]=0)"
+                  },
+                  "Mode": 2
+                }
+              }
+            },
+            {
+              "$type": "SimHub.Plugins.OutputPlugins.GraphicalDash.Models.RectangleItem, SimHub.Plugins",
+              "IsRectangleItem": true,
+              "BackgroundColor": "#00FFFFFF",
+              "BorderStyle": {
+                "BorderColor": "#FFFFFF00",
+                "BorderTop": 10,
+                "BorderBottom": 10,
+                "BorderLeft": 10,
+                "BorderRight": 10
+              },
+              "Height": 285.0,
+              "Left": 3.0,
+              "Top": 3.0,
+              "Visible": true,
+              "BlinkEnabled": true,
+              "Width": 1275.0,
+              "Name": "StallBoarder",
+              "RenderingSkip": 0,
+              "MinimumRefreshIntervalMS": 0.0,
+              "Bindings": {
+                "Visible": {
+                  "Formula": {
+                    "Expression": "[EngineStarted]=0 \r\nand \r\n[EngineIgnitionOn]=1\r\nand\r\n[DataCorePlugin.GameData.TotalLaps]>0"
+                  },
+                  "Mode": 2
+                }
+              }
+            }
+          ],
+          "Visible": true,
+          "Name": "Stall",
+          "RenderingSkip": 0,
+          "MinimumRefreshIntervalMS": 0.0
+        }
+      ],
+      "MinimumRefreshIntervalMS": 0.0
+    }
+  ],
+  "SnapToGrid": false,
+  "HideLabels": false,
+  "ShowForeground": true,
+  "ForegroundOpacity": 100.0,
+  "ShowBackground": true,
+  "BackgroundOpacity": 100.0,
+  "ShowBoundingRectangles": false,
+  "GridSize": 10,
+  "Images": [],
+  "Metadata": {
+    "ScreenCount": 1.0,
+    "InGameScreensIndexs": [
+      0
+    ],
+    "IdleScreensIndexs": [],
+    "MainPreviewIndex": 0,
+    "IsOverlay": false,
+    "OverlaySizeWarning": true,
+    "MetadataVersion": 2.0,
+    "EnableOnDashboardMessaging": true,
+    "PitScreensIndexs": [],
+    "SimHubVersion": "9.7.3",
+    "Width": 1280.0,
+    "Height": 795.0,
+    "DashboardVersion": ""
+  },
+  "ShowOnScreenControls": true,
+  "IsOverlay": false,
+  "EnableClickThroughOverlay": true,
+  "EnableOnDashboardMessaging": true
+}
