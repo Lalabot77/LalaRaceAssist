@@ -77,10 +77,10 @@
         "rootFile": "Lala-VerticalTrafficBar Overlay.djson"
       }
     },
-    "Lala-Head2Head": {
+    "Lala-Head 2 Head": {
       "type": "overlay",
-      "displayName": "Lala Head2Head",
-      "folder": "Dash Files/Lala-Head2Head",
+      "displayName": "Lala Head 2 Head",
+      "folder": "Dash Files/Lala-Head 2 Head",
       "file": "Lala-Head2Head.djson",
       "latest": "1.1.0",
       "minimumSupported": "1.1.0",
@@ -90,8 +90,8 @@
       "sharedWidget": false,
       "releaseCritical": false,
       "releaseAudit": {
-        "package": "Dash Files/Lala-Head2Head.simhubdash",
-        "rootFile": "Lala-Head2Head.djson"
+        "package": "Dash Files/Lala-Head 2 Head.simhubdash",
+        "rootFile": "Lala-Head 2 Head.djson"
       }
     },
     "Lala-Fuel Calculator": {

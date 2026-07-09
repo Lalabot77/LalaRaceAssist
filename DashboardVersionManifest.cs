@@ -33,7 +33,7 @@ namespace LaunchPlugin
             "Lala-Strategy Dash",
             "Lala-Alerts Overlay",
             "Lala-VerticalTrafficBar Overlay",
-            "Lala-Head2Head",
+            "Lala-Head 2 Head",
             "Lala-Fuel Calculator"
         };
 
@@ -215,7 +215,7 @@ namespace LaunchPlugin
                 case "Lala-Strategy Dash": return "StrategyDash";
                 case "Lala-Alerts Overlay": return "AlertsOverlay";
                 case "Lala-VerticalTrafficBar Overlay": return "VerticalTrafficBar";
-                case "Lala-Head2Head": return "Head2Head";
+                case "Lala-Head 2 Head": return "Head2Head";
                 case "Lala-Fuel Calculator": return "FuelCalculator";
                 default: return string.Empty;
             }
