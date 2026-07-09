@@ -280,7 +280,7 @@
                     <TextBlock Foreground="LightGray"
                                TextWrapping="Wrap"
                                Margin="0,0,0,10"
-                               Text="{Binding DashboardManifestStatusText, StringFormat=Manifest status: {0}}" />
+                               Text="{Binding DashboardManifestStatusText}" />
                     <ItemsControl ItemsSource="{Binding DashboardVersionRows}">
                         <ItemsControl.ItemsPanel>
                             <ItemsPanelTemplate>
@@ -297,11 +297,24 @@
                                         Width="240"
                                         MinHeight="218">
                                     <StackPanel>
-                                        <TextBlock Text="{Binding Name}"
-                                                   FontWeight="SemiBold"
-                                                   Foreground="White"
+                                        <DockPanel Margin="0,0,0,4"
+                                                   LastChildFill="False">
+                                            <TextBlock Text="{Binding Name}"
+                                                       FontWeight="SemiBold"
+                                                       Foreground="White"
+                                                       TextWrapping="Wrap"
+                                                       DockPanel.Dock="Left" />
+                                            <TextBlock Text="{Binding ReleaseCriticalText}"
+                                                       Foreground="LightGray"
+                                                       FontSize="10"
+                                                       HorizontalAlignment="Right"
+                                                       Margin="8,1,0,0" />
+                                        </DockPanel>
+                                        <TextBlock Text="{Binding Description}"
+                                                   Foreground="#CFCFCF"
+                                                   FontSize="11"
                                                    TextWrapping="Wrap"
-                                                   Margin="0,0,0,6" />
+                                                   Margin="0,0,0,7" />
                                         <Border BorderBrush="#333333"
                                                 BorderThickness="1"
                                                 CornerRadius="2"
@@ -313,22 +326,49 @@
                                                    Height="94"
                                                    Stretch="Uniform" />
                                         </Border>
-                                        <TextBlock Text="{Binding InstalledVersion, StringFormat=Installed: {0}}"
-                                                   Foreground="White"
-                                                   TextWrapping="Wrap"
-                                                   Margin="0,0,0,3" />
-                                        <TextBlock Text="{Binding ExpectedVersion, StringFormat=Bundled with plugin: {0}}"
-                                                   Foreground="White"
-                                                   TextWrapping="Wrap"
-                                                   Margin="0,0,0,3" />
-                                        <TextBlock Text="{Binding ReleaseCriticalText}"
-                                                   Foreground="LightGray"
-                                                   Margin="0,0,0,3" />
-                                        <TextBlock Text="{Binding InstalledStatusText, StringFormat=Status: {0}}"
-                                                   Foreground="#BDBDBD"
-                                                   FontSize="11"
-                                                   TextWrapping="Wrap"
-                                                   Margin="0,0,0,3" />
+                                        <Grid Margin="0,0,0,7">
+                                            <Grid.ColumnDefinitions>
+                                                <ColumnDefinition Width="78" />
+                                                <ColumnDefinition Width="*" />
+                                            </Grid.ColumnDefinitions>
+                                            <Grid.RowDefinitions>
+                                                <RowDefinition Height="Auto" />
+                                                <RowDefinition Height="Auto" />
+                                            </Grid.RowDefinitions>
+                                            <TextBlock Grid.Row="0"
+                                                       Grid.Column="0"
+                                                       Text="Installed"
+                                                       Foreground="#BDBDBD"
+                                                       Margin="0,0,8,3" />
+                                            <TextBlock Grid.Row="0"
+                                                       Grid.Column="1"
+                                                       Text="{Binding InstalledVersion}"
+                                                       Foreground="White"
+                                                       TextWrapping="Wrap"
+                                                       Margin="0,0,0,3" />
+                                            <TextBlock Grid.Row="1"
+                                                       Grid.Column="0"
+                                                       Text="Bundled"
+                                                       Foreground="#BDBDBD"
+                                                       Margin="0,0,8,0" />
+                                            <TextBlock Grid.Row="1"
+                                                       Grid.Column="1"
+                                                       Text="{Binding ExpectedVersion}"
+                                                       Foreground="White"
+                                                       TextWrapping="Wrap" />
+                                        </Grid>
+                                        <Border Background="{Binding StatusBackground}"
+                                                BorderBrush="{Binding StatusBorder}"
+                                                BorderThickness="1"
+                                                CornerRadius="8"
+                                                Padding="7,2"
+                                                HorizontalAlignment="Left"
+                                                Margin="0,0,0,5">
+                                            <TextBlock Text="{Binding InstalledStatusText}"
+                                                       Foreground="{Binding StatusForeground}"
+                                                       FontSize="10"
+                                                       FontWeight="SemiBold" />
+                                        </Border>
                                         <TextBlock Text="{Binding InstalledDetailText}"
                                                    Foreground="#9A9A9A"
                                                    FontSize="10"

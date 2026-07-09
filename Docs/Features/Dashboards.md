@@ -33,13 +33,15 @@ Current driver-facing warning texts include `CHECK FUEL DATA`, `REFUEL OFF`, `MF
 
 Lala Race Assist separates bundled compatibility information from locally installed dashboard packages:
 
+For releases, the repository stores official SimHub `.simhubdash` export packages under `Dash Files/`; unpacked dashboard folders are not required in the repository release source. That release-audit source is separate from runtime installed detection, which reads the dashboards a user has imported into SimHub.
+
 - **Bundled with plugin** comes from the embedded `LalaRaceAssist.VersionManifest.json` manifest inside `LaunchPlugin.dll`. This is the compatibility contract for the dashboard/overlay package versions shipped and tested with the plugin.
 - **Installed** comes from the dashboard package installed in SimHub. The plugin treats its own DLL directory as the primary SimHub root, checks that directory's `DashTemplates` folder, opens each expected package root `.djson`, and reads `Metadata.DashboardVersion`.
 - **Latest available from GitHub** is future work. The v1.1 Overview does not download a GitHub dashboard manifest and does not show update-available package comparisons yet.
 
 The main Driver Dash, Strategy Dash, Alerts Overlay, Vertical Traffic Bar Overlay, Head2Head package, and Fuel Calculator package each carry their own package version in the main/root `.djson` `DashboardVersion` metadata. Shared copied widgets, such as PitEntry, BoxEntry, PitPopup, RejoinAssist, LaunchAssist, copied H2H/Fuel/traffic/alert widgets, and similar common surfaces are not versioned independently; they inherit the version of the dashboard or overlay package that contains them.
 
-The Overview package cards show each package preview, name, installed version, bundled plugin version, whether it is a core package or optional add-on, and one local status:
+The Overview package cards show each package preview, name, short user-facing description, installed version, bundled plugin version, whether it is a core package or optional add-on, and one visually distinct local status:
 
 - `INSTALLED` — the expected root dashboard file was found and its `DashboardVersion` metadata was read successfully.
 - `NOT INSTALLED` — the expected package folder/file was not found in SimHub `DashTemplates`.
