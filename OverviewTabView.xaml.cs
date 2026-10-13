@@ -74,6 +74,7 @@ namespace LaunchPlugin
             InitializeComponent();
             _plugin = plugin;
             InstalledVersionText = GetInstalledVersionText();
+            RefreshInstalledDashboardPackages();
             LoadDashboardVersionRows();
 
             DataContext = this;
@@ -175,18 +176,108 @@ namespace LaunchPlugin
                 return;
             }
 
-            DashboardManifestStatusText = manifest.StatusText;
+            DashboardManifestStatusText = BuildDashboardManifestStatusText(manifest);
             foreach (var asset in manifest.Assets)
             {
                 DashboardVersionRows.Add(new DashboardVersionRow
                 {
                     Name = asset.DisplayName,
+                    Description = GetDashboardDescription(asset.PropertyKey),
                     ExpectedVersion = asset.Latest,
-                    ReleaseCriticalText = asset.ReleaseCritical ? "Release-critical" : "Auxiliary",
-                    PropertyName = "LalaLaunch.Dashboards." + asset.PropertyKey + ".ExpectedVersion",
-                    PreviewImagePath = GetDashboardPreviewImagePath(asset.PropertyKey)
+                    InstalledVersion = ResolveInstalledDashboardVersion(asset.PropertyKey),
+                    InstalledStatusText = ResolveInstalledDashboardStatusText(asset.PropertyKey),
+                    InstalledDetailText = ResolveInstalledDashboardDetailText(asset.PropertyKey),
+                    ReleaseCriticalText = asset.ReleaseCritical ? "Core package" : "Optional add-on",
+                    PreviewImagePath = GetDashboardPreviewImagePath(asset.PropertyKey),
+                    StatusBackground = ResolveInstalledDashboardStatusBackground(asset.PropertyKey),
+                    StatusBorder = ResolveInstalledDashboardStatusBorder(asset.PropertyKey),
+                    StatusForeground = ResolveInstalledDashboardStatusForeground(asset.PropertyKey)
                 });
             }
+        }
+
+        private void RefreshInstalledDashboardPackages()
+        {
+            _plugin?.RefreshDashboardInstalledPackages();
+        }
+
+        private string BuildDashboardManifestStatusText(DashboardVersionManifest manifest)
+        {
+            if (manifest == null)
+            {
+                return "Dashboard package information is unavailable.";
+            }
+
+            if (!manifest.Valid)
+            {
+                return "Dashboard package information could not be loaded.";
+            }
+
+            var scan = _plugin?.DashboardInstalledPackages;
+            if (scan == null)
+            {
+                return "Dashboard package information loaded; installed package scan has not run yet.";
+            }
+
+            if (!scan.SimHubRootFound)
+            {
+                return "Dashboard package information loaded; installed packages could not be scanned.";
+            }
+
+            return "Dashboard package information loaded successfully.";
+        }
+
+        private string ResolveInstalledDashboardVersion(string propertyKey)
+        {
+            var info = _plugin?.DashboardInstalledPackages?.FindByPropertyKey(propertyKey);
+            return info == null ? "Unknown" : info.InstalledVersion;
+        }
+
+        private string ResolveInstalledDashboardStatusText(string propertyKey)
+        {
+            var info = _plugin?.DashboardInstalledPackages?.FindByPropertyKey(propertyKey);
+            return info == null ? "UNKNOWN" : info.StatusText;
+        }
+
+        private string ResolveInstalledDashboardStatusBackground(string propertyKey)
+        {
+            switch (ResolveInstalledDashboardStatusText(propertyKey))
+            {
+                case "INSTALLED": return "#153F22";
+                case "NOT INSTALLED": return "#303030";
+                default: return "#4A3515";
+            }
+        }
+
+        private string ResolveInstalledDashboardStatusBorder(string propertyKey)
+        {
+            switch (ResolveInstalledDashboardStatusText(propertyKey))
+            {
+                case "INSTALLED": return "#2FA84F";
+                case "NOT INSTALLED": return "#5A5A5A";
+                default: return "#C58A2B";
+            }
+        }
+
+        private string ResolveInstalledDashboardStatusForeground(string propertyKey)
+        {
+            switch (ResolveInstalledDashboardStatusText(propertyKey))
+            {
+                case "INSTALLED": return "#83E09A";
+                case "NOT INSTALLED": return "#CFCFCF";
+                default: return "#FFD18A";
+            }
+        }
+
+        private string ResolveInstalledDashboardDetailText(string propertyKey)
+        {
+            var info = _plugin?.DashboardInstalledPackages?.FindByPropertyKey(propertyKey);
+            if (info == null || string.IsNullOrWhiteSpace(info.FailureReason))
+            {
+                return string.Empty;
+            }
+
+            return info.FailureReason;
         }
 
         private static string GetDashboardPreviewImagePath(string propertyKey)
@@ -210,10 +301,31 @@ namespace LaunchPlugin
             }
         }
 
+        private static string GetDashboardDescription(string propertyKey)
+        {
+            switch (propertyKey)
+            {
+                case "DriverDash":
+                    return "Primary in-car race display.";
+                case "StrategyDash":
+                    return "Fuel strategy and race management.";
+                case "AlertsOverlay":
+                    return "Important race messages and warnings.";
+                case "VerticalTrafficBar":
+                    return "Vertical traffic awareness overlay.";
+                case "Head2Head":
+                    return "Focused driver comparison overlay.";
+                case "FuelCalculator":
+                    return "Standalone fuel planning calculator.";
+                default:
+                    return string.Empty;
+            }
+        }
+
         private void RefreshDashboardManifestSnapshot()
         {
             var manifest = _plugin?.DashboardVersions;
-            DashboardManifestStatusText = manifest == null ? "Version manifest not loaded" : manifest.StatusText;
+            DashboardManifestStatusText = BuildDashboardManifestStatusText(manifest);
         }
 
         private void RefreshMonitorSystemSnapshot()
@@ -355,6 +467,8 @@ namespace LaunchPlugin
 
         private async void CheckNow_Click(object sender, RoutedEventArgs e)
         {
+            RefreshInstalledDashboardPackages();
+            LoadDashboardVersionRows();
             await CheckLatestReleaseAsync(force: true);
         }
 
@@ -395,10 +509,16 @@ namespace LaunchPlugin
         public sealed class DashboardVersionRow
         {
             public string Name { get; set; }
+            public string Description { get; set; }
             public string ExpectedVersion { get; set; }
+            public string InstalledVersion { get; set; }
+            public string InstalledStatusText { get; set; }
+            public string InstalledDetailText { get; set; }
             public string ReleaseCriticalText { get; set; }
-            public string PropertyName { get; set; }
             public string PreviewImagePath { get; set; }
+            public string StatusBackground { get; set; }
+            public string StatusBorder { get; set; }
+            public string StatusForeground { get; set; }
         }
     }
 }
