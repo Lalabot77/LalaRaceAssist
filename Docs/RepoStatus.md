@@ -1,3 +1,8 @@
+## 2026-10-15 — Opponents pace-car identity precedence
+- Updated Opponents filtering so Boolean-only pace-car flags cannot suppress a non-player row with corroborated competitor identity (positive `UserID`, complete canonical identity, and a normal driver name); explicit pace-car labels/path and incomplete-identity fail-closed behavior remain.
+- Preserved player exemption, held-row cleanup, Opponents ownership, CarSA physical selection, downstream contracts, and public exports/actions. Property Snapshot list reviewed: yes; no grouping or surface changes.
+- Validation: `dotnet build LaunchPlugin.csproj --no-restore --configuration Debug` reaches compilation but fails with 137 WPF generated-XAML symbol errors (for example missing `InitializeComponent`), with no reported `Opponents.cs` errors. No test project or test files were found. Live telemetry scenarios remain unverified.
+
 - 2026-07-09 Runtime dashboard manifest filename alignment landed:
   - manifest runtime `file` values now match the current exported/imported root `.djson` names for Driver Dash, Strategy Dash, Alerts Overlay, Vertical Traffic Bar Overlay, and Fuel Calculator while preserving `folder`, `latest`, release-audit metadata, scanner logic, Overview UI, dashboard packages/JS, and plugin exports. Overview installed-package detection should now find those imported dashboards through the existing deterministic `DashTemplates/<folder>/<file>` scan. Property Snapshot list reviewed: no; manifest filename metadata only with no export/property surface change.
 - 2026-07-09 VersionManifestAudit exported dashboard package support landed:
@@ -2336,3 +2341,4 @@ Branch: work
   - Strategy now prefers Live Detect as startup/default race-basis owner once live session context is active only while the owner is untouched; explicit Preset/Lap/Time selections and manual Race Minutes/Laps edits are preserved.
   - Race Preset selector/reapply controls are visible only in Preset or Live Detect owner modes (not manual Lap/Time), and remain available in Live Detect.
   - Selecting/reapplying/updating applied presets while Live Detect is active applies setup values without stealing race-basis ownership or clearing live-detect helper/cache state.
+

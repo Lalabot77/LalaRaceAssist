@@ -1,3 +1,9 @@
+## 2026-10-15 — Opponents pace-car identity precedence
+- Classification: **both** (driver-facing Opp target/race-position correction plus internal identity-rule documentation).
+- A non-player row with `IsPaceCar` or `CarIsPaceCar` set is no longer excluded on that Boolean evidence alone when it also has a positive `UserID`, a complete canonical `ClassColor:CarNumber` identity, and a nonblank `UserName` or fallback `AbbrevName`.
+- Explicit `Pace Car` labels and pace-car `CarPath` evidence remain decisive; missing or partial competitor identity keeps the existing fail-closed exclusion. Player-row exemption, skipped-row held-continuity cleanup, Opponents ordering/gap ownership, CarSA physical selection, H2H timing, PitExit formulas, and public export/action contracts are unchanged.
+- Property Snapshot list reviewed: yes; Opp/Car values may reflect the corrected row membership, but no exports, names, groups, or snapshot behavior changed.
+
 ## 2026-07-09 — Runtime dashboard manifest filename alignment
 - Classification: **internal manifest-data correction with driver-facing Overview detection effect** (aligns runtime installed-dashboard filename metadata with current SimHub export root `.djson` names; no scanner logic, Overview UI layout, dashboard packages/JS, SimHub exports/actions, or Fuel/Strategy/Pit/H2H/CarSA/Opponents/Shift/Launch/Rejoin/Monitor runtime logic changed).
 - Updated only the manifest runtime `file` values for Driver Dash, Strategy Dash, Alerts Overlay, Vertical Traffic Bar Overlay, and Fuel Calculator to match the canonical root `.djson` filenames used by the current official `.simhubdash` exports. `folder`, `latest`, `releaseAudit.package`, and `releaseAudit.rootFile` metadata were left unchanged.
@@ -3670,3 +3676,4 @@
 - Race Preset selector/reapply controls are visible only in Preset or Live Detect owner modes (not manual Lap/Time), and remain available in Live Detect.
 - Selecting/reapplying/updating applied presets while Live Detect is selected now applies setup values without stealing race-basis ownership away from Live Detect.
 - Refresh Calcs semantics unchanged (recompute-only); no runtime fuel model/pit command/telemetry ownership changes.
+

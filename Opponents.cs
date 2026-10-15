@@ -782,7 +782,7 @@ namespace LaunchPlugin
 
                     if (IsDriversRowPaceCarMetadata(pluginManager, basePath, out string paceCarSource))
                     {
-                        if (!isPlayerCarIdx)
+                        if (!isPlayerCarIdx && !HasReliableCompetitorIdentity(pluginManager, basePath))
                         {
                             snapshot.PaceCarRowsSkipped++;
                             snapshot.SkippedPaceCarCarIdx.Add(idx);
@@ -792,9 +792,11 @@ namespace LaunchPlugin
                             }
                             continue;
                         }
-
-                        snapshot.PlayerRowPaceCarFlagged = true;
-                        snapshot.PlayerPaceCarSource = paceCarSource;
+                        else if (isPlayerCarIdx)
+                        {
+                            snapshot.PlayerRowPaceCarFlagged = true;
+                            snapshot.PlayerPaceCarSource = paceCarSource;
+                        }
                     }
 
                     var row = BuildRowFromDriver(pluginManager, basePath, idx, carIdxLap, carIdxLapDist, carIdxBestLap, carIdxLastLap, carIdxClassPos, carIdxOnPitRoad, carIdxTrackSurface);
@@ -845,6 +847,43 @@ namespace LaunchPlugin
 
                 string classColor = NormalizeClassColor(ReadString(pluginManager, basePath + ".CarClassColor"));
                 return MakeIdentityKey(classColor, number);
+            }
+
+            private static bool HasReliableCompetitorIdentity(PluginManager pluginManager, string basePath)
+            {
+                if (string.IsNullOrWhiteSpace(basePath))
+                {
+                    return false;
+                }
+
+                // Explicit pace-car identity evidence remains authoritative. A Boolean alone can be
+                // contradicted only by multiple independent normal-driver identity fields.
+                if (IsPaceCarLabel(ReadString(pluginManager, basePath + ".UserName"))
+                    || IsPaceCarLabel(ReadString(pluginManager, basePath + ".AbbrevName"))
+                    || IsPaceCarLabel(ReadString(pluginManager, basePath + ".CarScreenName"))
+                    || IsPaceCarPath(ReadString(pluginManager, basePath + ".CarPath")))
+                {
+                    return false;
+                }
+
+                int userId = ReadInt(pluginManager, basePath + ".UserID", 0);
+                if (userId <= 0)
+                {
+                    return false;
+                }
+
+                if (string.IsNullOrWhiteSpace(BuildSkippedPaceCarIdentityKey(pluginManager, basePath)))
+                {
+                    return false;
+                }
+
+                string driverName = ReadString(pluginManager, basePath + ".UserName");
+                if (string.IsNullOrWhiteSpace(driverName))
+                {
+                    driverName = ReadString(pluginManager, basePath + ".AbbrevName");
+                }
+
+                return !string.IsNullOrWhiteSpace(driverName);
             }
 
             private static NativeCarRow BuildRowFromDriver(PluginManager pluginManager, string basePath, int carIdx,
