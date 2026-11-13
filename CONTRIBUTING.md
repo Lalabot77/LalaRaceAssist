@@ -7,8 +7,16 @@ This project uses strict engineering discipline.
 ## Before contributing
 
 * Read Docs/Project_Index.md
-* Read CODEX_CONTRACT.txt
+* Read Docs/Internal/CODEX_CONTRACT.txt
+* Read Docs/RepoStatus.md and relevant entries in Docs/Internal/Development_Changelog.md
 * Understand subsystem boundaries
+
+## Git and validation
+
+* Make implementation changes on a dedicated feature branch based on the latest `origin/main`; never develop directly on `main`.
+* Do not commit or push without explicit user approval.
+* Keep the plugin target at .NET Framework 4.8 and use C# 7.3 as enforced by the project file.
+* Build the solution and run applicable tests before reporting implementation work complete; explain any validation that could not run.
 
 ---
 

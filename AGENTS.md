@@ -1,16 +1,24 @@
 # Agent Entry Point
 
-Start with Docs/Project_Index.md
+Start with `Docs/Project_Index.md`.
 
 ---
 
 ## Mandatory Working Order
 
-1. Read CODEX_CONTRACT.txt
-2. Read Project_Index.md
-3. Read relevant Subsystem docs
-4. Check RepoStatus.md
-5. Review Development_Changelog.md for recent changes
+1. Read `Docs/Project_Index.md`.
+2. Read `Docs/Internal/CODEX_CONTRACT.txt`.
+3. Read relevant `Docs/Subsystems/` documents.
+4. Check `Docs/RepoStatus.md`.
+5. Review relevant entries in `Docs/Internal/Development_Changelog.md`.
+
+## Git and build rules
+
+* Work in the local repository on a dedicated feature branch created from the latest `origin/main`; never develop directly on `main`.
+* Do not commit or push without explicit user approval.
+* Keep the target framework at .NET Framework 4.8 and use the explicitly configured C# 7.3 language version.
+* For builds, locate the installed Visual Studio `MSBuild.exe` (for example with `vswhere`) and use it as the authoritative engine for this classic WPF/.NET Framework solution. Do not treat `dotnet build` as authoritative unless it independently produces the WPF-generated code and passes.
+* Report verification separately at four levels: compilation, automated logic tests, static/integration checks, and manual SimHub runtime checks. Never claim SimHub runtime verification unless the plugin was actually loaded and exercised in SimHub.
 
 ---
 

@@ -1,9 +1,8 @@
 # Project Index
 
 Validated against commit: HEAD
-Last updated: 2026-06-27
-Branch: work
-Current note: v1.1 documentation architecture now follows the outside-in product model: product surfaces first, core systems second, technical subsystem ownership third, and internal maintainer references last. The documentation restructure also included visible user-facing UI/product wording updates for Standing Start Assist plus Driver Tagging product terminology while preserving runtime behavior, dashboard JSON, SimHub export/action names, settings schema, profile/preset schema, and dashboard contracts.
+Last updated: 2026-11-12
+Current note: Codex setup guidance now uses the actual internal contract/changelog paths, requires feature branches from `origin/main`, and records the enforced C# 7.3 / .NET Framework 4.8 build configuration. The v1.1 documentation architecture remains outside-in: product surfaces first, core systems second, technical subsystem ownership third, and internal maintainer references last.
 
 ## What this repo is
 
@@ -13,13 +12,20 @@ This page is the canonical documentation map for the v1.1 GitHub documentation s
 
 ## Codex read/start order
 
-1. If present at repo root, read `../AGENTS.md` as the thin agent entry point, then start with `Project_Index.md`.
-2. Read `Docs/Internal/CODEX_CONTRACT.txt` for mandatory engineering policy.
+1. Read root `AGENTS.md`, then use this page as the canonical documentation map.
+2. Read `Docs/Internal/CODEX_CONTRACT.txt` for mandatory engineering and Git policy.
 3. Use `Docs/Internal/Architecture_Guardrails.md` for subsystem boundaries and ownership guidance.
 4. Read the relevant `Docs/Subsystems/**/*.md` files before editing affected areas.
 5. Check `RepoStatus.md` for the current validated repo/doc state.
 6. Use `Docs/Internal/Code_Snapshot.md` only for orientation when needed; it is not canonical if it conflicts with the docs above.
 7. Follow the analysis-first workflow and reusable task framing in `Docs/Internal/CODEX_TASK_TEMPLATE.txt`.
+
+## Development environment
+
+- Work against this local repository on a dedicated feature branch based on the latest `origin/main`; never develop directly on `main`.
+- Do not commit or push without explicit user approval.
+- `LaunchPlugin.csproj` targets .NET Framework 4.8 and explicitly enforces C# 7.3.
+- Build the solution and run applicable tests before reporting implementation work complete; record any validation that cannot run.
 
 ## Product surfaces
 

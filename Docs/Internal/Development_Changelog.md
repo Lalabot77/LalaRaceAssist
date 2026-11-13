@@ -1,3 +1,14 @@
+## 2026-11-12 — Visual Studio MSBuild and verification strategy
+- Classification: **internal-only** (build/test guidance and toolchain diagnosis; no production source, runtime behavior, dependencies, C# language version, or target framework changed).
+- Confirmed that .NET SDK MSBuild 18.6.4 used by `dotnet build` lacked `Microsoft.WinFX.targets` in its MSBuild extension directory, while installed Visual Studio MSBuild 18.7.8 included the target and generated the WPF code for this classic project. Documented Visual Studio MSBuild discovery and made it the authoritative solution build method unless the .NET SDK build is independently shown to run WPF markup compilation successfully.
+- Visual Studio MSBuild Debug/Any CPU rebuild succeeded with 0 errors and 1 `MSB3270` warning (MSIL project versus x86 `SimHubWPF`). Added four-level verification reporting and explicit SimHub runtime evidence requirements. No test infrastructure or production refactor was introduced.
+- Recorded future test candidates in RepoStatus: deterministic fuel projection and pit service time models first, followed by bounded strategy, pit state-transition, and opponent identity/race-calculation cases when stable seams are available.
+
+## 2026-11-12 — Local Codex development environment hardening
+- Classification: **internal-only** (repository setup, C# compiler-language enforcement, and maintainer workflow guidance; no runtime behavior or public product contract changed).
+- Fixed active documentation/instruction paths, clarified local-repository feature-branch and approval-gated commit/push rules, and required solution build plus applicable test validation before reporting implementation work complete.
+- Explicitly configured `LaunchPlugin.csproj` for C# 7.3 while retaining .NET Framework 4.8. MSBuild effective-property inspection confirmed `LangVersion=7.3` and `TargetFrameworkVersion=v4.8`; clean succeeded, but the solution build still fails with 137 missing WPF-generated symbol errors (`CS0103`, including `InitializeComponent`) as previously recorded in `Docs/RepoStatus.md`. No test project or test files were found.
+
 ## 2026-10-15 — Opponents pace-car identity precedence
 - Classification: **both** (driver-facing Opp target/race-position correction plus internal identity-rule documentation).
 - A non-player row with `IsPaceCar` or `CarIsPaceCar` set is no longer excluded on that Boolean evidence alone when it also has a positive `UserID`, a complete canonical `ClassColor:CarNumber` identity, and a nonblank `UserName` or fallback `AbbrevName`.

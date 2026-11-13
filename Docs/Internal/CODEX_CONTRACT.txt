@@ -20,6 +20,15 @@ If something appears wrong but is outside scope:
 * Do not refactor it.
 * Leave it untouched.
 
+## 1a. Local Repository and Git Discipline
+
+* Work against the local repository in the user's workspace.
+* Before implementation, inspect the complete Git status, including staged, unstaged, untracked, and deleted paths. If any pre-existing changes are present, stop and report each affected path and status; do not begin implementation.
+* Do not stash, discard, reset, overwrite, or incorporate pre-existing changes. Proceed only after the user explicitly resolves them or authorizes a specific safe approach.
+* Once this preflight is resolved or explicitly authorized, fetch `origin`, confirm `origin/main` is available, and create a dedicated feature branch from the latest `origin/main`.
+* Never make development changes directly on `main`.
+* Do not commit or push without explicit user approval. Do not merge into `main` or create a pull request unless explicitly requested.
+
 ---
 
 ## 2. Documentation Is Mandatory
@@ -147,11 +156,34 @@ Property Snapshot contract (mandatory when SimHub exports/properties change):
 
 ## 8. C# and Dependency Rules
 
-* Target C# 7.3
+* Target C# 7.3, explicitly configured in `LaunchPlugin.csproj` with `<LangVersion>7.3</LangVersion>`.
+* Target .NET Framework 4.8; do not change the target framework without an explicit requirement.
 * No new NuGet packages
 * No external DLLs
 * No unsafe code
 * No async changes unless requested
+
+## 8a. Build Engine and Verification Levels
+
+This repository is a classic WPF project targeting .NET Framework 4.8. Prefer the installed Visual Studio MSBuild engine for solution builds because it supplies the WPF markup-compilation targets used to generate `InitializeComponent` and XAML control fields.
+
+Locate the executable instead of assuming a Visual Studio edition or installation path. On Windows, use `vswhere.exe` when available, for example:
+
+```powershell
+$vswhere = Join-Path ${env:ProgramFiles(x86)} 'Microsoft Visual Studio\Installer\vswhere.exe'
+$msbuild = & $vswhere -all -products '*' -find 'MSBuild\**\Bin\amd64\MSBuild.exe' | Select-Object -First 1
+if (-not $msbuild) { throw 'Visual Studio MSBuild was not found.' }
+& $msbuild LaunchPlugin.sln /t:Rebuild /p:Configuration=Debug '/p:Platform=Any CPU' /v:minimal
+```
+
+Use the configuration and platform selected for the task. `dotnet build` invokes the .NET SDK's MSBuild installation; do not treat it as the authoritative result unless it independently runs WPF markup compilation and generates the required code. Classify missing generated members such as `InitializeComponent` as a possible build-tool/target-configuration failure, and report the evidence without claiming a successful compilation.
+
+Every task's verification report must state its status at each level:
+
+1. **Compilation verification:** solution/project and build engine/configuration, with actual warnings and errors.
+2. **Automated logic testing:** applicable automated tests run, or state that no test project/tests exist.
+3. **Static and integration checks:** checks performed and their scope/results (for example static validation, packaging, or integration boundaries).
+4. **Manual SimHub runtime verification:** state verified only when the plugin has actually been loaded and exercised in SimHub; otherwise explicitly state not performed.
 
 ---
 
@@ -175,6 +207,8 @@ Property Snapshot contract (mandatory when SimHub exports/properties change):
 A task is complete ONLY when:
 
 * Code compiles
+* The solution build and applicable tests were run; any blocked or unavailable validation is explicitly reported
+* Verification levels 1–4 are individually reported, and runtime verification is claimed only with direct SimHub execution evidence
 * Scope respected
 * No unintended behaviour changes
 * Regression risks evaluated

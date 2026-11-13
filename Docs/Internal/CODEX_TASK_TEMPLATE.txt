@@ -21,11 +21,13 @@ Phase 1 - Analysis (NO EDITS)
 
 Before editing:
 
-* Read Project_Index.md
-* Read CODEX_CONTRACT.txt
-* Read relevant subsystem docs
-* Check RepoStatus.md
-* Review relevant Development_Changelog.md entries
+* Read `Docs/Project_Index.md`
+* Read `Docs/Internal/CODEX_CONTRACT.txt`
+* Read relevant `Docs/Subsystems/` documents
+* Check `Docs/RepoStatus.md`
+* Review relevant `Docs/Internal/Development_Changelog.md` entries
+
+Before editing, inspect the complete Git status, including staged, unstaged, untracked, and deleted paths. If any pre-existing changes are present, stop and report each affected path and status; do not begin implementation. Do not stash, discard, reset, overwrite, or incorporate pre-existing changes. Proceed only after the user explicitly resolves them or authorizes a specific safe approach. Once this preflight is resolved or explicitly authorized, fetch `origin`, confirm `origin/main` is available, and create a dedicated feature branch from the latest `origin/main`. Never develop directly on `main`. Do not commit or push without explicit user approval.
 
 ---
 
@@ -132,6 +134,14 @@ Confirm:
 * RepoStatus updated
 * GitHub docs reviewed
 * Changelog classification included
+* Build with located Visual Studio MSBuild for this classic WPF/.NET Framework solution; report engine, configuration, warnings, and errors. Treat `dotnet build` as non-authoritative unless it independently generates WPF code and passes.
+
+Verification levels (state each as completed, failed, or not performed):
+
+1. Compilation verification — Visual Studio MSBuild command/configuration and result.
+2. Automated logic testing — tests run, or state that no test project/tests exist.
+3. Static and integration checks — checks performed and scope/results.
+4. Manual SimHub runtime verification — claim completed only after actually loading and testing the plugin in SimHub; otherwise state not performed.
 
 ---
 
