@@ -46,8 +46,9 @@
 - [ ] Confirm `LalaRaceAssist.VersionManifest.json` lists each asset's runtime `folder` / `file` fields unchanged and includes release-audit `releaseAudit.package` / `releaseAudit.rootFile` metadata for the exported package.
 - [ ] Run `python3 Docs/Internal/VersionManifestAudit.py`; it must inspect the exported `.simhubdash` packages directly without extraction and all release-critical mismatches must be resolved before packaging.
 - [ ] Confirm `LalaRaceAssist.VersionManifest.json` is the release/version source of truth for plugin and dashboard package versions and is embedded in `LaunchPlugin.csproj` as the runtime resource.
-- [ ] Confirm the plugin Overview lists expected/latest versions for Driver Dash, Strategy Dash, Alerts Overlay, Vertical Traffic Bar Overlay, Head2Head, and Fuel Calculator without claiming installed-dashboard detection.
-- [ ] Confirm the SimHub exports `LalaLaunch.Dashboards.*.ExpectedVersion`, matching `LatestVersion`, release-critical flags, and manifest status fields match the root manifest and that official-catalogue completeness does not imply users must install every asset.
+- [ ] Confirm the plugin Overview shows Installed local metadata, Bundled embedded versions, and Available GitHub versions for all six packages; verify remote failure shows `CHECK UNAVAILABLE` and leaves local/bundled values visible.
+- [ ] Confirm the SimHub exports `LalaLaunch.Dashboards.*.ExpectedVersion`, compatibility `LatestVersion`, `AvailableVersion`, `PackageStatusText`, release-critical flags, and both manifest status surfaces; official-catalogue completeness does not imply users must install every asset.
+- [ ] Verify remote manifest compatibility metadata cannot supply or change local scan paths, filenames, archive paths, or executable behavior, and verify no automatic dashboard download/install occurs.
 - [ ] Confirm shared copied widgets inherit their containing package version and are not independently versioned.
 - [ ] Import each dashboard package into a clean/fresh dashboard context.
 - [ ] Verify no missing-property or broken-expression errors.

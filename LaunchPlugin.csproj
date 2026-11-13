@@ -100,6 +100,7 @@
     </Compile>
     <Compile Include="DecelCapture.cs" />
     <Compile Include="DashboardVersionManifest.cs" />
+    <Compile Include="DashboardAvailableVersionManifest.cs" />
     <Compile Include="DashboardPackageInstallScanner.cs" />
     <Compile Include="EnumEqualsConverter.cs" />
     <Compile Include="FuelCalcs.cs" />

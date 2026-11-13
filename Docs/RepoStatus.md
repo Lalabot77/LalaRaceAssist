@@ -2355,3 +2355,10 @@ Branch: work
   - Race Preset selector/reapply controls are visible only in Preset or Live Detect owner modes (not manual Lap/Time), and remain available in Live Detect.
   - Selecting/reapplying/updating applied presets while Live Detect is active applies setup values without stealing race-basis ownership or clearing live-detect helper/cache state.
 
+## 2026-11-12 — GitHub dashboard package version check
+- Classification: **both** (Overview version/status presentation plus additive dashboard exports and subsystem contract docs).
+- Overview package cards now show Installed local metadata, Bundled embedded compatibility version, Available GitHub version, and package status based on numeric installed-versus-available comparison. The remote source is read-only, asynchronous, bounded to five seconds, validated as a complete official six-asset catalogue, and cannot supply local scan paths or filenames.
+- Check Now refreshes the local installed scan, remote dashboard manifest, and existing plugin release check; remote data is cached in memory and not polled by the recurring Overview timer. No automatic package download/install was added. `ExpectedVersion` and `LatestVersion` retain their bundled semantics.
+- Added `Dashboards.AvailableManifest.Valid` / `StatusText` and per-package `AvailableVersion` / `PackageStatusText`. Property Snapshot list reviewed: yes; `Dashboards.*` continues to resolve to the existing `RawDebug` group through `ResolvePropertySnapshotGroup(...)`.
+- Verification: Release solution rebuild succeeded with Visual Studio MSBuild 18.12.2, 0 errors, 0 warnings; project XML and Overview XAML XML parsing succeeded; `git diff --check` succeeded. No automated test project/files exist. `VersionManifestAudit.py` could not run because no usable Python runtime is installed (the `python3.exe` Windows Store shim could not be started). Manual SimHub validation was not performed.
+

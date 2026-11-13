@@ -1371,6 +1371,9 @@ namespace LaunchPlugin
         private readonly MonitorSystem _monitorSystem;
         public DashboardVersionManifest DashboardVersions { get; private set; }
         public DashboardPackageInstallScanResult DashboardInstalledPackages { get; private set; }
+        public DashboardAvailableVersionCheckResult DashboardAvailableVersions { get; private set; }
+        private readonly DashboardAvailableVersionManifest _dashboardAvailableVersionChecker = new DashboardAvailableVersionManifest();
+        private Task<DashboardAvailableVersionCheckResult> _dashboardAvailableVersionCheckTask;
         private DateTime _lastFuelRuntimeRecoveryUtc = DateTime.MinValue;
         private DateTime _lastFuelRuntimeHealthCheckUtc = DateTime.MinValue;
         private int _fuelRuntimeUnhealthyStreak = 0;
@@ -7585,6 +7588,25 @@ namespace LaunchPlugin
             DashboardInstalledPackages = new DashboardPackageInstallScanner().Scan(DashboardVersions);
         }
 
+        public async Task RefreshDashboardAvailableVersionsAsync()
+        {
+            if (_dashboardAvailableVersionCheckTask != null)
+            {
+                await _dashboardAvailableVersionCheckTask;
+                return;
+            }
+
+            _dashboardAvailableVersionCheckTask = _dashboardAvailableVersionChecker.FetchAsync(DashboardVersions);
+            try
+            {
+                DashboardAvailableVersions = await _dashboardAvailableVersionCheckTask;
+            }
+            finally
+            {
+                _dashboardAvailableVersionCheckTask = null;
+            }
+        }
+
         private void AttachDashboardVersionExports(string propertyKey)
         {
             AttachCore("Dashboards." + propertyKey + ".ExpectedVersion", () => ResolveDashboardExpectedVersion(propertyKey));
@@ -7592,6 +7614,8 @@ namespace LaunchPlugin
             AttachCore("Dashboards." + propertyKey + ".ReleaseCritical", () => ResolveDashboardReleaseCritical(propertyKey));
             AttachCore("Dashboards." + propertyKey + ".InstalledVersion", () => ResolveDashboardInstalledVersion(propertyKey));
             AttachCore("Dashboards." + propertyKey + ".InstalledStatusText", () => ResolveDashboardInstalledStatusText(propertyKey));
+            AttachCore("Dashboards." + propertyKey + ".AvailableVersion", () => ResolveDashboardAvailableVersion(propertyKey));
+            AttachCore("Dashboards." + propertyKey + ".PackageStatusText", () => ResolveDashboardPackageStatusText(propertyKey));
         }
 
         private string ResolveDashboardExpectedVersion(string propertyKey)
@@ -7616,6 +7640,26 @@ namespace LaunchPlugin
         {
             var info = DashboardInstalledPackages == null ? null : DashboardInstalledPackages.FindByPropertyKey(propertyKey);
             return info == null ? "UNKNOWN" : info.StatusText;
+        }
+
+        private string ResolveDashboardAvailableVersion(string propertyKey)
+        {
+            var info = DashboardAvailableVersions == null ? null : DashboardAvailableVersions.FindByPropertyKey(propertyKey);
+            return info == null ? "Unknown" : info.Latest;
+        }
+
+        private string ResolveDashboardPackageStatusText(string propertyKey)
+        {
+            var installed = DashboardInstalledPackages == null ? null : DashboardInstalledPackages.FindByPropertyKey(propertyKey);
+            var available = DashboardAvailableVersions == null ? null : DashboardAvailableVersions.FindByPropertyKey(propertyKey);
+            string family = DashboardVersions == null ? string.Empty : DashboardVersions.CompatiblePluginFamily;
+            return DashboardAvailableVersionManifest.ResolvePackageStatus(installed, available, family, GetInstalledPluginVersionText());
+        }
+
+        private static string GetInstalledPluginVersionText()
+        {
+            var version = System.Reflection.Assembly.GetExecutingAssembly().GetName().Version;
+            return version == null ? string.Empty : version.ToString();
         }
 
         private void AttachH2HExports()
@@ -8154,6 +8198,8 @@ namespace LaunchPlugin
             AttachCore("Dashboards.Manifest.Valid", () => DashboardVersions != null && DashboardVersions.Valid);
             AttachCore("Dashboards.Manifest.StatusText", () => DashboardVersions == null ? "Version manifest not loaded" : DashboardVersions.StatusText);
             AttachCore("Dashboards.Manifest.CompatiblePluginFamily", () => DashboardVersions == null ? string.Empty : DashboardVersions.CompatiblePluginFamily);
+            AttachCore("Dashboards.AvailableManifest.Valid", () => DashboardAvailableVersions != null && DashboardAvailableVersions.Valid);
+            AttachCore("Dashboards.AvailableManifest.StatusText", () => DashboardAvailableVersions == null ? "GitHub dashboard manifest not checked" : DashboardAvailableVersions.StatusText);
             AttachDashboardVersionExports("DriverDash");
             AttachDashboardVersionExports("StrategyDash");
             AttachDashboardVersionExports("AlertsOverlay");

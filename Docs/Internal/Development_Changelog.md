@@ -3688,3 +3688,10 @@
 - Selecting/reapplying/updating applied presets while Live Detect is selected now applies setup values without stealing race-basis ownership away from Live Detect.
 - Refresh Calcs semantics unchanged (recompute-only); no runtime fuel model/pit command/telemetry ownership changes.
 
+## 2026-11-12 — GitHub dashboard package version checking
+- Classification: **both** (driver-facing Overview package status/Available versions and internal additive SimHub export/remote-validation contract).
+- Overview cards now display Installed local SimHub metadata, Bundled embedded DLL manifest version, and Available version from the current raw GitHub root manifest. The remote manifest is validated as a complete official six-package catalogue and only provides version/plugin compatibility fields; local paths and filenames continue to come from the embedded manifest.
+- Added numeric installed-versus-available statuses: `NOT INSTALLED`, `UNKNOWN`, `CHECK UNAVAILABLE`, `UP TO DATE`, `UPDATE AVAILABLE`, `UPDATE REQUIRED`, and `NEWER THAN AVAILABLE`. Bundled mismatch does not override the main package status. A newer installed package is a development state, not an error.
+- Remote requests are asynchronous with a five-second timeout, begin when Overview opens, and refresh through Check Now alongside the existing installed scan and plugin release check. Results are cached in memory; the recurring timer does not fetch; network or validation failure leaves Installed/Bundled visible and does not claim up-to-date. No dashboard package is downloaded or installed.
+- Added `Dashboards.AvailableManifest.Valid` / `StatusText` and per-package `AvailableVersion` / `PackageStatusText`. `ExpectedVersion` and compatibility `LatestVersion` still mean the embedded bundled version. Property Snapshot list reviewed: yes; new `Dashboards.*` exports remain in the existing Raw Debug group via `ResolvePropertySnapshotGroup(...)`.
+
