@@ -37,17 +37,19 @@ For releases, the repository stores official SimHub `.simhubdash` export package
 
 - **Bundled with plugin** comes from the embedded `LalaRaceAssist.VersionManifest.json` manifest inside `LaunchPlugin.dll`. This is the compatibility contract for the dashboard/overlay package versions shipped and tested with the plugin.
 - **Installed** comes from the dashboard package installed in SimHub. The plugin treats its own DLL directory as the primary SimHub root, checks that directory's `DashTemplates` folder, opens each expected package root `.djson`, and reads `Metadata.DashboardVersion`.
-- **Latest available from GitHub** is future work. The v1.1 Overview does not download a GitHub dashboard manifest and does not show update-available package comparisons yet.
+- **Available** comes from the current raw GitHub root manifest. Overview checks it asynchronously when opened and refreshes it with **Check Now**. The manifest is validated as a complete six-package catalogue before any version is used.
 
 The main Driver Dash, Strategy Dash, Alerts Overlay, Vertical Traffic Bar Overlay, Head2Head package, and Fuel Calculator package each carry their own package version in the main/root `.djson` `DashboardVersion` metadata. Shared copied widgets, such as PitEntry, BoxEntry, PitPopup, RejoinAssist, LaunchAssist, copied H2H/Fuel/traffic/alert widgets, and similar common surfaces are not versioned independently; they inherit the version of the dashboard or overlay package that contains them.
 
-The Overview package cards show each package preview, name, short user-facing description, installed version, bundled plugin version, whether it is a core package or optional add-on, and one visually distinct local status:
+The Overview package cards show each package preview, name, short user-facing description, Installed, Bundled, and Available versions, whether it is a core package or optional add-on, and an overall package status:
 
 - `INSTALLED` — the expected root dashboard file was found and its `DashboardVersion` metadata was read successfully.
 - `NOT INSTALLED` — the expected package folder/file was not found in SimHub `DashTemplates`.
 - `UNKNOWN` — SimHub `DashTemplates` could not be located, the `.djson` file could not be read, or the version metadata was missing or unparsable.
+- `CHECK UNAVAILABLE` — GitHub could not be reached or its manifest failed validation.
+- `UP TO DATE`, `UPDATE AVAILABLE`, `UPDATE REQUIRED`, and `NEWER THAN AVAILABLE` compare installed against available versions numerically. A required update means the available package has a different plugin family or requires a newer plugin than the installed plugin. A newer local package is expected during development and is not an error.
 
-Detection uses only the deterministic manifest-declared package folder and root file. It does not search renamed dashboard folders, scan arbitrary folders, recursively search the user's drive, download packages, or install updates.
+Bundled versions remain the compatibility contract shipped in the DLL, and bundled mismatches do not override installed-versus-available status. Remote data supplies version and compatibility fields only; it cannot change local folder/file scanning. **Check Now** rescans installed metadata, refreshes GitHub package versions, and retains the plugin release check. A network failure leaves installed and bundled values visible. The plugin does not download or install dashboard packages. Detection uses only the deterministic embedded-manifest package folder and root file; it does not search renamed folders or scan arbitrary paths.
 
 ## 2. Installation / import
 

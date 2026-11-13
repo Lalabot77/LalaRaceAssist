@@ -276,7 +276,7 @@
                     <TextBlock Foreground="LightGray"
                                TextWrapping="Wrap"
                                Margin="0,0,0,6"
-                               Text="Installed versions are read from local SimHub dashboard metadata. Bundled versions come from the embedded compatibility manifest. GitHub latest package checks are future work." />
+                               Text="Installed versions come from local SimHub metadata; bundled versions come from this plugin's embedded manifest; available versions come from GitHub. The plugin never downloads or installs dashboard packages." />
                     <TextBlock Foreground="LightGray"
                                TextWrapping="Wrap"
                                Margin="0,0,0,10"
@@ -334,6 +334,7 @@
                                             <Grid.RowDefinitions>
                                                 <RowDefinition Height="Auto" />
                                                 <RowDefinition Height="Auto" />
+                                                <RowDefinition Height="Auto" />
                                             </Grid.RowDefinitions>
                                             <TextBlock Grid.Row="0"
                                                        Grid.Column="0"
@@ -356,6 +357,17 @@
                                                        Text="{Binding ExpectedVersion}"
                                                        Foreground="White"
                                                        TextWrapping="Wrap" />
+                                            <TextBlock Grid.Row="2"
+                                                       Grid.Column="0"
+                                                       Text="Available"
+                                                       Foreground="#BDBDBD"
+                                                       Margin="0,3,8,0" />
+                                            <TextBlock Grid.Row="2"
+                                                       Grid.Column="1"
+                                                       Text="{Binding AvailableVersion}"
+                                                       Foreground="White"
+                                                       TextWrapping="Wrap"
+                                                       Margin="0,3,0,0" />
                                         </Grid>
                                         <Border Background="{Binding StatusBackground}"
                                                 BorderBrush="{Binding StatusBorder}"
@@ -364,7 +376,7 @@
                                                 Padding="7,2"
                                                 HorizontalAlignment="Left"
                                                 Margin="0,0,0,5">
-                                            <TextBlock Text="{Binding InstalledStatusText}"
+                                            <TextBlock Text="{Binding PackageStatusText}"
                                                        Foreground="{Binding StatusForeground}"
                                                        FontSize="10"
                                                        FontWeight="SemiBold" />
@@ -394,6 +406,9 @@
                                TextWrapping="Wrap"
                                Margin="0,0,0,3" />
                     <TextBlock Text="• Optional wheelspin indicators require SimHub ShakeIt Motors 'TractionLoss' export."
+                               TextWrapping="Wrap"
+                               Margin="0,0,0,8" />
+                    <TextBlock Text="• Dashboard versions use local SimHub metadata, the bundled plugin manifest, and the current GitHub manifest. Packages are never downloaded or installed automatically."
                                TextWrapping="Wrap"
                                Margin="0,0,0,8" />
 
