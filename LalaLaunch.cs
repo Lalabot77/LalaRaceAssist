@@ -1373,7 +1373,8 @@ namespace LaunchPlugin
         public DashboardPackageInstallScanResult DashboardInstalledPackages { get; private set; }
         public DashboardAvailableVersionCheckResult DashboardAvailableVersions { get; private set; }
         private readonly DashboardAvailableVersionManifest _dashboardAvailableVersionChecker = new DashboardAvailableVersionManifest();
-        private Task<DashboardAvailableVersionCheckResult> _dashboardAvailableVersionCheckTask;
+        private Task _dashboardAvailableVersionCheckTask;
+        private bool _dashboardAvailableVersionRefreshRequested;
         private DateTime _lastFuelRuntimeRecoveryUtc = DateTime.MinValue;
         private DateTime _lastFuelRuntimeHealthCheckUtc = DateTime.MinValue;
         private int _fuelRuntimeUnhealthyStreak = 0;
@@ -7588,22 +7589,51 @@ namespace LaunchPlugin
             DashboardInstalledPackages = new DashboardPackageInstallScanner().Scan(DashboardVersions);
         }
 
-        public async Task RefreshDashboardAvailableVersionsAsync()
+        public Task RefreshDashboardAvailableVersionsAsync(bool forceRefresh = false)
         {
             if (_dashboardAvailableVersionCheckTask != null)
             {
-                await _dashboardAvailableVersionCheckTask;
-                return;
+                if (forceRefresh)
+                {
+                    _dashboardAvailableVersionRefreshRequested = true;
+                    DashboardAvailableVersions = DashboardAvailableVersionManifest.CreateCheckingResult();
+                }
+                return _dashboardAvailableVersionCheckTask;
             }
 
-            _dashboardAvailableVersionCheckTask = _dashboardAvailableVersionChecker.FetchAsync(DashboardVersions);
+            if (!forceRefresh && DashboardAvailableVersions != null) return Task.CompletedTask;
+
+            DashboardAvailableVersions = DashboardAvailableVersionManifest.CreateCheckingResult();
+            _dashboardAvailableVersionCheckTask = RefreshDashboardAvailableVersionsCoreAsync();
+            return _dashboardAvailableVersionCheckTask;
+        }
+
+        private async Task RefreshDashboardAvailableVersionsCoreAsync()
+        {
+            await Task.Yield();
             try
             {
-                DashboardAvailableVersions = await _dashboardAvailableVersionCheckTask;
+                while (true)
+                {
+                    var result = await _dashboardAvailableVersionChecker.FetchAsync(DashboardVersions);
+                    if (_dashboardAvailableVersionRefreshRequested)
+                    {
+                        _dashboardAvailableVersionRefreshRequested = false;
+                        continue;
+                    }
+
+                    DashboardAvailableVersions = result;
+                    break;
+                }
+            }
+            catch
+            {
+                DashboardAvailableVersions = DashboardAvailableVersionManifest.CreateUnavailableResult("GitHub dashboard manifest unavailable");
             }
             finally
             {
                 _dashboardAvailableVersionCheckTask = null;
+                _dashboardAvailableVersionRefreshRequested = false;
             }
         }
 
@@ -7651,15 +7681,7 @@ namespace LaunchPlugin
         private string ResolveDashboardPackageStatusText(string propertyKey)
         {
             var installed = DashboardInstalledPackages == null ? null : DashboardInstalledPackages.FindByPropertyKey(propertyKey);
-            var available = DashboardAvailableVersions == null ? null : DashboardAvailableVersions.FindByPropertyKey(propertyKey);
-            string family = DashboardVersions == null ? string.Empty : DashboardVersions.CompatiblePluginFamily;
-            return DashboardAvailableVersionManifest.ResolvePackageStatus(installed, available, family, GetInstalledPluginVersionText());
-        }
-
-        private static string GetInstalledPluginVersionText()
-        {
-            var version = System.Reflection.Assembly.GetExecutingAssembly().GetName().Version;
-            return version == null ? string.Empty : version.ToString();
+            return DashboardAvailableVersionManifest.ResolvePackageStatus(installed, DashboardAvailableVersions, propertyKey, DashboardPluginIdentity.FromLoadedPlugin());
         }
 
         private void AttachH2HExports()

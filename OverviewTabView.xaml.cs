@@ -85,7 +85,7 @@ namespace LaunchPlugin
             _statusTimer.Start();
 
             _ = CheckLatestReleaseAsync(force: false);
-            _ = CheckDashboardAvailableVersionsAsync();
+            _ = CheckDashboardAvailableVersionsAsync(forceRefresh: false);
         }
 
         private static HttpClient CreateReleaseClient()
@@ -173,11 +173,9 @@ namespace LaunchPlugin
             var manifest = _plugin?.DashboardVersions;
             if (manifest == null)
             {
-                DashboardManifestStatusText = "Version manifest not loaded";
                 return;
             }
 
-            DashboardManifestStatusText = BuildDashboardManifestStatusText(manifest);
             foreach (var asset in manifest.Assets)
             {
                 DashboardVersionRows.Add(new DashboardVersionRow
@@ -198,12 +196,14 @@ namespace LaunchPlugin
             }
         }
 
-        private async Task CheckDashboardAvailableVersionsAsync()
+        private async Task CheckDashboardAvailableVersionsAsync(bool forceRefresh)
         {
             if (_plugin == null) return;
-            await _plugin.RefreshDashboardAvailableVersionsAsync();
-            DashboardManifestStatusText = BuildDashboardManifestStatusText(_plugin.DashboardVersions) + " " +
-                (_plugin.DashboardAvailableVersions?.StatusText ?? "GitHub dashboard manifest unavailable");
+            var refreshTask = _plugin.RefreshDashboardAvailableVersionsAsync(forceRefresh);
+            RefreshDashboardManifestSnapshot();
+            LoadDashboardVersionRows();
+            await refreshTask;
+            RefreshDashboardManifestSnapshot();
             LoadDashboardVersionRows();
         }
 
@@ -216,10 +216,7 @@ namespace LaunchPlugin
         private string ResolveDashboardPackageStatusText(string propertyKey)
         {
             var installed = _plugin?.DashboardInstalledPackages?.FindByPropertyKey(propertyKey);
-            var available = _plugin?.DashboardAvailableVersions?.FindByPropertyKey(propertyKey);
-            var family = _plugin?.DashboardVersions?.CompatiblePluginFamily ?? string.Empty;
-            var pluginVersion = Assembly.GetExecutingAssembly().GetName().Version;
-            return DashboardAvailableVersionManifest.ResolvePackageStatus(installed, available, family, pluginVersion == null ? string.Empty : pluginVersion.ToString());
+            return DashboardAvailableVersionManifest.ResolvePackageStatus(installed, _plugin?.DashboardAvailableVersions, propertyKey, DashboardPluginIdentity.FromLoadedPlugin());
         }
 
         private string ResolveDashboardPackageStatusBackground(string key)
@@ -231,6 +228,7 @@ namespace LaunchPlugin
                 case "UPDATE AVAILABLE": return "#4A2E12";
                 case "UPDATE REQUIRED": return "#4A1717";
                 case "NEWER THAN AVAILABLE": return "#303843";
+                case "CHECKING": return "#4A3515";
                 default: return "#4A3515";
             }
         }
@@ -244,6 +242,7 @@ namespace LaunchPlugin
                 case "UPDATE AVAILABLE": return "#D98422";
                 case "UPDATE REQUIRED": return "#D94A4A";
                 case "NEWER THAN AVAILABLE": return "#74869A";
+                case "CHECKING": return "#C58A2B";
                 default: return "#C58A2B";
             }
         }
@@ -257,6 +256,7 @@ namespace LaunchPlugin
                 case "UPDATE AVAILABLE": return "#FFC078";
                 case "UPDATE REQUIRED": return "#FF8A8A";
                 case "NEWER THAN AVAILABLE": return "#BDCAD8";
+                case "CHECKING": return "#FFD18A";
                 default: return "#FFD18A";
             }
         }
@@ -354,7 +354,11 @@ namespace LaunchPlugin
         private void RefreshDashboardManifestSnapshot()
         {
             var manifest = _plugin?.DashboardVersions;
-            DashboardManifestStatusText = BuildDashboardManifestStatusText(manifest);
+            string embeddedStatus = BuildDashboardManifestStatusText(manifest);
+            string githubStatus = _plugin?.DashboardAvailableVersions == null
+                ? "GitHub check not started"
+                : _plugin.DashboardAvailableVersions.StatusText;
+            DashboardManifestStatusText = "Embedded/local: " + embeddedStatus + " | GitHub: " + githubStatus;
         }
 
         private void RefreshMonitorSystemSnapshot()
@@ -498,7 +502,7 @@ namespace LaunchPlugin
         {
             RefreshInstalledDashboardPackages();
             LoadDashboardVersionRows();
-            await CheckDashboardAvailableVersionsAsync();
+            await CheckDashboardAvailableVersionsAsync(forceRefresh: true);
             await CheckLatestReleaseAsync(force: true);
         }
 

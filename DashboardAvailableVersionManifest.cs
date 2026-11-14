@@ -4,11 +4,34 @@ using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.IO;
 using System.Net.Http;
+using System.Reflection;
 using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 
 namespace LaunchPlugin
 {
+    public sealed class DashboardPluginIdentity
+    {
+        public string AssemblyName { get; private set; }
+        public string Version { get; private set; }
+        public string Family { get; private set; }
+
+        private DashboardPluginIdentity(string assemblyName, string version, string family)
+        {
+            AssemblyName = assemblyName;
+            Version = version;
+            Family = family;
+        }
+
+        public static DashboardPluginIdentity FromLoadedPlugin()
+        {
+            var name = Assembly.GetExecutingAssembly().GetName();
+            var version = name == null ? null : name.Version;
+            if (name == null || version == null || version.Major < 0 || version.Minor < 0) return null;
+            return new DashboardPluginIdentity(name.Name, version.ToString(), version.Major + "." + version.Minor);
+        }
+    }
+
     public sealed class DashboardAvailableVersionInfo
     {
         public string Key { get; private set; }
@@ -32,12 +55,14 @@ namespace LaunchPlugin
     public sealed class DashboardAvailableVersionCheckResult
     {
         public bool Valid { get; private set; }
+        public bool IsChecking { get; private set; }
         public string StatusText { get; private set; }
         public IReadOnlyDictionary<string, DashboardAvailableVersionInfo> Packages { get; private set; }
 
-        internal DashboardAvailableVersionCheckResult(bool valid, string statusText, IReadOnlyDictionary<string, DashboardAvailableVersionInfo> packages)
+        internal DashboardAvailableVersionCheckResult(bool valid, bool isChecking, string statusText, IReadOnlyDictionary<string, DashboardAvailableVersionInfo> packages)
         {
             Valid = valid;
+            IsChecking = isChecking;
             StatusText = statusText;
             Packages = packages;
         }
@@ -110,7 +135,7 @@ namespace LaunchPlugin
                 {
                     if (!knownKeys.Contains(property.Name)) throw new InvalidDataException("unexpected asset key");
                 }
-                return new DashboardAvailableVersionCheckResult(true, "GitHub dashboard manifest loaded", new ReadOnlyDictionary<string, DashboardAvailableVersionInfo>(packages));
+                return new DashboardAvailableVersionCheckResult(true, false, "GitHub dashboard manifest loaded", new ReadOnlyDictionary<string, DashboardAvailableVersionInfo>(packages));
             }
             catch (Exception ex)
             {
@@ -147,23 +172,43 @@ namespace LaunchPlugin
                 TryCompareVersions(pluginVersion, match.Groups[2].Value, out upper) && upper < 0;
         }
 
-        public static string ResolvePackageStatus(DashboardPackageInstallInfo installed, DashboardAvailableVersionInfo available, string bundledPluginFamily, string installedPluginVersion)
+        public static DashboardAvailableVersionCheckResult CreateCheckingResult()
+        {
+            return new DashboardAvailableVersionCheckResult(false, true, "Checking GitHub dashboard manifest", EmptyPackages());
+        }
+
+        public static DashboardAvailableVersionCheckResult CreateUnavailableResult(string text)
+        {
+            return new DashboardAvailableVersionCheckResult(false, false, text, EmptyPackages());
+        }
+
+        private static IReadOnlyDictionary<string, DashboardAvailableVersionInfo> EmptyPackages()
+        {
+            return new ReadOnlyDictionary<string, DashboardAvailableVersionInfo>(new Dictionary<string, DashboardAvailableVersionInfo>(StringComparer.Ordinal));
+        }
+
+        public static string ResolvePackageStatus(DashboardPackageInstallInfo installed, DashboardAvailableVersionCheckResult checkResult, string propertyKey, DashboardPluginIdentity installedPlugin)
         {
             if (installed == null || installed.Status == DashboardPackageInstallStatus.Unknown) return "UNKNOWN";
             if (installed.Status == DashboardPackageInstallStatus.NotInstalled) return "NOT INSTALLED";
+            if (checkResult == null) return "NOT CHECKED";
+            if (checkResult.IsChecking) return "CHECKING";
+            if (!checkResult.Valid) return "CHECK UNAVAILABLE";
+            var available = checkResult.FindByPropertyKey(propertyKey);
             if (available == null) return "CHECK UNAVAILABLE";
             int comparison;
             if (!TryCompareVersions(installed.InstalledVersion, available.Latest, out comparison)) return "UNKNOWN";
-            if (comparison == 0) return "UP TO DATE";
             if (comparison > 0) return "NEWER THAN AVAILABLE";
-            bool incompatibleFamily = !string.Equals(available.CompatiblePluginFamily, bundledPluginFamily, StringComparison.OrdinalIgnoreCase);
-            bool pluginTooOld = !PluginSatisfies(available.RequiresPlugin, installedPluginVersion);
-            return incompatibleFamily || pluginTooOld ? "UPDATE REQUIRED" : "UPDATE AVAILABLE";
+            bool incompatibleFamily = installedPlugin == null || string.IsNullOrWhiteSpace(installedPlugin.Family) ||
+                !string.Equals(available.CompatiblePluginFamily, installedPlugin.Family, StringComparison.OrdinalIgnoreCase);
+            bool pluginTooOld = installedPlugin == null || !PluginSatisfies(available.RequiresPlugin, installedPlugin.Version);
+            if (incompatibleFamily || pluginTooOld) return "UPDATE REQUIRED";
+            return comparison == 0 ? "UP TO DATE" : "UPDATE AVAILABLE";
         }
 
         private static DashboardAvailableVersionCheckResult Unavailable(string text)
         {
-            return new DashboardAvailableVersionCheckResult(false, text, new ReadOnlyDictionary<string, DashboardAvailableVersionInfo>(new Dictionary<string, DashboardAvailableVersionInfo>(StringComparer.Ordinal)));
+            return CreateUnavailableResult(text);
         }
 
         private static string ReadManifestString(JObject obj, string propertyName, bool optional)

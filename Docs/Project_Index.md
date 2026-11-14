@@ -1,8 +1,8 @@
 # Project Index
 
 Validated against commit: HEAD
-Last updated: 2026-11-12
-Current note: Codex setup guidance now uses the actual internal contract/changelog paths, requires feature branches from `origin/main`, and records the enforced C# 7.3 / .NET Framework 4.8 build configuration. The v1.1 documentation architecture remains outside-in: product surfaces first, core systems second, technical subsystem ownership third, and internal maintainer references last.
+Last updated: 2026-11-14
+Current note: Codex setup guidance uses the actual internal contract/changelog paths, requires feature branches from `origin/main`, and records the enforced C# 7.3 / .NET Framework 4.8 build configuration. Dashboard package status compares Available versions against the loaded plugin assembly compatibility identity and preserves GitHub check state across Overview refreshes. The v1.1 documentation architecture remains outside-in: product surfaces first, core systems second, technical subsystem ownership third, and internal maintainer references last.
 
 ## What this repo is
 
