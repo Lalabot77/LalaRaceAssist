@@ -1371,6 +1371,11 @@ namespace LaunchPlugin
         private readonly MonitorSystem _monitorSystem;
         public DashboardVersionManifest DashboardVersions { get; private set; }
         public DashboardPackageInstallScanResult DashboardInstalledPackages { get; private set; }
+        public DashboardAvailableVersionCheckResult DashboardAvailableVersions { get; private set; }
+        private readonly DashboardAvailableVersionManifest _dashboardAvailableVersionChecker = new DashboardAvailableVersionManifest();
+        private Task _dashboardAvailableVersionCheckTask;
+        private readonly object _dashboardAvailableVersionRefreshSync = new object();
+        private int _dashboardAvailableVersionRefreshGeneration;
         private DateTime _lastFuelRuntimeRecoveryUtc = DateTime.MinValue;
         private DateTime _lastFuelRuntimeHealthCheckUtc = DateTime.MinValue;
         private int _fuelRuntimeUnhealthyStreak = 0;
@@ -7585,6 +7590,59 @@ namespace LaunchPlugin
             DashboardInstalledPackages = new DashboardPackageInstallScanner().Scan(DashboardVersions);
         }
 
+        public Task RefreshDashboardAvailableVersionsAsync(bool forceRefresh = false)
+        {
+            lock (_dashboardAvailableVersionRefreshSync)
+            {
+                if (forceRefresh)
+                {
+                    _dashboardAvailableVersionRefreshGeneration++;
+                    DashboardAvailableVersions = DashboardAvailableVersionManifest.CreateCheckingResult();
+                }
+
+                if (_dashboardAvailableVersionCheckTask != null)
+                {
+                    return _dashboardAvailableVersionCheckTask;
+                }
+
+                if (!forceRefresh && DashboardAvailableVersions != null) return Task.CompletedTask;
+
+                DashboardAvailableVersions = DashboardAvailableVersionManifest.CreateCheckingResult();
+                _dashboardAvailableVersionCheckTask = RefreshDashboardAvailableVersionsCoreAsync(_dashboardAvailableVersionRefreshGeneration);
+                return _dashboardAvailableVersionCheckTask;
+            }
+        }
+
+        private async Task RefreshDashboardAvailableVersionsCoreAsync(int requestGeneration)
+        {
+            await Task.Yield();
+            while (true)
+            {
+                DashboardAvailableVersionCheckResult result;
+                try
+                {
+                    result = await _dashboardAvailableVersionChecker.FetchAsync(DashboardVersions);
+                }
+                catch
+                {
+                    result = DashboardAvailableVersionManifest.CreateUnavailableResult("GitHub dashboard manifest unavailable");
+                }
+
+                lock (_dashboardAvailableVersionRefreshSync)
+                {
+                    if (requestGeneration != _dashboardAvailableVersionRefreshGeneration)
+                    {
+                        requestGeneration = _dashboardAvailableVersionRefreshGeneration;
+                        continue;
+                    }
+
+                    DashboardAvailableVersions = result;
+                    _dashboardAvailableVersionCheckTask = null;
+                    return;
+                }
+            }
+        }
+
         private void AttachDashboardVersionExports(string propertyKey)
         {
             AttachCore("Dashboards." + propertyKey + ".ExpectedVersion", () => ResolveDashboardExpectedVersion(propertyKey));
@@ -7592,6 +7650,8 @@ namespace LaunchPlugin
             AttachCore("Dashboards." + propertyKey + ".ReleaseCritical", () => ResolveDashboardReleaseCritical(propertyKey));
             AttachCore("Dashboards." + propertyKey + ".InstalledVersion", () => ResolveDashboardInstalledVersion(propertyKey));
             AttachCore("Dashboards." + propertyKey + ".InstalledStatusText", () => ResolveDashboardInstalledStatusText(propertyKey));
+            AttachCore("Dashboards." + propertyKey + ".AvailableVersion", () => ResolveDashboardAvailableVersion(propertyKey));
+            AttachCore("Dashboards." + propertyKey + ".PackageStatusText", () => ResolveDashboardPackageStatusText(propertyKey));
         }
 
         private string ResolveDashboardExpectedVersion(string propertyKey)
@@ -7616,6 +7676,18 @@ namespace LaunchPlugin
         {
             var info = DashboardInstalledPackages == null ? null : DashboardInstalledPackages.FindByPropertyKey(propertyKey);
             return info == null ? "UNKNOWN" : info.StatusText;
+        }
+
+        private string ResolveDashboardAvailableVersion(string propertyKey)
+        {
+            var info = DashboardAvailableVersions == null ? null : DashboardAvailableVersions.FindByPropertyKey(propertyKey);
+            return info == null ? "Unknown" : info.Latest;
+        }
+
+        private string ResolveDashboardPackageStatusText(string propertyKey)
+        {
+            var installed = DashboardInstalledPackages == null ? null : DashboardInstalledPackages.FindByPropertyKey(propertyKey);
+            return DashboardAvailableVersionManifest.ResolvePackageStatus(installed, DashboardAvailableVersions, propertyKey, DashboardPluginIdentity.FromLoadedPlugin());
         }
 
         private void AttachH2HExports()
@@ -8154,6 +8226,8 @@ namespace LaunchPlugin
             AttachCore("Dashboards.Manifest.Valid", () => DashboardVersions != null && DashboardVersions.Valid);
             AttachCore("Dashboards.Manifest.StatusText", () => DashboardVersions == null ? "Version manifest not loaded" : DashboardVersions.StatusText);
             AttachCore("Dashboards.Manifest.CompatiblePluginFamily", () => DashboardVersions == null ? string.Empty : DashboardVersions.CompatiblePluginFamily);
+            AttachCore("Dashboards.AvailableManifest.Valid", () => DashboardAvailableVersions != null && DashboardAvailableVersions.Valid);
+            AttachCore("Dashboards.AvailableManifest.StatusText", () => DashboardAvailableVersions == null ? "GitHub dashboard manifest not checked" : DashboardAvailableVersions.StatusText);
             AttachDashboardVersionExports("DriverDash");
             AttachDashboardVersionExports("StrategyDash");
             AttachDashboardVersionExports("AlertsOverlay");

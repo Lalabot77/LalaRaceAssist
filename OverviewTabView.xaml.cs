@@ -85,6 +85,7 @@ namespace LaunchPlugin
             _statusTimer.Start();
 
             _ = CheckLatestReleaseAsync(force: false);
+            _ = CheckDashboardAvailableVersionsAsync(forceRefresh: false);
         }
 
         private static HttpClient CreateReleaseClient()
@@ -172,11 +173,9 @@ namespace LaunchPlugin
             var manifest = _plugin?.DashboardVersions;
             if (manifest == null)
             {
-                DashboardManifestStatusText = "Version manifest not loaded";
                 return;
             }
 
-            DashboardManifestStatusText = BuildDashboardManifestStatusText(manifest);
             foreach (var asset in manifest.Assets)
             {
                 DashboardVersionRows.Add(new DashboardVersionRow
@@ -184,15 +183,81 @@ namespace LaunchPlugin
                     Name = asset.DisplayName,
                     Description = GetDashboardDescription(asset.PropertyKey),
                     ExpectedVersion = asset.Latest,
+                    AvailableVersion = ResolveAvailableDashboardVersion(asset.PropertyKey),
                     InstalledVersion = ResolveInstalledDashboardVersion(asset.PropertyKey),
-                    InstalledStatusText = ResolveInstalledDashboardStatusText(asset.PropertyKey),
                     InstalledDetailText = ResolveInstalledDashboardDetailText(asset.PropertyKey),
                     ReleaseCriticalText = asset.ReleaseCritical ? "Core package" : "Optional add-on",
                     PreviewImagePath = GetDashboardPreviewImagePath(asset.PropertyKey),
-                    StatusBackground = ResolveInstalledDashboardStatusBackground(asset.PropertyKey),
-                    StatusBorder = ResolveInstalledDashboardStatusBorder(asset.PropertyKey),
-                    StatusForeground = ResolveInstalledDashboardStatusForeground(asset.PropertyKey)
+                    PackageStatusText = ResolveDashboardPackageStatusText(asset.PropertyKey),
+                    StatusBackground = ResolveDashboardPackageStatusBackground(asset.PropertyKey),
+                    StatusBorder = ResolveDashboardPackageStatusBorder(asset.PropertyKey),
+                    StatusForeground = ResolveDashboardPackageStatusForeground(asset.PropertyKey)
                 });
+            }
+        }
+
+        private async Task CheckDashboardAvailableVersionsAsync(bool forceRefresh)
+        {
+            if (_plugin == null) return;
+            var refreshTask = _plugin.RefreshDashboardAvailableVersionsAsync(forceRefresh);
+            RefreshDashboardManifestSnapshot();
+            LoadDashboardVersionRows();
+            await refreshTask;
+            RefreshDashboardManifestSnapshot();
+            LoadDashboardVersionRows();
+        }
+
+        private string ResolveAvailableDashboardVersion(string propertyKey)
+        {
+            var info = _plugin?.DashboardAvailableVersions?.FindByPropertyKey(propertyKey);
+            return info == null ? "Unknown" : info.Latest;
+        }
+
+        private string ResolveDashboardPackageStatusText(string propertyKey)
+        {
+            var installed = _plugin?.DashboardInstalledPackages?.FindByPropertyKey(propertyKey);
+            return DashboardAvailableVersionManifest.ResolvePackageStatus(installed, _plugin?.DashboardAvailableVersions, propertyKey, DashboardPluginIdentity.FromLoadedPlugin());
+        }
+
+        private string ResolveDashboardPackageStatusBackground(string key)
+        {
+            switch (ResolveDashboardPackageStatusText(key))
+            {
+                case "NOT INSTALLED": return "#303030";
+                case "UP TO DATE": return "#153F22";
+                case "UPDATE AVAILABLE": return "#4A2E12";
+                case "UPDATE REQUIRED": return "#4A1717";
+                case "NEWER THAN AVAILABLE": return "#303843";
+                case "CHECKING": return "#4A3515";
+                default: return "#4A3515";
+            }
+        }
+
+        private string ResolveDashboardPackageStatusBorder(string key)
+        {
+            switch (ResolveDashboardPackageStatusText(key))
+            {
+                case "NOT INSTALLED": return "#5A5A5A";
+                case "UP TO DATE": return "#2FA84F";
+                case "UPDATE AVAILABLE": return "#D98422";
+                case "UPDATE REQUIRED": return "#D94A4A";
+                case "NEWER THAN AVAILABLE": return "#74869A";
+                case "CHECKING": return "#C58A2B";
+                default: return "#C58A2B";
+            }
+        }
+
+        private string ResolveDashboardPackageStatusForeground(string key)
+        {
+            switch (ResolveDashboardPackageStatusText(key))
+            {
+                case "NOT INSTALLED": return "#CFCFCF";
+                case "UP TO DATE": return "#83E09A";
+                case "UPDATE AVAILABLE": return "#FFC078";
+                case "UPDATE REQUIRED": return "#FF8A8A";
+                case "NEWER THAN AVAILABLE": return "#BDCAD8";
+                case "CHECKING": return "#FFD18A";
+                default: return "#FFD18A";
             }
         }
 
@@ -231,42 +296,6 @@ namespace LaunchPlugin
         {
             var info = _plugin?.DashboardInstalledPackages?.FindByPropertyKey(propertyKey);
             return info == null ? "Unknown" : info.InstalledVersion;
-        }
-
-        private string ResolveInstalledDashboardStatusText(string propertyKey)
-        {
-            var info = _plugin?.DashboardInstalledPackages?.FindByPropertyKey(propertyKey);
-            return info == null ? "UNKNOWN" : info.StatusText;
-        }
-
-        private string ResolveInstalledDashboardStatusBackground(string propertyKey)
-        {
-            switch (ResolveInstalledDashboardStatusText(propertyKey))
-            {
-                case "INSTALLED": return "#153F22";
-                case "NOT INSTALLED": return "#303030";
-                default: return "#4A3515";
-            }
-        }
-
-        private string ResolveInstalledDashboardStatusBorder(string propertyKey)
-        {
-            switch (ResolveInstalledDashboardStatusText(propertyKey))
-            {
-                case "INSTALLED": return "#2FA84F";
-                case "NOT INSTALLED": return "#5A5A5A";
-                default: return "#C58A2B";
-            }
-        }
-
-        private string ResolveInstalledDashboardStatusForeground(string propertyKey)
-        {
-            switch (ResolveInstalledDashboardStatusText(propertyKey))
-            {
-                case "INSTALLED": return "#83E09A";
-                case "NOT INSTALLED": return "#CFCFCF";
-                default: return "#FFD18A";
-            }
         }
 
         private string ResolveInstalledDashboardDetailText(string propertyKey)
@@ -325,7 +354,11 @@ namespace LaunchPlugin
         private void RefreshDashboardManifestSnapshot()
         {
             var manifest = _plugin?.DashboardVersions;
-            DashboardManifestStatusText = BuildDashboardManifestStatusText(manifest);
+            string embeddedStatus = BuildDashboardManifestStatusText(manifest);
+            string githubStatus = _plugin?.DashboardAvailableVersions == null
+                ? "GitHub check not started"
+                : _plugin.DashboardAvailableVersions.StatusText;
+            DashboardManifestStatusText = "Embedded/local: " + embeddedStatus + " | GitHub: " + githubStatus;
         }
 
         private void RefreshMonitorSystemSnapshot()
@@ -469,6 +502,7 @@ namespace LaunchPlugin
         {
             RefreshInstalledDashboardPackages();
             LoadDashboardVersionRows();
+            await CheckDashboardAvailableVersionsAsync(forceRefresh: true);
             await CheckLatestReleaseAsync(force: true);
         }
 
@@ -511,9 +545,10 @@ namespace LaunchPlugin
             public string Name { get; set; }
             public string Description { get; set; }
             public string ExpectedVersion { get; set; }
+            public string AvailableVersion { get; set; }
             public string InstalledVersion { get; set; }
-            public string InstalledStatusText { get; set; }
             public string InstalledDetailText { get; set; }
+            public string PackageStatusText { get; set; }
             public string ReleaseCriticalText { get; set; }
             public string PreviewImagePath { get; set; }
             public string StatusBackground { get; set; }

@@ -1,3 +1,8 @@
+## 2026-11-14 — Dashboard version refresh completion race
+- Classification: **both** (internal refresh-coordination correctness and dashboard-check guidance; no status meanings, exports, dashboard package schemas, telemetry behavior, or unrelated subsystem logic changed).
+- Replaced the shared refresh-request Boolean with a lock-protected generation counter. Refresh registration, result publication, and active-task release now serialize, so a refresh arriving as a request completes cannot be cleared or missed; requests during a fetch invalidate that result and coalesce into one retry.
+- Property Snapshot list reviewed: yes; no SimHub export/property changes or group changes. `VersionManifestAudit.py` and manual SimHub runtime verification remain outstanding and are recorded in RepoStatus.
+
 ## 2026-11-12 — Visual Studio MSBuild and verification strategy
 - Classification: **internal-only** (build/test guidance and toolchain diagnosis; no production source, runtime behavior, dependencies, C# language version, or target framework changed).
 - Confirmed that .NET SDK MSBuild 18.6.4 used by `dotnet build` lacked `Microsoft.WinFX.targets` in its MSBuild extension directory, while installed Visual Studio MSBuild 18.7.8 included the target and generated the WPF code for this classic project. Documented Visual Studio MSBuild discovery and made it the authoritative solution build method unless the .NET SDK build is independently shown to run WPF markup compilation successfully.
@@ -3687,4 +3692,17 @@
 - Race Preset selector/reapply controls are visible only in Preset or Live Detect owner modes (not manual Lap/Time), and remain available in Live Detect.
 - Selecting/reapplying/updating applied presets while Live Detect is selected now applies setup values without stealing race-basis ownership away from Live Detect.
 - Refresh Calcs semantics unchanged (recompute-only); no runtime fuel model/pit command/telemetry ownership changes.
+
+## 2026-11-12 — GitHub dashboard package version checking
+- Classification: **both** (driver-facing Overview package status/Available versions and internal additive SimHub export/remote-validation contract).
+- Overview cards now display Installed local SimHub metadata, Bundled embedded DLL manifest version, and Available version from the current raw GitHub root manifest. The remote manifest is validated as a complete official six-package catalogue and only provides version/plugin compatibility fields; local paths and filenames continue to come from the embedded manifest.
+- Added numeric installed-versus-available statuses: `NOT INSTALLED`, `UNKNOWN`, `CHECK UNAVAILABLE`, `UP TO DATE`, `UPDATE AVAILABLE`, `UPDATE REQUIRED`, and `NEWER THAN AVAILABLE`. Bundled mismatch does not override the main package status. A newer installed package is a development state, not an error.
+- Remote requests are asynchronous with a five-second timeout, begin when Overview opens, and refresh through Check Now alongside the existing installed scan and plugin release check. Results are cached in memory; the recurring timer does not fetch; network or validation failure leaves Installed/Bundled visible and does not claim up-to-date. No dashboard package is downloaded or installed.
+- Added `Dashboards.AvailableManifest.Valid` / `StatusText` and per-package `AvailableVersion` / `PackageStatusText`. `ExpectedVersion` and compatibility `LatestVersion` still mean the embedded bundled version. Property Snapshot list reviewed: yes; new `Dashboards.*` exports remain in the existing Raw Debug group via `ResolvePropertySnapshotGroup(...)`.
+
+## 2026-11-14 — Dashboard package compatibility and refresh corrections
+- Classification: **both** (driver-facing Overview status correction plus internal compatibility/refresh contract alignment).
+- Package compatibility now uses the loaded `LaunchPlugin` assembly name/version and derives its family from the loaded assembly's major/minor version; the embedded manifest remains the bundled contract only. Remote family and `requiresPlugin` are checked before an equal dashboard version can report `UP TO DATE`. Unknown plugin compatibility fails closed as `UPDATE REQUIRED` for an installed package whose version is equal to or below Available.
+- Manual Check Now queues a fresh remote request behind an active request. Repeated clicks coalesce to one follow-up request, superseded response data is not published, and prior Available values are cleared while checking; failed checks can recover on successful retry. `NOT CHECKED` and `CHECKING` are visible status states.
+- Overview status composition now has one owner that retains embedded/local and GitHub check results through row reloads and recurring timer ticks. The timer reads cached values and performs no network requests. Existing exports, local scan paths, bundled versions, plugin release checking, and no-download/no-install behavior remain intact. Property Snapshot list reviewed: yes; `Dashboards.*` remains in the existing `RawDebug` group, with no export name or group changes.
 
