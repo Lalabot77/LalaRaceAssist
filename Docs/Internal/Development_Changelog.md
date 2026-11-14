@@ -1,3 +1,8 @@
+## 2026-11-14 — Dashboard version refresh completion race
+- Classification: **both** (internal refresh-coordination correctness and dashboard-check guidance; no status meanings, exports, dashboard package schemas, telemetry behavior, or unrelated subsystem logic changed).
+- Replaced the shared refresh-request Boolean with a lock-protected generation counter. Refresh registration, result publication, and active-task release now serialize, so a refresh arriving as a request completes cannot be cleared or missed; requests during a fetch invalidate that result and coalesce into one retry.
+- Property Snapshot list reviewed: yes; no SimHub export/property changes or group changes. `VersionManifestAudit.py` and manual SimHub runtime verification remain outstanding and are recorded in RepoStatus.
+
 ## 2026-11-12 — Visual Studio MSBuild and verification strategy
 - Classification: **internal-only** (build/test guidance and toolchain diagnosis; no production source, runtime behavior, dependencies, C# language version, or target framework changed).
 - Confirmed that .NET SDK MSBuild 18.6.4 used by `dotnet build` lacked `Microsoft.WinFX.targets` in its MSBuild extension directory, while installed Visual Studio MSBuild 18.7.8 included the target and generated the WPF code for this classic project. Documented Visual Studio MSBuild discovery and made it the authoritative solution build method unless the .NET SDK build is independently shown to run WPF markup compilation successfully.

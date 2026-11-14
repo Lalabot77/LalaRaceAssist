@@ -1374,7 +1374,8 @@ namespace LaunchPlugin
         public DashboardAvailableVersionCheckResult DashboardAvailableVersions { get; private set; }
         private readonly DashboardAvailableVersionManifest _dashboardAvailableVersionChecker = new DashboardAvailableVersionManifest();
         private Task _dashboardAvailableVersionCheckTask;
-        private bool _dashboardAvailableVersionRefreshRequested;
+        private readonly object _dashboardAvailableVersionRefreshSync = new object();
+        private int _dashboardAvailableVersionRefreshGeneration;
         private DateTime _lastFuelRuntimeRecoveryUtc = DateTime.MinValue;
         private DateTime _lastFuelRuntimeHealthCheckUtc = DateTime.MinValue;
         private int _fuelRuntimeUnhealthyStreak = 0;
@@ -7591,49 +7592,54 @@ namespace LaunchPlugin
 
         public Task RefreshDashboardAvailableVersionsAsync(bool forceRefresh = false)
         {
-            if (_dashboardAvailableVersionCheckTask != null)
+            lock (_dashboardAvailableVersionRefreshSync)
             {
                 if (forceRefresh)
                 {
-                    _dashboardAvailableVersionRefreshRequested = true;
+                    _dashboardAvailableVersionRefreshGeneration++;
                     DashboardAvailableVersions = DashboardAvailableVersionManifest.CreateCheckingResult();
                 }
+
+                if (_dashboardAvailableVersionCheckTask != null)
+                {
+                    return _dashboardAvailableVersionCheckTask;
+                }
+
+                if (!forceRefresh && DashboardAvailableVersions != null) return Task.CompletedTask;
+
+                DashboardAvailableVersions = DashboardAvailableVersionManifest.CreateCheckingResult();
+                _dashboardAvailableVersionCheckTask = RefreshDashboardAvailableVersionsCoreAsync(_dashboardAvailableVersionRefreshGeneration);
                 return _dashboardAvailableVersionCheckTask;
             }
-
-            if (!forceRefresh && DashboardAvailableVersions != null) return Task.CompletedTask;
-
-            DashboardAvailableVersions = DashboardAvailableVersionManifest.CreateCheckingResult();
-            _dashboardAvailableVersionCheckTask = RefreshDashboardAvailableVersionsCoreAsync();
-            return _dashboardAvailableVersionCheckTask;
         }
 
-        private async Task RefreshDashboardAvailableVersionsCoreAsync()
+        private async Task RefreshDashboardAvailableVersionsCoreAsync(int requestGeneration)
         {
             await Task.Yield();
-            try
+            while (true)
             {
-                while (true)
+                DashboardAvailableVersionCheckResult result;
+                try
                 {
-                    var result = await _dashboardAvailableVersionChecker.FetchAsync(DashboardVersions);
-                    if (_dashboardAvailableVersionRefreshRequested)
+                    result = await _dashboardAvailableVersionChecker.FetchAsync(DashboardVersions);
+                }
+                catch
+                {
+                    result = DashboardAvailableVersionManifest.CreateUnavailableResult("GitHub dashboard manifest unavailable");
+                }
+
+                lock (_dashboardAvailableVersionRefreshSync)
+                {
+                    if (requestGeneration != _dashboardAvailableVersionRefreshGeneration)
                     {
-                        _dashboardAvailableVersionRefreshRequested = false;
+                        requestGeneration = _dashboardAvailableVersionRefreshGeneration;
                         continue;
                     }
 
                     DashboardAvailableVersions = result;
-                    break;
+                    _dashboardAvailableVersionCheckTask = null;
+                    return;
                 }
-            }
-            catch
-            {
-                DashboardAvailableVersions = DashboardAvailableVersionManifest.CreateUnavailableResult("GitHub dashboard manifest unavailable");
-            }
-            finally
-            {
-                _dashboardAvailableVersionCheckTask = null;
-                _dashboardAvailableVersionRefreshRequested = false;
             }
         }
 

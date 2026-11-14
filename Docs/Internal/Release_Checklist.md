@@ -50,7 +50,7 @@
 - [ ] Confirm the SimHub exports `LalaLaunch.Dashboards.*.ExpectedVersion`, compatibility `LatestVersion`, `AvailableVersion`, `PackageStatusText`, release-critical flags, and both manifest status surfaces; official-catalogue completeness does not imply users must install every asset.
 - [ ] Verify remote manifest compatibility metadata cannot supply or change local scan paths, filenames, archive paths, or executable behavior, and verify no automatic dashboard download/install occurs.
 - [ ] Verify plugin compatibility uses the loaded `LaunchPlugin` assembly identity/version, rejects equal package versions when `compatiblePluginFamily` or `requiresPlugin` fails, and does not infer installed plugin family from the embedded manifest.
-- [ ] Verify Check Now queues one fresh request behind an in-flight check, repeated clicks coalesce, old results are not published, failed requests can recover on retry, and recurring Overview status ticks preserve the GitHub result without network calls.
+- [ ] Verify Check Now advances a serialized request generation behind an in-flight check, repeated clicks coalesce, old results are not published even when refresh races completion, failed requests can recover on retry, and recurring Overview status ticks preserve the GitHub result without network calls.
 - [ ] Confirm shared copied widgets inherit their containing package version and are not independently versioned.
 - [ ] Import each dashboard package into a clean/fresh dashboard context.
 - [ ] Verify no missing-property or broken-expression errors.

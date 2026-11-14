@@ -39,6 +39,8 @@ For releases, the repository stores official SimHub `.simhubdash` export package
 - **Installed** comes from the dashboard package installed in SimHub. The plugin treats its own DLL directory as the primary SimHub root, checks that directory's `DashTemplates` folder, opens each expected package root `.djson`, and reads `Metadata.DashboardVersion`.
 - **Available** comes from the current raw GitHub root manifest. Overview checks it asynchronously when opened and refreshes it with **Check Now**. The manifest is validated as a complete six-package catalogue before any version is used.
 
+If **Check Now** is pressed while a request is already running, the request coordinator records a new generation and coalesces repeated presses into one follow-up request. A result from before that refresh is not published as current. Refresh registration and result publication are serialized, so a refresh near completion is either included in the follow-up or starts immediately after the active request completes.
+
 The main Driver Dash, Strategy Dash, Alerts Overlay, Vertical Traffic Bar Overlay, Head2Head package, and Fuel Calculator package each carry their own package version in the main/root `.djson` `DashboardVersion` metadata. Shared copied widgets, such as PitEntry, BoxEntry, PitPopup, RejoinAssist, LaunchAssist, copied H2H/Fuel/traffic/alert widgets, and similar common surfaces are not versioned independently; they inherit the version of the dashboard or overlay package that contains them.
 
 The Overview package cards show each package preview, name, short user-facing description, Installed, Bundled, and Available versions, whether it is a core package or optional add-on, and an overall package status:
