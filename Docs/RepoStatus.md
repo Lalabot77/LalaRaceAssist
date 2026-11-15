@@ -1,3 +1,9 @@
+## 2026-11-15 — Race-only ActivityPhase grid mappings
+- Classification: **both** (corrects dashboard visibility state for Practice/Qualifying and documents the presentation contract).
+- `ActivityPhase` now maps `StrategyDash.Phase` 2→110 and 3→120 only in recognized Race sessions. `StrategyDash.Phase` calculations/exports are unchanged. Formation and finish remain Race-scoped; pit/out-lap states remain session-agnostic.
+- Phase 3 can occur outside Race when the car is on track and SessionState is outside the existing grid/formation and racing states. Non-Race sessions therefore no longer expose `GRIDDING` or `START READY` from these shared StrategyDash values; other known ActivityPhase sources still take precedence.
+- Verification: Visual Studio MSBuild 18.12.2 Debug/Any CPU rebuild succeeded with 0 errors and 1 `MSB3270` MSIL/x86 warning. Static checks confirmed both Race-only StrategyDash mappings, unchanged upstream StrategyDash/session mappings, Formation Race gating, and `git diff --check`. No automated test project/files were found. Manual SimHub runtime verification was not performed. PR #873 remains open and unmerged; review threads will be addressed after fresh review completes.
+
 ## 2026-11-15 — Dashboard state resolver fallback and disconnect reset
 - Classification: **both** (targeted driver-facing dashboard state fallback/reset behavior and contract documentation).
 - VehicleClass now falls back to `DriverInfo.DriverCarClassID` for any non-positive telemetry ID and remains `0` / blank when both IDs are invalid. When `!GameRunning` or `NewData` is null, only the six dashboard resolver exports reset to their neutral values before the existing guard returns; normal resolver updates resume on valid ticks.

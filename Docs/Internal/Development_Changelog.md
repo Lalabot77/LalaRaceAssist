@@ -1,3 +1,9 @@
+## 2026-11-15 — Race-only ActivityPhase grid mappings
+- Classification: **both** (prevents Practice/Qualifying staging from activating race-grid dashboard visibility and documents the condition).
+- `GRIDDING` and `START READY` ActivityPhase mappings now require recognized Race context because `StrategyDash.Phase` can represent those shared SessionState stages outside Race sessions. Formation and race finish remain Race-only; pit/out-lap classifications remain available in non-Race sessions. The existing StrategyDash phase behavior and exports are unchanged.
+- Property Snapshot list reviewed: yes; no export names, types, or groups changed. Tooltip wording was reviewed and left unchanged.
+- Verification: Visual Studio MSBuild 18.12.2 Debug/Any CPU rebuild succeeded with 0 errors and 1 `MSB3270` MSIL/x86 warning; static checks confirmed both Race-only StrategyDash mappings, unchanged upstream StrategyDash/session mappings, Formation Race gating, and `git diff --check`. No automated test project/files were found. Manual SimHub runtime verification was not performed.
+
 ## 2026-11-15 — Dashboard state resolver fallback and disconnect reset
 - Classification: **both** (user-visible vehicle-class fallback and clearing stale dashboard visibility state, with matching technical and dashboard documentation).
 - `VehicleClass` now uses `DriverInfo.DriverCarClassID` whenever the telemetry ID is non-positive; if both IDs are invalid, it remains 0 with an empty name. The existing invalid-game-data guard resets only `SessionType`, `SessionTypeName`, `ActivityPhase`, `ActivityPhaseName`, `VehicleClass`, and `VehicleClassName` to neutral values before returning.
