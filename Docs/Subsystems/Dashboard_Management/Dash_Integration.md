@@ -4,11 +4,20 @@
 
 
 Validated against commit: HEAD
-Last updated: 2026-06-11
-Branch: work
+Last updated: 2026-11-15
+Branch: codex/dashboard-state-resolver
 
 ## Purpose
 Define how Lala Race Assist Plugin exports should be consumed by dashboards.
+
+## Dashboard state resolver
+The plugin publishes `SessionType` / `SessionTypeName`, `ActivityPhase` / `ActivityPhaseName`, and `VehicleClass` / `VehicleClassName` as presentation-only state catalogues. These values are resolved in `LalaLaunch` from existing session, StrategyDash, PitEngine, race-finish, and native iRacing telemetry sources. They are intended for page and overlay visibility; they do not replace subsystem exports or move detection ownership into dashboards.
+
+`SessionType` uses `0=UNKNOWN`, `100=OFFLINE TESTING`, `200=PRACTICE` (including Warmup), `300=QUALIFYING`, `310=SOLO QUALIFYING`, `320=OPEN QUALIFYING`, `400=RACE` when stop count is not trusted, `410=RACE - NO STOPS`, `420=RACE - ONE STOP`, and `430=RACE - MULTIPLE STOPS`. Race stop categories require an existing planner without validation errors and a positive finite live burn input; uncertain counts remain 400. `210` remains reserved.
+
+`ActivityPhase` uses `0=UNKNOWN / INACTIVE`, `10=IN GARAGE`, `20=SPECTATING`, `100=PRE-GRID`, `110=GRIDDING`, `120=START READY`, `200=FORMATION LAP`, `210=reserved`, `220=reserved`, `300=RACE RUNNING`, `400=OUT LAP`, `700=PIT ENTRY`, `710=PIT LANE`, `715=APPROACHING PIT BOX`, `720=PIT BOX`, `725=LEAVING PIT BOX`, `730=PIT EXIT`, `800=PLAYER FINISHED`, `850=LEADER FINISHED`, and `900=SESSION COMPLETE`. Priority is session complete, player finish, overall leader finish, pit activity, player out lap, formation, start ready, gridding, running, then garage/spectating/pre-grid. Simultaneous garage and spectating evidence resolves to Unknown. Missing/unconvertible nullable inputs are not treated as false; normal race-running and pre-grid require both current garage and spectating values to be explicitly false. Formation uses raw `SessionState==3` only in Race context; race running uses state 4. Finish and out-lap values consume `Race.EndPhase`, `RaceFinish.PlayerSnapshotActive`, `Race.OverallLeaderHasFinished`, and `PitEngine.CurrentState`; they do not recreate those lifecycles. Pit values mirror `CurrentPitPhase`, with confirmed lane-only evidence for 710. Green-transition and countdown codes are not currently emitted because there is no reliable existing lifecycle seam.
+
+`VehicleClass` is the native player class ID (`Telemetry.PlayerCarClassID`, falling back to `DriverInfo.DriverCarClassID`); `VehicleClassName` uses native `GameData.CarClass`, then DriverInfo's native class label. Missing IDs publish 0 and an empty name. League Class is intentionally separate. All six exports are in the existing Property Snapshot `RawDebug` group.
 
 This document is the canonical dash-facing contract layer. It does **not** redefine subsystem behavior; it explains:
 - which plugin outputs are meant for dash consumption,

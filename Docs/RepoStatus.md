@@ -1,3 +1,9 @@
+## 2026-11-15 — Dashboard state resolver
+- Classification: **both** (additive SimHub presentation exports and dashboard binding guidance; existing strategy, pit, finish, native vehicle identity, and dashboard-version behavior remain owned by their current sources).
+- Added `SessionType` / `SessionTypeName`, `ActivityPhase` / `ActivityPhaseName`, and `VehicleClass` / `VehicleClassName`. Session race stop subcategories require an existing valid planner state and positive finite live burn input; uncertain counts remain race-general. Activity phases consume the existing finish flags/end phase, PitEngine phase/out-lap state, StrategyDash phase, and current telemetry. Green transition/countdown remain reserved; simultaneous garage and spectating resolves to Unknown.
+- All six exports are in the existing Property Snapshot `RawDebug` group. Property Snapshot list reviewed: yes; no new group. Dashboard package-version request-generation behavior from the merged `origin/main` commit is unchanged.
+- Verification: Visual Studio MSBuild 18.12.2 Debug/Any CPU rebuild succeeded with 0 errors and 1 existing MSB3270 MSIL/x86 reference warning. `git diff --check` passed; no automated test project exists. Manual SimHub runtime verification was not performed. Dashboard versioning behavior remains preserved.
+
 ## 2026-11-14 — Dashboard version refresh completion race
 - Classification: **both** (internal request-coordination correction plus maintainer/user guidance; no status meanings, dashboard exports, package schemas, telemetry, or unrelated subsystem behavior changed).
 - Replaced the unsynchronized refresh-request Boolean with a lock-protected request generation. Manual refresh registration, result acceptance, and active-task release are serialized: a generation change during a fetch discards its result and triggers one fresh fetch; a refresh after completion starts a new request. Repeated active refreshes coalesce.
