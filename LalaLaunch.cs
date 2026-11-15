@@ -1937,7 +1937,7 @@ namespace LaunchPlugin
             else if (raceContext && hasSessionState && sessionState == 3) activity = 200;
             else if (inGarage == true && spectating == true) activity = 0;
             else if (raceContext && hasSessionState && sessionState >= 1 && sessionState < 4 && StrategyDash_Phase == 3) activity = 120;
-            else if (raceContext && StrategyDash_Phase == 2) activity = 110;
+            else if (raceContext && hasSessionState && sessionState >= 1 && sessionState < 4 && StrategyDash_Phase == 2) activity = 110;
             else if (raceContext && hasSessionState && sessionState == 4 && confirmedDrivingContext) activity = 300;
             else if (inGarage == true) activity = 10;
             else if (spectating == true) activity = 20;

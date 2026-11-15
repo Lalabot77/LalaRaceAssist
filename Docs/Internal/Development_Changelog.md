@@ -1,3 +1,8 @@
+## 2026-11-15 — Gate gridding on current pre-race state
+- Classification: **both** (ActivityPhase visibility correction and matching dashboard guidance; no StrategyDash calculation or polling behavior changed).
+- ActivityPhase 110 now requires recognized Race context, parsed SessionState 1–3, and StrategyDash phase 2. Current session state 4 therefore takes precedence over a cached gridding phase between 500 ms fuel-calculation polls.
+- Property Snapshot list reviewed: yes; names, types, and RawDebug grouping are unchanged. Visual Studio MSBuild 18.12.2 Debug/Any CPU rebuild succeeded with 0 errors and 1 `MSB3270` MSIL/x86 warning; static assertions and `git diff --check` passed. No automated test project/files were found and manual SimHub runtime verification was not performed.
+
 ## 2026-11-15 — Start Ready requires valid pre-race state
 - Classification: **both** (prevents START READY dashboard visibility during missing/invalid session state and documents the resolver condition).
 - ActivityPhase 120 now requires recognized Race context, a successfully parsed SessionState value 1–3, and StrategyDash phase 3. This prevents the existing StrategyDash state-0 fallback from leaving START READY active during a telemetry gap. StrategyDash itself and its exports are unchanged.

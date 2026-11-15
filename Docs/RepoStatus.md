@@ -1,3 +1,8 @@
+## 2026-11-15 — Gate gridding on current pre-race state
+- Classification: **both** (prevents dashboard grid visibility from persisting after green and documents resolver state requirements).
+- ActivityPhase 110 now requires Race context, a successfully parsed SessionState value 1–3, and StrategyDash phase 2. This blocks a cached phase 2 from winning for the interval between state 4 arriving and the next 500 ms StrategyDash update. StrategyDash and its polling cadence are unchanged.
+- Verification: Visual Studio MSBuild 18.12.2 Debug/Any CPU rebuild succeeded with 0 errors and 1 `MSB3270` MSIL/x86 warning. Static assertions confirmed the current pre-race gate, subsequent state-4 running classification, Practice/Qualifying branches, and `git diff --check`. No automated test project/files were found. Manual SimHub runtime verification was not performed.
+
 ## 2026-11-15 — Start Ready requires valid pre-race state
 - Classification: **both** (additional ActivityPhase safety condition and documentation).
 - Fresh Codex review found that missing/unparsable `SessionState` can become 0 upstream while StrategyDash phase 3 persists with `IsOnTrackCar`, which could otherwise publish Start Ready in Race. ActivityPhase 120 now requires recognized Race context and successfully parsed `SessionState` 1–3. StrategyDash calculation/export are unchanged.
