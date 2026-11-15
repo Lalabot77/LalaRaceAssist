@@ -1,3 +1,9 @@
+## 2026-11-15 — Dashboard state resolver fallback and disconnect reset
+- Classification: **both** (targeted driver-facing dashboard state fallback/reset behavior and contract documentation).
+- VehicleClass now falls back to `DriverInfo.DriverCarClassID` for any non-positive telemetry ID and remains `0` / blank when both IDs are invalid. When `!GameRunning` or `NewData` is null, only the six dashboard resolver exports reset to their neutral values before the existing guard returns; normal resolver updates resume on valid ticks.
+- No subsystem resets, calculations, existing export contracts, dashboard layouts, or JSON changed. Property Snapshot list reviewed: yes; all six remain in the existing RawDebug group.
+- Verification: Visual Studio MSBuild 18.12.2 Debug/Any CPU rebuild succeeded with 0 errors and 1 `MSB3270` MSIL/x86 warning. `git diff --check`, guard reset/order, class ID fallback cases, six export registrations, and RawDebug mapping checks passed. No automated test project/files were found. Manual SimHub runtime verification was not performed. PR #873 remains open and unmerged.
+
 ## 2026-11-15 — Dashboard state resolver PR #873 follow-up
 - Classification: **both** (targeted dashboard catalogue correction; no upstream subsystem calculations or existing dashboard behavior changed).
 - Race `SessionType` now maps the existing published `Fuel.Pit.StopsRequiredToEnd` value directly: 0→410, 1→420, 2+→430; unexpected negative values remain 400. No planner-validity or live-burn checks are added. Existing publication can reset to zero when live burn input is unavailable; this limitation is documented.

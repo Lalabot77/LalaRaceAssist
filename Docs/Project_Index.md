@@ -2,7 +2,7 @@
 
 Validated against commit: HEAD
 Last updated: 2026-11-15
-Current note: Codex setup guidance uses the actual internal contract/changelog paths, requires feature branches from `origin/main`, and records the enforced C# 7.3 / .NET Framework 4.8 build configuration. Dashboard package status compares Available versions against the loaded plugin assembly compatibility identity and preserves GitHub check state across Overview refreshes; serialized request generations ensure a manual refresh racing completion triggers a fresh request. Dashboard state visibility catalogues are documented in the Dashboard Integration contract. The v1.1 documentation architecture remains outside-in: product surfaces first, core systems second, technical subsystem ownership third, and internal maintainer references last.
+Current note: Codex setup guidance uses the actual internal contract/changelog paths, requires feature branches from `origin/main`, and records the enforced C# 7.3 / .NET Framework 4.8 build configuration. Dashboard package status compares Available versions against the loaded plugin assembly compatibility identity and preserves GitHub check state across Overview refreshes; serialized request generations ensure a manual refresh racing completion triggers a fresh request. Dashboard state visibility catalogues and their neutral values when game data is unavailable are documented in the Dashboard Integration contract. The v1.1 documentation architecture remains outside-in: product surfaces first, core systems second, technical subsystem ownership third, and internal maintainer references last.
 
 ## What this repo is
 

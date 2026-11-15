@@ -1964,7 +1964,7 @@ namespace LaunchPlugin
                 activity == 900 ? "SESSION COMPLETE" : "UNKNOWN / INACTIVE";
 
             int classId = SafeReadIntProperty("DataCorePlugin.GameRawData.Telemetry.PlayerCarClassID", int.MinValue);
-            if (classId == int.MinValue)
+            if (classId <= 0)
                 classId = SafeReadIntProperty("DataCorePlugin.GameRawData.SessionData.DriverInfo.DriverCarClassID", int.MinValue);
             string className = SafeReadStringProperty("DataCorePlugin.GameData.CarClass");
             if (string.IsNullOrWhiteSpace(className))
@@ -11677,6 +11677,12 @@ namespace LaunchPlugin
             }
             if (!data.GameRunning || data.NewData == null)
             {
+                SessionType = 0;
+                SessionTypeName = "UNKNOWN";
+                ActivityPhase = 0;
+                ActivityPhaseName = "UNKNOWN / INACTIVE";
+                VehicleClass = 0;
+                VehicleClassName = string.Empty;
                 ClearPitLimiterAndRunwayExports();
                 return;
             }

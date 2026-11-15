@@ -1,3 +1,9 @@
+## 2026-11-15 — Dashboard state resolver fallback and disconnect reset
+- Classification: **both** (user-visible vehicle-class fallback and clearing stale dashboard visibility state, with matching technical and dashboard documentation).
+- `VehicleClass` now uses `DriverInfo.DriverCarClassID` whenever the telemetry ID is non-positive; if both IDs are invalid, it remains 0 with an empty name. The existing invalid-game-data guard resets only `SessionType`, `SessionTypeName`, `ActivityPhase`, `ActivityPhaseName`, `VehicleClass`, and `VehicleClassName` to neutral values before returning.
+- Property Snapshot list reviewed: yes; all six exports remain in RawDebug. No existing subsystem reset or dashboard JSON/layout changed. Tooltip documentation was reviewed and left unchanged because no plugin UI control or tooltip behavior changed.
+- Verification: Visual Studio MSBuild 18.12.2 Debug/Any CPU rebuild succeeded with 0 errors and 1 `MSB3270` MSIL/x86 warning; `git diff --check`, guard reset/order, class ID fallback cases, six export registrations, and RawDebug mapping checks passed; no automated test project/files were found. Manual SimHub runtime verification was not performed.
+
 ## 2026-11-15 — Dashboard state resolver PR #873 follow-up
 - Classification: **both** (targeted refinement to new dashboard visibility exports and their technical/user documentation; no changes to existing fuel, StrategyDash, PitEngine, finish, League Class, launch, or rejoin logic).
 - Race stop categories now map the existing published `Fuel.Pit.StopsRequiredToEnd` directly: 0→410, 1→420, 2+→430. The resolver no longer applies planner-validation/live-burn guards; the existing source may reset the stop estimate to zero when live burn input is unavailable, and the docs state that limitation.

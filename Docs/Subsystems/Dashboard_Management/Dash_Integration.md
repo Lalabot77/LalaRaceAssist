@@ -19,6 +19,8 @@ The plugin publishes `SessionType` / `SessionTypeName`, `ActivityPhase` / `Activ
 
 `VehicleClass` is the native player class ID (`Telemetry.PlayerCarClassID`, falling back to `DriverInfo.DriverCarClassID`); `VehicleClassName` uses native `GameData.CarClass`, then DriverInfo's native class label. Missing IDs publish 0 and an empty name. League Class is intentionally separate. All six exports are in the existing Property Snapshot `RawDebug` group.
 
+When `DataUpdate` receives `!GameRunning` or null `NewData`, all six resolver exports return to their neutral values (`0` / `UNKNOWN` for session type, `0` / `UNKNOWN / INACTIVE` for activity, and `0` / empty for vehicle class). Valid game data resumes normal per-tick resolution. Other plugin/subsystem state is not reset by this resolver-specific clear.
+
 This document is the canonical dash-facing contract layer. It does **not** redefine subsystem behavior; it explains:
 - which plugin outputs are meant for dash consumption,
 - how dashboards should gate and render them,
