@@ -1,3 +1,8 @@
+## 2026-11-15 — Start Ready requires valid pre-race state
+- Classification: **both** (additional ActivityPhase safety condition and documentation).
+- Fresh Codex review found that missing/unparsable `SessionState` can become 0 upstream while StrategyDash phase 3 persists with `IsOnTrackCar`, which could otherwise publish Start Ready in Race. ActivityPhase 120 now requires recognized Race context and successfully parsed `SessionState` 1–3. StrategyDash calculation/export are unchanged.
+- Verification: Visual Studio MSBuild 18.12.2 Debug/Any CPU rebuild succeeded with 0 errors and 1 `MSB3270` MSIL/x86 warning. Static checks confirmed the valid pre-race SessionState gate, Race-only grid mappings, Formation precedence, unchanged StrategyDash/session classification paths, and `git diff --check`. No automated test project/files were found; manual SimHub runtime verification was not performed. Prior review threads are resolved; fresh review for this refinement is pending.
+
 ## 2026-11-15 — Race-only ActivityPhase grid mappings
 - Classification: **both** (corrects dashboard visibility state for Practice/Qualifying and documents the presentation contract).
 - `ActivityPhase` now maps `StrategyDash.Phase` 2→110 and 3→120 only in recognized Race sessions. `StrategyDash.Phase` calculations/exports are unchanged. Formation and finish remain Race-scoped; pit/out-lap states remain session-agnostic.
