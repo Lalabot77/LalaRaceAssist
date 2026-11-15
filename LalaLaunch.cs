@@ -1894,20 +1894,11 @@ namespace LaunchPlugin
             }
             else if (IsRaceSession(sessionType))
             {
-                SessionType = 400;
-                SessionTypeName = "RACE";
-                double liveBurn = LiveFuelPerLap_Stable > 0.0 ? LiveFuelPerLap_Stable : LiveFuelPerLap;
-                bool stopCountValid = FuelCalculator != null
-                    && !FuelCalculator.IsValidationMessageVisible
-                    && liveBurn > 0.0
-                    && !double.IsNaN(liveBurn)
-                    && !double.IsInfinity(liveBurn);
-                if (stopCountValid)
-                {
-                    if (Pit_StopsRequiredToEnd == 0) { SessionType = 410; SessionTypeName = "RACE - NO STOPS"; }
-                    else if (Pit_StopsRequiredToEnd == 1) { SessionType = 420; SessionTypeName = "RACE - ONE STOP"; }
-                    else if (Pit_StopsRequiredToEnd > 1) { SessionType = 430; SessionTypeName = "RACE - MULTIPLE STOPS"; }
-                }
+                int stopsRequiredToEnd = Pit_StopsRequiredToEnd;
+                if (stopsRequiredToEnd == 0) { SessionType = 410; SessionTypeName = "RACE - NO STOPS"; }
+                else if (stopsRequiredToEnd == 1) { SessionType = 420; SessionTypeName = "RACE - ONE STOP"; }
+                else if (stopsRequiredToEnd >= 2) { SessionType = 430; SessionTypeName = "RACE - MULTIPLE STOPS"; }
+                else { SessionType = 400; SessionTypeName = "RACE"; }
             }
             else
             {
@@ -1933,9 +1924,9 @@ namespace LaunchPlugin
             bool inPitLane = data.NewData != null && data.NewData.IsInPitLane != 0;
 
             int activity = 0;
-            if (RaceEndPhase == 4) activity = 900;
-            else if (_raceFinishPlayerSnapshotActive) activity = 800;
-            else if (OverallLeaderHasFinished) activity = 850;
+            if (raceContext && RaceEndPhase == 4) activity = 900;
+            else if (raceContext && _raceFinishPlayerSnapshotActive) activity = 800;
+            else if (raceContext && OverallLeaderHasFinished) activity = 850;
             else if ((int)pitPhase == 1) activity = 700;
             else if ((int)pitPhase == 2) activity = 715;
             else if ((int)pitPhase == 3) activity = 720;
@@ -1944,10 +1935,10 @@ namespace LaunchPlugin
             else if (inPitLane) activity = 710;
             else if (_pit?.CurrentState == PitEngine.PaceDeltaState.AwaitingOutLap) activity = 400;
             else if (raceContext && hasSessionState && sessionState == 3) activity = 200;
+            else if (inGarage == true && spectating == true) activity = 0;
             else if (StrategyDash_Phase == 3) activity = 120;
             else if (StrategyDash_Phase == 2) activity = 110;
             else if (raceContext && hasSessionState && sessionState == 4 && confirmedDrivingContext) activity = 300;
-            else if (inGarage == true && spectating == true) activity = 0;
             else if (inGarage == true) activity = 10;
             else if (spectating == true) activity = 20;
             else if (StrategyDash_Phase == 1 && confirmedDrivingContext) activity = 100;
