@@ -80,7 +80,7 @@
     "Lala-Head2Head": {
       "type": "overlay",
       "displayName": "Lala Head 2 Head",
-      "folder": "Dash Files/Lala-Head 2 Head",
+      "folder": "Dash Files/Lala-Head2Head",
       "file": "Lala-Head 2 Head.djson",
       "latest": "1.1.0",
       "minimumSupported": "1.1.0",
@@ -90,7 +90,7 @@
       "sharedWidget": false,
       "releaseCritical": false,
       "releaseAudit": {
-        "package": "Dash Files/Lala-Head 2 Head.simhubdash",
+        "package": "Dash Files/Lala-Head2Head.simhubdash",
         "rootFile": "Lala-Head 2 Head.djson"
       }
     },
