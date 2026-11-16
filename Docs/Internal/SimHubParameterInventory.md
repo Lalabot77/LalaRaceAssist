@@ -3,14 +3,23 @@
 **CANONICAL CONTRACT**
 
 Validated against: HEAD
-Last reviewed: 2026-06-07
-Last updated: 2026-06-08
-Branch: work
+Last reviewed: 2026-11-15
+Last updated: 2026-11-15
+Branch: codex/dashboard-state-resolver
 
 - All exports are attached in `LalaLaunch.cs` during `Init()` via `AttachCore`/`AttachVerbose`. Core values are refreshed in `DataUpdate` (500 ms poll for fuel/pace/pit via `_poll500ms`; per-tick for launch/dash/messaging). Verbose rows require `SimhubPublish.VERBOSE`.【F:LalaLaunch.cs†L2644-L3120】【F:LalaLaunch.cs†L3411-L3775】
 - Legacy spreadsheet removed; this file is canonical.
 - “Defined in” lists the class/method that computes the value before `AttachCore/AttachVerbose` publishes it.
 - SimHub displays plugin exports under the plugin namespace. The code registers PreRace and Friends properties as unqualified internal names (`PreRace.*`, `Friends.Count`) so dashboards consume the single-prefixed public names (`LalaLaunch.PreRace.*`, `LalaLaunch.Friends.Count`) instead of accidental `LalaLaunch.LalaLaunch.*` names.
+
+## Dashboard State Resolver
+| Exported name | Type | Units / meaning | Update cadence | Defined in |
+| --- | --- | --- | --- | --- |
+| SessionType / SessionTypeName | int / string | Presentation catalogue: `0=UNKNOWN`, `100=OFFLINE TESTING`, `200=PRACTICE` (includes Warmup), `300=QUALIFYING`, `310=SOLO QUALIFYING`, `320=OPEN QUALIFYING`, `400=RACE` with an unexpected negative stop estimate, `410=RACE - NO STOPS`, `420=RACE - ONE STOP`, `430=RACE - MULTIPLE STOPS`. For a recognized Race, the resolver maps the existing `Fuel.Pit.StopsRequiredToEnd` directly: 0→410, 1→420, 2+→430. No planner-validation or burn-validity gate is added. Existing source behavior can reset the published stop estimate to 0 when live fuel-per-lap input is unavailable, so 410 can reflect that limitation. When game data is unavailable, exports reset to `0` / `UNKNOWN`. 210 is reserved. Raw session type remains available from SimHub separately. | Per DataUpdate tick; neutralized on unavailable game data. | `LalaLaunch.cs` — `UpdateDashboardStateResolver`, invalid-game-data reset + `AttachCore`. |
+| ActivityPhase / ActivityPhaseName | int / string | Presentation catalogue: `0=UNKNOWN / INACTIVE`, `10=IN GARAGE`, `20=SPECTATING`, `100=PRE-GRID`, `110=GRIDDING`, `120=START READY`, `200=FORMATION LAP`, `210=reserved`, `220=reserved`, `300=RACE RUNNING`, `400=OUT LAP`, `700=PIT ENTRY`, `710=PIT LANE`, `715=APPROACHING PIT BOX`, `720=PIT BOX`, `725=LEAVING PIT BOX`, `730=PIT EXIT`, `800=PLAYER FINISHED`, `850=LEADER FINISHED`, `900=SESSION COMPLETE`. Race finish, formation, gridding, and start-ready codes are gated to Race context; pit and out-lap states are not. Gridding and Start Ready additionally require a successfully parsed SessionState 1–3; this prevents cached phase 2 from surviving a current state 4 between 500 ms StrategyDash updates. The StrategyDash phase contract itself is unchanged. At the low-priority classification step, simultaneous garage and spectating resolves to Unknown. Nullable reads are not defaulted to false; normal race-running and pre-grid require both current values explicitly false. These properties have no plugin-provided freshness marker, so stale true values cannot be distinguished from current true evidence. When game data is unavailable, exports reset to `0` / `UNKNOWN / INACTIVE`. | Per DataUpdate tick after PitEngine and race-finish updates; neutralized on unavailable game data. | `LalaLaunch.cs` — `UpdateDashboardStateResolver`, invalid-game-data reset + `AttachCore`. |
+| VehicleClass / VehicleClassName | int / string | Native iRacing player class ID and native class label; ID falls back from Telemetry.PlayerCarClassID to DriverInfo.DriverCarClassID whenever the telemetry ID is non-positive; label falls back from GameData.CarClass to DriverInfo.DriverCarClass. If both IDs are invalid, exports 0 and blank name. When game data is unavailable, exports 0 and blank name. LeagueClass is not used. | Per DataUpdate tick; neutralized on unavailable game data. | `LalaLaunch.cs` — `UpdateDashboardStateResolver`, invalid-game-data reset + `AttachCore`. |
+
+All six resolver exports are assigned to the existing Property Snapshot `RawDebug` group. The exports are additive and do not change their source subsystem calculations or contracts.
 
 ## Monitor System
 | Exported name | Type | Units / meaning | Update cadence | Defined in |

@@ -16,6 +16,10 @@ Keep the ownership split clear:
 
 That means dashboards are not the source of truth for strategy math, fuel learning, H2H selection, rejoin logic, or pit-entry calculations. They display the outputs the plugin publishes and let you interact with those surfaces in a driver-friendly way.
 
+### State visibility exports
+
+The plugin provides `LalaLaunch.SessionType` / `SessionTypeName`, `ActivityPhase` / `ActivityPhaseName`, and `VehicleClass` / `VehicleClassName` for page and overlay visibility conditions. These are convenient presentation catalogues; dashboards should not use them to recreate strategy, pit, finish, or native class detection. Race stop subcategories directly mirror the existing published stop estimate; that estimate can be zero when live fuel-per-lap input is unavailable, so compare it with existing dashboard behavior during initial testing. Grid and Start Ready activity are reported only in Race sessions and only while the current, successfully parsed SessionState is 1–3. This prevents cached StrategyDash phases from leaving grid visibility active after the race advances to state 4 between 500 ms updates. These resolver gates do not change StrategyDash behavior in Practice or Qualifying. If game data stops or is unavailable, the resolver returns its neutral values (`UNKNOWN`, `UNKNOWN / INACTIVE`, and empty/zero vehicle class); normal resolution resumes when valid game data returns. See [Dashboard Integration](../Subsystems/Dashboard_Management/Dash_Integration.md#dashboard-state-resolver) for the full numeric catalogue and priority.
+
 ## Monitor System
 
 The dashboard-facing Monitor System is enabled by default. Use **Settings -> Plugin Monitor -> Enable Monitor System** to control it:

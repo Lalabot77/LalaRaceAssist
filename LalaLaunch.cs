@@ -1333,6 +1333,12 @@ namespace LaunchPlugin
         public string PreRace_StatusColour { get; private set; } = "green";
         public int StrategyDash_Phase { get; private set; }
         public string StrategyDash_PhaseText { get; private set; } = "IDLE";
+        public int SessionType { get; private set; }
+        public string SessionTypeName { get; private set; } = "UNKNOWN";
+        public int ActivityPhase { get; private set; }
+        public string ActivityPhaseName { get; private set; } = "UNKNOWN / INACTIVE";
+        public int VehicleClass { get; private set; }
+        public string VehicleClassName { get; private set; } = string.Empty;
         public int StrategyDash_RequiredStopsPreGreen { get; private set; }
         public string StrategyDash_StrategyText { get; private set; } = "NO STOP";
         public double StrategyDash_StartFuelRequiredLitres { get; private set; }
@@ -1856,6 +1862,115 @@ namespace LaunchPlugin
             if (!isOnTrackCar) return 1; // Pre Grid
             if (isGridFormation) return 2; // Gridding
             return 3; // Start Ready
+        }
+
+        private void UpdateDashboardStateResolver(PluginManager pluginManager, GameData data)
+        {
+            string sessionType = NormalizeSessionTypeName(data.NewData?.SessionTypeName ?? string.Empty);
+            if (IsOfflineTestingSession(sessionType))
+            {
+                SessionType = 100;
+                SessionTypeName = "OFFLINE TESTING";
+            }
+            else if (IsPracticeLikeSession(sessionType))
+            {
+                SessionType = 200;
+                SessionTypeName = "PRACTICE";
+            }
+            else if (string.Equals(sessionType, "Lone Qualify", StringComparison.OrdinalIgnoreCase))
+            {
+                SessionType = 310;
+                SessionTypeName = "SOLO QUALIFYING";
+            }
+            else if (string.Equals(sessionType, "Open Qualify", StringComparison.OrdinalIgnoreCase))
+            {
+                SessionType = 320;
+                SessionTypeName = "OPEN QUALIFYING";
+            }
+            else if (string.Equals(sessionType, "Qualifying", StringComparison.OrdinalIgnoreCase))
+            {
+                SessionType = 300;
+                SessionTypeName = "QUALIFYING";
+            }
+            else if (IsRaceSession(sessionType))
+            {
+                int stopsRequiredToEnd = Pit_StopsRequiredToEnd;
+                if (stopsRequiredToEnd == 0) { SessionType = 410; SessionTypeName = "RACE - NO STOPS"; }
+                else if (stopsRequiredToEnd == 1) { SessionType = 420; SessionTypeName = "RACE - ONE STOP"; }
+                else if (stopsRequiredToEnd >= 2) { SessionType = 430; SessionTypeName = "RACE - MULTIPLE STOPS"; }
+                else { SessionType = 400; SessionTypeName = "RACE"; }
+            }
+            else
+            {
+                SessionType = 0;
+                SessionTypeName = "UNKNOWN";
+            }
+
+            object sessionStateRaw = pluginManager?.GetPropertyValue("DataCorePlugin.GameRawData.Telemetry.SessionState");
+            int sessionState = 0;
+            bool hasSessionState = false;
+            try
+            {
+                hasSessionState = sessionStateRaw != null && int.TryParse(Convert.ToString(sessionStateRaw, CultureInfo.InvariantCulture), NumberStyles.Integer, CultureInfo.InvariantCulture, out sessionState);
+            }
+            catch { sessionState = 0; }
+            if (!hasSessionState) sessionState = 0;
+
+            bool raceContext = IsRaceSession(sessionType);
+            bool? inGarage = TryReadNullableBool(pluginManager?.GetPropertyValue("DataCorePlugin.GameRawData.Telemetry.IsInGarage"));
+            bool? spectating = TryReadNullableBool(pluginManager?.GetPropertyValue("DataCorePlugin.GameData.Spectating"));
+            bool confirmedDrivingContext = inGarage == false && spectating == false;
+            PitPhase pitPhase = _pit?.CurrentPitPhase ?? PitPhase.None;
+            bool inPitLane = data.NewData != null && data.NewData.IsInPitLane != 0;
+
+            int activity = 0;
+            if (raceContext && RaceEndPhase == 4) activity = 900;
+            else if (raceContext && _raceFinishPlayerSnapshotActive) activity = 800;
+            else if (raceContext && OverallLeaderHasFinished) activity = 850;
+            else if ((int)pitPhase == 1) activity = 700;
+            else if ((int)pitPhase == 2) activity = 715;
+            else if ((int)pitPhase == 3) activity = 720;
+            else if ((int)pitPhase == 4) activity = 725;
+            else if ((int)pitPhase == 5) activity = 730;
+            else if (inPitLane) activity = 710;
+            else if (_pit?.CurrentState == PitEngine.PaceDeltaState.AwaitingOutLap) activity = 400;
+            else if (raceContext && hasSessionState && sessionState == 3) activity = 200;
+            else if (inGarage == true && spectating == true) activity = 0;
+            else if (raceContext && hasSessionState && sessionState >= 1 && sessionState < 4 && StrategyDash_Phase == 3) activity = 120;
+            else if (raceContext && hasSessionState && sessionState >= 1 && sessionState < 4 && StrategyDash_Phase == 2) activity = 110;
+            else if (raceContext && hasSessionState && sessionState == 4 && confirmedDrivingContext) activity = 300;
+            else if (inGarage == true) activity = 10;
+            else if (spectating == true) activity = 20;
+            else if (StrategyDash_Phase == 1 && confirmedDrivingContext) activity = 100;
+
+            ActivityPhase = activity;
+            ActivityPhaseName = activity == 10 ? "IN GARAGE" :
+                activity == 20 ? "SPECTATING" :
+                activity == 100 ? "PRE-GRID" :
+                activity == 110 ? "GRIDDING" :
+                activity == 120 ? "START READY" :
+                activity == 200 ? "FORMATION LAP" :
+                activity == 220 ? "GREEN TRANSITION" :
+                activity == 300 ? "RACE RUNNING" :
+                activity == 400 ? "OUT LAP" :
+                activity == 700 ? "PIT ENTRY" :
+                activity == 710 ? "PIT LANE" :
+                activity == 715 ? "APPROACHING PIT BOX" :
+                activity == 720 ? "PIT BOX" :
+                activity == 725 ? "LEAVING PIT BOX" :
+                activity == 730 ? "PIT EXIT" :
+                activity == 800 ? "PLAYER FINISHED" :
+                activity == 850 ? "LEADER FINISHED" :
+                activity == 900 ? "SESSION COMPLETE" : "UNKNOWN / INACTIVE";
+
+            int classId = SafeReadIntProperty("DataCorePlugin.GameRawData.Telemetry.PlayerCarClassID", int.MinValue);
+            if (classId <= 0)
+                classId = SafeReadIntProperty("DataCorePlugin.GameRawData.SessionData.DriverInfo.DriverCarClassID", int.MinValue);
+            string className = SafeReadStringProperty("DataCorePlugin.GameData.CarClass");
+            if (string.IsNullOrWhiteSpace(className))
+                className = SafeReadStringProperty("DataCorePlugin.GameRawData.SessionData.DriverInfo.DriverCarClass");
+            VehicleClass = classId > 0 ? classId : 0;
+            VehicleClassName = VehicleClass > 0 ? (className ?? string.Empty).Trim() : string.Empty;
         }
 
         private void UpdateStrategyDashAdvice(
@@ -8440,6 +8555,12 @@ namespace LaunchPlugin
             AttachCore("PreRace.StatusColour", () => PreRace_StatusColour);
             AttachCore("StrategyDash.Phase", () => StrategyDash_Phase);
             AttachCore("StrategyDash.PhaseText", () => StrategyDash_PhaseText);
+            AttachCore("SessionType", () => SessionType);
+            AttachCore("SessionTypeName", () => SessionTypeName);
+            AttachCore("ActivityPhase", () => ActivityPhase);
+            AttachCore("ActivityPhaseName", () => ActivityPhaseName);
+            AttachCore("VehicleClass", () => VehicleClass);
+            AttachCore("VehicleClassName", () => VehicleClassName);
             AttachCore("StrategyDash.RequiredStopsPreGreen", () => StrategyDash_RequiredStopsPreGreen);
             AttachCore("StrategyDash.StrategyText", () => StrategyDash_StrategyText);
             AttachCore("StrategyDash.StartFuelRequiredLitres", () => Math.Round(StrategyDash_StartFuelRequiredLitres, 1));
@@ -11556,6 +11677,12 @@ namespace LaunchPlugin
             }
             if (!data.GameRunning || data.NewData == null)
             {
+                SessionType = 0;
+                SessionTypeName = "UNKNOWN";
+                ActivityPhase = 0;
+                ActivityPhaseName = "UNKNOWN / INACTIVE";
+                VehicleClass = 0;
+                VehicleClassName = string.Empty;
                 ClearPitLimiterAndRunwayExports();
                 return;
             }
@@ -11658,6 +11785,7 @@ namespace LaunchPlugin
                 completedLaps,
                 currentSessionId,
                 currentSessionTypeForConfidence);
+            UpdateDashboardStateResolver(pluginManager, data);
             double lastLapSec = (data.NewData?.LastLapTime ?? TimeSpan.Zero).TotalSeconds;
             // IMPORTANT: give PitLite a *real* baseline pace.
             // Order: stable avg (from your fuel/baseline logic) → pit debug avg → profile avg → 0
@@ -16086,6 +16214,9 @@ namespace LaunchPlugin
         private static string ResolvePropertySnapshotGroup(string propertyName)
         {
             if (propertyName.StartsWith("Car.Debug.", StringComparison.Ordinal)) return "RawDebug";
+            if (propertyName == "SessionType" || propertyName == "SessionTypeName"
+                || propertyName == "ActivityPhase" || propertyName == "ActivityPhaseName"
+                || propertyName == "VehicleClass" || propertyName == "VehicleClassName") return "RawDebug";
 
             if (propertyName.StartsWith("Fuel.", StringComparison.Ordinal)
                 || propertyName.StartsWith("MonitorSystem.", StringComparison.Ordinal)
