@@ -1,3 +1,7 @@
+## 2026-11-15 — Dashboard package version release metadata and Head2Head audit key
+- Dashboard release metadata now lists Driver Dash and Strategy Dash at 1.1.1; the other four packages remain at 1.1.0. Head2Head's manifest, runtime validator, and audit use logical key `Lala-Head 2 Head`; its physical folder/file/archive names remain `Lala-Head2Head`.
+- Verification: all six `.simhubdash` root `DashboardVersion` values were inspected and match the manifest. The user reports `VersionManifestAudit.py` passed; it could not be independently rerun because no usable Python runtime is available. Plugin assembly version remains 1.1.0 and the manifest remains embedded. `git diff --check` passed. No build or manual SimHub runtime verification was performed; no dashboard exports, `.djson` files, or runtime C# code changed.
+
 ## 2026-11-15 — Gate gridding on current pre-race state
 - Classification: **both** (prevents dashboard grid visibility from persisting after green and documents resolver state requirements).
 - ActivityPhase 110 now requires Race context, a successfully parsed SessionState value 1–3, and StrategyDash phase 2. This blocks a cached phase 2 from winning for the interval between state 4 arriving and the next 500 ms StrategyDash update. StrategyDash and its polling cadence are unchanged.

@@ -23,7 +23,7 @@ REQUIRED_ASSETS = (
     "Lala-Strategy Dash",
     "Lala-Alerts Overlay",
     "Lala-VerticalTrafficBar Overlay",
-    "Lala-Head2Head",
+    "Lala-Head 2 Head",
     "Lala-Fuel Calculator",
 )
 VERSION_RE = re.compile(r"^v?\d+(?:\.\d+){1,3}$")
