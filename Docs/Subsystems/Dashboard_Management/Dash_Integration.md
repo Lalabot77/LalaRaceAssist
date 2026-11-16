@@ -55,7 +55,7 @@ The manifest `releaseCritical` flag separates packages that must match before a 
 
 Current manifest-tracked assets are:
 - release-critical: `Lala-Driver Dash`, `Lala-Strategy Dash`, `Lala-Alerts Overlay`, and `Lala-VerticalTrafficBar Overlay`;
-- non-release-critical: `Lala-Head2Head` and `Lala-Fuel Calculator`.
+- non-release-critical: logical asset keys `Lala-Head 2 Head` and `Lala-Fuel Calculator` (the Head2Head package folder, dashboard file, and archive use `Lala-Head2Head`).
 
 The plugin consumes the embedded copy of the root manifest at runtime for bundled dashboard/overlay compatibility display and export. Runtime manifest validation requires the official six-asset release catalogue above to be complete and valid, including parseable `v?major.minor[.patch[.revision]]` latest versions, before `Dashboards.Manifest.Valid` becomes true. That completeness check validates the release catalogue only; it does **not** mean a user has installed all six assets, and users may install only the dashboards/overlays they need.
 
