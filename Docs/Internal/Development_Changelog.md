@@ -1,3 +1,38 @@
+## 2026-11-15 — Gate gridding on current pre-race state
+- Classification: **both** (ActivityPhase visibility correction and matching dashboard guidance; no StrategyDash calculation or polling behavior changed).
+- ActivityPhase 110 now requires recognized Race context, parsed SessionState 1–3, and StrategyDash phase 2. Current session state 4 therefore takes precedence over a cached gridding phase between 500 ms fuel-calculation polls.
+- Property Snapshot list reviewed: yes; names, types, and RawDebug grouping are unchanged. Visual Studio MSBuild 18.12.2 Debug/Any CPU rebuild succeeded with 0 errors and 1 `MSB3270` MSIL/x86 warning; static assertions and `git diff --check` passed. No automated test project/files were found and manual SimHub runtime verification was not performed.
+
+## 2026-11-15 — Start Ready requires valid pre-race state
+- Classification: **both** (prevents START READY dashboard visibility during missing/invalid session state and documents the resolver condition).
+- ActivityPhase 120 now requires recognized Race context, a successfully parsed SessionState value 1–3, and StrategyDash phase 3. This prevents the existing StrategyDash state-0 fallback from leaving START READY active during a telemetry gap. StrategyDash itself and its exports are unchanged.
+- Property Snapshot list reviewed: yes; no export names, types, or groups changed. Visual Studio MSBuild 18.12.2 Debug/Any CPU rebuild succeeded with 0 errors and 1 `MSB3270` MSIL/x86 warning; static mapping/context checks and `git diff --check` passed; no automated test project/files were found. Manual SimHub remains unperformed; fresh PR review is pending.
+
+## 2026-11-15 — Race-only ActivityPhase grid mappings
+- Classification: **both** (prevents Practice/Qualifying staging from activating race-grid dashboard visibility and documents the condition).
+- `GRIDDING` and `START READY` ActivityPhase mappings now require recognized Race context because `StrategyDash.Phase` can represent those shared SessionState stages outside Race sessions. Formation and race finish remain Race-only; pit/out-lap classifications remain available in non-Race sessions. The existing StrategyDash phase behavior and exports are unchanged.
+- Property Snapshot list reviewed: yes; no export names, types, or groups changed. Tooltip wording was reviewed and left unchanged.
+- Verification: Visual Studio MSBuild 18.12.2 Debug/Any CPU rebuild succeeded with 0 errors and 1 `MSB3270` MSIL/x86 warning; static checks confirmed both Race-only StrategyDash mappings, unchanged upstream StrategyDash/session mappings, Formation Race gating, and `git diff --check`. No automated test project/files were found. Manual SimHub runtime verification was not performed.
+
+## 2026-11-15 — Dashboard state resolver fallback and disconnect reset
+- Classification: **both** (user-visible vehicle-class fallback and clearing stale dashboard visibility state, with matching technical and dashboard documentation).
+- `VehicleClass` now uses `DriverInfo.DriverCarClassID` whenever the telemetry ID is non-positive; if both IDs are invalid, it remains 0 with an empty name. The existing invalid-game-data guard resets only `SessionType`, `SessionTypeName`, `ActivityPhase`, `ActivityPhaseName`, `VehicleClass`, and `VehicleClassName` to neutral values before returning.
+- Property Snapshot list reviewed: yes; all six exports remain in RawDebug. No existing subsystem reset or dashboard JSON/layout changed. Tooltip documentation was reviewed and left unchanged because no plugin UI control or tooltip behavior changed.
+- Verification: Visual Studio MSBuild 18.12.2 Debug/Any CPU rebuild succeeded with 0 errors and 1 `MSB3270` MSIL/x86 warning; `git diff --check`, guard reset/order, class ID fallback cases, six export registrations, and RawDebug mapping checks passed; no automated test project/files were found. Manual SimHub runtime verification was not performed.
+
+## 2026-11-15 — Dashboard state resolver PR #873 follow-up
+- Classification: **both** (targeted refinement to new dashboard visibility exports and their technical/user documentation; no changes to existing fuel, StrategyDash, PitEngine, finish, League Class, launch, or rejoin logic).
+- Race stop categories now map the existing published `Fuel.Pit.StopsRequiredToEnd` directly: 0→410, 1→420, 2+→430. The resolver no longer applies planner-validation/live-burn guards; the existing source may reset the stop estimate to zero when live burn input is unavailable, and the docs state that limitation.
+- Finish phases 900/800/850 are gated to recognized Race sessions; pit and out-lap classifications remain usable in non-Race sessions. Formation remains Race-only. Conflicting garage/spectating true values resolve to Unknown at the low-priority activity decision; no freshness tracking or retained state was added.
+- Property Snapshot list reviewed: yes; all six exports remain explicitly in RawDebug. PR #873 remains open and unmerged.
+- Verification: Visual Studio MSBuild 18.12.2 Debug/Any CPU rebuild succeeded with 0 errors and 1 `MSB3270` MSIL/x86 warning; `git diff --check` and export/snapshot-registration checks passed; no automated test project was found. Manual SimHub runtime verification was not performed.
+
+## 2026-11-15 — Dashboard state resolver
+- Classification: **both** (additive driver-facing dashboard visibility exports plus internal export/source documentation; no edits to dashboard layouts, JSON, package/version-check behavior, fuel/strategy calculations, PitEngine lifecycle, race-finish detection, or League Class logic).
+- Added presentation-only `SessionType` / `SessionTypeName`, `ActivityPhase` / `ActivityPhaseName`, and `VehicleClass` / `VehicleClassName` exports. Session race stop categories are only emitted when the existing planner is not in validation error and the existing live burn input is finite and positive; otherwise the race category stays general. Activity priorities reuse current finish, pit, out-lap, strategy phase, and telemetry states. No start countdown or green-transition classification is emitted without an authoritative lifecycle seam.
+- Property Snapshot list reviewed: yes; all six new properties are explicitly assigned to the existing RawDebug group. Dashboard versioning's merged lock/generation refresh coordination remains unchanged. Tooltips were reviewed and left unchanged because the catalogue describes plugin UI controls, not dashboard-bound SimHub exports.
+- Verification: Visual Studio MSBuild 18.12.2 Debug/Any CPU solution rebuild succeeded with 0 errors and 1 `MSB3270` warning for MSIL versus x86 `SimHubWPF`; `git diff --check` passed; no automated test project exists; manual SimHub runtime verification was not performed.
+
 ## 2026-11-14 — Dashboard version refresh completion race
 - Classification: **both** (internal refresh-coordination correctness and dashboard-check guidance; no status meanings, exports, dashboard package schemas, telemetry behavior, or unrelated subsystem logic changed).
 - Replaced the shared refresh-request Boolean with a lock-protected generation counter. Refresh registration, result publication, and active-task release now serialize, so a refresh arriving as a request completes cannot be cleared or missed; requests during a fetch invalidate that result and coalesce into one retry.
