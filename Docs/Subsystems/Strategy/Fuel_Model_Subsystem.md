@@ -4,8 +4,8 @@
 
 
 Validated against commit: HEAD
-Last updated: 2026-06-11
-Branch: work
+Last updated: 2026-11-17
+Branch: codex/dashboard-state-runtime-refinements
 
 ## Purpose
 The Fuel Model is the runtime fuel-learning and fuel-projection engine. It:
@@ -37,6 +37,11 @@ This doc covers the **runtime** fuel path:
 - pit math,
 - pit-window states,
 - profile persistence of learned fuel values.
+
+## Stop estimate validity for dashboard classification
+`Fuel.PitStopsRequiredByFuel` is calculated from required fuel minus current fuel, divided by the effective live tank capacity and rounded up. Its invalid-burn branch resets the count to zero, and a missing capacity also produces zero, so the integer count alone cannot distinguish a genuine no-stop result from a default. The Fuel Model maintains an internal, non-exported validity flag alongside this calculation. It is valid only when the selected burn basis, projected remaining laps, required fuel, and effective tank capacity are positive and current fuel is finite and non-negative. The flag is cleared whenever `ResetLiveFuelModelForNewSession` or `ClearFuelInstructionOutputs` invalidates the corresponding result.
+
+The Dashboard State Resolver consumes `Fuel.PitStopsRequiredByFuel` exclusively when its validity flag is true. It does not switch to the plan-first `Fuel.Pit.StopsRequiredToEnd` or depend on Strategy Planner settings, Fuel Model live authority, or readiness. It does not recreate the Fuel Model's stop calculation.
 
 Out of scope:
 - Strategy-tab input ownership and preset behavior,
