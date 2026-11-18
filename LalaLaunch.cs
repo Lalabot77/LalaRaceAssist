@@ -1294,6 +1294,7 @@ namespace LaunchPlugin
         public double Pit_FuelSaveDeltaAfterStop { get; private set; }
         public double Pit_PushDeltaAfterStop { get; private set; }
         public int PitStopsRequiredByFuel { get; private set; }
+        private bool _pitStopsRequiredByFuelValid;
         public int PitStopsRequiredByPlan { get; private set; }
         public int Pit_StopsRequiredToEnd { get; private set; }
         public double Fuel_PitStopsRequiredByFuelExact { get; private set; }
@@ -1339,6 +1340,10 @@ namespace LaunchPlugin
         public string ActivityPhaseName { get; private set; } = "UNKNOWN / INACTIVE";
         public int VehicleClass { get; private set; }
         public string VehicleClassName { get; private set; } = string.Empty;
+        private bool _activityResolverWasInPitLane;
+        private bool _activityResolverOutLapActive;
+        private int _activityResolverOutLapStartCompletedLaps;
+        private string _activityResolverSessionToken = string.Empty;
         public int StrategyDash_RequiredStopsPreGreen { get; private set; }
         public string StrategyDash_StrategyText { get; private set; } = "NO STOP";
         public double StrategyDash_StartFuelRequiredLitres { get; private set; }
@@ -1894,11 +1899,12 @@ namespace LaunchPlugin
             }
             else if (IsRaceSession(sessionType))
             {
-                int stopsRequiredToEnd = Pit_StopsRequiredToEnd;
-                if (stopsRequiredToEnd == 0) { SessionType = 410; SessionTypeName = "RACE - NO STOPS"; }
+                bool stopEstimateValid = _pitStopsRequiredByFuelValid;
+                int stopsRequiredToEnd = PitStopsRequiredByFuel;
+                if (!stopEstimateValid || stopsRequiredToEnd < 0) { SessionType = 400; SessionTypeName = "RACE"; }
+                else if (stopsRequiredToEnd == 0) { SessionType = 410; SessionTypeName = "RACE - NO STOPS"; }
                 else if (stopsRequiredToEnd == 1) { SessionType = 420; SessionTypeName = "RACE - ONE STOP"; }
-                else if (stopsRequiredToEnd >= 2) { SessionType = 430; SessionTypeName = "RACE - MULTIPLE STOPS"; }
-                else { SessionType = 400; SessionTypeName = "RACE"; }
+                else { SessionType = 430; SessionTypeName = "RACE - MULTIPLE STOPS"; }
             }
             else
             {
@@ -1922,6 +1928,35 @@ namespace LaunchPlugin
             bool confirmedDrivingContext = inGarage == false && spectating == false;
             PitPhase pitPhase = _pit?.CurrentPitPhase ?? PitPhase.None;
             bool inPitLane = data.NewData != null && data.NewData.IsInPitLane != 0;
+            int completedLaps = Convert.ToInt32(data.NewData?.CompletedLaps ?? 0);
+
+            if (!string.Equals(_activityResolverSessionToken, _currentSessionToken, StringComparison.Ordinal))
+            {
+                _activityResolverSessionToken = _currentSessionToken ?? string.Empty;
+                _activityResolverWasInPitLane = false;
+                _activityResolverOutLapActive = false;
+            }
+
+            if (inPitLane)
+            {
+                _activityResolverWasInPitLane = true;
+                _activityResolverOutLapActive = false;
+            }
+            else if (_activityResolverWasInPitLane && confirmedDrivingContext)
+            {
+                _activityResolverWasInPitLane = false;
+                _activityResolverOutLapActive = true;
+                _activityResolverOutLapStartCompletedLaps = completedLaps;
+            }
+            else if (!confirmedDrivingContext)
+            {
+                _activityResolverWasInPitLane = false;
+                _activityResolverOutLapActive = false;
+            }
+
+            if (_activityResolverOutLapActive && completedLaps > _activityResolverOutLapStartCompletedLaps)
+                _activityResolverOutLapActive = false;
+
 
             int activity = 0;
             if (raceContext && RaceEndPhase == 4) activity = 900;
@@ -1933,12 +1968,15 @@ namespace LaunchPlugin
             else if ((int)pitPhase == 4) activity = 725;
             else if ((int)pitPhase == 5) activity = 730;
             else if (inPitLane) activity = 710;
-            else if (_pit?.CurrentState == PitEngine.PaceDeltaState.AwaitingOutLap) activity = 400;
+            else if (_activityResolverOutLapActive || _pit?.CurrentState == PitEngine.PaceDeltaState.AwaitingOutLap) activity = 400;
             else if (raceContext && hasSessionState && sessionState == 3) activity = 200;
             else if (inGarage == true && spectating == true) activity = 0;
             else if (raceContext && hasSessionState && sessionState >= 1 && sessionState < 4 && StrategyDash_Phase == 3) activity = 120;
             else if (raceContext && hasSessionState && sessionState >= 1 && sessionState < 4 && StrategyDash_Phase == 2) activity = 110;
             else if (raceContext && hasSessionState && sessionState == 4 && confirmedDrivingContext) activity = 300;
+            else if (IsPracticeLikeSession(sessionType) && confirmedDrivingContext) activity = 310;
+            else if (string.Equals(sessionType, "Lone Qualify", StringComparison.OrdinalIgnoreCase) && confirmedDrivingContext) activity = 320;
+            else if (string.Equals(sessionType, "Open Qualify", StringComparison.OrdinalIgnoreCase) && confirmedDrivingContext) activity = 330;
             else if (inGarage == true) activity = 10;
             else if (spectating == true) activity = 20;
             else if (StrategyDash_Phase == 1 && confirmedDrivingContext) activity = 100;
@@ -1952,6 +1990,9 @@ namespace LaunchPlugin
                 activity == 200 ? "FORMATION LAP" :
                 activity == 220 ? "GREEN TRANSITION" :
                 activity == 300 ? "RACE RUNNING" :
+                activity == 310 ? "PRACTICE RUNNING" :
+                activity == 320 ? "SOLO QUALIFYING RUNNING" :
+                activity == 330 ? "OPEN QUALIFYING RUNNING" :
                 activity == 400 ? "OUT LAP" :
                 activity == 700 ? "PIT ENTRY" :
                 activity == 710 ? "PIT LANE" :
@@ -1970,7 +2011,7 @@ namespace LaunchPlugin
             if (string.IsNullOrWhiteSpace(className))
                 className = SafeReadStringProperty("DataCorePlugin.GameRawData.SessionData.DriverInfo.DriverCarClass");
             VehicleClass = classId > 0 ? classId : 0;
-            VehicleClassName = VehicleClass > 0 ? (className ?? string.Empty).Trim() : string.Empty;
+            VehicleClassName = (className ?? string.Empty).Trim();
         }
 
         private void UpdateStrategyDashAdvice(
@@ -3731,6 +3772,7 @@ namespace LaunchPlugin
 
         private void ResetLiveFuelModelForNewSession(string newSessionType, bool applySeeds)
         {
+            _pitStopsRequiredByFuelValid = false;
             ResetProjectionFallbackState();
             ResetBurnAnalysisForFuelModelLifecycle();
 
@@ -4225,6 +4267,7 @@ namespace LaunchPlugin
 
         private void UpdateLiveFuelCalcs(GameData data, PluginManager pluginManager)
         {
+            _pitStopsRequiredByFuelValid = false;
             bool? detectedLapLimited = null;
             double? detectedRaceLaps = null;
             bool? detectedTimeLimited = null;
@@ -5266,6 +5309,7 @@ namespace LaunchPlugin
                 Pit_FuelSaveDeltaAfterStop = 0;
                 Pit_PushDeltaAfterStop = 0;
                 PitStopsRequiredByFuel = 0;
+                _pitStopsRequiredByFuelValid = false;
                 Fuel_PitStopsRequiredByFuelExact = 0.0;
                 PitStopsRequiredByPlan = 0;
                 Pit_StopsRequiredToEnd = 0;
@@ -5472,6 +5516,12 @@ namespace LaunchPlugin
                 int stopsRequiredByFuel = (effectiveMaxTank > 0)
                     ? (int)Math.Ceiling(litresShort / effectiveMaxTank)
                     : 0;
+                _pitStopsRequiredByFuelValid =
+                    IsFinitePositive(fuelPerLapForCalc) &&
+                    IsFinitePositive(LiveLapsRemainingInRace_Stable) &&
+                    IsFiniteNonNegative(currentFuel) &&
+                    IsFinitePositive(effectiveMaxTank) &&
+                    IsFinitePositive(litresRequiredToFinish);
                 Fuel_PitStopsRequiredByFuelExact = (effectiveMaxTank > 0.0)
                     ? Math.Max(0.0, litresShort / effectiveMaxTank)
                     : 0.0;
@@ -11654,6 +11704,7 @@ namespace LaunchPlugin
             // --- MASTER GUARD CLAUSES ---
             if (Settings == null || pluginManager == null)
             {
+                _pitStopsRequiredByFuelValid = false;
                 ClearPitLimiterAndRunwayExports();
                 return;
             }
@@ -11683,6 +11734,9 @@ namespace LaunchPlugin
                 ActivityPhaseName = "UNKNOWN / INACTIVE";
                 VehicleClass = 0;
                 VehicleClassName = string.Empty;
+                _pitStopsRequiredByFuelValid = false;
+                _activityResolverWasInPitLane = false;
+                _activityResolverOutLapActive = false;
                 ClearPitLimiterAndRunwayExports();
                 return;
             }
@@ -24195,6 +24249,7 @@ namespace LaunchPlugin
             Pit_FuelSaveDeltaAfterStop = 0;
             Pit_PushDeltaAfterStop = 0;
             PitStopsRequiredByFuel = 0;
+            _pitStopsRequiredByFuelValid = false;
             Fuel_PitStopsRequiredByFuelExact = 0;
             PitStopsRequiredByPlan = 0;
             Pit_StopsRequiredToEnd = 0;
